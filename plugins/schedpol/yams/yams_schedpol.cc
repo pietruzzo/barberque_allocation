@@ -22,7 +22,6 @@
 #include <cstdint>
 #include <iostream>
 #include <functional>
-
 #include "bbque/cpp11/thread.h"
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
@@ -207,6 +206,25 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitBindingInfo() {
 YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	SchedContribPtr_t sc_recf;
 
+	// COWS: Vectors resizing depending on the number of binding domains
+	cowsInfo.boundnessSquaredSum.resize(bindings.num);
+	cowsInfo.boundnessSum.resize(bindings.num);
+	cowsInfo.stallsSum.resize(bindings.num);
+	cowsInfo.retiredSum.resize(bindings.num);
+	cowsInfo.flopSum.resize(bindings.num);
+	cowsInfo.bdLoad.resize(bindings.num);
+	cowsInfo.boundnessMetrics.resize(bindings.num);
+	cowsInfo.stallsMetrics.resize(bindings.num);
+	cowsInfo.retiredMetrics.resize(bindings.num);
+	cowsInfo.flopsMetrics.resize(bindings.num);
+	cowsInfo.candidatedValues.resize(4);
+	cowsInfo.normStats.resize(4);
+	cowsInfo.modifiedSums.resize(3);
+
+	// COWS: Reset the counters
+	CowsResetStatus();
+	logger->Info("COWS: Support enabled");
+
 	// Set the view information into the metrics contribute
 	scm->SetViewInfo(sv, vtok);
 	scm->SetBindingInfo(bindings);
@@ -335,6 +353,9 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 		if (CheckSkipConditions(pschd->papp))
 			continue;
 
+		// COWS: Find the best binding for the AWM of the Application
+		CowsSetOptBinding(pschd);
+
 		// Send the schedule request
 		app_result = pschd->papp->ScheduleRequest(
 				pschd->pawm, vtok, pschd->bind_id);
@@ -343,6 +364,8 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 			logger->Debug("Selecting: %s rejected!", pschd->StrId());
 			continue;
 		}
+		//COWS: Update means and square means values
+		CowsUpdateMeans(pschd);
 		if (!pschd->papp->Synching() || pschd->papp->Blocking()) {
 			logger->Debug("Selecting: [%s] state %s|%s", pschd->papp->StrId(),
 					Application::StateStr(pschd->papp->State()),
@@ -550,6 +573,242 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 	return false;
 }
 
+void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
+
+	float db = atoi(std::static_pointer_cast<PluginAttr_t>\
+		(psch->pawm->GetAttribute("cows", "boundness"))->str.c_str());
+	float ds = atoi(std::static_pointer_cast<PluginAttr_t>\
+		(psch->pawm->GetAttribute("cows", "stalls"))->str.c_str());
+	float dr = atoi(std::static_pointer_cast<PluginAttr_t>\
+		(psch->pawm->GetAttribute("cows", "retired"))->str.c_str());
+	float df = atoi(std::static_pointer_cast<PluginAttr_t>\
+		(psch->pawm->GetAttribute("cows", "flops"))->str.c_str());
+
+	CowsApplyRecipeValues(db, ds, dr, df);
+	CowsComputeBoundness(psch);
+	CowsSysWideMetrics();
+	CowsAggregateResults(psch);
+	logger->Notice("COWS: scheduled SchedEnt on binding domain %d "
+		  "with other %d apps",
+		  psch->bind_id, cowsInfo.bdLoad[psch->bind_id]);
+}
+
+void YamsSchedPol::CowsUpdateMeans(SchedEntityPtr_t psch) {
+	//A new application has been scheduled
+	cowsInfo.bdLoad[psch->bind_id - 1]++;
+	cowsInfo.bdTotalLoad++;
+
+	//Applying the candidate SchedEnt statistics
+	cowsInfo.boundnessSquaredSum[psch->bind_id - 1] +=
+		pow(cowsInfo.candidatedValues[0],2);
+	cowsInfo.boundnessSum[psch->bind_id - 1] +=
+		cowsInfo.candidatedValues[0];
+	cowsInfo.stallsSum[psch->bind_id - 1] +=
+		cowsInfo.candidatedValues[1];
+	cowsInfo.retiredSum[psch->bind_id - 1] +=
+		cowsInfo.candidatedValues[2];
+	cowsInfo.flopSum[psch->bind_id - 1] +=
+		cowsInfo.candidatedValues[3];
+}
+
+void YamsSchedPol::CowsResetStatus() {
+	cowsInfo.boundnessSquaredSum.clear();
+	cowsInfo.boundnessSum.clear();
+	cowsInfo.stallsSum.clear();
+	cowsInfo.retiredSum.clear();
+	cowsInfo.flopSum.clear();
+	cowsInfo.bdLoad.clear();
+	cowsInfo.boundnessMetrics.clear();
+	cowsInfo.stallsMetrics.clear();
+	cowsInfo.retiredMetrics.clear();
+	cowsInfo.flopsMetrics.clear();
+	cowsInfo.normStats.clear();
+	cowsInfo.modifiedSums.clear();
+	cowsInfo.bdTotalLoad = 0;
+}
+
+void YamsSchedPol::CowsApplyRecipeValues(
+	  float db, float ds, float dr, float df) {
+	// Updating system-wide means
+	cowsInfo.modifiedSums[0] += ds;
+	cowsInfo.modifiedSums[1] += dr;
+	cowsInfo.modifiedSums[2] += df;
+
+	// Setting info for future system update
+	cowsInfo.candidatedValues[0] = db;
+	cowsInfo.candidatedValues[1] = ds;
+	cowsInfo.candidatedValues[2] = dr;
+	cowsInfo.candidatedValues[3] = df;
+}
+
+void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
+	logger->Info("==============| Boundness computing.. |===============");
+
+	// Boundness computation. Compute the delta-variance for each BD
+	for (int i = 0; i < bindings.num; i++) {
+		cowsInfo.boundnessMetrics[i] = 0;
+
+		if (cowsInfo.bdLoad[i] != 0) {
+			// E(X'^2) - E^2(X') - E(X^2) + E^2(X)
+			cowsInfo.boundnessMetrics[i] =
+				(cowsInfo.boundnessSquaredSum[i]
+				+ pow(cowsInfo.candidatedValues[0], 2))
+				/ (cowsInfo.bdLoad[i] + 1)
+				- pow((cowsInfo.boundnessSum[i]
+				+ cowsInfo.candidatedValues[0])
+				/ (cowsInfo.bdLoad[i] + 1), 2)
+				- (cowsInfo.boundnessSquaredSum[i])
+				/ (cowsInfo.bdLoad[i])
+				+ pow((cowsInfo.boundnessSum[i])
+				/ (cowsInfo.bdLoad[i]), 2);
+
+			// Only positive contributions are used to normalize
+			if (cowsInfo.boundnessMetrics[i] > 0)
+			  cowsInfo.normStats[0] += cowsInfo.boundnessMetrics[i];
+		}
+		logger->Notice("COWS: Boundness variance @BD %d for %s: %3.2f",
+			      i + 1, psch->StrId(), cowsInfo.boundnessMetrics[i]);
+	}
+
+	if (cowsInfo.normStats[0] == 0) cowsInfo.normStats[0]++;
+}
+
+void YamsSchedPol::CowsSysWideMetrics() {
+	for (int i = 0; i < bindings.num; i++) {
+		cowsInfo.modifiedSums[0] += cowsInfo.stallsSum[i];
+		cowsInfo.modifiedSums[1] += cowsInfo.retiredSum[i];
+		cowsInfo.modifiedSums[2] += cowsInfo.flopSum[i];
+	}
+
+	// Update system mean: sumOf(BDmeans)/numberOfBDs
+	cowsInfo.modifiedSums[0] /= bindings.num;
+	cowsInfo.modifiedSums[1] /= bindings.num;
+	cowsInfo.modifiedSums[2] /= bindings.num;
+
+	logger->Info("===| COWS: Sys-wide variation of metrics variance |===");
+	logger->Notice("COWS: Updated system wide stalls mean: %3.2f",
+			cowsInfo.modifiedSums[0]);
+	logger->Notice("COWS: Updated system wide retired instructions mean:"
+			"%3.2f", cowsInfo.modifiedSums[1]);
+	logger->Notice("COWS: Updated system wide floating point ops mean:"
+			"%3.2f", cowsInfo.modifiedSums[2]);
+
+	// For each binding domain, calculate the updated means AS IF
+	// I scheduled the new app there, then calculate the corresponding
+	// standard deviation
+	for (int i = 0; i < bindings.num; i++) {
+		logger->Info("");
+		logger->Info("COWS: Computing sys metric for BD %d...", i+1);
+
+		// Calculating standard deviations (squared). Again, if I'm on BD
+		// i, the mean has changed
+		for (int j = 0; j < bindings.num; j++) {
+			if (j == i) {
+				cowsInfo.stallsMetrics[i] +=
+					pow(((cowsInfo.stallsSum[j]
+					+ cowsInfo.candidatedValues[1]))
+					- (cowsInfo.modifiedSums[0]),2);
+				cowsInfo.retiredMetrics[i] +=
+					pow(((cowsInfo.retiredSum[j]
+					+ cowsInfo.candidatedValues[2]))
+					- (cowsInfo.modifiedSums[1]),2);
+				cowsInfo.flopsMetrics[i] +=
+					pow(((cowsInfo.flopSum[j]
+					+ cowsInfo.candidatedValues[3]))
+					- (cowsInfo.modifiedSums[2]),2);
+			}
+			else if (cowsInfo.bdLoad[j] != 0) {
+				cowsInfo.stallsMetrics[i] +=
+					pow(((cowsInfo.stallsSum[j]))
+					- (cowsInfo.modifiedSums[0]),2);
+				cowsInfo.retiredMetrics[i] +=
+					pow(((cowsInfo.retiredSum[j]))
+					- (cowsInfo.modifiedSums[1]),2);
+				cowsInfo.flopsMetrics[i] +=
+					pow(((cowsInfo.flopSum[j]))
+					- (cowsInfo.modifiedSums[2]),2);
+			}
+		}
+
+		logger->Notice("COWS: Total stalls quadratic deviation in BD"
+				"%d: %3.2f", i + 1, cowsInfo.stallsMetrics[i]);
+		logger->Notice("COWS: Total ret. instructions deviation in BD"
+				"%d: %3.2f", i + 1, cowsInfo.retiredMetrics[i]);
+		logger->Notice("COWS: Total X87 operations deviation in BD"
+				"%d: %3.2f", i + 1, cowsInfo.flopsMetrics[i]);
+		logger->Info("COWS: Proceeding with next BD, if any ...");
+
+		cowsInfo.normStats[1] += cowsInfo.stallsMetrics[i];
+		cowsInfo.normStats[2] += cowsInfo.retiredMetrics[i];
+		cowsInfo.normStats[3] += cowsInfo.flopsMetrics[i];
+	}
+}
+
+void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
+	int preferredBD = 0;
+	float bestResult = 0;
+	float actualResult = 0;
+
+	logger->Info("========|  COWS: Aggregating results ... |========");
+
+	// Normalizing
+	logger->Notice(" ======================================================"
+			"============");
+	for (int i = 0; i < bindings.num; i++) {
+		cowsInfo.stallsMetrics[i] /= cowsInfo.normStats[1];
+		cowsInfo.retiredMetrics[i] /= cowsInfo.normStats[2];
+		cowsInfo.flopsMetrics[i] /= cowsInfo.normStats[3];
+
+		if(cowsInfo.boundnessMetrics[i] < 0) {
+			cowsInfo.boundnessMetrics[i] = 0;
+		}
+		else {
+			cowsInfo.boundnessMetrics[i] /= cowsInfo.normStats[0];
+		}
+
+		logger->Notice("| BD %d | Boundness: %3.2f | Stalls:%3.2f | "
+				"Retired:%3.2f | Flops:%3.2f |", i+1,
+				cowsInfo.boundnessMetrics[i],
+				cowsInfo.stallsMetrics[i],
+				cowsInfo.retiredMetrics[i],
+				cowsInfo.flopsMetrics[i]);
+	}
+	logger->Notice(" ======================================================"
+			"============");
+
+	// Calculating the best BD to schedule the app in
+	bestResult = 3 * cowsInfo.boundnessMetrics[preferredBD]
+			- cowsInfo.stallsMetrics[preferredBD]
+			- cowsInfo.retiredMetrics[preferredBD]
+			- cowsInfo.flopsMetrics[preferredBD];
+
+	// The BDs are counted from 1, while my vectors' components are counted
+	// from 0. I correcting that by setting the default preferred BD to 1
+	preferredBD = 1;
+
+	for (int i = 0; i < bindings.num; i++) {
+		actualResult = 3 * cowsInfo.boundnessMetrics[i]
+				- cowsInfo.stallsMetrics[i]
+				- cowsInfo.retiredMetrics[i]
+				- cowsInfo.flopsMetrics[i];
+		if (actualResult > bestResult) {
+			preferredBD = i + 1;
+			bestResult  = actualResult;
+		}
+		logger->Info("COWS: Best result= %3.2f. BD %d result: %3.2f",
+				bestResult, i + 1, actualResult);
+	}
+
+	// Set the binding ID
+	psch->bind_id = preferredBD;
+	logger->Notice("COWS: selected id is: %d.", preferredBD);
+	logger->Notice("COWS: candidate values are: %3.2f, %3.2f, %3.2f, %3.2f"
+			".", cowsInfo.candidatedValues[0],
+			cowsInfo.candidatedValues[1],
+			cowsInfo.candidatedValues[2],
+			cowsInfo.candidatedValues[3]);
+	logger->Info("==========|          COWS: Done             |==========");
+}
 
 } // namespace plugins
 

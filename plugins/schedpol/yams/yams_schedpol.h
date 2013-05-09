@@ -184,8 +184,35 @@ private:
 	static SchedContribManager::Type_t sc_types[YAMS_SC_COUNT];
 
 
+	/**Cows metrics*/
+	struct cowsSystemInfo{
+		/** Total value and squared value of boundness for each BD */
+		std::vector<float> boundnessSquaredSum;
+		std::vector<float> boundnessSum;
+		/**Total stalls, retired instr. and flops for each BD */
+		std::vector<float> stallsSum;
+		std::vector<float> retiredSum;
+		std::vector<float> flopSum;
+		/**Applications scheduled on each BD and on the whole system */
+		std::vector<int> bdLoad;
+		int bdTotalLoad;
+		/*Metrics of the SchedEnt under analysis */
+		std::vector<float> candidatedValues;
+		/*statistic info used to normalize the metrics */
+		std::vector<float> normStats;
+		/*Total metrics allocated on the system during AWM analysis */
+		std::vector<float> modifiedSums;
+		/* Metrics container per BD */
+		std::vector<float> boundnessMetrics;
+		std::vector<float> stallsMetrics;
+		std::vector<float> retiredMetrics;
+		std::vector<float> flopsMetrics;
+	} cowsInfo;
+
+
 	/** Collect information on binding domains */
 	BindingInfo_t bindings;
+
 
 	/** Mutex */
 	std::mutex sched_mtx;
@@ -279,6 +306,59 @@ private:
 	 * @param pschd The scheduling entity to evaluate
 	 */
 	void EvalWorkingMode(SchedEntityPtr_t pschd);
+
+	/**
+	 * @brief COWS: Evaluate a Binding
+	 *
+	 * @param pschd The scheduling entity to evaluate
+	 */
+	void CowsSetOptBinding(SchedEntityPtr_t pschd);
+
+	/**
+	 * @brief COWS: reset resource counters
+	 *
+	 */
+	void CowsResetStatus();
+
+	/**
+	 * @brief COWS: apply values extracted from recipe
+	 *
+	 * @param db Cache misses per cycle of the current AWM
+	 * @param ds Stalls per cycle of the current AWM
+	 * @param dr Retired instructions per cycle of the current AWM
+	 */
+	void CowsApplyRecipeValues(float db, float ds, float dr, float df);
+
+	/**
+	 * @brief COWS: compute stalls, retired, flops var delta for the system
+	 *
+	 */
+	void CowsSysWideMetrics();
+
+	/**
+	 * @brief COWS: compute the boundness variance variation for all BDs
+	 *
+	 * @param boundness Container for the boundness metrics
+	 * @param percentualBoundnessDenom Needed to normalize the metrics
+	 * @param psch The scheduling entity to use
+         *
+	 */
+	void CowsComputeBoundness(SchedEntityPtr_t psch);
+
+	/**
+	 * @brief COWS: aggregate results
+	 *
+	 * @param psch The scheduling entity to use
+         *
+	 */
+	void CowsAggregateResults(SchedEntityPtr_t psch);
+
+	/**
+	 * @brief COWS: Update Means
+	 *
+	 * @param pschd The scheduling entity to use to update
+	 */
+	void CowsUpdateMeans(SchedEntityPtr_t pschd);
 
 	/**
 	 * @brief Require the scheduling of the entities
