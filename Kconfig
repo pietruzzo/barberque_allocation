@@ -129,6 +129,18 @@ config BBQUE_SP_YAMS_PARALLEL
   Select this option if you plan to run the BarbequeRTRM daemon on a multi-core
   host machine.
 
+config BBQUE_SP_COWS_BINDING
+  bool "Co-scheduling workloads (COWS) binding"
+  default n
+  ---help---
+  Enable this option only if the recipes feature information about some
+  performance counters based statistics. and the scheduling policy implements
+  the support to exploit such information. This potentially leads to a more
+  effective binding (i.e. selection of the resource domain of the AWM) in order
+  to establish whether it is better to co-schedule applications on the same
+  resource binding domain (e.g., CPU node) or spread them among different
+  domains.
+
 comment "Synchronization Policies Configuration"
 
 config BBQUE_YM_SYNC_FORCE

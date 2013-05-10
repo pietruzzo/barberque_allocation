@@ -121,6 +121,9 @@
 /** Enabled YaMS Scheduling policy parallel execution */
 #cmakedefine CONFIG_BBQUE_SP_YAMS_PARALLEL
 
+/** Enabled YaMS Scheduling policy parallel execution */
+#cmakedefine CONFIG_BBQUE_SP_COWS_BINDING
+
 /** Enabled Synchronization Manager sync point enforcing */
 #cmakedefine CONFIG_BBQUE_YM_SYNC_FORCE
 
