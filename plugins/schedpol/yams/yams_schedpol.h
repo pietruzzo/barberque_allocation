@@ -53,27 +53,28 @@
 
 #define YAMS_AWM_SC_COUNT 3
 #ifndef CONFIG_BBQUE_SP_COWS_BINDING
-#define YAMS_BD_SC_COUNT  2
+	#define YAMS_BD_SC_COUNT  2
 #else
-#define YAMS_BD_SC_COUNT  1
+	#define YAMS_BD_SC_COUNT  1
 #endif
 #define YAMS_SC_COUNT (YAMS_AWM_SC_COUNT + YAMS_BD_SC_COUNT)
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
-#define COWS_BOUND_METRICS  1
-#define COWS_UNITS_METRICS  3
-#define COWS_ADDITIONAL_METRICS 1
-#define COWS_RECIPE_METRICS (COWS_BOUND_METRICS + COWS_UNITS_METRICS)
-#define COWS_NORMAL_VALUES  (COWS_RECIPE_METRICS + COWS_ADDITIONAL_METRICS)
-#define COWS_AGGREGATION_WEIGHTS 3
-#define COWS_TOTAL_WEIGHT_SUM 10.0
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/count.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/variance.hpp>
-using namespace boost::accumulators;
+	#define COWS_BOUND_METRICS  1
+	#define COWS_UNITS_METRICS  3
+	#define COWS_ADDITIONAL_METRICS 1
+	#define COWS_RECIPE_METRICS (COWS_BOUND_METRICS + COWS_UNITS_METRICS)
+	#define COWS_NORMAL_VALUES  (COWS_RECIPE_METRICS + COWS_ADDITIONAL_METRICS)
+	#define COWS_AGGREGATION_WEIGHTS 3
+	#define COWS_TOTAL_WEIGHT_SUM 10.0
+	#include <boost/accumulators/accumulators.hpp>
+	#include <boost/accumulators/statistics/stats.hpp>
+	#include <boost/accumulators/statistics/count.hpp>
+	#include <boost/accumulators/statistics/mean.hpp>
+	#include <boost/accumulators/statistics/variance.hpp>
+	using namespace boost::accumulators;
 #endif
+
 
 using bbque::res::RViewToken_t;
 using bbque::utils::Timer;
