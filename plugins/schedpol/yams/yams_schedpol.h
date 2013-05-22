@@ -51,7 +51,11 @@
  * computation */
 
 #define YAMS_AWM_SC_COUNT 3
+#ifndef CONFIG_BBQUE_SP_COWS_BINDING
 #define YAMS_BD_SC_COUNT  2
+#else
+#define YAMS_BD_SC_COUNT  0
+#endif
 #define YAMS_SC_COUNT (YAMS_AWM_SC_COUNT + YAMS_BD_SC_COUNT)
 
 using bbque::res::RViewToken_t;
@@ -310,6 +314,33 @@ private:
 	void EvalWorkingMode(SchedEntityPtr_t pschd);
 
 	/**
+	 * @brief Compute the metrics of the given scheduling entity
+	 *
+	 * This puts together all the contributes for the metrics computation
+	 *
+	 * @param pschd The scheduling entity to evaluate
+	 */
+	void GetSchedContribValue(SchedEntityPtr_t pschd,
+			SchedContribManager::Type_t sc_type, float & sc_value);
+
+	/**
+	 * @brief Evaluate an AWM in a specific binding domain
+	 *
+	 * @param pschd The scheduling entity to evaluate
+	 */
+	ExitCode_t EvalBinding(SchedEntityPtr_t pschd_bd, float & value);
+
+	/**
+	 * @brief Bind the resources of the AWM into the given binding domain
+	 *
+	 * @param pschd The scheduling entity to evaluate
+	 *
+	 * @return YAMS_SUCCESS for success, YAMS_ERROR if an unexpected error has
+	 * been encountered
+	 */
+	ExitCode_t BindResources(SchedEntityPtr_t pschd);
+
+	/**
 	 * @brief COWS: Evaluate a Binding
 	 *
 	 * @param pschd The scheduling entity to evaluate
@@ -415,25 +446,6 @@ private:
 
 		return false;
 	}
-
-	/**
-	 * @brief Bind the resources of the AWM into the given binding domain
-	 *
-	 * @param pschd The scheduling entity to evaluate
-	 *
-	 * @return YAMS_SUCCESS for success, YAMS_ERROR if an unexpected error has
-	 * been encountered
-	 */
-	YamsSchedPol::ExitCode_t BindResources(SchedEntityPtr_t pschd);
-
-	/**
-	 * @brief Compute the metrics of the given scheduling entity
-	 *
-	 * This puts together all the contributes for the metrics computation
-	 *
-	 * @param pschd The scheduling entity to evaluate
-	 */
-	void AggregateContributes(SchedEntityPtr_t pschd);
 
 	/**
 	 * @brief Compare scheduling entities

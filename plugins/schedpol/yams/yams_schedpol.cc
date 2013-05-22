@@ -38,8 +38,10 @@ SchedContribManager::Type_t YamsSchedPol::sc_types[] = {
 	SchedContribManager::VALUE,
 	SchedContribManager::RECONFIG,
 	SchedContribManager::FAIRNESS,
+#ifndef CONFIG_BBQUE_SP_COWS_BINDING
 	SchedContribManager::CONGESTION,
 	SchedContribManager::MIGRATION
+#endif
 };
 
 // Definition of time metrics of the scheduling policy
@@ -64,10 +66,12 @@ YamsSchedPol::coll_mct_metrics[YAMS_SC_COUNT] = {
 			"Reconfiguration contribution computing time [ms]"),
 	YAMS_SAMPLE_METRIC("fair.comp",
 			"Fairness contribution computing time [ms]"),
+#ifndef CONFIG_BBQUE_SP_COWS_BINDING
 	YAMS_SAMPLE_METRIC("cgst.comp",
 			"Congestion contribution computing time [ms]"),
 	YAMS_SAMPLE_METRIC("migr.comp",
 			"Migration contribution computing time [ms]")
+#endif
 	// ...:: ADD_MCT ::...
 };
 
@@ -401,130 +405,163 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 
 void YamsSchedPol::InsertWorkingModes(AppCPtr_t const & papp) {
 	std::list<std::thread> awm_thds;
-	std::vector<ResID_t>::iterator ids_it;
-	std::vector<ResID_t>::iterator end_ids;
 	AwmPtrList_t const * awms = nullptr;
 	AwmPtrList_t::const_iterator awm_it;
-	ResID_t bd_id = R_ID_NONE;
-	float metrics = 0.0;
 
-	// For each binding domain (e.g., CPU node) evaluate the AWM
-	ids_it = bindings.ids.begin();
-	for (; ids_it != bindings.ids.end(); ++ids_it) {
-		bd_id = *ids_it;
-		logger->Info("Evaluate: :::::::::: BINDING:'%s' ID:[%d] :::::::::",
-				bindings.domain.c_str(), bd_id);
-
-		// Skip current cluster if full
-		if (bindings.full[bd_id]) {
-			logger->Info("Evaluate: domain [%s%d] is full, skipping...",
-					bindings.domain.c_str(), bd_id);
-			continue;
-		}
-
-		// AWMs (+resources bound to 'bd_id') evaluation
-		awms = papp->WorkingModes();
-		for (awm_it = awms->begin(); awm_it != awms->end(); ++awm_it) {
-			AwmPtr_t const & pawm(*awm_it);
-			SchedEntityPtr_t pschd(new SchedEntity_t(papp, pawm, bd_id, metrics));
+	// AWMs evaluation (no binding)
+	awms = papp->WorkingModes();
+	for (awm_it = awms->begin(); awm_it != awms->end(); ++awm_it) {
+		AwmPtr_t const & pawm(*awm_it);
+		SchedEntityPtr_t pschd(new SchedEntity_t(papp, pawm, R_ID_NONE, 0.0));
 #ifdef CONFIG_BBQUE_SP_YAMS_PARALLEL
-			awm_thds.push_back(
-					std::thread(&YamsSchedPol::EvalWorkingMode, this, pschd)
-			);
+		awm_thds.push_back(
+				std::thread(&YamsSchedPol::EvalWorkingMode, this, pschd)
+		);
 #else
-			EvalWorkingMode(pschd);
+		EvalWorkingMode(pschd);
 #endif
-		}
 	}
 
 #ifdef CONFIG_BBQUE_SP_YAMS_PARALLEL
 	for_each(awm_thds.begin(), awm_thds.end(), mem_fn(&std::thread::join));
 	awm_thds.clear();
 #endif
-	logger->Debug("Evaluate: number of entities = %d", entities.size());
+	logger->Debug("Eval: number of entities = %d", entities.size());
 }
 
 void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
-	ExitCode_t result;
-	logger->Debug("Insert: %s ...metrics computing...", pschd->StrId());
+	std::vector<ResID_t>::iterator ids_it;
+	ResID_t bd_id;
+	float sc_value    = 0.0;
+	uint8_t mlog_len  = 0;
+	char mlog[255];
+	Timer comp_tmr;
 
 	// Skip if the application has been disabled/stopped in the meanwhile
 	if (pschd->papp->Disabled()) {
-		logger->Debug("Insert: %s disabled/stopped during schedule ordering",
+		logger->Debug("Eval: %s disabled/stopped during schedule ordering",
 				pschd->papp->StrId());
 		return;
 	}
 
-	// Bind the resources of the AWM to the current binding domain
-	result = BindResources(pschd);
-	if (result != YAMS_SUCCESS)
-		return;
-
-	// Metrics computation
-	Timer comp_tmr;
+	// Metrics computation start
 	YAMS_RESET_TIMING(comp_tmr);
-	AggregateContributes(pschd);
-	YAMS_GET_TIMING(coll_metrics, YAMS_METRICS_COMP_TIME, comp_tmr);
 
+	// Aggregate binding-independent scheduling contributions
+	for (uint i = 0; i < YAMS_AWM_SC_COUNT; ++i) {
+		GetSchedContribValue(pschd, sc_types[i], sc_value);
+		pschd->metrics += sc_value;
+		mlog_len += sprintf(mlog + mlog_len, "%c:%5.4f, ",
+					scm->GetString(sc_types[i])[0],	sc_value);
+	}
+	mlog[mlog_len-2] = '\0';
+	logger->Info("EvalAWM: %s metrics %s -> %5.4f",
+			pschd->StrId(),	mlog, pschd->metrics);
+
+#ifndef CONFIG_BBQUE_SP_COWS_BINDING
+	// Add binding-dependent scheduling contributions
+	ids_it = bindings.ids.begin();
+	for (; ids_it != bindings.ids.end(); ++ids_it) {
+		bd_id = *ids_it;
+		if (bindings.full[bd_id]) {
+			logger->Info("Eval: domain [%s%d] is full, skipping...",
+					bindings.domain.c_str(), bd_id);
+			continue;
+		}
+
+		// Evaluate the AWM resource binding
+		SchedEntityPtr_t pschd_bd(new SchedEntity_t(*pschd.get()));
+		pschd_bd->SetBindingID(bd_id);
+		EvalBinding(pschd_bd, sc_value);
+		pschd_bd->metrics += sc_value;
+
+		// Insert the SchedEntity in the scheduling list
+		sched_ul.lock();
+		entities.push_back(pschd_bd);
+		sched_ul.unlock();
+		logger->Notice("Eval: %s scheduling metrics = %1.4f [%d]",
+				pschd_bd->StrId(), pschd_bd->metrics, entities.size());
+	}
+#else
 	// Insert the SchedEntity in the scheduling list
 	sched_ul.lock();
 	entities.push_back(pschd);
-	logger->Debug("Insert: %s scheduling metrics: %1.3f [%d]",
+	logger->Notice("Eval: %s scheduling metrics = %1.4f [%d]",
 			pschd->StrId(), pschd->metrics, entities.size());
+#endif
+	YAMS_GET_TIMING(coll_metrics, YAMS_METRICS_COMP_TIME, comp_tmr);
 }
 
-void YamsSchedPol::AggregateContributes(SchedEntityPtr_t pschd) {
+void YamsSchedPol::GetSchedContribValue(
+		SchedEntityPtr_t pschd,
+		SchedContribManager::Type_t sc_type,
+		float & sc_value) {
 	SchedContribManager::ExitCode_t scm_ret;
 	SchedContrib::ExitCode_t sc_ret;
-	float sc_value;
-	char mlog[255];
-	uint8_t mlog_len = 0;
+	EvalEntity_t const & eval_ent(*pschd.get());
+	sc_value = 0.0;
+	Timer comp_tmr;
+	YAMS_RESET_TIMING(comp_tmr);
 
-	for (int i = 0; i < YAMS_SC_COUNT; ++i) {
-		// Timer
-		Timer comp_tmr;
-
-		sc_value = 0.0;
-		EvalEntity_t const & eval_ent(*pschd.get());
-		YAMS_RESET_TIMING(comp_tmr);
-
-		// Compute the single contribution
-		scm_ret = scm->GetIndex(sc_types[i], eval_ent, sc_value, sc_ret);
-		if (scm_ret != SchedContribManager::OK) {
-
-			logger->Error("Aggregate: [SC manager error:%d]", scm_ret);
-			if (scm_ret != SchedContribManager::SC_ERROR) {
-				YAMS_RESET_TIMING(comp_tmr);
-				continue;
-			}
-
-			// SchedContrib specific error handling
-			switch (sc_ret) {
-			case SchedContrib::SC_RSRC_NO_PE:
-				logger->Debug("Aggregate: No available PEs in {%s} %d",
-						bindings.domain.c_str(), pschd->bind_id);
-				bindings.full.Set(pschd->bind_id);
-				return;
-			default:
-				logger->Warn("Aggregate: Unable to schedule in {%s} %d [err:%d]",
-						bindings.domain.c_str(), pschd->bind_id, sc_ret);
-				YAMS_GET_TIMING(coll_mct_metrics, i, comp_tmr);
-				continue;
-			}
+	// Compute the single contribution
+	scm_ret = scm->GetIndex(sc_type, eval_ent, sc_value, sc_ret);
+	if (scm_ret != SchedContribManager::OK) {
+		logger->Error("SchedContrib: [SC manager error:%d]", scm_ret);
+		if (scm_ret != SchedContribManager::SC_ERROR) {
+			YAMS_RESET_TIMING(comp_tmr);
+			return;
 		}
-		YAMS_GET_TIMING(coll_mct_metrics, i, comp_tmr);
-		logger->Debug("Aggregate: back from index computation");
 
-		// Cumulate the contribution
-		pschd->metrics += sc_value;
-		mlog_len += sprintf(mlog + mlog_len, "%c:%5.4f, ",
-				scm->GetString(sc_types[i])[0],	sc_value);
+		// SchedContrib specific error handling
+		switch (sc_ret) {
+		case SchedContrib::SC_RSRC_NO_PE:
+			logger->Debug("SchedContrib: No available PEs in {%s} %d",
+					bindings.domain.c_str(), pschd->bind_id);
+			bindings.full.Set(pschd->bind_id);
+			return;
+		default:
+			logger->Warn("SchedContrib: Unable to schedule in {%s} %d [err:%d]",
+					bindings.domain.c_str(), pschd->bind_id, sc_ret);
+			YAMS_GET_TIMING(coll_mct_metrics, sc_type, comp_tmr);
+			return;
+		}
+	}
+	YAMS_GET_TIMING(coll_mct_metrics, sc_type, comp_tmr);
+	logger->Debug("SchedContrib: back from index computation");
+}
+
+YamsSchedPol::ExitCode_t YamsSchedPol::EvalBinding(
+		SchedEntityPtr_t pschd_bd,
+		float & value) {
+	ExitCode_t result;
+	float sc_value   = 0.0;
+	uint8_t mlog_len = 0;
+	char mlog[255];
+	logger->Info("EvalBD: =========== BINDING:'%s' ID[%2d ] ===========",
+			bindings.domain.c_str(), pschd_bd->bind_id);
+
+	// Bind the resources of the AWM to the given binding domain
+	result = BindResources(pschd_bd);
+	if (result != YAMS_SUCCESS) {
+		logger->Error("EvalBD: Resource binding failed [%d]", result);
+		return result;
 	}
 
+	// Aggregate binding-dependent scheduling contributions
+	value = 0.0;
+	for (uint i = YAMS_AWM_SC_COUNT; i < YAMS_SC_COUNT; ++i) {
+		GetSchedContribValue(pschd_bd, sc_types[i], sc_value);
+		value += sc_value;
+		mlog_len += sprintf(mlog + mlog_len, "%c:%5.4f, ",
+					scm->GetString(sc_types[i])[0],	sc_value);
+	}
 	mlog[mlog_len-2] = '\0';
-	logger->Notice("Aggregate: %s app-value: %s => %5.4f",
-			pschd->StrId(),	mlog, pschd->metrics);
+	logger->Info("EvalBD: %s metrics %s -> %5.4f",
+			pschd_bd->StrId(), mlog, value);
+	logger->Info("EvalBD: ================================================= ");
+
+	return YAMS_SUCCESS;
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(SchedEntityPtr_t pschd) {
