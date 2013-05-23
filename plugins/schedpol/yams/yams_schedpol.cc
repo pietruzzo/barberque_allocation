@@ -460,9 +460,8 @@ void YamsSchedPol::InsertWorkingModes(AppCPtr_t const & papp) {
 void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
 	std::vector<ResID_t>::iterator ids_it;
-	ResID_t bd_id;
 	float sc_value    = 0.0;
-	uint8_t mlog_len  = 0;
+	uint8_t mlog_len  = 2;
 	char mlog[255];
 	Timer comp_tmr;
 
@@ -489,6 +488,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 
 #ifndef CONFIG_BBQUE_SP_COWS_BINDING
 	// Add binding-dependent scheduling contributions
+	ResID_t bd_id;
 	ids_it = bindings.ids.begin();
 	for (; ids_it != bindings.ids.end(); ++ids_it) {
 		bd_id = *ids_it;
@@ -564,7 +564,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBinding(
 		float & value) {
 	ExitCode_t result;
 	float sc_value   = 0.0;
-	uint8_t mlog_len = 0;
+	uint8_t mlog_len = 2;
 	char mlog[255];
 	logger->Info("EvalBD: =========== BINDING:'%s' ID[%2d ] ===========",
 			bindings.domain.c_str(), pschd_bd->bind_id);
