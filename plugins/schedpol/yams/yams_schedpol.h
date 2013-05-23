@@ -183,6 +183,7 @@ private:
 	/** Set of scheduling contributions type used for the metrics */
 	static SchedContribManager::Type_t sc_types[YAMS_SC_COUNT];
 
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
 
 	/**Cows metrics*/
 	struct cowsSystemInfo{
@@ -209,6 +210,7 @@ private:
 		std::vector<float> flopsMetrics;
 	} cowsInfo;
 
+#endif
 
 	/** Collect information on binding domains */
 	BindingInfo_t bindings;

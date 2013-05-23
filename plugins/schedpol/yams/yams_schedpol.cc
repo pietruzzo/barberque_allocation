@@ -206,6 +206,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitBindingInfo() {
 YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	SchedContribPtr_t sc_recf;
 
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	// COWS: Vectors resizing depending on the number of binding domains
 	cowsInfo.boundnessSquaredSum.resize(bindings.num);
 	cowsInfo.boundnessSum.resize(bindings.num);
@@ -224,6 +225,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	// COWS: Reset the counters
 	CowsResetStatus();
 	logger->Info("COWS: Support enabled");
+#endif
 
 	// Set the view information into the metrics contribute
 	scm->SetViewInfo(sv, vtok);
@@ -353,9 +355,10 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 		if (CheckSkipConditions(pschd->papp))
 			continue;
 
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
 		// COWS: Find the best binding for the AWM of the Application
 		CowsSetOptBinding(pschd);
-
+#endif
 		// Send the schedule request
 		app_result = pschd->papp->ScheduleRequest(
 				pschd->pawm, vtok, pschd->bind_id);
@@ -364,8 +367,10 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 			logger->Debug("Selecting: %s rejected!", pschd->StrId());
 			continue;
 		}
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
 		//COWS: Update means and square means values
 		CowsUpdateMeans(pschd);
+#endif
 		if (!pschd->papp->Synching() || pschd->papp->Blocking()) {
 			logger->Debug("Selecting: [%s] state %s|%s", pschd->papp->StrId(),
 					Application::StateStr(pschd->papp->State()),
@@ -573,6 +578,7 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 	return false;
 }
 
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
 void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
 
 	float db = atoi(std::static_pointer_cast<PluginAttr_t>\
@@ -809,6 +815,7 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 			cowsInfo.candidatedValues[3]);
 	logger->Info("==========|          COWS: Done             |==========");
 }
+#endif // CONFIG_BBQUE_SP_COWS_BINDING
 
 } // namespace plugins
 
