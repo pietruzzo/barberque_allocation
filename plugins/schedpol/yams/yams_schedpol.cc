@@ -711,18 +711,17 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 		}
 		logger->Notice("COWS: Boundness variance @BD %d for %s: %3.2f",
 			      i + 1, psch->StrId(), cowsInfo.boundnessMetrics[i]);
+
+		logger->Info("COWS: Prefetching Sys-Wide info for bd %i", i);
+		cowsInfo.modifiedSums[0] += cowsInfo.stallsSum[i];
+		cowsInfo.modifiedSums[1] += cowsInfo.retiredSum[i];
+		cowsInfo.modifiedSums[2] += cowsInfo.flopSum[i];
 	}
 
 	if (cowsInfo.normStats[0] == 0) cowsInfo.normStats[0]++;
 }
 
 void YamsSchedPol::CowsSysWideMetrics() {
-	for (int i = 0; i < bindings.num; i++) {
-		cowsInfo.modifiedSums[0] += cowsInfo.stallsSum[i];
-		cowsInfo.modifiedSums[1] += cowsInfo.retiredSum[i];
-		cowsInfo.modifiedSums[2] += cowsInfo.flopSum[i];
-	}
-
 	// Update system mean: sumOf(BDmeans)/numberOfBDs
 	cowsInfo.modifiedSums[0] /= bindings.num;
 	cowsInfo.modifiedSums[1] /= bindings.num;
