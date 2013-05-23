@@ -788,6 +788,7 @@ void YamsSchedPol::CowsSysWideMetrics() {
 }
 
 void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
+	ExitCode_t result;
 	int preferredBD = 0;
 	float bestResult = 0;
 	float actualResult = 0;
@@ -843,7 +844,12 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 	}
 
 	// Set the binding ID
-	psch->bind_id = preferredBD;
+	psch->SetBindingID(preferredBD);
+	result = BindResources(psch);
+	if (result != YAMS_SUCCESS) {
+		logger->Error("COWS: Resource binding failed [%d]", result);
+	}
+
 	logger->Notice("COWS: selected id is: %d.", preferredBD);
 	logger->Notice("COWS: candidate values are: %3.2f, %3.2f, %3.2f, %3.2f"
 			".", cowsInfo.candidatedValues[0],
