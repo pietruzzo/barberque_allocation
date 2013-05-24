@@ -656,19 +656,22 @@ void YamsSchedPol::CowsUpdateMeans(SchedEntityPtr_t psch) {
 }
 
 void YamsSchedPol::CowsResetStatus() {
-	cowsInfo.boundnessSquaredSum.clear();
-	cowsInfo.boundnessSum.clear();
-	cowsInfo.stallsSum.clear();
-	cowsInfo.retiredSum.clear();
-	cowsInfo.flopSum.clear();
-	cowsInfo.bdLoad.clear();
-	cowsInfo.boundnessMetrics.clear();
-	cowsInfo.stallsMetrics.clear();
-	cowsInfo.retiredMetrics.clear();
-	cowsInfo.migrationMetrics.clear();
-	cowsInfo.flopsMetrics.clear();
-	cowsInfo.normStats.clear();
-	cowsInfo.modifiedSums.clear();
+
+	for (int i = 0; i < bindings.num ; i++){
+		cowsInfo.boundnessSquaredSum[i] = 0;
+		cowsInfo.boundnessSum[i] = 0;
+		cowsInfo.stallsSum[i] = 0;
+		cowsInfo.retiredSum[i] = 0;
+		cowsInfo.flopSum[i] = 0;
+		cowsInfo.bdLoad[i] = 0;
+		cowsInfo.boundnessMetrics[i] = 0;
+		cowsInfo.stallsMetrics[i] = 0;
+		cowsInfo.retiredMetrics[i] = 0;
+		cowsInfo.migrationMetrics[i] = 0;
+		cowsInfo.flopsMetrics[i] = 0;
+	}
+	for (int i = 0; i < 5 ; i++) cowsInfo.normStats[i] = 0;
+	for (int i = 0; i < 3 ; i++) cowsInfo.modifiedSums[i] = 0;
 	cowsInfo.bdTotalLoad = 0;
 }
 
