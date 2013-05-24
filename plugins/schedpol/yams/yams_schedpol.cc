@@ -223,6 +223,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	cowsInfo.retiredMetrics.resize(bindings.num);
 	cowsInfo.flopsMetrics.resize(bindings.num);
 	cowsInfo.migrationMetrics.resize(bindings.num);
+	cowsInfo.candidatedBindings.resize(bindings.num);
 	cowsInfo.candidatedValues.resize(4);
 	cowsInfo.normStats.resize(5);
 	cowsInfo.modifiedSums.resize(3);
@@ -363,7 +364,35 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 		// COWS: Find the best binding for the AWM of the Application
 		CowsSetOptBinding(pschd);
-#endif
+
+		for (int i = 0; i < bindings.num; i++){
+			//Setting bd id
+			pschd->SetBindingID(bindings.ids[cowsInfo.candidatedBindings[i]]);
+			ExitCode_t myresult = BindResources(pschd);
+			if (myresult != YAMS_SUCCESS) {
+				logger->Error("COWS: Resource binding failed [%d]", myresult);
+				break;
+			}
+			logger->Info("COWS_DEBUG: trying to schedule option #%d",
+				i + 1);
+			// Send the schedule request
+			app_result = pschd->papp->ScheduleRequest(pschd->pawm,
+				vtok, pschd->bind_id);
+			logger->Debug("Selecting: %s schedule requested",
+				pschd->StrId());
+			if (app_result == ApplicationStatusIF::APP_WM_ACCEPTED){
+				logger->Info("COWS_DEBUG: scheduling OK");
+				//COWS: Update means and square means values
+				CowsUpdateMeans(pschd);
+				break;
+			}
+		}
+
+		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
+			logger->Info("All options rejected!", pschd->StrId());
+			continue;
+		}
+#else
 		// Send the schedule request
 		app_result = pschd->papp->ScheduleRequest(
 				pschd->pawm, vtok, pschd->bind_id);
@@ -372,10 +401,8 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 			logger->Debug("Selecting: %s rejected!", pschd->StrId());
 			continue;
 		}
-#ifdef CONFIG_BBQUE_SP_COWS_BINDING
-		//COWS: Update means and square means values
-		CowsUpdateMeans(pschd);
 #endif
+
 		if (!pschd->papp->Synching() || pschd->papp->Blocking()) {
 			logger->Debug("Selecting: [%s] state %s|%s", pschd->papp->StrId(),
 					Application::StateStr(pschd->papp->State()),
@@ -618,6 +645,16 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
+	logger->Info("COWS: clearing previous running info");
+	cowsInfo.normStats[0] = 0;
+	cowsInfo.normStats[1] = 0;
+	cowsInfo.normStats[2] = 0;
+	cowsInfo.normStats[3] = 0;
+	cowsInfo.normStats[4] = 0;
+
+	for (int i = 0; i < bindings.num; i++) {
+		cowsInfo.candidatedBindings[i] = i;
+	}
 
 	float db = atoi(std::static_pointer_cast<PluginAttr_t>\
 		(psch->pawm->GetAttribute("cows", "boundness"))->str.c_str());
@@ -632,9 +669,6 @@ void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
 	CowsComputeBoundness(psch);
 	CowsSysWideMetrics();
 	CowsAggregateResults(psch);
-	logger->Notice("COWS: scheduled SchedEnt on binding domain %d "
-		  "with other %d apps",
-		  psch->bind_id, cowsInfo.bdLoad[psch->bind_id]);
 }
 
 void YamsSchedPol::CowsUpdateMeans(SchedEntityPtr_t psch) {
@@ -815,10 +849,9 @@ void YamsSchedPol::CowsSysWideMetrics() {
 }
 
 void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
-	ExitCode_t result;
-	int preferredBD = 0;
-	float bestResult = 0;
-	float actualResult = 0;
+	int index = 0;
+	float util = 0;
+	std::vector<float> results;
 
 	logger->Info("========|  COWS: Aggregating results ... |========");
 
@@ -850,37 +883,38 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 	logger->Notice(" ======================================================"
 			"==================");
 
-	// Calculating the best BD to schedule the app in
-	bestResult = 3 * cowsInfo.boundnessMetrics[preferredBD]
-			- cowsInfo.stallsMetrics[preferredBD]
-			- cowsInfo.retiredMetrics[preferredBD]
-			- cowsInfo.flopsMetrics[preferredBD];
-
-	// The BDs are counted from 1, while my vectors' components are counted
-	// from 0. I correcting that by setting the default preferred BD to 1
-	preferredBD = 1;
+	results.resize(bindings.num);
 
 	for (int i = 0; i < bindings.num; i++) {
-		actualResult = 3 * cowsInfo.boundnessMetrics[i]
-				- cowsInfo.stallsMetrics[i]
-				- cowsInfo.retiredMetrics[i]
-				- cowsInfo.flopsMetrics[i];
-		if (actualResult > bestResult) {
-			preferredBD = i + 1;
-			bestResult  = actualResult;
+		// Calculating the best BD to schedule the app in
+		results[i] = 4 * cowsInfo.boundnessMetrics[i]
+			- cowsInfo.stallsMetrics[i]
+			- cowsInfo.retiredMetrics[i]
+			- cowsInfo.flopsMetrics[i]
+			+ 2 * cowsInfo.migrationMetrics[i];
+	}
+
+	for (int i = 0; i < bindings.num; i++) {
+		logger->Notice("COWS: result & index [%d] = %f - %d", i, results[i], cowsInfo.candidatedBindings[i]);
+	}
+
+	for (int i = 0; i < bindings.num - 1; i++) {
+		for (int j = i+1; j < bindings.num; j++) {
+			if (results[j] > results[i]) {
+				index = cowsInfo.candidatedBindings[j];
+				util = results[j];
+				cowsInfo.candidatedBindings[j] = cowsInfo.candidatedBindings[i];
+				results[j] = results[i];
+				cowsInfo.candidatedBindings[i] = index;
+				results[i] = util;
+			}
 		}
-		logger->Info("COWS: Best result= %3.2f. BD %d result: %3.2f",
-				bestResult, i + 1, actualResult);
 	}
 
-	// Set the binding ID
-	psch->SetBindingID(preferredBD);
-	result = BindResources(psch);
-	if (result != YAMS_SUCCESS) {
-		logger->Error("COWS: Resource binding failed [%d]", result);
+	for (int i = 0; i < bindings.num; i++) {
+		logger->Notice("COWS: ordered BDs[%d] = %d", i, cowsInfo.candidatedBindings[i]);
 	}
 
-	logger->Notice("COWS: selected id is: %d.", preferredBD);
 	logger->Notice("COWS: candidate values are: %3.2f, %3.2f, %3.2f, %3.2f"
 			".", cowsInfo.candidatedValues[0],
 			cowsInfo.candidatedValues[1],

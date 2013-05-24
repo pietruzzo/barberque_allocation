@@ -203,6 +203,7 @@ private:
 		int bdTotalLoad;
 		/*Metrics of the SchedEnt under analysis */
 		std::vector<float> candidatedValues;
+		std::vector<int> candidatedBindings;
 		/*statistic info used to normalize the metrics */
 		std::vector<float> normStats;
 		/*Total metrics allocated on the system during AWM analysis */
