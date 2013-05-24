@@ -383,7 +383,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 			if (app_result == ApplicationStatusIF::APP_WM_ACCEPTED){
 				logger->Info("COWS_DEBUG: scheduling OK");
 				//COWS: Update means and square means values
-				CowsUpdateMeans(pschd);
+				CowsUpdateMeans(cowsInfo.candidatedBindings[i]);
 				break;
 			}
 		}
@@ -671,21 +671,21 @@ void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
 	CowsAggregateResults(psch);
 }
 
-void YamsSchedPol::CowsUpdateMeans(SchedEntityPtr_t psch) {
+void YamsSchedPol::CowsUpdateMeans(int logic_index) {
 	//A new application has been scheduled
-	cowsInfo.bdLoad[psch->bind_id - 1]++;
+	cowsInfo.bdLoad[logic_index]++;
 	cowsInfo.bdTotalLoad++;
 
 	//Applying the candidate SchedEnt statistics
-	cowsInfo.boundnessSquaredSum[psch->bind_id - 1] +=
+	cowsInfo.boundnessSquaredSum[logic_index] +=
 		pow(cowsInfo.candidatedValues[0],2);
-	cowsInfo.boundnessSum[psch->bind_id - 1] +=
+	cowsInfo.boundnessSum[logic_index] +=
 		cowsInfo.candidatedValues[0];
-	cowsInfo.stallsSum[psch->bind_id - 1] +=
+	cowsInfo.stallsSum[logic_index] +=
 		cowsInfo.candidatedValues[1];
-	cowsInfo.retiredSum[psch->bind_id - 1] +=
+	cowsInfo.retiredSum[logic_index] +=
 		cowsInfo.candidatedValues[2];
-	cowsInfo.flopSum[psch->bind_id - 1] +=
+	cowsInfo.flopSum[logic_index] +=
 		cowsInfo.candidatedValues[3];
 }
 
@@ -754,17 +754,17 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 			  cowsInfo.normStats[0] += cowsInfo.boundnessMetrics[i];
 		}
 		logger->Notice("COWS: Boundness variance @BD %d for %s: %3.2f",
-			      i + 1, psch->StrId(), cowsInfo.boundnessMetrics[i]);
+		  bindings.ids[i], psch->StrId(), cowsInfo.boundnessMetrics[i]);
 
-		logger->Info("COWS: Prefetching Sys-Wide info for bd %i", i);
+		logger->Info("COWS: Prefetching Sys-Wide info for bd %i",
+								bindings.ids[i]);
 		cowsInfo.modifiedSums[0] += cowsInfo.stallsSum[i];
 		cowsInfo.modifiedSums[1] += cowsInfo.retiredSum[i];
 		cowsInfo.modifiedSums[2] += cowsInfo.flopSum[i];
 
-		logger->Info("COWS: Prefetching Migration info for bd %i", i);
-
-		SchedEntityPtr_t pschd_bd(new SchedEntity_t(*psch.get()));
-		pschd_bd->SetBindingID(i + 1);
+		logger->Info("COWS: Prefetching Reconfig info for bd %i",
+							       bindings.ids[i]);
+		psch->SetBindingID(bindings.ids[i]);
 		result = BindResources(psch);
 		if (result != YAMS_SUCCESS) {
 			logger->Error("COWS: Resource binding failed [%d]", result);
@@ -772,7 +772,7 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 
 		// Aggregate binding-dependent scheduling contributions
 		value = 0.0;
-		GetSchedContribValue(pschd_bd, sc_types[SchedContribManager::MIGRATION], value);
+		GetSchedContribValue(psch, sc_types[SchedContribManager::MIGRATION], value);
 		logger->Info("----- Migration value: %f", value);
 		cowsInfo.migrationMetrics[i] = value;
 		cowsInfo.normStats[4] += value;
@@ -802,7 +802,8 @@ void YamsSchedPol::CowsSysWideMetrics() {
 	// standard deviation
 	for (int i = 0; i < bindings.num; i++) {
 		logger->Info("");
-		logger->Info("COWS: Computing sys metric for BD %d...", i+1);
+		logger->Info("COWS: Computing sys metric for BD %d...",
+							       bindings.ids[i]);
 
 		// Calculating standard deviations (squared). Again, if I'm on BD
 		// i, the mean has changed
@@ -835,11 +836,11 @@ void YamsSchedPol::CowsSysWideMetrics() {
 		}
 
 		logger->Notice("COWS: Total stalls quadratic deviation in BD"
-				"%d: %3.2f", i + 1, cowsInfo.stallsMetrics[i]);
+				"%d: %3.2f", bindings.ids[i], cowsInfo.stallsMetrics[i]);
 		logger->Notice("COWS: Total ret. instructions deviation in BD"
-				"%d: %3.2f", i + 1, cowsInfo.retiredMetrics[i]);
+				"%d: %3.2f", bindings.ids[i], cowsInfo.retiredMetrics[i]);
 		logger->Notice("COWS: Total X87 operations deviation in BD"
-				"%d: %3.2f", i + 1, cowsInfo.flopsMetrics[i]);
+				"%d: %3.2f", bindings.ids[i], cowsInfo.flopsMetrics[i]);
 		logger->Info("COWS: Proceeding with next BD, if any ...");
 
 		cowsInfo.normStats[1] += cowsInfo.stallsMetrics[i];
@@ -873,7 +874,7 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 
 		logger->Notice("| BD %d | Bound: %3.2f | Stalls:%3.2f | "
 				"Ret:%3.2f | Flops:%3.2f | Migrat:%3.2f |",
-				i+1,
+				bindings.ids[i],
 				cowsInfo.boundnessMetrics[i],
 				cowsInfo.stallsMetrics[i],
 				cowsInfo.retiredMetrics[i],
@@ -895,7 +896,8 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 	}
 
 	for (int i = 0; i < bindings.num; i++) {
-		logger->Notice("COWS: result & index [%d] = %f - %d", i, results[i], cowsInfo.candidatedBindings[i]);
+		logger->Notice("COWS: result & index [%d] = %f - %d", i,
+				results[i], cowsInfo.candidatedBindings[i]);
 	}
 
 	for (int i = 0; i < bindings.num - 1; i++) {
@@ -903,7 +905,8 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 			if (results[j] > results[i]) {
 				index = cowsInfo.candidatedBindings[j];
 				util = results[j];
-				cowsInfo.candidatedBindings[j] = cowsInfo.candidatedBindings[i];
+				cowsInfo.candidatedBindings[j] =
+						 cowsInfo.candidatedBindings[i];
 				results[j] = results[i];
 				cowsInfo.candidatedBindings[i] = index;
 				results[i] = util;
@@ -911,8 +914,10 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 		}
 	}
 
+	logger->Notice("COWS BD ordering:");
 	for (int i = 0; i < bindings.num; i++) {
-		logger->Notice("COWS: ordered BDs[%d] = %d", i, cowsInfo.candidatedBindings[i]);
+		logger->Notice("--- %d# = %d", i + 1,
+				  bindings.ids[cowsInfo.candidatedBindings[i]]);
 	}
 
 	logger->Notice("COWS: candidate values are: %3.2f, %3.2f, %3.2f, %3.2f"

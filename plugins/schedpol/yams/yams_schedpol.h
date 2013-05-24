@@ -393,6 +393,7 @@ private:
 	 *
 	 * @param pschd The scheduling entity to use to update
 	 */
+	void CowsUpdateMeans(int logic_index);
 	void CowsUpdateMeans(SchedEntityPtr_t pschd);
 
 	/**
