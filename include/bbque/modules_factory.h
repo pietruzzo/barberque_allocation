@@ -48,11 +48,6 @@ class ModulesFactory {
 public:
 
 	/**
-	 * Get a reference to the (singleton) module factory
-	 */
-	static ModulesFactory & GetInstance();
-
-	/**
 	 * Get a reference to a module implementing the TestIF interface
 	 */
 	static plugins::TestIF * GetTestModule(

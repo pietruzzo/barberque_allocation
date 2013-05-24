@@ -26,23 +26,12 @@ namespace bu = bbque::utils;
 
 namespace bbque {
 
-ModulesFactory::ModulesFactory() {
-}
-
-ModulesFactory & ModulesFactory::GetInstance() {
-	static ModulesFactory instance;
-	return instance;
-}
-
-
 /**
  * Specialize the ObjectAdapter template for Test plugins
  */
 typedef bp::ObjectAdapter<bp::TestAdapter, C_Test> Test_ObjectAdapter;
 
 plugins::TestIF * ModulesFactory::GetTestModule(const std::string & id) {
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
 	// Build a object adapter for the TestModule
 	Test_ObjectAdapter toa;
 
@@ -62,8 +51,6 @@ plugins::LoggerIF * ModulesFactory::GetLoggerModule(
 		std::string const & id) {
 	std::shared_ptr<bu::ConsoleLogger> logger;
 
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
 	// Build a object adapter for the Logger
 	Logger_ObjectAdapter loa;
 
@@ -91,9 +78,6 @@ plugins::RPCChannelIF * ModulesFactory::GetRPCChannelModule(
 plugins::RecipeLoaderIF * ModulesFactory::GetRecipeLoaderModule(
     std::string const & id) {
 
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
-
 	// RecipeLoader is just implemented in C++ thus it doesn't
 	// require a real ObjectAdapter
 	void * module = bp::PluginManager::GetInstance().
@@ -105,9 +89,6 @@ plugins::RecipeLoaderIF * ModulesFactory::GetRecipeLoaderModule(
 plugins::SchedulerPolicyIF * ModulesFactory::GetSchedulerPolicyModule(
 		std::string const & id) {
 
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
-
 	// SchedulerPolicy is just implemented in C++ thus it doesn't
 	// require a real ObjectAdapter
 	void * module = bp::PluginManager::GetInstance().
@@ -118,9 +99,6 @@ plugins::SchedulerPolicyIF * ModulesFactory::GetSchedulerPolicyModule(
 
 plugins::SynchronizationPolicyIF * ModulesFactory::GetSynchronizationPolicyModule(
 		std::string const & id) {
-
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
 
 	// SchedulerPolicy is just implemented in C++ thus it doesn't
 	// require a real ObjectAdapter
