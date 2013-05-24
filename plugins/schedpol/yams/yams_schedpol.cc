@@ -222,8 +222,9 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	cowsInfo.stallsMetrics.resize(bindings.num);
 	cowsInfo.retiredMetrics.resize(bindings.num);
 	cowsInfo.flopsMetrics.resize(bindings.num);
+	cowsInfo.migrationMetrics.resize(bindings.num);
 	cowsInfo.candidatedValues.resize(4);
-	cowsInfo.normStats.resize(4);
+	cowsInfo.normStats.resize(5);
 	cowsInfo.modifiedSums.resize(3);
 
 	// COWS: Reset the counters
@@ -664,6 +665,7 @@ void YamsSchedPol::CowsResetStatus() {
 	cowsInfo.boundnessMetrics.clear();
 	cowsInfo.stallsMetrics.clear();
 	cowsInfo.retiredMetrics.clear();
+	cowsInfo.migrationMetrics.clear();
 	cowsInfo.flopsMetrics.clear();
 	cowsInfo.normStats.clear();
 	cowsInfo.modifiedSums.clear();
@@ -685,7 +687,12 @@ void YamsSchedPol::CowsApplyRecipeValues(
 }
 
 void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
+	float value;
+	ExitCode_t result;
+
 	logger->Info("==============| Boundness computing.. |===============");
+
+	logger->Info("COWS: %d binding domain(s) found", bindings.num);
 
 	// Boundness computation. Compute the delta-variance for each BD
 	for (int i = 0; i < bindings.num; i++) {
@@ -716,9 +723,27 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 		cowsInfo.modifiedSums[0] += cowsInfo.stallsSum[i];
 		cowsInfo.modifiedSums[1] += cowsInfo.retiredSum[i];
 		cowsInfo.modifiedSums[2] += cowsInfo.flopSum[i];
-	}
 
+		logger->Info("COWS: Prefetching Migration info for bd %i", i);
+
+		SchedEntityPtr_t pschd_bd(new SchedEntity_t(*psch.get()));
+		pschd_bd->SetBindingID(i + 1);
+		result = BindResources(psch);
+		if (result != YAMS_SUCCESS) {
+			logger->Error("COWS: Resource binding failed [%d]", result);
+		}
+
+		// Aggregate binding-dependent scheduling contributions
+		value = 0.0;
+		GetSchedContribValue(pschd_bd, sc_types[SchedContribManager::MIGRATION], value);
+		logger->Info("----- Migration value: %f", value);
+		cowsInfo.migrationMetrics[i] = value;
+		cowsInfo.normStats[4] += value;
+
+	}
 	if (cowsInfo.normStats[0] == 0) cowsInfo.normStats[0]++;
+	if (cowsInfo.normStats[4] == 0) cowsInfo.normStats[4]++;
+	logger->Info("Total migration denom: %f", cowsInfo.normStats[4]);
 }
 
 void YamsSchedPol::CowsSysWideMetrics() {
@@ -796,11 +821,12 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 
 	// Normalizing
 	logger->Notice(" ======================================================"
-			"============");
+			"==================");
 	for (int i = 0; i < bindings.num; i++) {
 		cowsInfo.stallsMetrics[i] /= cowsInfo.normStats[1];
 		cowsInfo.retiredMetrics[i] /= cowsInfo.normStats[2];
 		cowsInfo.flopsMetrics[i] /= cowsInfo.normStats[3];
+		cowsInfo.migrationMetrics[i] /= cowsInfo.normStats[4];
 
 		if(cowsInfo.boundnessMetrics[i] < 0) {
 			cowsInfo.boundnessMetrics[i] = 0;
@@ -809,15 +835,17 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 			cowsInfo.boundnessMetrics[i] /= cowsInfo.normStats[0];
 		}
 
-		logger->Notice("| BD %d | Boundness: %3.2f | Stalls:%3.2f | "
-				"Retired:%3.2f | Flops:%3.2f |", i+1,
+		logger->Notice("| BD %d | Bound: %3.2f | Stalls:%3.2f | "
+				"Ret:%3.2f | Flops:%3.2f | Migrat:%3.2f |",
+				i+1,
 				cowsInfo.boundnessMetrics[i],
 				cowsInfo.stallsMetrics[i],
 				cowsInfo.retiredMetrics[i],
-				cowsInfo.flopsMetrics[i]);
+				cowsInfo.flopsMetrics[i],
+				cowsInfo.migrationMetrics[i]);
 	}
 	logger->Notice(" ======================================================"
-			"============");
+			"==================");
 
 	// Calculating the best BD to schedule the app in
 	bestResult = 3 * cowsInfo.boundnessMetrics[preferredBD]

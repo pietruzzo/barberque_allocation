@@ -212,6 +212,7 @@ private:
 		std::vector<float> stallsMetrics;
 		std::vector<float> retiredMetrics;
 		std::vector<float> flopsMetrics;
+		std::vector<float> migrationMetrics;
 	} cowsInfo;
 
 #endif
