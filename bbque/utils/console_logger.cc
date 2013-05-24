@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bbque/console_logger.h"
+#include "bbque/utils/console_logger.h"
 
 #include <cstdarg>
 #include <cstdio>
 
 #define LOG_MAX_SENTENCE 256
 
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
 
 std::shared_ptr<ConsoleLogger> ConsoleLogger::GetInstance(void) {
@@ -117,7 +117,7 @@ void ConsoleLogger::Fatal(const char *fmt, ...) {
 	fprintf(stderr, "[FAT] %s\n", str);
 }
 
-} // namespace plugins
+} // namespace utils
 
 } // namespace bbque
 

@@ -19,9 +19,10 @@
 #include "bbque/plugin_manager.h"
 #include "bbque/plugins/object_adapter.h"
 
-#include "bbque/console_logger.h"
+#include "bbque/utils/console_logger.h"
 
 namespace bp = bbque::plugins;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -59,7 +60,7 @@ typedef bp::ObjectAdapter<bp::LoggerAdapter, C_Logger> Logger_ObjectAdapter;
 plugins::LoggerIF * ModulesFactory::GetLoggerModule(
 		plugins::LoggerIF::Configuration const & data,
 		std::string const & id) {
-	std::shared_ptr<bp::ConsoleLogger> logger;
+	std::shared_ptr<bu::ConsoleLogger> logger;
 
 	// Ensure ModulesFactory initialization
 	ModulesFactory::GetInstance();
@@ -73,7 +74,7 @@ plugins::LoggerIF * ModulesFactory::GetLoggerModule(
 	// successifully load, we fall-back to a dummy (console based) logger
 	// implementation.
 	if (!module) {
-		logger = bp::ConsoleLogger::GetInstance();
+		logger = bu::ConsoleLogger::GetInstance();
 		logger->Error("Logger module loading/configuration FAILED");
 		logger->Warn("Using (dummy) console logger");
 		module = (void*)(logger.get());

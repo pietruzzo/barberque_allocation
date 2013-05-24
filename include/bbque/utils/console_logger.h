@@ -15,15 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_CONSOLE_LOGGER_H_
-#define BBQUE_CONSOLE_LOGGER_H_
+#ifndef BBQUE_UTILS_CONSOLE_LOGGER_H_
+#define BBQUE_UTILS_CONSOLE_LOGGER_H_
 
 #include "bbque/plugins/logger.h"
 
 #include <memory>
 #include <cstdint>
 
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
 /**
  * @brief The basic class for each Barbeque component
@@ -31,7 +31,7 @@ namespace bbque { namespace plugins {
  * This defines a console based logger to be used for logging if a more
  * advanced logger module is not available
  */
-class ConsoleLogger : public LoggerIF {
+class ConsoleLogger : public bbque::plugins::LoggerIF {
 
 public:
 
@@ -97,8 +97,8 @@ public:
 
 };
 
-} // namespace plugins
+} // namespace utils
 
 } // namespace bbque
 
-#endif // BBQUE_CONSOLE_LOGGER_H_
+#endif // BBQUE_UTILS_CONSOLE_LOGGER_H_

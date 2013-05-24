@@ -80,7 +80,7 @@ endif (CONFIG_TARGET_ANDROID)
 
 
 # Add "barbeque" target binary
-set (BARBEQUE_SRC barbeque version object configuration_manager console_logger)
+set (BARBEQUE_SRC barbeque version object configuration_manager)
 set (BARBEQUE_SRC platform_services dynamic_library ${BARBEQUE_SRC})
 set (BARBEQUE_SRC plugin_manager modules_factory ${BARBEQUE_SRC})
 set (BARBEQUE_SRC resource_manager application_manager ${BARBEQUE_SRC})
