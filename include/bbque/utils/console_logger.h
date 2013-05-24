@@ -36,9 +36,10 @@ class ConsoleLogger : public bbque::plugins::LoggerIF {
 public:
 
 	/**
-	 * Return a singleton instance of the console logger
+	 * Build a new configured console logger
 	 */
-	static std::shared_ptr<ConsoleLogger> GetInstance(void);
+	ConsoleLogger(plugins::LoggerIF::Configuration const & data,
+			std::string const & id);
 
 	/**
 	 *

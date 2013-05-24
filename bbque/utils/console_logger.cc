@@ -25,14 +25,9 @@
 namespace bbque { namespace utils {
 
 
-std::shared_ptr<ConsoleLogger> ConsoleLogger::GetInstance(void) {
-	static std::shared_ptr<ConsoleLogger> logger;
+ConsoleLogger::ConsoleLogger(plugins::LoggerIF::Configuration const & data,
+				std::string const & id) {
 
-	if (logger)
-		return logger;
-
-	logger = std::shared_ptr<ConsoleLogger>(new ConsoleLogger);
-	return logger;
 }
 
 //----- Logger plugin interface

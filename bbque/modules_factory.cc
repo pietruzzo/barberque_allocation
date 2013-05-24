@@ -49,7 +49,7 @@ typedef bp::ObjectAdapter<bp::LoggerAdapter, C_Logger> Logger_ObjectAdapter;
 plugins::LoggerIF * ModulesFactory::GetLoggerModule(
 		plugins::LoggerIF::Configuration const & data,
 		std::string const & id) {
-	std::shared_ptr<bu::ConsoleLogger> logger;
+	bu::ConsoleLogger *logger = NULL;
 
 	// Build a object adapter for the Logger
 	Logger_ObjectAdapter loa;
@@ -61,10 +61,10 @@ plugins::LoggerIF * ModulesFactory::GetLoggerModule(
 	// successifully load, we fall-back to a dummy (console based) logger
 	// implementation.
 	if (!module) {
-		logger = bu::ConsoleLogger::GetInstance();
+		logger = new bu::ConsoleLogger(data, id);
 		logger->Error("Logger module loading/configuration FAILED");
 		logger->Warn("Using (dummy) console logger");
-		module = (void*)(logger.get());
+		module = (void*)(logger);
 	}
 
 	return (plugins::LoggerIF *) module;
