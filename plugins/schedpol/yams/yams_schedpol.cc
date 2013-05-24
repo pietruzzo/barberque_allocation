@@ -224,9 +224,9 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	cowsInfo.flopsMetrics.resize(bindings.num);
 	cowsInfo.migrationMetrics.resize(bindings.num);
 	cowsInfo.candidatedBindings.resize(bindings.num);
-	cowsInfo.candidatedValues.resize(4);
-	cowsInfo.normStats.resize(5);
-	cowsInfo.modifiedSums.resize(3);
+	cowsInfo.candidatedValues.resize(COWS_RECIPE_METRICS);
+	cowsInfo.normStats.resize(COWS_NORMALIZATION_VALUES);
+	cowsInfo.modifiedSums.resize(COWS_SYSWIDE_METRICS);
 
 	// COWS: Reset the counters
 	CowsResetStatus();
@@ -704,8 +704,10 @@ void YamsSchedPol::CowsResetStatus() {
 		cowsInfo.migrationMetrics[i] = 0;
 		cowsInfo.flopsMetrics[i] = 0;
 	}
-	for (int i = 0; i < 5 ; i++) cowsInfo.normStats[i] = 0;
-	for (int i = 0; i < 3 ; i++) cowsInfo.modifiedSums[i] = 0;
+	for (int i = 0; i < COWS_NORMALIZATION_VALUES ; i++) 
+						cowsInfo.normStats[i] = 0;
+	for (int i = 0; i < COWS_SYSWIDE_METRICS ; i++) 
+						cowsInfo.modifiedSums[i] = 0;
 	cowsInfo.bdTotalLoad = 0;
 }
 
