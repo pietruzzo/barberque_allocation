@@ -238,7 +238,6 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	cowsInfo.retiredMetrics.resize(bindings.num);
 	cowsInfo.flopsMetrics.resize(bindings.num);
 	cowsInfo.migrationMetrics.resize(bindings.num);
-	cowsInfo.candidatedBindings.resize(bindings.num);
 	cowsInfo.candidatedValues.resize(COWS_RECIPE_METRICS);
 	cowsInfo.normStats.resize(COWS_NORMALIZATION_VALUES);
 	cowsInfo.modifiedSums.resize(COWS_SYSWIDE_METRICS);
@@ -381,27 +380,30 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 		// COWS: Find the best binding for the AWM of the Application
 		CowsSetOptBinding(pschd);
 
-		for (int i = 0; i < bindings.num; i++){
+		std::multimap<float,int>::reverse_iterator rit;
+		for ( rit = cowsInfo.orderedBDs.rbegin();
+				rit != cowsInfo.orderedBDs.rend(); ++rit) {
 			//Setting bd id
 			pschd->SetBindingID(
-				  bindings.ids[cowsInfo.candidatedBindings[i]]);
+				  bindings.ids[(*rit).second]);
 			ExitCode_t myresult = BindResources(pschd);
 			if (myresult != YAMS_SUCCESS) {
 				logger->Error("COWS: Resource binding failed ["
 							       "%d]", myresult);
 				break;
 			}
-			logger->Info("COWS_DEBUG: trying to schedule option #%d",
-				i + 1);
+			logger->Info("COWS: trying scheduling on BD #%d",
+				bindings.ids[(*rit).second]);
+			logger->Info("Value: %f", (*rit).first);
 			// Send the schedule request
 			app_result = pschd->papp->ScheduleRequest(pschd->pawm,
 				vtok, pschd->bind_id);
 			logger->Debug("Selecting: %s schedule requested",
 				pschd->StrId());
 			if (app_result == ApplicationStatusIF::APP_WM_ACCEPTED){
-				logger->Info("COWS_DEBUG: scheduling OK");
+				logger->Info("COWS: scheduling OK");
 				//COWS: Update means and square means values
-				CowsUpdateMeans(cowsInfo.candidatedBindings[i]);
+				CowsUpdateMeans((*rit).second);
 				break;
 			}
 		}
@@ -665,12 +667,9 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
 	logger->Info("COWS: clearing previous running info");
 
+	cowsInfo.orderedBDs.clear();
 	for (int i = 0; i < COWS_NORMALIZATION_VALUES; i++) {
 		cowsInfo.normStats[i] = 0;
-	}
-
-	for (int i = 0; i < bindings.num; i++) {
-		cowsInfo.candidatedBindings[i] = i;
 	}
 
 	float db = atoi(std::static_pointer_cast<PluginAttr_t>\
@@ -775,6 +774,10 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 			  cowsInfo.normStats[COWS_LLCM_METRIC] +=
 						   cowsInfo.boundnessMetrics[i];
 		}
+		else {
+			cowsInfo.boundnessMetrics[i] = 1;
+			cowsInfo.normStats[COWS_LLCM_METRIC] ++;
+		}
 		logger->Notice("COWS: Boundness variance @BD %d for %s: %3.2f",
 		  bindings.ids[i], psch->StrId(), cowsInfo.boundnessMetrics[i]);
 
@@ -873,9 +876,8 @@ void YamsSchedPol::CowsSysWideMetrics() {
 }
 
 void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
-	int index = 0;
-	float util = 0;
-	std::vector<float> results;
+
+	float result = 0.0;
 
 	logger->Info("========|  COWS: Aggregating results ... |========");
 
@@ -907,11 +909,9 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 	logger->Info(" ======================================================"
 			"==================");
 
-	results.resize(bindings.num);
-
 	for (int i = 0; i < bindings.num; i++) {
 		// Calculating the best BD to schedule the app in
-		results[i] =
+		result =
 		// (W1*BOUNDNESS) - [W2*(ST + RET + FLOPS)] + (W3*MIGRATION)
 		    cowsInfo.metricsWeights[COWS_BOUNDNESS_WEIGHT] *
 				cowsInfo.boundnessMetrics[i]
@@ -921,28 +921,16 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 				cowsInfo.flopsMetrics[i] )
 		  + cowsInfo.metricsWeights[COWS_MIGRATION_WEIGHT] *
 				cowsInfo.migrationMetrics[i];
-	}
 
-	for (int i = 0; i < bindings.num - 1; i++) {
-		for (int j = i+1; j < bindings.num; j++) {
-			if (results[j] > results[i]) {
-				index = cowsInfo.candidatedBindings[j];
-				util = results[j];
-				cowsInfo.candidatedBindings[j] =
-						 cowsInfo.candidatedBindings[i];
-				results[j] = results[i];
-				cowsInfo.candidatedBindings[i] = index;
-				results[i] = util;
-			}
-		}
+		cowsInfo.orderedBDs.insert( std::pair<float,int>(result,i) );
 	}
 
 	logger->Info("COWS BD ordering:");
-	for (int i = 0; i < bindings.num; i++) {
-		logger->Notice("--- %d# = BD: %d, Value: %f", i + 1,
-				  bindings.ids[cowsInfo.candidatedBindings[i]],
-				  results[i]);
-	}
+	std::multimap<float,int>::reverse_iterator rit;
+	for (rit = cowsInfo.orderedBDs.rbegin();
+		rit != cowsInfo.orderedBDs.rend(); ++rit)
+		logger->Info("--- BD: %d, Value: %f",
+				bindings.ids[(*rit).second], (*rit).first);
 
 	logger->Notice("COWS: candidate values are: %3.2f, %3.2f, %3.2f, %3.2f"
 			".", cowsInfo.candidatedValues[COWS_LLCM_METRIC],
