@@ -366,7 +366,8 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 	Application::ExitCode_t app_result;
 	SchedEntityList_t::iterator se_it(entities.begin());
 	SchedEntityList_t::iterator end_se(entities.end());
-	logger->Debug("=================| Scheduling entities |=================");
+	logger->Debug("=================| Scheduling entities |================"
+									   "=");
 
 	// Pick the entity and set the new AWM
 	for (; se_it != end_se; ++se_it) {
@@ -382,10 +383,12 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 
 		for (int i = 0; i < bindings.num; i++){
 			//Setting bd id
-			pschd->SetBindingID(bindings.ids[cowsInfo.candidatedBindings[i]]);
+			pschd->SetBindingID(
+				  bindings.ids[cowsInfo.candidatedBindings[i]]);
 			ExitCode_t myresult = BindResources(pschd);
 			if (myresult != YAMS_SUCCESS) {
-				logger->Error("COWS: Resource binding failed [%d]", myresult);
+				logger->Error("COWS: Resource binding failed ["
+							       "%d]", myresult);
 				break;
 			}
 			logger->Info("COWS_DEBUG: trying to schedule option #%d",
@@ -790,7 +793,8 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 		psch->SetBindingID(bindings.ids[i]);
 		result = BindResources(psch);
 		if (result != YAMS_SUCCESS) {
-			logger->Error("COWS: Resource binding failed [%d]", result);
+			logger->Error("COWS: Resource binding failed [%d]",
+									result);
 		}
 		// Aggregate binding-dependent scheduling contributions
 		value = 0.0;
@@ -826,8 +830,8 @@ void YamsSchedPol::CowsSysWideMetrics() {
 		logger->Info("COWS: Computing sys metric for BD %d...",
 							       bindings.ids[i]);
 
-		// Calculating standard deviations (squared). Again, if I'm on BD
-		// i, the mean has changed
+		// Calculating standard deviations (squared). Again, if I'm on
+		// BD i, the mean has changed
 		for (int j = 0; j < bindings.num; j++) {
 			if (j == i) {
 				cowsInfo.stallsMetrics[i] +=
@@ -857,11 +861,14 @@ void YamsSchedPol::CowsSysWideMetrics() {
 		}
 
 		logger->Notice("COWS: Total stalls quadratic deviation in BD"
-				"%d: %3.2f", bindings.ids[i], cowsInfo.stallsMetrics[i]);
+				"%d: %3.2f", bindings.ids[i],
+						    cowsInfo.stallsMetrics[i]);
 		logger->Notice("COWS: Total ret. instructions deviation in BD"
-				"%d: %3.2f", bindings.ids[i], cowsInfo.retiredMetrics[i]);
+				"%d: %3.2f", bindings.ids[i],
+						    cowsInfo.retiredMetrics[i]);
 		logger->Notice("COWS: Total X87 operations deviation in BD"
-				"%d: %3.2f", bindings.ids[i], cowsInfo.flopsMetrics[i]);
+				"%d: %3.2f", bindings.ids[i],
+						    cowsInfo.flopsMetrics[i]);
 		logger->Info("COWS: Proceeding with next BD, if any ...");
 
 		cowsInfo.normStats[COWS_STALLS_METRIC]
