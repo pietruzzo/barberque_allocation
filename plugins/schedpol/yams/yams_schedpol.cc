@@ -749,7 +749,6 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 	ExitCode_t result;
 
 	logger->Info("==============| Boundness computing.. |===============");
-
 	logger->Info("COWS: %d binding domain(s) found", bindings.num);
 
 	// Boundness computation. Compute the delta-variance for each BD
@@ -815,18 +814,11 @@ void YamsSchedPol::CowsSysWideMetrics() {
 	cowsInfo.modifiedSums[COWS_FLOPS_METRIC - 1] /= bindings.num;
 
 	logger->Info("===| COWS: Sys-wide variation of metrics variance |===");
-	logger->Notice("COWS: Updated system wide stalls mean: %3.2f",
-			cowsInfo.modifiedSums[0]);
-	logger->Notice("COWS: Updated system wide retired instructions mean:"
-			"%3.2f", cowsInfo.modifiedSums[1]);
-	logger->Notice("COWS: Updated system wide floating point ops mean:"
-			"%3.2f", cowsInfo.modifiedSums[2]);
 
 	// For each binding domain, calculate the updated means AS IF
 	// I scheduled the new app there, then calculate the corresponding
 	// standard deviation
 	for (int i = 0; i < bindings.num; i++) {
-		logger->Info("");
 		logger->Info("COWS: Computing sys metric for BD %d...",
 							       bindings.ids[i]);
 
@@ -888,7 +880,7 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 	logger->Info("========|  COWS: Aggregating results ... |========");
 
 	// Normalizing
-	logger->Notice(" ======================================================"
+	logger->Info(" ======================================================"
 			"==================");
 	for (int i = 0; i < bindings.num; i++) {
 		cowsInfo.stallsMetrics[i] /= cowsInfo.normStats[1];
@@ -903,7 +895,7 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 			cowsInfo.boundnessMetrics[i] /= cowsInfo.normStats[0];
 		}
 
-		logger->Notice("| BD %d | Bound: %3.2f | Stalls:%3.2f | "
+		logger->Info("| BD %d | Bound: %3.2f | Stalls:%3.2f | "
 				"Ret:%3.2f | Flops:%3.2f | Migrat:%3.2f |",
 				bindings.ids[i],
 				cowsInfo.boundnessMetrics[i],
@@ -912,7 +904,7 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 				cowsInfo.flopsMetrics[i],
 				cowsInfo.migrationMetrics[i]);
 	}
-	logger->Notice(" ======================================================"
+	logger->Info(" ======================================================"
 			"==================");
 
 	results.resize(bindings.num);
@@ -945,10 +937,11 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 		}
 	}
 
-	logger->Notice("COWS BD ordering:");
+	logger->Info("COWS BD ordering:");
 	for (int i = 0; i < bindings.num; i++) {
-		logger->Notice("--- %d# = %d", i + 1,
-				  bindings.ids[cowsInfo.candidatedBindings[i]]);
+		logger->Notice("--- %d# = BD: %d, Value: %f", i + 1,
+				  bindings.ids[cowsInfo.candidatedBindings[i]],
+				  results[i]);
 	}
 
 	logger->Notice("COWS: candidate values are: %3.2f, %3.2f, %3.2f, %3.2f"
@@ -968,7 +961,7 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 		logger->Info("set_weights function: expecting 3 weights, "
 						"possibly summing up to 10");
 		logger->Info("Usage example:");
-		logger->Info("bq.sp.yams.cows 5 2 3");
+		logger->Info("bq.sp.yams.cows.set_weights 5 2 3");
 		return 1;
 	}
 
