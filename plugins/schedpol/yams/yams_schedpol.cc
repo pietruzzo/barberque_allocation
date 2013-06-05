@@ -38,9 +38,9 @@ SchedContribManager::Type_t YamsSchedPol::sc_types[] = {
 	SchedContribManager::VALUE,
 	SchedContribManager::RECONFIG,
 	SchedContribManager::FAIRNESS,
+	SchedContribManager::MIGRATION,
 #ifndef CONFIG_BBQUE_SP_COWS_BINDING
-	SchedContribManager::CONGESTION,
-	SchedContribManager::MIGRATION
+	SchedContribManager::CONGESTION
 #endif
 };
 
@@ -66,11 +66,11 @@ YamsSchedPol::coll_mct_metrics[YAMS_SC_COUNT] = {
 			"Reconfiguration contribution computing time [ms]"),
 	YAMS_SAMPLE_METRIC("fair.comp",
 			"Fairness contribution computing time [ms]"),
+	YAMS_SAMPLE_METRIC("migr.comp",
+			"Migration contribution computing time [ms]"),
 #ifndef CONFIG_BBQUE_SP_COWS_BINDING
 	YAMS_SAMPLE_METRIC("cgst.comp",
-			"Congestion contribution computing time [ms]"),
-	YAMS_SAMPLE_METRIC("migr.comp",
-			"Migration contribution computing time [ms]")
+			"Congestion contribution computing time [ms]")
 #endif
 	// ...:: ADD_MCT ::...
 };
@@ -132,7 +132,7 @@ YamsSchedPol::YamsSchedPol():
 	vtok_count = 0;
 
 	// Register all the metrics to collect
-	mc.Register(coll_metrics, YAMS_METRICS_COUNT);
+	mc.Register(coll_metrics, YAMS_SC_COUNT);
 	mc.Register(coll_mct_metrics, YAMS_SC_COUNT);
 }
 
@@ -762,18 +762,16 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 		cowsInfo.modifiedSums[1] += cowsInfo.retiredSum[i];
 		cowsInfo.modifiedSums[2] += cowsInfo.flopSum[i];
 
-		logger->Info("COWS: Prefetching Reconfig info for bd %i",
+		logger->Info("COWS: Prefetching Migration info for bd %i",
 							       bindings.ids[i]);
 		psch->SetBindingID(bindings.ids[i]);
 		result = BindResources(psch);
 		if (result != YAMS_SUCCESS) {
 			logger->Error("COWS: Resource binding failed [%d]", result);
 		}
-
 		// Aggregate binding-dependent scheduling contributions
 		value = 0.0;
 		GetSchedContribValue(psch, sc_types[SchedContribManager::MIGRATION], value);
-		logger->Info("----- Migration value: %f", value);
 		cowsInfo.migrationMetrics[i] = value;
 		cowsInfo.normStats[4] += value;
 

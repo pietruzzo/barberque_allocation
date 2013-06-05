@@ -54,7 +54,7 @@
 #ifndef CONFIG_BBQUE_SP_COWS_BINDING
 #define YAMS_BD_SC_COUNT  2
 #else
-#define YAMS_BD_SC_COUNT  0
+#define YAMS_BD_SC_COUNT  1
 #endif
 #define YAMS_SC_COUNT (YAMS_AWM_SC_COUNT + YAMS_BD_SC_COUNT)
 
