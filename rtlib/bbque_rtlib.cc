@@ -15,12 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <dlfcn.h>
+
 #include "bbque/rtlib.h"
 
 #include "bbque/version.h"
 #include "bbque/utils/timer.h"
 #include "bbque/utils/utility.h"
 
+#include "bbque/rtlib/bbque_ocl.h"
 #include "bbque/rtlib/bbque_rpc.h"
 
 #ifdef CONFIG_TARGET_ANDROID
@@ -51,6 +54,11 @@ static br::BbqueRPC *rpc = NULL;
  * The collection of RTLib services accessible from applications.
  */
 static RTLIB_Services_t rtlib_services;
+
+/**
+ * The collection of RTLib wrapped OpenCL functions.
+ */
+RTLIB_OpenCL_t rtlib_ocl;
 
 static RTLIB_ExecutionContextHandler_t rtlib_register(const char *name,
 		const RTLIB_ExecutionContextParams_t *params) {
@@ -254,6 +262,10 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 	rtlib_services.Notify.PreResume = rtlib_notify_pre_resume;
 	rtlib_services.Notify.PostResume = rtlib_notify_post_resume;
 	rtlib_services.Notify.Release = rtlib_notify_release;
+
+	// Initialize OpenCL wrappers
+	rtlib_ocl.getPlatformIDs =
+		(cl_int (*) (cl_uint, cl_platform_id *, cl_uint *)) dlsym(RTLD_NEXT, "clGetPlatformIDs");
 
 	// Building a communication channel
 	rpc = br::BbqueRPC::GetInstance();
