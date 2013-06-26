@@ -265,7 +265,141 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 
 	// Initialize OpenCL wrappers
 	rtlib_ocl.getPlatformIDs =
-		(cl_int (*) (cl_uint, cl_platform_id *, cl_uint *)) dlsym(RTLD_NEXT, "clGetPlatformIDs");
+		(cl_int (*) (cl_uint, cl_platform_id *, cl_uint *))
+			dlsym(RTLD_NEXT, "clGetPlatformIDs");
+	rtlib_ocl.getPlatformInfo =
+		(cl_int (*) (cl_platform_id, cl_platform_info, size_t, void *, size_t *))
+			dlsym(RTLD_NEXT, "clGetPlatformInfo");
+	rtlib_ocl.getDeviceIDs =
+		(cl_int (*) (cl_platform_id, cl_device_type, cl_uint, cl_device_id *, cl_uint *))
+			dlsym(RTLD_NEXT, "clGetDeviceIDs");
+	rtlib_ocl.getDeviceInfo =
+		(cl_int (*) (cl_device_id, cl_device_info, size_t, void *, size_t *))
+			dlsym(RTLD_NEXT, "clGetDeviceInfo");
+	rtlib_ocl.createSubDevices =
+		(cl_int (*) (cl_device_id, const cl_device_partition_property *, cl_uint, cl_device_id *, cl_uint *))
+			dlsym(RTLD_NEXT, "clCreateSubDevices");
+	rtlib_ocl.retainDevice =
+		(cl_int (*) (cl_device_id)) dlsym(RTLD_NEXT, "clRetainDevice");
+	rtlib_ocl.releaseDevice =
+		(cl_int (*) (cl_device_id)) dlsym(RTLD_NEXT, "clReleaseDevice");
+	rtlib_ocl.createContext =
+		(cl_context (*) (const cl_context_properties *, cl_uint, const cl_device_id *, void (CL_CALLBACK *)(const char *, const void *, size_t, void *), void *, cl_int *))
+			dlsym(RTLD_NEXT, "clCreateContext");
+	rtlib_ocl.createContextFromType =
+		(cl_context (*) (const cl_context_properties *, cl_device_type, void (CL_CALLBACK *)(const char *, const void *, size_t, void *), void *, cl_int *))
+			dlsym(RTLD_NEXT, "clCreateContextFromType");
+	rtlib_ocl.retainContext =
+		(cl_int (*) (cl_context)) dlsym(RTLD_NEXT, "clRetainContext");
+	rtlib_ocl.releaseContext =
+		(cl_int (*) (cl_context)) dlsym(RTLD_NEXT, "clReleaseContext");
+	rtlib_ocl.getContextInfo =
+		(cl_int (*) (cl_context, cl_context_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetContextInfo");
+	rtlib_ocl.createCommandQueue =
+		(cl_command_queue (*) (cl_context, cl_device_id, cl_command_queue_properties, cl_int *))
+		dlsym(RTLD_NEXT, "cl_CreateCommandQueue");
+	rtlib_ocl.retainCommandQueue =
+		(cl_int (*) (cl_command_queue)) dlsym(RTLD_NEXT, "clRetainCommandQueue");
+	rtlib_ocl.releaseCommandQueue =
+		(cl_int (*) (cl_command_queue)) dlsym(RTLD_NEXT, "clReleaseCommandQueue");
+	rtlib_ocl.getCommandQueueInfo =
+		(cl_int (*) (cl_command_queue, cl_command_queue_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetCommandQueueInfo");
+	rtlib_ocl.createBuffer =
+		(cl_mem (*) (cl_context, cl_mem_flags, size_t, void *, cl_int *))
+		dlsym(RTLD_NEXT, "cl_CreateBuffer");
+	rtlib_ocl.createSubBuffer =
+		(cl_mem (*)(cl_mem, cl_mem_flags, cl_buffer_create_type, const void *, cl_int *))
+		dlsym(RTLD_NEXT, "cl_CreateSubBuffer");
+	rtlib_ocl.createImage =
+		(cl_mem (*)(cl_context, cl_mem_flags, const cl_image_format *, const cl_image_desc *, void *, cl_int *))
+		dlsym(RTLD_NEXT, "cl_CreateImage");
+	rtlib_ocl.retainMemObject =
+		(cl_int (*)(cl_mem)) dlsym(RTLD_NEXT, "clRetainMemObject");
+	rtlib_ocl.releaseMemObject =
+		(cl_int (*)(cl_mem)) dlsym(RTLD_NEXT, "clReleaseMemObject");
+	rtlib_ocl.getSupportedImageFormats =
+		(cl_int (*)(cl_context, cl_mem_flags, cl_mem_object_type, cl_uint, cl_image_format *, cl_uint *))
+		dlsym(RTLD_NEXT, "clGetSupportedImageFormats");
+	rtlib_ocl.getMemObjectInfo =
+		(cl_int (*)(cl_mem, cl_mem_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetMemObjectInfo");
+	rtlib_ocl.getImageInfo =
+		(cl_int (*)(cl_mem, cl_image_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetImageInfo");
+	rtlib_ocl.setMemObjectDestructorCallback =
+		(cl_int (*)(cl_mem, void (CL_CALLBACK *)(cl_mem, void*), void *))
+		dlsym(RTLD_NEXT, "clSetMemObjectDestructorCallback");
+	rtlib_ocl.createSampler =
+		(cl_sampler (*)(cl_context, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int *))
+		dlsym(RTLD_NEXT, "clCreateSampler");
+	rtlib_ocl.retainSampler =
+		(cl_int (*)(cl_sampler))
+		dlsym(RTLD_NEXT, "clRetainSampler");
+	rtlib_ocl.releaseSampler =
+		(cl_int (*)(cl_sampler))
+		dlsym(RTLD_NEXT, "clReleaseSampler");
+	rtlib_ocl.getSamplerInfo =
+		(cl_int (*)(cl_sampler, cl_sampler_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetSamplerInfo");
+	rtlib_ocl.createProgramWithSource =
+		(cl_program (*)(cl_context, cl_uint, const char **, const size_t *, cl_int *))
+		dlsym(RTLD_NEXT, "clCreateProgramWithSource");
+	rtlib_ocl.createProgramWithBinary =
+		(cl_program (*)(cl_context, cl_uint, const cl_device_id *, const size_t *, const unsigned char **, cl_int *, cl_int *))
+		dlsym(RTLD_NEXT, "clCreateProgramWithBinary");
+	rtlib_ocl.createProgramWithBuiltInKernels =
+		(cl_program (*)(cl_context, cl_uint, const cl_device_id *, const char *, cl_int *))
+		dlsym(RTLD_NEXT, "clCreateProgramWithBuiltInKernels");
+	rtlib_ocl.retainProgram =
+		(cl_int (*)(cl_program))
+		dlsym(RTLD_NEXT, "clRetainProgram");
+	rtlib_ocl.releaseProgram =
+		(cl_int (*)(cl_program))
+		dlsym(RTLD_NEXT, "clReleaseProgram");
+	rtlib_ocl.buildProgram =
+		(cl_int (*)(cl_program, cl_uint, const cl_device_id *, const char *, void (CL_CALLBACK *)(cl_program, void *), void *))
+		dlsym(RTLD_NEXT, "clBuildProgram");
+	rtlib_ocl.compileProgram =
+		(cl_int (*)(cl_program, cl_uint, const cl_device_id *, const char *, cl_uint, const cl_program *, const char **, void (CL_CALLBACK *)(cl_program, void *), void *))
+		dlsym(RTLD_NEXT, "clCompileProgram");
+	rtlib_ocl.linkProgram =
+		(cl_program (*)(cl_context, cl_uint, const cl_device_id *, const char *, cl_uint, const cl_program *, void (CL_CALLBACK *)(cl_program, void *), void *, cl_int *))
+		dlsym(RTLD_NEXT, "clLinkProgram");
+	rtlib_ocl.unloadPlatformCompiler =
+		(cl_int (*)(cl_platform_id))
+		dlsym(RTLD_NEXT, "clUnloadPlatformCompiler");
+	rtlib_ocl.getProgramInfo =
+		(cl_int (*)(cl_program, cl_program_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetProgramInfo");
+	rtlib_ocl.getProgramBuildInfo =
+		(cl_int (*)(cl_program, cl_device_id, cl_program_build_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetProgramBuildInfo");
+	rtlib_ocl.createKernel =
+		(cl_kernel (*)(cl_program, const char *, cl_int *))
+		dlsym(RTLD_NEXT, "clCreateKernel");
+	rtlib_ocl.createKernelsInProgram =
+		(cl_int (*)(cl_program, cl_uint, cl_kernel *, cl_uint *))
+		dlsym(RTLD_NEXT, "clCreateKernelsInProgram");
+	rtlib_ocl.retainKernel =
+		(cl_int (*)(cl_kernel))
+		dlsym(RTLD_NEXT, "clRetainKernel");
+	rtlib_ocl.releaseKernel =
+		(cl_int (*)(cl_kernel))
+		dlsym(RTLD_NEXT, "clReleaseKernel");
+	rtlib_ocl.setKernelArg =
+		(cl_int (*)(cl_kernel, cl_uint, size_t, const void *))
+		dlsym(RTLD_NEXT, "clSetKernelArg");
+	rtlib_ocl.getKernelInfo =
+		(cl_int (*)(cl_kernel, cl_kernel_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetKernelInfo");
+	rtlib_ocl.getKernelArgInfo =
+		(cl_int (*)(cl_kernel, cl_uint, cl_kernel_arg_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetKernelArgInfo");
+	rtlib_ocl.getKernelWorkGroupInfo =
+		(cl_int (*)(cl_kernel, cl_device_id, cl_kernel_work_group_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetKernelWorkGroupInfo");
 
 	// Building a communication channel
 	rpc = br::BbqueRPC::GetInstance();
