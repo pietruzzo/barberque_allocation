@@ -87,6 +87,8 @@ struct RTLIB_OpenCL {
 	cl_int (*setEventCallback)(cl_event, cl_int, void (CL_CALLBACK *)(cl_event, cl_int, void *),
 		void *);
 	cl_int (*getEventProfilingInfo)(cl_event, cl_profiling_info, size_t, void *, size_t *);
+	cl_int (*flush)(cl_command_queue);
+	cl_int (*finish)(cl_command_queue);
 };
 
 /* Platform API */
@@ -497,6 +499,13 @@ clGetEventProfilingInfo(
 		void *,
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
+
+/* Flush and Finish APIs */
+extern CL_API_ENTRY cl_int CL_API_CALL
+clFlush(cl_command_queue) CL_API_SUFFIX__VERSION_1_0;
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clFinish(cl_command_queue) CL_API_SUFFIX__VERSION_1_0;
 
 #endif // BBQUE_OCL_H_
 
