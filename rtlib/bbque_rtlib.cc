@@ -298,7 +298,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 		dlsym(RTLD_NEXT, "clGetContextInfo");
 	rtlib_ocl.createCommandQueue =
 		(cl_command_queue (*) (cl_context, cl_device_id, cl_command_queue_properties, cl_int *))
-		dlsym(RTLD_NEXT, "cl_CreateCommandQueue");
+		dlsym(RTLD_NEXT, "clCreateCommandQueue");
 	rtlib_ocl.retainCommandQueue =
 		(cl_int (*) (cl_command_queue)) dlsym(RTLD_NEXT, "clRetainCommandQueue");
 	rtlib_ocl.releaseCommandQueue =
@@ -308,13 +308,13 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 		dlsym(RTLD_NEXT, "clGetCommandQueueInfo");
 	rtlib_ocl.createBuffer =
 		(cl_mem (*) (cl_context, cl_mem_flags, size_t, void *, cl_int *))
-		dlsym(RTLD_NEXT, "cl_CreateBuffer");
+		dlsym(RTLD_NEXT, "clCreateBuffer");
 	rtlib_ocl.createSubBuffer =
 		(cl_mem (*)(cl_mem, cl_mem_flags, cl_buffer_create_type, const void *, cl_int *))
-		dlsym(RTLD_NEXT, "cl_CreateSubBuffer");
+		dlsym(RTLD_NEXT, "clCreateSubBuffer");
 	rtlib_ocl.createImage =
 		(cl_mem (*)(cl_context, cl_mem_flags, const cl_image_format *, const cl_image_desc *, void *, cl_int *))
-		dlsym(RTLD_NEXT, "cl_CreateImage");
+		dlsym(RTLD_NEXT, "clCreateImage");
 	rtlib_ocl.retainMemObject =
 		(cl_int (*)(cl_mem)) dlsym(RTLD_NEXT, "clRetainMemObject");
 	rtlib_ocl.releaseMemObject =
