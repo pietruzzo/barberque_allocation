@@ -530,4 +530,70 @@ clGetKernelWorkGroupInfo(
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetKernelWorkGroupInfo()...\n"));
 	return rtlib_ocl.getKernelWorkGroupInfo(kernel, device, param_name, param_value_size, param_value, param_value_size_ret);
+
+/* Event Object APIs */
+extern CL_API_ENTRY cl_int CL_API_CALL
+clWaitForEvents(
+		cl_uint num_events,
+		const cl_event *event_list)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clWaitForEvents()...\n"));
+	return rtlib_ocl.waitForEvents(num_events, event_list);
+}
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clGetEventInfo(
+		cl_event event,
+		cl_event_info param_name,
+		size_t param_value_size,
+		void *param_value,
+		size_t *param_value_size_ret)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clGetEventInfo()...\n"));
+	return rtlib_ocl.getEventInfo(event, param_name, param_value_size,
+		param_value, param_value_size_ret);
+}
+
+extern CL_API_ENTRY cl_event CL_API_CALL
+clCreateUserEvent(
+		cl_context context,
+		cl_int *errcode_ret)
+		CL_API_SUFFIX__VERSION_1_1 {
+	fprintf(stderr, FD("Calling clCreateUserEvent()...\n"));
+	return rtlib_ocl.createUserEvent(context, errcode_ret);
+}
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clRetainEvent(cl_event event) CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clRetainEvent()...\n"));
+	return rtlib_ocl.retainEvent(event);
+}
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clReleaseEvent(cl_event event) CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clReleaseEvent()...\n"));
+	return rtlib_ocl.releaseEvent(event);
+}
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clSetUserEventStatus(
+		cl_event event,
+		cl_int execution_status)
+		CL_API_SUFFIX__VERSION_1_1 {
+	fprintf(stderr, FD("Calling clSetUserEventStatus()...\n"));
+	return rtlib_ocl.setUserEventStatus(event, execution_status);
+}
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clSetEventCallback(
+		cl_event event,
+		cl_int command_exec_callback_type,
+		void (CL_CALLBACK *pfn_event_notify)(cl_event event, cl_int event_command_exec_status, void *user_data),
+		void *user_data)
+		CL_API_SUFFIX__VERSION_1_1 {
+	fprintf(stderr, FD("Calling clSetEventCallback()...\n"));
+	return rtlib_ocl.setEventCallback(event, command_exec_callback_type,
+		(*pfn_event_notify), user_data);
+}
+
 }

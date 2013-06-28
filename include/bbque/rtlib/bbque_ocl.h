@@ -78,6 +78,14 @@ struct RTLIB_OpenCL {
 	cl_int (*getKernelInfo)(cl_kernel, cl_kernel_info, size_t, void *, size_t *);
 	cl_int (*getKernelArgInfo)(cl_kernel, cl_uint, cl_kernel_arg_info, size_t, void *, size_t *);
 	cl_int (*getKernelWorkGroupInfo)(cl_kernel, cl_device_id, cl_kernel_work_group_info, size_t, void *, size_t *);
+	cl_int (*waitForEvents)(cl_uint, const cl_event *);
+	cl_int (*getEventInfo)(cl_event, cl_event_info, size_t, void *, size_t *);
+	cl_event (*createUserEvent)(cl_context, cl_int *);
+	cl_int (*retainEvent)(cl_event);
+	cl_int (*releaseEvent)(cl_event);
+	cl_int (*setUserEventStatus)(cl_event, cl_int);
+	cl_int (*setEventCallback)(cl_event, cl_int, void (CL_CALLBACK *)(cl_event, cl_int, void *),
+		void *);
 };
 
 /* Platform API */
@@ -436,6 +444,48 @@ clGetKernelWorkGroupInfo(
 		void *,
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
+
+/* Event Object APIs */
+extern CL_API_ENTRY cl_int CL_API_CALL
+clWaitForEvents(
+		cl_uint,
+		const cl_event *)
+		CL_API_SUFFIX__VERSION_1_0;
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clGetEventInfo(
+		cl_event,
+		cl_event_info,
+		size_t,
+		void *,
+		size_t *)
+		CL_API_SUFFIX__VERSION_1_0;
+
+extern CL_API_ENTRY cl_event CL_API_CALL
+clCreateUserEvent(
+		cl_context,
+		cl_int *)
+		CL_API_SUFFIX__VERSION_1_1;
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clRetainEvent(cl_event) CL_API_SUFFIX__VERSION_1_0;
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clReleaseEvent(cl_event) CL_API_SUFFIX__VERSION_1_0;
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clSetUserEventStatus(
+		cl_event,
+		cl_int)
+		CL_API_SUFFIX__VERSION_1_1;
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clSetEventCallback(
+		cl_event,
+		cl_int,
+		void (CL_CALLBACK *)(cl_event, cl_int, void *),
+		void *)
+		CL_API_SUFFIX__VERSION_1_1;
 
 #endif // BBQUE_OCL_H_
 

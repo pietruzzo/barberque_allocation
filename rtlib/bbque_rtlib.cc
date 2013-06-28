@@ -400,6 +400,28 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 	rtlib_ocl.getKernelWorkGroupInfo =
 		(cl_int (*)(cl_kernel, cl_device_id, cl_kernel_work_group_info, size_t, void *, size_t *))
 		dlsym(RTLD_NEXT, "clGetKernelWorkGroupInfo");
+	rtlib_ocl.waitForEvents =
+		(cl_int (*)(cl_uint, const cl_event *))
+		dlsym(RTLD_NEXT, "clWaitForEvents");
+	rtlib_ocl.getEventInfo =
+		(cl_int (*)(cl_event, cl_event_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetEventInfo");
+	rtlib_ocl.createUserEvent =
+		(cl_event (*)(cl_context, cl_int *))
+		dlsym(RTLD_NEXT, "clCreateUserEvent");
+	rtlib_ocl.retainEvent =
+		(cl_int (*)(cl_event))
+		dlsym(RTLD_NEXT, "clRetainEvent");
+	rtlib_ocl.releaseEvent =
+		(cl_int (*)(cl_event))
+		dlsym(RTLD_NEXT, "clReleaseEvent");
+	rtlib_ocl.setUserEventStatus =
+		(cl_int (*)(cl_event, cl_int))
+		dlsym(RTLD_NEXT, "clSetUserEventStatus");
+	rtlib_ocl.setEventCallback =
+		(cl_int (*)(cl_event, cl_int, void (CL_CALLBACK *)(cl_event, cl_int, void *),
+		void *))
+		dlsym(RTLD_NEXT, "clSetEventCallback");
 
 	// Building a communication channel
 	rpc = br::BbqueRPC::GetInstance();
