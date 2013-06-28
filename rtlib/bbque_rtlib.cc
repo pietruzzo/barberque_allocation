@@ -422,6 +422,9 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 		(cl_int (*)(cl_event, cl_int, void (CL_CALLBACK *)(cl_event, cl_int, void *),
 		void *))
 		dlsym(RTLD_NEXT, "clSetEventCallback");
+	rtlib_ocl.getEventProfilingInfo =
+		(cl_int (*)(cl_event, cl_profiling_info, size_t, void *, size_t *))
+		dlsym(RTLD_NEXT, "clGetEventProfilingInfo");
 
 	// Building a communication channel
 	rpc = br::BbqueRPC::GetInstance();
