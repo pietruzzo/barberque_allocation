@@ -65,6 +65,8 @@
 #define COWS_ADDITIONAL_METRICS 1
 #define COWS_RECIPE_METRICS (COWS_BOUNDNESS_METRICS + COWS_SYSWIDE_METRICS)
 #define COWS_NORMALIZATION_VALUES (COWS_RECIPE_METRICS + COWS_ADDITIONAL_METRICS)
+#define COWS_AGGREGATION_WEIGHTS 3
+#define COWS_TOTAL_WEIGHT_SUM 10.0
 #endif
 
 using bbque::res::RViewToken_t;
@@ -149,7 +151,6 @@ private:
 		YAMS_SELECTING_TIME,
 		YAMS_METRICS_COMP_TIME,
 		YAMS_METRICS_AWMVALUE,
-
 		YAMS_METRICS_COUNT
 	};
 
@@ -164,6 +165,28 @@ private:
 		// ...:: ADD_MCT ::...
 	};
 
+	/**
+	 * @brief Metrics used by COWS to chose the preferred bindings
+	 */
+
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
+	enum CowsMetrics_t {
+		COWS_LLCM_METRIC,
+		COWS_STALLS_METRIC,
+		COWS_RETIRED_METRIC,
+		COWS_FLOPS_METRIC,
+		COWS_MIGRATION_METRIC
+	};
+
+	/**
+	 * @brief Weights used by COWS to aggregate the metrics
+	 */
+	enum CowsAggregationWeights_t {
+		COWS_BOUNDNESS_WEIGHT,
+		COWS_RESOURCES_WEIGHT,
+		COWS_MIGRATION_WEIGHT
+	};
+#endif
 
 	/** Shared pointer to a scheduling entity */
 	typedef std::shared_ptr<SchedEntity_t> SchedEntityPtr_t;
@@ -362,6 +385,7 @@ private:
 	 */
 	ExitCode_t BindResources(SchedEntityPtr_t pschd);
 
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	/**
 	 * @brief COWS: Evaluate a Binding
 	 *
@@ -415,6 +439,7 @@ private:
 	 */
 	void CowsUpdateMeans(int logic_index);
 	void CowsUpdateMeans(SchedEntityPtr_t pschd);
+#endif
 
 	/**
 	 * @brief Require the scheduling of the entities

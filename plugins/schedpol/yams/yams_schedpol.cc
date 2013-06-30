@@ -138,8 +138,10 @@ YamsSchedPol::YamsSchedPol():
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	//COWS: initialize the weights to be changed af runtime through commands
-	cowsInfo.metricsWeights.resize(3);
-	for (int i = 0; i < 3; i ++) cowsInfo.metricsWeights[i] = 3.333;
+	cowsInfo.metricsWeights.resize(COWS_AGGREGATION_WEIGHTS);
+	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i ++)
+		cowsInfo.metricsWeights[i] = COWS_TOTAL_WEIGHT_SUM
+			/ cowsInfo.metricsWeights.size();
 
 	//COWS: initialize the command manager
 #define CMD_SET_WEIGHTS ".cows.set_weights"
@@ -659,11 +661,10 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
 	logger->Info("COWS: clearing previous running info");
-	cowsInfo.normStats[0] = 0;
-	cowsInfo.normStats[1] = 0;
-	cowsInfo.normStats[2] = 0;
-	cowsInfo.normStats[3] = 0;
-	cowsInfo.normStats[4] = 0;
+
+	for (int i = 0; i < COWS_NORMALIZATION_VALUES; i++) {
+		cowsInfo.normStats[i] = 0;
+	}
 
 	for (int i = 0; i < bindings.num; i++) {
 		cowsInfo.candidatedBindings[i] = i;
@@ -726,16 +727,18 @@ void YamsSchedPol::CowsResetStatus() {
 
 void YamsSchedPol::CowsApplyRecipeValues(
 	  float db, float ds, float dr, float df) {
-	// Updating system-wide means
-	cowsInfo.modifiedSums[0] += ds;
-	cowsInfo.modifiedSums[1] += dr;
-	cowsInfo.modifiedSums[2] += df;
+	// Updating system-wide means. The indexes are shifted by one
+	// because modifiedSums vector doesn't need the first metric
+	// (aka COWS_LLCM_METRIC)
+	cowsInfo.modifiedSums[COWS_STALLS_METRIC - 1] += ds;
+	cowsInfo.modifiedSums[COWS_RETIRED_METRIC - 1] += dr;
+	cowsInfo.modifiedSums[COWS_FLOPS_METRIC - 1] += df;
 
 	// Setting info for future system update
-	cowsInfo.candidatedValues[0] = db;
-	cowsInfo.candidatedValues[1] = ds;
-	cowsInfo.candidatedValues[2] = dr;
-	cowsInfo.candidatedValues[3] = df;
+	cowsInfo.candidatedValues[COWS_LLCM_METRIC] = db;
+	cowsInfo.candidatedValues[COWS_STALLS_METRIC] = ds;
+	cowsInfo.candidatedValues[COWS_RETIRED_METRIC] = dr;
+	cowsInfo.candidatedValues[COWS_FLOPS_METRIC] = df;
 }
 
 void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
@@ -754,10 +757,11 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 			// E(X'^2) - E^2(X') - E(X^2) + E^2(X)
 			cowsInfo.boundnessMetrics[i] =
 				(cowsInfo.boundnessSquaredSum[i]
-				+ pow(cowsInfo.candidatedValues[0], 2))
+				+ pow(
+				cowsInfo.candidatedValues[COWS_LLCM_METRIC], 2))
 				/ (cowsInfo.bdLoad[i] + 1)
 				- pow((cowsInfo.boundnessSum[i]
-				+ cowsInfo.candidatedValues[0])
+				+ cowsInfo.candidatedValues[COWS_LLCM_METRIC])
 				/ (cowsInfo.bdLoad[i] + 1), 2)
 				- (cowsInfo.boundnessSquaredSum[i])
 				/ (cowsInfo.bdLoad[i])
@@ -766,16 +770,20 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 
 			// Only positive contributions are used to normalize
 			if (cowsInfo.boundnessMetrics[i] > 0)
-			  cowsInfo.normStats[0] += cowsInfo.boundnessMetrics[i];
+			  cowsInfo.normStats[COWS_LLCM_METRIC] +=
+						   cowsInfo.boundnessMetrics[i];
 		}
 		logger->Notice("COWS: Boundness variance @BD %d for %s: %3.2f",
 		  bindings.ids[i], psch->StrId(), cowsInfo.boundnessMetrics[i]);
 
 		logger->Info("COWS: Prefetching Sys-Wide info for bd %i",
 								bindings.ids[i]);
-		cowsInfo.modifiedSums[0] += cowsInfo.stallsSum[i];
-		cowsInfo.modifiedSums[1] += cowsInfo.retiredSum[i];
-		cowsInfo.modifiedSums[2] += cowsInfo.flopSum[i];
+		cowsInfo.modifiedSums[COWS_STALLS_METRIC - 1]
+						+= cowsInfo.stallsSum[i];
+		cowsInfo.modifiedSums[COWS_RETIRED_METRIC - 1]
+						+= cowsInfo.retiredSum[i];
+		cowsInfo.modifiedSums[COWS_FLOPS_METRIC - 1]
+						+= cowsInfo.flopSum[i];
 
 		logger->Info("COWS: Prefetching Migration info for bd %i",
 							       bindings.ids[i]);
@@ -788,19 +796,19 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 		value = 0.0;
 		GetSchedContribValue(psch, sc_types[SchedContribManager::MIGRATION], value);
 		cowsInfo.migrationMetrics[i] = value;
-		cowsInfo.normStats[4] += value;
+		cowsInfo.normStats[COWS_MIGRATION_METRIC] += value;
 
 	}
-	if (cowsInfo.normStats[0] == 0) cowsInfo.normStats[0]++;
-	if (cowsInfo.normStats[4] == 0) cowsInfo.normStats[4]++;
-	logger->Info("Total migration denom: %f", cowsInfo.normStats[4]);
+	if (cowsInfo.normStats[COWS_LLCM_METRIC] == 0) cowsInfo.normStats[0]++;
+	if (cowsInfo.normStats[COWS_MIGRATION_METRIC] == 0)
+							cowsInfo.normStats[4]++;
 }
 
 void YamsSchedPol::CowsSysWideMetrics() {
 	// Update system mean: sumOf(BDmeans)/numberOfBDs
-	cowsInfo.modifiedSums[0] /= bindings.num;
-	cowsInfo.modifiedSums[1] /= bindings.num;
-	cowsInfo.modifiedSums[2] /= bindings.num;
+	cowsInfo.modifiedSums[COWS_STALLS_METRIC - 1] /= bindings.num;
+	cowsInfo.modifiedSums[COWS_RETIRED_METRIC - 1] /= bindings.num;
+	cowsInfo.modifiedSums[COWS_FLOPS_METRIC - 1] /= bindings.num;
 
 	logger->Info("===| COWS: Sys-wide variation of metrics variance |===");
 	logger->Notice("COWS: Updated system wide stalls mean: %3.2f",
@@ -856,9 +864,12 @@ void YamsSchedPol::CowsSysWideMetrics() {
 				"%d: %3.2f", bindings.ids[i], cowsInfo.flopsMetrics[i]);
 		logger->Info("COWS: Proceeding with next BD, if any ...");
 
-		cowsInfo.normStats[1] += cowsInfo.stallsMetrics[i];
-		cowsInfo.normStats[2] += cowsInfo.retiredMetrics[i];
-		cowsInfo.normStats[3] += cowsInfo.flopsMetrics[i];
+		cowsInfo.normStats[COWS_STALLS_METRIC]
+						+= cowsInfo.stallsMetrics[i];
+		cowsInfo.normStats[COWS_RETIRED_METRIC]
+						+= cowsInfo.retiredMetrics[i];
+		cowsInfo.normStats[COWS_FLOPS_METRIC]
+						+= cowsInfo.flopsMetrics[i];
 	}
 }
 
@@ -902,16 +913,15 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 	for (int i = 0; i < bindings.num; i++) {
 		// Calculating the best BD to schedule the app in
 		results[i] =
-		    cowsInfo.metricsWeights[0] * cowsInfo.boundnessMetrics[i]
-		    - cowsInfo.metricsWeights[1] * ( cowsInfo.stallsMetrics[i] +
-		    + cowsInfo.retiredMetrics[i] + cowsInfo.flopsMetrics[i] )
-		    + cowsInfo.metricsWeights[2] *
-			cowsInfo.migrationMetrics[i];
-	}
-
-	for (int i = 0; i < bindings.num; i++) {
-		logger->Notice("COWS: result & index [%d] = %f - %d", i,
-				results[i], cowsInfo.candidatedBindings[i]);
+		// (W1*BOUNDNESS) - [W2*(ST + RET + FLOPS)] + (W3*MIGRATION)
+		    cowsInfo.metricsWeights[COWS_BOUNDNESS_WEIGHT] *
+				cowsInfo.boundnessMetrics[i]
+		  - cowsInfo.metricsWeights[COWS_RESOURCES_WEIGHT] *
+			      ( cowsInfo.stallsMetrics[i] +
+				cowsInfo.retiredMetrics[i] +
+				cowsInfo.flopsMetrics[i] )
+		  + cowsInfo.metricsWeights[COWS_MIGRATION_WEIGHT] *
+				cowsInfo.migrationMetrics[i];
 	}
 
 	for (int i = 0; i < bindings.num - 1; i++) {
@@ -935,10 +945,10 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 	}
 
 	logger->Notice("COWS: candidate values are: %3.2f, %3.2f, %3.2f, %3.2f"
-			".", cowsInfo.candidatedValues[0],
-			cowsInfo.candidatedValues[1],
-			cowsInfo.candidatedValues[2],
-			cowsInfo.candidatedValues[3]);
+			".", cowsInfo.candidatedValues[COWS_LLCM_METRIC],
+			cowsInfo.candidatedValues[COWS_STALLS_METRIC],
+			cowsInfo.candidatedValues[COWS_RETIRED_METRIC],
+			cowsInfo.candidatedValues[COWS_FLOPS_METRIC]);
 	logger->Info("==========|          COWS: Done             |==========");
 }
 
@@ -955,11 +965,14 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 		return 1;
 	}
 
-	float sum = atof(argv[1]) + atof(argv[2]) + atof(argv[3]);
+	float sum = 0.0;
 
-	// Normalizing. The inputs should sum up to 10
-	if (sum != 10) logger->Info("COWS: weights sum up to %f."
-							"Normalizing ..", sum);
+	for (int i = 1; i < COWS_AGGREGATION_WEIGHTS + 1; i++)
+							   sum += atof(argv[i]);
+
+	// Normalizing. The inputs should sum up to COWS_TOTAL_WEIGHT_SUM
+	if (sum != COWS_TOTAL_WEIGHT_SUM) logger->Info("COWS: weights sum up to"
+						    " %f. Normalizing ..", sum);
 
 	logger->Info(" ================================================= ");
 	logger->Info("|                   Old weights                   |");
@@ -967,12 +980,14 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
 	logger->Info("|=========+=========+=========+=========+=========|");
 	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-		cowsInfo.metricsWeights[0], cowsInfo.metricsWeights[1],
-		cowsInfo.metricsWeights[2]);
+				cowsInfo.metricsWeights[COWS_BOUNDNESS_WEIGHT],
+				cowsInfo.metricsWeights[COWS_RESOURCES_WEIGHT],
+				cowsInfo.metricsWeights[COWS_MIGRATION_WEIGHT]);
 	logger->Info(" =========+=========+=========+=========+========= ");
 
-	for (int i = 0; i < 3; i++) {
-		cowsInfo.metricsWeights[i] = 10 * (atof(argv[i + 1])) / sum;
+	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i++) {
+		cowsInfo.metricsWeights[i] =
+			      COWS_TOTAL_WEIGHT_SUM * (atof(argv[i + 1])) / sum;
 	}
 
 	logger->Info(" ================================================= ");
@@ -981,8 +996,9 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
 	logger->Info("|=========+=========+=========+=========+=========|");
 	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-		cowsInfo.metricsWeights[0], cowsInfo.metricsWeights[1],
-		cowsInfo.metricsWeights[2]);
+				cowsInfo.metricsWeights[COWS_BOUNDNESS_WEIGHT],
+				cowsInfo.metricsWeights[COWS_RESOURCES_WEIGHT],
+				cowsInfo.metricsWeights[COWS_MIGRATION_WEIGHT]);
 	logger->Info(" =========+=========+=========+=========+========= ");
 #endif // CONFIG_BBQUE_SP_COWS_BINDING
 	return 0;
