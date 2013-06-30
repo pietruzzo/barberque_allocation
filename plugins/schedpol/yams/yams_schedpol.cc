@@ -97,7 +97,8 @@ char const * YamsSchedPol::Name() {
 YamsSchedPol::YamsSchedPol():
 	cm(ConfigurationManager::GetInstance()),
 	ra(ResourceAccounter::GetInstance()),
-	mc(bu::MetricsCollector::GetInstance()) {
+	mc(bu::MetricsCollector::GetInstance()),
+	cmm(CommandManager::GetInstance()) {
 
 	// Get a logger
 	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
@@ -134,6 +135,18 @@ YamsSchedPol::YamsSchedPol():
 	// Register all the metrics to collect
 	mc.Register(coll_metrics, YAMS_SC_COUNT);
 	mc.Register(coll_mct_metrics, YAMS_SC_COUNT);
+
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
+	//COWS: initialize the weights to be changed af runtime through commands
+	cowsInfo.metricsWeights.resize(3);
+	for (int i = 0; i < 3; i ++) cowsInfo.metricsWeights[i] = 3.333;
+
+	//COWS: initialize the command manager
+#define CMD_SET_WEIGHTS ".cows.set_weights"
+	cmm.RegisterCommand(MODULE_NAMESPACE CMD_SET_WEIGHTS,
+		static_cast<CommandHandler*>(this),
+		"Set COWS binding metrics weights");
+#endif
 }
 
 YamsSchedPol::~YamsSchedPol() {
@@ -888,11 +901,12 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 
 	for (int i = 0; i < bindings.num; i++) {
 		// Calculating the best BD to schedule the app in
-		results[i] = 4 * cowsInfo.boundnessMetrics[i]
-			- cowsInfo.stallsMetrics[i]
-			- cowsInfo.retiredMetrics[i]
-			- cowsInfo.flopsMetrics[i]
-			+ 2 * cowsInfo.migrationMetrics[i];
+		results[i] =
+		    cowsInfo.metricsWeights[0] * cowsInfo.boundnessMetrics[i]
+		    - cowsInfo.metricsWeights[1] * ( cowsInfo.stallsMetrics[i] +
+		    + cowsInfo.retiredMetrics[i] + cowsInfo.flopsMetrics[i] )
+		    + cowsInfo.metricsWeights[2] *
+			cowsInfo.migrationMetrics[i];
 	}
 
 	for (int i = 0; i < bindings.num; i++) {
@@ -927,7 +941,53 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 			cowsInfo.candidatedValues[3]);
 	logger->Info("==========|          COWS: Done             |==========");
 }
+
 #endif // CONFIG_BBQUE_SP_COWS_BINDING
+
+int YamsSchedPol::CommandsCb(int argc, char *argv[]){
+
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
+	if ( argc != 4) {
+		logger->Info("set_weights function: expecting 3 weights, "
+						"possibly summing up to 10");
+		logger->Info("Usage example:");
+		logger->Info("bq.sp.yams.cows 5 2 3");
+		return 1;
+	}
+
+	float sum = atof(argv[1]) + atof(argv[2]) + atof(argv[3]);
+
+	// Normalizing. The inputs should sum up to 10
+	if (sum != 10) logger->Info("COWS: weights sum up to %f."
+							"Normalizing ..", sum);
+
+	logger->Info(" ================================================= ");
+	logger->Info("|                   Old weights                   |");
+	logger->Info("|=========+=========+=========+=========+=========|");
+	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
+	logger->Info("|=========+=========+=========+=========+=========|");
+	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
+		cowsInfo.metricsWeights[0], cowsInfo.metricsWeights[1],
+		cowsInfo.metricsWeights[2]);
+	logger->Info(" =========+=========+=========+=========+========= ");
+
+	for (int i = 0; i < 3; i++) {
+		cowsInfo.metricsWeights[i] = 10 * (atof(argv[i + 1])) / sum;
+	}
+
+	logger->Info(" ================================================= ");
+	logger->Info("|                   New weights                   |");
+	logger->Info("|=========+=========+=========+=========+=========|");
+	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
+	logger->Info("|=========+=========+=========+=========+=========|");
+	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
+		cowsInfo.metricsWeights[0], cowsInfo.metricsWeights[1],
+		cowsInfo.metricsWeights[2]);
+	logger->Info(" =========+=========+=========+=========+========= ");
+#endif // CONFIG_BBQUE_SP_COWS_BINDING
+	return 0;
+}
+
 
 } // namespace plugins
 

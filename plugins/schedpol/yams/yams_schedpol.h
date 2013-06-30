@@ -22,6 +22,7 @@
 
 #include "bbque/configuration_manager.h"
 #include "bbque/scheduler_manager.h"
+#include "bbque/command_manager.h"
 #include "bbque/plugins/plugin.h"
 
 #include "contrib/sched_contrib_manager.h"
@@ -86,7 +87,7 @@ class LoggerIF;
  * The yams resource scheduler heuristic registered as a dynamic C++
  * plugin.
  */
-class YamsSchedPol: public SchedulerPolicyIF {
+class YamsSchedPol: public SchedulerPolicyIF, CommandHandler {
 
 public:
 
@@ -119,6 +120,12 @@ public:
 	 * @see SchedulerPolicyIF
 	 */
 	ExitCode_t Schedule(System & sys_if, RViewToken_t & rav);
+
+	/**
+	 * @see CommandHandler
+	 */
+	int CommandsCb(int argc, char *argv[]);
+
 
 private:
 
@@ -174,6 +181,9 @@ private:
 	/** Metric collector instance */
 	MetricsCollector & mc;
 
+	/** Command manager instance */
+	CommandManager &cmm;
+
 	/** System logger instance */
 	LoggerIF *logger = NULL;
 
@@ -222,6 +232,8 @@ private:
 		std::vector<float> retiredMetrics;
 		std::vector<float> flopsMetrics;
 		std::vector<float> migrationMetrics;
+		/* Weights used to compute metrics */
+		std::vector<float> metricsWeights;
 	} cowsInfo;
 
 #endif
