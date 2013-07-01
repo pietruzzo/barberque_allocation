@@ -627,6 +627,397 @@ clFinish(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
 	return rtlib_ocl.finish(command_queue);
 }
 
+/* Enqueued Commands APIs */
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueReadBuffer(
+		cl_command_queue command_queue,
+		cl_mem buffer,
+		cl_bool blocking_read,
+		size_t offset,
+		size_t size,
+		void *ptr,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueReadBuffer()...\n"));
+	return rtlib_ocl.enqueueReadBuffer(command_queue, buffer, blocking_read,
+		offset, size, ptr, num_events_in_wait_list,	event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueReadBufferRect(
+		cl_command_queue command_queue,
+		cl_mem buffer,
+		cl_bool blocking_read,
+		const size_t *buffer_origin,
+		const size_t *host_origin,
+		const size_t *region,
+		size_t buffer_row_pitch,
+		size_t buffer_slice_pitch,
+		size_t host_row_pitch,
+		size_t host_slice_pitch,
+		void *ptr,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_1 {
+	fprintf(stderr, FD("Calling clEnqueueReadBufferRect()...\n"));
+	return rtlib_ocl.enqueueReadBufferRect(command_queue, buffer,
+		blocking_read, buffer_origin, host_origin, region, buffer_row_pitch,
+		buffer_slice_pitch, host_row_pitch, host_slice_pitch, ptr,
+		num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueWriteBuffer(
+		cl_command_queue command_queue,
+		cl_mem buffer,
+		cl_bool blocking_write,
+		size_t offset,
+		size_t size,
+		const void *ptr,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueWriteBuffer()...\n"));
+	return rtlib_ocl.enqueueWriteBuffer(command_queue, buffer, blocking_write,
+		offset, size, ptr, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueWriteBufferRect(
+		cl_command_queue command_queue,
+		cl_mem buffer,
+		cl_bool blocking_write,
+		const size_t *buffer_origin,
+		const size_t *host_origin,
+		const size_t *region,
+		size_t buffer_row_pitch,
+		size_t buffer_slice_pitch,
+		size_t host_row_pitch,
+		size_t host_slice_pitch,
+		const void *ptr,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_1 {
+	fprintf(stderr, FD("Calling clEnqueueWriteBufferRect()...\n"));
+	return rtlib_ocl.enqueueWriteBufferRect(command_queue, buffer, blocking_write,
+		buffer_origin, host_origin, region,	buffer_row_pitch, buffer_slice_pitch,
+		host_row_pitch, host_slice_pitch, ptr, num_events_in_wait_list,
+		event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueFillBuffer(
+		cl_command_queue command_queue,
+		cl_mem buffer,
+		const void *pattern,
+		size_t pattern_size,
+		size_t offset,
+		size_t size,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	fprintf(stderr, FD("Calling clEnqueueFillBuffer()...\n"));
+	return rtlib_ocl.enqueueFillBuffer(command_queue, buffer, pattern, pattern_size,
+		offset, size, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueCopyBuffer(
+		cl_command_queue command_queue,
+		cl_mem src_buffer,
+		cl_mem dst_buffer,
+		size_t src_offset,
+		size_t dst_offset,
+		size_t size,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueCopyBuffer()...\n"));
+	return rtlib_ocl.enqueueCopyBuffer(command_queue, src_buffer, dst_buffer,
+		src_offset, dst_offset, size, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueCopyBufferRect(
+		cl_command_queue command_queue,
+		cl_mem src_buffer,
+		cl_mem dst_buffer,
+		const size_t *src_origin,
+		const size_t *dst_origin,
+		const size_t *region,
+		size_t src_row_pitch,
+		size_t src_slice_pitch,
+		size_t dst_row_pitch,
+		size_t dst_slice_pitch,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_1 {
+	fprintf(stderr, FD("Calling clEnqueueCopyBufferRect()...\n"));
+	return rtlib_ocl.enqueueCopyBufferRect(command_queue, src_buffer, dst_buffer,
+		src_origin, dst_origin, region, src_row_pitch, src_slice_pitch,
+		dst_row_pitch, dst_slice_pitch, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueReadImage(
+		cl_command_queue command_queue,
+		cl_mem image,
+		cl_bool blocking_read,
+		const size_t *origin,
+		const size_t *region,
+		size_t row_pitch,
+		size_t slice_pitch,
+		void *ptr,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueReadImage()...\n"));
+	return rtlib_ocl.enqueueReadImage(command_queue, image, blocking_read,
+		origin, region, row_pitch, slice_pitch, ptr, num_events_in_wait_list,
+		event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueWriteImage(
+		cl_command_queue command_queue,
+		cl_mem image,
+		cl_bool blocking_write,
+		const size_t *origin,
+		const size_t *region,
+		size_t input_row_pitch,
+		size_t input_slice_pitch,
+		const void *ptr,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueWriteImage()...\n"));
+	return rtlib_ocl.enqueueWriteImage(command_queue, image, blocking_write,
+		origin, region, input_row_pitch, input_slice_pitch, ptr,
+		num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueFillImage(
+		cl_command_queue command_queue,
+		cl_mem image,
+		const void *fill_color,
+		const size_t *origin,
+		const size_t *region,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	fprintf(stderr, FD("Calling clEnqueueFillImage()...\n"));
+	return rtlib_ocl.enqueueFillImage(command_queue, image, fill_color, origin,
+		region, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueCopyImage(
+		cl_command_queue command_queue,
+		cl_mem src_image,
+		cl_mem dst_image,
+		const size_t *src_origin,
+		const size_t *dst_origin,
+		const size_t *region,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueCopyImage()...\n"));
+	return rtlib_ocl.enqueueCopyImage(command_queue, src_image, dst_image,
+		src_origin, dst_origin, region, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueCopyImageToBuffer(
+		cl_command_queue command_queue,
+		cl_mem src_image,
+		cl_mem dst_buffer,
+		const size_t *src_origin,
+		const size_t *region,
+		size_t dst_offset,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueCopyImageToBuffer()...\n"));
+	return rtlib_ocl.enqueueCopyImageToBuffer(command_queue, src_image,
+		dst_buffer, src_origin, region, dst_offset, num_events_in_wait_list,
+		event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueCopyBufferToImage(
+		cl_command_queue command_queue,
+		cl_mem src_buffer,
+		cl_mem dst_image,
+		size_t src_offset,
+		const size_t *dst_origin,
+		const size_t *region,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueCopyBufferToImage()...\n"));
+	return rtlib_ocl.enqueueCopyBufferToImage(command_queue, src_buffer,
+		dst_image, src_offset, dst_origin, region, num_events_in_wait_list,
+		event_wait_list, event);
+}
+
+CL_API_ENTRY void * CL_API_CALL
+clEnqueueMapBuffer(
+		cl_command_queue command_queue,
+		cl_mem buffer,
+		cl_bool blocking_map,
+		cl_map_flags map_flags,
+		size_t offset,
+		size_t size,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event,
+		cl_int *errcode_ret)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueMapBuffer()...\n"));
+	return rtlib_ocl.enqueueMapBuffer(command_queue, buffer, blocking_map,
+		map_flags, offset, size, num_events_in_wait_list, event_wait_list,
+		event, errcode_ret);
+}
+
+CL_API_ENTRY void * CL_API_CALL
+clEnqueueMapImage(
+		cl_command_queue command_queue,
+		cl_mem image,
+		cl_bool blocking_map,
+		cl_map_flags map_flags,
+		const size_t *origin,
+		const size_t *region,
+		size_t *image_row_pitch,
+		size_t *image_slice_pitch,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event,
+		cl_int *errcode_ret)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueMapImage()...\n"));
+	return rtlib_ocl.enqueueMapImage(command_queue, image, blocking_map,
+		map_flags, origin, region, image_row_pitch, image_slice_pitch,
+		num_events_in_wait_list, event_wait_list, event, errcode_ret);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueUnmapMemObject(
+		cl_command_queue command_queue,
+		cl_mem memobj,
+		void *mapped_ptr,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueUnmapMemObject()...\n"));
+	return rtlib_ocl.enqueueUnmapMemObject(command_queue, memobj, mapped_ptr,
+		num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueMigrateMemObjects(
+		cl_command_queue command_queue,
+		cl_uint num_mem_objects,
+		const cl_mem *mem_objects,
+		cl_mem_migration_flags flags,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	fprintf(stderr, FD("Calling clEnqueueMigrateMemObjects()...\n"));
+	return rtlib_ocl.enqueueMigrateMemObjects(command_queue, num_mem_objects,
+		mem_objects, flags, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueNDRangeKernel(
+		cl_command_queue command_queue,
+		cl_kernel kernel,
+		cl_uint work_dim,
+		const size_t *global_work_offset,
+		const size_t *global_work_size,
+		const size_t *local_work_size,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueNDRangeKernel()...\n"));
+	return rtlib_ocl.enqueueNDRangeKernel(command_queue, kernel, work_dim,
+		global_work_offset, global_work_size, local_work_size,
+		num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueTask(
+		cl_command_queue command_queue,
+		cl_kernel kernel,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueTask()...\n"));
+	return rtlib_ocl.enqueueTask(command_queue, kernel, num_events_in_wait_list,
+		event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueNativeKernel(
+		cl_command_queue command_queue,
+		void (CL_CALLBACK *user_func)(void *),
+		void *args,
+		size_t cb_args,
+		cl_uint num_mem_objects,
+		const cl_mem *mem_list,
+		const void **args_mem_loc,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_0 {
+	fprintf(stderr, FD("Calling clEnqueueNativeKernel()...\n"));
+	return rtlib_ocl.enqueueNativeKernel(command_queue, (*user_func), args,
+		cb_args, num_mem_objects, mem_list, args_mem_loc, num_events_in_wait_list,
+		event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueMarkerWithWaitList(
+		cl_command_queue command_queue,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	fprintf(stderr, FD("Calling clEnqueueMarkerWithWaitList()...\n"));
+	return rtlib_ocl.enqueueMarkerWithWaitList(command_queue, num_events_in_wait_list,
+		event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueBarrierWithWaitList(
+		cl_command_queue command_queue,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	fprintf(stderr, FD("Calling clEnqueueBarrierWithWaitList()...\n"));
+	return rtlib_ocl.enqueueBarrierWithWaitList(command_queue,
+	num_events_in_wait_list, event_wait_list, event);
+}
+
 }
 
 #ifdef  __cplusplus
