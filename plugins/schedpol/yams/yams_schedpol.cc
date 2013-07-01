@@ -731,16 +731,16 @@ void YamsSchedPol::CowsApplyRecipeValues(
 	  float db, float ds, float dr, float df) {
 	// Updating system-wide means. The indexes are shifted by one
 	// because modifiedSums vector doesn't need the first metric
-	// (aka COWS_LLCM_METRIC)
-	cowsInfo.modifiedSums[COWS_STALLS_METRIC - 1] += ds;
-	cowsInfo.modifiedSums[COWS_RETIRED_METRIC - 1] += dr;
-	cowsInfo.modifiedSums[COWS_FLOPS_METRIC - 1] += df;
+	// (aka COWS_LLCM)
+	cowsInfo.modifiedSums[COWS_STALLS - 1] += ds;
+	cowsInfo.modifiedSums[COWS_IRET   - 1] += dr;
+	cowsInfo.modifiedSums[COWS_FLOPS  - 1] += df;
 
 	// Setting info for future system update
-	cowsInfo.candidatedValues[COWS_LLCM_METRIC] = db;
-	cowsInfo.candidatedValues[COWS_STALLS_METRIC] = ds;
-	cowsInfo.candidatedValues[COWS_RETIRED_METRIC] = dr;
-	cowsInfo.candidatedValues[COWS_FLOPS_METRIC] = df;
+	cowsInfo.candidatedValues[COWS_LLCM]   = db;
+	cowsInfo.candidatedValues[COWS_STALLS] = ds;
+	cowsInfo.candidatedValues[COWS_IRET]   = dr;
+	cowsInfo.candidatedValues[COWS_FLOPS]  = df;
 }
 
 void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
@@ -759,10 +759,10 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 			cowsInfo.boundnessMetrics[i] =
 				(cowsInfo.boundnessSquaredSum[i]
 				+ pow(
-				cowsInfo.candidatedValues[COWS_LLCM_METRIC], 2))
+				cowsInfo.candidatedValues[COWS_LLCM], 2))
 				/ (cowsInfo.bdLoad[i] + 1)
 				- pow((cowsInfo.boundnessSum[i]
-				+ cowsInfo.candidatedValues[COWS_LLCM_METRIC])
+				+ cowsInfo.candidatedValues[COWS_LLCM])
 				/ (cowsInfo.bdLoad[i] + 1), 2)
 				- (cowsInfo.boundnessSquaredSum[i])
 				/ (cowsInfo.bdLoad[i])
@@ -771,24 +771,21 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 
 			// Only positive contributions are used to normalize
 			if (cowsInfo.boundnessMetrics[i] > 0)
-			  cowsInfo.normStats[COWS_LLCM_METRIC] +=
+			  cowsInfo.normStats[COWS_LLCM] +=
 						   cowsInfo.boundnessMetrics[i];
 		}
 		else {
 			cowsInfo.boundnessMetrics[i] = 1;
-			cowsInfo.normStats[COWS_LLCM_METRIC] ++;
+			cowsInfo.normStats[COWS_LLCM] ++;
 		}
 		logger->Notice("COWS: Boundness variance @BD %d for %s: %3.2f",
 		  bindings.ids[i], psch->StrId(), cowsInfo.boundnessMetrics[i]);
 
 		logger->Info("COWS: Prefetching Sys-Wide info for bd %i",
-								bindings.ids[i]);
-		cowsInfo.modifiedSums[COWS_STALLS_METRIC - 1]
-						+= cowsInfo.stallsSum[i];
-		cowsInfo.modifiedSums[COWS_RETIRED_METRIC - 1]
-						+= cowsInfo.retiredSum[i];
-		cowsInfo.modifiedSums[COWS_FLOPS_METRIC - 1]
-						+= cowsInfo.flopSum[i];
+				bindings.ids[i]);
+		cowsInfo.modifiedSums[COWS_STALLS - 1] += cowsInfo.stallsSum[i];
+		cowsInfo.modifiedSums[COWS_IRET - 1]   += cowsInfo.retiredSum[i];
+		cowsInfo.modifiedSums[COWS_FLOPS - 1]  += cowsInfo.flopSum[i];
 
 		logger->Info("COWS: Prefetching Migration info for bd %i",
 							       bindings.ids[i]);
@@ -802,19 +799,19 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 		value = 0.0;
 		GetSchedContribValue(psch, sc_types[SchedContribManager::MIGRATION], value);
 		cowsInfo.migrationMetrics[i] = value;
-		cowsInfo.normStats[COWS_MIGRATION_METRIC] += value;
-
+		cowsInfo.normStats[COWS_MIGRA] += value;
 	}
-	if (cowsInfo.normStats[COWS_LLCM_METRIC] == 0) cowsInfo.normStats[0]++;
-	if (cowsInfo.normStats[COWS_MIGRATION_METRIC] == 0)
-							cowsInfo.normStats[4]++;
+
+	// TODO: Comment
+	if (cowsInfo.normStats[COWS_LLCM] == 0) cowsInfo.normStats[0]++;
+	if (cowsInfo.normStats[COWS_MIGRA] == 0) cowsInfo.normStats[COWS_MIGRA]++;
 }
 
 void YamsSchedPol::CowsSysWideMetrics() {
 	// Update system mean: sumOf(BDmeans)/numberOfBDs
-	cowsInfo.modifiedSums[COWS_STALLS_METRIC - 1] /= bindings.num;
-	cowsInfo.modifiedSums[COWS_RETIRED_METRIC - 1] /= bindings.num;
-	cowsInfo.modifiedSums[COWS_FLOPS_METRIC - 1] /= bindings.num;
+	cowsInfo.modifiedSums[COWS_STALLS - 1] /= bindings.num;
+	cowsInfo.modifiedSums[COWS_IRET   - 1] /= bindings.num;
+	cowsInfo.modifiedSums[COWS_FLOPS  - 1] /= bindings.num;
 
 	logger->Info("===| COWS: Sys-wide variation of metrics variance |===");
 
@@ -866,11 +863,11 @@ void YamsSchedPol::CowsSysWideMetrics() {
 						    cowsInfo.flopsMetrics[i]);
 		logger->Info("COWS: Proceeding with next BD, if any ...");
 
-		cowsInfo.normStats[COWS_STALLS_METRIC]
+		cowsInfo.normStats[COWS_STALLS]
 						+= cowsInfo.stallsMetrics[i];
-		cowsInfo.normStats[COWS_RETIRED_METRIC]
+		cowsInfo.normStats[COWS_IRET]
 						+= cowsInfo.retiredMetrics[i];
-		cowsInfo.normStats[COWS_FLOPS_METRIC]
+		cowsInfo.normStats[COWS_FLOPS]
 						+= cowsInfo.flopsMetrics[i];
 	}
 }
@@ -913,13 +910,13 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 		// Calculating the best BD to schedule the app in
 		result =
 		// (W1*BOUNDNESS) - [W2*(ST + RET + FLOPS)] + (W3*MIGRATION)
-		    cowsInfo.metricsWeights[COWS_BOUNDNESS_WEIGHT] *
+		    cowsInfo.metricsWeights[COWS_BOUND_WEIGHT] *
 				cowsInfo.boundnessMetrics[i]
-		  - cowsInfo.metricsWeights[COWS_RESOURCES_WEIGHT] *
+		  - cowsInfo.metricsWeights[COWS_RSRC_WEIGHT] *
 			      ( cowsInfo.stallsMetrics[i] +
 				cowsInfo.retiredMetrics[i] +
 				cowsInfo.flopsMetrics[i] )
-		  + cowsInfo.metricsWeights[COWS_MIGRATION_WEIGHT] *
+		  + cowsInfo.metricsWeights[COWS_MIGR_WEIGHT] *
 				cowsInfo.migrationMetrics[i];
 
 		cowsInfo.orderedBDs.insert( std::pair<float,int>(result,i) );
@@ -932,11 +929,11 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
 		logger->Info("--- BD: %d, Value: %f",
 				bindings.ids[(*rit).second], (*rit).first);
 
-	logger->Notice("COWS: candidate values are: %3.2f, %3.2f, %3.2f, %3.2f"
-			".", cowsInfo.candidatedValues[COWS_LLCM_METRIC],
-			cowsInfo.candidatedValues[COWS_STALLS_METRIC],
-			cowsInfo.candidatedValues[COWS_RETIRED_METRIC],
-			cowsInfo.candidatedValues[COWS_FLOPS_METRIC]);
+	logger->Notice("COWS: candidate values: %3.2f, %3.2f, %3.2f, %3.2f",
+			cowsInfo.candidatedValues[COWS_LLCM],
+			cowsInfo.candidatedValues[COWS_STALLS],
+			cowsInfo.candidatedValues[COWS_IRET],
+			cowsInfo.candidatedValues[COWS_FLOPS]);
 	logger->Info("==========|          COWS: Done             |==========");
 }
 
@@ -968,9 +965,9 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
 	logger->Info("|=========+=========+=========+=========+=========|");
 	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-				cowsInfo.metricsWeights[COWS_BOUNDNESS_WEIGHT],
-				cowsInfo.metricsWeights[COWS_RESOURCES_WEIGHT],
-				cowsInfo.metricsWeights[COWS_MIGRATION_WEIGHT]);
+				cowsInfo.metricsWeights[COWS_BOUND_WEIGHT],
+				cowsInfo.metricsWeights[COWS_RSRC_WEIGHT],
+				cowsInfo.metricsWeights[COWS_MIGR_WEIGHT]);
 	logger->Info(" =========+=========+=========+=========+========= ");
 
 	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i++) {
@@ -984,9 +981,9 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
 	logger->Info("|=========+=========+=========+=========+=========|");
 	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-				cowsInfo.metricsWeights[COWS_BOUNDNESS_WEIGHT],
-				cowsInfo.metricsWeights[COWS_RESOURCES_WEIGHT],
-				cowsInfo.metricsWeights[COWS_MIGRATION_WEIGHT]);
+				cowsInfo.metricsWeights[COWS_BOUND_WEIGHT],
+				cowsInfo.metricsWeights[COWS_RSRC_WEIGHT],
+				cowsInfo.metricsWeights[COWS_MIGR_WEIGHT]);
 	logger->Info(" =========+=========+=========+=========+========= ");
 #endif // CONFIG_BBQUE_SP_COWS_BINDING
 	return 0;

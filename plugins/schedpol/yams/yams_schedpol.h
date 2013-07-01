@@ -171,20 +171,20 @@ private:
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	enum CowsMetrics_t {
-		COWS_LLCM_METRIC,
-		COWS_STALLS_METRIC,
-		COWS_RETIRED_METRIC,
-		COWS_FLOPS_METRIC,
-		COWS_MIGRATION_METRIC
+		COWS_LLCM,
+		COWS_STALLS,
+		COWS_IRET,
+		COWS_FLOPS,
+		COWS_MIGRA
 	};
 
 	/**
 	 * @brief Weights used by COWS to aggregate the metrics
 	 */
 	enum CowsAggregationWeights_t {
-		COWS_BOUNDNESS_WEIGHT,
-		COWS_RESOURCES_WEIGHT,
-		COWS_MIGRATION_WEIGHT
+		COWS_BOUND_WEIGHT,
+		COWS_RSRC_WEIGHT,
+		COWS_MIGR_WEIGHT
 	};
 #endif
 
