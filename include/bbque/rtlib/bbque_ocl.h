@@ -192,14 +192,14 @@ struct RTLIB_OpenCL {
 };
 
 /* Platform API */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetPlatformIDs(
 		cl_uint,
 		cl_platform_id *,
 		cl_uint *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetPlatformInfo(
 		cl_platform_id,
 		cl_platform_info,
@@ -209,7 +209,7 @@ clGetPlatformInfo(
 		CL_API_SUFFIX__VERSION_1_0;
 
 /* Device APIs */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetDeviceIDs(
 		cl_platform_id,
 		cl_device_type,
@@ -218,7 +218,7 @@ clGetDeviceIDs(
 		cl_uint *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetDeviceInfo(
 		cl_device_id,
 		cl_device_info,
@@ -227,7 +227,7 @@ clGetDeviceInfo(
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clCreateSubDevices(
 		cl_device_id,
 		const cl_device_partition_property *,
@@ -236,14 +236,14 @@ clCreateSubDevices(
 		cl_uint *)
 		CL_API_SUFFIX__VERSION_1_2;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clRetainDevice(cl_device_id) CL_API_SUFFIX__VERSION_1_2;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clReleaseDevice(cl_device_id) CL_API_SUFFIX__VERSION_1_2;
 
 /* Context APIs  */
-extern CL_API_ENTRY cl_context CL_API_CALL
+CL_API_ENTRY  cl_context CL_API_CALL
 clCreateContext(
 		const cl_context_properties *,
 		cl_uint,
@@ -253,7 +253,7 @@ clCreateContext(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_context CL_API_CALL
+CL_API_ENTRY  cl_context CL_API_CALL
 clCreateContextFromType(
 		const cl_context_properties *,
 		cl_device_type,
@@ -262,13 +262,13 @@ clCreateContextFromType(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clRetainContext(cl_context) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clReleaseContext(cl_context) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetContextInfo(
 		cl_context,
         cl_context_info,
@@ -278,7 +278,7 @@ clGetContextInfo(
         CL_API_SUFFIX__VERSION_1_0;
 
 /* Command Queue APIs */
-extern CL_API_ENTRY cl_command_queue CL_API_CALL
+CL_API_ENTRY  cl_command_queue CL_API_CALL
 clCreateCommandQueue(
 		cl_context,
 		cl_device_id,
@@ -286,13 +286,13 @@ clCreateCommandQueue(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clRetainCommandQueue(cl_command_queue) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clReleaseCommandQueue(cl_command_queue) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetCommandQueueInfo(
 		cl_command_queue,
 		cl_command_queue_info,
@@ -302,7 +302,7 @@ clGetCommandQueueInfo(
 		CL_API_SUFFIX__VERSION_1_0;
 
 /* Memory Object APIs */
-extern CL_API_ENTRY cl_mem CL_API_CALL
+CL_API_ENTRY  cl_mem CL_API_CALL
 clCreateBuffer(
 		cl_context,
 		cl_mem_flags,
@@ -311,7 +311,7 @@ clCreateBuffer(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_mem CL_API_CALL
+CL_API_ENTRY  cl_mem CL_API_CALL
 clCreateSubBuffer(
 		cl_mem,
 		cl_mem_flags,
@@ -320,7 +320,7 @@ clCreateSubBuffer(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_1;
 
-extern CL_API_ENTRY cl_mem CL_API_CALL
+CL_API_ENTRY  cl_mem CL_API_CALL
 clCreateImage(
 		cl_context,
 		cl_mem_flags,
@@ -330,13 +330,13 @@ clCreateImage(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_2;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clRetainMemObject(cl_mem) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clReleaseMemObject(cl_mem) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetSupportedImageFormats(
 		cl_context,
 		cl_mem_flags,
@@ -346,7 +346,7 @@ clGetSupportedImageFormats(
 		cl_uint *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetMemObjectInfo(
 		cl_mem,
 		cl_mem_info,
@@ -355,7 +355,7 @@ clGetMemObjectInfo(
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetImageInfo(
 		cl_mem,
 		cl_image_info,
@@ -364,14 +364,14 @@ clGetImageInfo(
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clSetMemObjectDestructorCallback(
 		cl_mem,
 		void (CL_CALLBACK *)(cl_mem, void*), void *)
 		CL_API_SUFFIX__VERSION_1_1;
 
 /* Sampler APIs */
-extern CL_API_ENTRY cl_sampler CL_API_CALL
+CL_API_ENTRY  cl_sampler CL_API_CALL
 clCreateSampler(
 		cl_context,
 		cl_bool,
@@ -380,13 +380,13 @@ clCreateSampler(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clRetainSampler(cl_sampler) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clReleaseSampler(cl_sampler) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetSamplerInfo(
 		cl_sampler,
 		cl_sampler_info,
@@ -396,7 +396,7 @@ clGetSamplerInfo(
 		CL_API_SUFFIX__VERSION_1_0;
 
 /* Program Object APIs  */
-extern CL_API_ENTRY cl_program CL_API_CALL
+CL_API_ENTRY  cl_program CL_API_CALL
 clCreateProgramWithSource(
 		cl_context,
 		cl_uint,
@@ -405,7 +405,7 @@ clCreateProgramWithSource(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_program CL_API_CALL
+CL_API_ENTRY  cl_program CL_API_CALL
 clCreateProgramWithBinary(
 		cl_context,
 		cl_uint,
@@ -416,7 +416,7 @@ clCreateProgramWithBinary(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_program CL_API_CALL
+CL_API_ENTRY  cl_program CL_API_CALL
 clCreateProgramWithBuiltInKernels(
 		cl_context,
 		cl_uint,
@@ -425,13 +425,13 @@ clCreateProgramWithBuiltInKernels(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_2;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clRetainProgram(cl_program) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clReleaseProgram(cl_program) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clBuildProgram(
 		cl_program,
 		cl_uint,
@@ -441,7 +441,7 @@ clBuildProgram(
 		void *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clCompileProgram(
 		cl_program,
 		cl_uint,
@@ -454,7 +454,7 @@ clCompileProgram(
 		void *)
 		CL_API_SUFFIX__VERSION_1_2;
 
-extern CL_API_ENTRY cl_program CL_API_CALL
+CL_API_ENTRY  cl_program CL_API_CALL
 clLinkProgram(
 		cl_context,
 		cl_uint,
@@ -467,10 +467,10 @@ clLinkProgram(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_2;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clUnloadPlatformCompiler(cl_platform_id) CL_API_SUFFIX__VERSION_1_2;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetProgramInfo(
 		cl_program,
 		cl_program_info,
@@ -479,7 +479,7 @@ clGetProgramInfo(
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetProgramBuildInfo(
 		cl_program,
 		cl_device_id,
@@ -490,14 +490,14 @@ clGetProgramBuildInfo(
 		CL_API_SUFFIX__VERSION_1_0;
 
 /* Kernel Object APIs */
-extern CL_API_ENTRY cl_kernel CL_API_CALL
+CL_API_ENTRY  cl_kernel CL_API_CALL
 clCreateKernel(
 		cl_program,
 		const char *,
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clCreateKernelsInProgram(
 		cl_program,
 		cl_uint,
@@ -505,13 +505,13 @@ clCreateKernelsInProgram(
 		cl_uint *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clRetainKernel(cl_kernel) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clReleaseKernel(cl_kernel) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clSetKernelArg(
 		cl_kernel,
 		cl_uint,
@@ -519,7 +519,7 @@ clSetKernelArg(
 		const void *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetKernelInfo(
 		cl_kernel,
 		cl_kernel_info,
@@ -528,7 +528,7 @@ clGetKernelInfo(
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetKernelArgInfo(
 		cl_kernel,
 		cl_uint,
@@ -538,7 +538,7 @@ clGetKernelArgInfo(
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_2;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetKernelWorkGroupInfo(
 		cl_kernel,
 		cl_device_id,
@@ -549,13 +549,13 @@ clGetKernelWorkGroupInfo(
 		CL_API_SUFFIX__VERSION_1_0;
 
 /* Event Object APIs */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clWaitForEvents(
 		cl_uint,
 		const cl_event *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetEventInfo(
 		cl_event,
 		cl_event_info,
@@ -564,25 +564,25 @@ clGetEventInfo(
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_event CL_API_CALL
+CL_API_ENTRY  cl_event CL_API_CALL
 clCreateUserEvent(
 		cl_context,
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_1;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clRetainEvent(cl_event) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clReleaseEvent(cl_event) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clSetUserEventStatus(
 		cl_event,
 		cl_int)
 		CL_API_SUFFIX__VERSION_1_1;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clSetEventCallback(
 		cl_event,
 		cl_int,
@@ -591,7 +591,7 @@ clSetEventCallback(
 		CL_API_SUFFIX__VERSION_1_1;
 
 /* Profiling APIs */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clGetEventProfilingInfo(
 		cl_event,
 		cl_profiling_info,
@@ -601,10 +601,10 @@ clGetEventProfilingInfo(
 		CL_API_SUFFIX__VERSION_1_0;
 
 /* Flush and Finish APIs */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clFlush(cl_command_queue) CL_API_SUFFIX__VERSION_1_0;
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY  cl_int CL_API_CALL
 clFinish(cl_command_queue) CL_API_SUFFIX__VERSION_1_0;
 
 /* Enqueued Commands APIs */

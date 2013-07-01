@@ -31,7 +31,7 @@ extern "C" {
 extern RTLIB_OpenCL_t rtlib_ocl;
 
 /* Platform API */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetPlatformIDs(
 		cl_uint num_entries,
 		cl_platform_id *platforms,
@@ -41,7 +41,7 @@ clGetPlatformIDs(
 	return rtlib_ocl.getPlatformIDs(num_entries, platforms, num_platforms);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetPlatformInfo(
 		cl_platform_id platform,
 		cl_platform_info param_name,
@@ -54,7 +54,7 @@ clGetPlatformInfo(
 }
 
 /* Device APIs */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetDeviceIDs(
 		cl_platform_id platform,
 		cl_device_type device_type,
@@ -66,7 +66,7 @@ clGetDeviceIDs(
 	return rtlib_ocl.getDeviceIDs(platform, device_type, num_entries, devices, num_devices);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetDeviceInfo(
 		cl_device_id device,
 		cl_device_info param_name,
@@ -78,7 +78,7 @@ clGetDeviceInfo(
 	return rtlib_ocl.getDeviceInfo(device, param_name, param_value_size, param_value, param_value_size_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clCreateSubDevices(
 		cl_device_id in_device,
 		const cl_device_partition_property *properties,
@@ -90,20 +90,20 @@ clCreateSubDevices(
 	return rtlib_ocl.createSubDevices(in_device, properties, num_devices, out_devices, num_devices_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clRetainDevice(cl_device_id device) CL_API_SUFFIX__VERSION_1_2 {
 	fprintf(stderr, FD("Calling clRetainDevice()...\n"));
 	return rtlib_ocl.retainDevice(device);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clReleaseDevice(cl_device_id device) CL_API_SUFFIX__VERSION_1_2 {
 	fprintf(stderr, FD("Calling clReleaseDevice()...\n"));
 	return rtlib_ocl.releaseDevice(device);
 }
 
 /* Context APIs  */
-extern CL_API_ENTRY cl_context CL_API_CALL
+CL_API_ENTRY cl_context CL_API_CALL
 clCreateContext(
 		const cl_context_properties *properties,
 		cl_uint num_devices,
@@ -117,7 +117,7 @@ clCreateContext(
 		user_data, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_context CL_API_CALL
+CL_API_ENTRY cl_context CL_API_CALL
 clCreateContextFromType(
 		const cl_context_properties *properties,
 		cl_device_type device_type,
@@ -130,19 +130,19 @@ clCreateContextFromType(
 		user_data, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clRetainContext(cl_context context) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clRetainContext()...\n"));
 	return rtlib_ocl.retainContext(context);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clReleaseContext(cl_context context) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clReleaseContext()...\n"));
 	return rtlib_ocl.releaseContext(context);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetContextInfo(
 		cl_context context,
         cl_context_info param_name,
@@ -156,7 +156,7 @@ clGetContextInfo(
 }
 
 /* Command Queue APIs */
-extern CL_API_ENTRY cl_command_queue CL_API_CALL
+CL_API_ENTRY cl_command_queue CL_API_CALL
 clCreateCommandQueue(
 		cl_context context,
 		cl_device_id device,
@@ -167,19 +167,19 @@ clCreateCommandQueue(
 	return rtlib_ocl.createCommandQueue(context, device, properties, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clRetainCommandQueue(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clRetainCommandQueue()...\n"));
 	return rtlib_ocl.retainCommandQueue(command_queue);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clReleaseCommandQueue(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clReleaseCommandQueue()...\n"));
 	return rtlib_ocl.releaseCommandQueue(command_queue);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetCommandQueueInfo(
 		cl_command_queue command_queue,
 		cl_command_queue_info param_name,
@@ -193,7 +193,7 @@ clGetCommandQueueInfo(
 }
 
 /* Memory Object APIs */
-extern CL_API_ENTRY cl_mem CL_API_CALL
+CL_API_ENTRY cl_mem CL_API_CALL
 clCreateBuffer(
 		cl_context context,
 		cl_mem_flags flags,
@@ -205,7 +205,7 @@ clCreateBuffer(
 	return rtlib_ocl.createBuffer(context, flags, size, host_ptr, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_mem CL_API_CALL
+CL_API_ENTRY cl_mem CL_API_CALL
 clCreateSubBuffer(
 		cl_mem buffer,
 		cl_mem_flags flags,
@@ -218,7 +218,7 @@ clCreateSubBuffer(
 		buffer_create_info, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_mem CL_API_CALL
+CL_API_ENTRY cl_mem CL_API_CALL
 clCreateImage(
 		cl_context context,
 		cl_mem_flags flags,
@@ -232,19 +232,19 @@ clCreateImage(
 		host_ptr, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clRetainMemObject(cl_mem memobj) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clRetainMemObject()...\n"));
 	return rtlib_ocl.retainMemObject(memobj);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clReleaseMemObject(cl_mem memobj) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clReleaseMemObject()...\n"));
 	return rtlib_ocl.releaseMemObject(memobj);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetSupportedImageFormats(
 		cl_context context,
 		cl_mem_flags flags,
@@ -258,7 +258,7 @@ clGetSupportedImageFormats(
 		num_entries, image_formats, num_image_formats);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetMemObjectInfo(
 		cl_mem memobj,
 		cl_mem_info param_name,
@@ -271,7 +271,7 @@ clGetMemObjectInfo(
 		param_value, param_value_size_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetImageInfo(
 		cl_mem  image,
 		cl_image_info param_name,
@@ -284,7 +284,7 @@ clGetImageInfo(
 		param_value, param_value_size_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clSetMemObjectDestructorCallback(
 		cl_mem memobj,
 		void (CL_CALLBACK *pfn_notify)(cl_mem memobj, void *user_data),
@@ -295,7 +295,7 @@ clSetMemObjectDestructorCallback(
 }
 
 /* Sampler APIs */
-extern CL_API_ENTRY cl_sampler CL_API_CALL
+CL_API_ENTRY cl_sampler CL_API_CALL
 clCreateSampler(
 		cl_context context,
 		cl_bool normalized_coords,
@@ -308,19 +308,19 @@ clCreateSampler(
 		filter_mode, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clRetainSampler(cl_sampler sampler) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clRetainSampler()...\n"));
 	return rtlib_ocl.retainSampler(sampler);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clReleaseSampler(cl_sampler sampler) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clReleaseSampler()...\n"));
 	return rtlib_ocl.releaseSampler(sampler);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetSamplerInfo(
 		cl_sampler sampler,
 		cl_sampler_info param_name,
@@ -334,7 +334,7 @@ clGetSamplerInfo(
 }
 
 /* Program Object APIs  */
-extern CL_API_ENTRY cl_program CL_API_CALL
+CL_API_ENTRY cl_program CL_API_CALL
 clCreateProgramWithSource(
 		cl_context context,
 		cl_uint count,
@@ -346,7 +346,7 @@ clCreateProgramWithSource(
 	return rtlib_ocl.createProgramWithSource(context, count, strings, lengths, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_program CL_API_CALL
+CL_API_ENTRY cl_program CL_API_CALL
 clCreateProgramWithBinary(
 		cl_context context,
 		cl_uint num_devices,
@@ -361,7 +361,7 @@ clCreateProgramWithBinary(
 		lengths, binaries, binary_status, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_program CL_API_CALL
+CL_API_ENTRY cl_program CL_API_CALL
 clCreateProgramWithBuiltInKernels(
 		cl_context context,
 		cl_uint num_devices,
@@ -374,19 +374,19 @@ clCreateProgramWithBuiltInKernels(
 		device_list, kernel_names, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clRetainProgram(cl_program program) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clRetainProgram()...\n"));
 	return rtlib_ocl.retainProgram(program);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clReleaseProgram(cl_program program) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clReleaseProgram()...\n"));
 	return rtlib_ocl.releaseProgram(program);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clBuildProgram(
 		cl_program program,
 		cl_uint num_devices,
@@ -400,7 +400,7 @@ clBuildProgram(
 		(*pfn_notify), user_data);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clCompileProgram(
 		cl_program program,
 		cl_uint num_devices,
@@ -417,7 +417,7 @@ clCompileProgram(
 		num_input_headers, input_headers, header_include_names, (*pfn_notify), user_data);
 }
 
-extern CL_API_ENTRY cl_program CL_API_CALL
+CL_API_ENTRY cl_program CL_API_CALL
 clLinkProgram(
 		cl_context context,
 		cl_uint num_devices,
@@ -434,13 +434,13 @@ clLinkProgram(
 		num_input_programs, input_programs, (*pfn_notify), user_data, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clUnloadPlatformCompiler(cl_platform_id platform) CL_API_SUFFIX__VERSION_1_2 {
 	fprintf(stderr, FD("Calling clUnloadPlatformCompiler()...\n"));
 	return rtlib_ocl.unloadPlatformCompiler(platform);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetProgramInfo(
 		cl_program program,
 		cl_program_info param_name,
@@ -453,7 +453,7 @@ clGetProgramInfo(
 		param_value, param_value_size_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetProgramBuildInfo(
 		cl_program program,
 		cl_device_id device,
@@ -468,7 +468,7 @@ clGetProgramBuildInfo(
 }
 
 /* Kernel Object APIs */
-extern CL_API_ENTRY cl_kernel CL_API_CALL
+CL_API_ENTRY cl_kernel CL_API_CALL
 clCreateKernel(
 		cl_program program,
 		const char *kernel_name,
@@ -478,7 +478,7 @@ clCreateKernel(
 	return rtlib_ocl.createKernel(program, kernel_name, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clCreateKernelsInProgram(
 		cl_program program,
 		cl_uint num_kernels,
@@ -489,19 +489,19 @@ clCreateKernelsInProgram(
 	return rtlib_ocl.createKernelsInProgram(program, num_kernels, kernels, num_kernels_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clRetainKernel(cl_kernel kernel) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clRetainKernel()...\n"));
 	return rtlib_ocl.retainKernel(kernel);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clReleaseKernel(cl_kernel kernel) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clReleaseKernel()...\n"));
 	return rtlib_ocl.releaseKernel(kernel);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clSetKernelArg(
 		cl_kernel kernel,
 		cl_uint arg_index,
@@ -512,7 +512,7 @@ clSetKernelArg(
 	return rtlib_ocl.setKernelArg(kernel, arg_index, arg_size, arg_value);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetKernelInfo(
 		cl_kernel kernel,
 		cl_kernel_info param_name,
@@ -525,7 +525,7 @@ clGetKernelInfo(
 		param_value, param_value_size_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetKernelArgInfo(
 		cl_kernel kernel,
 		cl_uint arg_indx,
@@ -539,7 +539,7 @@ clGetKernelArgInfo(
 		param_value_size, param_value, param_value_size_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetKernelWorkGroupInfo(
 		cl_kernel kernel,
 		cl_device_id device,
@@ -554,7 +554,7 @@ clGetKernelWorkGroupInfo(
 }
 
 /* Event Object APIs */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clWaitForEvents(
 		cl_uint num_events,
 		const cl_event *event_list)
@@ -563,7 +563,7 @@ clWaitForEvents(
 	return rtlib_ocl.waitForEvents(num_events, event_list);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetEventInfo(
 		cl_event event,
 		cl_event_info param_name,
@@ -576,7 +576,7 @@ clGetEventInfo(
 		param_value, param_value_size_ret);
 }
 
-extern CL_API_ENTRY cl_event CL_API_CALL
+CL_API_ENTRY cl_event CL_API_CALL
 clCreateUserEvent(
 		cl_context context,
 		cl_int *errcode_ret)
@@ -585,19 +585,19 @@ clCreateUserEvent(
 	return rtlib_ocl.createUserEvent(context, errcode_ret);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clRetainEvent(cl_event event) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clRetainEvent()...\n"));
 	return rtlib_ocl.retainEvent(event);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clReleaseEvent(cl_event event) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clReleaseEvent()...\n"));
 	return rtlib_ocl.releaseEvent(event);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clSetUserEventStatus(
 		cl_event event,
 		cl_int execution_status)
@@ -606,7 +606,7 @@ clSetUserEventStatus(
 	return rtlib_ocl.setUserEventStatus(event, execution_status);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clSetEventCallback(
 		cl_event event,
 		cl_int command_exec_callback_type,
@@ -619,7 +619,7 @@ clSetEventCallback(
 }
 
 /* Profiling APIs */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clGetEventProfilingInfo(
 		cl_event event,
 		cl_profiling_info param_name,
@@ -633,13 +633,13 @@ clGetEventProfilingInfo(
 }
 
 /* Flush and Finish APIs */
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clFlush(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clFlush()...\n"));
 	return rtlib_ocl.flush(command_queue);
 }
 
-extern CL_API_ENTRY cl_int CL_API_CALL
+CL_API_ENTRY cl_int CL_API_CALL
 clFinish(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clFinish()...\n"));
 	return rtlib_ocl.finish(command_queue);
