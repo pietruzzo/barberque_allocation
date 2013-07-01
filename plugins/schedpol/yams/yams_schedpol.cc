@@ -672,16 +672,7 @@ void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
 		cowsInfo.normStats[i] = 0;
 	}
 
-	float db = atoi(std::static_pointer_cast<PluginAttr_t>\
-		(psch->pawm->GetAttribute("cows", "boundness"))->str.c_str());
-	float ds = atoi(std::static_pointer_cast<PluginAttr_t>\
-		(psch->pawm->GetAttribute("cows", "stalls"))->str.c_str());
-	float dr = atoi(std::static_pointer_cast<PluginAttr_t>\
-		(psch->pawm->GetAttribute("cows", "retired"))->str.c_str());
-	float df = atoi(std::static_pointer_cast<PluginAttr_t>\
-		(psch->pawm->GetAttribute("cows", "flops"))->str.c_str());
-
-	CowsApplyRecipeValues(db, ds, dr, df);
+	CowsInit(psch);
 	CowsComputeBoundness(psch);
 	CowsSysWideMetrics();
 	CowsAggregateResults(psch);
@@ -727,8 +718,19 @@ void YamsSchedPol::CowsResetStatus() {
 	cowsInfo.bdTotalLoad = 0;
 }
 
-void YamsSchedPol::CowsApplyRecipeValues(
-	  float db, float ds, float dr, float df) {
+void YamsSchedPol::CowsInit(SchedEntityPtr_t psch) {
+	int db, ds, dr, df;
+
+	// Get the metrics parsed from the recipe
+	db = atoi(std::static_pointer_cast<PluginAttr_t>
+			(psch->pawm->GetAttribute("cows", "boundness"))->str.c_str());
+	ds = atoi(std::static_pointer_cast<PluginAttr_t>
+			(psch->pawm->GetAttribute("cows", "stalls"))->str.c_str());
+	dr = atoi(std::static_pointer_cast<PluginAttr_t>
+			(psch->pawm->GetAttribute("cows", "retired"))->str.c_str());
+	df = atoi(std::static_pointer_cast<PluginAttr_t>
+			(psch->pawm->GetAttribute("cows", "flops"))->str.c_str());
+
 	// Updating system-wide means. The indexes are shifted by one
 	// because modifiedSums vector doesn't need the first metric
 	// (aka COWS_LLCM)

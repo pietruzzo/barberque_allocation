@@ -400,13 +400,9 @@ private:
 	void CowsResetStatus();
 
 	/**
-	 * @brief COWS: apply values extracted from recipe
-	 *
-	 * @param db Cache misses per cycle of the current AWM
-	 * @param ds Stalls per cycle of the current AWM
-	 * @param dr Retired instructions per cycle of the current AWM
+	 * @brief COWS: Initialize with values extracted from recipe
 	 */
-	void CowsApplyRecipeValues(float db, float ds, float dr, float df);
+	void CowsInit(SchedEntityPtr_t psch);
 
 	/**
 	 * @brief COWS: compute stalls, retired, flops var delta for the system
