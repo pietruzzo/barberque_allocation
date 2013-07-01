@@ -191,6 +191,12 @@ struct RTLIB_OpenCL {
 	enqueueBarrierWithWaitList_t enqueueBarrierWithWaitList;
 };
 
+void rtlib_init_ocl();
+
+/******************************************************************************
+ * OpenCL wrapper functions                                                   *
+ ******************************************************************************/
+
 /* Platform API */
 CL_API_ENTRY cl_int CL_API_CALL
 clGetPlatformIDs(

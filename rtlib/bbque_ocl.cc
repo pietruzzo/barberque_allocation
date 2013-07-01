@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <dlfcn.h>
 
 #include <cstdint>
 #include <cstdlib>
@@ -1036,6 +1037,90 @@ clEnqueueBarrierWithWaitList(
 	num_events_in_wait_list, event_wait_list, event);
 }
 
+// Initialize OpenCL wrappers
+void rtlib_init_ocl() {
+	void *handle = dlopen("/opt/AMDAPP/lib/x86_64/libOpenCL.so", RTLD_LOCAL | RTLD_LAZY);
+
+	rtlib_ocl.getPlatformIDs = (getPlatformIDs_t) dlsym(handle, "clGetPlatformIDs");
+	rtlib_ocl.getPlatformInfo = (getPlatformInfo_t) dlsym(handle, "clGetPlatformInfo");
+	rtlib_ocl.getDeviceIDs = (getDeviceIDs_t) dlsym(handle, "clGetDeviceIDs");
+	rtlib_ocl.getDeviceInfo = (getDeviceInfo_t) dlsym(handle, "clGetDeviceInfo");
+	rtlib_ocl.createSubDevices = (createSubDevices_t) dlsym(handle, "clCreateSubDevices");
+	rtlib_ocl.retainDevice = (retainDevice_t) dlsym(handle, "clRetainDevice");
+	rtlib_ocl.releaseDevice = (releaseDevice_t) dlsym(handle, "clReleaseDevice");
+	rtlib_ocl.createContext = (createContext_t) dlsym(handle, "clCreateContext");
+	rtlib_ocl.createContextFromType = (createContextFromType_t) dlsym(handle, "clCreateContextFromType");
+	rtlib_ocl.retainContext = (retainContext_t) dlsym(handle, "clRetainContext");
+	rtlib_ocl.releaseContext = (releaseContext_t) dlsym(handle, "clReleaseContext");
+	rtlib_ocl.getContextInfo = (getContextInfo_t) dlsym(handle, "clGetContextInfo");
+	rtlib_ocl.createCommandQueue = (createCommandQueue_t) dlsym(handle, "clCreateCommandQueue");
+	rtlib_ocl.retainCommandQueue = (retainCommandQueue_t) dlsym(handle, "clRetainCommandQueue");
+	rtlib_ocl.releaseCommandQueue = (releaseCommandQueue_t) dlsym(handle, "clReleaseCommandQueue");
+	rtlib_ocl.getCommandQueueInfo = (getCommandQueueInfo_t) dlsym(handle, "clGetCommandQueueInfo");
+	rtlib_ocl.createBuffer = (createBuffer_t) dlsym(handle, "clCreateBuffer");
+	rtlib_ocl.createSubBuffer = (createSubBuffer_t) dlsym(handle, "clCreateSubBuffer");
+	rtlib_ocl.createImage = (createImage_t) dlsym(handle, "clCreateImage");
+	rtlib_ocl.retainMemObject = (retainMemObject_t) dlsym(handle, "clRetainMemObject");
+	rtlib_ocl.releaseMemObject = (releaseMemObject_t) dlsym(handle, "clReleaseMemObject");
+	rtlib_ocl.getSupportedImageFormats = (getSupportedImageFormats_t) dlsym(handle, "clGetSupportedImageFormats");
+	rtlib_ocl.getMemObjectInfo = (getMemObjectInfo_t) dlsym(handle, "clGetMemObjectInfo");
+	rtlib_ocl.getImageInfo = (getImageInfo_t) dlsym(handle, "clGetImageInfo");
+	rtlib_ocl.setMemObjectDestructorCallback = (setMemObjectDestructorCallback_t) dlsym(handle, "clSetMemObjectDestructorCallback");
+	rtlib_ocl.createSampler = (createSampler_t) dlsym(handle, "clCreateSampler");
+	rtlib_ocl.retainSampler = (retainSampler_t) dlsym(handle, "clRetainSampler");
+	rtlib_ocl.releaseSampler = (releaseSampler_t) dlsym(handle, "clReleaseSampler");
+	rtlib_ocl.getSamplerInfo = (getSamplerInfo_t) dlsym(handle, "clGetSamplerInfo");
+	rtlib_ocl.createProgramWithSource = (createProgramWithSource_t) dlsym(handle, "clCreateProgramWithSource");
+	rtlib_ocl.createProgramWithBinary = (createProgramWithBinary_t) dlsym(handle, "clCreateProgramWithBinary");
+	rtlib_ocl.createProgramWithBuiltInKernels = (createProgramWithBuiltInKernels_t) dlsym(handle, "clCreateProgramWithBuiltInKernels");
+	rtlib_ocl.retainProgram = (retainProgram_t) dlsym(handle, "clRetainProgram");
+	rtlib_ocl.releaseProgram = (releaseProgram_t) dlsym(handle, "clReleaseProgram");
+	rtlib_ocl.buildProgram = (buildProgram_t) dlsym(handle, "clBuildProgram");
+	rtlib_ocl.compileProgram = (compileProgram_t) dlsym(handle, "clCompileProgram");
+	rtlib_ocl.linkProgram = (linkProgram_t) dlsym(handle, "clLinkProgram");
+	rtlib_ocl.unloadPlatformCompiler = (unloadPlatformCompiler_t) dlsym(handle, "clUnloadPlatformCompiler");
+	rtlib_ocl.getProgramInfo = (getProgramInfo_t) dlsym(handle, "clGetProgramInfo");
+	rtlib_ocl.getProgramBuildInfo = (getProgramBuildInfo_t) dlsym(handle, "clGetProgramBuildInfo");
+	rtlib_ocl.createKernel = (createKernel_t) dlsym(handle, "clCreateKernel");
+	rtlib_ocl.createKernelsInProgram = (createKernelsInProgram_t) dlsym(handle, "clCreateKernelsInProgram");
+	rtlib_ocl.retainKernel = (retainKernel_t) dlsym(handle, "clRetainKernel");
+	rtlib_ocl.releaseKernel = (releaseKernel_t) dlsym(handle, "clReleaseKernel");
+	rtlib_ocl.setKernelArg = (setKernelArg_t) dlsym(handle, "clSetKernelArg");
+	rtlib_ocl.getKernelInfo = (getKernelInfo_t) dlsym(handle, "clGetKernelInfo");
+	rtlib_ocl.getKernelArgInfo = (getKernelArgInfo_t) dlsym(handle, "clGetKernelArgInfo");
+	rtlib_ocl.getKernelWorkGroupInfo = (getKernelWorkGroupInfo_t) dlsym(handle, "clGetKernelWorkGroupInfo");
+	rtlib_ocl.waitForEvents = (waitForEvents_t) dlsym(handle, "clWaitForEvents");
+	rtlib_ocl.getEventInfo = (getEventInfo_t) dlsym(handle, "clGetEventInfo");
+	rtlib_ocl.createUserEvent = (createUserEvent_t) dlsym(handle, "clCreateUserEvent");
+	rtlib_ocl.retainEvent = (retainEvent_t) dlsym(handle, "clRetainEvent");
+	rtlib_ocl.releaseEvent = (releaseEvent_t) dlsym(handle, "clReleaseEvent");
+	rtlib_ocl.setUserEventStatus = (setUserEventStatus_t) dlsym(handle, "clSetUserEventStatus");
+	rtlib_ocl.setEventCallback = (setEventCallback_t) dlsym(handle, "clSetEventCallback");
+	rtlib_ocl.getEventProfilingInfo = (getEventProfilingInfo_t) dlsym(handle, "clGetEventProfilingInfo");
+	rtlib_ocl.enqueueReadBuffer = (enqueueReadBuffer_t) dlsym(handle, "clEnqueueReadBuffer");
+	rtlib_ocl.enqueueReadBufferRect = (enqueueReadBufferRect_t) dlsym(handle, "clEnqueueReadBufferRect");
+	rtlib_ocl.enqueueWriteBuffer = (enqueueWriteBuffer_t) dlsym(handle, "clEnqueueWriteBuffer");
+	rtlib_ocl.enqueueWriteBufferRect = (enqueueWriteBufferRect_t) dlsym(handle, "clEnqueueWriteBufferRect");
+	rtlib_ocl.enqueueFillBuffer = (enqueueFillBuffer_t) dlsym(handle, "clEnqueueFillBuffer");
+	rtlib_ocl.enqueueCopyBuffer = (enqueueCopyBuffer_t) dlsym(handle, "clEnqueueCopyBuffer");
+	rtlib_ocl.enqueueCopyBufferRect = (enqueueCopyBufferRect_t) dlsym(handle, "clEnqueueCopyBufferRect");
+	rtlib_ocl.enqueueReadImage = (enqueueReadImage_t) dlsym(handle, "clEnqueueReadImage");
+	rtlib_ocl.enqueueWriteImage = (enqueueWriteImage_t) dlsym(handle, "clEnqueueWriteImage");
+	rtlib_ocl.enqueueFillImage = (enqueueFillImage_t) dlsym(handle, "clEnqueueFillImage");
+	rtlib_ocl.enqueueCopyImage = (enqueueCopyImage_t) dlsym(handle, "clEnqueueCopyImage");
+	rtlib_ocl.enqueueCopyImageToBuffer = (enqueueCopyImageToBuffer_t) dlsym(handle, "clEnqueueCopyImageToBuffer");
+	rtlib_ocl.enqueueCopyBufferToImage = (enqueueCopyBufferToImage_t) dlsym(handle, "clEnqueueCopyBufferToImage");
+	rtlib_ocl.enqueueMapBuffer = (enqueueMapBuffer_t) dlsym(handle, "clEnqueueMapBuffer");
+	rtlib_ocl.enqueueMapImage = (enqueueMapImage_t) dlsym(handle, "clEnqueueMapImage");
+	rtlib_ocl.enqueueUnmapMemObject = (enqueueUnmapMemObject_t) dlsym(handle, "clEnqueueUnmapMemObject");
+	rtlib_ocl.enqueueMigrateMemObjects = (enqueueMigrateMemObjects_t) dlsym(handle, "clEnqueueMigrateMemObjects");
+	rtlib_ocl.enqueueNDRangeKernel = (enqueueNDRangeKernel_t) dlsym(handle, "clEnqueueNDRangeKernel");
+	rtlib_ocl.enqueueTask = (enqueueTask_t) dlsym(handle, "clEnqueueTask");
+	rtlib_ocl.enqueueNativeKernel = (enqueueNativeKernel_t) dlsym(handle, "clEnqueueNativeKernel");
+	rtlib_ocl.enqueueMarkerWithWaitList = (enqueueMarkerWithWaitList_t) dlsym(handle, "clEnqueueMarkerWithWaitList");
+	rtlib_ocl.enqueueBarrierWithWaitList = (enqueueBarrierWithWaitList_t) dlsym(handle, "clEnqueueBarrierWithWaitList");
+	rtlib_ocl.flush = (flush_t) dlsym(handle, "clFlush");
+	rtlib_ocl.finish = (finish_t) dlsym(handle, "clFinish");
 }
 
 #ifdef  __cplusplus
