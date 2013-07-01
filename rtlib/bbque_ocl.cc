@@ -214,7 +214,8 @@ clCreateSubBuffer(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_1 {
 	fprintf(stderr, FD("Calling clCreateSubBuffer()...\n"));
-	return rtlib_ocl.createSubBuffer(buffer, flags, buffer_create_type, buffer_create_info, errcode_ret);
+	return rtlib_ocl.createSubBuffer(buffer, flags, buffer_create_type,
+		buffer_create_info, errcode_ret);
 }
 
 extern CL_API_ENTRY cl_mem CL_API_CALL
@@ -227,7 +228,8 @@ clCreateImage(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_2 {
 	fprintf(stderr, FD("Calling clCreateImage()...\n"));
-	return rtlib_ocl.createImage(context, flags, image_format, image_desc, host_ptr, errcode_ret);
+	return rtlib_ocl.createImage(context, flags, image_format, image_desc,
+		host_ptr, errcode_ret);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -252,7 +254,8 @@ clGetSupportedImageFormats(
 		cl_uint *num_image_formats)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetSupportedImageFormats()...\n"));
-	return rtlib_ocl.getSupportedImageFormats(context, flags, image_type, num_entries, image_formats, num_image_formats);
+	return rtlib_ocl.getSupportedImageFormats(context, flags, image_type,
+		num_entries, image_formats, num_image_formats);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -264,7 +267,8 @@ clGetMemObjectInfo(
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetMemObjectInfo()...\n"));
-	return rtlib_ocl.getMemObjectInfo(memobj, param_name, param_value_size, param_value, param_value_size_ret);
+	return rtlib_ocl.getMemObjectInfo(memobj, param_name, param_value_size,
+		param_value, param_value_size_ret);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -276,7 +280,8 @@ clGetImageInfo(
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetImageInfo()...\n"));
-	return rtlib_ocl.getImageInfo(image, param_name, param_value_size, param_value, param_value_size_ret);
+	return rtlib_ocl.getImageInfo(image, param_name, param_value_size,
+		param_value, param_value_size_ret);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -299,7 +304,8 @@ clCreateSampler(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clCreateSampler()...\n"));
-	return rtlib_ocl.createSampler(context, normalized_coords, addressing_mode, filter_mode, errcode_ret);
+	return rtlib_ocl.createSampler(context, normalized_coords, addressing_mode,
+		filter_mode, errcode_ret);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -323,7 +329,8 @@ clGetSamplerInfo(
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetSamplerInfo()...\n"));
-	return rtlib_ocl.getSamplerInfo(sampler, param_name, param_value_size, param_value, param_value_size_ret);
+	return rtlib_ocl.getSamplerInfo(sampler, param_name, param_value_size,
+		param_value, param_value_size_ret);
 }
 
 /* Program Object APIs  */
@@ -350,7 +357,8 @@ clCreateProgramWithBinary(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clCreateProgramWithBinary()...\n"));
-	return rtlib_ocl.createProgramWithBinary(context, num_devices, device_list, lengths, binaries, binary_status, errcode_ret);
+	return rtlib_ocl.createProgramWithBinary(context, num_devices, device_list,
+		lengths, binaries, binary_status, errcode_ret);
 }
 
 extern CL_API_ENTRY cl_program CL_API_CALL
@@ -362,7 +370,8 @@ clCreateProgramWithBuiltInKernels(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_2 {
 	fprintf(stderr, FD("Calling clCreateProgramWithBuiltInKernels()...\n"));
-	return rtlib_ocl.createProgramWithBuiltInKernels(context, num_devices, device_list, kernel_names, errcode_ret);
+	return rtlib_ocl.createProgramWithBuiltInKernels(context, num_devices,
+		device_list, kernel_names, errcode_ret);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -387,7 +396,8 @@ clBuildProgram(
 		void *user_data)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clBuildProgram()...\n"));
-	return rtlib_ocl.buildProgram(program, num_devices, device_list, options, (*pfn_notify), user_data);
+	return rtlib_ocl.buildProgram(program, num_devices, device_list, options,
+		(*pfn_notify), user_data);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -403,7 +413,8 @@ clCompileProgram(
 		void *user_data)
 		CL_API_SUFFIX__VERSION_1_2 {
 	fprintf(stderr, FD("Calling clCompileProgram()...\n"));
-	return rtlib_ocl.compileProgram(program, num_devices, device_list, options, num_input_headers, input_headers, header_include_names, (*pfn_notify), user_data);
+	return rtlib_ocl.compileProgram(program, num_devices, device_list, options,
+		num_input_headers, input_headers, header_include_names, (*pfn_notify), user_data);
 }
 
 extern CL_API_ENTRY cl_program CL_API_CALL
@@ -419,7 +430,8 @@ clLinkProgram(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_2 {
 	fprintf(stderr, FD("Calling clLinkProgram()...\n"));
-	return rtlib_ocl.linkProgram(context, num_devices, device_list, options, num_input_programs, input_programs, (*pfn_notify), user_data, errcode_ret);
+	return rtlib_ocl.linkProgram(context, num_devices, device_list, options,
+		num_input_programs, input_programs, (*pfn_notify), user_data, errcode_ret);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -437,7 +449,8 @@ clGetProgramInfo(
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetProgramInfo()...\n"));
-	return rtlib_ocl.getProgramInfo(program, param_name, param_value_size, param_value, param_value_size_ret);
+	return rtlib_ocl.getProgramInfo(program, param_name, param_value_size,
+		param_value, param_value_size_ret);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -450,7 +463,8 @@ clGetProgramBuildInfo(
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetProgramBuildInfo()...\n"));
-	return rtlib_ocl.getProgramBuildInfo(program, device, param_name, param_value_size, param_value, param_value_size_ret);
+	return rtlib_ocl.getProgramBuildInfo(program, device, param_name,
+		param_value_size, param_value, param_value_size_ret);
 }
 
 /* Kernel Object APIs */
@@ -507,7 +521,8 @@ clGetKernelInfo(
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetKernelInfo()...\n"));
-	return rtlib_ocl.getKernelInfo(kernel, param_name, param_value_size, param_value, param_value_size_ret);
+	return rtlib_ocl.getKernelInfo(kernel, param_name, param_value_size,
+		param_value, param_value_size_ret);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -520,7 +535,8 @@ clGetKernelArgInfo(
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_2 {
 	fprintf(stderr, FD("Calling clGetKernelArgInfo()...\n"));
-	return rtlib_ocl.getKernelArgInfo(kernel, arg_indx, param_name, param_value_size, param_value, param_value_size_ret);
+	return rtlib_ocl.getKernelArgInfo(kernel, arg_indx, param_name,
+		param_value_size, param_value, param_value_size_ret);
 }
 
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -533,7 +549,9 @@ clGetKernelWorkGroupInfo(
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetKernelWorkGroupInfo()...\n"));
-	return rtlib_ocl.getKernelWorkGroupInfo(kernel, device, param_name, param_value_size, param_value, param_value_size_ret);
+	return rtlib_ocl.getKernelWorkGroupInfo(kernel, device, param_name,
+		param_value_size, param_value, param_value_size_ret);
+}
 
 /* Event Object APIs */
 extern CL_API_ENTRY cl_int CL_API_CALL
@@ -642,7 +660,7 @@ clEnqueueReadBuffer(
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clEnqueueReadBuffer()...\n"));
 	return rtlib_ocl.enqueueReadBuffer(command_queue, buffer, blocking_read,
-		offset, size, ptr, num_events_in_wait_list,	event_wait_list, event);
+		offset, size, ptr, num_events_in_wait_list, event_wait_list, event);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
