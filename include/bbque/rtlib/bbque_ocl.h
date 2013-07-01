@@ -20,6 +20,10 @@
 
 #include <CL/cl.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct RTLIB_OpenCL RTLIB_OpenCL_t;
 
 struct RTLIB_OpenCL {
@@ -506,6 +510,11 @@ clFlush(cl_command_queue) CL_API_SUFFIX__VERSION_1_0;
 
 extern CL_API_ENTRY cl_int CL_API_CALL
 clFinish(cl_command_queue) CL_API_SUFFIX__VERSION_1_0;
+
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif // BBQUE_OCL_H_
 

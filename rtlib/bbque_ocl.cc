@@ -24,6 +24,10 @@
 #undef  BBQUE_LOG_MODULE
 #define BBQUE_LOG_MODULE "rtl.ocl"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern RTLIB_OpenCL_t rtlib_ocl;
 
 /* Platform API */
@@ -624,3 +628,7 @@ clFinish(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
 }
 
 }
+
+#ifdef  __cplusplus
+}
+#endif
