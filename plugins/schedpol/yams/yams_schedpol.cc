@@ -711,10 +711,11 @@ void YamsSchedPol::CowsResetStatus() {
 		cowsInfo.migrationMetrics[i] = 0;
 		cowsInfo.flopsMetrics[i] = 0;
 	}
-	for (int i = 0; i < COWS_NORMALIZATION_VALUES ; i++) 
-						cowsInfo.normStats[i] = 0;
-	for (int i = 0; i < COWS_SYSWIDE_METRICS ; i++) 
-						cowsInfo.modifiedSums[i] = 0;
+
+	for (int i = 0; i < COWS_NORMALIZATION_VALUES ; i++)
+		cowsInfo.normStats[i] = 0;
+	for (int i = 0; i < COWS_SYSWIDE_METRICS ; i++)
+		cowsInfo.modifiedSums[i] = 0;
 	cowsInfo.bdTotalLoad = 0;
 }
 
@@ -785,12 +786,15 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 
 		logger->Info("COWS: Prefetching Sys-Wide info for bd %i",
 				bindings.ids[i]);
+
 		cowsInfo.modifiedSums[COWS_STALLS - 1] += cowsInfo.stallsSum[i];
 		cowsInfo.modifiedSums[COWS_IRET - 1]   += cowsInfo.retiredSum[i];
 		cowsInfo.modifiedSums[COWS_FLOPS - 1]  += cowsInfo.flopSum[i];
 
 		logger->Info("COWS: Prefetching Migration info for bd %i",
-							       bindings.ids[i]);
+				bindings.ids[i]);
+
+		// Set the binding ID
 		psch->SetBindingID(bindings.ids[i]);
 		result = BindResources(psch);
 		if (result != YAMS_SUCCESS) {
