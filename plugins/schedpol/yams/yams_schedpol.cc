@@ -243,7 +243,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	cowsInfo.modifiedSums.resize(COWS_SYSWIDE_METRICS);
 
 	// COWS: Reset the counters
-	CowsResetStatus();
+	CowsClear();
 	logger->Info("COWS: Support enabled");
 #endif
 
@@ -378,7 +378,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 		// COWS: Find the best binding for the AWM of the Application
-		CowsSetOptBinding(pschd);
+		CowsBinding(pschd);
 
 		std::multimap<float,int>::reverse_iterator rit;
 		for ( rit = cowsInfo.orderedBDs.rbegin();
@@ -664,7 +664,7 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 }
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
-void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
+void YamsSchedPol::CowsBinding(SchedEntityPtr_t psch) {
 	logger->Info("COWS: clearing previous running info");
 
 	cowsInfo.orderedBDs.clear();
@@ -673,8 +673,8 @@ void YamsSchedPol::CowsSetOptBinding(SchedEntityPtr_t psch) {
 	}
 
 	CowsInit(psch);
-	CowsComputeBoundness(psch);
-	CowsSysWideMetrics();
+	CowsBoundMix(psch);
+	CowsUnitsBalance();
 	CowsAggregateResults(psch);
 }
 
@@ -696,7 +696,7 @@ void YamsSchedPol::CowsUpdateMeans(int logic_index) {
 		cowsInfo.candidatedValues[3];
 }
 
-void YamsSchedPol::CowsResetStatus() {
+void YamsSchedPol::CowsClear() {
 
 	for (int i = 0; i < bindings.num ; i++){
 		cowsInfo.boundnessSquaredSum[i] = 0;
@@ -746,7 +746,7 @@ void YamsSchedPol::CowsInit(SchedEntityPtr_t psch) {
 	cowsInfo.candidatedValues[COWS_FLOPS]  = df;
 }
 
-void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
+void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t psch) {
 	float value;
 	ExitCode_t result;
 
@@ -813,7 +813,7 @@ void YamsSchedPol::CowsComputeBoundness(SchedEntityPtr_t psch) {
 	if (cowsInfo.normStats[COWS_MIGRA] == 0) cowsInfo.normStats[COWS_MIGRA]++;
 }
 
-void YamsSchedPol::CowsSysWideMetrics() {
+void YamsSchedPol::CowsUnitsBalance() {
 	// Update system mean: sumOf(BDmeans)/numberOfBDs
 	cowsInfo.modifiedSums[COWS_STALLS - 1] /= bindings.num;
 	cowsInfo.modifiedSums[COWS_IRET   - 1] /= bindings.num;

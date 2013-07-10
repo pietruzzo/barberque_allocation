@@ -391,13 +391,13 @@ private:
 	 *
 	 * @param pschd The scheduling entity to evaluate
 	 */
-	void CowsSetOptBinding(SchedEntityPtr_t pschd);
+	void CowsBinding(SchedEntityPtr_t pschd);
 
 	/**
 	 * @brief COWS: reset resource counters
 	 *
 	 */
-	void CowsResetStatus();
+	void CowsClear();
 
 	/**
 	 * @brief COWS: Initialize with values extracted from recipe
@@ -405,26 +405,21 @@ private:
 	void CowsInit(SchedEntityPtr_t psch);
 
 	/**
-	 * @brief COWS: compute stalls, retired, flops var delta for the system
-	 *
-	 */
-	void CowsSysWideMetrics();
-
-	/**
 	 * @brief COWS: compute the boundness variance variation for all BDs
 	 *
-	 * @param boundness Container for the boundness metrics
-	 * @param percentualBoundnessDenom Needed to normalize the metrics
 	 * @param psch The scheduling entity to use
-         *
 	 */
-	void CowsComputeBoundness(SchedEntityPtr_t psch);
+	void CowsBoundMix(SchedEntityPtr_t psch);
+
+	/**
+	 * @brief COWS: compute stalls, retired, flops var delta for the system
+	 */
+	void CowsUnitsBalance();
 
 	/**
 	 * @brief COWS: aggregate results
 	 *
 	 * @param psch The scheduling entity to use
-         *
 	 */
 	void CowsAggregateResults(SchedEntityPtr_t psch);
 
