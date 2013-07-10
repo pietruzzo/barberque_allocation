@@ -664,7 +664,7 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 }
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
-void YamsSchedPol::CowsBinding(SchedEntityPtr_t psch) {
+void YamsSchedPol::CowsBinding(SchedEntityPtr_t pschd) {
 	logger->Info("COWS: clearing previous running info");
 
 	cowsInfo.orderedBDs.clear();
@@ -672,10 +672,10 @@ void YamsSchedPol::CowsBinding(SchedEntityPtr_t psch) {
 		cowsInfo.normStats[i] = 0;
 	}
 
-	CowsInit(psch);
-	CowsBoundMix(psch);
+	CowsInit(pschd);
+	CowsBoundMix(pschd);
 	CowsUnitsBalance();
-	CowsAggregateResults(psch);
+	CowsAggregateResults(pschd);
 }
 
 void YamsSchedPol::CowsUpdateMeans(int logic_index) {
@@ -719,18 +719,18 @@ void YamsSchedPol::CowsClear() {
 	cowsInfo.bdTotalLoad = 0;
 }
 
-void YamsSchedPol::CowsInit(SchedEntityPtr_t psch) {
+void YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
 	int db, ds, dr, df;
 
 	// Get the metrics parsed from the recipe
 	db = atoi(std::static_pointer_cast<PluginAttr_t>
-			(psch->pawm->GetAttribute("cows", "boundness"))->str.c_str());
+			(pschd->pawm->GetAttribute("cows", "boundness"))->str.c_str());
 	ds = atoi(std::static_pointer_cast<PluginAttr_t>
-			(psch->pawm->GetAttribute("cows", "stalls"))->str.c_str());
+			(pschd->pawm->GetAttribute("cows", "stalls"))->str.c_str());
 	dr = atoi(std::static_pointer_cast<PluginAttr_t>
-			(psch->pawm->GetAttribute("cows", "retired"))->str.c_str());
+			(pschd->pawm->GetAttribute("cows", "retired"))->str.c_str());
 	df = atoi(std::static_pointer_cast<PluginAttr_t>
-			(psch->pawm->GetAttribute("cows", "flops"))->str.c_str());
+			(pschd->pawm->GetAttribute("cows", "flops"))->str.c_str());
 
 	// Updating system-wide means. The indexes are shifted by one
 	// because modifiedSums vector doesn't need the first metric
@@ -746,7 +746,7 @@ void YamsSchedPol::CowsInit(SchedEntityPtr_t psch) {
 	cowsInfo.candidatedValues[COWS_FLOPS]  = df;
 }
 
-void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t psch) {
+void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 	float value;
 	ExitCode_t result;
 
@@ -781,8 +781,6 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t psch) {
 			cowsInfo.boundnessMetrics[i] = 1;
 			cowsInfo.normStats[COWS_LLCM] ++;
 		}
-		logger->Notice("COWS: Boundness variance @BD %d for %s: %3.2f",
-		  bindings.ids[i], psch->StrId(), cowsInfo.boundnessMetrics[i]);
 
 		logger->Info("COWS: Prefetching Sys-Wide info for bd %i",
 				bindings.ids[i]);
@@ -795,8 +793,8 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t psch) {
 				bindings.ids[i]);
 
 		// Set the binding ID
-		psch->SetBindingID(bindings.ids[i]);
-		result = BindResources(psch);
+		pschd->SetBindingID(bindings.ids[i]);
+		result = BindResources(pschd);
 		if (result != YAMS_SUCCESS) {
 			logger->Error("COWS: Resource binding failed [%d]",
 									result);
@@ -878,8 +876,7 @@ void YamsSchedPol::CowsUnitsBalance() {
 	}
 }
 
-void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t psch) {
-
+void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t pschd) {
 	float result = 0.0;
 
 	logger->Info("========|  COWS: Aggregating results ... |========");

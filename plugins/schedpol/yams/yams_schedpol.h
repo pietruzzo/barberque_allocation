@@ -402,14 +402,14 @@ private:
 	/**
 	 * @brief COWS: Initialize with values extracted from recipe
 	 */
-	void CowsInit(SchedEntityPtr_t psch);
+	void CowsInit(SchedEntityPtr_t pschd);
 
 	/**
 	 * @brief COWS: compute the boundness variance variation for all BDs
 	 *
 	 * @param psch The scheduling entity to use
 	 */
-	void CowsBoundMix(SchedEntityPtr_t psch);
+	void CowsBoundMix(SchedEntityPtr_t pschd);
 
 	/**
 	 * @brief COWS: compute stalls, retired, flops var delta for the system
@@ -421,7 +421,7 @@ private:
 	 *
 	 * @param psch The scheduling entity to use
 	 */
-	void CowsAggregateResults(SchedEntityPtr_t psch);
+	void CowsAggregateResults(SchedEntityPtr_t pschd);
 
 	/**
 	 * @brief COWS: Update Means
