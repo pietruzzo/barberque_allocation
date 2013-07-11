@@ -57,6 +57,7 @@ static RTLIB_Services_t rtlib_services;
  * The collection of RTLib wrapped OpenCL functions.
  */
 RTLIB_OpenCL_t rtlib_ocl;
+std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
 
 static RTLIB_ExecutionContextHandler_t rtlib_register(const char *name,
 		const RTLIB_ExecutionContextParams_t *params) {

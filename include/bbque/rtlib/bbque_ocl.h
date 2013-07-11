@@ -18,13 +18,31 @@
 #ifndef BBQUE_OCL_H_
 #define BBQUE_OCL_H_
 
+#include <memory>
+#include <iostream>
+#include <map>
+#include <vector>
+
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/sum.hpp>
+
 #include <CL/cl.h>
+
+
+namespace ba = boost::accumulators;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct RTLIB_OpenCL RTLIB_OpenCL_t;
+typedef class RTLIB_OCL_QueueProf RTLIB_OCL_QueueProf_t;
+typedef std::shared_ptr<RTLIB_OCL_QueueProf_t> QueueProfPtr_t;
+typedef ba::accumulator_set<double, ba::stats<ba::tag::sum> > AccProf_t;
+typedef std::shared_ptr<AccProf_t> AccProfPtr_t;
+typedef std::pair<cl_command_type, AccProfPtr_t> CmdProfPair_t;
+typedef std::pair<cl_command_queue, QueueProfPtr_t> QueueProfPair_t;
 
 typedef cl_int (*getPlatformIDs_t)(cl_uint, cl_platform_id *, cl_uint *);
 typedef cl_int (*getPlatformInfo_t)(cl_platform_id, cl_platform_info, size_t, void *, size_t *);
@@ -189,6 +207,24 @@ struct RTLIB_OpenCL {
 	enqueueNativeKernel_t        enqueueNativeKernel;
 	enqueueMarkerWithWaitList_t  enqueueMarkerWithWaitList;
 	enqueueBarrierWithWaitList_t enqueueBarrierWithWaitList;
+};
+
+class RTLIB_OCL_QueueProf {
+public:
+	~RTLIB_OCL_QueueProf() {
+		std::vector<cl_event>::iterator it_v;
+		cl_uint ref_count;
+		for (it_v = events.begin(); it_v < events.end(); it_v++) {
+			clGetEventInfo(*it_v, CL_EVENT_REFERENCE_COUNT, sizeof(cl_uint), &ref_count, NULL);
+			if (ref_count > 0)
+				clReleaseEvent(*it_v);
+		}
+
+		cmd_prof.clear();
+	};
+
+	std::vector<cl_event> events;
+	std::map<cl_command_type, AccProfPtr_t> cmd_prof;
 };
 
 void rtlib_ocl_init();

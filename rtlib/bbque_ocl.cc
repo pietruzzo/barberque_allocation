@@ -30,6 +30,7 @@ extern "C" {
 #endif
 
 extern RTLIB_OpenCL_t rtlib_ocl;
+extern std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
 
 /* Platform API */
 CL_API_ENTRY cl_int CL_API_CALL
@@ -1121,6 +1122,20 @@ void rtlib_ocl_init() {
 	rtlib_ocl.enqueueBarrierWithWaitList = (enqueueBarrierWithWaitList_t) dlsym(handle, "clEnqueueBarrierWithWaitList");
 	rtlib_ocl.flush = (flush_t) dlsym(handle, "clFlush");
 	rtlib_ocl.finish = (finish_t) dlsym(handle, "clFinish");
+}
+
+void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event) {
+	std::map<cl_command_queue, QueueProfPtr_t>::iterator it;
+	if (event == NULL)
+		rtlib_ocl.retainEvent(*event);
+	else
+		event = new cl_event;
+
+	it = ocl_queues_prof.find(command_queue);
+	if (it == ocl_queues_prof.end())
+		ocl_queues_prof.insert(
+			QueueProfPair_t(command_queue, QueueProfPtr_t(new RTLIB_OCL_QueueProf)));
+	ocl_queues_prof[command_queue]->events.push_back(*event);
 }
 
 #ifdef  __cplusplus
