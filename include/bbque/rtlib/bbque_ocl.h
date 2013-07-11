@@ -191,7 +191,7 @@ struct RTLIB_OpenCL {
 	enqueueBarrierWithWaitList_t enqueueBarrierWithWaitList;
 };
 
-void rtlib_init_ocl();
+void rtlib_ocl_init();
 
 /******************************************************************************
  * OpenCL wrapper functions                                                   *

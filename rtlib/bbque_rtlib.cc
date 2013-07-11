@@ -262,7 +262,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 	rtlib_services.Notify.Release = rtlib_notify_release;
 
 	// OpenCL support initialization
-	rtlib_init_ocl();
+	rtlib_ocl_init();
 
 	// Building a communication channel
 	rpc = br::BbqueRPC::GetInstance();
