@@ -229,6 +229,8 @@ public:
 
 void rtlib_ocl_init();
 
+void rtlib_ocl_coll_event(cl_command_queue, cl_event *);
+
 /******************************************************************************
  * OpenCL wrapper functions                                                   *
  ******************************************************************************/

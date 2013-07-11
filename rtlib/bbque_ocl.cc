@@ -977,6 +977,7 @@ clEnqueueNDRangeKernel(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clEnqueueNDRangeKernel()...\n"));
+	rtlib_ocl_coll_event(command_queue, event);
 	return rtlib_ocl.enqueueNDRangeKernel(command_queue, kernel, work_dim,
 		global_work_offset, global_work_size, local_work_size,
 		num_events_in_wait_list, event_wait_list, event);
@@ -1134,8 +1135,12 @@ void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event) {
 	it = ocl_queues_prof.find(command_queue);
 	if (it == ocl_queues_prof.end())
 		ocl_queues_prof.insert(
-			QueueProfPair_t(command_queue, QueueProfPtr_t(new RTLIB_OCL_QueueProf)));
-	ocl_queues_prof[command_queue]->events.push_back(*event);
+			std::pair<cl_command_queue, QueueProfPtr_t>(
+				command_queue,
+				QueueProfPtr_t(new RTLIB_OCL_QueueProf))
+		);
+
+	ocl_queues_prof[command_queue]->events.push_back(event);
 }
 
 #ifdef  __cplusplus
