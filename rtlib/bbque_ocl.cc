@@ -1143,6 +1143,32 @@ void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event) {
 	ocl_queues_prof[command_queue]->events.push_back(event);
 }
 
+void rtlib_ocl_prof_clean() {
+	ocl_queues_prof.clear();
+}
+
+void rtlib_ocl_prof_run() {
+	cl_command_type cmd_type = 0;
+	cl_int status;
+	double p_value = 0.0;
+	std::vector<cl_event>::iterator it_v;
+	std::map<cl_command_queue, QueueProfPtr_t>::iterator it;
+	fprintf(stderr, FE("------>>>>>>>>>>>>>>>>>>> Profiling \n"));
+	for (it = ocl_queues_prof.begin(); it != ocl_queues_prof.end(); it++) {
+		clFinish(it->first);
+		QueueProfPtr_t stPtr = it->second;
+		status = clWaitForEvents(stPtr->events.size(), stPtr->events.data());
+		if (status != CL_SUCCESS) {
+			fprintf(stderr, FE("OCL: Error [%d] in clWaitForEvents\n"), status);
+		}
+		for (it_v = stPtr->events.begin(); it_v < stPtr->events.end(); it_v++){
+			get_command_prof_info(*it_v, cmd_type, p_value);
+			acc_command_stats(stPtr, cmd_type, p_value);
+			//#ifdef abilitato
+			dump_command_prof_info(cmd_type, p_value);
+		}
+	}
+}
 
 void acc_command_stats(QueueProfPtr_t stPtr, cl_command_type cmd_type, double p_value) {
 	std::map<cl_command_type, AccProfPtr_t>::iterator it_ct;
