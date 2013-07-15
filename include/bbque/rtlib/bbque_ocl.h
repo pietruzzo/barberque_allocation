@@ -227,6 +227,9 @@ public:
 	std::map<cl_command_type, AccProfPtr_t> cmd_prof;
 };
 
+void acc_command_stats(QueueProfPtr_t, cl_command_type, double);
+void dump_command_prof_info(cl_command_type, double);
+void get_command_prof_info(cl_event, cl_command_type &, double &);
 void rtlib_ocl_init();
 
 void rtlib_ocl_coll_event(cl_command_queue, cl_event *);

@@ -1143,6 +1143,49 @@ void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event) {
 	ocl_queues_prof[command_queue]->events.push_back(event);
 }
 
+
+void acc_command_stats(QueueProfPtr_t stPtr, cl_command_type cmd_type, double p_value) {
+	std::map<cl_command_type, AccProfPtr_t>::iterator it_ct;
+	it_ct = stPtr->cmd_prof.find(cmd_type);
+	if (it_ct == stPtr->cmd_prof.end())
+		stPtr->cmd_prof.insert(
+			CmdProfPair_t(cmd_type, AccProfPtr_t(new AccProf_t)));
+	AccProf_t & p_acc(*(stPtr->cmd_prof[cmd_type].get()));
+	p_acc(p_value);
+}
+
+void dump_command_prof_info(cl_command_type cmd_type, double p_value) {
+	FILE *dump_file;
+	char buffer [100];
+	snprintf(buffer, 100, "Prof.dat");
+	dump_file = fopen(buffer, "a");
+	if (dump_file) {
+		fprintf(dump_file, "%d %f\n", cmd_type, p_value*1e-06);
+	}
+	fclose(dump_file);
+}
+
+void get_command_prof_info(cl_event event, cl_command_type & cmd_type, double & p_value) {
+	size_t return_bytes;
+	cl_int status;
+	cl_ulong ev_start_time = (cl_ulong)0;
+	cl_ulong ev_end_time   = (cl_ulong)0;
+	clGetEventInfo(event, CL_EVENT_COMMAND_TYPE, sizeof(cl_command_type), &cmd_type, NULL);
+	status = clGetEventProfilingInfo(
+		event,
+		CL_PROFILING_COMMAND_QUEUED,
+		sizeof(cl_ulong),
+		&ev_start_time,
+		&return_bytes);
+	status = clGetEventProfilingInfo(
+		event,
+		CL_PROFILING_COMMAND_END,
+		sizeof(cl_ulong),
+		&ev_end_time,
+		&return_bytes);
+	p_value = (double)(ev_end_time - ev_start_time);
+}
+
 #ifdef  __cplusplus
 }
 #endif
