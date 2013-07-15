@@ -168,6 +168,7 @@ static void rtlib_notify_pre_run(
 
 static void rtlib_notify_post_run(
 		RTLIB_ExecutionContextHandler_t ech) {
+	rtlib_ocl_prof_run();
 	rpc->NotifyPostRun(ech);
 }
 
