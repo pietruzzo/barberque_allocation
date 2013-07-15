@@ -29,6 +29,9 @@
 
 #include <CL/cl.h>
 
+#define EVENT_RC_CONTROL(ev) \
+	cl_event local_event; \
+	if (ev == NULL) ev = &local_event;
 
 namespace ba = boost::accumulators;
 
