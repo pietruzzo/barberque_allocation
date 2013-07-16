@@ -237,26 +237,26 @@ private:
 		std::vector<float> boundnessSum;
 		/**Total stalls, retired instr. and flops for each BD */
 		std::vector<float> stallsSum;
-		std::vector<float> retiredSum;
+		std::vector<float> iretSum;
 		std::vector<float> flopSum;
 		/**Applications scheduled on each BD and on the whole system */
-		std::vector<int> bdLoad;
+		std::vector<int> bd_load;
 		int bdTotalLoad;
 		/*Metrics of the SchedEnt under analysis */
-		std::vector<float> candidatedValues;
+		std::vector<float> perf_data;
 		std::multimap<float,int> orderedBDs;
 		/*statistic info used to normalize the metrics */
 		std::vector<float> normStats;
 		/*Total metrics allocated on the system during AWM analysis */
 		std::vector<float> modifiedSums;
 		/* Metrics container per BD */
-		std::vector<float> boundnessMetrics;
+		std::vector<double> bound_mix;
 		std::vector<float> stallsMetrics;
-		std::vector<float> retiredMetrics;
+		std::vector<float> iretMetrics;
 		std::vector<float> flopsMetrics;
-		std::vector<float> migrationMetrics;
+		std::vector<float> migrMetrics;
 		/* Weights used to compute metrics */
-		std::vector<float> metricsWeights;
+		std::vector<float> m_weights;
 	} cowsInfo;
 
 #endif
