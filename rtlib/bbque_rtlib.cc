@@ -57,6 +57,11 @@ RTLIB_Services_t rtlib_services;
  * The collection of RTLib wrapped OpenCL functions.
  */
 RTLIB_OpenCL_t rtlib_ocl;
+
+/**
+ * The map contains OpenCL command queues and shared pointers to profiling
+ * events data structures
+ */
 std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
 
 /**
