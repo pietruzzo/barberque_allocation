@@ -362,6 +362,7 @@ uint8_t YamsSchedPol::OrderSchedEntities(AppPrio_t prio) {
 }
 
 bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
+	ExitCode_t bd_result;
 	Application::ExitCode_t app_result;
 	SchedEntityList_t::iterator se_it(entities.begin());
 	SchedEntityList_t::iterator end_se(entities.end());
@@ -381,23 +382,25 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 		CowsBinding(pschd);
 
 		std::multimap<float,int>::reverse_iterator rit;
-		for ( rit = cowsInfo.orderedBDs.rbegin();
+		for (rit = cowsInfo.orderedBDs.rbegin();
 				rit != cowsInfo.orderedBDs.rend(); ++rit) {
-			//Setting bd id
-			pschd->SetBindingID(
-				  bindings.ids[(*rit).second]);
-			ExitCode_t myresult = BindResources(pschd);
-			if (myresult != YAMS_SUCCESS) {
-				logger->Error("COWS: Resource binding failed ["
-							       "%d]", myresult);
+
+			logger->Info("COWS: Select BD[%d] (metrics=%2.2f)",
+					bindings.ids[(*rit).second], (*rit).first);
+
+			// Do binding
+			pschd->SetBindingID(bindings.ids[(*rit).second]);
+			bd_result = BindResources(pschd);
+			if (bd_result != YAMS_SUCCESS) {
+				logger->Error("COWS: Resource binding failed [%d]",
+						bd_result);
 				break;
 			}
 
 			// Send the schedule request
-			app_result = pschd->papp->ScheduleRequest(pschd->pawm,
-				vtok, pschd->bind_id);
-			logger->Debug("Selecting: %s schedule requested",
-				pschd->StrId());
+			app_result = pschd->papp->ScheduleRequest(
+					pschd->pawm, vtok, pschd->bind_id);
+			logger->Debug("Selecting: %s schedule requested", pschd->StrId());
 			if (app_result == ApplicationStatusIF::APP_WM_ACCEPTED){
 				logger->Info("COWS: scheduling OK");
 				//COWS: Update means and square means values
@@ -745,8 +748,8 @@ void YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
 }
 
 void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
-	float value;
 	ExitCode_t result;
+	float value;
 
 	logger->Info("COWS: ------------ Bound mix computation -------------");
 	logger->Info("COWS: Binding domain(s): %d", bindings.num);
@@ -792,8 +795,7 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 		pschd->SetBindingID(bindings.ids[i]);
 		result = BindResources(pschd);
 		if (result != YAMS_SUCCESS) {
-			logger->Error("COWS: Resource binding failed [%d]",
-									result);
+			logger->Error("COWS: Resource binding failed [%d]", result);
 		}
 		value = 0.0;
 		GetSchedContribValue(psch, sc_types[SchedContribManager::MIGRATION], value);
@@ -946,14 +948,13 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 		return 1;
 	}
 
-	float sum = 0.0;
-
+	float w_sum = 0.0;
 	for (int i = 1; i < COWS_AGGREGATION_WEIGHTS + 1; i++)
-							   sum += atof(argv[i]);
+		w_sum += atof(argv[i]);
 
 	// Normalizing. The inputs should sum up to COWS_TOTAL_WEIGHT_SUM
-	if (sum != COWS_TOTAL_WEIGHT_SUM) logger->Info("COWS: weights sum up to"
-						    " %f. Normalizing ..", sum);
+	if (w_sum != COWS_TOTAL_WEIGHT_SUM)
+		logger->Info("COWS: weights sum up to %f. Normalizing...", w_sum);
 
 	logger->Info(" ================================================= ");
 	logger->Info("|                   Old weights                   |");
@@ -967,8 +968,8 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 	logger->Info(" =========+=========+=========+=========+========= ");
 
 	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i++) {
-		cowsInfo.metricsWeights[i] =
-			      COWS_TOTAL_WEIGHT_SUM * (atof(argv[i + 1])) / sum;
+		cowsInfo.m_weights[i] =
+			COWS_TOTAL_WEIGHT_SUM * (atof(argv[i + 1])) / w_sum;
 	}
 
 	logger->Info(" ================================================= ");
