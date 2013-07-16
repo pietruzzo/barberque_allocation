@@ -51,7 +51,7 @@ static br::BbqueRPC *rpc = NULL;
 /**
  * The collection of RTLib services accessible from applications.
  */
-static RTLIB_Services_t rtlib_services;
+RTLIB_Services_t rtlib_services;
 
 /**
  * The collection of RTLib wrapped OpenCL functions.
@@ -173,7 +173,6 @@ static void rtlib_notify_pre_run(
 
 static void rtlib_notify_post_run(
 		RTLIB_ExecutionContextHandler_t ech) {
-	rtlib_ocl_prof_run();
 	rpc->NotifyPostRun(ech);
 }
 
@@ -212,7 +211,7 @@ static void rtlib_notify_release(
 	rpc->NotifyRelease(ech);
 }
 
-static const char *rtlib_app_name;
+const char *rtlib_app_name;
 static uint8_t rtlib_initialized = 0;
 
 #include "bbque_errors.cc"

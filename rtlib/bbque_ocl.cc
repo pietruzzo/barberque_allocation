@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstdlib>
 
+#include "bbque/rtlib.h"
 #include "bbque/rtlib/bbque_ocl.h"
 #include "bbque/utils/utility.h"
 
@@ -29,7 +30,9 @@
 extern "C" {
 #endif
 
+extern const char *rtlib_app_name;
 extern RTLIB_OpenCL_t rtlib_ocl;
+extern RTLIB_Services_t rtlib_services;
 extern std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
 extern std::map<cl_command_type, std::string> ocl_cmd_str;
 
@@ -1272,7 +1275,7 @@ void rtlib_ocl_prof_clean() {
 	ocl_queues_prof.clear();
 }
 
-void rtlib_ocl_prof_run() {
+void rtlib_ocl_prof_run(uint8_t awm_id) {
 	cl_command_type cmd_type = 0;
 	cl_int status;
 	double p_value = 0.0;
@@ -1290,7 +1293,7 @@ void rtlib_ocl_prof_run() {
 			get_command_prof_info(*it_v, cmd_type, p_value);
 			acc_command_stats(stPtr, cmd_type, p_value);
 			//#ifdef abilitato
-			dump_command_prof_info(cmd_type, p_value);
+			dump_command_prof_info(awm_id, cmd_type, p_value);
 		}
 	}
 }
@@ -1305,13 +1308,21 @@ void acc_command_stats(QueueProfPtr_t stPtr, cl_command_type cmd_type, double p_
 	p_acc(p_value);
 }
 
-void dump_command_prof_info(cl_command_type cmd_type, double p_value) {
+void dump_command_prof_info(
+		uint8_t awm_id,
+		cl_command_type cmd_type,
+		double p_value) {
 	FILE *dump_file;
 	char buffer [100];
-	snprintf(buffer, 100, "%s.dat", ocl_cmd_str[cmd_type].c_str());
+	snprintf(buffer, 100, "%s/PROFOCL-%d-%s-AWM%d-%s.dat",
+		OCL_PROF_OUTDIR,
+		rtlib_services.Utils.GetChUid(),
+		rtlib_app_name,
+		awm_id,
+		ocl_cmd_str[cmd_type].c_str());
 	dump_file = fopen(buffer, "a");
 	if (dump_file) {
-		fprintf(dump_file, "%d %f\n", cmd_type, p_value*1e-06);
+		fprintf(dump_file, "%f %f\n", bbque_tmr.getElapsedTimeMs(), p_value*1e-06);
 	}
 	fclose(dump_file);
 }

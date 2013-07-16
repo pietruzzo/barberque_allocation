@@ -34,6 +34,7 @@
 	cl_event local_event; \
 	if (ev == NULL) ev = &local_event;
 
+#define OCL_PROF_OUTDIR "/tmp"
 
 namespace bac = boost::accumulators;
 
@@ -234,13 +235,13 @@ public:
 };
 
 void acc_command_stats(QueueProfPtr_t, cl_command_type, double);
-void dump_command_prof_info(cl_command_type, double);
+void dump_command_prof_info(uint8_t, cl_command_type, double);
 void get_command_prof_info(cl_event, cl_command_type &, double &);
 
 void rtlib_ocl_init();
 void rtlib_ocl_coll_event(cl_command_queue, cl_event *);
 void rtlib_ocl_prof_clean();
-void rtlib_ocl_prof_run();
+void rtlib_ocl_prof_run(uint8_t);
 
 /******************************************************************************
  * OpenCL wrapper functions                                                   *
