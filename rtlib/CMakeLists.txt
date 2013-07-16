@@ -18,7 +18,9 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
 
 set (RTLIB_SRC bbque_rtlib bbque_rpc ${PROJECT_BINARY_DIR}/bbque/version.cc)
 set (RTLIB_SRC bbque_exc ${RTLIB_SRC})
-set (RTLIB_SRC bbque_ocl ${RTLIB_SRC})
+if (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
+	set (RTLIB_SRC bbque_ocl ${RTLIB_SRC})
+endif (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
 
 if (CONFIG_BBQUE_RPC_FIFO)
 	set (RTLIB_SRC rpc_fifo_client ${RTLIB_SRC})
@@ -31,16 +33,11 @@ set (RTLIB_SRC ${RTLIB_SRC})
 #----- Add "bbque_rtlib" target dinamic binary
 add_library(bbque_rtlib SHARED ${RTLIB_SRC})
 
-#----- OpenCL
-find_package (OpenCL REQUIRED)
-include_directories (${OPENCL_INCLUDE_DIR})
-
 # Linking dependencies
 target_link_libraries(
 	bbque_rtlib
 	bbque_utils
 	${Boost_LIBRARIES}
-	${OPENCL_LIBRARY}
 )
 
 # Add "Generic-Linux" specific flags
@@ -59,6 +56,19 @@ target_link_libraries(
 )
 endif (CONFIG_TARGET_ANDROID)
 
+#----- OpenCL
+if (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
+	find_package (OpenCL REQUIRED)
+	include_directories (${OPENCL_INCLUDE_DIR})
+	# Linking dependencies
+	target_link_libraries(
+		bbque_rtlib
+		bbque_utils
+		${Boost_LIBRARIES}
+		${OPENCL_LIBRARY}
+	)
+endif (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
+
 # Use link path ad RPATH
 set_property (TARGET bbque_rtlib PROPERTY
 		INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -68,8 +78,14 @@ set_property (TARGET bbque_rtlib PROPERTY
 
 set_property (TARGET bbque_rtlib PROPERTY PUBLIC_HEADER
 		${PROJECT_SOURCE_DIR}/include/bbque/rtlib.h
+		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_exc.h)
+
+if (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
+set_property (TARGET bbque_rtlib PROPERTY PUBLIC_HEADER
+		${PROJECT_SOURCE_DIR}/include/bbque/rtlib.h
 		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_exc.h
 		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_ocl.h)
+endif (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
 
 # Install the RTLib
 install (TARGETS bbque_rtlib LIBRARY
