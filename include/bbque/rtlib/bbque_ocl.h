@@ -34,7 +34,8 @@
 	cl_event local_event; \
 	if (ev == NULL) ev = &local_event;
 
-namespace ba = boost::accumulators;
+
+namespace bac = boost::accumulators;
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,7 +44,7 @@ extern "C" {
 typedef struct RTLIB_OpenCL RTLIB_OpenCL_t;
 typedef class RTLIB_OCL_QueueProf RTLIB_OCL_QueueProf_t;
 typedef std::shared_ptr<RTLIB_OCL_QueueProf_t> QueueProfPtr_t;
-typedef ba::accumulator_set<double, ba::stats<ba::tag::sum> > AccProf_t;
+typedef bac::accumulator_set<double, bac::stats<bac::tag::sum> > AccProf_t;
 typedef std::shared_ptr<AccProf_t> AccProfPtr_t;
 typedef std::pair<cl_command_type, AccProfPtr_t> CmdProfPair_t;
 typedef std::pair<cl_command_type, std::string> CmdStrPair_t;
