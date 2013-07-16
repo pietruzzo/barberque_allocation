@@ -59,6 +59,11 @@ static RTLIB_Services_t rtlib_services;
 RTLIB_OpenCL_t rtlib_ocl;
 std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
 
+/**
+ * The map contains OpenCL command types and their respective string values
+ */
+std::map<cl_command_type, std::string> ocl_cmd_str;
+
 static RTLIB_ExecutionContextHandler_t rtlib_register(const char *name,
 		const RTLIB_ExecutionContextParams_t *params) {
 	return rpc->Register(name, params);

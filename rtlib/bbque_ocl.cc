@@ -31,6 +31,7 @@ extern "C" {
 
 extern RTLIB_OpenCL_t rtlib_ocl;
 extern std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
+extern std::map<cl_command_type, std::string> ocl_cmd_str;
 
 /* Platform API */
 CL_API_ENTRY cl_int CL_API_CALL
@@ -1234,6 +1235,23 @@ void rtlib_ocl_init() {
 	rtlib_ocl.enqueueBarrierWithWaitList = (enqueueBarrierWithWaitList_t) dlsym(handle, "clEnqueueBarrierWithWaitList");
 	rtlib_ocl.flush = (flush_t) dlsym(handle, "clFlush");
 	rtlib_ocl.finish = (finish_t) dlsym(handle, "clFinish");
+
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_BUFFER, "clEnqueueReadBuffer"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_BUFFER_RECT, "clEnqueueReadBufferRect"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_WRITE_BUFFER, "clEnqueueWriteBuffer"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_WRITE_BUFFER_RECT, "clEnqueueWriteBufferRect"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_BUFFER, "clEnqueueCopyBuffer"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_BUFFER_RECT, "clEnqueueCopyBufferRect"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_IMAGE, "clEnqueueReadImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_WRITE_IMAGE, "clEnqueueWriteImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_IMAGE, "clEnqueueCopyImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_IMAGE_TO_BUFFER, "clEnqueueCopyImageToBuffer"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_BUFFER_TO_IMAGE, "clEnqueueCopyBufferToImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_MAP_BUFFER, "clEnqueueMapBuffer"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_MAP_IMAGE, "clEnqueueMapImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NDRANGE_KERNEL, "clEnqueueNDRangeKernel"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_TASK, "clEnqueueTask"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NATIVE_KERNEL, "clEnqueueNativeKernel"));
 }
 
 void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event) {
@@ -1290,7 +1308,7 @@ void acc_command_stats(QueueProfPtr_t stPtr, cl_command_type cmd_type, double p_
 void dump_command_prof_info(cl_command_type cmd_type, double p_value) {
 	FILE *dump_file;
 	char buffer [100];
-	snprintf(buffer, 100, "Prof.dat");
+	snprintf(buffer, 100, "%s.dat", ocl_cmd_str[cmd_type].c_str());
 	dump_file = fopen(buffer, "a");
 	if (dump_file) {
 		fprintf(dump_file, "%d %f\n", cmd_type, p_value*1e-06);

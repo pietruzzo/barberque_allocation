@@ -21,6 +21,7 @@
 #include <memory>
 #include <iostream>
 #include <map>
+#include <string>
 #include <vector>
 
 #include <boost/accumulators/accumulators.hpp>
@@ -45,6 +46,7 @@ typedef std::shared_ptr<RTLIB_OCL_QueueProf_t> QueueProfPtr_t;
 typedef ba::accumulator_set<double, ba::stats<ba::tag::sum> > AccProf_t;
 typedef std::shared_ptr<AccProf_t> AccProfPtr_t;
 typedef std::pair<cl_command_type, AccProfPtr_t> CmdProfPair_t;
+typedef std::pair<cl_command_type, std::string> CmdStrPair_t;
 typedef std::pair<cl_command_queue, QueueProfPtr_t> QueueProfPair_t;
 
 typedef cl_int (*getPlatformIDs_t)(cl_uint, cl_platform_id *, cl_uint *);
