@@ -53,6 +53,7 @@ static br::BbqueRPC *rpc = NULL;
  */
 RTLIB_Services_t rtlib_services;
 
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 /**
  * The collection of RTLib wrapped OpenCL functions.
  */
@@ -63,6 +64,7 @@ RTLIB_OpenCL_t rtlib_ocl;
  * events data structures
  */
 std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
+#endif
 
 /**
  * The map contains OpenCL command types and their respective string values
@@ -272,8 +274,10 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 	rtlib_services.Notify.PostResume = rtlib_notify_post_resume;
 	rtlib_services.Notify.Release = rtlib_notify_release;
 
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 	// OpenCL support initialization
 	rtlib_ocl_init();
+#endif
 
 	// Building a communication channel
 	rpc = br::BbqueRPC::GetInstance();

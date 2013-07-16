@@ -2313,8 +2313,9 @@ void BbqueRPC::NotifyPostRun(
 			PerfCollectStats(prec);
 		}
 	}
-
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 	rtlib_ocl_prof_run(prec->awm_id);
+#endif
 }
 
 void BbqueRPC::NotifyPreMonitor(
