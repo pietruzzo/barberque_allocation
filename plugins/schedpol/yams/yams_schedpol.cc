@@ -392,9 +392,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 							       "%d]", myresult);
 				break;
 			}
-			logger->Info("COWS: trying scheduling on BD #%d",
-				bindings.ids[(*rit).second]);
-			logger->Info("Value: %f", (*rit).first);
+
 			// Send the schedule request
 			app_result = pschd->papp->ScheduleRequest(pschd->pawm,
 				vtok, pschd->bind_id);
@@ -665,8 +663,8 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 void YamsSchedPol::CowsBinding(SchedEntityPtr_t pschd) {
-	logger->Info("COWS: clearing previous running info");
 
+	// Clear previous run information
 	cowsInfo.orderedBDs.clear();
 	for (int i = 0; i < COWS_NORMAL_VALUES; i++) {
 		cowsInfo.normStats[i] = 0;
@@ -679,11 +677,11 @@ void YamsSchedPol::CowsBinding(SchedEntityPtr_t pschd) {
 }
 
 void YamsSchedPol::CowsUpdateMeans(int logic_index) {
-	//A new application has been scheduled
+	// A new application has been scheduled
 	cowsInfo.bdLoad[logic_index]++;
 	cowsInfo.bdTotalLoad++;
 
-	//Applying the candidate SchedEnt statistics
+	// Applying the candidate SchedEnt statistics
 	cowsInfo.boundnessSquaredSum[logic_index] +=
 		pow(cowsInfo.candidatedValues[0],2);
 	cowsInfo.boundnessSum[logic_index] +=
@@ -750,10 +748,10 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 	float value;
 	ExitCode_t result;
 
-	logger->Info("==============| Boundness computing.. |===============");
-	logger->Info("COWS: %d binding domain(s) found", bindings.num);
+	logger->Info("COWS: ------------ Bound mix computation -------------");
+	logger->Info("COWS: Binding domain(s): %d", bindings.num);
 
-	// Boundness computation. Compute the delta-variance for each BD
+	// BOUND MIX: compute the delta-variance for each binding domain
 	for (int i = 0; i < bindings.num; i++) {
 		cowsInfo.boundnessMetrics[i] = 0;
 
@@ -782,15 +780,13 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 			cowsInfo.normStats[COWS_LLCM] ++;
 		}
 
-		logger->Info("COWS: Prefetching Sys-Wide info for bd %i",
-				bindings.ids[i]);
-
+		logger->Notice("COWS: Bound mix @BD[%d] for %s: %3.2f",
+				bindings.ids[i], pschd->StrId(), cowsInfo.bound_mix[i]);
 		cowsInfo.modifiedSums[COWS_STALLS - 1] += cowsInfo.stallsSum[i];
 		cowsInfo.modifiedSums[COWS_IRET - 1]   += cowsInfo.retiredSum[i];
 		cowsInfo.modifiedSums[COWS_FLOPS - 1]  += cowsInfo.flopSum[i];
 
-		logger->Info("COWS: Prefetching Migration info for bd %i",
-				bindings.ids[i]);
+		// Pre-fetching units load per binding domain
 
 		// Set the binding ID
 		pschd->SetBindingID(bindings.ids[i]);
@@ -799,7 +795,6 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 			logger->Error("COWS: Resource binding failed [%d]",
 									result);
 		}
-		// Aggregate binding-dependent scheduling contributions
 		value = 0.0;
 		GetSchedContribValue(psch, sc_types[SchedContribManager::MIGRATION], value);
 		cowsInfo.migrationMetrics[i] = value;
@@ -812,19 +807,19 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 }
 
 void YamsSchedPol::CowsUnitsBalance() {
+	logger->Info("COWS: ---------- Functional units balance ------------");
+
 	// Update system mean: sumOf(BDmeans)/numberOfBDs
 	cowsInfo.modifiedSums[COWS_STALLS - 1] /= bindings.num;
 	cowsInfo.modifiedSums[COWS_IRET   - 1] /= bindings.num;
 	cowsInfo.modifiedSums[COWS_FLOPS  - 1] /= bindings.num;
 
-	logger->Info("===| COWS: Sys-wide variation of metrics variance |===");
-
 	// For each binding domain, calculate the updated means AS IF
 	// I scheduled the new app there, then calculate the corresponding
 	// standard deviation
 	for (int i = 0; i < bindings.num; i++) {
-		logger->Info("COWS: Computing sys metric for BD %d...",
-							       bindings.ids[i]);
+		logger->Info("COWS: Computing units balance for BD[%d]...",
+				bindings.ids[i]);
 
 		// Calculating standard deviations (squared). Again, if I'm on
 		// BD i, the mean has changed
@@ -878,8 +873,7 @@ void YamsSchedPol::CowsUnitsBalance() {
 
 void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t pschd) {
 	float result = 0.0;
-
-	logger->Info("========|  COWS: Aggregating results ... |========");
+	logger->Info("COWS: ----------- Results aggregation ------------");
 
 	// Normalizing
 	logger->Info(" ======================================================"
@@ -909,8 +903,8 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t pschd) {
 	logger->Info(" ======================================================"
 			"==================");
 
+	// Order the binding domains for the current <Application, AWM>
 	for (int i = 0; i < bindings.num; i++) {
-		// Calculating the best BD to schedule the app in
 		result =
 		// (W1*BOUNDNESS) - [W2*(ST + RET + FLOPS)] + (W3*MIGRATION)
 		    cowsInfo.metricsWeights[COWS_BOUND_WEIGHT] *
@@ -924,19 +918,18 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t pschd) {
 
 		cowsInfo.orderedBDs.insert( std::pair<float,int>(result,i) );
 	}
-
-	logger->Info("COWS BD ordering:");
+	logger->Info("COWS: Ordering binding domains");
 	std::multimap<float,int>::reverse_iterator rit;
 	for (rit = cowsInfo.orderedBDs.rbegin();
 		rit != cowsInfo.orderedBDs.rend(); ++rit)
 		logger->Info("--- BD: %d, Value: %f",
 				bindings.ids[(*rit).second], (*rit).first);
 
-	logger->Notice("COWS: candidate values: %3.2f, %3.2f, %3.2f, %3.2f",
-			cowsInfo.candidatedValues[COWS_LLCM],
-			cowsInfo.candidatedValues[COWS_STALLS],
-			cowsInfo.candidatedValues[COWS_IRET],
-			cowsInfo.candidatedValues[COWS_FLOPS]);
+	logger->Notice("COWS: Performance counters: %3.2f, %3.2f, %3.2f, %3.2f",
+			cowsInfo.perf_data[COWS_LLCM],
+			cowsInfo.perf_data[COWS_STALLS],
+			cowsInfo.perf_data[COWS_IRET],
+			cowsInfo.perf_data[COWS_FLOPS]);
 	logger->Info("==========|          COWS: Done             |==========");
 }
 
