@@ -804,7 +804,7 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 	}
 
 	// TODO: Comment
-	if (cowsInfo.normStats[COWS_LLCM] == 0) cowsInfo.normStats[0]++;
+	if (cowsInfo.normStats[COWS_LLCM] == 0) cowsInfo.normStats[COWS_LLCM]++;
 	if (cowsInfo.normStats[COWS_MIGRA] == 0) cowsInfo.normStats[COWS_MIGRA]++;
 }
 
@@ -881,10 +881,10 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t pschd) {
 	logger->Info(" ======================================================"
 			"==================");
 	for (int i = 0; i < bindings.num; i++) {
-		cowsInfo.stallsMetrics[i] /= cowsInfo.normStats[1];
-		cowsInfo.retiredMetrics[i] /= cowsInfo.normStats[2];
-		cowsInfo.flopsMetrics[i] /= cowsInfo.normStats[3];
-		cowsInfo.migrationMetrics[i] /= cowsInfo.normStats[4];
+		cowsInfo.stallsMetrics[i] /= cowsInfo.normStats[COWS_STALLS];
+		cowsInfo.iretMetrics[i]   /= cowsInfo.normStats[COWS_IRET];
+		cowsInfo.flopsMetrics[i]  /= cowsInfo.normStats[COWS_FLOPS];
+		cowsInfo.migrMetrics[i]   /= cowsInfo.normStats[COWS_MIGRA];
 
 		if(cowsInfo.boundnessMetrics[i] < 0) {
 			cowsInfo.boundnessMetrics[i] = 0;
