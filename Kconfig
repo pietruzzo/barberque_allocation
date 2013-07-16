@@ -1,6 +1,8 @@
 
 comment "BarbequeRTRM Daemon Configuration"
 
+comment "PIL Configuration"
+
 config BBQUE_TEST_PLATFORM_DATA
   bool "Use Test Platform Data (TPD)"
   default y if TARGET_ANDROID
@@ -13,6 +15,13 @@ config BBQUE_TEST_PLATFORM_DATA
   This could be a convenient way to use the BarbequeRTRM for initial
   application development and integration, without worry about daemon
   setup or requiring to run the daemon as root.
+
+config BBQUE_PIL_OPENCL_SUPPORT
+  bool "Enable OpenCL support"
+  default n
+  depends on TARGET_LINUX
+  ---help---
+  Enable the support for run-time resource management of OpenCL applications
 
 
 comment "Plugins Management"
