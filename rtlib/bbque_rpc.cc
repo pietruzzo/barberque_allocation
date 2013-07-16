@@ -16,6 +16,7 @@
  */
 
 #include "bbque/config.h"
+#include "bbque/rtlib/bbque_ocl.h"
 #include "bbque/rtlib/bbque_rpc.h"
 #include "bbque/rtlib/rpc_fifo_client.h"
 #include "bbque/rtlib/rpc_unmanaged_client.h"
@@ -2313,6 +2314,7 @@ void BbqueRPC::NotifyPostRun(
 		}
 	}
 
+	rtlib_ocl_prof_run(prec->awm_id);
 }
 
 void BbqueRPC::NotifyPreMonitor(
