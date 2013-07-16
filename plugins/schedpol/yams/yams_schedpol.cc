@@ -239,8 +239,8 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	cowsInfo.flopsMetrics.resize(bindings.num);
 	cowsInfo.migrationMetrics.resize(bindings.num);
 	cowsInfo.candidatedValues.resize(COWS_RECIPE_METRICS);
-	cowsInfo.normStats.resize(COWS_NORMALIZATION_VALUES);
-	cowsInfo.modifiedSums.resize(COWS_SYSWIDE_METRICS);
+	cowsInfo.normStats.resize(COWS_NORMAL_VALUES);
+	cowsInfo.modifiedSums.resize(COWS_UNITS_METRICS);
 
 	// COWS: Reset the counters
 	CowsClear();
@@ -668,7 +668,7 @@ void YamsSchedPol::CowsBinding(SchedEntityPtr_t pschd) {
 	logger->Info("COWS: clearing previous running info");
 
 	cowsInfo.orderedBDs.clear();
-	for (int i = 0; i < COWS_NORMALIZATION_VALUES; i++) {
+	for (int i = 0; i < COWS_NORMAL_VALUES; i++) {
 		cowsInfo.normStats[i] = 0;
 	}
 
@@ -712,9 +712,9 @@ void YamsSchedPol::CowsClear() {
 		cowsInfo.flopsMetrics[i] = 0;
 	}
 
-	for (int i = 0; i < COWS_NORMALIZATION_VALUES ; i++)
+	for (int i = 0; i < COWS_NORMAL_VALUES; i++)
 		cowsInfo.normStats[i] = 0;
-	for (int i = 0; i < COWS_SYSWIDE_METRICS ; i++)
+	for (int i = 0; i < COWS_UNITS_METRICS; i++)
 		cowsInfo.modifiedSums[i] = 0;
 	cowsInfo.bdTotalLoad = 0;
 }
@@ -968,9 +968,9 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
 	logger->Info("|=========+=========+=========+=========+=========|");
 	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-				cowsInfo.metricsWeights[COWS_BOUND_WEIGHT],
-				cowsInfo.metricsWeights[COWS_RSRC_WEIGHT],
-				cowsInfo.metricsWeights[COWS_MIGR_WEIGHT]);
+				cowsInfo.m_weights[COWS_BOUND_WEIGHT],
+				cowsInfo.m_weights[COWS_UNITS_WEIGHT],
+				cowsInfo.m_weights[COWS_MIGRA_WEIGHT]);
 	logger->Info(" =========+=========+=========+=========+========= ");
 
 	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i++) {
@@ -984,9 +984,9 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
 	logger->Info("|=========+=========+=========+=========+=========|");
 	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-				cowsInfo.metricsWeights[COWS_BOUND_WEIGHT],
-				cowsInfo.metricsWeights[COWS_RSRC_WEIGHT],
-				cowsInfo.metricsWeights[COWS_MIGR_WEIGHT]);
+				cowsInfo.m_weights[COWS_BOUND_WEIGHT],
+				cowsInfo.m_weights[COWS_UNITS_WEIGHT],
+				cowsInfo.m_weights[COWS_MIGRA_WEIGHT]);
 	logger->Info(" =========+=========+=========+=========+========= ");
 #endif // CONFIG_BBQUE_SP_COWS_BINDING
 	return 0;
