@@ -792,8 +792,10 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 		if (result != YAMS_SUCCESS) {
 			logger->Error("COWS: Resource binding failed [%d]", result);
 		}
+
+		// Get migration contribution
 		value = 0.0;
-		GetSchedContribValue(psch, sc_types[SchedContribManager::MIGRATION], value);
+		GetSchedContribValue(pschd, SchedContribManager::MIGRATION, value);
 		cowsInfo.migrMetrics[i] = value;
 		cowsInfo.normStats[COWS_MIGRA] += value;
 	}
