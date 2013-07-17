@@ -672,7 +672,7 @@ clEnqueueReadBuffer(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueReadBuffer\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -703,7 +703,7 @@ clEnqueueReadBufferRect(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueReadBufferRect\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -720,14 +720,14 @@ clEnqueueWriteBuffer(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueWriteBuffer()...\n"));
+	fprintf(stderr, FD("Calling clEnqueueWriteBuffer() @ %p...\n"), __builtin_return_address(0));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueWriteBuffer(command_queue, buffer, blocking_write,
 		offset, size, ptr, num_events_in_wait_list, event_wait_list, event);
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueWriteBuffer\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -758,7 +758,7 @@ clEnqueueWriteBufferRect(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueWriteBufferRect\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -799,7 +799,7 @@ clEnqueueCopyBuffer(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyBuffer\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -828,7 +828,7 @@ clEnqueueCopyBufferRect(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyBufferRect\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -855,7 +855,7 @@ clEnqueueReadImage(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueReadImage\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -882,7 +882,7 @@ clEnqueueWriteImage(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueWriteImage\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -922,7 +922,7 @@ clEnqueueCopyImage(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyImage\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -947,7 +947,7 @@ clEnqueueCopyImageToBuffer(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyImageToBuffer\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -972,7 +972,7 @@ clEnqueueCopyBufferToImage(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyBufferToImage\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -998,7 +998,7 @@ clEnqueueMapBuffer(
 	if (errcode_ret != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapBuffer\n"), errcode_ret);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return buff_ptr;
 }
 
@@ -1026,7 +1026,7 @@ clEnqueueMapImage(
 	if (errcode_ret != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapImage\n"), errcode_ret);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return buff_ptr;
 }
 
@@ -1080,7 +1080,7 @@ clEnqueueNDRangeKernel(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueNDRangeKernel\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -1100,7 +1100,7 @@ clEnqueueTask(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueTask\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -1126,7 +1126,7 @@ clEnqueueNativeKernel(
 	if (status != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueNativeKernel\n"), status);
 	}
-	rtlib_ocl_coll_event(command_queue, event);
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
 }
 
@@ -1257,18 +1257,15 @@ void rtlib_ocl_init() {
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NATIVE_KERNEL, "clEnqueueNativeKernel"));
 }
 
-void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event) {
+void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event, void *addr) {
 	std::map<cl_command_queue, QueueProfPtr_t>::iterator it;
 	clRetainEvent(*event);
 	it = ocl_queues_prof.find(command_queue);
 	if (it == ocl_queues_prof.end())
 		ocl_queues_prof.insert(
-			std::pair<cl_command_queue, QueueProfPtr_t>(
-				command_queue,
-				QueueProfPtr_t(new RTLIB_OCL_QueueProf))
-		);
-
-	ocl_queues_prof[command_queue]->events.push_back(event);
+			QueueProfPair_t(command_queue, QueueProfPtr_t(new RTLIB_OCL_QueueProf)));
+	ocl_queues_prof[command_queue]->events.insert(std::pair<void *, cl_event>(addr, *event));
+	ocl_queues_prof[command_queue]->cmd_prof.insert(std::pair<void *,CmdProfPtr_t>(addr,CmdProfPtr_t(new CmdProf_t)));
 }
 
 void rtlib_ocl_prof_clean() {
@@ -1279,39 +1276,48 @@ void rtlib_ocl_prof_run(uint8_t awm_id) {
 	cl_command_type cmd_type = 0;
 	cl_int status;
 	double p_value = 0.0;
-	std::vector<cl_event>::iterator it_v;
-	std::map<cl_command_queue, QueueProfPtr_t>::iterator it;
+	std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
+	std::map<void *, cl_event>::iterator it_ev;
 	fprintf(stderr, FE("------>>>>>>>>>>>>>>>>>>> Profiling \n"));
-	for (it = ocl_queues_prof.begin(); it != ocl_queues_prof.end(); it++) {
-		clFinish(it->first);
-		QueueProfPtr_t stPtr = it->second;
-		status = clWaitForEvents(stPtr->events.size(), stPtr->events.data());
-		if (status != CL_SUCCESS) {
-			fprintf(stderr, FE("OCL: Error [%d] in clWaitForEvents\n"), status);
-		}
-		for (it_v = stPtr->events.begin(); it_v < stPtr->events.end(); it_v++){
-			get_command_prof_info(*it_v, cmd_type, p_value);
-			acc_command_stats(stPtr, cmd_type, p_value);
+	for (it_cq = ocl_queues_prof.begin(); it_cq != ocl_queues_prof.end(); it_cq++) {
+		clFinish(it_cq->first);
+		QueueProfPtr_t stPtr = it_cq->second;
+		for (it_ev = stPtr->events.begin(); it_ev != stPtr->events.end(); it_ev++) {
+			status = clWaitForEvents(1, &it_ev->second);
+			if (status != CL_SUCCESS) {
+				fprintf(stderr, FE("OCL: Error [%d] in clWaitForEvents\n"), status);
+			}
+			acc_command_event_info(stPtr, it_ev->second, cmd_type, it_ev->first, awm_id);
 			//#ifdef abilitato
-			dump_command_prof_info(awm_id, cmd_type, p_value);
 		}
 	}
 }
 
-void acc_command_stats(QueueProfPtr_t stPtr, cl_command_type cmd_type, double p_value) {
-	std::map<cl_command_type, AccProfPtr_t>::iterator it_ct;
-	it_ct = stPtr->cmd_prof.find(cmd_type);
+void acc_command_stats(
+		QueueProfPtr_t stPtr,
+		cl_command_type cmd_type,
+		double queued_time,
+		double submit_time,
+		double exec_time,
+		void *addr) {
+	std::map<void *, CmdProfPtr_t>::iterator it_ct;
+	it_ct = stPtr->cmd_prof.find(addr);
 	if (it_ct == stPtr->cmd_prof.end())
-		stPtr->cmd_prof.insert(
-			CmdProfPair_t(cmd_type, AccProfPtr_t(new AccProf_t)));
-	AccProf_t & p_acc(*(stPtr->cmd_prof[cmd_type].get()));
-	p_acc(p_value);
+		fprintf(stderr, FE("OCL: Unexpected Error in acc_command_stats()\n"));
+	CmdProf_t & info(*(stPtr->cmd_prof[addr].get()));
+	info.cmd_type = cmd_type;
+	info.prof_time[CL_CMD_QUEUED_TIME](queued_time);
+	info.prof_time[CL_CMD_SUBMIT_TIME](submit_time);
+	info.prof_time[CL_CMD_EXEC_TIME](exec_time);
 }
 
 void dump_command_prof_info(
 		uint8_t awm_id,
 		cl_command_type cmd_type,
-		double p_value) {
+		double queued_time,
+		double submit_time,
+		double exec_time,
+		void * addr) {
 	FILE *dump_file;
 	char buffer [100];
 	snprintf(buffer, 100, "%s/PROFOCL-%d-%s-AWM%d-%s.dat",
@@ -1322,20 +1328,46 @@ void dump_command_prof_info(
 		ocl_cmd_str[cmd_type].c_str());
 	dump_file = fopen(buffer, "a");
 	if (dump_file) {
-		fprintf(dump_file, "%f %f\n", bbque_tmr.getElapsedTimeMs(), p_value*1e-06);
+		fprintf(dump_file, "%f %p %f %f %f\n",
+			bbque_tmr.getElapsedTimeMs(),
+			addr,
+			queued_time*1e-06,
+			submit_time*1e-06,
+			exec_time*1e-06);
 	}
 	fclose(dump_file);
 }
 
-void get_command_prof_info(cl_event event, cl_command_type & cmd_type, double & p_value) {
+void acc_command_event_info(
+		QueueProfPtr_t stPtr,
+		cl_event event,
+		cl_command_type & cmd_type,
+		void *addr,
+		uint8_t awm_id) {
 	size_t return_bytes;
 	cl_int status;
+	cl_ulong ev_queued_time = (cl_ulong)0;
+	cl_ulong ev_submit_time = (cl_ulong)0;
 	cl_ulong ev_start_time = (cl_ulong)0;
 	cl_ulong ev_end_time   = (cl_ulong)0;
+
+	// Extract event times
 	clGetEventInfo(event, CL_EVENT_COMMAND_TYPE, sizeof(cl_command_type), &cmd_type, NULL);
 	status = clGetEventProfilingInfo(
 		event,
 		CL_PROFILING_COMMAND_QUEUED,
+		sizeof(cl_ulong),
+		&ev_queued_time,
+		&return_bytes);
+	status = clGetEventProfilingInfo(
+		event,
+		CL_PROFILING_COMMAND_SUBMIT,
+		sizeof(cl_ulong),
+		&ev_submit_time,
+		&return_bytes);
+	status = clGetEventProfilingInfo(
+		event,
+		CL_PROFILING_COMMAND_START,
 		sizeof(cl_ulong),
 		&ev_start_time,
 		&return_bytes);
@@ -1345,7 +1377,14 @@ void get_command_prof_info(cl_event event, cl_command_type & cmd_type, double & 
 		sizeof(cl_ulong),
 		&ev_end_time,
 		&return_bytes);
-	p_value = (double)(ev_end_time - ev_start_time);
+
+	// Accumulate event times for this command
+	double queued_time = (double)(ev_submit_time - ev_queued_time);
+	double submit_time = (double)(ev_start_time - ev_submit_time);
+	double exec_time   = (double)(ev_end_time - ev_start_time);
+	acc_command_stats(stPtr, cmd_type, queued_time, submit_time, exec_time, addr);
+
+	dump_command_prof_info(awm_id, cmd_type, queued_time, submit_time, exec_time, addr);
 }
 
 #ifdef  __cplusplus

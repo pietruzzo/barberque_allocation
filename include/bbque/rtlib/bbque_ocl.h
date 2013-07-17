@@ -18,9 +18,10 @@
 #ifndef BBQUE_OCL_H_
 #define BBQUE_OCL_H_
 
-#include <memory>
+#include <array>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -36,6 +37,10 @@
 
 #define OCL_PROF_OUTDIR "/tmp"
 
+#define CL_CMD_QUEUED_TIME 0
+#define CL_CMD_SUBMIT_TIME 1
+#define CL_CMD_EXEC_TIME   2
+
 namespace bac = boost::accumulators;
 
 #ifdef __cplusplus
@@ -44,10 +49,10 @@ extern "C" {
 
 typedef struct RTLIB_OpenCL RTLIB_OpenCL_t;
 typedef class RTLIB_OCL_QueueProf RTLIB_OCL_QueueProf_t;
+typedef struct CmdProf CmdProf_t;
 typedef std::shared_ptr<RTLIB_OCL_QueueProf_t> QueueProfPtr_t;
-typedef bac::accumulator_set<double, bac::stats<bac::tag::sum> > AccProf_t;
-typedef std::shared_ptr<AccProf_t> AccProfPtr_t;
-typedef std::pair<cl_command_type, AccProfPtr_t> CmdProfPair_t;
+typedef std::array<bac::accumulator_set<double, bac::stats<bac::tag::sum> >,3> AccArray_t;
+typedef std::shared_ptr<CmdProf_t> CmdProfPtr_t;
 typedef std::pair<cl_command_type, std::string> CmdStrPair_t;
 typedef std::pair<cl_command_queue, QueueProfPtr_t> QueueProfPair_t;
 
@@ -219,27 +224,33 @@ struct RTLIB_OpenCL {
 class RTLIB_OCL_QueueProf {
 public:
 	~RTLIB_OCL_QueueProf() {
-		std::vector<cl_event>::iterator it_v;
+		std::map<void *, cl_event>::iterator it_ev;
 		cl_uint ref_count;
-		for (it_v = events.begin(); it_v < events.end(); it_v++) {
-			clGetEventInfo(*it_v, CL_EVENT_REFERENCE_COUNT, sizeof(cl_uint), &ref_count, NULL);
+		for (it_ev = events.begin(); it_ev != events.end(); it_ev++) {
+			clGetEventInfo(it_ev->second, CL_EVENT_REFERENCE_COUNT, sizeof(cl_uint), &ref_count, NULL);
 			if (ref_count > 0)
-				clReleaseEvent(*it_v);
+				clReleaseEvent(it_ev->second);
 		}
 
 		cmd_prof.clear();
 	};
 
-	std::vector<cl_event> events;
-	std::map<cl_command_type, AccProfPtr_t> cmd_prof;
+	std::map<void *, cl_event> events;
+	std::map<void *, CmdProfPtr_t> cmd_prof;
 };
 
-void acc_command_stats(QueueProfPtr_t, cl_command_type, double);
-void dump_command_prof_info(uint8_t, cl_command_type, double);
-void get_command_prof_info(cl_event, cl_command_type &, double &);
+struct CmdProf {
+	cl_command_type cmd_type;
+	AccArray_t prof_time;
+};
+
+void acc_command_event_info(QueueProfPtr_t, cl_event, cl_command_type &, void *, uint8_t);
+void acc_command_stats(QueueProfPtr_t, cl_command_type, double, double, double, void *);
+void dump_command_prof_info(uint8_t, cl_command_type, double, double, double, void *);
+
 
 void rtlib_ocl_init();
-void rtlib_ocl_coll_event(cl_command_queue, cl_event *);
+void rtlib_ocl_coll_event(cl_command_queue, cl_event *, void *);
 void rtlib_ocl_prof_clean();
 void rtlib_ocl_prof_run(uint8_t);
 
