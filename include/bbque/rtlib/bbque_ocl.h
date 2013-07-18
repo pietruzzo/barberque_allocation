@@ -25,10 +25,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/sum.hpp>
-
 #include <CL/cl.h>
 
 #define EVENT_RC_CONTROL(ev) \
@@ -37,24 +33,11 @@
 
 #define OCL_PROF_OUTDIR "/tmp"
 
-#define CL_CMD_QUEUED_TIME 0
-#define CL_CMD_SUBMIT_TIME 1
-#define CL_CMD_EXEC_TIME   2
-
-namespace bac = boost::accumulators;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct RTLIB_OpenCL RTLIB_OpenCL_t;
-typedef class RTLIB_OCL_QueueProf RTLIB_OCL_QueueProf_t;
-typedef struct CmdProf CmdProf_t;
-typedef std::shared_ptr<RTLIB_OCL_QueueProf_t> QueueProfPtr_t;
-typedef std::array<bac::accumulator_set<double, bac::stats<bac::tag::sum> >,3> AccArray_t;
-typedef std::shared_ptr<CmdProf_t> CmdProfPtr_t;
-typedef std::pair<cl_command_type, std::string> CmdStrPair_t;
-typedef std::pair<cl_command_queue, QueueProfPtr_t> QueueProfPair_t;
 
 typedef cl_int (*getPlatformIDs_t)(cl_uint, cl_platform_id *, cl_uint *);
 typedef cl_int (*getPlatformInfo_t)(cl_platform_id, cl_platform_info, size_t, void *, size_t *);
@@ -221,28 +204,6 @@ struct RTLIB_OpenCL {
 	enqueueBarrierWithWaitList_t enqueueBarrierWithWaitList;
 };
 
-class RTLIB_OCL_QueueProf {
-public:
-	~RTLIB_OCL_QueueProf() {
-		std::map<void *, cl_event>::iterator it_ev;
-		cl_uint ref_count;
-		for (it_ev = events.begin(); it_ev != events.end(); it_ev++) {
-			clGetEventInfo(it_ev->second, CL_EVENT_REFERENCE_COUNT, sizeof(cl_uint), &ref_count, NULL);
-			if (ref_count > 0)
-				clReleaseEvent(it_ev->second);
-		}
-
-		cmd_prof.clear();
-	};
-
-	std::map<void *, cl_event> events;
-	std::map<void *, CmdProfPtr_t> cmd_prof;
-};
-
-struct CmdProf {
-	cl_command_type cmd_type;
-	AccArray_t prof_time;
-};
 
 void acc_command_event_info(QueueProfPtr_t, cl_event, cl_command_type &, void *, uint8_t);
 void acc_command_stats(QueueProfPtr_t, cl_command_type, double, double, double, void *);
