@@ -27,6 +27,8 @@
 
 #include <CL/cl.h>
 
+#include "bbque/rtlib/bbque_rpc.h"
+
 #define EVENT_RC_CONTROL(ev) \
 	cl_event local_event; \
 	if (ev == NULL) ev = &local_event;
@@ -204,16 +206,16 @@ struct RTLIB_OpenCL {
 	enqueueBarrierWithWaitList_t enqueueBarrierWithWaitList;
 };
 
+using bbque::rtlib::BbqueRPC;
 
 void acc_command_event_info(QueueProfPtr_t, cl_event, cl_command_type &, void *, uint8_t);
 void acc_command_stats(QueueProfPtr_t, cl_command_type, double, double, double, void *);
 void dump_command_prof_info(uint8_t, cl_command_type, double, double, double, void *);
 
-
 void rtlib_ocl_init();
 void rtlib_ocl_coll_event(cl_command_queue, cl_event *, void *);
 void rtlib_ocl_prof_clean();
-void rtlib_ocl_prof_run(uint8_t);
+void rtlib_ocl_prof_run(uint8_t, OclEventsStatsMap_t &);
 
 /******************************************************************************
  * OpenCL wrapper functions                                                   *

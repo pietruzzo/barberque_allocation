@@ -1272,7 +1272,7 @@ void rtlib_ocl_prof_clean() {
 	ocl_queues_prof.clear();
 }
 
-void rtlib_ocl_prof_run(uint8_t awm_id) {
+void rtlib_ocl_prof_run(uint8_t awm_id, OclEventsStatsMap_t & awm_ocl_events) {
 	cl_command_type cmd_type = 0;
 	cl_int status;
 	double p_value = 0.0;
@@ -1291,6 +1291,9 @@ void rtlib_ocl_prof_run(uint8_t awm_id) {
 			//#ifdef abilitato
 		}
 	}
+
+	awm_ocl_events = ocl_queues_prof;
+	rtlib_ocl_prof_clean();
 }
 
 void acc_command_stats(
