@@ -1264,8 +1264,10 @@ void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event, void 
 	if (it == ocl_queues_prof.end())
 		ocl_queues_prof.insert(
 			QueueProfPair_t(command_queue, QueueProfPtr_t(new RTLIB_OCL_QueueProf)));
-	ocl_queues_prof[command_queue]->events.insert(std::pair<void *, cl_event>(addr, *event));
-	ocl_queues_prof[command_queue]->cmd_prof.insert(std::pair<void *,CmdProfPtr_t>(addr,CmdProfPtr_t(new CmdProf_t)));
+	ocl_queues_prof[command_queue]->events.insert(
+		AddrEventPair_t(addr, *event));
+	ocl_queues_prof[command_queue]->cmd_prof.insert(
+		AddrCmdPair_t(addr,CmdProfPtr_t(new CmdProf_t)));
 }
 
 void rtlib_ocl_prof_clean() {
