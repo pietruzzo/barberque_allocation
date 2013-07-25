@@ -34,7 +34,6 @@ extern const char *rtlib_app_name;
 extern RTLIB_OpenCL_t rtlib_ocl;
 extern RTLIB_Services_t rtlib_services;
 extern std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
-extern std::map<cl_command_type, std::string> ocl_cmd_str;
 
 /* Platform API */
 CL_API_ENTRY cl_int CL_API_CALL
@@ -1266,8 +1265,6 @@ void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event, void 
 			QueueProfPair_t(command_queue, QueueProfPtr_t(new RTLIB_OCL_QueueProf)));
 	ocl_queues_prof[command_queue]->events.insert(
 		AddrEventPair_t(addr, *event));
-	ocl_queues_prof[command_queue]->cmd_prof.insert(
-		AddrCmdPair_t(addr,CmdProfPtr_t(new CmdProf_t)));
 }
 
 void rtlib_ocl_prof_clean() {
@@ -1303,17 +1300,20 @@ void acc_command_stats(
 		cl_command_type cmd_type,
 		double queued_time,
 		double submit_time,
-		double exec_time,
-		void *addr) {
-	std::map<void *, CmdProfPtr_t>::iterator it_ct;
-	it_ct = stPtr->cmd_prof.find(addr);
-	if (it_ct == stPtr->cmd_prof.end())
-		fprintf(stderr, FE("OCL: Unexpected Error in acc_command_stats()\n"));
-	CmdProf_t & info(*(stPtr->cmd_prof[addr].get()));
-	info.cmd_type = cmd_type;
-	info.prof_time[CL_CMD_QUEUED_TIME](queued_time);
-	info.prof_time[CL_CMD_SUBMIT_TIME](submit_time);
-	info.prof_time[CL_CMD_EXEC_TIME](exec_time);
+		double exec_time) {
+	std::map<cl_command_type, AccArray_t>::iterator it_ct;
+	AccArray_t accs;
+	it_ct = stPtr->cmd_prof.find(cmd_type);
+	if (it_ct == stPtr->cmd_prof.end()) {
+		accs[CL_CMD_QUEUED_TIME](queued_time);
+		accs[CL_CMD_SUBMIT_TIME](submit_time);
+		accs[CL_CMD_EXEC_TIME](exec_time);
+		stPtr->cmd_prof.insert(CmdProfPair_t(cmd_type, accs));
+	} else {
+		it_ct->second[CL_CMD_QUEUED_TIME](queued_time);
+		it_ct->second[CL_CMD_SUBMIT_TIME](submit_time);
+		it_ct->second[CL_CMD_EXEC_TIME](exec_time);
+	}
 }
 
 void dump_command_prof_info(
@@ -1387,7 +1387,7 @@ void acc_command_event_info(
 	double queued_time = (double)(ev_submit_time - ev_queued_time);
 	double submit_time = (double)(ev_start_time - ev_submit_time);
 	double exec_time   = (double)(ev_end_time - ev_start_time);
-	acc_command_stats(stPtr, cmd_type, queued_time, submit_time, exec_time, addr);
+	acc_command_stats(stPtr, cmd_type, queued_time, submit_time, exec_time);
 
 	dump_command_prof_info(awm_id, cmd_type, queued_time, submit_time, exec_time, addr);
 }

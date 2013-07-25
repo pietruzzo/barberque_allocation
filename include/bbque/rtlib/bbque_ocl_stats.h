@@ -38,15 +38,20 @@
 namespace bac = boost::accumulators;
 
 typedef class RTLIB_OCL_QueueProf RTLIB_OCL_QueueProf_t;
-typedef struct CmdProf CmdProf_t;
-typedef std::array<bac::accumulator_set<double, bac::stats<bac::tag::sum> >,3> AccArray_t;
+typedef std::array<bac::accumulator_set<double,
+					bac::stats<bac::tag::sum, bac::tag::min, bac::tag::max,
+					bac::tag::variance, bac::tag::mean> >,3> AccArray_t;
+typedef std::map<cl_command_type, AccArray_t> CmdProf_t;
 typedef std::shared_ptr<RTLIB_OCL_QueueProf_t> QueueProfPtr_t;
 typedef std::shared_ptr<CmdProf_t> CmdProfPtr_t;
 typedef std::map<cl_command_queue, QueueProfPtr_t> OclEventsStatsMap_t;
 typedef std::pair<cl_command_type, std::string> CmdStrPair_t;
 typedef std::pair<cl_command_queue, QueueProfPtr_t> QueueProfPair_t;
+typedef std::pair<cl_command_type, AccArray_t> CmdProfPair_t;
 typedef std::pair<void *, cl_event> AddrEventPair_t;
 typedef std::pair<void *, CmdProfPtr_t> AddrCmdPair_t;
+
+extern std::map<cl_command_type, std::string> ocl_cmd_str;
 
 /**
  * @class Collect events profiling info for an OpenCL command queue
@@ -66,15 +71,7 @@ public:
 	};
 
 	std::map<void *, cl_event> events;
-	std::map<void *, CmdProfPtr_t> cmd_prof;
-};
-
-/**
- * @struct Collect timings for OpenCL commands
- */
-struct CmdProf {
-	cl_command_type cmd_type;
-	AccArray_t prof_time;
+	std::map<cl_command_type, AccArray_t> cmd_prof;
 };
 
 #endif // BBQUE_OCL_STATS_H_

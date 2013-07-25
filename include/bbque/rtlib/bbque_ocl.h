@@ -209,7 +209,7 @@ struct RTLIB_OpenCL {
 using bbque::rtlib::BbqueRPC;
 
 void acc_command_event_info(QueueProfPtr_t, cl_event, cl_command_type &, void *, uint8_t);
-void acc_command_stats(QueueProfPtr_t, cl_command_type, double, double, double, void *);
+void acc_command_stats(QueueProfPtr_t, cl_command_type, double, double, double);
 void dump_command_prof_info(uint8_t, cl_command_type, double, double, double, void *);
 
 void rtlib_ocl_init();
