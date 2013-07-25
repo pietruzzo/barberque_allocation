@@ -16,7 +16,6 @@
  */
 
 #include "bbque/config.h"
-#include "bbque/rtlib/bbque_ocl.h"
 #include "bbque/rtlib/bbque_rpc.h"
 #include "bbque/rtlib/rpc_fifo_client.h"
 #include "bbque/rtlib/rpc_unmanaged_client.h"
@@ -24,6 +23,10 @@
 
 #include <cstdio>
 #include <sys/stat.h>
+
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+  #include "bbque/rtlib/bbque_ocl.h"
+#endif
 
 // Setup logging
 #undef  BBQUE_LOG_MODULE

@@ -279,7 +279,7 @@ protected:
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 		/** Map of OpenCL profiling info */
 		OclEventsStatsMap_t ocl_events_map;
-#endif
+#endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
 		/** The mutex protecting concurrent access to statistical data */
 		std::mutex stats_mtx;

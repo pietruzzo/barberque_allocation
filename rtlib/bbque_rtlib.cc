@@ -21,8 +21,10 @@
 #include "bbque/utils/timer.h"
 #include "bbque/utils/utility.h"
 
-#include "bbque/rtlib/bbque_ocl.h"
 #include "bbque/rtlib/bbque_rpc.h"
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+  #include "bbque/rtlib/bbque_ocl.h"
+#endif
 
 #ifdef CONFIG_TARGET_ANDROID
 # include <stdint.h>
@@ -64,12 +66,12 @@ RTLIB_OpenCL_t rtlib_ocl;
  * events data structures
  */
 std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
-#endif
 
 /**
  * The map contains OpenCL command types and their respective string values
  */
 std::map<cl_command_type, std::string> ocl_cmd_str;
+#endif
 
 static RTLIB_ExecutionContextHandler_t rtlib_register(const char *name,
 		const RTLIB_ExecutionContextParams_t *params) {
