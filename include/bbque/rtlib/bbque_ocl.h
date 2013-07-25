@@ -208,7 +208,7 @@ struct RTLIB_OpenCL {
 
 using bbque::rtlib::BbqueRPC;
 
-void acc_command_event_info(QueueProfPtr_t, cl_event, cl_command_type &, void *, uint8_t);
+void acc_command_event_info(QueueProfPtr_t, cl_event, cl_command_type &, void *, uint8_t, bool);
 void acc_command_stats(QueueProfPtr_t, cl_command_type, double, double, double);
 void dump_command_prof_info(uint8_t, cl_command_type, double, double, double, void *);
 
@@ -216,7 +216,7 @@ void rtlib_ocl_init();
 void rtlib_ocl_coll_event(cl_command_queue, cl_event *, void *);
 void rtlib_ocl_prof_save(cl_command_queue, OclEventsStatsMap_t &);
 void rtlib_ocl_prof_clean();
-void rtlib_ocl_prof_run(uint8_t, OclEventsStatsMap_t &);
+void rtlib_ocl_prof_run(uint8_t, OclEventsStatsMap_t &, bool);
 
 /******************************************************************************
  * OpenCL wrapper functions                                                   *
