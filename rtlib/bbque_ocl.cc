@@ -670,7 +670,7 @@ clEnqueueReadBuffer(
 	status = rtlib_ocl.enqueueReadBuffer(command_queue, buffer, blocking_read,
 		offset, size, ptr, num_events_in_wait_list, event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueReadBuffer\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueReadBuffer()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -701,7 +701,7 @@ clEnqueueReadBufferRect(
 		buffer_slice_pitch, host_row_pitch, host_slice_pitch, ptr,
 		num_events_in_wait_list, event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueReadBufferRect\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueReadBufferRect()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -720,12 +720,12 @@ clEnqueueWriteBuffer(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueWriteBuffer() @ %p...\n"), __builtin_return_address(0));
+	fprintf(stderr, FD("Calling clEnqueueWriteBuffer()...\n"));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueWriteBuffer(command_queue, buffer, blocking_write,
 		offset, size, ptr, num_events_in_wait_list, event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueWriteBuffer\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueWriteBuffer()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -756,7 +756,7 @@ clEnqueueWriteBufferRect(
 		host_row_pitch, host_slice_pitch, ptr, num_events_in_wait_list,
 		event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueWriteBufferRect\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueWriteBufferRect()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -797,7 +797,7 @@ clEnqueueCopyBuffer(
 	status = rtlib_ocl.enqueueCopyBuffer(command_queue, src_buffer, dst_buffer,
 		src_offset, dst_offset, size, num_events_in_wait_list, event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyBuffer\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyBuffer()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -826,7 +826,7 @@ clEnqueueCopyBufferRect(
 		src_origin, dst_origin, region, src_row_pitch, src_slice_pitch,
 		dst_row_pitch, dst_slice_pitch, num_events_in_wait_list, event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyBufferRect\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyBufferRect()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -853,7 +853,7 @@ clEnqueueReadImage(
 		origin, region, row_pitch, slice_pitch, ptr, num_events_in_wait_list,
 		event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueReadImage\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueReadImage()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -880,7 +880,7 @@ clEnqueueWriteImage(
 		origin, region, input_row_pitch, input_slice_pitch, ptr,
 		num_events_in_wait_list, event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueWriteImage\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueWriteImage()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -920,7 +920,7 @@ clEnqueueCopyImage(
 	status = rtlib_ocl.enqueueCopyImage(command_queue, src_image, dst_image,
 		src_origin, dst_origin, region, num_events_in_wait_list, event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyImage\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyImage()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -945,7 +945,7 @@ clEnqueueCopyImageToBuffer(
 		dst_buffer, src_origin, region, dst_offset, num_events_in_wait_list,
 		event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyImageToBuffer\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyImageToBuffer()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -970,7 +970,7 @@ clEnqueueCopyBufferToImage(
 		dst_image, src_offset, dst_origin, region, num_events_in_wait_list,
 		event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyBufferToImage\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueCopyBufferToImage()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -996,7 +996,7 @@ clEnqueueMapBuffer(
 		map_flags, offset, size, num_events_in_wait_list, event_wait_list,
 		event, errcode_ret);
 	if (errcode_ret != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapBuffer\n"), errcode_ret);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapBuffer()\n"), errcode_ret);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return buff_ptr;
@@ -1024,7 +1024,7 @@ clEnqueueMapImage(
 		map_flags, origin, region, image_row_pitch, image_slice_pitch,
 		num_events_in_wait_list, event_wait_list, event, errcode_ret);
 	if (errcode_ret != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapImage\n"), errcode_ret);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapImage()\n"), errcode_ret);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return buff_ptr;
@@ -1078,7 +1078,7 @@ clEnqueueNDRangeKernel(
 		global_work_offset, global_work_size, local_work_size,
 		num_events_in_wait_list, event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueNDRangeKernel\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueNDRangeKernel()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -1098,7 +1098,7 @@ clEnqueueTask(
 	status = rtlib_ocl.enqueueTask(command_queue, kernel, num_events_in_wait_list,
 		event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueTask\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueTask()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
@@ -1124,7 +1124,7 @@ clEnqueueNativeKernel(
 		cb_args, num_mem_objects, mem_list, args_mem_loc, num_events_in_wait_list,
 		event_wait_list, event);
 	if (status != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueNativeKernel\n"), status);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueNativeKernel()\n"), status);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return status;
