@@ -1281,6 +1281,8 @@ void rtlib_ocl_prof_run(uint8_t awm_id, OclEventsStatsMap_t & awm_ocl_events) {
 	for (it_cq = ocl_queues_prof.begin(); it_cq != ocl_queues_prof.end(); it_cq++) {
 		clFinish(it_cq->first);
 		QueueProfPtr_t stPtr = it_cq->second;
+		if (awm_ocl_events[it_cq->first] != nullptr)
+			stPtr->cmd_prof = awm_ocl_events[it_cq->first]->cmd_prof;
 		for (it_ev = stPtr->events.begin(); it_ev != stPtr->events.end(); it_ev++) {
 			status = clWaitForEvents(1, &it_ev->second);
 			if (status != CL_SUCCESS) {
@@ -1289,10 +1291,20 @@ void rtlib_ocl_prof_run(uint8_t awm_id, OclEventsStatsMap_t & awm_ocl_events) {
 			acc_command_event_info(stPtr, it_ev->second, cmd_type, it_ev->first, awm_id);
 			//#ifdef abilitato
 		}
+		rtlib_ocl_prof_save(it_cq->first, awm_ocl_events);
 	}
-
-	awm_ocl_events = ocl_queues_prof;
 	rtlib_ocl_prof_clean();
+}
+
+void rtlib_ocl_prof_save(cl_command_queue command_queue, OclEventsStatsMap_t & awm_ocl_events) {
+	OclEventsStatsMap_t::iterator it_cq;
+	it_cq = awm_ocl_events.find(command_queue);
+	if (it_cq == awm_ocl_events.end()) {
+		QueueProfPtr_t p(new RTLIB_OCL_QueueProf(*(ocl_queues_prof[command_queue].get())));
+		awm_ocl_events.insert(QueueProfPair_t(command_queue, p));
+	} else {
+		awm_ocl_events[command_queue] = ocl_queues_prof[command_queue];
+	}
 }
 
 void acc_command_stats(

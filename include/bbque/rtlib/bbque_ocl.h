@@ -214,6 +214,7 @@ void dump_command_prof_info(uint8_t, cl_command_type, double, double, double, vo
 
 void rtlib_ocl_init();
 void rtlib_ocl_coll_event(cl_command_queue, cl_event *, void *);
+void rtlib_ocl_prof_save(cl_command_queue, OclEventsStatsMap_t &);
 void rtlib_ocl_prof_clean();
 void rtlib_ocl_prof_run(uint8_t, OclEventsStatsMap_t &);
 
