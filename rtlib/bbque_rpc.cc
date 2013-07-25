@@ -99,6 +99,7 @@ int  BbqueRPC::envRawPerfCount = 0;
 bool BbqueRPC::envNoKernel = false;
 bool BbqueRPC::envCsvOutput = false;
 bool BbqueRPC::envMOSTOutput = false;
+bool BbqueRPC::envOCLFileOutput = false;
 char BbqueRPC::envMetricsTag[BBQUE_RTLIB_OPTS_TAG_MAX+2] = "";
 bool BbqueRPC::envBigNum = false;
 bool BbqueRPC::envUnmanaged = false;
@@ -217,6 +218,14 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			envRawPerfCount = idx;
 			break;
 #endif //CONFIG_BBQUE_RTLIB_PERF_SUPPORT
+
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+		case 'o':
+			// Enabling OpenCL Profiling Output on file
+			envOCLFileOutput = true;
+			break;
+#endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+
 		case 's':
 			// Setting CSV separator
 			if (opt[1])
@@ -683,6 +692,11 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 
 		// Dump Performance Counters for this AWM
 		PerfPrintStats(prec, pstats);
+
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+		// Dump OpenCL profiling info for each AWM
+		OclPrintStats(pstats);
+#endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
 	}
 
@@ -2083,8 +2097,47 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
  ******************************************************************************/
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
-void BbqueRPC::OclCollectStats(uint8_t awm_id, OclEventsStatsMap_t & ocl_events_map) {
-	rtlib_ocl_prof_run(awm_id, ocl_events_map);
+void BbqueRPC::OclCollectStats(
+		uint8_t awm_id,
+		OclEventsStatsMap_t & ocl_events_map,
+		bool envOCLFileOutput) {
+	rtlib_ocl_prof_run(awm_id, ocl_events_map, envOCLFileOutput);
+}
+
+void BbqueRPC::OclPrintStats(pAwmStats_t pstats) {
+	std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
+	std::map<cl_command_type, AccArray_t>::iterator it_ct;
+	char q_buff[100], s_buff[100], x_buff[100];
+	std::string q_str, s_str, x_str;
+	for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
+		QueueProfPtr_t stPtr = it_cq->second;
+		for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
+			snprintf(q_buff, 100, "%x_%s_queue",
+				it_cq->first, ocl_cmd_str[it_ct->first].c_str());
+			q_str.assign(q_buff);
+			snprintf(s_buff, 100, "%x_%s_submit",
+				it_cq->first, ocl_cmd_str[it_ct->first].c_str());
+			s_str.assign(s_buff);
+			snprintf(x_buff, 100, "%x_%s_exec",
+				it_cq->first, ocl_cmd_str[it_ct->first].c_str());
+			x_str.assign(x_buff);
+			DUMP_MOST_METRIC("ocl", (q_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (q_str + "_min_ms").c_str(), min(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (q_str + "_max_ms").c_str(), max(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (q_str + "_avg_ms").c_str(), mean(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (q_str + "_std_ms").c_str(), sqrt(variance(it_ct->second[CL_CMD_QUEUED_TIME]))*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (s_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (s_str + "_min_ms").c_str(), min(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (s_str + "_max_ms").c_str(), max(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (s_str + "_avg_ms").c_str(), mean(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (s_str + "_std_ms").c_str(), sqrt(variance(it_ct->second[CL_CMD_SUBMIT_TIME]))*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (x_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (x_str + "_min_ms").c_str(), min(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (x_str + "_max_ms").c_str(), max(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (x_str + "_avg_ms").c_str(), mean(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+			DUMP_MOST_METRIC("ocl", (x_str + "_std_ms").c_str(), sqrt(variance(it_ct->second[CL_CMD_EXEC_TIME]))*1e-06, "%.3f");
+		}
+	}
 }
 
 #endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
@@ -2326,8 +2379,11 @@ void BbqueRPC::NotifyPostRun(
 		}
 	}
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
-	OclCollectStats(prec->awm_id, prec->pAwmStats->ocl_events_map);
-#endif
+
+	OclCollectStats(prec->awm_id, prec->pAwmStats->ocl_events_map,
+		envOCLFileOutput);
+
+#endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 }
 
 void BbqueRPC::NotifyPreMonitor(
