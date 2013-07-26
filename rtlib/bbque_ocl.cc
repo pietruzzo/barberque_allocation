@@ -34,6 +34,7 @@ extern const char *rtlib_app_name;
 extern RTLIB_OpenCL_t rtlib_ocl;
 extern RTLIB_Services_t rtlib_services;
 extern std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
+extern std::map<void *, cl_command_type> ocl_addr_cmd;
 
 /* Platform API */
 CL_API_ENTRY cl_int CL_API_CALL
@@ -1282,10 +1283,13 @@ void rtlib_ocl_prof_run(
 	std::map<void *, cl_event>::iterator it_ev;
 	fprintf(stderr, FE("------>>>>>>>>>>>>>>>>>>> Profiling \n"));
 	for (it_cq = ocl_queues_prof.begin(); it_cq != ocl_queues_prof.end(); it_cq++) {
+		cl_command_queue cq = it_cq->first;
 		clFinish(it_cq->first);
 		QueueProfPtr_t stPtr = it_cq->second;
-		if (awm_ocl_events[it_cq->first] != nullptr)
-			stPtr->cmd_prof = awm_ocl_events[it_cq->first]->cmd_prof;
+		if (awm_ocl_events[cq] != nullptr) {
+			stPtr->cmd_prof = awm_ocl_events[cq]->cmd_prof;
+			stPtr->addr_prof = awm_ocl_events[cq]->addr_prof;
+		}
 		for (it_ev = stPtr->events.begin(); it_ev != stPtr->events.end(); it_ev++) {
 			status = clWaitForEvents(1, &it_ev->second);
 			if (status != CL_SUCCESS) {
@@ -1331,6 +1335,27 @@ void acc_command_stats(
 	}
 }
 
+void acc_address_stats(
+		QueueProfPtr_t stPtr,
+		void * addr,
+		double queued_time,
+		double submit_time,
+		double exec_time) {
+	std::map<void *, AccArray_t>::iterator it_ca;
+	AccArray_t accs;
+	it_ca = stPtr->addr_prof.find(addr);
+	if (it_ca == stPtr->addr_prof.end()) {
+		accs[CL_CMD_QUEUED_TIME](queued_time);
+		accs[CL_CMD_SUBMIT_TIME](submit_time);
+		accs[CL_CMD_EXEC_TIME](exec_time);
+		stPtr->addr_prof.insert(AddrProfPair_t(addr, accs));
+	} else {
+		it_ca->second[CL_CMD_QUEUED_TIME](queued_time);
+		it_ca->second[CL_CMD_SUBMIT_TIME](submit_time);
+		it_ca->second[CL_CMD_EXEC_TIME](exec_time);
+	}
+}
+
 void dump_command_prof_info(
 		uint8_t awm_id,
 		cl_command_type cmd_type,
@@ -1348,12 +1373,12 @@ void dump_command_prof_info(
 		ocl_cmd_str[cmd_type].c_str());
 	dump_file = fopen(buffer, "a");
 	if (dump_file) {
-		fprintf(dump_file, "%f %p %f %f %f\n",
+		fprintf(dump_file, "%f %f %f %f %p\n",
 			bbque_tmr.getElapsedTimeMs(),
-			addr,
 			queued_time*1e-06,
 			submit_time*1e-06,
-			exec_time*1e-06);
+			exec_time*1e-06,
+			addr);
 	}
 	fclose(dump_file);
 }
@@ -1406,7 +1431,21 @@ void acc_command_event_info(
 	acc_command_stats(stPtr, cmd_type, queued_time, submit_time, exec_time);
 
 	if (envOCLFileOutput)
-		dump_command_prof_info(awm_id, cmd_type, queued_time, submit_time, exec_time, addr);
+	// Collects stats for command instances
+		acc_address_stats(stPtr, addr, queued_time, submit_time, exec_time);
+		ocl_addr_cmd[addr] = cmd_type;
+	dump_command_prof_info(awm_id, cmd_type, queued_time, submit_time, exec_time, addr);
+}
+
+cl_command_type rtlib_ocl_get_command_type(void * addr) {
+	cl_command_type cmd_type;
+	std::map<void *, cl_command_type>::iterator it_ev;
+	it_ev = ocl_addr_cmd.find(addr);
+	if (it_ev == ocl_addr_cmd.end()) {
+		fprintf(stderr, FW("OCL Unexpected missing command instance...\n"));
+		return cmd_type;
+	}
+	return it_ev->second;
 }
 
 #ifdef  __cplusplus

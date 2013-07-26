@@ -71,7 +71,9 @@ std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
  * The map contains OpenCL command types and their respective string values
  */
 std::map<cl_command_type, std::string> ocl_cmd_str;
-#endif
+std::map<void *, cl_command_type>      ocl_addr_cmd;
+
+#endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
 static RTLIB_ExecutionContextHandler_t rtlib_register(const char *name,
 		const RTLIB_ExecutionContextParams_t *params) {

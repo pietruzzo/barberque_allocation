@@ -49,7 +49,7 @@ typedef std::pair<cl_command_type, std::string> CmdStrPair_t;
 typedef std::pair<cl_command_queue, QueueProfPtr_t> QueueProfPair_t;
 typedef std::pair<cl_command_type, AccArray_t> CmdProfPair_t;
 typedef std::pair<void *, cl_event> AddrEventPair_t;
-typedef std::pair<void *, CmdProfPtr_t> AddrCmdPair_t;
+typedef std::pair<void *, AccArray_t> AddrProfPair_t;
 
 extern std::map<cl_command_type, std::string> ocl_cmd_str;
 
@@ -71,6 +71,7 @@ public:
 	};
 
 	std::map<void *, cl_event> events;
+	std::map<void *, AccArray_t> addr_prof;
 	std::map<cl_command_type, AccArray_t> cmd_prof;
 };
 
