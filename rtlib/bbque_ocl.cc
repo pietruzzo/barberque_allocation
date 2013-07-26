@@ -1275,7 +1275,7 @@ void rtlib_ocl_prof_clean() {
 void rtlib_ocl_prof_run(
 		uint8_t awm_id,
 		OclEventsStatsMap_t & awm_ocl_events,
-		bool envOCLFileOutput) {
+		int prof_level) {
 	cl_command_type cmd_type = 0;
 	cl_int status;
 	double p_value = 0.0;
@@ -1295,8 +1295,9 @@ void rtlib_ocl_prof_run(
 			if (status != CL_SUCCESS) {
 				fprintf(stderr, FE("OCL: Error [%d] in clWaitForEvents\n"), status);
 			}
-			acc_command_event_info(stPtr, it_ev->second, cmd_type, it_ev->first, awm_id, envOCLFileOutput);
 			//#ifdef abilitato
+			acc_command_event_info(
+				stPtr, ev, cmd_type, it_ev->first, awm_id, prof_level);
 		}
 		rtlib_ocl_prof_save(it_cq->first, awm_ocl_events);
 	}
@@ -1389,7 +1390,7 @@ void acc_command_event_info(
 		cl_command_type & cmd_type,
 		void *addr,
 		uint8_t awm_id,
-		bool envOCLFileOutput) {
+		int prof_level) {
 	size_t return_bytes;
 	cl_int status;
 	cl_ulong ev_queued_time = (cl_ulong)0;
@@ -1430,10 +1431,14 @@ void acc_command_event_info(
 	double exec_time   = (double)(ev_end_time - ev_start_time);
 	acc_command_stats(stPtr, cmd_type, queued_time, submit_time, exec_time);
 
-	if (envOCLFileOutput)
 	// Collects stats for command instances
+	if (prof_level > 0) {
 		acc_address_stats(stPtr, addr, queued_time, submit_time, exec_time);
 		ocl_addr_cmd[addr] = cmd_type;
+	}
+	else
+		addr = 0;
+
 	dump_command_prof_info(awm_id, cmd_type, queued_time, submit_time, exec_time, addr);
 }
 

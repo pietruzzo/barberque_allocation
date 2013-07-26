@@ -99,7 +99,10 @@ int  BbqueRPC::envRawPerfCount = 0;
 bool BbqueRPC::envNoKernel = false;
 bool BbqueRPC::envCsvOutput = false;
 bool BbqueRPC::envMOSTOutput = false;
-bool BbqueRPC::envOCLFileOutput = false;
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+bool BbqueRPC::envOCLProf = false;
+int  BbqueRPC::envOCLProfLevel = 0;
+#endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 char BbqueRPC::envMetricsTag[BBQUE_RTLIB_OPTS_TAG_MAX+2] = "";
 bool BbqueRPC::envBigNum = false;
 bool BbqueRPC::envUnmanaged = false;
@@ -222,7 +225,9 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 		case 'o':
 			// Enabling OpenCL Profiling Output on file
-			envOCLFileOutput = true;
+			envOCLProf = true;
+			sscanf(opt+1, "%d", &envOCLProfLevel);
+			fprintf(stderr, "Enabling OpenCL profiling [verbosity: %d]\n", envOCLProfLevel);
 			break;
 #endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
@@ -695,7 +700,8 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 		// Dump OpenCL profiling info for each AWM
-		OclPrintStats(pstats);
+		if (envOCLProf)
+			OclPrintStats(pstats);
 #endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
 	}
@@ -2099,44 +2105,85 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
 
 void BbqueRPC::OclCollectStats(
 		uint8_t awm_id,
-		OclEventsStatsMap_t & ocl_events_map,
-		bool envOCLFileOutput) {
-	rtlib_ocl_prof_run(awm_id, ocl_events_map, envOCLFileOutput);
+		OclEventsStatsMap_t & ocl_events_map) {
+	rtlib_ocl_prof_run(awm_id, ocl_events_map, envOCLProfLevel);
 }
 
 void BbqueRPC::OclPrintStats(pAwmStats_t pstats) {
 	std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
+	for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
+		QueueProfPtr_t stPtr = it_cq->second;
+		OclPrintCmdStats(stPtr, it_cq->first);
+		if (envOCLProfLevel > 0) {
+			fprintf(stderr, FD("OCL: Printing command instance statistics...\n"));
+			OclPrintAddrStats(stPtr, it_cq->first);
+		}
+	}
+}
+
+void BbqueRPC::OclPrintCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
 	std::map<cl_command_type, AccArray_t>::iterator it_ct;
 	char q_buff[100], s_buff[100], x_buff[100];
 	std::string q_str, s_str, x_str;
-	for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
-		QueueProfPtr_t stPtr = it_cq->second;
-		for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
-			snprintf(q_buff, 100, "%x_%s_queue",
-				it_cq->first, ocl_cmd_str[it_ct->first].c_str());
-			q_str.assign(q_buff);
-			snprintf(s_buff, 100, "%x_%s_submit",
-				it_cq->first, ocl_cmd_str[it_ct->first].c_str());
-			s_str.assign(s_buff);
-			snprintf(x_buff, 100, "%x_%s_exec",
-				it_cq->first, ocl_cmd_str[it_ct->first].c_str());
-			x_str.assign(x_buff);
-			DUMP_MOST_METRIC("ocl", (q_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (q_str + "_min_ms").c_str(), min(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (q_str + "_max_ms").c_str(), max(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (q_str + "_avg_ms").c_str(), mean(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (q_str + "_std_ms").c_str(), sqrt(variance(it_ct->second[CL_CMD_QUEUED_TIME]))*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (s_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (s_str + "_min_ms").c_str(), min(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (s_str + "_max_ms").c_str(), max(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (s_str + "_avg_ms").c_str(), mean(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (s_str + "_std_ms").c_str(), sqrt(variance(it_ct->second[CL_CMD_SUBMIT_TIME]))*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (x_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (x_str + "_min_ms").c_str(), min(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (x_str + "_max_ms").c_str(), max(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (x_str + "_avg_ms").c_str(), mean(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
-			DUMP_MOST_METRIC("ocl", (x_str + "_std_ms").c_str(), sqrt(variance(it_ct->second[CL_CMD_EXEC_TIME]))*1e-06, "%.3f");
-		}
+	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
+		snprintf(q_buff, 100, "%x_%s_queue",
+			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
+		q_str.assign(q_buff);
+		snprintf(s_buff, 100, "%x_%s_submit",
+			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
+		s_str.assign(s_buff);
+		snprintf(x_buff, 100, "%x_%s_exec",
+			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
+		x_str.assign(x_buff);
+		DUMP_MOST_METRIC("ocl", (q_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (q_str + "_min_ms").c_str(), min(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (q_str + "_max_ms").c_str(), max(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (q_str + "_avg_ms").c_str(), mean(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (q_str + "_std_ms").c_str(), sqrt(variance(it_ct->second[CL_CMD_QUEUED_TIME]))*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_min_ms").c_str(), min(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_max_ms").c_str(), max(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_avg_ms").c_str(), mean(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_std_ms").c_str(), sqrt(variance(it_ct->second[CL_CMD_SUBMIT_TIME]))*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_min_ms").c_str(), min(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_max_ms").c_str(), max(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_avg_ms").c_str(), mean(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_std_ms").c_str(), sqrt(variance(it_ct->second[CL_CMD_EXEC_TIME]))*1e-06, "%.3f");
+	}
+}
+
+void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
+	std::map<void *, AccArray_t>::iterator it_ca;
+	char q_buff[100], s_buff[100], x_buff[100];
+	cl_command_type cmd_type;
+	std::string q_str, s_str, x_str;
+	for (it_ca = stPtr->addr_prof.begin(); it_ca != stPtr->addr_prof.end(); it_ca++) {
+		cmd_type = rtlib_ocl_get_command_type(it_ca->first);
+		snprintf(q_buff, 100, "%x_%s_%p_queue",
+			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ca->first);
+		q_str.assign(q_buff);
+		snprintf(s_buff, 100, "%x_%s_%p_submit",
+			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ca->first);
+		s_str.assign(s_buff);
+		snprintf(x_buff, 100, "%x_%s_%p_exec",
+			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ca->first);
+		x_str.assign(x_buff);
+		DUMP_MOST_METRIC("ocl", (q_str + "_sum_ms").c_str(), sum(it_ca->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (q_str + "_min_ms").c_str(), min(it_ca->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (q_str + "_max_ms").c_str(), max(it_ca->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (q_str + "_avg_ms").c_str(), mean(it_ca->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (q_str + "_std_ms").c_str(), sqrt(variance(it_ca->second[CL_CMD_QUEUED_TIME]))*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_sum_ms").c_str(), sum(it_ca->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_min_ms").c_str(), min(it_ca->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_max_ms").c_str(), max(it_ca->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_avg_ms").c_str(), mean(it_ca->second[CL_CMD_SUBMIT_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (s_str + "_std_ms").c_str(), sqrt(variance(it_ca->second[CL_CMD_SUBMIT_TIME]))*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_sum_ms").c_str(), sum(it_ca->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_min_ms").c_str(), min(it_ca->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_max_ms").c_str(), max(it_ca->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_avg_ms").c_str(), mean(it_ca->second[CL_CMD_EXEC_TIME])*1e-06, "%.3f");
+		DUMP_MOST_METRIC("ocl", (x_str + "_std_ms").c_str(), sqrt(variance(it_ca->second[CL_CMD_EXEC_TIME]))*1e-06, "%.3f");
 	}
 }
 
@@ -2379,9 +2426,8 @@ void BbqueRPC::NotifyPostRun(
 		}
 	}
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
-
-	OclCollectStats(prec->awm_id, prec->pAwmStats->ocl_events_map,
-		envOCLFileOutput);
+	if (envOCLProf)
+		OclCollectStats(prec->awm_id, prec->pAwmStats->ocl_events_map);
 
 #endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 }
