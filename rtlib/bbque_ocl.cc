@@ -1239,33 +1239,36 @@ void rtlib_ocl_init() {
 	rtlib_ocl.flush = (flush_t) dlsym(handle, "clFlush");
 	rtlib_ocl.finish = (finish_t) dlsym(handle, "clFinish");
 
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_BUFFER, "clEnqueueReadBuffer"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_BUFFER_RECT, "clEnqueueReadBufferRect"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_WRITE_BUFFER, "clEnqueueWriteBuffer"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_BUFFER,       "clEnqueueReadBuffer"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_BUFFER_RECT,  "clEnqueueReadBufferRect"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_WRITE_BUFFER,      "clEnqueueWriteBuffer"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_WRITE_BUFFER_RECT, "clEnqueueWriteBufferRect"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_BUFFER, "clEnqueueCopyBuffer"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_BUFFER_RECT, "clEnqueueCopyBufferRect"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_IMAGE, "clEnqueueReadImage"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_WRITE_IMAGE, "clEnqueueWriteImage"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_IMAGE, "clEnqueueCopyImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_BUFFER,       "clEnqueueCopyBuffer"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_BUFFER_RECT,  "clEnqueueCopyBufferRect"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_IMAGE,        "clEnqueueReadImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_WRITE_IMAGE,       "clEnqueueWriteImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_IMAGE,        "clEnqueueCopyImage"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_IMAGE_TO_BUFFER, "clEnqueueCopyImageToBuffer"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_BUFFER_TO_IMAGE, "clEnqueueCopyBufferToImage"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_MAP_BUFFER, "clEnqueueMapBuffer"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_MAP_IMAGE, "clEnqueueMapImage"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NDRANGE_KERNEL, "clEnqueueNDRangeKernel"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_TASK, "clEnqueueTask"));
-	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NATIVE_KERNEL, "clEnqueueNativeKernel"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_MAP_BUFFER,      "clEnqueueMapBuffer"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_MAP_IMAGE,       "clEnqueueMapImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NDRANGE_KERNEL,  "clEnqueueNDRangeKernel"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_TASK,            "clEnqueueTask"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NATIVE_KERNEL,   "clEnqueueNativeKernel"));
 }
 
-void rtlib_ocl_coll_event(cl_command_queue command_queue, cl_event *event, void *addr) {
+}
+
+void rtlib_ocl_coll_event(cl_command_queue cmd_queue, cl_event *event, void *addr) {
 	std::map<cl_command_queue, QueueProfPtr_t>::iterator it;
 	clRetainEvent(*event);
-	it = ocl_queues_prof.find(command_queue);
+
+	// Collect events per command queue
+	it = ocl_queues_prof.find(cmd_queue);
 	if (it == ocl_queues_prof.end())
-		ocl_queues_prof.insert(
-			QueueProfPair_t(command_queue, QueueProfPtr_t(new RTLIB_OCL_QueueProf)));
-	ocl_queues_prof[command_queue]->events.insert(
-		AddrEventPair_t(addr, *event));
+		ocl_queues_prof.insert(QueueProfPair_t(
+					cmd_queue, QueueProfPtr_t(new RTLIB_OCL_QueueProf)));
+	ocl_queues_prof[cmd_queue]->events.insert(AddrEventPair_t(addr, *event));
 }
 
 void rtlib_ocl_prof_clean() {
@@ -1278,40 +1281,46 @@ void rtlib_ocl_prof_run(
 		int prof_level) {
 	cl_command_type cmd_type = 0;
 	cl_int status;
-	double p_value = 0.0;
 	std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
 	std::map<void *, cl_event>::iterator it_ev;
-	fprintf(stderr, FE("------>>>>>>>>>>>>>>>>>>> Profiling \n"));
-	for (it_cq = ocl_queues_prof.begin(); it_cq != ocl_queues_prof.end(); it_cq++) {
+
+	for (it_cq = ocl_queues_prof.begin();
+			it_cq != ocl_queues_prof.end(); it_cq++) {
 		cl_command_queue cq = it_cq->first;
-		clFinish(it_cq->first);
+		clFinish(cq);
+
+		// Resume previously stored statistics
 		QueueProfPtr_t stPtr = it_cq->second;
 		if (awm_ocl_events[cq] != nullptr) {
 			stPtr->cmd_prof = awm_ocl_events[cq]->cmd_prof;
 			stPtr->addr_prof = awm_ocl_events[cq]->addr_prof;
 		}
+
+		// Extract event profiling timings
 		for (it_ev = stPtr->events.begin(); it_ev != stPtr->events.end(); it_ev++) {
-			status = clWaitForEvents(1, &it_ev->second);
-			if (status != CL_SUCCESS) {
-				fprintf(stderr, FE("OCL: Error [%d] in clWaitForEvents\n"), status);
-			}
-			//#ifdef abilitato
+			cl_event & ev(it_ev->second);
+			status = clWaitForEvents(1, &ev);
+			if (status != CL_SUCCESS)
+				fprintf(stderr, FE("OCL: Error [%d] in clWaitForEvents\n"),
+					status);
 			acc_command_event_info(
 				stPtr, ev, cmd_type, it_ev->first, awm_id, prof_level);
 		}
-		rtlib_ocl_prof_save(it_cq->first, awm_ocl_events);
+		rtlib_ocl_prof_save(cq, awm_ocl_events);
 	}
 	rtlib_ocl_prof_clean();
 }
 
-void rtlib_ocl_prof_save(cl_command_queue command_queue, OclEventsStatsMap_t & awm_ocl_events) {
+void rtlib_ocl_prof_save(
+		cl_command_queue cmd_queue,
+		OclEventsStatsMap_t & awm_ocl_events) {
 	OclEventsStatsMap_t::iterator it_cq;
-	it_cq = awm_ocl_events.find(command_queue);
+	it_cq = awm_ocl_events.find(cmd_queue);
 	if (it_cq == awm_ocl_events.end()) {
-		QueueProfPtr_t p(new RTLIB_OCL_QueueProf(*(ocl_queues_prof[command_queue].get())));
-		awm_ocl_events.insert(QueueProfPair_t(command_queue, p));
+		QueueProfPtr_t p(new RTLIB_OCL_QueueProf(*(ocl_queues_prof[cmd_queue].get())));
+		awm_ocl_events.insert(QueueProfPair_t(cmd_queue, p));
 	} else {
-		awm_ocl_events[command_queue] = ocl_queues_prof[command_queue];
+		awm_ocl_events[cmd_queue] = ocl_queues_prof[cmd_queue];
 	}
 }
 
@@ -1395,11 +1404,13 @@ void acc_command_event_info(
 	cl_int status;
 	cl_ulong ev_queued_time = (cl_ulong)0;
 	cl_ulong ev_submit_time = (cl_ulong)0;
-	cl_ulong ev_start_time = (cl_ulong)0;
-	cl_ulong ev_end_time   = (cl_ulong)0;
+	cl_ulong ev_start_time  = (cl_ulong)0;
+	cl_ulong ev_end_time    = (cl_ulong)0;
 
 	// Extract event times
-	clGetEventInfo(event, CL_EVENT_COMMAND_TYPE, sizeof(cl_command_type), &cmd_type, NULL);
+	clGetEventInfo(
+			event, CL_EVENT_COMMAND_TYPE, sizeof(cl_command_type),
+			&cmd_type, NULL);
 	status = clGetEventProfilingInfo(
 		event,
 		CL_PROFILING_COMMAND_QUEUED,
@@ -1439,7 +1450,9 @@ void acc_command_event_info(
 	else
 		addr = 0;
 
-	dump_command_prof_info(awm_id, cmd_type, queued_time, submit_time, exec_time, addr);
+	// File dump
+	dump_command_prof_info(
+			awm_id, cmd_type, queued_time, submit_time, exec_time, addr);
 }
 
 cl_command_type rtlib_ocl_get_command_type(void * addr) {
