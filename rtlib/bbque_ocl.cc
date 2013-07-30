@@ -1275,6 +1275,14 @@ void rtlib_ocl_prof_clean() {
 	ocl_queues_prof.clear();
 }
 
+void rtlib_ocl_flush_events() {
+	std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
+	for (it_cq = ocl_queues_prof.begin(); it_cq != ocl_queues_prof.end(); it_cq++) {
+		QueueProfPtr_t stPtr = it_cq->second;
+		stPtr->events.clear();
+	}
+}
+
 void rtlib_ocl_prof_run(
 		uint8_t awm_id,
 		OclEventsStatsMap_t & awm_ocl_events,

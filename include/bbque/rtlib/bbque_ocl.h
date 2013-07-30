@@ -214,6 +214,7 @@ void acc_address_stats(QueueProfPtr_t, void *, double, double, double);
 void dump_command_prof_info(uint8_t, cl_command_type, double, double, double, void *);
 
 void rtlib_ocl_init();
+void rtlib_ocl_flush_events();
 void rtlib_ocl_coll_event(cl_command_queue, cl_event *, void *);
 void rtlib_ocl_prof_save(cl_command_queue, OclEventsStatsMap_t &);
 void rtlib_ocl_prof_clean();
