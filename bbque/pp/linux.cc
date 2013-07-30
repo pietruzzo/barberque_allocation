@@ -26,6 +26,7 @@
 #include <string.h>
 #include <linux/version.h>
 
+
 #define BBQUE_LINUXPP_PLATFORM_ID		"org.linux.cgroup"
 
 #define BBQUE_LINUXPP_SILOS 			BBQUE_LINUXPP_CGROUP"/silos"
@@ -570,11 +571,18 @@ LinuxPP::_LoadPlatformData() {
 	// Release the iterator
 	cgroup_walk_tree_end(&node_it);
 
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	// Load OpenCL platforms and devices
+	ocl_proxy.LoadPlatformData();
+#endif
+
 	// Switch to refresh mode for the upcoming calls
 	refreshMode = true;
 
 	return pp_result;
 }
+
+
 
 /*******************************************************************************
  *    Resources Mapping and Assigment to Applications
@@ -991,6 +999,20 @@ LinuxPP::_ReclaimResources(AppPtr_t papp) {
 LinuxPP::ExitCode_t
 LinuxPP::_MapResources(AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt,
 		bool excl) {
+
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	// Map resources for OpenCL applications
+	logger->Debug("PLAT LNX: Programming language = %d", papp->Language());
+	if (papp->Language() == RTLIB_LANG_OPENCL) {
+		OpenCLProxy::ExitCode_t ocl_return;
+		ocl_return = ocl_proxy.MapResources(papp, pum, rvt);
+		if (ocl_return != OpenCLProxy::SUCCESS) {
+			logger->Error("PLAT LNX: OpenCL mapping failed");
+			return MAPPING_FAILED;
+		}
+	}
+#endif
+
 	RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
 	// FIXME: update once a better SetAttributes support is available
 	CGroupDataPtr_t pcgd;

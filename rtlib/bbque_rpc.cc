@@ -1238,6 +1238,9 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
 	// Set the new required AWM (if not being blocked)
 	if (prec->event != RTLIB_EXC_GWM_BLOCKED) {
 		prec->awm_id = msg.awm;
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+		prec->dev_id = msg.dev;
+#endif
 		fprintf(stderr, FI("SyncP_1 (Pre-Change) EXC [%d], "
 					"Action [%d], Assigned AWM [%d]\n"),
 				msg.hdr.exc_id,

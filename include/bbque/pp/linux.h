@@ -26,6 +26,10 @@
 
 #include <libcgroup.h>
 
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#include "bbque/pp/opencl.h"
+#endif
+
 /**
  * @brief Default MAX number of CPUs per socket
  */
@@ -220,6 +224,9 @@ private:
 	 */
 	bool refreshMode;
 
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	OpenCLProxy ocl_proxy;
+#endif
 
 /**
  * @defgroup group_plt_prx Platform Proxy

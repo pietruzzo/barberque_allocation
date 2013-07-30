@@ -321,6 +321,10 @@ protected:
 		RTLIB_ExitCode_t event = RTLIB_OK;
 		/** The ID of the assigned AWM (if valid) */
 		uint8_t awm_id = 0;
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+		/** The ID of the assigned OpenCL device */
+		uint8_t dev_id;
+#endif
 		/** The mutex protecting access to this structure */
 		std::mutex mtx;
 		/** The conditional variable to be notified on changes for this EXC */

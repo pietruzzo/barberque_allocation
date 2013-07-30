@@ -28,6 +28,7 @@
 #define MODULE_NAMESPACE APPLICATION_PROXY_NAMESPACE
 
 namespace ba = bbque::app;
+namespace br = bbque::res;
 
 namespace bbque {
 
@@ -222,10 +223,15 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		// don't care at RTLib side about the value of this parameter
 		0
 	};
-	
+
 	// Set the next AWM only if the application is not going to be blocked
-	if (likely(!papp->Blocking()))
+	if (likely(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(Resource::GPU));
+		syncp_prechange_msg.dev = (uint8_t) gpu_ids.FirstSet();
+#endif
+	}
 
 	// Send the required synchronization action
 	logger->Debug("APPs PRX: Send Command [RPC_BBQ_SYNCP_PRECHANGE] to "
