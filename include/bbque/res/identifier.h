@@ -70,11 +70,13 @@ public:
 		SYSTEM       ,
 		GROUP        ,
 		CPU          ,
+		GPU          ,
 		ACCELERATOR  ,
 		PROC_ELEMENT ,
 		MEMORY       ,
 		INTERCONNECT ,
 		IO           ,
+		CUSTOM       ,
 
 		TYPE_COUNT
 	};

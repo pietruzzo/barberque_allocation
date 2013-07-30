@@ -28,11 +28,13 @@ const char * ResourceIdentifier::TypeStr[TYPE_COUNT] = {
 	"sys" ,
 	"grp" ,
 	"cpu" ,
+	"gpu" ,
 	"acc" ,
 	"pe"  ,
 	"mem" ,
 	"icn" ,
-	"io"
+	"io"  ,
+	"cst"
 };
 
 ResourceIdentifier::ResourceIdentifier(
