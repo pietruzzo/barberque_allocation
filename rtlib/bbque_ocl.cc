@@ -192,6 +192,7 @@ clCreateCommandQueue(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clCreateCommandQueue()...\n"));
+	properties |= CL_QUEUE_PROFILING_ENABLE;
 	return rtlib_ocl.createCommandQueue(context, device, properties, errcode_ret);
 }
 
