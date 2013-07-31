@@ -1425,24 +1425,43 @@ void acc_command_event_info(
 		sizeof(cl_ulong),
 		&ev_queued_time,
 		&return_bytes);
+	if (status != CL_SUCCESS) {
+		fprintf(stderr, FE("OCL: Error [%d] in queued event profiling\n"), status);
+		return;
+	}
+
 	status = clGetEventProfilingInfo(
 		event,
 		CL_PROFILING_COMMAND_SUBMIT,
 		sizeof(cl_ulong),
 		&ev_submit_time,
 		&return_bytes);
+	if (status != CL_SUCCESS) {
+		fprintf(stderr, FE("OCL: Error [%d] in submit event profiling\n"), status);
+		return;
+	}
+
 	status = clGetEventProfilingInfo(
 		event,
 		CL_PROFILING_COMMAND_START,
 		sizeof(cl_ulong),
 		&ev_start_time,
 		&return_bytes);
+	if (status != CL_SUCCESS) {
+		fprintf(stderr, FE("OCL: Error [%d] in start event profiling\n"), status);
+		return;
+	}
+
 	status = clGetEventProfilingInfo(
 		event,
 		CL_PROFILING_COMMAND_END,
 		sizeof(cl_ulong),
 		&ev_end_time,
 		&return_bytes);
+	if (status != CL_SUCCESS) {
+		fprintf(stderr, FE("OCL: Error [%d] in end event profiling\n"), status);
+		return;
+	}
 
 	// Accumulate event times for this command
 	double queued_time = (double)(ev_submit_time - ev_queued_time);
