@@ -69,7 +69,29 @@ clGetDeviceIDs(
 		cl_uint *num_devices)
 		CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetDeviceIDs()...\n"));
-	return rtlib_ocl.getDeviceIDs(platform, device_type, num_entries, devices, num_devices);
+	cl_int result;
+
+	if (device_type == CL_DEVICE_TYPE_CPU) {
+		(*num_devices) = 0;
+		return CL_INVALID_DEVICE_TYPE;
+	}
+
+	if (num_devices != NULL) {
+			if (rtlib_ocl.status != RTLIB_EXC_GWM_BLOCKED)
+				(*num_devices) = 1;
+			else
+				(*num_devices) = 0;
+	}
+
+	if (devices == NULL)
+		return CL_SUCCESS;
+
+	cl_device_id * devs = new cl_device_id[2];
+	result = rtlib_ocl.getDeviceIDs(
+			platform, CL_DEVICE_TYPE_GPU, 2, devs, NULL);
+	(*devices) = devs[rtlib_ocl.device_id];
+
+	return result;
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
