@@ -2106,6 +2106,10 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
  ******************************************************************************/
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
+void BbqueRPC::OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status) {
+	rtlib_ocl_set_device(device_id, status);
+}
+
 void BbqueRPC::OclFlushEvents() {
 	rtlib_ocl_flush_events();
 }
@@ -2356,6 +2360,20 @@ void BbqueRPC::NotifyPreConfigure(
 	RTLIB_ExecutionContextHandler_t ech) {
 	DB(fprintf(stderr, FD("===> NotifyConfigure\n")));
 	(void)ech;
+	pregExCtx_t prec;
+
+	assert(ech);
+	prec = getRegistered(ech);
+	if (!prec) {
+		fprintf(stderr, FE("NotifyPreConfigure EXC [%p] FAILED "
+				"(EXC not registered)\n"), (void*)ech);
+		return;
+	}
+	assert(isRegistered(prec) == true);
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	fprintf(stderr, FD("NotifyPreConfigure - OCL Device: %d\n"), prec->dev_id);
+	OclSetDevice(prec->dev_id, prec->event);
+#endif
 }
 
 void BbqueRPC::NotifyPostConfigure(
