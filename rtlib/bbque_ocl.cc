@@ -996,7 +996,7 @@ clEnqueueMapBuffer(
 		map_flags, offset, size, num_events_in_wait_list, event_wait_list,
 		event, errcode_ret);
 	if (errcode_ret != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapBuffer()\n"), errcode_ret);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapBuffer()\n"), *errcode_ret);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return buff_ptr;
@@ -1024,7 +1024,7 @@ clEnqueueMapImage(
 		map_flags, origin, region, image_row_pitch, image_slice_pitch,
 		num_events_in_wait_list, event_wait_list, event, errcode_ret);
 	if (errcode_ret != CL_SUCCESS) {
-		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapImage()\n"), errcode_ret);
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapImage()\n"), *errcode_ret);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
 	return buff_ptr;
@@ -1383,7 +1383,7 @@ void dump_command_prof_info(
 		void * addr) {
 	FILE *dump_file;
 	char buffer [100];
-	snprintf(buffer, 100, "%s/PROFOCL-%d-%s-AWM%d-%s.dat",
+	snprintf(buffer, 100, "%s/PROFOCL-%s-%s-AWM%d-%s.dat",
 		OCL_PROF_OUTDIR,
 		rtlib_services.Utils.GetChUid(),
 		rtlib_app_name,
@@ -1464,7 +1464,7 @@ void acc_command_event_info(
 }
 
 cl_command_type rtlib_ocl_get_command_type(void * addr) {
-	cl_command_type cmd_type;
+	cl_command_type cmd_type = CL_COMMAND_USER;
 	std::map<void *, cl_command_type>::iterator it_ev;
 	it_ev = ocl_addr_cmd.find(addr);
 	if (it_ev == ocl_addr_cmd.end()) {

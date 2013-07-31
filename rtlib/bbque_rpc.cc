@@ -2133,13 +2133,13 @@ void BbqueRPC::OclPrintCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue
 	char q_buff[100], s_buff[100], x_buff[100];
 	std::string q_str, s_str, x_str;
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
-		snprintf(q_buff, 100, "%x_%s_queue",
+		snprintf(q_buff, 100, "%p_%s_queue",
 			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
 		q_str.assign(q_buff);
-		snprintf(s_buff, 100, "%x_%s_submit",
+		snprintf(s_buff, 100, "%p_%s_submit",
 			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
 		s_str.assign(s_buff);
-		snprintf(x_buff, 100, "%x_%s_exec",
+		snprintf(x_buff, 100, "%p_%s_exec",
 			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
 		x_str.assign(x_buff);
 		DUMP_MOST_METRIC("ocl", (q_str + "_sum_ms").c_str(), sum(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
@@ -2167,13 +2167,13 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queu
 	std::string q_str, s_str, x_str;
 	for (it_ca = stPtr->addr_prof.begin(); it_ca != stPtr->addr_prof.end(); it_ca++) {
 		cmd_type = rtlib_ocl_get_command_type(it_ca->first);
-		snprintf(q_buff, 100, "%x_%s_%p_queue",
+		snprintf(q_buff, 100, "%p_%s_%p_queue",
 			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ca->first);
 		q_str.assign(q_buff);
-		snprintf(s_buff, 100, "%x_%s_%p_submit",
+		snprintf(s_buff, 100, "%p_%s_%p_submit",
 			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ca->first);
 		s_str.assign(s_buff);
-		snprintf(x_buff, 100, "%x_%s_%p_exec",
+		snprintf(x_buff, 100, "%p_%s_%p_exec",
 			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ca->first);
 		x_str.assign(x_buff);
 		DUMP_MOST_METRIC("ocl", (q_str + "_sum_ms").c_str(), sum(it_ca->second[CL_CMD_QUEUED_TIME])*1e-06, "%.3f");
