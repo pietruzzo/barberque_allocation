@@ -1257,6 +1257,9 @@ void rtlib_ocl_init() {
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NATIVE_KERNEL,   "clEnqueueNativeKernel"));
 }
 
+void rtlib_ocl_set_device(uint8_t device_id, RTLIB_ExitCode_t status) {
+	rtlib_ocl.device_id = device_id;
+	rtlib_ocl.status    = status;
 }
 
 void rtlib_ocl_coll_event(cl_command_queue cmd_queue, cl_event *event, void *addr) {

@@ -204,6 +204,11 @@ struct RTLIB_OpenCL {
 	enqueueNativeKernel_t        enqueueNativeKernel;
 	enqueueMarkerWithWaitList_t  enqueueMarkerWithWaitList;
 	enqueueBarrierWithWaitList_t enqueueBarrierWithWaitList;
+
+	/** Assigned OpenCL device ID */
+	uint8_t device_id;
+	/** Track the execution status */
+	RTLIB_ExitCode_t status;
 };
 
 using bbque::rtlib::BbqueRPC;
@@ -214,6 +219,7 @@ void acc_address_stats(QueueProfPtr_t, void *, double, double, double);
 void dump_command_prof_info(uint8_t, cl_command_type, double, double, double, void *);
 
 void rtlib_ocl_init();
+void rtlib_ocl_set_device(uint8_t device_id, RTLIB_ExitCode_t status);
 void rtlib_ocl_flush_events();
 void rtlib_ocl_coll_event(cl_command_queue, cl_event *, void *);
 void rtlib_ocl_prof_save(cl_command_queue, OclEventsStatsMap_t &);
