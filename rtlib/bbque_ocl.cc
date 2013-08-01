@@ -157,6 +157,7 @@ clCreateContextFromType(
 		void *user_data,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
+	device_type = CL_DEVICE_TYPE_GPU;
 	fprintf(stderr, FD("Calling clCreateContextFromType()...\n"));
 	return rtlib_ocl.createContextFromType(properties, device_type, (*pfn_notify),
 		user_data, errcode_ret);
