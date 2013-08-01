@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 
 #include "bbque/rtlib.h"
 #include "bbque/rtlib/bbque_ocl.h"
@@ -177,15 +178,35 @@ clReleaseContext(cl_context context) CL_API_SUFFIX__VERSION_1_0 {
 
 CL_API_ENTRY cl_int CL_API_CALL
 clGetContextInfo(
-		cl_context context,
+	cl_context context,
         cl_context_info param_name,
         size_t param_value_size,
         void *param_value,
         size_t *param_value_size_ret)
         CL_API_SUFFIX__VERSION_1_0 {
 	fprintf(stderr, FD("Calling clGetContextInfo()...\n"));
-	return rtlib_ocl.getContextInfo(context, param_name, param_value_size,
-		param_value, param_value_size_ret);
+	cl_int result;
+
+	if (param_name != CL_CONTEXT_DEVICES) {
+		return rtlib_ocl.getContextInfo(
+				context, param_name, param_value_size,
+				param_value, param_value_size_ret);
+	}
+
+	if (param_value_size_ret != NULL)
+		(*param_value_size_ret) = sizeof(cl_device_id);
+
+	if (param_value == NULL)
+		return CL_SUCCESS;
+
+	cl_device_id devs[OCL_NUM_GPU_DEVICES];
+	result = rtlib_ocl.getContextInfo(
+			context, param_name, sizeof(cl_device_id)*2,
+			&devs, NULL);
+
+	memcpy(param_value, &devs[rtlib_ocl.device_id], sizeof(cl_device_id));
+
+	return result;
 }
 
 /* Command Queue APIs */
