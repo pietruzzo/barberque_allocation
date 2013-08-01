@@ -77,19 +77,23 @@ clGetDeviceIDs(
 	}
 
 	if (num_devices != NULL) {
-			if (rtlib_ocl.status != RTLIB_EXC_GWM_BLOCKED)
-				(*num_devices) = 1;
-			else
-				(*num_devices) = 0;
+		if (rtlib_ocl.status != RTLIB_EXC_GWM_BLOCKED)
+			(*num_devices) = 1;
+		else
+			(*num_devices) = 0;
 	}
 
 	if (devices == NULL)
 		return CL_SUCCESS;
 
-	cl_device_id * devs = new cl_device_id[2];
+	cl_device_id * devs = new cl_device_id[OCL_NUM_GPU_DEVICES];
 	result = rtlib_ocl.getDeviceIDs(
-			platform, CL_DEVICE_TYPE_GPU, 2, devs, NULL);
+			platform, CL_DEVICE_TYPE_GPU, OCL_NUM_GPU_DEVICES,
+			devs, NULL);
+
 	(*devices) = devs[rtlib_ocl.device_id];
+	DB (fprintf(stderr, FD("OCL: clGetDeviceIDs [BBQ-Device -> %d]\n"),
+			rtlib_ocl.device_id));
 
 	return result;
 }
