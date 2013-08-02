@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <unistd.h>
 
 #include "bbque/rtlib.h"
 #include "bbque/rtlib/bbque_ocl.h"
@@ -30,6 +31,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+#define DB2(x)
 
 extern const char *rtlib_app_name;
 extern RTLIB_OpenCL_t rtlib_ocl;
@@ -44,7 +48,7 @@ clGetPlatformIDs(
 		cl_platform_id *platforms,
 		cl_uint *num_platforms)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetPlatformIDs()...\n"));
+	DB2(fprintf(stderr, FD("Calling clGetPlatformIDs()...\n")));
 	return rtlib_ocl.getPlatformIDs(num_entries, platforms, num_platforms);
 }
 
@@ -56,7 +60,7 @@ clGetPlatformInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetPlatformInfo()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clGetPlatformInfo()...\n")));
 	return rtlib_ocl.getPlatformInfo(platform, param_name, param_value_size, param_value, param_value_size_ret);
 }
 
@@ -69,7 +73,7 @@ clGetDeviceIDs(
 		cl_device_id *devices,
 		cl_uint *num_devices)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetDeviceIDs()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clGetDeviceIDs()...\n")));
 	cl_int result;
 
 	if (device_type == CL_DEVICE_TYPE_CPU) {
@@ -107,7 +111,7 @@ clGetDeviceInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetDeviceInfo()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clGetDeviceInfo()...\n")));
 	return rtlib_ocl.getDeviceInfo(device, param_name, param_value_size, param_value, param_value_size_ret);
 }
 
@@ -119,19 +123,19 @@ clCreateSubDevices(
 		cl_device_id *out_devices,
 		cl_uint *num_devices_ret)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clCreateSubDevices()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clCreateSubDevices()...\n")));
 	return rtlib_ocl.createSubDevices(in_device, properties, num_devices, out_devices, num_devices_ret);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainDevice(cl_device_id device) CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clRetainDevice()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clRetainDevice()...\n")));
 	return rtlib_ocl.retainDevice(device);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clReleaseDevice(cl_device_id device) CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clReleaseDevice()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clReleaseDevice()...\n")));
 	return rtlib_ocl.releaseDevice(device);
 }
 
@@ -145,7 +149,7 @@ clCreateContext(
 		void *user_data,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clCreateContext()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clCreateContext()...\n")));
 	return rtlib_ocl.createContext(properties, num_devices, devices, (*pfn_notify),
 		user_data, errcode_ret);
 }
@@ -159,20 +163,20 @@ clCreateContextFromType(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	device_type = CL_DEVICE_TYPE_GPU;
-	fprintf(stderr, FD("Calling clCreateContextFromType()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clCreateContextFromType()...\n")));
 	return rtlib_ocl.createContextFromType(properties, device_type, (*pfn_notify),
 		user_data, errcode_ret);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainContext(cl_context context) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clRetainContext()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clRetainContext()...\n")));
 	return rtlib_ocl.retainContext(context);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clReleaseContext(cl_context context) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clReleaseContext()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clReleaseContext()...\n")));
 	return rtlib_ocl.releaseContext(context);
 }
 
@@ -184,7 +188,7 @@ clGetContextInfo(
         void *param_value,
         size_t *param_value_size_ret)
         CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetContextInfo()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clGetContextInfo()...\n")));
 	cl_int result;
 
 	if (param_name != CL_CONTEXT_DEVICES) {
@@ -217,20 +221,20 @@ clCreateCommandQueue(
 		cl_command_queue_properties properties,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clCreateCommandQueue()...\n"));
+	DB2(fprintf(stderr, FD("Calling clCreateCommandQueue()...\n")));
 	properties |= CL_QUEUE_PROFILING_ENABLE;
 	return rtlib_ocl.createCommandQueue(context, device, properties, errcode_ret);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainCommandQueue(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clRetainCommandQueue()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clRetainCommandQueue()...\n")));
 	return rtlib_ocl.retainCommandQueue(command_queue);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clReleaseCommandQueue(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clReleaseCommandQueue()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clReleaseCommandQueue()...\n")));
 	return rtlib_ocl.releaseCommandQueue(command_queue);
 }
 
@@ -242,7 +246,7 @@ clGetCommandQueueInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetCommandQueueInfo()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clGetCommandQueueInfo()...\n")));
 	return rtlib_ocl.getCommandQueueInfo(command_queue, param_name,
 		param_value_size, param_value, param_value_size_ret);
 }
@@ -256,7 +260,7 @@ clCreateBuffer(
 		void *host_ptr,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clCreateBuffer()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clCreateBuffer()...\n")));
 	return rtlib_ocl.createBuffer(context, flags, size, host_ptr, errcode_ret);
 }
 
@@ -268,7 +272,7 @@ clCreateSubBuffer(
 		const void *buffer_create_info,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_1 {
-	fprintf(stderr, FD("Calling clCreateSubBuffer()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clCreateSubBuffer()...\n")));
 	return rtlib_ocl.createSubBuffer(buffer, flags, buffer_create_type,
 		buffer_create_info, errcode_ret);
 }
@@ -282,20 +286,20 @@ clCreateImage(
 		void *host_ptr,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clCreateImage()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clCreateImage()...\n")));
 	return rtlib_ocl.createImage(context, flags, image_format, image_desc,
 		host_ptr, errcode_ret);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainMemObject(cl_mem memobj) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clRetainMemObject()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clRetainMemObject()...\n")));
 	return rtlib_ocl.retainMemObject(memobj);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clReleaseMemObject(cl_mem memobj) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clReleaseMemObject()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clReleaseMemObject()...\n")));
 	return rtlib_ocl.releaseMemObject(memobj);
 }
 
@@ -308,7 +312,7 @@ clGetSupportedImageFormats(
 		cl_image_format *image_formats,
 		cl_uint *num_image_formats)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetSupportedImageFormats()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clGetSupportedImageFormats()...\n")));
 	return rtlib_ocl.getSupportedImageFormats(context, flags, image_type,
 		num_entries, image_formats, num_image_formats);
 }
@@ -321,7 +325,7 @@ clGetMemObjectInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetMemObjectInfo()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clGetMemObjectInfo()...\n")));
 	return rtlib_ocl.getMemObjectInfo(memobj, param_name, param_value_size,
 		param_value, param_value_size_ret);
 }
@@ -334,7 +338,7 @@ clGetImageInfo(
 		void * param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetImageInfo()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clGetImageInfo()...\n")));
 	return rtlib_ocl.getImageInfo(image, param_name, param_value_size,
 		param_value, param_value_size_ret);
 }
@@ -345,7 +349,7 @@ clSetMemObjectDestructorCallback(
 		void (CL_CALLBACK *pfn_notify)(cl_mem memobj, void *user_data),
 		void *user_data)
 		CL_API_SUFFIX__VERSION_1_1 {
-	fprintf(stderr, FD("Calling clSetMemObjectDestructorCallback()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clSetMemObjectDestructorCallback()...\n")));
 	return rtlib_ocl.setMemObjectDestructorCallback(memobj,(*pfn_notify), user_data);
 }
 
@@ -358,20 +362,20 @@ clCreateSampler(
 		cl_filter_mode filter_mode,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clCreateSampler()...\n"));
+	DB2 (fprintf(stderr, FD("Calling clCreateSampler()...\n")));
 	return rtlib_ocl.createSampler(context, normalized_coords, addressing_mode,
 		filter_mode, errcode_ret);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainSampler(cl_sampler sampler) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clRetainSampler()...\n"));
+	DB2(fprintf(stderr, FD("Calling clRetainSampler()...\n")));
 	return rtlib_ocl.retainSampler(sampler);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clReleaseSampler(cl_sampler sampler) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clReleaseSampler()...\n"));
+	DB2(fprintf(stderr, FD("Calling clReleaseSampler()...\n")));
 	return rtlib_ocl.releaseSampler(sampler);
 }
 
@@ -383,7 +387,7 @@ clGetSamplerInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetSamplerInfo()...\n"));
+	DB2(fprintf(stderr, FD("Calling clGetSamplerInfo()...\n")));
 	return rtlib_ocl.getSamplerInfo(sampler, param_name, param_value_size,
 		param_value, param_value_size_ret);
 }
@@ -397,7 +401,7 @@ clCreateProgramWithSource(
 		const size_t *lengths,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clCreateProgramWithSource()...\n"));
+	DB2(fprintf(stderr, FD("Calling clCreateProgramWithSource()...\n")));
 	return rtlib_ocl.createProgramWithSource(context, count, strings, lengths, errcode_ret);
 }
 
@@ -411,7 +415,7 @@ clCreateProgramWithBinary(
 		cl_int *binary_status,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clCreateProgramWithBinary()...\n"));
+	DB2(fprintf(stderr, FD("Calling clCreateProgramWithBinary()...\n")));
 	return rtlib_ocl.createProgramWithBinary(context, num_devices, device_list,
 		lengths, binaries, binary_status, errcode_ret);
 }
@@ -424,20 +428,20 @@ clCreateProgramWithBuiltInKernels(
 		const char *kernel_names,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clCreateProgramWithBuiltInKernels()...\n"));
+	DB2(fprintf(stderr, FD("Calling clCreateProgramWithBuiltInKernels()...\n")));
 	return rtlib_ocl.createProgramWithBuiltInKernels(context, num_devices,
 		device_list, kernel_names, errcode_ret);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainProgram(cl_program program) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clRetainProgram()...\n"));
+	DB2(fprintf(stderr, FD("Calling clRetainProgram()...\n")));
 	return rtlib_ocl.retainProgram(program);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clReleaseProgram(cl_program program) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clReleaseProgram()...\n"));
+	DB2(fprintf(stderr, FD("Calling clReleaseProgram()...\n")));
 	return rtlib_ocl.releaseProgram(program);
 }
 
@@ -450,7 +454,7 @@ clBuildProgram(
 		void (CL_CALLBACK *pfn_notify)(cl_program program, void *user_data),
 		void *user_data)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clBuildProgram()...\n"));
+	DB2(fprintf(stderr, FD("Calling clBuildProgram()...\n")));
 	return rtlib_ocl.buildProgram(program, num_devices, device_list, options,
 		(*pfn_notify), user_data);
 }
@@ -467,7 +471,7 @@ clCompileProgram(
 		void (CL_CALLBACK *pfn_notify)(cl_program program, void *user_data),
 		void *user_data)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clCompileProgram()...\n"));
+	DB2(fprintf(stderr, FD("Calling clCompileProgram()...\n")));
 	return rtlib_ocl.compileProgram(program, num_devices, device_list, options,
 		num_input_headers, input_headers, header_include_names, (*pfn_notify), user_data);
 }
@@ -484,14 +488,14 @@ clLinkProgram(
 		void *user_data,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clLinkProgram()...\n"));
+	DB2(fprintf(stderr, FD("Calling clLinkProgram()...\n")));
 	return rtlib_ocl.linkProgram(context, num_devices, device_list, options,
 		num_input_programs, input_programs, (*pfn_notify), user_data, errcode_ret);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clUnloadPlatformCompiler(cl_platform_id platform) CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clUnloadPlatformCompiler()...\n"));
+	DB2(fprintf(stderr, FD("Calling clUnloadPlatformCompiler()...\n")));
 	return rtlib_ocl.unloadPlatformCompiler(platform);
 }
 
@@ -503,7 +507,7 @@ clGetProgramInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetProgramInfo()...\n"));
+	DB2(fprintf(stderr, FD("Calling clGetProgramInfo()...\n")));
 	return rtlib_ocl.getProgramInfo(program, param_name, param_value_size,
 		param_value, param_value_size_ret);
 }
@@ -517,7 +521,7 @@ clGetProgramBuildInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetProgramBuildInfo()...\n"));
+	DB2(fprintf(stderr, FD("Calling clGetProgramBuildInfo()...\n")));
 	return rtlib_ocl.getProgramBuildInfo(program, device, param_name,
 		param_value_size, param_value, param_value_size_ret);
 }
@@ -529,7 +533,7 @@ clCreateKernel(
 		const char *kernel_name,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clCreateKernel()...\n"));
+	DB2(fprintf(stderr, FD("Calling clCreateKernel()...\n")));
 	return rtlib_ocl.createKernel(program, kernel_name, errcode_ret);
 }
 
@@ -540,19 +544,19 @@ clCreateKernelsInProgram(
 		cl_kernel *kernels,
 		cl_uint *num_kernels_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clCreateKernelsInProgram()...\n"));
+	DB2(fprintf(stderr, FD("Calling clCreateKernelsInProgram()...\n")));
 	return rtlib_ocl.createKernelsInProgram(program, num_kernels, kernels, num_kernels_ret);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainKernel(cl_kernel kernel) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clRetainKernel()...\n"));
+	DB2(fprintf(stderr, FD("Calling clRetainKernel()...\n")));
 	return rtlib_ocl.retainKernel(kernel);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clReleaseKernel(cl_kernel kernel) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clReleaseKernel()...\n"));
+	DB2(fprintf(stderr, FD("Calling clReleaseKernel()...\n")));
 	return rtlib_ocl.releaseKernel(kernel);
 }
 
@@ -563,7 +567,7 @@ clSetKernelArg(
 		size_t arg_size,
 		const void *arg_value)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clSetKernelArg()...\n"));
+	DB2(fprintf(stderr, FD("Calling clSetKernelArg()...\n")));
 	return rtlib_ocl.setKernelArg(kernel, arg_index, arg_size, arg_value);
 }
 
@@ -575,7 +579,7 @@ clGetKernelInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetKernelInfo()...\n"));
+	DB2(fprintf(stderr, FD("Calling clGetKernelInfo()...\n")));
 	return rtlib_ocl.getKernelInfo(kernel, param_name, param_value_size,
 		param_value, param_value_size_ret);
 }
@@ -589,7 +593,7 @@ clGetKernelArgInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clGetKernelArgInfo()...\n"));
+	DB2(fprintf(stderr, FD("Calling clGetKernelArgInfo()...\n")));
 	return rtlib_ocl.getKernelArgInfo(kernel, arg_indx, param_name,
 		param_value_size, param_value, param_value_size_ret);
 }
@@ -603,7 +607,7 @@ clGetKernelWorkGroupInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetKernelWorkGroupInfo()...\n"));
+	DB2(fprintf(stderr, FD("Calling clGetKernelWorkGroupInfo()...\n")));
 	return rtlib_ocl.getKernelWorkGroupInfo(kernel, device, param_name,
 		param_value_size, param_value, param_value_size_ret);
 }
@@ -614,7 +618,7 @@ clWaitForEvents(
 		cl_uint num_events,
 		const cl_event *event_list)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clWaitForEvents()...\n"));
+	DB2(fprintf(stderr, FD("Calling clWaitForEvents()...\n")));
 	return rtlib_ocl.waitForEvents(num_events, event_list);
 }
 
@@ -626,7 +630,7 @@ clGetEventInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetEventInfo()...\n"));
+	DB2(fprintf(stderr, FD("Calling clGetEventInfo()...\n")));
 	return rtlib_ocl.getEventInfo(event, param_name, param_value_size,
 		param_value, param_value_size_ret);
 }
@@ -636,19 +640,19 @@ clCreateUserEvent(
 		cl_context context,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_1 {
-	fprintf(stderr, FD("Calling clCreateUserEvent()...\n"));
+	DB2(fprintf(stderr, FD("Calling clCreateUserEvent()...\n")));
 	return rtlib_ocl.createUserEvent(context, errcode_ret);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainEvent(cl_event event) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clRetainEvent()...\n"));
+	DB2(fprintf(stderr, FD("Calling clRetainEvent()...\n")));
 	return rtlib_ocl.retainEvent(event);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clReleaseEvent(cl_event event) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clReleaseEvent()...\n"));
+	DB2(fprintf(stderr, FD("Calling clReleaseEvent()...\n")));
 	return rtlib_ocl.releaseEvent(event);
 }
 
@@ -657,7 +661,7 @@ clSetUserEventStatus(
 		cl_event event,
 		cl_int execution_status)
 		CL_API_SUFFIX__VERSION_1_1 {
-	fprintf(stderr, FD("Calling clSetUserEventStatus()...\n"));
+	DB2(fprintf(stderr, FD("Calling clSetUserEventStatus()...\n")));
 	return rtlib_ocl.setUserEventStatus(event, execution_status);
 }
 
@@ -668,7 +672,7 @@ clSetEventCallback(
 		void (CL_CALLBACK *pfn_event_notify)(cl_event event, cl_int event_command_exec_status, void *user_data),
 		void *user_data)
 		CL_API_SUFFIX__VERSION_1_1 {
-	fprintf(stderr, FD("Calling clSetEventCallback()...\n"));
+	DB2(fprintf(stderr, FD("Calling clSetEventCallback()...\n")));
 	return rtlib_ocl.setEventCallback(event, command_exec_callback_type,
 		(*pfn_event_notify), user_data);
 }
@@ -682,7 +686,7 @@ clGetEventProfilingInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clGetEventProfilingInfo()...\n"));
+	DB2(fprintf(stderr, FD("Calling clGetEventProfilingInfo()...\n")));
 	return rtlib_ocl.getEventProfilingInfo(event, param_name, param_value_size,
 		param_value, param_value_size_ret);
 }
@@ -690,13 +694,13 @@ clGetEventProfilingInfo(
 /* Flush and Finish APIs */
 CL_API_ENTRY cl_int CL_API_CALL
 clFlush(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clFlush()...\n"));
+	DB2(fprintf(stderr, FD("Calling clFlush()...\n")));
 	return rtlib_ocl.flush(command_queue);
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
 clFinish(cl_command_queue command_queue) CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clFinish()...\n"));
+	DB2(fprintf(stderr, FD("Calling clFinish()...\n")));
 	return rtlib_ocl.finish(command_queue);
 }
 
@@ -714,7 +718,7 @@ clEnqueueReadBuffer(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueReadBuffer()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueReadBuffer()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueReadBuffer(command_queue, buffer, blocking_read,
 		offset, size, ptr, num_events_in_wait_list, event_wait_list, event);
@@ -743,7 +747,7 @@ clEnqueueReadBufferRect(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_1 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueReadBufferRect()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueReadBufferRect()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueReadBufferRect(command_queue, buffer,
 		blocking_read, buffer_origin, host_origin, region, buffer_row_pitch,
@@ -769,7 +773,7 @@ clEnqueueWriteBuffer(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueWriteBuffer()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueWriteBuffer()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueWriteBuffer(command_queue, buffer, blocking_write,
 		offset, size, ptr, num_events_in_wait_list, event_wait_list, event);
@@ -798,7 +802,7 @@ clEnqueueWriteBufferRect(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_1 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueWriteBufferRect()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueWriteBufferRect()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueWriteBufferRect(command_queue, buffer, blocking_write,
 		buffer_origin, host_origin, region,	buffer_row_pitch, buffer_slice_pitch,
@@ -823,7 +827,7 @@ clEnqueueFillBuffer(
 		const cl_event *event_wait_list,
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clEnqueueFillBuffer()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueFillBuffer()...\n")));
 	return rtlib_ocl.enqueueFillBuffer(command_queue, buffer, pattern, pattern_size,
 		offset, size, num_events_in_wait_list, event_wait_list, event);
 }
@@ -841,7 +845,7 @@ clEnqueueCopyBuffer(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueCopyBuffer()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueCopyBuffer()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueCopyBuffer(command_queue, src_buffer, dst_buffer,
 		src_offset, dst_offset, size, num_events_in_wait_list, event_wait_list, event);
@@ -869,7 +873,7 @@ clEnqueueCopyBufferRect(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_1 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueCopyBufferRect()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueCopyBufferRect()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueCopyBufferRect(command_queue, src_buffer, dst_buffer,
 		src_origin, dst_origin, region, src_row_pitch, src_slice_pitch,
@@ -896,7 +900,7 @@ clEnqueueReadImage(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueReadImage()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueReadImage()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueReadImage(command_queue, image, blocking_read,
 		origin, region, row_pitch, slice_pitch, ptr, num_events_in_wait_list,
@@ -923,7 +927,7 @@ clEnqueueWriteImage(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueWriteImage()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueWriteImage()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueWriteImage(command_queue, image, blocking_write,
 		origin, region, input_row_pitch, input_slice_pitch, ptr,
@@ -946,7 +950,7 @@ clEnqueueFillImage(
 		const cl_event *event_wait_list,
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clEnqueueFillImage()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueFillImage()...\n")));
 	return rtlib_ocl.enqueueFillImage(command_queue, image, fill_color, origin,
 		region, num_events_in_wait_list, event_wait_list, event);
 }
@@ -964,7 +968,7 @@ clEnqueueCopyImage(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueCopyImage()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueCopyImage()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueCopyImage(command_queue, src_image, dst_image,
 		src_origin, dst_origin, region, num_events_in_wait_list, event_wait_list, event);
@@ -988,7 +992,7 @@ clEnqueueCopyImageToBuffer(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueCopyImageToBuffer()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueCopyImageToBuffer()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueCopyImageToBuffer(command_queue, src_image,
 		dst_buffer, src_origin, region, dst_offset, num_events_in_wait_list,
@@ -1013,7 +1017,7 @@ clEnqueueCopyBufferToImage(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueCopyBufferToImage()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueCopyBufferToImage()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueCopyBufferToImage(command_queue, src_buffer,
 		dst_image, src_offset, dst_origin, region, num_events_in_wait_list,
@@ -1039,7 +1043,7 @@ clEnqueueMapBuffer(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	void * buff_ptr;
-	fprintf(stderr, FD("Calling clEnqueueMapBuffer()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueMapBuffer()...\n")));
 	EVENT_RC_CONTROL(event);
 	buff_ptr = rtlib_ocl.enqueueMapBuffer(command_queue, buffer, blocking_map,
 		map_flags, offset, size, num_events_in_wait_list, event_wait_list,
@@ -1067,7 +1071,7 @@ clEnqueueMapImage(
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
 	void * buff_ptr;
-	fprintf(stderr, FD("Calling clEnqueueMapImage()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueMapImage()...\n")));
 	EVENT_RC_CONTROL(event);
 	buff_ptr = rtlib_ocl.enqueueMapImage(command_queue, image, blocking_map,
 		map_flags, origin, region, image_row_pitch, image_slice_pitch,
@@ -1088,7 +1092,7 @@ clEnqueueUnmapMemObject(
 		const cl_event *event_wait_list,
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
-	fprintf(stderr, FD("Calling clEnqueueUnmapMemObject()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueUnmapMemObject()...\n")));
 	return rtlib_ocl.enqueueUnmapMemObject(command_queue, memobj, mapped_ptr,
 		num_events_in_wait_list, event_wait_list, event);
 }
@@ -1103,7 +1107,7 @@ clEnqueueMigrateMemObjects(
 		const cl_event *event_wait_list,
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clEnqueueMigrateMemObjects()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueMigrateMemObjects()...\n")));
 	return rtlib_ocl.enqueueMigrateMemObjects(command_queue, num_mem_objects,
 		mem_objects, flags, num_events_in_wait_list, event_wait_list, event);
 }
@@ -1121,7 +1125,7 @@ clEnqueueNDRangeKernel(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueNDRangeKernel()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueNDRangeKernel()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueNDRangeKernel(command_queue, kernel, work_dim,
 		global_work_offset, global_work_size, local_work_size,
@@ -1142,7 +1146,7 @@ clEnqueueTask(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueTask()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueTask()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueTask(command_queue, kernel, num_events_in_wait_list,
 		event_wait_list, event);
@@ -1167,7 +1171,7 @@ clEnqueueNativeKernel(
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
 	cl_int status;
-	fprintf(stderr, FD("Calling clEnqueueNativeKernel()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueNativeKernel()...\n")));
 	EVENT_RC_CONTROL(event);
 	status = rtlib_ocl.enqueueNativeKernel(command_queue, (*user_func), args,
 		cb_args, num_mem_objects, mem_list, args_mem_loc, num_events_in_wait_list,
@@ -1186,7 +1190,7 @@ clEnqueueMarkerWithWaitList(
 		const cl_event *event_wait_list,
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clEnqueueMarkerWithWaitList()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueMarkerWithWaitList()...\n")));
 	return rtlib_ocl.enqueueMarkerWithWaitList(command_queue, num_events_in_wait_list,
 		event_wait_list, event);
 }
@@ -1198,7 +1202,7 @@ clEnqueueBarrierWithWaitList(
 		const cl_event *event_wait_list,
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_2 {
-	fprintf(stderr, FD("Calling clEnqueueBarrierWithWaitList()...\n"));
+	DB2(fprintf(stderr, FD("Calling clEnqueueBarrierWithWaitList()...\n")));
 	return rtlib_ocl.enqueueBarrierWithWaitList(command_queue,
 	num_events_in_wait_list, event_wait_list, event);
 }
