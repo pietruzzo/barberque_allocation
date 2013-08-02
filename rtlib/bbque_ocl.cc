@@ -1044,7 +1044,7 @@ clEnqueueMapBuffer(
 	buff_ptr = rtlib_ocl.enqueueMapBuffer(command_queue, buffer, blocking_map,
 		map_flags, offset, size, num_events_in_wait_list, event_wait_list,
 		event, errcode_ret);
-	if (errcode_ret != CL_SUCCESS) {
+	if ((*errcode_ret) != CL_SUCCESS) {
 		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueMapBuffer()\n"), *errcode_ret);
 	}
 	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
