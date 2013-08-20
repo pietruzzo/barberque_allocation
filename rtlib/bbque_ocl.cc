@@ -1333,10 +1333,13 @@ void rtlib_ocl_prof_clean() {
 
 void rtlib_ocl_flush_events() {
 	std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
+	cl_command_queue cq;
 	for (it_cq = ocl_queues_prof.begin(); it_cq != ocl_queues_prof.end(); it_cq++) {
 		QueueProfPtr_t stPtr = it_cq->second;
+		cq = it_cq->first;
 		stPtr->events.clear();
 	}
+	ocl_queues_prof.erase(cq);
 }
 
 void rtlib_ocl_prof_run(
