@@ -2198,6 +2198,82 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queu
 	}
 }
 
+#define OCL_STATS_HEADER \
+"#          Command Queue          ||     Command Type      ||            queue(ms)        ||           submit(ms)        ||            exec(ms)         ||\n"\
+"# --------------------------------++-----------------------++-----------------------------++-----------------------------++-----------------------------||\n"\
+"#                                 ||                       ||    Ʃ    |    μ    |    σ    ||    Ʃ    |    μ    |    σ    ||    Ʃ    |    μ    |    σ    ||\n"\
+"# --------------------------------++-----------------------++---------+---------+---------++---------+---------+---------++---------+---------+---------||\n"\
+
+#define OCL_STATS_HEADER_ADDR\
+"#  Command Queue  || Code Address ||    Command Type       ||           queue(ms)         ||          submit(ms)         ||            exec(ms)         ||\n"\
+"# ----------------++--------------++-----------------------++-----------------------------++-----------------------------++-----------------------------||\n"\
+"#                 ||              ||                       ||    Ʃ    |    μ    |    σ    ||    Ʃ    |    μ    |    σ    ||    Ʃ    |    μ    |    σ    ||\n"\
+"# ----------------++--------------++-----------------------++---------+---------+---------++---------+---------+---------++---------+---------+---------||\n"\
+
+void BbqueRPC::OclDumpStatsHeader(bool h) {
+	fprintf(stderr, "\n");
+	if (h)
+		fprintf(stderr, OCL_STATS_HEADER);
+	else
+		fprintf(stderr, OCL_STATS_HEADER_ADDR);
+}
+
+void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
+	AwmStatsMap_t::iterator it;
+	pAwmStats_t pstats;
+	uint8_t awm_id;
+	uint8_t count = 0;
+
+	// Print RTLib stats for each AWM
+	it = prec->stats.begin();
+	for ( ; it != prec->stats.end(); ++it) {
+		awm_id = (*it).first;
+		pstats = (*it).second;
+		std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
+		fprintf(stderr, "#=======================================================================================================================================================##\n");
+		fprintf(stderr, "# %75s-%-74d##\n", prec->name.c_str(), awm_id);
+		fprintf(stderr, "#=======================================================================================================================================================##\n");
+		OclDumpStatsHeader(true);
+		for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
+			QueueProfPtr_t stPtr = it_cq->second;
+			OclDumpCmdStatsConsole(stPtr, it_cq->first);
+			if (envOCLProfLevel == 0)
+				continue;
+			OclDumpAddrStatsConsole(stPtr, it_cq->first);
+		}
+	}
+}
+
+void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
+	std::map<cl_command_type, AccArray_t>::iterator it_ct;
+	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
+		fprintf(stderr, "# %-32p||%-23s||%8.3f |%8.3f |%8.3f ||%8.3f |%8.3f |%8.3f ||%8.3f |%8.3f |%8.3f ||\n",
+			cmd_queue, ocl_cmd_str[it_ct->first].c_str(), sum(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06, mean(it_ct->second[CL_CMD_QUEUED_TIME])*1e-06,
+			sqrt(variance(it_ct->second[CL_CMD_QUEUED_TIME]))*1e-06, sum(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06, mean(it_ct->second[CL_CMD_SUBMIT_TIME])*1e-06,
+			sqrt(variance(it_ct->second[CL_CMD_SUBMIT_TIME]))*1e-06, sum(it_ct->second[CL_CMD_EXEC_TIME])*1e-06, mean(it_ct->second[CL_CMD_EXEC_TIME])*1e-06,
+			sqrt(variance(it_ct->second[CL_CMD_EXEC_TIME]))*1e-06);
+	}
+	fprintf(stderr, "#=======================================================================================================================================================##\n");
+
+}
+
+void BbqueRPC::OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
+	std::map<void *, AccArray_t>::iterator it_ca;
+	cl_command_type cmd_type;
+	OclDumpStatsHeader(false);
+	for (it_ca = stPtr->addr_prof.begin(); it_ca != stPtr->addr_prof.end(); it_ca++) {
+		cmd_type = rtlib_ocl_get_command_type(it_ca->first);
+
+		fprintf(stderr, "# %-16p||%-14p||%-23s||%8.3f |%8.3f |%8.3f ||%8.3f |%8.3f |%8.3f ||%8.3f |%8.3f |%8.3f ||\n",
+			cmd_queue, it_ca->first, ocl_cmd_str[cmd_type].c_str(), sum(it_ca->second[CL_CMD_QUEUED_TIME])*1e-06, mean(it_ca->second[CL_CMD_QUEUED_TIME])*1e-06,
+			sqrt(variance(it_ca->second[CL_CMD_QUEUED_TIME]))*1e-06, sum(it_ca->second[CL_CMD_SUBMIT_TIME])*1e-06, mean(it_ca->second[CL_CMD_SUBMIT_TIME])*1e-06,
+			sqrt(variance(it_ca->second[CL_CMD_SUBMIT_TIME]))*1e-06, sum(it_ca->second[CL_CMD_EXEC_TIME])*1e-06, mean(it_ca->second[CL_CMD_EXEC_TIME])*1e-06,
+			sqrt(variance(it_ca->second[CL_CMD_EXEC_TIME]))*1e-06);
+	}
+	fprintf(stderr, "#=======================================================================================================================================================##\n");
+}
+
+
 #endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
 /*******************************************************************************
