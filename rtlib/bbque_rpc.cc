@@ -843,6 +843,12 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 	}
 
 	DumpStatsConsole(prec, verbose);
+
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	// Dump OpenCL profiling info for each AWM
+	if (envOCLProf)
+		OclDumpStatsConsole(prec);
+#endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 }
 
 void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
