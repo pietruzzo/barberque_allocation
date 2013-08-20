@@ -2110,8 +2110,8 @@ void BbqueRPC::OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status) {
 	rtlib_ocl_set_device(device_id, status);
 }
 
-void BbqueRPC::OclFlushEvents() {
-	rtlib_ocl_flush_events();
+void BbqueRPC::OclClearStats() {
+	rtlib_ocl_prof_clean();
 }
 
 void BbqueRPC::OclCollectStats(
@@ -2396,6 +2396,11 @@ void BbqueRPC::NotifyPostConfigure(
 		prec->cps_tstart = bbque_tmr.getElapsedTimeMs();
 
 	(void)ech;
+
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	// Clear pre-run OpenCL command events
+	OclClearStats();
+#endif
 }
 
 void BbqueRPC::NotifyPreRun(
@@ -2422,9 +2427,6 @@ void BbqueRPC::NotifyPreRun(
 			PerfEnable(prec);
 		}
 	}
-
-	// Clear pre-run OpenCL command events
-	OclFlushEvents();
 }
 
 void BbqueRPC::NotifyPostRun(

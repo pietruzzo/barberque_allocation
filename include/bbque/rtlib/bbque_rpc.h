@@ -495,7 +495,7 @@ protected:
  ******************************************************************************/
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 	void OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status);
-	void OclFlushEvents();
+	void OclClearStats();
 	void OclCollectStats(uint8_t awm_id, OclEventsStatsMap_t & ocl_events_map);
 	void OclPrintStats(pAwmStats_t pstats);
 	void OclPrintCmdStats(QueueProfPtr_t, cl_command_queue);
