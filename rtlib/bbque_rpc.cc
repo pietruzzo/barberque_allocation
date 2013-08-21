@@ -2112,6 +2112,17 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
  ******************************************************************************/
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
+#define SUM(v) \
+	sum(it_ct->second[CL_CMD_ ## v ## _TIME])*1e-06
+#define MIN(v) \
+	min(it_ct->second[CL_CMD_ ## v ## _TIME])*1e-06
+#define MAX(v) \
+	max(it_ct->second[CL_CMD_ ## v ## _TIME])*1e-06
+#define MEAN(v) \
+	mean(it_ct->second[CL_CMD_ ## v ## _TIME])*1e-06
+#define STDDEV(v) \
+	sqrt(variance(it_ct->second[CL_CMD_ ## v ## _TIME]))*1e-06
+
 void BbqueRPC::OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status) {
 	rtlib_ocl_set_device(device_id, status);
 }
