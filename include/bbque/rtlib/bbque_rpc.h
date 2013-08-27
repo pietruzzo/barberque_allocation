@@ -507,6 +507,12 @@ protected:
 
 #endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 
+#define OCL_STATS_FILE 1
+#ifdef OCL_STATS_FILE
+	FILE * outfd;
+#define OCL_FILE_PATH "/tmp/BbqueOCLStats.log"
+#endif
+
 /******************************************************************************
  * RTLib Run-Time Configuration
  ******************************************************************************/

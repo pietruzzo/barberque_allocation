@@ -84,7 +84,6 @@ BbqueRPC::~BbqueRPC(void) {
 			prec = (*it).second;
 			DumpStats(prec, true);
 		}
-
 	}
 
 	// Clean-up all the registered EXCs
@@ -648,6 +647,8 @@ static char _metricPrefix[64] = "";
 static inline void _setMetricPrefix(const char *exc_name, uint8_t awm_id) {
 	snprintf(_metricPrefix, 64, "%s:%02d", exc_name, awm_id);
 }
+
+
 
 #define DUMP_MOST_METRIC(CLASS, NAME, VALUE, FMT)	\
 	fprintf(stderr, "@%s%s:%s:%s=" FMT "@\n",	\
@@ -2215,35 +2216,45 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queu
 	}
 }
 
+#ifdef OCL_STATS_FILE
+#define OUTFD outfd
+#else
+#define OUTFD stderr
+#endif
+
 #define OCL_STATS_HEADER \
-"#          Command Queue          ||     Command Type      ||               queue[ms]                   ||                 submit[ms]                ||                    exec[ms]               ||\n"\
-"# --------------------------------++-----------------------++-------------------------------------------++-------------------------------------------++-------------------------------------------||\n"\
-"#                                 ||                       ||        Ʃ (%%o %%v)      |    μ    |    σ    ||        Ʃ (%%o %%v)      |    μ    |    σ    ||        Ʃ (%%o %%v)      |    μ    |    σ    ||\n"\
-"# --------------------------------++-----------------------++-----------------------+---------+---------++-----------------------+---------+---------++-----------------------+---------+---------||\n"\
+"#           Command Queue          ||      Command Type       ||                 queue[ms]                   ||                 submit[ms]                  ||                     exec[ms]                ||\n"\
+"# ---------------------------------++-------------------------++---------------------------------------------++---------------------------------------------++---------------------------------------------||\n"\
+"#                                  ||                         ||        Ʃ (%%h %%v)      |     μ    |     σ    ||        Ʃ (%%h %%v)      |     μ    |     σ    ||        Ʃ (%%h %%v)      |     μ    |     σ    ||\n"\
+"# ---------------------------------++-------------------------++-----------------------+----------+----------++-----------------------+----------+----------++-----------------------+----------+----------||\n"
 
 #define OCL_STATS_HEADER_ADDR \
-"#  Command Queue  || Code Address ||    Command Type       ||           queue[ms]         ||          submit[ms]         ||            exec[ms]         ||\n"\
-"# ----------------++--------------++-----------------------++-----------------------------++-----------------------------++-----------------------------||\n"\
-"#                 ||              ||                       ||    Ʃ    |    μ    |    σ    ||    Ʃ    |    μ    |    σ    ||    Ʃ    |    μ    |    σ    ||\n"\
-"# ----------------++--------------++-----------------------++---------+---------+---------++---------+---------+---------++---------+---------+---------||\n"\
+"#   Command Queue  || Code Address ||      Command Type       ||             queue[ms]          ||            submit[ms]          ||             exec[ms]           ||\n"\
+"# -----------------++--------------++-------------------------++--------------------------------++--------------------------------++--------------------------------||\n"\
+"#                  ||              ||                         ||    Ʃ     |    μ     |     σ    ||    Ʃ     |     μ    |    σ     ||     Ʃ    |     μ    |     σ    ||\n"\
+"# -----------------++--------------++-------------------------++----------+----------+----------++----------+----------+----------++----------+----------+----------||\n"
 
 #define OCL_EXC_AWM_HEADER \
-"##================================================================================================================================================================================================##\n" \
-"## %95s-%-95d##\n" \
-"##================================================================================================================================================================================================##\n"
+"##=========================================================================================================================================================================================================##\n" \
+"## %100s-%-99d##\n" \
+"##=========================================================================================================================================================================================================##\n"
 
-#define OCL_STATS_TRAILER \
-"#=================================================================================================================================================================================================##\n"
+#define OCL_STATS_BAR \
+"#==========================================================================================================================================================================================================##\n"
 
-#define OCL_STATS_TRAILER_ADDR \
-"#=======================================================================================================================================================##\n"
+#define OCL_STATS_BAR_ADDR \
+"#===================================================================================================================================================================##\n"
 
 void BbqueRPC::OclDumpStatsHeader(bool h) {
-	fprintf(stderr, "\n");
-	if (h)
-		fprintf(stderr, OCL_STATS_HEADER);
-	else
-		fprintf(stderr, OCL_STATS_HEADER_ADDR);
+	fprintf(OUTFD, "\n");
+	if (h) {
+		fprintf(OUTFD, OCL_STATS_BAR);
+		fprintf(OUTFD, OCL_STATS_HEADER);
+	}
+	else {
+		fprintf(OUTFD, OCL_STATS_BAR_ADDR);
+		fprintf(OUTFD, OCL_STATS_HEADER_ADDR);
+	}
 }
 
 void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
@@ -2252,13 +2263,17 @@ void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
 	uint8_t awm_id;
 	uint8_t count = 0;
 
+#ifdef OCL_STATS_FILE
+	outfd = fopen(OCL_FILE_PATH, "a");
+#endif
 	// Print RTLib stats for each AWM
 	it = prec->stats.begin();
 	for ( ; it != prec->stats.end(); ++it) {
 		awm_id = (*it).first;
 		pstats = (*it).second;
 		std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
-		fprintf(stderr, OCL_EXC_AWM_HEADER, prec->name.c_str(), awm_id);
+		fprintf(OUTFD, OCL_EXC_AWM_HEADER, prec->name.c_str(), awm_id);
+
 		OclDumpStatsHeader(true);
 		for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
 			QueueProfPtr_t stPtr = it_cq->second;
@@ -2268,6 +2283,9 @@ void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
 			OclDumpAddrStatsConsole(stPtr, it_cq->first);
 		}
 	}
+#ifdef OCL_STATS_FILE
+	fclose(outfd);
+#endif
 }
 
 void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
@@ -2278,9 +2296,13 @@ void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd
 		vtot_s += SUM(SUBMIT);
 		vtot_e += SUM(EXEC);
 	}
+
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
 		otot = SUM(QUEUED)+SUM(SUBMIT)+SUM(EXEC);
-		fprintf(stderr, "# %-32p||%-23s|| %7.3f (%5.2f %5.2f) |%8.3f |%8.3f || %7.3f (%5.2f %5.2f) |%8.3f |%8.3f || %7.3f (%5.2f %5.2f) |%8.3f |%8.3f ||\n",
+		fprintf(OUTFD, "# %-32p || %-23s || "
+				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
+				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
+				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f ||\n",
 			cmd_queue, ocl_cmd_str[it_ct->first].c_str(),
 			SUM(QUEUED), (100 * SUM(QUEUED))/otot, (100 * SUM(QUEUED))/vtot_q,
 			MEAN(QUEUED), STDDEV(QUEUED),
@@ -2288,24 +2310,27 @@ void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd
 			MEAN(SUBMIT), STDDEV(SUBMIT),
 			SUM(EXEC), (100 * SUM(EXEC))/otot, (100 * SUM(EXEC))/vtot_e,
 			MEAN(EXEC), STDDEV(EXEC));
-		otot = 0;
 	}
-	fprintf(stderr, OCL_STATS_TRAILER);
+	fprintf(OUTFD, OCL_STATS_BAR);
 }
 void BbqueRPC::OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
 	std::map<void *, AccArray_t>::iterator it_ct;
 	cl_command_type cmd_type;
+
 	OclDumpStatsHeader(false);
 	for (it_ct = stPtr->addr_prof.begin(); it_ct != stPtr->addr_prof.end(); it_ct++) {
 		cmd_type = rtlib_ocl_get_command_type(it_ct->first);
 
-		fprintf(stderr, "# %-16p||%-14p||%-23s||%8.3f |%8.3f |%8.3f ||%8.3f |%8.3f |%8.3f ||%8.3f |%8.3f |%8.3f ||\n",
+		fprintf(OUTFD, "# %-16p || %-12p || %-23s || "
+				"%8.3f | %8.3f | %8.3f || "
+				"%8.3f | %8.3f | %8.3f || "
+				"%8.3f | %8.3f | %8.3f ||\n",
 			cmd_queue, it_ct->first, ocl_cmd_str[cmd_type].c_str(),
 			SUM(QUEUED), MEAN(QUEUED), STDDEV(QUEUED),
 			SUM(SUBMIT), MEAN(SUBMIT), STDDEV(SUBMIT),
 			SUM(EXEC), MEAN(EXEC), STDDEV(EXEC));
 	}
-	fprintf(stderr, OCL_STATS_TRAILER_ADDR);
+	fprintf(OUTFD, OCL_STATS_BAR_ADDR);
 }
 
 
