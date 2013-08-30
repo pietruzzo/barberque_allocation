@@ -498,7 +498,7 @@ void YamsSchedPol::InsertWorkingModes(AppCPtr_t const & papp) {
 
 void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
-	std::vector<ResID_t>::iterator ids_it;
+	std::vector<ResID_t>::reverse_iterator ids_it;
 	ResID_t bd_id;
 	float sc_value    = 0.0;
 	uint8_t mlog_len  = 0;
@@ -528,8 +528,8 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 
 #ifndef CONFIG_BBQUE_SP_COWS_BINDING
 	// Add binding-dependent scheduling contributions
-	ids_it = bindings.ids.begin();
-	for (; ids_it != bindings.ids.end(); ++ids_it) {
+	ids_it = bindings.ids.rbegin();
+	for (; ids_it != bindings.ids.rend(); ++ids_it) {
 		bd_id = *ids_it;
 		if (bindings.full[bd_id]) {
 			logger->Info("Eval: domain [%s%d] is full, skipping...",
