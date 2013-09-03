@@ -230,11 +230,10 @@ private:
 	/** List of entities to schedule */
 	SchedEntityList_t entities;
 
-	/** Manager for the scheduling contributions set */
-	SchedContribManager * scm;
 
 	/** Set of scheduling contributions type used for the metrics */
 	static SchedContribManager::Type_t sc_types[YAMS_SC_COUNT];
+	static SchedContribManager::Type_t sc_gpu[];
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 
@@ -261,6 +260,7 @@ private:
 
 	typedef accumulator_set<float, stats<tag::sum, tag::variance>> mv_metrics_t;
 	typedef accumulator_set<float, stats<tag::mean>> syswide_metrics_t;
+
 	struct cows_binding_info{
 		mv_metrics_t llcm_info;
 		mv_metrics_t stalls_info;
@@ -277,10 +277,17 @@ private:
 	std::vector<syswide_metrics_t> syswide_sums;
 	std::vector<syswide_metrics_t> syswide_empty;
 
+	/** Total number of CPU bindings to evaluate */
+	uint16_t cpu_bindings_num;
 #endif
 
+	/** Manager for the scheduling contributions set */
+	typedef std::pair<Resource::Type_t, SchedContribManager *> SchedContribPair_t;
+	std::map<Resource::Type_t, SchedContribManager *> scms;
+
 	/** Collect information on binding domains */
-	BindingInfo_t bindings;
+	typedef std::pair<Resource::Type_t, BindingInfo_t *> BindingPair_t;
+	std::map<Resource::Type_t, BindingInfo_t *>  bindings;
 
 
 	/** Mutex */
@@ -306,6 +313,11 @@ private:
 	 * Usually the PluginManager acts as object
 	 */
 	YamsSchedPol();
+
+	/**
+	 * @brief Load the resource binding configuration
+	 */
+	YamsSchedPol::ExitCode_t LoadBindingConfig();
 
 	/**
 	 * @brief Clear information on scheduling entitties and bindings
@@ -384,6 +396,7 @@ private:
 	 * @param pschd The scheduling entity to evaluate
 	 */
 	void GetSchedContribValue(SchedEntityPtr_t pschd,
+			ResourceIdentifier::Type_t bd_type,
 			SchedContribManager::Type_t sc_type, float & sc_value);
 
 	/**
@@ -404,6 +417,7 @@ private:
 	ExitCode_t BindResources(SchedEntityPtr_t pschd);
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
+	void CowsSetup();
 	/**
 	 * @brief COWS: Evaluate a Binding
 	 *

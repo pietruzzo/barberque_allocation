@@ -45,6 +45,13 @@ SchedContribManager::Type_t YamsSchedPol::sc_types[] = {
 #endif
 };
 
+SchedContribManager::Type_t YamsSchedPol::sc_gpu[] = {
+	SchedContribManager::VALUE,
+	SchedContribManager::FAIRNESS,
+#ifndef CONFIG_BBQUE_SP_COWS_BINDING
+	SchedContribManager::CONGESTION
+#endif
+};
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 const char * YamsSchedPol::cows_metrics_str[] = {
@@ -121,33 +128,76 @@ YamsSchedPol::YamsSchedPol():
 		fprintf(stderr, FI("yams: Built new dynamic object [%p]\n"),
 				(void *)this);
 
-	// Binding domain resource path
-	po::options_description opts_desc("Scheduling policy parameters");
-	opts_desc.add_options()
-		(SCHEDULER_POLICY_CONFIG".binding.domain",
-		 po::value<std::string>
-		 (&bindings.domain)->default_value(SCHEDULER_DEFAULT_BINDING_DOMAIN),
-		"Resource binding domain");
-	;
-	po::variables_map opts_vm;
-	cm.ParseConfigurationFile(opts_desc, opts_vm);
-
-	// Binding domain resource type
-	ResourcePath rp(bindings.domain);
-	bindings.type = rp.Type();
-	logger->Debug("Binding domain:'%s' Type:%s",
-			bindings.domain.c_str(),
-			ResourceIdentifier::TypeStr[bindings.type]);
-
-	// Instantiate the SchedContribManager
-	scm = new SchedContribManager(sc_types, bindings, YAMS_SC_COUNT);
+	// Load binding domains configuration
+	LoadBindingConfig();
 
 	// Resource view counter
 	vtok_count = 0;
 
 	// Register all the metrics to collect
-	mc.Register(coll_metrics, YAMS_SC_COUNT);
+	mc.Register(coll_metrics, YAMS_METRICS_COUNT);
 	mc.Register(coll_mct_metrics, YAMS_SC_COUNT);
+}
+
+YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
+	Resource::Type_t bd_type;
+	std::string bd_domains;
+	std::string bd_str;
+	size_t end_pos, beg_pos = 0;
+
+	// Binding domain resource path
+	po::options_description opts_desc("Scheduling policy parameters");
+	opts_desc.add_options()
+		(SCHEDULER_POLICY_CONFIG".binding.domain",
+		 po::value<std::string>
+		 (&bd_domains)->default_value(SCHEDULER_DEFAULT_BINDING_DOMAIN),
+		"Resource binding domain");
+	;
+	po::variables_map opts_vm;
+	cm.ParseConfigurationFile(opts_desc, opts_vm);
+
+	// Parse each binding domain string
+	while (end_pos != std::string::npos) {
+		end_pos = bd_domains.find(',', beg_pos);
+		bd_str  = bd_domains.substr(beg_pos, end_pos);
+
+		// Binding domain resource type
+		ResourcePath rp(bd_str);
+		bd_type = rp.Type();
+		if (bd_type == Resource::UNDEFINED ||
+				bd_type == Resource::TYPE_COUNT) {
+			logger->Error("Invalid binding domain type for: %s",
+					bd_str.c_str());
+			beg_pos  = end_pos + 1;
+			continue;
+		}
+
+		// New binding info structure
+		bindings.insert(BindingPair_t(bd_type, new BindingInfo_t));
+		bindings[bd_type]->domain = bd_str;
+		bindings[bd_type]->type   = bd_type;
+		logger->Info("Binding domain:'%s' Type:%s",
+				bindings[bd_type]->domain.c_str(),
+				ResourceIdentifier::TypeStr[bindings[bd_type]->type]);
+
+		// Instantiate a scheduling contributions manager per binding domain
+		if (bd_type == Resource::GPU) {
+			scms.insert(SchedContribPair_t(
+						bd_type,
+						new SchedContribManager(
+							sc_gpu, *(bindings[Resource::GPU]), 3)));
+		}
+		else {
+			scms.insert(SchedContribPair_t(
+						bd_type,
+						new SchedContribManager(
+							sc_types, *(bindings[bd_type]), YAMS_SC_COUNT)));
+		}
+
+		// Next binding domain...
+		beg_pos  = end_pos + 1;
+	}
+
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	// COWS: Init metrics weights
@@ -162,6 +212,7 @@ YamsSchedPol::YamsSchedPol():
 		static_cast<CommandHandler*>(this),
 		"Set COWS binding metrics weights");
 #endif
+	return YAMS_SUCCESS;
 }
 
 YamsSchedPol::~YamsSchedPol() {
@@ -181,6 +232,10 @@ YamsSchedPol::ExitCode_t YamsSchedPol::Init() {
 
 	// Initialize information for scheduling contributions
 	InitSchedContribManagers();
+
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
+	CowsSetup();
+#endif
 
 	return YAMS_SUCCESS;
 }
@@ -210,51 +265,78 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitResourceStateView() {
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::InitBindingInfo() {
-	bindings.rsrcs = sv->GetResources(bindings.domain);
-	bindings.num   = bindings.rsrcs.size();
-	bindings.ids.resize(bindings.num);
-	if (bindings.num == 0) {
-		logger->Error("Init: No bindings to R{%s} possible. "
-				"Please check the platform configuration.",
-				bindings.domain.c_str());
-		return YAMS_ERR_CLUSTERS;
-	}
+	std::map<Resource::Type_t, BindingInfo_t *>::iterator bd_it;
 
-	// Get all the possible resource binding IDs
-	ResourcePtrList_t::iterator b_it(bindings.rsrcs.begin());
-	ResourcePtrList_t::iterator b_end(bindings.rsrcs.end());
-	for (uint8_t j = 0; b_it != b_end; ++b_it, ++j) {
-		ResourcePtr_t const & rsrc(*b_it);
-		bindings.ids[j] = rsrc->ID();
-		logger->Debug("Init: R{%s} ID: %d",
-				bindings.domain.c_str(), bindings.ids[j]);
+	for (bd_it = bindings.begin(); bd_it != bindings.end(); ++bd_it) {
+		// Set information for each binding domain
+		BindingInfo_t & bd(*(bd_it->second));
+		bd.rsrcs = sv->GetResources(bd.domain);
+		bd.num   = bd.rsrcs.size();
+		bd.ids.resize(bd.num);
+		if (bd.num == 0) {
+			logger->Warn("Init: No bindings R{%s} available",
+					bd.domain.c_str());
+			continue;
+		}
+
+		// Get all the possible resource binding IDs
+		ResourcePtrList_t::iterator br_it(bd.rsrcs.begin());
+		ResourcePtrList_t::iterator br_end(bd.rsrcs.end());
+		for (uint8_t j = 0; br_it != br_end; ++br_it, ++j) {
+			ResourcePtr_t const & rsrc(*br_it);
+			bd.ids[j] = rsrc->ID();
+			logger->Debug("Init: R{%s} ID: %d",
+					bd.domain.c_str(), bd.ids[j]);
+		}
+		logger->Debug("Init: R{%s}: %d possible bindings",
+				bd.domain.c_str(), bd.num);
 	}
-	logger->Debug("Init: R{%s}: %d possible bindings",
-			bindings.domain.c_str(), bindings.num);
 
 	return YAMS_SUCCESS;
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
+	std::map<Resource::Type_t, SchedContribManager *>::iterator scm_it;
 	SchedContribPtr_t sc_recf;
 
-#ifdef CONFIG_BBQUE_SP_COWS_BINDING
+	// Set the view information into the scheduling contribution managers
+	for (scm_it = scms.begin(); scm_it != scms.end(); ++scm_it) {
+		SchedContribManager * scm = scm_it->second;
+		scm->SetViewInfo(sv, vtok);
+		scm->SetBindingInfo(*(bindings[scm_it->first]));
+		logger->Debug("Init: Scheduling contribution manager for R{%s} ready",
+				ResourceIdentifier::TypeStr[scm_it->first]);
+
+		// Init Reconfig contribution
+		sc_recf = scm->GetContrib(SchedContribManager::RECONFIG);
+		if (sc_recf != nullptr) {
+			ResID_t first_id = *(bindings[scm_it->first]->ids.begin());
+			sc_recf->Init(&first_id);
+		}
+	}
+
+	return YAMS_SUCCESS;
+}
+
+void YamsSchedPol::CowsSetup() {
+	cpu_bindings_num = bindings[Resource::CPU]->num;
+
 	// COWS: Vectors resizing depending on the number of binding domains
-	cows_info.bd_load.resize(bindings.num);
-	cows_info.bound_mix.resize(bindings.num);
-	cows_info.stalls_metrics.resize(bindings.num);
-	cows_info.iret_metrics.resize(bindings.num);
-	cows_info.flops_metrics.resize(bindings.num);
-	cows_info.migr_metrics.resize(bindings.num);
+	cows_info.bd_load.resize(cpu_bindings_num);
+	cows_info.bound_mix.resize(cpu_bindings_num);
+	cows_info.stalls_metrics.resize(cpu_bindings_num);
+	cows_info.iret_metrics.resize(cpu_bindings_num);
+	cows_info.flops_metrics.resize(cpu_bindings_num);
+	cows_info.migr_metrics.resize(cpu_bindings_num);
 	cows_info.perf_data.resize(COWS_RECIPE_METRICS);
 	cows_info.norm_stats.resize(COWS_NORMAL_VALUES);
 	// Accumulators resizing, depending on the number of BDs
 	// The real accumulators set
-	binding_domains.resize(bindings.num);
+	binding_domains.resize(cpu_bindings_num);
 	// A set needed to simulate system changes
-	binding_speculative.resize(bindings.num);
+	binding_speculative.resize(cpu_bindings_num);
 	// A set needed to reset the original one
-	binding_empty.resize(bindings.num);
+	binding_empty.resize(cpu_bindings_num);
 	// Accumulator for sys-wide sums information
 	syswide_sums.resize(COWS_UNITS_METRICS);
 	// A set needed to reset the original one
@@ -263,24 +345,6 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	// COWS: Reset the counters
 	CowsClear();
 	logger->Info("COWS: Support enabled");
-#endif
-
-	// Set the view information into the metrics contribute
-	scm->SetViewInfo(sv, vtok);
-	scm->SetBindingInfo(bindings);
-	logger->Debug("Init: SchedContribs: %d", YAMS_SC_COUNT);
-
-	// Init Reconfig contribution
-	ResID_t first_id = *(bindings.ids.begin());
-	sc_recf = scm->GetContrib(SchedContribManager::RECONFIG);
-	if (sc_recf == nullptr) {
-		logger->Error("Init: SchedContrib 'RECONFIG' missing");
-		return YAMS_ERROR;
-	}
-	assert(sc_recf != nullptr);
-	sc_recf->Init(&first_id);
-
-	return YAMS_SUCCESS;
 }
 
 SchedulerPolicyIF::ExitCode_t
@@ -301,13 +365,11 @@ YamsSchedPol::Schedule(System & sys_if, RViewToken_t & rav) {
 			continue;
 		SchedulePrioQueue(prio);
 	}
-
 	// Set the new resource state view token
 	rav = vtok;
 
 	// Reset scheduling entities and resource bindings status
 	Clear();
-	bindings.full.Reset();
 
 	// Report table
 	ra.PrintStatusReport(vtok);
@@ -315,7 +377,6 @@ YamsSchedPol::Schedule(System & sys_if, RViewToken_t & rav) {
 
 error:
 	logger->Error("Schedule: an error occurred. Interrupted.");
-	bindings.full.Reset();
 	Clear();
 	ra.PutView(vtok);
 	return SCHED_ERROR;
@@ -323,16 +384,29 @@ error:
 
 inline void YamsSchedPol::Clear() {
 	entities.clear();
+
+	// Reset bindings
+	std::map<Resource::Type_t, BindingInfo_t *>::iterator bd_it;
+	for (bd_it = bindings.begin(); bd_it != bindings.end(); ++bd_it) {
+		bd_it->second->full.Reset();
+	}
 }
+
 void YamsSchedPol::SchedulePrioQueue(AppPrio_t prio) {
 	bool sched_incomplete;
 	uint8_t naps_count = 0;
+	std::map<Resource::Type_t, SchedContribManager *>::iterator scm_it;
 	SchedContribPtr_t sc_fair;
 
-	// Init Fairness contribution
-	sc_fair = scm->GetContrib(SchedContribManager::FAIRNESS);
-	assert(sc_fair != nullptr);
-	sc_fair->Init(&prio);
+	// Init Fairness contributions
+	logger->Debug("Schedule: Init FAIRNESS contributions (if any)");
+	for (scm_it = scms.begin(); scm_it != scms.end(); ++scm_it) {
+		SchedContribManager * scm = scm_it->second;
+		sc_fair = scm->GetContrib(SchedContribManager::FAIRNESS);
+		if (sc_fair == nullptr)
+			continue;
+		sc_fair->Init(&prio);
+	}
 
 	// Reset timer
 	YAMS_RESET_TIMING(yams_tmr);
@@ -391,8 +465,10 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 	for (; se_it != end_se; ++se_it) {
 		SchedEntityPtr_t & pschd(*se_it);
 
-		// Skip if the Application/EXC has been already scheduled
-		if (CheckSkipConditions(pschd->papp))
+		// Skip this AWM,Binding if the bound domain is full or if the
+		// Application/EXC must be skipped
+		if (bindings[pschd->bind_type]->full.Test(pschd->bind_id) ||
+				(CheckSkipConditions(pschd->papp)))
 			continue;
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
@@ -434,7 +510,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 #else
 		// Send the schedule request
 		app_result = pschd->papp->ScheduleRequest(
-				pschd->pawm, vtok, pschd->bind_id);
+				pschd->pawm, vtok, pschd->bind_refn);
 		logger->Debug("Selecting: %s schedule requested", pschd->StrId());
 		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
 			logger->Debug("Selecting: %s rejected!", pschd->StrId());
@@ -498,6 +574,7 @@ void YamsSchedPol::InsertWorkingModes(AppCPtr_t const & papp) {
 
 void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
+	std::map<Resource::Type_t, BindingInfo_t *>::iterator bd_it;
 	std::vector<ResID_t>::reverse_iterator ids_it;
 	ResID_t bd_id;
 	float sc_value    = 0.0;
@@ -516,52 +593,64 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	YAMS_RESET_TIMING(comp_tmr);
 
 	// Aggregate binding-independent scheduling contributions
-	for (uint i = 0; i < YAMS_AWM_SC_COUNT; ++i) {
-		GetSchedContribValue(pschd, sc_types[i], sc_value);
-		pschd->metrics += sc_value;
-		mlog_len += sprintf(mlog + mlog_len, "%c:%5.4f, ",
-					scm->GetString(sc_types[i])[0],	sc_value);
-	}
-	mlog[mlog_len-2] = '\0';
-	logger->Info("EvalAWM: %s metrics %s -> %5.4f",
-			pschd->StrId(),	mlog, pschd->metrics);
+	for (bd_it = bindings.begin(); bd_it != bindings.end(); ++bd_it) {
+		BindingInfo_t & bd(*(bd_it->second));
+		Resource::Type_t bd_type = bd_it->first;
+
+		// Skipping empty binding domains
+		if (bd.num == 0)
+			continue;
+
+		for (uint i = 0; i < YAMS_AWM_SC_COUNT; ++i) {
+			GetSchedContribValue(pschd, bd_type, sc_types[i], sc_value);
+			pschd->metrics += sc_value;
+			mlog_len += sprintf(mlog + mlog_len, "%c:%5.4f, ",
+						scms[bd_type]->GetString(sc_types[i])[0], sc_value);
+		}
+		mlog[mlog_len-2] = '\0';
+		logger->Info("EvalAWM: %s metrics %s -> %5.4f",
+				pschd->StrId(),	mlog, pschd->metrics);
 
 #ifndef CONFIG_BBQUE_SP_COWS_BINDING
-	// Add binding-dependent scheduling contributions
-	ids_it = bindings.ids.rbegin();
-	for (; ids_it != bindings.ids.rend(); ++ids_it) {
-		bd_id = *ids_it;
-		if (bindings.full[bd_id]) {
-			logger->Info("Eval: domain [%s%d] is full, skipping...",
-					bindings.domain.c_str(), bd_id);
-			continue;
+		// Add binding-dependent scheduling contributions
+		ids_it = bd.ids.rbegin();
+		for (; ids_it != bd.ids.rend(); ++ids_it) {
+			bd_id = *ids_it;
+			if (bd.full[bd_id]) {
+				logger->Info("Eval: domain [%s%d] is full, skipping...",
+						bd.domain.c_str(), bd_id);
+				continue;
+			}
+
+			// Evaluate the AWM resource binding
+			SchedEntityPtr_t pschd_bd(new SchedEntity_t(*pschd.get()));
+
+			// Set resource binding type and ID in the scheduling entity
+			pschd_bd->SetBindingID(bd_id, bd_type);
+			EvalBinding(pschd_bd, sc_value);
+			pschd_bd->metrics += sc_value;
+
+			// Insert the SchedEntity in the scheduling list
+			sched_ul.lock();
+			entities.push_back(pschd_bd);
+			sched_ul.unlock();
+			logger->Notice("Eval: %s scheduling metrics = %1.4f [%d]",
+					pschd_bd->StrId(), pschd_bd->metrics, entities.size());
 		}
-
-		// Evaluate the AWM resource binding
-		SchedEntityPtr_t pschd_bd(new SchedEntity_t(*pschd.get()));
-		pschd_bd->SetBindingID(bd_id);
-		EvalBinding(pschd_bd, sc_value);
-		pschd_bd->metrics += sc_value;
-
+#else
 		// Insert the SchedEntity in the scheduling list
 		sched_ul.lock();
-		entities.push_back(pschd_bd);
-		sched_ul.unlock();
+		entities.push_back(pschd);
 		logger->Notice("Eval: %s scheduling metrics = %1.4f [%d]",
-				pschd_bd->StrId(), pschd_bd->metrics, entities.size());
-	}
-#else
-	// Insert the SchedEntity in the scheduling list
-	sched_ul.lock();
-	entities.push_back(pschd);
-	logger->Notice("Eval: %s scheduling metrics = %1.4f [%d]",
-			pschd->StrId(), pschd->metrics, entities.size());
+				pschd->StrId(), pschd->metrics, entities.size());
 #endif
+	}
 	YAMS_GET_TIMING(coll_metrics, YAMS_METRICS_COMP_TIME, comp_tmr);
 }
 
 void YamsSchedPol::GetSchedContribValue(
 		SchedEntityPtr_t pschd,
+		ResourceIdentifier::Type_t bd_type,
 		SchedContribManager::Type_t sc_type,
 		float & sc_value) {
 	SchedContribManager::ExitCode_t scm_ret;
@@ -571,8 +660,12 @@ void YamsSchedPol::GetSchedContribValue(
 	Timer comp_tmr;
 	YAMS_RESET_TIMING(comp_tmr);
 
+	if (scms[bd_type] == nullptr)
+		logger->Fatal("SCM for %s is null!",
+				ResourceIdentifier::TypeStr[bd_type]);
+
 	// Compute the single contribution
-	scm_ret = scm->GetIndex(sc_type, eval_ent, sc_value, sc_ret);
+	scm_ret = scms[bd_type]->GetIndex(sc_type, eval_ent, sc_value, sc_ret);
 	if (scm_ret != SchedContribManager::OK) {
 		logger->Error("SchedContrib: [SC manager error:%d]", scm_ret);
 		if (scm_ret != SchedContribManager::SC_ERROR) {
@@ -584,12 +677,12 @@ void YamsSchedPol::GetSchedContribValue(
 		switch (sc_ret) {
 		case SchedContrib::SC_RSRC_NO_PE:
 			logger->Debug("SchedContrib: No available PEs in {%s} %d",
-					bindings.domain.c_str(), pschd->bind_id);
-			bindings.full.Set(pschd->bind_id);
+					bindings[bd_type]->domain.c_str(), pschd->bind_id);
+			bindings[bd_type]->full.Set(pschd->bind_id);
 			return;
 		default:
 			logger->Warn("SchedContrib: Unable to schedule in {%s} %d [err:%d]",
-					bindings.domain.c_str(), pschd->bind_id, sc_ret);
+					bindings[bd_type]->domain.c_str(), pschd->bind_id, sc_ret);
 			YAMS_GET_TIMING(coll_mct_metrics, sc_type, comp_tmr);
 			return;
 		}
@@ -605,8 +698,9 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBinding(
 	float sc_value   = 0.0;
 	uint8_t mlog_len = 0;
 	char mlog[255];
+	Resource::Type_t bd_type = pschd_bd->bind_type;
 	logger->Info("EvalBD: =========== BINDING:'%s' ID[%2d ] ===========",
-			bindings.domain.c_str(), pschd_bd->bind_id);
+			bindings[bd_type]->domain.c_str(), pschd_bd->bind_id);
 
 	// Bind the resources of the AWM to the given binding domain
 	result = BindResources(pschd_bd);
@@ -618,10 +712,10 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBinding(
 	// Aggregate binding-dependent scheduling contributions
 	value = 0.0;
 	for (uint i = YAMS_AWM_SC_COUNT; i < YAMS_SC_COUNT; ++i) {
-		GetSchedContribValue(pschd_bd, sc_types[i], sc_value);
+		GetSchedContribValue(pschd_bd, bd_type, sc_types[i], sc_value);
 		value += sc_value;
 		mlog_len += sprintf(mlog + mlog_len, "%c:%5.4f, ",
-					scm->GetString(sc_types[i])[0],	sc_value);
+					scms[bd_type]->GetString(sc_types[i])[0], sc_value);
 	}
 	mlog[mlog_len-2] = '\0';
 	logger->Info("EvalBD: %s metrics %s -> %5.4f",
@@ -635,25 +729,29 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(SchedEntityPtr_t pschd) {
 	WorkingModeStatusIF::ExitCode_t awm_result;
 	AwmPtr_t & pawm(pschd->pawm);
 	ResID_t & bd_id(pschd->bind_id);
+	Resource::Type_t & bd_type(pschd->bind_type);
 
-	// Binding of the AWM resource into the current cluster.
+	// Binding of the AWM resource into the current binding resource ID.
 	// Since the policy handles more than one binding per AWM the resource
-	// binding is referenced by the ID of the bound resource
-	awm_result = pawm->BindResource(bindings.type, R_ID_ANY, bd_id, bd_id);
+	// binding is referenced by a number.
+	uint16_t refn = ((uint16_t) bd_type)*10 + bd_id;
+	logger->Debug("BindResources: reference number %d", refn);
+	awm_result = pawm->BindResource(bd_type, R_ID_ANY, bd_id, refn);
 
 	// The resource binding should never fail
 	if (awm_result == WorkingModeStatusIF::WM_RSRC_MISS_BIND) {
 		logger->Error("BindResources: AWM{%d} to resource '%s' ID=%d."
 				"Incomplete	resources binding. %d / %d resources bound.",
-				pawm->Id(), bindings.type, bd_id,
+				pawm->Id(), bd_type, bd_id,
 				pawm->GetSchedResourceBinding()->size(),
 				pawm->RecipeResourceUsages().size());
 		assert(awm_result == WorkingModeStatusIF::WM_SUCCESS);
 		return YAMS_ERROR;
 	}
 	logger->Debug("BindResources: AWM{%d} to resource '%s' ID=%d",
-			pawm->Id(), bindings.domain.c_str(), bd_id);
+			pawm->Id(), bindings[bd_type]->domain.c_str(), bd_id);
 
+	pschd->bind_refn = refn;
 	return YAMS_SUCCESS;
 }
 
@@ -717,7 +815,7 @@ void YamsSchedPol::CowsUpdateMeans(int logic_index) {
 void YamsSchedPol::CowsClear() {
 
 	// Clearing the indexes needed to store evaluation results
-	for (int i = 0; i < bindings.num ; i++){
+	for (int i = 0; i < cpu_bindings_num ; i++){
 		cows_info.bd_load[i] = 0;
 		cows_info.bound_mix[i] = 0;
 		cows_info.stalls_metrics[i] = 0;
@@ -777,10 +875,10 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 	float value;
 
 	logger->Info("COWS: ------------ Bound mix computation -------------");
-	logger->Info("COWS: Binding domain(s): %d", bindings.num);
+	logger->Info("COWS: Binding domain(s): %d", cpu_bindings_num);
 
 	// BOUND MIX: compute the delta-variance for each binding domain
-	for (int i = 0; i < bindings.num; i++) {
+	for (int i = 0; i < cpu_bindings_num; i++) {
 
 		// Computing system boundness status 'AS IF' the BD chosen to
 		// contain the application is the current BD.
@@ -842,7 +940,7 @@ void YamsSchedPol::CowsUnitsBalance() {
 	logger->Info("COWS: ---------- Functional units balance ------------");
 
 	// Update system-wide allocated resources amount
-	for (int i = 0; i < bindings.num; i++) {
+	for (int i = 0; i < cpu_bindings_num; i++) {
 		syswide_sums[COWS_STALLS](sum(binding_domains[i].stalls_info));
 		syswide_sums[COWS_IRET  ](sum(binding_domains[i].iret_info));
 		syswide_sums[COWS_FLOPS ](sum(binding_domains[i].flops_info));
@@ -851,26 +949,26 @@ void YamsSchedPol::CowsUnitsBalance() {
 	// For each binding domain, calculate the updated means AS IF
 	// I scheduled the new app there, then calculate the corresponding
 	// standard deviation
-	for (int i = 0; i < bindings.num; i++) {
+	for (int i = 0; i < cpu_bindings_num; i++) {
 		logger->Info("COWS: Computing units balance for BD[%d]...",
 				bindings.ids[i]);
 
 		// Calculating standard deviations (squared). Again, if I'm on
 		// BD i, the mean has changed
-		for (int j = 0; j < bindings.num; j++) {
+		for (int j = 0; j < cpu_bindings_num; j++) {
 
 			float dist_from_avg_stalls =
 					sum(binding_domains[j].stalls_info) -
 					(mean(syswide_sums[COWS_STALLS]) +
-					cows_info.perf_data[COWS_STALLS]/bindings.num);
+					cows_info.perf_data[COWS_STALLS]/cpu_bindings_num);
 				float dist_from_avg_iret =
 					sum(binding_domains[j].iret_info) -
 					(mean(syswide_sums[COWS_IRET]) +
-					cows_info.perf_data[COWS_IRET]/bindings.num);
+					cows_info.perf_data[COWS_IRET]/cpu_bindings_num);
 				float dist_from_avg_flops =
 					sum(binding_domains[j].flops_info) -
 					(mean(syswide_sums[COWS_FLOPS]) +
-					cows_info.perf_data[COWS_FLOPS]/bindings.num);
+					cows_info.perf_data[COWS_FLOPS]/cpu_bindings_num);
 
 			if (j == i) {
 				dist_from_avg_stalls +=
@@ -921,7 +1019,7 @@ void YamsSchedPol::CowsAggregateResults() {
 	// Normalizing
 	logger->Info(" ======================================================"
 			"==================");
-	for (int i = 0; i < bindings.num; i++) {
+	for (int i = 0; i < cpu_bindings_num; i++) {
 		cows_info.stalls_metrics[i] /= cows_info.norm_stats[COWS_STALLS];
 		cows_info.iret_metrics[i]   /= cows_info.norm_stats[COWS_IRET];
 		cows_info.flops_metrics[i]  /= cows_info.norm_stats[COWS_FLOPS];
@@ -947,7 +1045,7 @@ void YamsSchedPol::CowsAggregateResults() {
 			"==================");
 
 	// Order the binding domains for the current <Application, AWM>
-	for (int i = 0; i < bindings.num; i++) {
+	for (int i = 0; i < cpu_bindings_num; i++) {
 		result =
 		// (W1*BOUNDNESS) - [W2*(ST + RET + FLOPS)] + (W3*MIGRATION)
 		    cows_info.m_weights[COWS_BOUND_WEIGHT] * cows_info.bound_mix[i]
