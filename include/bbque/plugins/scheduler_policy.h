@@ -117,6 +117,8 @@ public:
 		AwmPtr_t pawm;
 		/** Candidate cluster for resource binding */
 		ResID_t bind_id;
+		/** Type of resource for the candidate binding */
+		ResourceIdentifier::Type_t bind_type;
 		/**
 		 * A number through which reference the current scheduling binding
 		 * in the set stored in the AWM descriptor */
@@ -140,8 +142,9 @@ public:
 		}
 
 		/** Set the binding ID to track */
-		inline void SetBindingID(ResID_t bid) {
-			bind_id = bid;
+		inline void SetBindingID(ResID_t bid, Resource::Type_t btype) {
+			bind_id   = bid;
+			bind_type = btype;
 			_BuildStr();
 		}
 
