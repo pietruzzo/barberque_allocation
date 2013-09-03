@@ -234,13 +234,17 @@ public:
 	 * @see WorkingModeConfIF
 	 */
 	ExitCode_t BindResource(ResourceIdentifier::Type_t r_type,
-			ResID_t src_ID,	ResID_t dst_ID, uint16_t b_id = 0);
+			ResID_t src_ID,	ResID_t dst_ID, uint16_t b_refn = 0);
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline UsagesMapPtr_t GetSchedResourceBinding(uint16_t b_id = 0) const {
-		return resources.sched_bindings[b_id];
+	inline UsagesMapPtr_t GetSchedResourceBinding(uint16_t b_refn = 0) const {
+		std::map<uint16_t, UsagesMapPtr_t>::const_iterator sched_it;
+		sched_it = resources.sched_bindings.find(b_refn);
+		if (sched_it == resources.sched_bindings.end())
+			return UsagesMapPtr_t();
+		return sched_it->second;
 	}
 
 	/**
@@ -378,7 +382,7 @@ private:
 		 * The temporary map of resource bindings. This is built by the
 		 * BindResource calls
 		 */
-		std::vector<UsagesMapPtr_t> sched_bindings;
+		std::map<uint16_t, UsagesMapPtr_t> sched_bindings;
 		/**
 		 * The map of the resource bindings allocated for the working mode.
 		 * This is set by SetResourceBinding() as a commit of the

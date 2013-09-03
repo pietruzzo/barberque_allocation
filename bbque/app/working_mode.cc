@@ -43,7 +43,6 @@ namespace bbque { namespace app {
 
 WorkingMode::WorkingMode():
 	hidden(false) {
-	resources.sched_bindings.resize(MAX_R_ID_NUM);
 	resources.binding_masks.resize(
 		static_cast<uint16_t>(ResourceIdentifier::TYPE_COUNT));
 	// Set the log string id
@@ -61,7 +60,6 @@ WorkingMode::WorkingMode(uint8_t _id,
 	_value > 0 ? value.recpv = _value : value.recpv = 0;
 
 	// Init the size of the scheduling bindings vector
-	resources.sched_bindings.resize(MAX_R_ID_NUM);
 	resources.binding_masks.resize(ResourceIdentifier::TYPE_COUNT);
 
 	// Get a logger
@@ -161,12 +159,12 @@ WorkingMode::ExitCode_t WorkingMode::BindResource(
 		ResourceIdentifier::Type_t r_type,
 		ResID_t src_ID,
 		ResID_t dst_ID,
-		uint16_t b_id) {
+		uint16_t b_refn) {
 	uint32_t b_count;
 	UsagesMap_t::const_iterator b_it, b_end;
 
 	// Sanity check
-	if (b_id >= MAX_R_ID_NUM)
+	if (b_refn >= MAX_R_ID_NUM)
 		return WM_BIND_ID_OVERFLOW;
 
 	// Allocate a new temporary resource usages map
@@ -179,22 +177,22 @@ WorkingMode::ExitCode_t WorkingMode::BindResource(
 		logger->Warn("%s BindResource: nothing to bind", str_id);
 		return WM_RSRC_MISS_BIND;
 	}
-	logger->Debug("%s BindResource: R{%s} b_id[%d] size:%d count:%d",
+	logger->Debug("%s BindResource: R{%s} b_refn[%d] size:%d count:%d",
 			str_id, ResourceIdentifier::StringFromType(r_type),
-			b_id, bind_pum->size(), b_count);
+			b_refn, bind_pum->size(), b_count);
 
 	// Store the resource binding
-	resources.sched_bindings[b_id] = bind_pum;
+	resources.sched_bindings[b_refn] = bind_pum;
 
 	return WM_SUCCESS;
 }
 
-WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(uint16_t b_id) {
+WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(uint16_t b_refn) {
 	ResourceBitset new_mask, temp_mask;
 	uint8_t r_type;
 
 	// Sanity check
-	if (b_id >= MAX_R_ID_NUM)
+	if (b_refn >= MAX_R_ID_NUM)
 		return WM_BIND_ID_OVERFLOW;
 
 	// Update the resource binding bitmask (for each type)
@@ -204,7 +202,7 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(uint16_t b_id) {
 		// Update the binding mask
 		BindingInfo & r_mask(resources.binding_masks[r_type]);
 		new_mask = ResourceBinder::GetMask(
-				resources.sched_bindings[b_id],
+				resources.sched_bindings[b_refn],
 				static_cast<ResourceIdentifier::Type_t>(r_type));
 		r_mask.prev = r_mask.curr;
 		r_mask.curr = new_mask;
@@ -216,8 +214,8 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(uint16_t b_id) {
 	}
 
 	// Set the new binding / resource usages map
-	resources.sync_bindings = resources.sched_bindings[b_id];
-	resources.sched_bindings[b_id].reset();
+	resources.sync_bindings = resources.sched_bindings[b_refn];
+	resources.sched_bindings[b_refn].reset();
 
 	return WM_SUCCESS;
 }
