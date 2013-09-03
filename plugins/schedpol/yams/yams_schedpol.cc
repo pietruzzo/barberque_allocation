@@ -202,7 +202,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitResourceStateView() {
 	ra_result = ra.GetView(token_path, vtok);
 	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
 		logger->Fatal("Init: Cannot get a resource state view");
-		return YAMS_ERR_VIEW;
+		return YAMS_ERROR_VIEW;
 	}
 	logger->Debug("Init: Resources state view token = %d", vtok);
 
