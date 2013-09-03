@@ -117,6 +117,10 @@ public:
 		AwmPtr_t pawm;
 		/** Candidate cluster for resource binding */
 		ResID_t bind_id;
+		/**
+		 * A number through which reference the current scheduling binding
+		 * in the set stored in the AWM descriptor */
+		uint16_t bind_refn;
 		/** Identifier string */
 		char str_id[40];
 
