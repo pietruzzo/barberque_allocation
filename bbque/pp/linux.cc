@@ -592,8 +592,8 @@ LinuxPP::GetResourceMapping(AppPtr_t papp, UsagesMapPtr_t pum,
 	memset(prlb->mems, 0, 3*MaxMemsCount);
 
 	// Set the amount of CPUs and MEMORY
-	prlb->amount_cpus = ra.GetUsageAmount(pum, Resource::PROC_ELEMENT);
-	prlb->amount_memb = ra.GetUsageAmount(pum, Resource::MEMORY);
+	prlb->amount_cpus = ra.GetUsageAmount(pum, Resource::PROC_ELEMENT, Resource::CPU);
+	prlb->amount_memb = ra.GetUsageAmount(pum, Resource::MEMORY, Resource::CPU);
 
 	// Sockets and nodes
 	socket_ids = papp->NextAWM()->BindingSet(Resource::SYSTEM);
