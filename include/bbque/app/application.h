@@ -339,7 +339,7 @@ public:
 	 * @see ApplicationConfIF
 	 */
 	ExitCode_t ScheduleRequest(AwmPtr_t const & awm, RViewToken_t vtok,
-			uint8_t bid = 0);
+			size_t b_refn = 0);
 
 	/**
 	 * @brief Commit a previously required re-scheduling request

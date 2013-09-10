@@ -68,7 +68,7 @@ public:
 	 */
 	virtual ExitCode_t ScheduleRequest(AwmPtr_t const & awm,
 			bbque::res::RViewToken_t tok,
-			uint8_t bid = 0) = 0;
+			size_t b_refn = 0) = 0;
 
 	/**
 	 * @brief Set the scheduling metrics value
