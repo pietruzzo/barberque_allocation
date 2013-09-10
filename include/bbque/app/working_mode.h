@@ -233,19 +233,17 @@ public:
 	/**
 	 * @see WorkingModeConfIF
 	 */
-	ExitCode_t BindResource(ResourceIdentifier::Type_t r_type,
-			ResID_t src_ID,	ResID_t dst_ID, uint16_t b_refn = 0);
+	size_t BindResource(ResourceIdentifier::Type_t r_type,
+			ResID_t src_ID,	ResID_t dst_ID, size_t b_refn = 0);
+
+	std::string BindingStr(	ResourceIdentifier::Type_t r_type,
+			ResID_t src_ID, ResID_t dst_ID, size_t b_refn);
+
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline UsagesMapPtr_t GetSchedResourceBinding(uint16_t b_refn = 0) const {
-		std::map<uint16_t, UsagesMapPtr_t>::const_iterator sched_it;
-		sched_it = resources.sched_bindings.find(b_refn);
-		if (sched_it == resources.sched_bindings.end())
-			return UsagesMapPtr_t();
-		return sched_it->second;
-	}
+	UsagesMapPtr_t GetSchedResourceBinding(size_t b_refn) const;
 
 	/**
 	 * @brief Set the resource binding to schedule
@@ -263,7 +261,7 @@ public:
 	 *
 	 * @return WM_SUCCESS, or WM_RSRC_MISS_BIND if some bindings are missing
 	 */
-	ExitCode_t SetResourceBinding(uint16_t b_id = 0);
+	ExitCode_t SetResourceBinding(size_t b_refn = 0);
 
 
 	/**
@@ -382,7 +380,7 @@ private:
 		 * The temporary map of resource bindings. This is built by the
 		 * BindResource calls
 		 */
-		std::map<uint16_t, UsagesMapPtr_t> sched_bindings;
+		std::map<size_t, UsagesMapPtr_t> sched_bindings;
 		/**
 		 * The map of the resource bindings allocated for the working mode.
 		 * This is set by SetResourceBinding() as a commit of the

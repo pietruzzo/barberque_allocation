@@ -155,51 +155,87 @@ uint64_t WorkingMode::ResourceUsageAmount(
 	return 0;
 }
 
-WorkingMode::ExitCode_t WorkingMode::BindResource(
+size_t WorkingMode::BindResource(
 		ResourceIdentifier::Type_t r_type,
 		ResID_t src_ID,
 		ResID_t dst_ID,
-		uint16_t b_refn) {
+		size_t b_refn) {
+	UsagesMap_t * src_pum;
 	uint32_t b_count;
-	UsagesMap_t::const_iterator b_it, b_end;
-
-	// Sanity check
-	if (b_refn >= MAX_R_ID_NUM)
-		return WM_BIND_ID_OVERFLOW;
+	size_t n_refn;
+	std::map<size_t, UsagesMapPtr_t>::iterator pum_it;
 
 	// Allocate a new temporary resource usages map
 	UsagesMapPtr_t bind_pum(UsagesMapPtr_t(new UsagesMap_t()));
 
-	// Binding
-	b_count = ResourceBinder::Bind(
-			resources.requested, r_type, src_ID, dst_ID, bind_pum);
-	if (b_count == 0) {
-		logger->Warn("%s BindResource: nothing to bind", str_id);
-		return WM_RSRC_MISS_BIND;
+	if (b_refn == 0) {
+		logger->Debug("[%s] BindResource: binding resources from recipe", str_id);
+		src_pum = &resources.requested;
 	}
-	logger->Debug("%s BindResource: R{%s} b_refn[%d] size:%d count:%d",
-			str_id, ResourceIdentifier::StringFromType(r_type),
-			b_refn, bind_pum->size(), b_count);
+	else {
+		pum_it = resources.sched_bindings.find(b_refn);
+		if (pum_it == resources.sched_bindings.end()) {
+			logger->Error("[%s] BindResource: invalid binding reference [%ld]",
+				str_id, b_refn);
+			return 0;
+		}
+		src_pum = (pum_it->second).get();
+	}
+
+	// Binding
+	b_count = ResourceBinder::Bind(	*src_pum, r_type, src_ID, dst_ID, bind_pum);
+	if (b_count == 0) {
+		logger->Warn("[%s] BindResource: nothing to bind", str_id);
+		return 0;
+	}
 
 	// Store the resource binding
-	resources.sched_bindings[b_refn] = bind_pum;
-
-	return WM_SUCCESS;
+	n_refn = std::hash<std::string>()(BindingStr(r_type, src_ID, dst_ID, b_refn));
+	resources.sched_bindings[n_refn] = bind_pum;
+	logger->Info("[%s] BindResource: R{%s} refn[%ld] size:%d count:%d",
+			str_id, ResourceIdentifier::StringFromType(r_type),
+			n_refn, bind_pum->size(), b_count);
+	return n_refn;
 }
 
-WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(uint16_t b_refn) {
+std::string WorkingMode::BindingStr(
+		ResourceIdentifier::Type_t r_type,
+		ResID_t src_ID,
+		ResID_t dst_ID,
+		size_t b_refn) {
+	char tail_str[40];
+	std::string str(ResourceIdentifier::TypeStr[r_type]);
+	snprintf(tail_str, 40, ",%d,%d,%ld", src_ID, dst_ID, b_refn);
+	str.append(tail_str);
+	logger->Debug("BindingStr: %s", str.c_str());
+	return str;
+}
+
+UsagesMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
+	std::map<size_t, UsagesMapPtr_t>::const_iterator sched_it;
+	sched_it = resources.sched_bindings.find(b_refn);
+	if (sched_it == resources.sched_bindings.end()) {
+		logger->Error("GetSchedResourceBinding: "
+			"invalid reference [%ld]", b_refn);
+		return nullptr;
+	}
+	return sched_it->second;
+}
+
+WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
 	ResourceBitset new_mask, temp_mask;
 	uint8_t r_type;
 
-	// Sanity check
-	if (b_refn >= MAX_R_ID_NUM)
-		return WM_BIND_ID_OVERFLOW;
+	// Set the new binding / resource usages map
+	resources.sync_bindings = GetSchedResourceBinding(b_refn);
+	if (resources.sync_bindings == nullptr) {
+		logger->Error("SetBinding: invalid scheduling binding [%ld]", b_refn);
+		return WM_BIND_FAILED;
+	}
 
 	// Update the resource binding bitmask (for each type)
 	for (r_type = ResourceIdentifier::SYSTEM;
 			r_type < ResourceIdentifier::TYPE_COUNT; ++r_type) {
-
-		// Update the binding mask
 		BindingInfo & r_mask(resources.binding_masks[r_type]);
 		new_mask = ResourceBinder::GetMask(
 				resources.sched_bindings[b_refn],
@@ -213,10 +249,10 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(uint16_t b_refn) {
 				str_id, ResourceIdentifier::TypeStr[r_type], r_mask.changed);
 	}
 
-	// Set the new binding / resource usages map
-	resources.sync_bindings = resources.sched_bindings[b_refn];
-	resources.sched_bindings[b_refn].reset();
+	// Trash all the remaining scheduling bindings
+	resources.sched_bindings.clear();
 
+	logger->Debug("SetBinding: resource binding [%ld] to allocate", b_refn);
 	return WM_SUCCESS;
 }
 

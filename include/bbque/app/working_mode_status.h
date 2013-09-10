@@ -82,7 +82,9 @@ public:
 		/** Missing some resource bindings */
 		WM_RSRC_MISS_BIND,
 		/** Exceeded resource binding ID */
-		WM_BIND_ID_OVERFLOW
+		WM_BIND_ID_OVERFLOW,
+		/** Trying to schedule invalid resource binding */
+		WM_BIND_FAILED
 	};
 
 	/**
@@ -145,7 +147,7 @@ public:
 	 *
 	 * @return A map of Usage objects
 	 */
-	virtual UsagesMapPtr_t GetSchedResourceBinding(uint16_t b_id = 0) const = 0;
+	virtual UsagesMapPtr_t GetSchedResourceBinding(size_t b_id = 0) const = 0;
 
 	/**
 	 * @brief Get the bitmap of the clusters currently used.

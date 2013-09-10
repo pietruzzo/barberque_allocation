@@ -67,8 +67,8 @@ public:
 	 * @note Use R_ID_ANY if you want to bind the resource without care
 	 * about its ID.
 	 */
-	virtual ExitCode_t BindResource(ResourceIdentifier::Type_t r_type,
-			ResID_t src_ID, ResID_t dst_ID, uint16_t b_id = 0) = 0;
+	virtual size_t BindResource(ResourceIdentifier::Type_t r_type,
+			ResID_t src_ID, ResID_t dst_ID, size_t b_refn = 0) = 0;
 
 	/**
 	 * @brief Clear the resource binding to schedule
