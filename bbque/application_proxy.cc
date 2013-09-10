@@ -229,7 +229,10 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(Resource::GPU));
-		syncp_prechange_msg.dev = (uint8_t) gpu_ids.FirstSet();
+		uint8_t ocl_dev = (uint8_t) gpu_ids.FirstSet();
+		if (ocl_dev == 254) ocl_dev = 2;
+		logger->Error("[%s] OCL device = %d", papp->StrId(), ocl_dev);
+		syncp_prechange_msg.dev = ocl_dev;
 #endif
 	}
 
