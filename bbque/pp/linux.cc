@@ -597,7 +597,7 @@ LinuxPP::GetResourceMapping(AppPtr_t papp, UsagesMapPtr_t pum,
 
 	// Sockets and nodes
 	socket_ids = papp->NextAWM()->BindingSet(Resource::SYSTEM);
-	node_ids = papp->NextAWM()->BindingSet(Resource::CPU);
+	node_ids   = papp->NextAWM()->BindingSet(Resource::CPU);
 	prlb->socket_id = log(socket_ids.ToULong()) / log(2);
 	prlb->node_id   = log(node_ids.ToULong())   / log(2);
 	logger->Debug("PLAT LNX: Map resources @ Machine Socket [%d], NUMA Node [%d]",
