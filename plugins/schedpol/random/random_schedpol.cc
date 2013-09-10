@@ -88,13 +88,13 @@ std::mt19937 rng_engine(time(0));
 
 void RandomSchedPol::ScheduleApp(AppCPtr_t papp) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	ba::WorkingMode::ExitCode_t bindResult;
 	ba::AwmPtrList_t::const_iterator it;
 	ba::AwmPtrList_t::const_iterator end;
 	ba::AwmPtrList_t const *awms;
 	uint32_t selected_awm;
 	uint32_t selected_bd;
 	uint8_t bd_count;
+	size_t b_refn;
 
 	assert(papp);
 
@@ -119,8 +119,8 @@ void RandomSchedPol::ScheduleApp(AppCPtr_t papp) {
 	selected_bd = dist(rng_engine) % bd_count;
 	logger->Debug("Scheduling EXC [%s] on binding domain [%d of %d]",
 			papp->StrId(), selected_bd, ra.Total(binding_domain.c_str()));
-	bindResult = (*it)->BindResource(binding_type, R_ID_ANY, selected_bd);
-	if (bindResult != ba::WorkingMode::WM_SUCCESS) {
+	b_refn = (*it)->BindResource(binding_type, R_ID_ANY, selected_bd);
+	if (b_refn == 0) {
 		logger->Error("Resource biding for EXC [%s] FAILED", papp->StrId());
 		return;
 	}

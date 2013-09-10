@@ -122,7 +122,7 @@ public:
 		/**
 		 * A number through which reference the current scheduling binding
 		 * in the set stored in the AWM descriptor */
-		uint16_t bind_refn;
+		size_t bind_refn;
 		/** Identifier string */
 		char str_id[40];
 
@@ -134,8 +134,10 @@ public:
 		/** Build the identifier string */
 		inline void _BuildStr() {
 			if ((bind_id != R_ID_NONE) && (bind_id != R_ID_ANY))
-				snprintf(str_id, 40, "[%s] {AWM:%2d, B:%2d}",
-						papp->StrId(), pawm->Id(), bind_id);
+				snprintf(str_id, 40, "[%s] {AWM:%2d, B:%s%d}",
+						papp->StrId(), pawm->Id(),
+						ResourceIdentifier::TypeStr[bind_type],
+						bind_id);
 			else
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B: -}",
 						papp->StrId(), pawm->Id());

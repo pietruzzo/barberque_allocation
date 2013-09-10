@@ -494,7 +494,7 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::GetContentionLevel(
 		AwmPtr_t const & wm,
 		int cl_id,
 		float & cont_level) {
-	WorkingMode::ExitCode_t wm_result;
+	size_t refn;
 
 	// Safety data check
 	if (!wm) {
@@ -508,16 +508,17 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::GetContentionLevel(
 	// Binding of the resources requested by the working mode into the current
 	// cluster. Note: No multi-cluster allocation supported yet!
 	logger->Debug("Contention level: Binding into cluster %d", cl_id);
-	wm_result = wm->BindResource(Resource::CPU, R_ID_ANY, cl_id, cl_id);
-	if (wm_result == WorkingMode::WM_RSRC_MISS_BIND)
+	refn = wm->BindResource(Resource::CPU, R_ID_ANY, cl_id, cl_id);
+	if (refn == 0)
 		logger->Error("Contention level: {AWM %d} [cluster = %d]"
 				"Incomplete resources binding. %d / %d resources bound.",
-						wm->Id(), cl_id, wm->GetSchedResourceBinding()->size(),
+						wm->Id(), cl_id,
+						wm->GetSchedResourceBinding(refn)->size(),
 						wm->RecipeResourceUsages().size());
 
 	// Contention level
-	return ComputeContentionLevel(papp, wm->GetSchedResourceBinding(),
-			cont_level);
+	return ComputeContentionLevel(
+			papp, wm->GetSchedResourceBinding(refn), cont_level);
 }
 
 
