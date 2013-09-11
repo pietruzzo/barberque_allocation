@@ -320,7 +320,7 @@ private:
 	YamsSchedPol::ExitCode_t LoadBindingConfig();
 
 	/**
-	 * @brief Clear information on scheduling entitties and bindings
+	 * @brief Clear information on scheduling entities and bindings
 	 */
 	void Clear();
 
@@ -397,7 +397,8 @@ private:
 	 */
 	void GetSchedContribValue(SchedEntityPtr_t pschd,
 			ResourceIdentifier::Type_t bd_type,
-			SchedContribManager::Type_t sc_type, float & sc_value);
+			SchedContribManager::Type_t sc_type,
+			float & sc_value);
 
 	/**
 	 * @brief Evaluate an AWM in a specific binding domain

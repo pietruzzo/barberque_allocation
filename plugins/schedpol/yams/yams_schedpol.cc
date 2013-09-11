@@ -26,6 +26,7 @@
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/plugins/logger.h"
+#include "bbque/res/binder.h"
 #include "contrib/sched_contrib_manager.h"
 #include "bbque/utils/attributes_container.h"
 
@@ -183,15 +184,15 @@ YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
 		// Instantiate a scheduling contributions manager per binding domain
 		if (bd_type == Resource::GPU) {
 			scms.insert(SchedContribPair_t(
-						bd_type,
-						new SchedContribManager(
-							sc_gpu, *(bindings[Resource::GPU]), 3)));
+					bd_type,
+					new SchedContribManager(
+						sc_gpu, *(bindings[bd_type]), 3)));
 		}
 		else {
 			scms.insert(SchedContribPair_t(
-						bd_type,
-						new SchedContribManager(
-							sc_types, *(bindings[bd_type]), YAMS_SC_COUNT)));
+					bd_type,
+					new SchedContribManager(
+						sc_types, *(bindings[bd_type]), YAMS_SC_COUNT)));
 		}
 
 		// Next binding domain...
@@ -439,7 +440,7 @@ uint8_t YamsSchedPol::OrderSchedEntities(AppPrio_t prio) {
 		if (CheckSkipConditions(papp))
 			continue;
 
-		// Compute the metrics for each AWM binding resources to cluster 'bd_id'
+		// Compute the metrics for each AWM [and binding option]
 		InsertWorkingModes(papp);
 
 		// Keep track of NAPped Applications/EXC
@@ -576,15 +577,15 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
 	std::map<Resource::Type_t, BindingInfo_t *>::iterator bd_it;
 	std::vector<ResID_t>::reverse_iterator ids_it;
+	float sc_value   = 0.0;
+	uint8_t mlog_len = 0;
 	ResID_t bd_id;
-	float sc_value    = 0.0;
-	uint8_t mlog_len  = 0;
 	char mlog[255];
 	Timer comp_tmr;
 
 	// Skip if the application has been disabled/stopped in the meanwhile
 	if (pschd->papp->Disabled()) {
-		logger->Debug("Eval: %s disabled/stopped during schedule ordering",
+		logger->Debug("EvalAWM: %s disabled/stopped during schedule ordering",
 				pschd->papp->StrId());
 		return;
 	}
@@ -594,8 +595,8 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 
 	// Aggregate binding-independent scheduling contributions
 	for (bd_it = bindings.begin(); bd_it != bindings.end(); ++bd_it) {
-		BindingInfo_t & bd(*(bd_it->second));
 		Resource::Type_t bd_type = bd_it->first;
+		BindingInfo_t & bd(*(bd_it->second));
 
 		// Skipping empty binding domains
 		if (bd.num == 0)
@@ -605,7 +606,8 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 			GetSchedContribValue(pschd, bd_type, sc_types[i], sc_value);
 			pschd->metrics += sc_value;
 			mlog_len += sprintf(mlog + mlog_len, "%c:%5.4f, ",
-						scms[bd_type]->GetString(sc_types[i])[0], sc_value);
+						scms[bd_type]->GetString(
+							sc_types[i])[0], sc_value);
 		}
 		mlog[mlog_len-2] = '\0';
 		logger->Info("EvalAWM: %s metrics %s -> %5.4f",
@@ -641,7 +643,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 		// Insert the SchedEntity in the scheduling list
 		sched_ul.lock();
 		entities.push_back(pschd);
-		logger->Notice("Eval: %s scheduling metrics = %1.4f [%d]",
+		logger->Notice("EvalAWM: %s scheduling metrics = %1.4f [%d]",
 				pschd->StrId(), pschd->metrics, entities.size());
 #endif
 	}
@@ -713,7 +715,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBinding(
 	value = 0.0;
 	for (uint i = YAMS_AWM_SC_COUNT; i < YAMS_SC_COUNT; ++i) {
 		GetSchedContribValue(pschd_bd, bd_type, sc_types[i], sc_value);
-		value += sc_value;
+		value    += sc_value;
 		mlog_len += sprintf(mlog + mlog_len, "%c:%5.4f, ",
 					scms[bd_type]->GetString(sc_types[i])[0], sc_value);
 	}
