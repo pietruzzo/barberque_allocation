@@ -34,7 +34,7 @@
 	if (ev == NULL) ev = &local_event;
 
 #define OCL_PROF_OUTDIR "/tmp"
-#define OCL_NUM_GPU_DEVICES 2
+#define OCL_NUM_DEVICES 3
 
 #ifdef __cplusplus
 extern "C" {

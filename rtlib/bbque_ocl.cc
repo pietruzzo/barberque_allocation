@@ -76,11 +76,6 @@ clGetDeviceIDs(
 	DB2 (fprintf(stderr, FD("Calling clGetDeviceIDs()...\n")));
 	cl_int result;
 
-	if (device_type == CL_DEVICE_TYPE_CPU) {
-		(*num_devices) = 0;
-		return CL_INVALID_DEVICE_TYPE;
-	}
-
 	if (num_devices != NULL) {
 		if (rtlib_ocl.status != RTLIB_EXC_GWM_BLOCKED)
 			(*num_devices) = 1;
@@ -91,10 +86,19 @@ clGetDeviceIDs(
 	if (devices == NULL)
 		return CL_SUCCESS;
 
-	cl_device_id * devs = new cl_device_id[OCL_NUM_GPU_DEVICES];
+	cl_device_id * devs = new cl_device_id[OCL_NUM_DEVICES];
 	result = rtlib_ocl.getDeviceIDs(
-			platform, CL_DEVICE_TYPE_GPU, OCL_NUM_GPU_DEVICES,
+			platform, CL_DEVICE_TYPE_ALL, OCL_NUM_DEVICES,
 			devs, NULL);
+
+	DB (
+	cl_device_type dev_type;
+	char dev_name[1024];
+	for (uint8_t i = 0; i < OCL_NUM_DEVICES; ++i) {
+		clGetDeviceInfo(devs[i], CL_DEVICE_TYPE, sizeof(dev_type), &dev_type, NULL);
+		clGetDeviceInfo(devs[i], CL_DEVICE_NAME, 1024, dev_name, NULL);
+		fprintf(stderr, "OCL: Device type: %d, Name: %s\n", (int) dev_type, dev_name);
+	});
 
 	(*devices) = devs[rtlib_ocl.device_id];
 	DB (fprintf(stderr, FD("OCL: clGetDeviceIDs [BBQ-Device -> %d]\n"),
@@ -162,7 +166,6 @@ clCreateContextFromType(
 		void *user_data,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	device_type = CL_DEVICE_TYPE_GPU;
 	DB2 (fprintf(stderr, FD("Calling clCreateContextFromType()...\n")));
 	return rtlib_ocl.createContextFromType(properties, device_type, (*pfn_notify),
 		user_data, errcode_ret);
@@ -203,7 +206,7 @@ clGetContextInfo(
 	if (param_value == NULL)
 		return CL_SUCCESS;
 
-	cl_device_id devs[OCL_NUM_GPU_DEVICES];
+	cl_device_id devs[OCL_NUM_DEVICES];
 	result = rtlib_ocl.getContextInfo(
 			context, param_name, sizeof(cl_device_id)*2,
 			&devs, NULL);
