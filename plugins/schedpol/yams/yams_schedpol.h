@@ -401,11 +401,43 @@ private:
 			float & sc_value);
 
 	/**
+	 * @brief Evaluate the scheduling bindings for each domain
+	 *
+	 * @param dom_it  Map iterator pointing the binding domain
+	 * @param dom_end End of the binding domain map iterator
+	 * @param last_it Iterator pointing the last binding domain evaluated
+	 * @param pschd_parent SchedEntity_t to fill (in case)
+	 */
+	void EvalDomains(
+			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
+			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
+			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator & last_it);
+
+	/**
+	 * @brief Recursive evaluation of bindings
+	 *
+	 * @param dom_it  Map iterator pointing the binding domain
+	 * @param dom_end End of the binding domain map iterator
+	 * @param next_it Iterator tracking the next binding domain to evaluate
+	 * @param pschd_parent SchedEntity_t to fill (in case)
+	 *
+	 * @return YAMS_IGNORE if a resource binding cannot be performed,
+	 * YAMS_SUCCESS otherwise
+	 */
+	ExitCode_t EvalBindings(
+			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
+			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
+			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator & next_it,
+			SchedEntityPtr_t pschd_parent);
+
+	/**
 	 * @brief Evaluate an AWM in a specific binding domain
 	 *
-	 * @param pschd The scheduling entity to evaluate
+	 * @param pschd  Scheduling entitity to evaluate
+	 * @param b_refn Reference number of a previously bound resource set
+	 * @param value  The value of the scheduling contributions aggregation
 	 */
-	ExitCode_t EvalBinding(SchedEntityPtr_t pschd_bd, float & value);
+	ExitCode_t GetBoundContrib(SchedEntityPtr_t pschd_bd, size_t b_refn, float & value);
 
 	/**
 	 * @brief Bind the resources of the AWM into the given binding domain
@@ -415,7 +447,7 @@ private:
 	 * @return YAMS_SUCCESS for success, YAMS_ERROR if an unexpected error has
 	 * been encountered
 	 */
-	ExitCode_t BindResources(SchedEntityPtr_t pschd);
+	ExitCode_t BindResources(SchedEntityPtr_t pschd, size_t b_refn);
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	void CowsSetup();

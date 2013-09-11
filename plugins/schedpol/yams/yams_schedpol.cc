@@ -525,8 +525,10 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 					Application::SyncStateStr(pschd->papp->SyncState()));
 			continue;
 		}
-		logger->Notice("Selecting: %s SCHEDULED metrics: %.4f",
-				pschd->StrId(), pschd->metrics);
+		logger->Notice("Selecting: %s on [%s] SCHEDULED metrics: %.4f",
+				pschd->StrId(),
+				ResourceIdentifier::TypeStr[pschd->bind_type],
+				pschd->metrics);
 
 		// Set the application value (scheduling metrics)
 		pschd->papp->SetValue(pschd->metrics);
@@ -576,10 +578,11 @@ void YamsSchedPol::InsertWorkingModes(AppCPtr_t const & papp) {
 void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
 	std::map<Resource::Type_t, BindingInfo_t *>::iterator bd_it;
+	std::map<Resource::Type_t, SchedEntityPtr_t> pschd_map;
+	std::map<Resource::Type_t, SchedEntityPtr_t>::iterator next_it;
 	std::vector<ResID_t>::reverse_iterator ids_it;
 	float sc_value   = 0.0;
 	uint8_t mlog_len = 0;
-	ResID_t bd_id;
 	char mlog[255];
 	Timer comp_tmr;
 
@@ -597,57 +600,145 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	for (bd_it = bindings.begin(); bd_it != bindings.end(); ++bd_it) {
 		Resource::Type_t bd_type = bd_it->first;
 		BindingInfo_t & bd(*(bd_it->second));
+		ResourceBitset r_mask;
 
 		// Skipping empty binding domains
-		if (bd.num == 0)
+		r_mask = ResourceBinder::GetMask(pschd->pawm->RecipeResourceUsages(), bd_type);
+		if ((bd.num == 0) || (r_mask.Count() == 0))
 			continue;
 
+		// Cumulate the scheduling contributions in the SchedEntity object
+		SchedEntityPtr_t pschd_domain(new SchedEntity_t(*pschd.get()));
+		pschd_domain->bind_type = bd_type;
 		for (uint i = 0; i < YAMS_AWM_SC_COUNT; ++i) {
-			GetSchedContribValue(pschd, bd_type, sc_types[i], sc_value);
-			pschd->metrics += sc_value;
+			GetSchedContribValue(pschd_domain, bd_type, sc_types[i], sc_value);
+			pschd_domain->metrics += sc_value;
 			mlog_len += sprintf(mlog + mlog_len, "%c:%5.4f, ",
 						scms[bd_type]->GetString(
 							sc_types[i])[0], sc_value);
 		}
 		mlog[mlog_len-2] = '\0';
 		logger->Info("EvalAWM: %s metrics %s -> %5.4f",
-				pschd->StrId(),	mlog, pschd->metrics);
+				pschd_domain->StrId(), mlog,
+				pschd_domain->metrics);
+		// Base evaluation (without bound resources)
+		pschd_map[bd_type] = pschd_domain;
 
-#ifndef CONFIG_BBQUE_SP_COWS_BINDING
-		// Add binding-dependent scheduling contributions
-		ids_it = bd.ids.rbegin();
-		for (; ids_it != bd.ids.rend(); ++ids_it) {
-			bd_id = *ids_it;
-			if (bd.full[bd_id]) {
-				logger->Info("Eval: domain [%s%d] is full, skipping...",
-						bd.domain.c_str(), bd_id);
-				continue;
-			}
-
-			// Evaluate the AWM resource binding
-			SchedEntityPtr_t pschd_bd(new SchedEntity_t(*pschd.get()));
-
-			// Set resource binding type and ID in the scheduling entity
-			pschd_bd->SetBindingID(bd_id, bd_type);
-			EvalBinding(pschd_bd, sc_value);
-			pschd_bd->metrics += sc_value;
-
-			// Insert the SchedEntity in the scheduling list
-			sched_ul.lock();
-			entities.push_back(pschd_bd);
-			sched_ul.unlock();
-			logger->Notice("Eval: %s scheduling metrics = %1.4f [%d]",
-					pschd_bd->StrId(), pschd_bd->metrics, entities.size());
-		}
-#else
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
 		// Insert the SchedEntity in the scheduling list
 		sched_ul.lock();
 		entities.push_back(pschd);
+		sched_ul.unlock();
 		logger->Notice("EvalAWM: %s scheduling metrics = %1.4f [%d]",
 				pschd->StrId(), pschd->metrics, entities.size());
-#endif
 	}
+#else
+	}
+
+	// Evaluate the AWM on bound resources
+	EvalDomains(pschd_map.begin(), pschd_map.end(), next_it);
 	YAMS_GET_TIMING(coll_metrics, YAMS_METRICS_COMP_TIME, comp_tmr);
+#endif
+}
+
+void YamsSchedPol::EvalDomains(
+		std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
+		std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
+		std::map<Resource::Type_t, SchedEntityPtr_t>::iterator & last_it) {
+	ExitCode_t result;
+
+	while (1) {
+		// Current binding domain: evaluate IDs
+		result = EvalBindings(dom_it, dom_end, last_it, nullptr);
+		if (result == YAMS_SUCCESS)
+			break;
+		// Next binding domain
+		if (last_it != dom_end)
+			++dom_it;
+	}
+}
+
+YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
+		std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
+		std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
+		std::map<Resource::Type_t, SchedEntityPtr_t>::iterator & next_it,
+		SchedEntityPtr_t pschd_parent) {
+	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
+	std::map<Resource::Type_t, BindingInfo_t *>::iterator bd_it;
+	std::vector<ResID_t>::reverse_iterator ids_it;
+	Resource::Type_t bd_type(dom_it->first);
+	SchedEntityPtr_t pschd_domain(dom_it->second);
+	float  sc_value  = 0.0;
+	float  base_metr = 0.0;
+	size_t base_refn = 0;
+	ResID_t bd_id;
+	ExitCode_t result;
+
+	// Get the BindingInfo of the given resource binding type
+	bd_it = bindings.find(bd_type);
+	if (bd_it == bindings.end()) {
+		logger->Fatal("EvalBindings: Unexpected binding type");
+		return YAMS_ERROR;
+	}
+	BindingInfo_t bd = *(bd_it->second);
+	logger->Debug("EvalBindings: [%s] base (AWM) metrics %1.4f",
+			ResourceIdentifier::TypeStr[bd_type],
+			pschd_domain->metrics);
+
+	// Multiple bindings: cumulate metrics and keep track of the binding reference
+	if (pschd_parent != nullptr) {
+		base_refn = pschd_parent->bind_refn;
+		base_metr = pschd_parent->metrics;
+	}
+
+	// Binding IDs
+	for (ids_it = bd.ids.rbegin(); ids_it != bd.ids.rend(); ++ids_it) {
+		next_it = dom_it;
+		bd_id   = *ids_it;
+		logger->Debug("EvalBindings: [%s] ID = %d",
+			ResourceIdentifier::TypeStr[bd_type], bd_id);
+
+		// Check resource availability
+		if (bd.full[bd_id]) {
+			logger->Info("EvalBindings: [%s%d] is full, skipping...",
+				bd.domain.c_str(), bd_id);
+			continue;
+		}
+
+		// Get the scheduling contributions for <AWM, Binding (ID)>
+		SchedEntityPtr_t pschd_bound(
+				new SchedEntity_t(*pschd_domain.get()));
+		pschd_bound->SetBindingID(bd_id, bd_type);
+		result = GetBoundContrib(pschd_bound, base_refn, sc_value);
+		if (result != YAMS_SUCCESS) {
+			logger->Debug("EvalBindings: nothing to bind to [%s]",
+				ResourceIdentifier::TypeStr[bd_type]);
+			return YAMS_IGNORE;
+		}
+
+		// Update the metrics value
+		pschd_bound->metrics =
+			(pschd_bound->metrics + (base_metr + sc_value)) / 2.0;
+
+		// Next binding domain? Go recursively
+		if (++next_it != dom_end) {
+			logger->Debug("EvalBindings: next domain is [%s]",
+				ResourceIdentifier::TypeStr[next_it->first]);
+			EvalBindings(next_it, dom_end, next_it, pschd_bound);
+		}
+		else {
+			// Insert the SchedEntity in the scheduling list
+			sched_ul.lock();
+			entities.push_back(pschd_bound);
+			sched_ul.unlock();
+			logger->Notice("EvalBindings: %s scheduling metrics = %1.4f [%d]",
+					pschd_bound->StrId(),
+					pschd_bound->metrics, entities.size());
+		}
+	}
+	logger->Debug("EvalBindings: [%s] - DONE -",
+			ResourceIdentifier::TypeStr[dom_it->first]);
+	return YAMS_SUCCESS;
 }
 
 void YamsSchedPol::GetSchedContribValue(
@@ -660,16 +751,18 @@ void YamsSchedPol::GetSchedContribValue(
 	EvalEntity_t const & eval_ent(*pschd.get());
 	sc_value = 0.0;
 	Timer comp_tmr;
-	YAMS_RESET_TIMING(comp_tmr);
 
-	if (scms[bd_type] == nullptr)
-		logger->Fatal("SCM for %s is null!",
+	if (scms[bd_type] == nullptr) {
+		logger->Debug("SchedContrib: Missing resource binding [%s]",
 				ResourceIdentifier::TypeStr[bd_type]);
+		return;
+	}
 
 	// Compute the single contribution
+	YAMS_RESET_TIMING(comp_tmr);
 	scm_ret = scms[bd_type]->GetIndex(sc_type, eval_ent, sc_value, sc_ret);
 	if (scm_ret != SchedContribManager::OK) {
-		logger->Error("SchedContrib: [SC manager error:%d]", scm_ret);
+		logger->Warn("SchedContrib: return code %d", scm_ret);
 		if (scm_ret != SchedContribManager::SC_ERROR) {
 			YAMS_RESET_TIMING(comp_tmr);
 			return;
@@ -693,21 +786,21 @@ void YamsSchedPol::GetSchedContribValue(
 	logger->Debug("SchedContrib: back from index computation");
 }
 
-YamsSchedPol::ExitCode_t YamsSchedPol::EvalBinding(
+YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
 		SchedEntityPtr_t pschd_bd,
+		size_t b_refn,
 		float & value) {
 	ExitCode_t result;
 	float sc_value   = 0.0;
 	uint8_t mlog_len = 0;
 	char mlog[255];
 	Resource::Type_t bd_type = pschd_bd->bind_type;
-	logger->Info("EvalBD: =========== BINDING:'%s' ID[%2d ] ===========",
+	logger->Info("GetBoundContrib: =========== BINDING:'%s' ID[%2d ] ===========",
 			bindings[bd_type]->domain.c_str(), pschd_bd->bind_id);
 
 	// Bind the resources of the AWM to the given binding domain
-	result = BindResources(pschd_bd);
+	result = BindResources(pschd_bd, b_refn);
 	if (result != YAMS_SUCCESS) {
-		logger->Error("EvalBD: Resource binding failed [%d]", result);
 		return result;
 	}
 
@@ -720,40 +813,39 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBinding(
 					scms[bd_type]->GetString(sc_types[i])[0], sc_value);
 	}
 	mlog[mlog_len-2] = '\0';
-	logger->Info("EvalBD: %s metrics %s -> %5.4f",
+	logger->Info("GetBoundContrib: %s metrics %s -> %5.4f",
 			pschd_bd->StrId(), mlog, value);
-	logger->Info("EvalBD: ================================================= ");
+	logger->Info("GetBoundContrib: ================================================= ");
 
 	return YAMS_SUCCESS;
 }
 
-YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(SchedEntityPtr_t pschd) {
-	WorkingModeStatusIF::ExitCode_t awm_result;
+YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
+		SchedEntityPtr_t pschd,
+		size_t b_refn) {
 	AwmPtr_t & pawm(pschd->pawm);
 	ResID_t & bd_id(pschd->bind_id);
 	Resource::Type_t & bd_type(pschd->bind_type);
+	size_t r_refn;
 
 	// Binding of the AWM resource into the current binding resource ID.
 	// Since the policy handles more than one binding per AWM the resource
 	// binding is referenced by a number.
-	uint16_t refn = ((uint16_t) bd_type)*10 + bd_id;
-	logger->Debug("BindResources: reference number %d", refn);
-	awm_result = pawm->BindResource(bd_type, R_ID_ANY, bd_id, refn);
+	r_refn = pawm->BindResource(bd_type, R_ID_ANY, bd_id, b_refn);
+	logger->Debug("BindResources: reference number %ld", r_refn);
 
 	// The resource binding should never fail
-	if (awm_result == WorkingModeStatusIF::WM_RSRC_MISS_BIND) {
-		logger->Error("BindResources: AWM{%d} to resource '%s' ID=%d."
-				"Incomplete	resources binding. %d / %d resources bound.",
-				pawm->Id(), bd_type, bd_id,
-				pawm->GetSchedResourceBinding()->size(),
-				pawm->RecipeResourceUsages().size());
-		assert(awm_result == WorkingModeStatusIF::WM_SUCCESS);
+	if (r_refn == 0) {
+		logger->Warn("BindResources: AWM{%d} on '%s%d' failed",
+			pawm->Id(), ResourceIdentifier::TypeStr[bd_type], bd_id);
 		return YAMS_ERROR;
 	}
-	logger->Debug("BindResources: AWM{%d} to resource '%s' ID=%d",
-			pawm->Id(), bindings[bd_type]->domain.c_str(), bd_id);
 
-	pschd->bind_refn = refn;
+	pschd->bind_refn = r_refn;
+	logger->Info("BindResources: AWM{%d} to resource '%s' ID=%d [%ld]",
+			pawm->Id(), bindings[bd_type]->domain.c_str(),
+			bd_id, pschd->bind_refn);
+
 	return YAMS_SUCCESS;
 }
 
