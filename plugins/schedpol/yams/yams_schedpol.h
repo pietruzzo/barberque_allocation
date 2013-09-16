@@ -67,12 +67,17 @@
 #define COWS_NORMAL_VALUES  (COWS_RECIPE_METRICS + COWS_ADDITIONAL_METRICS)
 #define COWS_AGGREGATION_WEIGHTS 3
 #define COWS_TOTAL_WEIGHT_SUM 10.0
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/count.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+using namespace boost::accumulators;
 #endif
 
 using bbque::res::RViewToken_t;
 using bbque::utils::Timer;
 using bbque::utils::MetricsCollector;
-
 
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
@@ -171,10 +176,10 @@ private:
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	enum CowsMetrics_t {
-		COWS_LLCM,
 		COWS_STALLS,
 		COWS_IRET,
 		COWS_FLOPS,
+		COWS_LLCM,
 		COWS_MIGRA
 	};
 
@@ -232,13 +237,6 @@ private:
 
 	/**Cows metrics*/
 	struct cowsSystemInfo{
-		/** Total value and squared value of boundness for each BD */
-		std::vector<float> boundnessSquaredSum;
-		std::vector<float> boundnessSum;
-		/**Total stalls, retired instr. and flops for each BD */
-		std::vector<float> stallsSum;
-		std::vector<float> iretSum;
-		std::vector<float> flopSum;
 		/**Applications scheduled on each BD and on the whole system */
 		std::vector<int> bd_load;
 		int bdTotalLoad;
@@ -247,8 +245,6 @@ private:
 		std::multimap<float,int> orderedBDs;
 		/*statistic info used to normalize the metrics */
 		std::vector<float> normStats;
-		/*Total metrics allocated on the system during AWM analysis */
-		std::vector<float> modifiedSums;
 		/* Metrics container per BD */
 		std::vector<double> bound_mix;
 		std::vector<float> stallsMetrics;
@@ -258,6 +254,21 @@ private:
 		/* Weights used to compute metrics */
 		std::vector<float> m_weights;
 	} cowsInfo;
+
+	typedef accumulator_set<float, stats<tag::sum, tag::variance>> mvMetrics_t;
+	typedef accumulator_set<float, stats<tag::mean>> sysWideMetrics_t;
+
+	struct cowsBindingInfo{
+		mvMetrics_t boundness_info;
+		mvMetrics_t stalls_info;
+		mvMetrics_t iret_info;
+		mvMetrics_t flops_info;
+	};
+	std::vector<cowsBindingInfo> bindingDomains;
+	std::vector<cowsBindingInfo> speculativeDomains;
+	std::vector<cowsBindingInfo> emptyDomains;
+	std::vector<sysWideMetrics_t> sysWideSums;
+	std::vector<sysWideMetrics_t> sysWideReset;
 
 #endif
 

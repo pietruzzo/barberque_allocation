@@ -227,11 +227,6 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	// COWS: Vectors resizing depending on the number of binding domains
-	cowsInfo.boundnessSquaredSum.resize(bindings.num);
-	cowsInfo.boundnessSum.resize(bindings.num);
-	cowsInfo.stallsSum.resize(bindings.num);
-	cowsInfo.iretSum.resize(bindings.num);
-	cowsInfo.flopSum.resize(bindings.num);
 	cowsInfo.bd_load.resize(bindings.num);
 	cowsInfo.bound_mix.resize(bindings.num);
 	cowsInfo.stallsMetrics.resize(bindings.num);
@@ -240,7 +235,17 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	cowsInfo.migrMetrics.resize(bindings.num);
 	cowsInfo.perf_data.resize(COWS_RECIPE_METRICS);
 	cowsInfo.normStats.resize(COWS_NORMAL_VALUES);
-	cowsInfo.modifiedSums.resize(COWS_UNITS_METRICS);
+	// Accumulators resizing, depending on the number of BDs
+	// The real accumulators set
+	bindingDomains.resize(bindings.num);
+	// A set needed to simulate system changes
+	speculativeDomains.resize(bindings.num);
+	// A set needed to reset the original one
+	emptyDomains.resize(bindings.num);
+	// Accumulator for sys-wide sums information
+	sysWideReset.resize(COWS_UNITS_METRICS);
+	// A set needed to reset the original one
+	sysWideReset.resize(COWS_UNITS_METRICS);
 
 	// COWS: Reset the counters
 	CowsClear();
@@ -685,22 +690,24 @@ void YamsSchedPol::CowsUpdateMeans(int logic_index) {
 	cowsInfo.bdTotalLoad++;
 
 	// Applying the candidate SchedEnt statistics
-	cowsInfo.boundnessSquaredSum[logic_index] +=
-		pow(cowsInfo.perf_data[0], 2);
-	cowsInfo.boundnessSum[logic_index] += cowsInfo.perf_data[COWS_LLCM];
-	cowsInfo.stallsSum[logic_index] += cowsInfo.perf_data[COWS_STALLS];
-	cowsInfo.iretSum[logic_index]  += cowsInfo.perf_data[COWS_IRET];
-	cowsInfo.flopSum[logic_index]  += cowsInfo.perf_data[COWS_FLOPS];
+	// Updating Last Level Cache Misses accumulator for the chosen BD
+	bindingDomains[logic_index].
+		boundness_info(cowsInfo.perf_data[COWS_LLCM]);
+	// Updating Stalls accumulator for the chosen BD
+	bindingDomains[logic_index].
+		stalls_info(cowsInfo.perf_data[COWS_STALLS]);
+	// Updating Retired Instructions accumulator for the chosen BD
+	bindingDomains[logic_index].
+		iret_info(cowsInfo.perf_data[COWS_IRET]);
+	// Updating Floating Operations accumulator for the chosen BD
+	bindingDomains[logic_index].
+		flops_info(cowsInfo.perf_data[COWS_FLOPS]);
 }
 
 void YamsSchedPol::CowsClear() {
 
+	// Clearing the indexes needed to store evaluation results
 	for (int i = 0; i < bindings.num ; i++){
-		cowsInfo.boundnessSquaredSum[i] = 0;
-		cowsInfo.boundnessSum[i] = 0;
-		cowsInfo.stallsSum[i] = 0;
-		cowsInfo.iretSum[i] = 0;
-		cowsInfo.flopSum[i] = 0;
 		cowsInfo.bd_load[i] = 0;
 		cowsInfo.bound_mix[i] = 0;
 		cowsInfo.stallsMetrics[i] = 0;
@@ -709,10 +716,15 @@ void YamsSchedPol::CowsClear() {
 		cowsInfo.flopsMetrics[i] = 0;
 	}
 
+	// Clearing my accumulators
+	bindingDomains = emptyDomains;
+	speculativeDomains = emptyDomains;
+
+	// Clearing the indexes needed to normalize evaluation results
 	for (int i = 0; i < COWS_NORMAL_VALUES; i++)
 		cowsInfo.normStats[i] = 0;
-	for (int i = 0; i < COWS_UNITS_METRICS; i++)
-		cowsInfo.modifiedSums[i] = 0;
+	// Clearing system-wide data
+	sysWideSums = sysWideReset;
 	cowsInfo.bdTotalLoad = 0;
 }
 
@@ -729,14 +741,8 @@ void YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
 	df = atoi(std::static_pointer_cast<PluginAttr_t>
 			(pschd->pawm->GetAttribute("cows", "flops"))->str.c_str());
 
-	// Updating system-wide means. The indexes are shifted by one
-	// because modifiedSums vector doesn't need the first metric
-	// (aka COWS_LLCM)
-	cowsInfo.modifiedSums[COWS_STALLS - 1] += ds;
-	cowsInfo.modifiedSums[COWS_IRET   - 1] += dr;
-	cowsInfo.modifiedSums[COWS_FLOPS  - 1] += df;
-
-	// Setting info for future system update
+	// Setting info for future system update. 'perf_data' will be used
+	// from now on to store the current application statistics
 	cowsInfo.perf_data[COWS_LLCM]   = db;
 	cowsInfo.perf_data[COWS_STALLS] = ds;
 	cowsInfo.perf_data[COWS_IRET]   = dr;
@@ -752,22 +758,22 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 
 	// BOUND MIX: compute the delta-variance for each binding domain
 	for (int i = 0; i < bindings.num; i++) {
+
+		// Computing system boundness status 'AS IF' the BD chosen to
+		// contain the application is the current BD.
+		// Thus, speculativeDomains accumulators are to be exploited.
+		speculativeDomains = bindingDomains;
+		speculativeDomains[i].boundness_info(cowsInfo.perf_data[COWS_LLCM]);
+
+		// Resetting the bound mix variable, which will contain the
+		// boundness scores for each BD.
 		cowsInfo.bound_mix[i] = 0;
 
 		if (cowsInfo.bd_load[i] != 0) {
-			// E(X'^2) - E^2(X') - E(X^2) + E^2(X)
+			// bound mix = variance (new case) - variance (current case)
 			cowsInfo.bound_mix[i] =
-				(cowsInfo.boundnessSquaredSum[i]
-				+ pow(
-				cowsInfo.perf_data[COWS_LLCM], 2))
-				/ (cowsInfo.bd_load[i] + 1)
-				- pow((cowsInfo.boundnessSum[i]
-				+ cowsInfo.perf_data[COWS_LLCM])
-				/ (cowsInfo.bd_load[i] + 1), 2)
-				- (cowsInfo.boundnessSquaredSum[i])
-				/ (cowsInfo.bd_load[i])
-				+ pow((cowsInfo.boundnessSum[i])
-				/ (cowsInfo.bd_load[i]), 2);
+				variance(speculativeDomains[i].boundness_info) -
+				variance(bindingDomains[i].boundness_info);
 
 			// Only positive contributions are used to normalize
 			if (cowsInfo.bound_mix[i] > 0)
@@ -780,11 +786,6 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 
 		logger->Notice("COWS: Bound mix @BD[%d] for %s: %3.2f",
 				bindings.ids[i], pschd->StrId(), cowsInfo.bound_mix[i]);
-
-		// Pre-fetching units load per binding domain
-		cowsInfo.modifiedSums[COWS_STALLS - 1] += cowsInfo.stallsSum[i];
-		cowsInfo.modifiedSums[COWS_IRET   - 1] += cowsInfo.iretSum[i];
-		cowsInfo.modifiedSums[COWS_FLOPS  - 1] += cowsInfo.flopSum[i];
 
 		// Set the binding ID
 		pschd->SetBindingID(bindings.ids[i]);
@@ -808,10 +809,12 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 void YamsSchedPol::CowsUnitsBalance() {
 	logger->Info("COWS: ---------- Functional units balance ------------");
 
-	// Update system mean: sumOf(BDmeans)/numberOfBDs
-	cowsInfo.modifiedSums[COWS_STALLS - 1] /= bindings.num;
-	cowsInfo.modifiedSums[COWS_IRET   - 1] /= bindings.num;
-	cowsInfo.modifiedSums[COWS_FLOPS  - 1] /= bindings.num;
+	// Update system-wide allocated resources amount
+	for (int i = 0; i < bindings.num; i++) {
+		sysWideSums[COWS_STALLS](sum(bindingDomains[i].stalls_info));
+		sysWideSums[COWS_IRET  ](sum(bindingDomains[i].iret_info));
+		sysWideSums[COWS_FLOPS ](sum(bindingDomains[i].flops_info));
+	}
 
 	// For each binding domain, calculate the updated means AS IF
 	// I scheduled the new app there, then calculate the corresponding
@@ -823,30 +826,37 @@ void YamsSchedPol::CowsUnitsBalance() {
 		// Calculating standard deviations (squared). Again, if I'm on
 		// BD i, the mean has changed
 		for (int j = 0; j < bindings.num; j++) {
+
+			float distFromStallsMean =
+					sum(bindingDomains[j].stalls_info) -
+					(mean(sysWideSums[COWS_STALLS]) +
+					cowsInfo.perf_data[COWS_STALLS]/bindings.num);
+				float distFromIretMean =
+					sum(bindingDomains[j].iret_info) -
+					(mean(sysWideSums[COWS_IRET]) +
+					cowsInfo.perf_data[COWS_IRET]/bindings.num);
+				float distFromFlopsMean =
+					sum(bindingDomains[j].flops_info) -
+					(mean(sysWideSums[COWS_FLOPS]) +
+					cowsInfo.perf_data[COWS_FLOPS]/bindings.num);
+
 			if (j == i) {
-				cowsInfo.stallsMetrics[i] +=
-					pow(((cowsInfo.stallsSum[j]
-					+ cowsInfo.perf_data[1]))
-					- (cowsInfo.modifiedSums[0]),2);
-				cowsInfo.iretMetrics[i] +=
-					pow(((cowsInfo.iretSum[j]
-					+ cowsInfo.perf_data[2]))
-					- (cowsInfo.modifiedSums[1]),2);
-				cowsInfo.flopsMetrics[i] +=
-					pow(((cowsInfo.flopSum[j]
-					+ cowsInfo.perf_data[3]))
-					- (cowsInfo.modifiedSums[2]),2);
+				distFromStallsMean +=
+					cowsInfo.perf_data[COWS_STALLS];
+				distFromIretMean +=
+					cowsInfo.perf_data[COWS_IRET];
+				distFromFlopsMean +=
+					cowsInfo.perf_data[COWS_FLOPS];
+
+				cowsInfo.stallsMetrics[i] += pow(distFromStallsMean, 2);
+				cowsInfo.iretMetrics[i] += pow(distFromIretMean, 2);
+				cowsInfo.flopsMetrics[i] += pow(distFromFlopsMean, 2);
 			}
 			else if (cowsInfo.bd_load[j] != 0) {
-				cowsInfo.stallsMetrics[i] +=
-					pow(((cowsInfo.stallsSum[j]))
-					- (cowsInfo.modifiedSums[0]),2);
-				cowsInfo.iretMetrics[i] +=
-					pow(((cowsInfo.iretSum[j]))
-					- (cowsInfo.modifiedSums[1]),2);
-				cowsInfo.flopsMetrics[i] +=
-					pow(((cowsInfo.flopSum[j]))
-					- (cowsInfo.modifiedSums[2]),2);
+
+				cowsInfo.stallsMetrics[i] += pow(distFromStallsMean, 2);
+				cowsInfo.iretMetrics[i] += pow(distFromIretMean, 2);
+				cowsInfo.flopsMetrics[i] += pow(distFromFlopsMean, 2);
 			}
 		}
 
