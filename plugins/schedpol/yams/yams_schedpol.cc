@@ -692,7 +692,7 @@ void YamsSchedPol::CowsUpdateMeans(int logic_index) {
 	// Applying the candidate SchedEnt statistics
 	// Updating Last Level Cache Misses accumulator for the chosen BD
 	binding_domains[logic_index].
-		boundness_info(cows_info.perf_data[COWS_LLCM]);
+		llcm_info(cows_info.perf_data[COWS_LLCM]);
 	// Updating Stalls accumulator for the chosen BD
 	binding_domains[logic_index].
 		stalls_info(cows_info.perf_data[COWS_STALLS]);
@@ -763,7 +763,7 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 		// contain the application is the current BD.
 		// Thus, speculativeDomains accumulators are to be exploited.
 		binding_speculative = binding_domains;
-		binding_speculative[i].boundness_info
+		binding_speculative[i].llcm_info
 			(cows_info.perf_data[COWS_LLCM]);
 
 		// Resetting the bound mix variable, which will contain the
@@ -773,8 +773,8 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 		if (cows_info.bd_load[i] != 0) {
 			// bound mix = variance (new case) - variance (current case)
 			cows_info.bound_mix[i] =
-				variance(binding_speculative[i].boundness_info) -
-				variance(binding_domains[i].boundness_info);
+				variance(binding_speculative[i].llcm_info) -
+				variance(binding_domains[i].llcm_info);
 
 			// Only positive contributions are used to normalize
 			if (cows_info.bound_mix[i] > 0)

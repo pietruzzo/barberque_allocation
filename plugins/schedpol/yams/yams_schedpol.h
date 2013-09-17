@@ -259,7 +259,7 @@ private:
 	typedef accumulator_set<float, stats<tag::sum, tag::variance>> mv_metrics_t;
 	typedef accumulator_set<float, stats<tag::mean>> syswide_metrics_t;
 	struct cows_binding_info{
-		mv_metrics_t boundness_info;
+		mv_metrics_t llcm_info;
 		mv_metrics_t stalls_info;
 		mv_metrics_t iret_info;
 		mv_metrics_t flops_info;
