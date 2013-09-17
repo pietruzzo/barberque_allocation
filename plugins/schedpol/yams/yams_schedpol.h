@@ -236,39 +236,39 @@ private:
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 
 	/**Cows metrics*/
-	struct cowsSystemInfo{
+	struct cows_system_info{
 		/**Applications scheduled on each BD and on the whole system */
 		std::vector<int> bd_load;
-		int bdTotalLoad;
+		int bd_total_load;
 		/*Metrics of the SchedEnt under analysis */
 		std::vector<float> perf_data;
-		std::multimap<float,int> orderedBDs;
+		std::multimap<float,int> ordered_bds;
 		/*statistic info used to normalize the metrics */
-		std::vector<float> normStats;
+		std::vector<float> norm_stats;
 		/* Metrics container per BD */
 		std::vector<double> bound_mix;
-		std::vector<float> stallsMetrics;
-		std::vector<float> iretMetrics;
-		std::vector<float> flopsMetrics;
-		std::vector<float> migrMetrics;
+		std::vector<float> stalls_metrics;
+		std::vector<float> iret_metrics;
+		std::vector<float> flops_metrics;
+		std::vector<float> migr_metrics;
 		/* Weights used to compute metrics */
 		std::vector<float> m_weights;
-	} cowsInfo;
 
-	typedef accumulator_set<float, stats<tag::sum, tag::variance>> mvMetrics_t;
-	typedef accumulator_set<float, stats<tag::mean>> sysWideMetrics_t;
+	} cows_info;
 
-	struct cowsBindingInfo{
-		mvMetrics_t boundness_info;
-		mvMetrics_t stalls_info;
-		mvMetrics_t iret_info;
-		mvMetrics_t flops_info;
+	typedef accumulator_set<float, stats<tag::sum, tag::variance>> mv_metrics_t;
+	typedef accumulator_set<float, stats<tag::mean>> syswide_metrics_t;
+	struct cows_binding_info{
+		mv_metrics_t boundness_info;
+		mv_metrics_t stalls_info;
+		mv_metrics_t iret_info;
+		mv_metrics_t flops_info;
 	};
-	std::vector<cowsBindingInfo> bindingDomains;
-	std::vector<cowsBindingInfo> speculativeDomains;
-	std::vector<cowsBindingInfo> emptyDomains;
-	std::vector<sysWideMetrics_t> sysWideSums;
-	std::vector<sysWideMetrics_t> sysWideReset;
+	std::vector<cows_binding_info> binding_domains;
+	std::vector<cows_binding_info> binding_speculative;
+	std::vector<cows_binding_info> binding_empty;
+	std::vector<syswide_metrics_t> syswide_sums;
+	std::vector<syswide_metrics_t> syswide_empty;
 
 #endif
 

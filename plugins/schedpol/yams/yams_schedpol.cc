@@ -138,10 +138,10 @@ YamsSchedPol::YamsSchedPol():
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	//COWS: initialize the weights to be changed af runtime through commands
-	cowsInfo.m_weights.resize(COWS_AGGREGATION_WEIGHTS);
+	cows_info.m_weights.resize(COWS_AGGREGATION_WEIGHTS);
 	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i ++)
-		cowsInfo.m_weights[i] = COWS_TOTAL_WEIGHT_SUM
-			/ cowsInfo.m_weights.size();
+		cows_info.m_weights[i] = COWS_TOTAL_WEIGHT_SUM
+			/ cows_info.m_weights.size();
 
 	//COWS: initialize the command manager
 #define CMD_SET_WEIGHTS ".cows.set_weights"
@@ -227,25 +227,25 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	// COWS: Vectors resizing depending on the number of binding domains
-	cowsInfo.bd_load.resize(bindings.num);
-	cowsInfo.bound_mix.resize(bindings.num);
-	cowsInfo.stallsMetrics.resize(bindings.num);
-	cowsInfo.iretMetrics.resize(bindings.num);
-	cowsInfo.flopsMetrics.resize(bindings.num);
-	cowsInfo.migrMetrics.resize(bindings.num);
-	cowsInfo.perf_data.resize(COWS_RECIPE_METRICS);
-	cowsInfo.normStats.resize(COWS_NORMAL_VALUES);
+	cows_info.bd_load.resize(bindings.num);
+	cows_info.bound_mix.resize(bindings.num);
+	cows_info.stalls_metrics.resize(bindings.num);
+	cows_info.iret_metrics.resize(bindings.num);
+	cows_info.flops_metrics.resize(bindings.num);
+	cows_info.migr_metrics.resize(bindings.num);
+	cows_info.perf_data.resize(COWS_RECIPE_METRICS);
+	cows_info.norm_stats.resize(COWS_NORMAL_VALUES);
 	// Accumulators resizing, depending on the number of BDs
 	// The real accumulators set
-	bindingDomains.resize(bindings.num);
+	binding_domains.resize(bindings.num);
 	// A set needed to simulate system changes
-	speculativeDomains.resize(bindings.num);
+	binding_speculative.resize(bindings.num);
 	// A set needed to reset the original one
-	emptyDomains.resize(bindings.num);
+	binding_empty.resize(bindings.num);
 	// Accumulator for sys-wide sums information
-	sysWideReset.resize(COWS_UNITS_METRICS);
+	syswide_sums.resize(COWS_UNITS_METRICS);
 	// A set needed to reset the original one
-	sysWideReset.resize(COWS_UNITS_METRICS);
+	syswide_empty.resize(COWS_UNITS_METRICS);
 
 	// COWS: Reset the counters
 	CowsClear();
@@ -387,8 +387,8 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 		CowsBinding(pschd);
 
 		std::multimap<float,int>::reverse_iterator rit;
-		for (rit = cowsInfo.orderedBDs.rbegin();
-				rit != cowsInfo.orderedBDs.rend(); ++rit) {
+		for (rit = cows_info.ordered_bds.rbegin();
+				rit != cows_info.ordered_bds.rend(); ++rit) {
 
 			logger->Info("COWS: Select BD[%d] (metrics=%2.2f)",
 					bindings.ids[(*rit).second], (*rit).first);
@@ -673,9 +673,9 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 void YamsSchedPol::CowsBinding(SchedEntityPtr_t pschd) {
 
 	// Clear previous run information
-	cowsInfo.orderedBDs.clear();
+	cows_info.ordered_bds.clear();
 	for (int i = 0; i < COWS_NORMAL_VALUES; i++) {
-		cowsInfo.normStats[i] = 0;
+		cows_info.norm_stats[i] = 0;
 	}
 
 	CowsInit(pschd);
@@ -686,46 +686,46 @@ void YamsSchedPol::CowsBinding(SchedEntityPtr_t pschd) {
 
 void YamsSchedPol::CowsUpdateMeans(int logic_index) {
 	// A new application has been scheduled
-	cowsInfo.bd_load[logic_index]++;
-	cowsInfo.bdTotalLoad++;
+	cows_info.bd_load[logic_index]++;
+	cows_info.bd_total_load++;
 
 	// Applying the candidate SchedEnt statistics
 	// Updating Last Level Cache Misses accumulator for the chosen BD
-	bindingDomains[logic_index].
-		boundness_info(cowsInfo.perf_data[COWS_LLCM]);
+	binding_domains[logic_index].
+		boundness_info(cows_info.perf_data[COWS_LLCM]);
 	// Updating Stalls accumulator for the chosen BD
-	bindingDomains[logic_index].
-		stalls_info(cowsInfo.perf_data[COWS_STALLS]);
+	binding_domains[logic_index].
+		stalls_info(cows_info.perf_data[COWS_STALLS]);
 	// Updating Retired Instructions accumulator for the chosen BD
-	bindingDomains[logic_index].
-		iret_info(cowsInfo.perf_data[COWS_IRET]);
+	binding_domains[logic_index].
+		iret_info(cows_info.perf_data[COWS_IRET]);
 	// Updating Floating Operations accumulator for the chosen BD
-	bindingDomains[logic_index].
-		flops_info(cowsInfo.perf_data[COWS_FLOPS]);
+	binding_domains[logic_index].
+		flops_info(cows_info.perf_data[COWS_FLOPS]);
 }
 
 void YamsSchedPol::CowsClear() {
 
 	// Clearing the indexes needed to store evaluation results
 	for (int i = 0; i < bindings.num ; i++){
-		cowsInfo.bd_load[i] = 0;
-		cowsInfo.bound_mix[i] = 0;
-		cowsInfo.stallsMetrics[i] = 0;
-		cowsInfo.iretMetrics[i] = 0;
-		cowsInfo.migrMetrics[i] = 0;
-		cowsInfo.flopsMetrics[i] = 0;
+		cows_info.bd_load[i] = 0;
+		cows_info.bound_mix[i] = 0;
+		cows_info.stalls_metrics[i] = 0;
+		cows_info.iret_metrics[i] = 0;
+		cows_info.migr_metrics[i] = 0;
+		cows_info.flops_metrics[i] = 0;
 	}
 
 	// Clearing my accumulators
-	bindingDomains = emptyDomains;
-	speculativeDomains = emptyDomains;
+	binding_domains = binding_empty;
+	binding_speculative = binding_empty;
 
 	// Clearing the indexes needed to normalize evaluation results
 	for (int i = 0; i < COWS_NORMAL_VALUES; i++)
-		cowsInfo.normStats[i] = 0;
+		cows_info.norm_stats[i] = 0;
 	// Clearing system-wide data
-	sysWideSums = sysWideReset;
-	cowsInfo.bdTotalLoad = 0;
+	syswide_sums = syswide_empty;
+	cows_info.bd_total_load = 0;
 }
 
 void YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
@@ -743,10 +743,10 @@ void YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
 
 	// Setting info for future system update. 'perf_data' will be used
 	// from now on to store the current application statistics
-	cowsInfo.perf_data[COWS_LLCM]   = db;
-	cowsInfo.perf_data[COWS_STALLS] = ds;
-	cowsInfo.perf_data[COWS_IRET]   = dr;
-	cowsInfo.perf_data[COWS_FLOPS]  = df;
+	cows_info.perf_data[COWS_LLCM]   = db;
+	cows_info.perf_data[COWS_STALLS] = ds;
+	cows_info.perf_data[COWS_IRET]   = dr;
+	cows_info.perf_data[COWS_FLOPS]  = df;
 }
 
 void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
@@ -762,30 +762,34 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 		// Computing system boundness status 'AS IF' the BD chosen to
 		// contain the application is the current BD.
 		// Thus, speculativeDomains accumulators are to be exploited.
-		speculativeDomains = bindingDomains;
-		speculativeDomains[i].boundness_info(cowsInfo.perf_data[COWS_LLCM]);
+		binding_speculative = binding_domains;
+		binding_speculative[i].boundness_info
+			(cows_info.perf_data[COWS_LLCM]);
 
 		// Resetting the bound mix variable, which will contain the
 		// boundness scores for each BD.
-		cowsInfo.bound_mix[i] = 0;
+		cows_info.bound_mix[i] = 0;
 
-		if (cowsInfo.bd_load[i] != 0) {
+		if (cows_info.bd_load[i] != 0) {
 			// bound mix = variance (new case) - variance (current case)
-			cowsInfo.bound_mix[i] =
-				variance(speculativeDomains[i].boundness_info) -
-				variance(bindingDomains[i].boundness_info);
+			cows_info.bound_mix[i] =
+				variance(binding_speculative[i].boundness_info) -
+				variance(binding_domains[i].boundness_info);
 
 			// Only positive contributions are used to normalize
-			if (cowsInfo.bound_mix[i] > 0)
-				cowsInfo.normStats[COWS_LLCM] += cowsInfo.bound_mix[i];
+			if (cows_info.bound_mix[i] > 0)
+				cows_info.norm_stats[COWS_LLCM] +=
+					cows_info.bound_mix[i];
 		}
 		else {
-			cowsInfo.bound_mix[i] = 1;
-			cowsInfo.normStats[COWS_LLCM] ++;
+			// If the binding domain is empty, the score must be low but
+			// greater than zero.
+			cows_info.bound_mix[i] = 1;
+			cows_info.norm_stats[COWS_LLCM] ++;
 		}
 
 		logger->Notice("COWS: Bound mix @BD[%d] for %s: %3.2f",
-				bindings.ids[i], pschd->StrId(), cowsInfo.bound_mix[i]);
+				bindings.ids[i], pschd->StrId(), cows_info.bound_mix[i]);
 
 		// Set the binding ID
 		pschd->SetBindingID(bindings.ids[i]);
@@ -797,13 +801,14 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 		// Get migration contribution
 		value = 0.0;
 		GetSchedContribValue(pschd, SchedContribManager::MIGRATION, value);
-		cowsInfo.migrMetrics[i] = value;
-		cowsInfo.normStats[COWS_MIGRA] += value;
+		cows_info.migr_metrics[i] = value;
+		cows_info.norm_stats[COWS_MIGRA] += value;
 	}
 
-	// TODO: Comment
-	if (cowsInfo.normStats[COWS_LLCM] == 0) cowsInfo.normStats[COWS_LLCM]++;
-	if (cowsInfo.normStats[COWS_MIGRA] == 0) cowsInfo.normStats[COWS_MIGRA]++;
+	// Normalization statistics initialization for already
+	// collected metrics
+	if (cows_info.norm_stats[COWS_LLCM] == 0) cows_info.norm_stats[COWS_LLCM]++;
+	if (cows_info.norm_stats[COWS_MIGRA] == 0) cows_info.norm_stats[COWS_MIGRA]++;
 }
 
 void YamsSchedPol::CowsUnitsBalance() {
@@ -811,9 +816,9 @@ void YamsSchedPol::CowsUnitsBalance() {
 
 	// Update system-wide allocated resources amount
 	for (int i = 0; i < bindings.num; i++) {
-		sysWideSums[COWS_STALLS](sum(bindingDomains[i].stalls_info));
-		sysWideSums[COWS_IRET  ](sum(bindingDomains[i].iret_info));
-		sysWideSums[COWS_FLOPS ](sum(bindingDomains[i].flops_info));
+		syswide_sums[COWS_STALLS](sum(binding_domains[i].stalls_info));
+		syswide_sums[COWS_IRET  ](sum(binding_domains[i].iret_info));
+		syswide_sums[COWS_FLOPS ](sum(binding_domains[i].flops_info));
 	}
 
 	// For each binding domain, calculate the updated means AS IF
@@ -827,53 +832,58 @@ void YamsSchedPol::CowsUnitsBalance() {
 		// BD i, the mean has changed
 		for (int j = 0; j < bindings.num; j++) {
 
-			float distFromStallsMean =
-					sum(bindingDomains[j].stalls_info) -
-					(mean(sysWideSums[COWS_STALLS]) +
-					cowsInfo.perf_data[COWS_STALLS]/bindings.num);
-				float distFromIretMean =
-					sum(bindingDomains[j].iret_info) -
-					(mean(sysWideSums[COWS_IRET]) +
-					cowsInfo.perf_data[COWS_IRET]/bindings.num);
-				float distFromFlopsMean =
-					sum(bindingDomains[j].flops_info) -
-					(mean(sysWideSums[COWS_FLOPS]) +
-					cowsInfo.perf_data[COWS_FLOPS]/bindings.num);
+			float dist_from_avg_stalls =
+					sum(binding_domains[j].stalls_info) -
+					(mean(syswide_sums[COWS_STALLS]) +
+					cows_info.perf_data[COWS_STALLS]/bindings.num);
+				float dist_from_avg_iret =
+					sum(binding_domains[j].iret_info) -
+					(mean(syswide_sums[COWS_IRET]) +
+					cows_info.perf_data[COWS_IRET]/bindings.num);
+				float dist_from_avg_flops =
+					sum(binding_domains[j].flops_info) -
+					(mean(syswide_sums[COWS_FLOPS]) +
+					cows_info.perf_data[COWS_FLOPS]/bindings.num);
 
 			if (j == i) {
-				distFromStallsMean +=
-					cowsInfo.perf_data[COWS_STALLS];
-				distFromIretMean +=
-					cowsInfo.perf_data[COWS_IRET];
-				distFromFlopsMean +=
-					cowsInfo.perf_data[COWS_FLOPS];
+				dist_from_avg_stalls +=
+					cows_info.perf_data[COWS_STALLS];
+				dist_from_avg_iret +=
+					cows_info.perf_data[COWS_IRET];
+				dist_from_avg_flops +=
+					cows_info.perf_data[COWS_FLOPS];
 
-				cowsInfo.stallsMetrics[i] += pow(distFromStallsMean, 2);
-				cowsInfo.iretMetrics[i] += pow(distFromIretMean, 2);
-				cowsInfo.flopsMetrics[i] += pow(distFromFlopsMean, 2);
+				cows_info.stalls_metrics[i] +=
+					dist_from_avg_stalls * dist_from_avg_stalls;
+				cows_info.iret_metrics[i] +=
+					dist_from_avg_iret * dist_from_avg_iret;
+				cows_info.flops_metrics[i] +=
+					dist_from_avg_flops * dist_from_avg_flops;
 			}
-			else if (cowsInfo.bd_load[j] != 0) {
-
-				cowsInfo.stallsMetrics[i] += pow(distFromStallsMean, 2);
-				cowsInfo.iretMetrics[i] += pow(distFromIretMean, 2);
-				cowsInfo.flopsMetrics[i] += pow(distFromFlopsMean, 2);
+			else if (cows_info.bd_load[j] != 0) {
+				cows_info.stalls_metrics[i] +=
+					dist_from_avg_stalls * dist_from_avg_stalls;
+				cows_info.iret_metrics[i] +=
+					dist_from_avg_iret * dist_from_avg_iret;
+				cows_info.flops_metrics[i] +=
+					dist_from_avg_flops * dist_from_avg_flops;
 			}
 		}
 
 		logger->Notice("COWS: Total stalls quadratic deviation in BD"
 				"%d: %3.2f", bindings.ids[i],
-						    cowsInfo.stallsMetrics[i]);
+						    cows_info.stalls_metrics[i]);
 		logger->Notice("COWS: Total ret. instructions deviation in BD"
 				"%d: %3.2f", bindings.ids[i],
-						    cowsInfo.iretMetrics[i]);
+						    cows_info.iret_metrics[i]);
 		logger->Notice("COWS: Total X87 operations deviation in BD"
 				"%d: %3.2f", bindings.ids[i],
-						    cowsInfo.flopsMetrics[i]);
+						    cows_info.flops_metrics[i]);
 		logger->Info("COWS: Proceeding with next BD, if any ...");
 
-		cowsInfo.normStats[COWS_STALLS] += cowsInfo.stallsMetrics[i];
-		cowsInfo.normStats[COWS_IRET]   += cowsInfo.iretMetrics[i];
-		cowsInfo.normStats[COWS_FLOPS]  += cowsInfo.flopsMetrics[i];
+		cows_info.norm_stats[COWS_STALLS] += cows_info.stalls_metrics[i];
+		cows_info.norm_stats[COWS_IRET]   += cows_info.iret_metrics[i];
+		cows_info.norm_stats[COWS_FLOPS]  += cows_info.flops_metrics[i];
 	}
 }
 
@@ -885,26 +895,26 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t pschd) {
 	logger->Info(" ======================================================"
 			"==================");
 	for (int i = 0; i < bindings.num; i++) {
-		cowsInfo.stallsMetrics[i] /= cowsInfo.normStats[COWS_STALLS];
-		cowsInfo.iretMetrics[i]   /= cowsInfo.normStats[COWS_IRET];
-		cowsInfo.flopsMetrics[i]  /= cowsInfo.normStats[COWS_FLOPS];
-		cowsInfo.migrMetrics[i]   /= cowsInfo.normStats[COWS_MIGRA];
+		cows_info.stalls_metrics[i] /= cows_info.norm_stats[COWS_STALLS];
+		cows_info.iret_metrics[i]   /= cows_info.norm_stats[COWS_IRET];
+		cows_info.flops_metrics[i]  /= cows_info.norm_stats[COWS_FLOPS];
+		cows_info.migr_metrics[i]   /= cows_info.norm_stats[COWS_MIGRA];
 
-		if(cowsInfo.bound_mix[i] < 0) {
-			cowsInfo.bound_mix[i] = 0;
+		if(cows_info.bound_mix[i] < 0) {
+			cows_info.bound_mix[i] = 0;
 		}
 		else {
-			cowsInfo.bound_mix[i] /= cowsInfo.normStats[COWS_LLCM];
+			cows_info.bound_mix[i] /= cows_info.norm_stats[COWS_LLCM];
 		}
 
 		logger->Info("| BD %d | Bound: %3.2f | Stalls:%3.2f | "
 				"Ret:%3.2f | Flops:%3.2f | Migrat:%3.2f |",
 				bindings.ids[i],
-				cowsInfo.bound_mix[i],
-				cowsInfo.stallsMetrics[i],
-				cowsInfo.iretMetrics[i],
-				cowsInfo.flopsMetrics[i],
-				cowsInfo.migrMetrics[i]);
+				cows_info.bound_mix[i],
+				cows_info.stalls_metrics[i],
+				cows_info.iret_metrics[i],
+				cows_info.flops_metrics[i],
+				cows_info.migr_metrics[i]);
 	}
 	logger->Info(" ======================================================"
 			"==================");
@@ -913,29 +923,29 @@ void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t pschd) {
 	for (int i = 0; i < bindings.num; i++) {
 		result =
 		// (W1*BOUNDNESS) - [W2*(ST + RET + FLOPS)] + (W3*MIGRATION)
-		    cowsInfo.m_weights[COWS_BOUND_WEIGHT] * cowsInfo.bound_mix[i]
+		    cows_info.m_weights[COWS_BOUND_WEIGHT] * cows_info.bound_mix[i]
 			-
-			cowsInfo.m_weights[COWS_UNITS_WEIGHT] * (
-				  cowsInfo.stallsMetrics[i]  +
-				  cowsInfo.iretMetrics[i] +
-				  cowsInfo.flopsMetrics[i])
+			cows_info.m_weights[COWS_UNITS_WEIGHT] * (
+				  cows_info.stalls_metrics[i]  +
+				  cows_info.iret_metrics[i] +
+				  cows_info.flops_metrics[i])
 			+
-			cowsInfo.m_weights[COWS_MIGRA_WEIGHT] * cowsInfo.migrMetrics[i];
+			cows_info.m_weights[COWS_MIGRA_WEIGHT] * cows_info.migr_metrics[i];
 
-		cowsInfo.orderedBDs.insert( std::pair<float,int>(result,i) );
+		cows_info.ordered_bds.insert( std::pair<float,int>(result,i) );
 	}
 	logger->Info("COWS: Ordering binding domains");
 	std::multimap<float,int>::reverse_iterator rit;
-	for (rit = cowsInfo.orderedBDs.rbegin();
-		rit != cowsInfo.orderedBDs.rend(); ++rit)
+	for (rit = cows_info.ordered_bds.rbegin();
+		rit != cows_info.ordered_bds.rend(); ++rit)
 		logger->Info("--- BD: %d, Value: %f",
 				bindings.ids[(*rit).second], (*rit).first);
 
 	logger->Notice("COWS: Performance counters: %3.2f, %3.2f, %3.2f, %3.2f",
-			cowsInfo.perf_data[COWS_LLCM],
-			cowsInfo.perf_data[COWS_STALLS],
-			cowsInfo.perf_data[COWS_IRET],
-			cowsInfo.perf_data[COWS_FLOPS]);
+			cows_info.perf_data[COWS_LLCM],
+			cows_info.perf_data[COWS_STALLS],
+			cows_info.perf_data[COWS_IRET],
+			cows_info.perf_data[COWS_FLOPS]);
 	logger->Info("==========|          COWS: Done             |==========");
 }
 
@@ -966,13 +976,13 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
 	logger->Info("|=========+=========+=========+=========+=========|");
 	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-				cowsInfo.m_weights[COWS_BOUND_WEIGHT],
-				cowsInfo.m_weights[COWS_UNITS_WEIGHT],
-				cowsInfo.m_weights[COWS_MIGRA_WEIGHT]);
+				cows_info.m_weights[COWS_BOUND_WEIGHT],
+				cows_info.m_weights[COWS_UNITS_WEIGHT],
+				cows_info.m_weights[COWS_MIGRA_WEIGHT]);
 	logger->Info(" =========+=========+=========+=========+========= ");
 
 	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i++) {
-		cowsInfo.m_weights[i] =
+		cows_info.m_weights[i] =
 			COWS_TOTAL_WEIGHT_SUM * (atof(argv[i + 1])) / w_sum;
 	}
 
@@ -982,9 +992,9 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]){
 	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
 	logger->Info("|=========+=========+=========+=========+=========|");
 	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-				cowsInfo.m_weights[COWS_BOUND_WEIGHT],
-				cowsInfo.m_weights[COWS_UNITS_WEIGHT],
-				cowsInfo.m_weights[COWS_MIGRA_WEIGHT]);
+				cows_info.m_weights[COWS_BOUND_WEIGHT],
+				cows_info.m_weights[COWS_UNITS_WEIGHT],
+				cows_info.m_weights[COWS_MIGRA_WEIGHT]);
 	logger->Info(" =========+=========+=========+=========+========= ");
 #endif // CONFIG_BBQUE_SP_COWS_BINDING
 	return 0;
