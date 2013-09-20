@@ -189,7 +189,7 @@ private:
 	std::map<Type_t, SchedContribPtr_t> sc_objs_reqs;
 
 	/** Scheduling contributions (all) */
-	static std::map<Type_t, SchedContribPtr_t> sc_objs;
+	std::map<Type_t, SchedContribPtr_t> sc_objs;
 
 
 	/** Metrics contribute configuration keys */

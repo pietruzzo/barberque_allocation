@@ -55,8 +55,6 @@ char const * SchedContribManager::sc_str[SC_COUNT] = {
 	// ...:: ADD_SC ::...
 };
 
-std::map<SchedContribManager::Type_t,
-	SchedContribPtr_t> SchedContribManager::sc_objs  = {};
 float SchedContribManager::sc_weights_norm[SC_COUNT] = {0};
 uint16_t SchedContribManager::sc_weights[SC_COUNT]   = {0};
 uint16_t
@@ -88,9 +86,11 @@ SchedContribManager::SchedContribManager(
 	if (!SchedContribManager::config_ready) {
 		ParseConfiguration();
 		NormalizeWeights();
-		AllocateContribs();
 		SchedContribManager::config_ready = true;
 	}
+
+	// Allocate the scheduling contribution objects
+	AllocateContribs();
 
 	// Init the map of scheduling contributions required
 	for (int i = 0; i < sc_num; ++i) {
