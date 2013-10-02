@@ -213,6 +213,8 @@ YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
 		static_cast<CommandHandler*>(this),
 		"Set COWS binding metrics weights");
 #endif
+
+	logger->Debug("Binding domain: %d scheduling contrib manager(s)", scms.size());
 	return YAMS_SUCCESS;
 }
 
@@ -466,8 +468,8 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 	for (; se_it != end_se; ++se_it) {
 		SchedEntityPtr_t & pschd(*se_it);
 
-		// Skip this AWM,Binding if the bound domain is full or if the
-		// Application/EXC must be skipped
+		// Skip if the <Application, AWM> has been already scheduled or
+		// the binding references a full resource
 		if (bindings[pschd->bind_type]->full.Test(pschd->bind_id) ||
 				(CheckSkipConditions(pschd->papp)))
 			continue;
@@ -601,6 +603,8 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 		Resource::Type_t bd_type = bd_it->first;
 		BindingInfo_t & bd(*(bd_it->second));
 		ResourceBitset r_mask;
+		logger->Debug("EvalAWM: current domain: %s",
+			ResourceIdentifier::TypeStr[bd_type]);
 
 		// Skipping empty binding domains
 		r_mask = ResourceBinder::GetMask(pschd->pawm->RecipeResourceUsages(), bd_type);
@@ -753,13 +757,14 @@ void YamsSchedPol::GetSchedContribValue(
 	Timer comp_tmr;
 
 	if (scms[bd_type] == nullptr) {
-		logger->Debug("SchedContrib: Missing resource binding [%s]",
+		logger->Error("SchedContrib: Missing resource binding [%s]",
 				ResourceIdentifier::TypeStr[bd_type]);
 		return;
 	}
 
 	// Compute the single contribution
 	YAMS_RESET_TIMING(comp_tmr);
+
 	scm_ret = scms[bd_type]->GetIndex(sc_type, eval_ent, sc_value, sc_ret);
 	if (scm_ret != SchedContribManager::OK) {
 		logger->Warn("SchedContrib: return code %d", scm_ret);
@@ -783,7 +788,8 @@ void YamsSchedPol::GetSchedContribValue(
 		}
 	}
 	YAMS_GET_TIMING(coll_mct_metrics, sc_type, comp_tmr);
-	logger->Debug("SchedContrib: back from index computation");
+	logger->Debug("SchedContrib: domain:%s, sc:%d",
+		ResourceIdentifier::TypeStr[bd_type], sc_type);
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
