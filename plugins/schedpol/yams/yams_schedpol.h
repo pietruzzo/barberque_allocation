@@ -272,9 +272,13 @@ private:
 	static const char * cows_metrics_str[];
 
 	std::vector<cows_binding_info> binding_domains;
+	/** A set needed to simulate system changes */
 	std::vector<cows_binding_info> binding_speculative;
+	/** A set needed to reset the original one */
 	std::vector<cows_binding_info> binding_empty;
+	/** Accumulator for sys-wide sums information */
 	std::vector<syswide_metrics_t> syswide_sums;
+	/** A set needed to reset the original one */
 	std::vector<syswide_metrics_t> syswide_empty;
 
 	/** Info about CPU bindings to evaluate */

@@ -455,14 +455,14 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 			if (cpu_bindings->full.Test(cpu_bindings->ids[(*rit).second]))
 				continue;
 
-			// Do binding
+			// Do CPU binding
 			logger->Info("COWS: Select BD[%d] (metrics=%2.2f)",
 					cpu_bindings->ids[(*rit).second], (*rit).first);
 			pschd->SetBindingID(
 					cpu_bindings->ids[(*rit).second], Resource::CPU);
 			ExitCode_t bd_result = BindResources(pschd, 0);
 			if (bd_result != YAMS_SUCCESS) {
-				logger->Error("COWS: Resource binding failed [%d]",
+				logger->Error("COWS: CPU binding failed [%d]",
 						bd_result);
 				break;
 			}
@@ -580,7 +580,8 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 			ResourceIdentifier::TypeStr[bd_type]);
 
 		// Skipping empty binding domains
-		r_mask = ResourceBinder::GetMask(pschd->pawm->RecipeResourceUsages(), bd_type);
+		r_mask = ResourceBinder::GetMask(
+				pschd->pawm->RecipeResourceUsages(), bd_type);
 		if ((bd.num == 0) || (r_mask.Count() == 0))
 			continue;
 
@@ -990,7 +991,6 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 		// Resetting the bound mix variable, which will contain the
 		// boundness scores for each BD.
 		cows_info.bound_mix[i] = 0;
-
 		if (cows_info.bd_load[i] != 0) {
 			// bound mix = variance (new case) - variance (current case)
 			cows_info.bound_mix[i] =
