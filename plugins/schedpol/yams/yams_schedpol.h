@@ -277,8 +277,8 @@ private:
 	std::vector<syswide_metrics_t> syswide_sums;
 	std::vector<syswide_metrics_t> syswide_empty;
 
-	/** Total number of CPU bindings to evaluate */
-	uint16_t cpu_bindings_num;
+	/** Info about CPU bindings to evaluate */
+	BindingInfo_t * cpu_bindings;
 #endif
 
 	/** Manager for the scheduling contributions set */
@@ -450,7 +450,11 @@ private:
 	ExitCode_t BindResources(SchedEntityPtr_t pschd, size_t b_refn);
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
+	/**
+	 * @brief COWS: Setup initial information required
+	 */
 	void CowsSetup();
+
 	/**
 	 * @brief COWS: Evaluate a Binding
 	 *
@@ -493,7 +497,6 @@ private:
 	 */
 	void CowsUpdateMeans(int logic_index);
 	void CowsUpdateMeans(SchedEntityPtr_t pschd);
-
 
 	/**
 	 * @brief Command handler for COWS specific commands
