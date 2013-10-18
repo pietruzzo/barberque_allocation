@@ -405,6 +405,16 @@ private:
 			float & sc_value);
 
 	/**
+	 * @brief Run-time reconfiguration of the scheduling contributions weights
+	 *
+	 * @param num_weights The size of the vector containing the new weights
+	 * @param set_weights The vector containing the new weight values
+	 */
+	void ReconfigSchedContribWeights(
+			uint8_t num_weights,
+			char * set_weights[YAMS_SC_COUNT]);
+
+	/**
 	 * @brief Evaluate the scheduling bindings for each domain
 	 *
 	 * @param dom_it  Map iterator pointing the binding domain

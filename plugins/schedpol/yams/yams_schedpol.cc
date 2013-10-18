@@ -199,6 +199,11 @@ YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
 		beg_pos  = end_pos + 1;
 	}
 
+	// Register commands
+#define CMD_SET_WEIGHTS ".set_weights"
+	cmm.RegisterCommand(MODULE_NAMESPACE CMD_SET_WEIGHTS,
+		static_cast<CommandHandler*>(this),
+		"Set scheduling contributions weights");
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 	// COWS: Init metrics weights
@@ -206,7 +211,6 @@ YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
 	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i ++)
 		cows_info.m_weights[i] = COWS_TOTAL_WEIGHT_SUM
 			/ cows_info.m_weights.size();
-
 	// COWS: Register command for run-time change of weights
 #define CMD_COWS_SET_WEIGHTS ".cows.set_weights"
 	cmm.RegisterCommand(MODULE_NAMESPACE CMD_COWS_SET_WEIGHTS,
@@ -1241,8 +1245,56 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]) {
 	}
 #endif // CONFIG_BBQUE_SP_COWS_BINDING
 
+	switch (argv[0][cmd_offset]) {
+	case 's':
+		logger->Info("Commands: Reconfigure scheduling contributions weights");
+		if (argc-1 != YAMS_SC_COUNT) {
+			logger->Error("Commands: %d of %d weights specified", argc-1, YAMS_SC_COUNT);
+			logger->Error("\t Usage: %s 7 2 3 2", argv[0]);
+			logger->Error("\t Usage: %s 7 - 3 2", argv[0]);
+			return 1;
+		}
+		ReconfigSchedContribWeights(argc-1, argv);
+		break;
+	}
 
 	return 0;
+}
+
+void YamsSchedPol::ReconfigSchedContribWeights(
+		uint8_t num_weights,
+		char * set_weights[]) {
+	std::map<Resource::Type_t, SchedContribManager *>::iterator scm_it;
+	uint16_t * new_weights = nullptr;
+	uint16_t * old_weights = nullptr;
+	logger->Debug("ReconfigSchedContribWeights: %d weights...", num_weights);
+
+	for (scm_it = scms.begin(); scm_it != scms.end(); ++scm_it) {
+		SchedContribManager * scm = scm_it->second;
+		logger->Debug("ReconfigSchedContribWeights: BD[%s] %d weights...",
+				ResourceIdentifier::TypeStr[scm_it->first],
+				scm->GetNumMax());
+
+		// Update starting from the old set of weights
+		new_weights = (uint16_t *) malloc(sizeof(uint16_t)*scm->GetNumMax());
+		old_weights = scm->GetWeights();
+		if (old_weights == nullptr) {
+			logger->Error("ReconfigSchedContribWeights: missing old weights");
+			return;
+		}
+		for (uint8_t i = 0;  i < scm->GetNumMax(); ++i) {
+			if ((i >= num_weights) || (strncmp(set_weights[i+1], "-", 1) == 0))
+				new_weights[i] = old_weights[i];
+			else
+				new_weights[i] = atoi(set_weights[i+1]);
+			logger->Info("ReconfigSchedContribWeights: [%11s]  %2d -> %2d ",
+					scm->GetString(sc_types[i]),
+					old_weights[i], new_weights[i]);
+		}
+		// Set the new weights
+		scm->SetWeights(new_weights);
+		free(new_weights);
+	}
 }
 
 } // namespace plugins
