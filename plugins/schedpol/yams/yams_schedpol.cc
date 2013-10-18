@@ -681,7 +681,7 @@ void YamsSchedPol::CowsBinding(SchedEntityPtr_t pschd) {
 	CowsInit(pschd);
 	CowsBoundMix(pschd);
 	CowsUnitsBalance();
-	CowsAggregateResults(pschd);
+	CowsAggregateResults();
 }
 
 void YamsSchedPol::CowsUpdateMeans(int logic_index) {
@@ -887,7 +887,7 @@ void YamsSchedPol::CowsUnitsBalance() {
 	}
 }
 
-void YamsSchedPol::CowsAggregateResults(SchedEntityPtr_t pschd) {
+void YamsSchedPol::CowsAggregateResults() {
 	float result = 0.0;
 	logger->Info("COWS: ----------- Results aggregation ------------");
 

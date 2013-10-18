@@ -429,10 +429,8 @@ private:
 
 	/**
 	 * @brief COWS: aggregate results
-	 *
-	 * @param psch The scheduling entity to use
 	 */
-	void CowsAggregateResults(SchedEntityPtr_t pschd);
+	void CowsAggregateResults();
 
 	/**
 	 * @brief COWS: Update Means
