@@ -782,10 +782,14 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 					cows_info.bound_mix[i];
 		}
 		else {
-			// If the binding domain is empty, the score must be low but
-			// greater than zero.
-			cows_info.bound_mix[i] = 1;
-			cows_info.norm_stats[COWS_LLCM] ++;
+			// If the binding domain is empty, it is considered as a binding
+			// domain containing an application with 0 llcm/cycle.
+			// Thus, the resulting variance is X^2/4
+			cows_info.bound_mix[i] =
+				(cows_info.perf_data[COWS_LLCM] *
+				cows_info.perf_data[COWS_LLCM])/4;
+			cows_info.norm_stats[COWS_LLCM] +=
+					cows_info.bound_mix[i];
 		}
 
 		logger->Notice("COWS: Bound mix @BD[%d] for %s: %3.2f",
