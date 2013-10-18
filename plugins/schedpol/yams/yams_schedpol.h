@@ -439,6 +439,12 @@ private:
 	 */
 	void CowsUpdateMeans(int logic_index);
 	void CowsUpdateMeans(SchedEntityPtr_t pschd);
+
+
+	/**
+	 * @brief Command handler for COWS specific commands
+	 */
+	int CowsCommandsHandler(int argc, char * argv[]);
 #endif
 
 	/**

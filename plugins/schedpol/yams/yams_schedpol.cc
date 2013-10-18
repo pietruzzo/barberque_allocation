@@ -137,15 +137,15 @@ YamsSchedPol::YamsSchedPol():
 	mc.Register(coll_mct_metrics, YAMS_SC_COUNT);
 
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
-	//COWS: initialize the weights to be changed af runtime through commands
+	// COWS: Init metrics weights
 	cows_info.m_weights.resize(COWS_AGGREGATION_WEIGHTS);
 	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i ++)
 		cows_info.m_weights[i] = COWS_TOTAL_WEIGHT_SUM
 			/ cows_info.m_weights.size();
 
-	//COWS: initialize the command manager
-#define CMD_SET_WEIGHTS ".cows.set_weights"
-	cmm.RegisterCommand(MODULE_NAMESPACE CMD_SET_WEIGHTS,
+	// COWS: Register command for run-time change of weights
+#define CMD_COWS_SET_WEIGHTS ".cows.set_weights"
+	cmm.RegisterCommand(MODULE_NAMESPACE CMD_COWS_SET_WEIGHTS,
 		static_cast<CommandHandler*>(this),
 		"Set COWS binding metrics weights");
 #endif
@@ -949,57 +949,78 @@ void YamsSchedPol::CowsAggregateResults() {
 	logger->Info("==========|          COWS: Done             |==========");
 }
 
-#endif // CONFIG_BBQUE_SP_COWS_BINDING
+int YamsSchedPol::CowsCommandsHandler(int argc, char * argv[]) {
+	float w_sum = 0.0;
+	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + strlen(".cows.");
 
-int YamsSchedPol::CommandsCb(int argc, char *argv[]){
-
-#ifdef CONFIG_BBQUE_SP_COWS_BINDING
-	if ( argc != 4) {
-		logger->Info("set_weights function: expecting 3 weights, "
-						"possibly summing up to 10");
-		logger->Info("Usage example:");
-		logger->Info("bq.sp.yams.cows.set_weights 5 2 3");
+	// Check number of command arguments
+	if (argc != 4) {
+		logger->Error("'cows.set_weights' expecting 3 parameters (possibly summing up to 10");
+		logger->Error("Usage example: bq.sp.yams.cows.set_weights 5 2 3");
 		return 1;
 	}
 
-	float w_sum = 0.0;
-	for (int i = 1; i < COWS_AGGREGATION_WEIGHTS + 1; i++)
-		w_sum += atof(argv[i]);
+	switch (argv[0][cmd_offset]) {
+	// set_weigths
+	case 's':
+		for (int i = 1; i < COWS_AGGREGATION_WEIGHTS + 1; i++)
+			w_sum += atof(argv[i]);
 
-	// Normalizing. The inputs should sum up to COWS_TOTAL_WEIGHT_SUM
-	if (w_sum != COWS_TOTAL_WEIGHT_SUM)
-		logger->Info("COWS: weights sum up to %f. Normalizing...", w_sum);
+		// Normalizing. The inputs should sum up to COWS_TOTAL_WEIGHT_SUM
+		if (w_sum != COWS_TOTAL_WEIGHT_SUM)
+			logger->Info("COWS: weights sum up to %f. Normalizing...", w_sum);
 
-	logger->Info(" ================================================= ");
-	logger->Info("|                   Old weights                   |");
-	logger->Info("|=========+=========+=========+=========+=========|");
-	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
-	logger->Info("|=========+=========+=========+=========+=========|");
-	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-				cows_info.m_weights[COWS_BOUND_WEIGHT],
-				cows_info.m_weights[COWS_UNITS_WEIGHT],
-				cows_info.m_weights[COWS_MIGRA_WEIGHT]);
-	logger->Info(" =========+=========+=========+=========+========= ");
+		logger->Info(" ================================================= ");
+		logger->Info("|                   Old weights                   |");
+		logger->Info("|=========+=========+=========+=========+=========|");
+		logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
+		logger->Info("|=========+=========+=========+=========+=========|");
+		logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
+					cows_info.m_weights[COWS_BOUND_WEIGHT],
+					cows_info.m_weights[COWS_UNITS_WEIGHT],
+					cows_info.m_weights[COWS_MIGRA_WEIGHT]);
+		logger->Info(" =========+=========+=========+=========+========= ");
 
-	for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i++) {
-		cows_info.m_weights[i] =
-			COWS_TOTAL_WEIGHT_SUM * (atof(argv[i + 1])) / w_sum;
+		for (int i = 0; i < COWS_AGGREGATION_WEIGHTS; i++) {
+			cows_info.m_weights[i] =
+				COWS_TOTAL_WEIGHT_SUM * (atof(argv[i + 1])) / w_sum;
+		}
+
+		logger->Info(" ================================================= ");
+		logger->Info("|                   New weights                   |");
+		logger->Info("|=========+=========+=========+=========+=========|");
+		logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
+		logger->Info("|=========+=========+=========+=========+=========|");
+		logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
+					cows_info.m_weights[COWS_BOUND_WEIGHT],
+					cows_info.m_weights[COWS_UNITS_WEIGHT],
+					cows_info.m_weights[COWS_MIGRA_WEIGHT]);
+		logger->Info(" =========+=========+=========+=========+========= ");
+		break;
+	default:
+		logger->Warn("Commands: unknown command '%s'", argv[0]);
 	}
 
-	logger->Info(" ================================================= ");
-	logger->Info("|                   New weights                   |");
-	logger->Info("|=========+=========+=========+=========+=========|");
-	logger->Info("|  Bound  |  Stall  & Retired &  Flops  |  Recon  |");
-	logger->Info("|=========+=========+=========+=========+=========|");
-	logger->Info("|  %3.3f  |            %3.3f            |  %3.3f  |",
-				cows_info.m_weights[COWS_BOUND_WEIGHT],
-				cows_info.m_weights[COWS_UNITS_WEIGHT],
-				cows_info.m_weights[COWS_MIGRA_WEIGHT]);
-	logger->Info(" =========+=========+=========+=========+========= ");
-#endif // CONFIG_BBQUE_SP_COWS_BINDING
 	return 0;
 }
+#endif // CONFIG_BBQUE_SP_COWS_BINDING
 
+int YamsSchedPol::CommandsCb(int argc, char *argv[]) {
+	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
+	logger->Debug("Processing command [%s]", argv[0] + cmd_offset);
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
+	size_t cmd_cows_pref_len = ::strlen(MODULE_NAMESPACE""".cows");
+	if (strncmp(argv[0],
+				MODULE_NAMESPACE""".cows",
+				cmd_cows_pref_len) == 0) {
+		logger->Debug("'%s' is a COWS command", argv[0]);
+		return CowsCommandsHandler(argc, argv);
+	}
+#endif // CONFIG_BBQUE_SP_COWS_BINDING
+
+
+	return 0;
+}
 
 } // namespace plugins
 
