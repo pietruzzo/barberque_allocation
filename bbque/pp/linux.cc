@@ -61,6 +61,9 @@ namespace bbque {
 
 LinuxPP::LinuxPP() :
 	PlatformProxy(),
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	oclProxy(OpenCLProxy::GetInstance()),
+#endif
 	controller("cpuset"),
 	cfsQuotaSupported(true),
 	MaxCpusCount(DEFAULT_MAX_CPUS),
@@ -573,9 +576,8 @@ LinuxPP::_LoadPlatformData() {
 
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 	// Load OpenCL platforms and devices
-	ocl_proxy.LoadPlatformData();
+	oclProxy.LoadPlatformData();
 #endif
-
 	// Switch to refresh mode for the upcoming calls
 	refreshMode = true;
 
@@ -1005,7 +1007,7 @@ LinuxPP::_MapResources(AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt,
 	logger->Debug("PLAT LNX: Programming language = %d", papp->Language());
 	if (papp->Language() == RTLIB_LANG_OPENCL) {
 		OpenCLProxy::ExitCode_t ocl_return;
-		ocl_return = ocl_proxy.MapResources(papp, pum, rvt);
+		ocl_return = oclProxy.MapResources(papp, pum, rvt);
 		if (ocl_return != OpenCLProxy::SUCCESS) {
 			logger->Error("PLAT LNX: OpenCL mapping failed");
 			return MAPPING_FAILED;

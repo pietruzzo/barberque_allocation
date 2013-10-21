@@ -103,6 +103,9 @@ public:
 
 private:
 
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	OpenCLProxy & oclProxy;
+#endif
 	/**
 	 * @brief Resource assignement bindings on a Linux machine
 	 */
@@ -224,9 +227,6 @@ private:
 	 */
 	bool refreshMode;
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
-	OpenCLProxy ocl_proxy;
-#endif
 
 /**
  * @defgroup group_plt_prx Platform Proxy

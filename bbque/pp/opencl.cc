@@ -30,6 +30,10 @@ using bbque::res::ResourceIdentifier;
 
 namespace bbque {
 
+OpenCLProxy & OpenCLProxy::GetInstance() {
+	static OpenCLProxy instance;
+	return instance;
+}
 
 OpenCLProxy::OpenCLProxy():
 	num_platforms(0),

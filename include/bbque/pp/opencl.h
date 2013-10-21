@@ -55,7 +55,7 @@ public:
 	/**
 	 * @brief Constructor
 	 */
-	OpenCLProxy();
+	static OpenCLProxy & GetInstance();
 
 	/**
 	 * @brief Load OpenCL platform data 
@@ -76,7 +76,10 @@ public:
 	 * @brief Set of OpenCL device IDs for a given resource type
 	 */
 	VectorUInt8Ptr_t GetDeviceIDs(ResourceIdentifier::Type_t r_type);
+
 private:
+
+	OpenCLProxy();
 
 	LoggerIF * logger;
 
