@@ -25,6 +25,9 @@
 
 #define MODULE_NAMESPACE "bq.pp.ocl"
 
+
+using bbque::res::ResourceIdentifier;
+
 namespace bbque {
 
 
@@ -85,6 +88,39 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 }
 
 
+VectorUInt8Ptr_t OpenCLProxy::GetDeviceIDs(ResourceIdentifier::Type_t r_type) {
+	std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>::iterator d_it;
+	d_it = GetDeviceIterator(r_type);
+	if (d_it == device_ids.end()) {
+		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
+			ResourceIdentifier::TypeStr[r_type]);
+		return nullptr;
+	}
+	return d_it->second;
+}
+
+
+uint8_t OpenCLProxy::GetDevicesNum(ResourceIdentifier::Type_t r_type) {
+	std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>::iterator d_it;
+	d_it = GetDeviceIterator(r_type);
+	if (d_it == device_ids.end()) {
+		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
+			ResourceIdentifier::TypeStr[r_type]);
+		return 0;
+	}
+	return d_it->second->size();
+}
+
+
+std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>::iterator
+OpenCLProxy::GetDeviceIterator(ResourceIdentifier::Type_t r_type) {
+	if (platforms == nullptr) {
+		logger->Error("PLAT OCL: Missing OpenCL platforms");
+		return device_ids.end();
+	}
+	return	device_ids.find(r_type);
+}
+
 OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 	cl_int status;
 	cl_device_type dev_type;
@@ -106,6 +142,10 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 			// TODO: resource path
 			snprintf(resourcePath+5, 12, "gpu%hu.pe0", i);
 			ra.RegisterResource(resourcePath, "", 100);
+			InsertDeviceID(ResourceIdentifier::GPU, i);
+			break;
+		case CL_DEVICE_TYPE_CPU:
+			InsertDeviceID(ResourceIdentifier::CPU, i);
 			break;
 
 		default:
@@ -116,6 +156,27 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 	return SUCCESS;
 }
 
+
+void OpenCLProxy::InsertDeviceID(
+		ResourceIdentifier::Type_t r_type,
+		uint8_t dev_id) {
+	std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>::iterator d_it;
+	VectorUInt8Ptr_t pdev_ids;
+	d_it = GetDeviceIterator(r_type);
+	if (d_it == device_ids.end()) {
+		device_ids.insert(
+			std::pair<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>
+				(r_type, VectorUInt8Ptr_t(new VectorUInt8_t))
+		);
+	}
+
+	pdev_ids = device_ids[r_type];
+	pdev_ids->push_back(dev_id);
+	logger->Info("PLAT OCL: Device '%s'[%d] ID = %d",
+		ResourceIdentifier::TypeStr[r_type],
+		pdev_ids->size(),
+		pdev_ids->at(pdev_ids->size()-1));
+}
 
 OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(
 		AppPtr_t papp,
