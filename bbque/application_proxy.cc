@@ -22,8 +22,11 @@
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/utils/utility.h"
-
 #include "bbque/cpp11/chrono.h"
+
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#include "bbque/pp/opencl.h"
+#endif
 
 #define MODULE_NAMESPACE APPLICATION_PROXY_NAMESPACE
 
@@ -32,7 +35,11 @@ namespace br = bbque::res;
 
 namespace bbque {
 
-ApplicationProxy::ApplicationProxy() : Worker() {
+ApplicationProxy::ApplicationProxy() : Worker()
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	, oclProxy(OpenCLProxy::GetInstance())
+#endif
+{
 
 	//---------- Setup Worker
 	Worker::Setup(BBQUE_MODULE_NAME("ap"), APPLICATION_PROXY_NAMESPACE);
@@ -228,11 +235,17 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 	if (likely(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
-		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(Resource::GPU));
-		uint8_t ocl_dev = (uint8_t) gpu_ids.FirstSet();
-		if (ocl_dev == 254) ocl_dev = 2;
-		logger->Error("[%s] OCL device = %d", papp->StrId(), ocl_dev);
-		syncp_prechange_msg.dev = ocl_dev;
+		ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(Resource::GPU));
+		ResID_t r_id = gpu_ids.FirstSet();
+		// If no GPU have been bound, the CPU is the OpenCL device assigned
+		if ((r_id == R_ID_NONE)  || (r_id == R_ID_ANY)) {
+			VectorUInt8Ptr_t pdev_ids = oclProxy.GetDeviceIDs(Resource::CPU);
+			r_id  = pdev_ids->at(0);
+		}
+
+		syncp_prechange_msg.dev = (uint8_t) r_id;
+		logger->Info("APPs PRX: [%s] OpenCL device assigned: %d",
+			 papp->StrId(), r_id);
 #endif
 	}
 

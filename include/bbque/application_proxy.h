@@ -38,6 +38,11 @@ using namespace bbque::utils;
 
 namespace bbque {
 
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+class OpenCLProxy;
+#endif
+
+
 /**
  * @brief Interface to access application specific data and functionalities.
  *
@@ -83,7 +88,9 @@ private:
 	} cmdRsp_t;
 
 
-
+#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+	OpenCLProxy & oclProxy;
+#endif
 
 public:
 
