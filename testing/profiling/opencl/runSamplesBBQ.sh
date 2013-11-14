@@ -137,8 +137,8 @@ function run_stereomatch {
 		printf "Running up to %d instances " $2
 	#	echo "BBQUE_RTLIB_OPTS=o1 $1 -i" $NUMITER \
 	#		"--path_img_ref "$BOSP_BASE"/contrib/ocl-samples/StereoMatching/tsukuba" $3 $4 > nist
-		eval `BBQUE_RTLIB_OPTS="o1" $1 -i ${NUMITER[$SEL]} \
-		--path_img_ref $BOSP_BASE/contrib/ocl-samples/StereoMatching/tsukuba $3 $4 &`
+		(BBQUE_RTLIB_OPTS="o1" $1 -i ${NUMITER[$SEL]} \
+		--path_img_ref $BOSP_BASE/contrib/ocl-samples/StereoMatching/tsukuba $3 $4 &)
 	done
 	wait
 }
