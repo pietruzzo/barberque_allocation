@@ -88,6 +88,22 @@ $AMD_SAMPLE_PREFIX"NBody -i 300 -x 32768 -q -t"
 $AMD_SAMPLE_PREFIX"FluidSimulation2D -i 1000 -q -t"
 $AMD_SAMPLE_PREFIX"MonteCarloAsian -i 10 -c 256 -t")
 
+# $1 = sample
+# $2 = current number of run
+# $3 = number of instances
+# $4 = application parameter value
+
+function print_test_header {
+	printf "============================================\n"
+	printf "| BBQ Test run    : %-3d / %-16d | \n" $2 $NUMRUN
+	echo   "--------------------------------------------"
+	printf "| SAMPLE          : %-17s      | \n" $1
+	printf "| Instances       : %-17d      | \n" $3
+	printf "| Parameter value : %-17d      | \n" $4
+	printf "============================================  \n"
+}
+
+
 #1: Sample
 #2: Number of instances
 #3: Parameter flag
@@ -156,13 +172,15 @@ function launch {
 	end_t=$(date +%s)
 	diff_t=$((end_t-start_t))
 	cosched_times[$1,$2]=$diff_t
-	echo "In matrix ->" ${cosched_times[$1,$2]}
+	printf "\t"
+	echo ${ocl_names[$1]} "has finished in" ${cosched_times[$1,$2]} "s"
 #	echo ${cosched_times[$1,$2]}" " >> \
 #		$TESTDIR"/GPUcs-"${ocl_names[$1]}"_"${ocl_names[$2]}".dat"
 
 	ADAPTER_INFO=$(cat /tmp/OCLSampleRuntime.dat)
 	IFS=" " read -ra INFO <<< "$ADAPTER_INFO"
-	printf "%d %d %d %d %d\n" $diff_t ${INFO[0]} ${INFO[1]} ${INFO[2]} ${INFO[3]} >> $TESTDIR"/GPUcs-"${ocl_names[$1]}"_"${ocl_names[$2]}".dat"
+	printf "%d %d %d %d %d\n" $diff_t ${INFO[0]} ${INFO[1]} ${INFO[2]} ${INFO[3]} >>\
+		$TESTDIR"/GPUcs-"${ocl_names[$1]}"_"${ocl_names[$2]}".dat"
 
 
 }
@@ -223,9 +241,9 @@ for s in $AMD_SAMPLES; do
 		if [ $SEL == 2 ]; then
 			printf "[%s] No application parameters\n" $SAMPLE
 			OUTFILENAME=$OUTDIR/$DATETIME/"NOBBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P0-Runtime.dat"
-			printf "[%s] OUTPUTFILE: ......" $SAMPLE $OUTFILENAME
+			printf "[%s] Output file: %s\n" $SAMPLE $OUTFILENAME
 			for ((r=1; r <=$NUMRUN; ++r)); do
-				printf "[%s] [nI=%d]********* RUN %d *********************\n" $SAMPLE $i $r
+				print_test_header $SAMPLE $r $i $p
 				echo $AMD_SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]} -t
 				START=$(date +%s)
 				(run_sample $AMD_SAMPLE_PREFIX$SAMPLE $ix) 2>&1 |./getAdapterInfoNOBBQ.awk
@@ -242,9 +260,9 @@ for s in $AMD_SAMPLES; do
 			for p in $PVALUES; do
 				printf "[%s] Parameter value = %d\n" $SAMPLE $p
 				OUTFILENAME=$OUTDIR/$DATETIME/"NOBBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P"$p"-Runtime.dat" 
-				printf "[%s] OUTPUTFILE: ......" $SAMPLE $OUTFILENAME
+				printf "[%s] Output file: %s\n" $SAMPLE $OUTFILENAME
 				for ((r=1; r <=$NUMRUN; ++r)); do
-					printf "[%s] [nI=%d]********* RUN %d *********************\n" $SAMPLE $i $r
+					print_test_header $SAMPLE $r $i $p
 					echo $AMD_SAMPLE_PREFIX$SAMPLE -i ${NUMITER[$SEL]} ${ARGS[$SEL]} $p -t
 					START=$(date +%s)
 					(run_sample $AMD_SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./getAdapterInfoNOBBQ.awk

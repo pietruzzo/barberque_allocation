@@ -60,7 +60,8 @@ SM_PARAMS=(20)
 # Number of iterations per sample execution
 NUMITER=(0 300 100 20 1)
 #NUMITER=(0 10 20 90 1)
-
+#TOTRUNS=$(($NUMRUN*${#SAMPLES[@]}))
+#TOTRUNS=$(($NUMRUN*4))
 
 declare -A cosched_times
 
@@ -91,7 +92,8 @@ function setup {
 		cpu_gov=$(cat /sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_governor)
 		echo "cpu"$i": "$cpu_gov
 		if [ $cpuf_gov ! "performance" ]; then
-			echo "Please set the cpufreq governor to performance!"
+			echo "Please setting the cpufreq governor to performance..."
+			eval `cpufreq-set -c` $i `-g performance`
 			exit
 		fi
 	done
@@ -106,6 +108,10 @@ function setup {
 		*)
 			BBQUE_RTLIB_OPTS="o1"
 	esac
+
+#	printf "Total number of test runs = %d\n" $TOTRUNS
+#	echo ${#SAMPLES[@]}
+#	exit
 }
 
 sample_cmdline=(
@@ -186,6 +192,21 @@ function launch {
 
 }
 
+# $1 = sample
+# $2 = current number of run
+# $3 = number of instances
+# $4 = application parameter value
+
+function print_test_header {
+	printf "============================================\n"
+	printf "| BBQ Test run    : %-3d / %-16d | \n" $2 $NUMRUN
+	echo   "--------------------------------------------"
+	printf "| SAMPLE          : %-17s      | \n" $1
+	printf "| Instances       : %-17d      | \n" $3
+	printf "| Parameter value : %-17d      | \n" $4
+	printf "============================================  \n"
+}
+
 ## Start ##
 setup $1
 
@@ -222,7 +243,6 @@ if [ $BBQ = 0 ]; then
 	SAMPLES=$AMD_SAMPLES
 fi
 
-
 for s in $SAMPLES; do
 	# Launch sample
 	#SAMPLE=${SAMPLES[$SEL]}
@@ -251,11 +271,11 @@ for s in $SAMPLES; do
 			;;
 	esac
 
-	printf "============== Sample=%s SEL=%s ================\n" $SAMPLE $SEL
-	printf "Parameter set = %s\n" $PVALUES
+	printf "==================== (SEL=%s) ================\n" $SAMPLE $SEL
+	printf "Parameter set = [%s]\n" $PVALUES
 
 	for i in $NUMINST; do
-		printf "# Instances = %s\n" $i
+#		printf "# Instances = %s\n" $i
 		# Remove BBQ generated log file
 		clean_out
 
@@ -264,13 +284,13 @@ for s in $SAMPLES; do
 			printf "[%s] No application parameters\n" $SAMPLE
 			for ((r=1; r <=$NUMRUN; ++r)); do
 				p=0
-				printf "[%s] [nI=%d]************ RUN %d *********************\n" $SAMPLE $i $r
+				print_test_header $SAMPLE $r $i $p
 				echo $SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]}
 				START=$(date +%s)
 				(run_sample $SAMPLE_PREFIX$SAMPLE $i) 2>&1 |./getAdapterInfo.awk
 				END=$(date +%s)
 				DIFF=$((END-START))
-				printf "Time: %d s\n" $DIFF  >> /tmp/$OUTFILENAME.log
+				printf "Time: %d s\n" $DIFF | tee -a /tmp/$OUTFILENAME.log
 				printf "Param: %d\n" $p      >> /tmp/$OUTFILENAME.log
 				sleep 3
 			done
@@ -278,16 +298,15 @@ for s in $SAMPLES; do
 		# --- Stereomatching --- #
 		elif [ $SEL == 2 ]; then
 			for p in $PVALUES; do
-				printf "[%s] Parameter value = %d\n" $SAMPLE $p
 				echo $BOSP_BASE"/contrib/ocl-samples/StereoMatching/tsukuba"
 				for ((r=1; r <=$NUMRUN; ++r)); do
-					printf "[%s] [nI=%d]************ RUN %d *********************\n" $SAMPLE $i $r
+					print_test_header $SAMPLE $r $i $p
 					echo $SAMPLE_PREFIX$SAMPLE -i ${NUMITER[$SEL]} ${ARGS[$SEL]} $p
 					START=$(date +%s)
 					(run_stereomatch $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./getAdapterInfo.awk
 					END=$(date +%s)
 					DIFF=$((END-START))
-					printf "Time: %d s\n" $DIFF >> /tmp/$OUTFILENAME.log
+					printf "Time: %d s\n" $DIFF | tee -a /tmp/$OUTFILENAME.log
 					printf "Param: %d\n" $p     >> /tmp/$OUTFILENAME.log
 					sleep 3
 				done
@@ -296,15 +315,15 @@ for s in $SAMPLES; do
 		else
 		# --- Nbody, Montecarlo --- #
 			for p in $PVALUES; do
-				printf "[%s] Parameter value = %d\n" $SAMPLE $p
 				for ((r=1; r <=$NUMRUN; ++r)); do
-					printf "[%s] [nI=%d]********* RUN %d *********************\n" $SAMPLE $i $r
+					print_test_header $SAMPLE $r $i $p
 					echo $SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]} ${ARGS[$SEL]} $p
 					START=$(date +%s)
 					(run_sample $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./getAdapterInfo.awk
 					END=$(date +%s)
 					DIFF=$((END-START))
-					printf "Time: %d s\n" $DIFF >> /tmp/$OUTFILENAME.log
+					#printf "Time: %d s\n" $DIFF >> /tmp/$OUTFILENAME.log
+					printf "Time: %d s\n" $DIFF | tee -a /tmp/$OUTFILENAME.log
 					printf "Param: %d\n" $p     >> /tmp/$OUTFILENAME.log
 					sleep 3
 				done
@@ -316,6 +335,5 @@ for s in $SAMPLES; do
 		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P" -f extractData.awk /tmp/$OUTFILENAME.log
 	done
 done
-
 
 
