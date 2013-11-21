@@ -44,6 +44,17 @@ SchedContribManager::Type_t YamsSchedPol::sc_types[] = {
 #endif
 };
 
+
+#ifdef CONFIG_BBQUE_SP_COWS_BINDING
+const char * YamsSchedPol::cows_metrics_str[] = {
+	"stalls",
+	"iret"  ,
+	"flops" ,
+	"llcm"
+};
+#endif // CONFIG_BBQUE_SP_COWS_BINDING
+
+
 // Definition of time metrics of the scheduling policy
 MetricsCollector::MetricsCollection_t
 YamsSchedPol::coll_metrics[YAMS_METRICS_COUNT] = {

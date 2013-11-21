@@ -264,6 +264,10 @@ private:
 		mv_metrics_t iret_info;
 		mv_metrics_t flops_info;
 	};
+
+	/** Char strings of the metrics in the recipe */
+	static const char * cows_metrics_str[];
+
 	std::vector<cows_binding_info> binding_domains;
 	std::vector<cows_binding_info> binding_speculative;
 	std::vector<cows_binding_info> binding_empty;
