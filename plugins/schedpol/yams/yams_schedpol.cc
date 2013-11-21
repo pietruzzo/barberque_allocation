@@ -689,17 +689,14 @@ void YamsSchedPol::CowsUpdateMeans(int logic_index) {
 	cows_info.bd_load[logic_index]++;
 	cows_info.bd_total_load++;
 
-	// Applying the candidate SchedEnt statistics
-	// Updating Last Level Cache Misses accumulator for the chosen BD
+	// Applying the candidate scheduling entity statistics
+	// Update accumulators for the chosen BD
 	binding_domains[logic_index].
 		llcm_info(cows_info.perf_data[COWS_LLCM]);
-	// Updating Stalls accumulator for the chosen BD
 	binding_domains[logic_index].
 		stalls_info(cows_info.perf_data[COWS_STALLS]);
-	// Updating Retired Instructions accumulator for the chosen BD
 	binding_domains[logic_index].
 		iret_info(cows_info.perf_data[COWS_IRET]);
-	// Updating Floating Operations accumulator for the chosen BD
 	binding_domains[logic_index].
 		flops_info(cows_info.perf_data[COWS_FLOPS]);
 }
