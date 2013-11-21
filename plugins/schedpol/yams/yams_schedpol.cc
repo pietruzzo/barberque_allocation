@@ -728,8 +728,18 @@ void YamsSchedPol::CowsClear() {
 	cows_info.bd_total_load = 0;
 }
 
-void YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
+YamsSchedPol::ExitCode_t YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
 	int db, ds, dr, df;
+
+	// Safety checks
+	if (!pschd) {
+		logger->Error("COWS: Unexpected null scheduling entity");
+		return YAMS_ERROR;
+	}
+	if (!pschd->pawm) {
+		logger->Error("COWS: Unexpected null AWM specified");
+		return YAMS_ERROR;
+	}
 
 	// Get the metrics parsed from the recipe
 	db = atoi(std::static_pointer_cast<PluginAttr_t>

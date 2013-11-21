@@ -413,7 +413,7 @@ private:
 	/**
 	 * @brief COWS: Initialize with values extracted from recipe
 	 */
-	void CowsInit(SchedEntityPtr_t pschd);
+	ExitCode_t CowsInit(SchedEntityPtr_t pschd);
 
 	/**
 	 * @brief COWS: compute the boundness variance variation for all BDs
