@@ -627,7 +627,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 		// Insert the SchedEntity in the scheduling list
 		sched_ul.lock();
-		entities.push_back(pschd);
+		entities.push_back(pschd_domain);
 		sched_ul.unlock();
 		logger->Notice("EvalAWM: %s scheduling metrics = %1.4f [%d]",
 				pschd->StrId(), pschd->metrics, entities.size());
