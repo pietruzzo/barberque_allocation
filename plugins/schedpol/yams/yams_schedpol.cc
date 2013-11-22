@@ -27,6 +27,7 @@
 #include "bbque/app/working_mode.h"
 #include "bbque/plugins/logger.h"
 #include "contrib/sched_contrib_manager.h"
+#include "bbque/utils/attributes_container.h"
 
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
@@ -737,7 +738,7 @@ void YamsSchedPol::CowsClear() {
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
-	int db, ds, dr, df;
+	PluginAttrPtr_t plugin_attr;
 
 	// Safety checks
 	if (!pschd) {
@@ -750,21 +751,24 @@ YamsSchedPol::ExitCode_t YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
 	}
 
 	// Get the metrics parsed from the recipe
-	db = atoi(std::static_pointer_cast<PluginAttr_t>
-			(pschd->pawm->GetAttribute("cows", "boundness"))->str.c_str());
-	ds = atoi(std::static_pointer_cast<PluginAttr_t>
-			(pschd->pawm->GetAttribute("cows", "stalls"))->str.c_str());
-	dr = atoi(std::static_pointer_cast<PluginAttr_t>
-			(pschd->pawm->GetAttribute("cows", "retired"))->str.c_str());
-	df = atoi(std::static_pointer_cast<PluginAttr_t>
-			(pschd->pawm->GetAttribute("cows", "flops"))->str.c_str());
+	for (uint8_t cm = COWS_STALLS; cm < COWS_MIGRA; ++cm) {
+		plugin_attr = std::static_pointer_cast<PluginAttr_t>(
+				pschd->pawm->GetAttribute("cows", cows_metrics_str[cm])
+		);
+		if (plugin_attr != nullptr) {
+			cows_info.perf_data[cm] = atoi(plugin_attr->str.c_str());
+		}
+		else {
+			cows_info.perf_data[cm] = 0;
+			logger->Warn("COWS: %s  missing '%s' attribute [%d]."
+					" Set to 0 by default",
+					pschd->pawm->StrId(), cows_metrics_str[cm], cm);
+		}
+		logger->Info("COWS: %s '%s' = %.2f",
+				pschd->StrId(), cows_metrics_str[cm], cows_info.perf_data[cm]);
+	}
 
-	// Setting info for future system update. 'perf_data' will be used
-	// from now on to store the current application statistics
-	cows_info.perf_data[COWS_LLCM]   = db;
-	cows_info.perf_data[COWS_STALLS] = ds;
-	cows_info.perf_data[COWS_IRET]   = dr;
-	cows_info.perf_data[COWS_FLOPS]  = df;
+	return YAMS_SUCCESS;
 }
 
 void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
