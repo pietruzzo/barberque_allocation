@@ -152,7 +152,7 @@ function launch {
 	local end_t=0
 	local diff_t=0
 	start_t=$(date +%s)
-	eval ${sample_cmdline[$1]} 2>&1 |./bbqOCLAdapterInfoNOBBQ.awk
+	eval ${sample_cmdline[$1]} 2>&1 |./getAdapterInfoNOBBQ.awk
 	end_t=$(date +%s)
 	diff_t=$((end_t-start_t))
 	cosched_times[$1,$2]=$diff_t
@@ -228,7 +228,7 @@ for s in $AMD_SAMPLES; do
 				printf "[%s] [nI=%d]********* RUN %d *********************\n" $SAMPLE $i $r
 				echo $AMD_SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]} -t
 				START=$(date +%s)
-				(run_sample $AMD_SAMPLE_PREFIX$SAMPLE $ix) 2>&1 |./bbqOCLAdapterInfoNOBBQ.awk
+				(run_sample $AMD_SAMPLE_PREFIX$SAMPLE $ix) 2>&1 |./getAdapterInfoNOBBQ.awk
 				END=$(date +%s)
 				DIFF=$((END-START))
 				ADAPTER_INFO=$(cat /tmp/OCLSampleRuntime.dat)
@@ -247,7 +247,7 @@ for s in $AMD_SAMPLES; do
 					printf "[%s] [nI=%d]********* RUN %d *********************\n" $SAMPLE $i $r
 					echo $AMD_SAMPLE_PREFIX$SAMPLE -i ${NUMITER[$SEL]} ${ARGS[$SEL]} $p -t
 					START=$(date +%s)
-					(run_sample $AMD_SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./bbqOCLAdapterInfoNOBBQ.awk
+					(run_sample $AMD_SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./getAdapterInfoNOBBQ.awk
 					END=$(date +%s)
 					DIFF=$((END-START))
 					ADAPTER_INFO=$(cat /tmp/OCLSampleRuntime.dat)

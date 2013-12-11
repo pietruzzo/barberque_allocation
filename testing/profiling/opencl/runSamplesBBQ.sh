@@ -267,7 +267,7 @@ for s in $SAMPLES; do
 				printf "[%s] [nI=%d]************ RUN %d *********************\n" $SAMPLE $i $r
 				echo $SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]}
 				START=$(date +%s)
-				(run_sample $SAMPLE_PREFIX$SAMPLE $i) 2>&1 |./bbqOCLAdapterInfo.awk
+				(run_sample $SAMPLE_PREFIX$SAMPLE $i) 2>&1 |./getAdapterInfo.awk
 				END=$(date +%s)
 				DIFF=$((END-START))
 				printf "Time: %d s\n" $DIFF  >> /tmp/$OUTFILENAME.log
@@ -284,7 +284,7 @@ for s in $SAMPLES; do
 					printf "[%s] [nI=%d]************ RUN %d *********************\n" $SAMPLE $i $r
 					echo $SAMPLE_PREFIX$SAMPLE -i ${NUMITER[$SEL]} ${ARGS[$SEL]} $p
 					START=$(date +%s)
-					(run_stereomatch $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./bbqOCLAdapterInfo.awk
+					(run_stereomatch $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./getAdapterInfo.awk
 					END=$(date +%s)
 					DIFF=$((END-START))
 					printf "Time: %d s\n" $DIFF >> /tmp/$OUTFILENAME.log
@@ -301,7 +301,7 @@ for s in $SAMPLES; do
 					printf "[%s] [nI=%d]********* RUN %d *********************\n" $SAMPLE $i $r
 					echo $SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]} ${ARGS[$SEL]} $p
 					START=$(date +%s)
-					(run_sample $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./bbqOCLAdapterInfo.awk
+					(run_sample $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./getAdapterInfo.awk
 					END=$(date +%s)
 					DIFF=$((END-START))
 					printf "Time: %d s\n" $DIFF >> /tmp/$OUTFILENAME.log
@@ -312,8 +312,8 @@ for s in $SAMPLES; do
 			done
 		fi
 		# Extract data
-		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-P" -f bbqOCLDataExtract.awk /tmp/$OUTFILENAME.log
-		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P" -f bbqOCLDataExtract.awk /tmp/$OUTFILENAME.log
+		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-P" -f extractData.awk /tmp/$OUTFILENAME.log
+		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P" -f extractData.awk /tmp/$OUTFILENAME.log
 	done
 done
 
