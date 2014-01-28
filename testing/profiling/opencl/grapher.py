@@ -22,6 +22,18 @@ import sys
 
 import numpy as np
 import matplotlib.pyplot as plt
+
+from matplotlib import rc, rcParams
+rc('font',**{'family':'sans-serif','sans-serif':['Times New Roman']})
+#rc('font',**{'family':'sans-serif','sans-serif':['computer modern sans serif']})
+# These lines are needed to get type-1 results:
+# http://nerdjusttyped.blogspot.com/2010/07/type-1-fonts-and-matplotlib-figures.html
+rcParams['ps.useafm'] = True
+rcParams['pdf.use14corefonts'] = True
+rcParams['text.usetex'] = False
+rcParams['text.latex.unicode']=True
+
+
 from scipy import stats
 from math import sqrt
 
@@ -640,10 +652,43 @@ def cleanup(s):
 
 
 ###############################################################################
+#                                                             Fonts settings  #
+###############################################################################
+
+def SetPlotRC():
+	#If fonttype = 1 doesn't work with LaTeX, try fonttype 42.
+	plt.rc('pdf', fonttype = 1)
+	plt.rc('ps',  fonttype = 1)
+
+def ApplyFont(ax):
+        ticks = ax.get_xticklabels() + ax.get_yticklabels()
+	text_size = 12.0
+	for t in ticks:
+		t.set_fontname('Times New Roman')
+		t.set_fontsize(text_size)
+
+	txt = ax.get_xlabel()
+        txt_obj = ax.set_xlabel(txt)
+	txt_obj.set_fontname('Times New Roman')
+	txt_obj.set_fontsize(text_size)
+
+	txt = ax.get_ylabel()
+	txt_obj = ax.set_ylabel(txt)
+	txt_obj.set_fontname('Times New Roman')
+	txt_obj.set_fontsize(text_size)
+
+	txt = ax.get_title()
+	txt_obj = ax.set_title(txt)
+	txt_obj.set_fontname('Times New Roman')
+	txt_obj.set_fontsize(text_size)
+
+
+###############################################################################
 #                                  MAIN                                       #
 ###############################################################################
 
 for s in samples:
+#	SetPlotRC()
 	print " ******************** Sample: %s ***************************" % s
 
 	# Runtime metrics trends (time, load, temperature)
