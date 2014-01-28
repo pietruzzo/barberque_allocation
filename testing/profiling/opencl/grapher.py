@@ -115,9 +115,9 @@ def getRuntimeStats(sample):
 		for p in params[s]:
 			p_i = params[s].index(p)
 			for n in instances:
-				#datafile = "%s-%s-N%d-I%d-P%d-Runtime.dat" % (bbq, s, n, i, p)
-				datafile = "%s-%s-N%d-P%d-Runtime.dat" % (bbq, s, n, p)
-				print "Parsing sample data from %s..." % datafile
+				datafile = "%s-%s-N%d-I%d-P%d-Runtime.dat" % (bbq, s, n, i, p)
+				print "# Opening %s..." % (datafile)
+				#datafile = "%s-%s-N%d-P%d-Runtime.dat" % (bbq, s, n, p)
 				data = np.loadtxt(datafile)
 				nr_i = instances.index(n)
 
@@ -132,14 +132,15 @@ def getRuntimeStats(sample):
 
 
 def getCommandStatsInst(sample, param, orient):
+	nr_it = iterations[sample]
 	for c in commands:
 		a_times = [[[] for x in range(len(times_stage))]  for j in range(len(instances))]
 		e_times = [[[] for x in range(len(times_stage))]  for j in range(len(instances))]
 		for n in instances:
+			datafile = "BBQ-%s-N%d-I%d-P%d-%s-%s.dat" % (sample, n, nr_it, param, c, orient)
+			#datafile = "BBQ-%s-N%d-P%d-%s-%s.dat" % (sample, n, param, c, orient)
+			print "<< Parsing command data from %s..." % datafile
 			n_i = instances.index(n)
-			#datafile = "BBQ-%s-N%d-I%d-P%d-%s-%s.dat" % (sample, nr_inst, nr_it, param, c, orient)
-			datafile = "BBQ-%s-N%d-P%d-%s-%s.dat" % (sample, n, param, c, orient)
-			print "Parsing command data from %s..." % datafile
 			try:
 				data = np.loadtxt(datafile)
 			except IOError as e:
@@ -158,9 +159,9 @@ def getCommandStatsParams(s, nr_i, orient):
 
 		for p in params[s]:
 			p_i = params[s].index(p)
-			datafile = "BBQ-%s-N%d-P%d-%s-%s.dat" % (s, nr_i, p, c, orient)
-			#datafile = "BBQ-%s-N%d-I%d-P%d-Runtime.dat" % (s, nr_i, i, p)
-			print "Parsing command data from %s..." % datafile
+			#datafile = "BBQ-%s-N%d-P%d-%s-%s.dat" % (s, nr_i, p, c, orient)
+			datafile = "BBQ-%s-N%d-I%d-P%d-Runtime.dat" % (s, nr_i, i, p)
+			print "<< Parsing command data from %s..." % datafile
 			try:
 				data = np.loadtxt(datafile)
 			except IOError as e:
