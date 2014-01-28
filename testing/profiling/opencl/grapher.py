@@ -756,9 +756,6 @@ for s in samples:
 		for p in params[s]:
 			plotMetricsInst(bbq, s, p)
 
-			if s == "fluidsimulation2D":
-				continue
-
 			### Plot per command (OpenCL) statistics [horizontal]
        			getCommandStatsInst(s, p, "H")
        			plotCommandBarsInstH(s, p)
