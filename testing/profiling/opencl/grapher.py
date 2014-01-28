@@ -649,10 +649,12 @@ def cleanup(s):
 			while avg_metrics_bbq[s_i][p_i][m_i] != []:
 				avg_metrics_bbq[s_i][p_i][m_i].pop()
 				err_metrics_bbq[s_i][p_i][m_i].pop()
-				avg_metrics_amd[s_i][p_i][m_i].pop()
-				err_metrics_amd[s_i][p_i][m_i].pop()
-		print avg_metrics_bbq[s_i][p_i]
-		print avg_metrics_amd[s_i][p_i]
+				if "NOBBQ" in cases:
+					avg_metrics_amd[s_i][p_i][m_i].pop()
+					err_metrics_amd[s_i][p_i][m_i].pop()
+	#	print avg_metrics_bbq[s_i][p_i]
+	#	if "NOBBQ" in cases:
+	#		print avg_metrics_amd[s_i][p_i]
 
 
 
