@@ -295,7 +295,7 @@ def plotCommandBarsParamsV(sample, nr_inst):
 	s_i = samples.index(sample)
 	N     = len(params[sample])
 	rects = [0]
-	width = 0.35      # the width of the bars
+	width = 0.35   		# the width of the bars
 	ind   = np.arange(N)    # the x locations for the groups
 
 	# queue, submit, exec
@@ -445,7 +445,7 @@ def plotCommandBarsInstV(sample, param):
 			plt.ylabel('Percentage of time spent [%]')
 			plt.xlabel(param_labels[sample])
 			plt.title(graph_title)
-			plt.xticks(ind+width/2, params[sample])
+			plt.xticks(np.arange(N)+width/2, instances)
 			plt.yticks(np.arange(0, 101, 10))
 			# Legend information
 			cmd_labels.append(c)
@@ -463,8 +463,8 @@ def plotCommandBarsInstV(sample, param):
 #######################################################################
 
 def plotMetricsVs(sample):
-	print "Plotting metrics BBQ vs NoBBQ..."
-	width = 0.15          # the width of the bars
+	print "-> Plotting metrics BBQ vs NoBBQ..."
+	width = 0.30          # the width of the bars
 	rects     = []
 	rect_attr = []
 	labels    = []
@@ -507,11 +507,12 @@ def plotMetricsVs(sample):
 			ind  = ind + 2*width
 
 			# Plot settings
-			plt.title(title_metrics[m_i] + "(" + bbq_param_labels[sample] + "=" + str(p) + ")")
-			plt.ylabel(lab_y[cs])
-			ax.set_xlabel("Number of instances")
+			plt.title(title_metrics[m_i] + "(" + bbq_param_labels[sample] + "=" + str(p) + ")",
+				fontsize=14)
+			ax.set_ylabel(lab_y[cs], size='large')
+			ax.set_xlabel("Number of instances", size='large')
 			ax.set_xticklabels(instances)
-			ax.set_xticks(np.arange(len(instances)+(width*len(instances))))
+			ax.set_xticks(np.arange(len(instances)+(0.5*width*len(instances))))
 			ax.legend(cases_lgd, loc='best')
 			#plt.show()
 			plt.savefig(graph_name, papertype = 'a3', format = 'pdf')
@@ -547,9 +548,11 @@ def plotMetricsParams(bbq, sample, nr_inst):
 		plt.ylim(0, 180)
 		ax.set_ylabel('Metrics values')
 		ax.set_xticklabels(out_metrics)
-		ax.set_title('Runtime metrics ['+str(nr_inst)\
+		ax.set_title(\
+			'Runtime metrics ['+str(nr_inst)\
 				+' instances] varying the parameter "'\
-				+ param_labels[sample] + '"')
+				+ param_labels[sample] + '"',
+			fontsize=14)
 		#ax.legend((rects[i]), (commands[pos]))
 		ind = ind + width
 
@@ -557,15 +560,16 @@ def plotMetricsParams(bbq, sample, nr_inst):
 		for r in rect:
 			xloc = ind[rect.index(r)] - width/2
 			yloc = ydata[rect.index(r)] + 2
-			plt.text(xloc, yloc, params[sample][p_i], horizontalalignment='center',\
-				verticalalignment='bottom', color='k', rotation=90, fontsize=9)
+			plt.text(xloc, yloc, params[sample][p_i],
+				horizontalalignment='center', verticalalignment='bottom',\
+				color='k', rotation=90, fontsize=9)
 
 		#labels.append(title_metrics[m_i])
 		rect_attr.append(rect[0])
 		rects.append(rect)
 
 	plt.xticks(np.arange(len(out_metrics))+(width*len(avg_metrics[n_i][p_i]))/2)
-	plt.legend(rect_attr, labels, loc='upper left', fontsize=12)
+	plt.legend(rect_attr, labels, loc='upper left', fontsize=14)
 	plt.savefig(graph_name, papertype = 'a3', format = 'pdf')
 	plt.close()
 	#plt.show()
