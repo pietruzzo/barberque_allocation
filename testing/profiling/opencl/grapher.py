@@ -502,8 +502,10 @@ def plotMetricsVs(sample):
 						amd_data.append(avg_metrics_amd[i_nr][p_nr][m_i][0])
 						amd_err.append(err_metrics_amd[i_nr][p_nr][m_i][0])
 
-			rect = plt.bar(ind, bbq_data, width, color=colorm[cs], yerr=bbq_err)
-			rect = plt.bar(ind+width, amd_data, width, color=colorm[cs+3], yerr=amd_err)
+			#rect = plt.bar(ind, bbq_data, width, color=colorm[cs], yerr=bbq_err)
+			rect = plt.bar(ind, bbq_data, width, color="#AAAAAA", yerr=bbq_err, ecolor='black')
+			rect = plt.bar(ind+width, amd_data, width, color="#333333", yerr=amd_err, ecolor='black')
+			#rect = plt.bar(ind+width, amd_data, width, color=colorm[cs+3], yerr=amd_err)
 			ind  = ind + 2*width
 
 			# Plot settings
