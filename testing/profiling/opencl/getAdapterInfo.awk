@@ -9,14 +9,14 @@ function dumpAdapterCounters() {
   # Example output:
   # Current Clocks : 300 400 GPU load : 0 Sensor 0: Temperature - 36.00 C
 
-  "DISPLAY=:0 aticonfig --odgc --odgt --adapter=0 | egrep -i \"clock|load|temperature\" | xargs echo | sed 's/%//'"|getline load;
+  "aticonfig --input=/etc/X11/xorg.conf_gpu --odgc --odgt --adapter=0 | egrep -i \"clock|load|temperature\" | xargs echo | sed 's/%//'"|getline load;
   split(load, v, " ");
   clock_a0 = v[4];
   load_a0  = v[9];
   temp_a0 = v[14];
   printf("Adapter 0 - Clock: %d MHz, Load: %d %%, Temp: %d C\n", v[4], v[9], v[14]) >> "/tmp/BbqueOCLStats.log"
 
-  "DISPLAY=:0 aticonfig --odgc --odgt --adapter=1 | egrep -i \"clock|load|temperature\" | xargs echo | sed 's/%//'"|getline load;
+  "aticonfig --input=/etc/X11/xorg.conf_gpu --odgc --odgt --adapter=1 | egrep -i \"clock|load|temperature\" | xargs echo | sed 's/%//'"|getline load;
   split(load, v, " ");
   clock_a1 = v[4];
   load_a1  = v[9];

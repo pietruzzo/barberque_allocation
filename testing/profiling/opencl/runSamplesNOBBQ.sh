@@ -30,6 +30,7 @@ AMD_SAMPLE_PREFIX="/opt/AMDAPP/samples/opencl/bin/x86_64/"
 OUTDIR=${OUTDIR:-$BOSP_BASE"/out/var/ocl"}
 OUTFILENAME="BbqueOCLStats"
 DATADIR_PREFIX=${DATADIR_PREFIX:-"/tmp"}
+XORG_CONF="/etc/X11/xorg.conf_gpu"
 
 # ========================== Samples data ==================================
 ocl_names=(nbody fluidsimulation2D montecarlo)
@@ -52,7 +53,7 @@ NUMITER=(0 1000 2000 5)
 
 function setup {
 	# Block GPUs frequency
-	(amdconfig --adapter=all --od-setclocks=300,400)
+	(amdconfig --adapter=all --od-setclocks=300,400 --input=$XORG_CONF)
 
 	# Set cpufreq governor to 'performance'
 	echo "cpufreq governors:"
