@@ -123,11 +123,11 @@ def getRuntimeStats(sample):
 
 				if bbq == "BBQ":
 					getStats(data, avg_metrics_bbq[nr_i][p_i], err_metrics_bbq[nr_i][p_i])
-					print "BBQ  averages  [P:%d, I:%d]: " % (p, n),
+					print "BBQ  averages  [S:%s, P:%d, I:%d]: " % (s, p, n),
 					print avg_metrics_bbq[nr_i][p_i]
 				else:
 					getStats(data, avg_metrics_amd[nr_i][p_i], err_metrics_amd[nr_i][p_i])
-					print "NOBBQ averages [P:%d, I:%d]: " % (p, n),
+					print "NOBBQ averages [S:%s, P:%d, I:%d]: " % (s, p, n),
 					print avg_metrics_amd[nr_i][p_i]
 
 
@@ -196,8 +196,7 @@ def getCommandStatsInstForPie(sample, nr_inst, param, hv):
 		e_times = [[], [], []]
 
 		datafile = "BBQ-%s-N%d-P%d-%s-%s.dat" % (sample, nr_inst, param, c, hv)
-		print "Parsing command data from %s..." % datafile
-
+		print "<- Parsing command data from %s..." % datafile
 		try:
 			data = np.loadtxt(datafile)
 		except IOError as e:
@@ -206,7 +205,6 @@ def getCommandStatsInstForPie(sample, nr_inst, param, hv):
 		getStats(data, a_times, e_times)
 		avg_cmds[commands.index(c)] = a_times
 		err_cmds[commands.index(c)] = e_times
-		#print a_times
 
 def plotCommandsPie(sample, param, stage):
 	graph_name = "{}-{}.pdf".format(sample, param, "CommandsPie")
@@ -317,9 +315,11 @@ def plotCommandBarsParamsV(sample, nr_inst):
 			cmd_means = []
 			cmd_errs  = []
 			for p in params[sample]:
+				print "-> Plotting [%s] T:%s, C:%s, P:%d" % (graph_name, times_stage[t_i], c, p)
 				p_i = params[sample].index(p)
 				cmd_means.append(cmd_data[p_i][t_i][0])
 				cmd_errs.append(cmd_data_err[p_i][t_i][0])
+#				print cmd_means
 
 			# Bar graph
 			rect = plt.bar(ind, cmd_means, width, color=colors[c_i], bottom=cmd_bottom, yerr=cmd_errs)
@@ -366,7 +366,6 @@ def plotCommandBarsInstH(sample, param):
 		c_i = commands.index(c)
 		cmd_data     = avg_cmds[c_i]
 		cmd_data_err = err_cmds[c_i]
-		#if  cmd_data == [[[], [], []], [[], [], []], [[], [], []], [[], [], []], [[], [], []], [[], [], []]]:
 		if cmd_data == [[[] for x in range(len(times_stage))]  for j in range(len(instances))]:
 			print "(W) Command %s not profiled in %s" % (c, sample)
 			continue
@@ -380,8 +379,7 @@ def plotCommandBarsInstH(sample, param):
 			for n in instances:
 				n_i = instances.index(n)
 				print "[%s] command '%s' stage '%s' [N:%d]:" % (sample, c, t_i, n)
-				print cmd_data[n_i]
-
+			#	print cmd_data[n_i]
 				if cmd_data[n_i] == [[], [], []]:
 					print "Skipping #instances = %d" % n
 					continue
@@ -389,6 +387,7 @@ def plotCommandBarsInstH(sample, param):
 				cmd_errs.append(cmd_data_err[n_i][t_i][0])
 
 			# Bar graph
+			print "(I) Len of height (cmd_means) = %d" % len(cmd_means)
 			rect = plt.bar(ind, cmd_means, width, color=colorc[t_i], bottom=cmd_bottom, yerr=cmd_errs)
 			cmd_bottom = [x+y for x,y in zip(cmd_bottom, cmd_means)]
 
@@ -444,7 +443,7 @@ def plotCommandBarsInstV(sample, param):
 			# Plot settings
 			plt.ylim(0, 140)
 			plt.ylabel('Percentage of time spent [%]')
-			plt.xlabel(param_labels[sample])
+			plt.xlabel("Number of instances")
 			plt.title(graph_title)
 			plt.xticks(np.arange(N)+width/2, instances)
 			plt.yticks(np.arange(0, 101, 10))
@@ -486,7 +485,7 @@ def plotMetricsVs(sample):
 
 			#Plot settings
 			cs = getMetricsColor(m_i)
-			print "[%s] METRICS: %s" % (sample, out_metrics[m_i])
+			print "[%s] metrics: %s" % (sample, out_metrics[m_i])
 			if out_metrics[m_i] == "GPU0Load" or out_metrics[m_i] == "GPU1Load":
 				plt.ylim(0, 100)
 			elif out_metrics[m_i] == "GPU0Temp" or out_metrics[m_i] == "GPU1Temp":
@@ -537,7 +536,7 @@ def plotMetricsParams(bbq, sample, nr_inst):
 	fig, ax = plt.subplots()
 	graph_name = "{}-{}-N{}-Runtime.pdf".format(bbq, sample, nr_inst)
 
-	print "%s [%s] N:%d P:%d" % (bbq, sample, nr_inst, len(params[sample]))
+	print "-> Plotting metrics for %s [%s] N:%d P:%d" % (bbq, sample, nr_inst, len(params[sample]))
 	for p_i in range(len(params[sample])):
 		ydata, yerrs = [], []
 		for m_i in range(len(avg_metrics[n_i][p_i])):
@@ -594,12 +593,13 @@ def plotMetricsInst(bbq, sample, param):
 	graph_name = "{}-{}-P{}-Runtime.pdf".format(bbq, sample, param)
 
 	for n_i in range(len(instances)):
-		print "%s [%s] N:%d P:%d" % (bbq, sample, instances[n_i], len(params[sample]))
+		print "-> Plotting metrics (for #instances) for %s [%s] N:%d P:%d = " % (bbq, sample, instances[n_i], len(params[sample])),
 		ydata, yerrs = [], []
 		for m_i in range(len(avg_metrics[n_i][p_i])):
 			ydata.append(avg_metrics[n_i][p_i][m_i][0])
 			yerrs.append(err_metrics[n_i][p_i][m_i][0])
 		rect = ax.bar(ind, ydata, width, color=colorm2, yerr=yerrs)
+		print ydata
 
 		# Plot settings
 		plt.ylim(0, 180)
