@@ -630,6 +630,42 @@ def plotMetricsInst(bbq, sample, param):
 	#plt.show()
 
 
+def plotDeltaTemp(sample, param):
+	# Get data
+	gpus_delta_temp = [[[] for p in range(len(instances)) ] for g in range(2)]
+	for p_i in range(len(params[sample])):
+		width     = 0.30          # the width of the bars
+		rects     = []
+		rect_attr = []
+		#ind     = np.arange(len(instances)) # the x locations for the groups
+		fig, ax = plt.subplots()
+		graph_name = "{}-P{}-dTemp.pdf".format(sample, params[sample][p_i])
+		for n_i in range(len(instances)):
+			# delta(GPU0, GPU1)
+			gpus_delta_temp[0][n_i] = abs(avg_metrics_amd[n_i][p_i][2][0] - avg_metrics_amd[n_i][p_i][4][0])
+			gpus_delta_temp[1][n_i] = abs(avg_metrics_bbq[n_i][p_i][2][0] - avg_metrics_bbq[n_i][p_i][4][0])
+
+			# Bars
+			rect = ax.bar(n_i, gpus_delta_temp[1][n_i], width, color="#AAAAAA")
+			rects.append(rect)
+			rect_attr.append(rect[0])
+			rect = ax.bar(n_i+width,  gpus_delta_temp[0][n_i], width, color="#333333")
+			rects.append(rect)
+			rect_attr.append(rect[0])
+
+		plt.ylim(0,20)
+		ax.legend(rect_attr, cases_lgd, loc='upper right', fontsize=14)
+		ax.set_title("Difference of temperature between GPUs", fontsize=14)
+#		ax.set_ylabel(u'\u0394'u'\u00B0'"C", size='large')
+		ax.set_ylabel(u'\u00B0'"C", size='large')
+		ax.set_xlabel("Number of instances", size='large')
+		ax.set_xticks(np.arange(len(instances)+(0.5*width*len(instances))))
+		ax.set_xticklabels(instances)
+#		plt.show()
+		#ApplyFont(plt.gca())
+		plt.savefig(graph_name, papertype = 'a3', format = 'pdf')
+		plt.close()
+
 ##########################################################################################
 #                                                                           Utilities    #
 ##########################################################################################
@@ -706,6 +742,7 @@ for s in samples:
 	# BBQ vs NoBBQ
 	if len(cases) > 1:
 		plotMetricsVs(s)
+		plotDeltaTemp(s, p)
 
 #	getCommandStatsInstForPie("fluidsimulation2D", 2, 1024, 'V')
 #	plotCommandsPie("fluidsimulation2D", 1024, 'exec')
