@@ -17,8 +17,6 @@
 
 # ===================== Setup =================================
 
-source setupSamples.sh
-
 BBQ=1
 SAMPLE_DIR=${SAMPLE_DIR:-$BOSP_BASE"/out/usr/bin"}
 SAMPLE_PREFIX=${SAMPLE_PREFIX:-$SAMPLE_DIR"/bbque-ocl-"}
@@ -41,7 +39,7 @@ sample_cmdline=(
 function run_sample {
 	for i in `seq 1 $2`; do
 		printf "Running up to %d instances " $2
-		(BBQUE_RTLIB_OPTS="o1" $1 -q -i ${NUMITER[$SEL]} $3 $4 &)
+		(BBQUE_RTLIB_OPTS=$OCLPROF $1 -q -i ${NUMITER[$SEL]} $3 $4 &)
 	done
 	wait
 }
