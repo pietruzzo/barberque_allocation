@@ -15,54 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+# ===================== Setup =================================
 
-# ========================== Setup data ==================================
+source setupSamples.sh
+
 BBQ=1
-BOSP_BASE=${BOSP_BASE:-"/home/ccaffarri/BOSP"}
-#BOSP_BASE=${BOSP_BASE:-"/opt/BOSP"}
-DATETIME=`date +%Y%m%d_%H%M%S`
-DATETIME_STR=`date`
-
-OCLPROF="o1"
-#OCLPROF=""
-NUMRUN=${NUMRUN:-1}
-NUMINST=${NUMINST:-"1 2 3 4"}
-#NUMINST=${NUMINST:-"4"}
-AWM=${AWM:-"0"}
-DEVICES=${DEVICES:-"cpu gpu"}
 SAMPLE_DIR=${SAMPLE_DIR:-$BOSP_BASE"/out/usr/bin"}
 SAMPLE_PREFIX=${SAMPLE_PREFIX:-$SAMPLE_DIR"/bbque-ocl-"}
-AMD_SAMPLE_PREFIX="/opt/AMDAPP/samples/opencl/bin/x86_64/"
-OUTDIR=${OUTDIR:-$BOSP_BASE"/out/var/ocl"}
-OUTFILENAME="BbqueOCLStats"
-DATADIR_PREFIX=${DATADIR_PREFIX:-"/tmp"}
-XORG_CONF="/etc/X11/xorg.conf_gpu"
-SEL=$1
-
-# ========================== Samples data ==================================
-ocl_names=(nbody stereomatch fluidsimulation2D montecarlo)
-#AMD_SAMPLES="NBody FluidSimulation2D MonteCarloAsian"
-#AMD_SAMPLES="MonteCarloAsian"
-SAMPLES="nbody stereomatch fluidsimulation2D montecarlo"
-#SAMPLES="fluidsimulation2D montecarlo"
-#SAMPLES="nbody fluidsimulation2D montecarlo"
-#SAMPLES="stereomatching"
-ARGS=("" "-x" "--fps" "" "-c")
-# Number of particles
-#NB_PARAMS=(32768 16384 8192 4096 2048 1024)
-NB_PARAMS=(32768)
-# Number of steps
-#MC_PARAMS=(8 16 32 64 128 256)
-MC_PARAMS=(256)
-#MC_PARAMS=(64)
-# FPS
-#SM_PARAMS=(1 3 5 10 15 20)
-SM_PARAMS=(20)
-# Number of iterations per sample execution
-NUMITER=(0 300 100 20 1)
-#NUMITER=(0 10 20 90 1)
-#TOTRUNS=$(($NUMRUN*${#SAMPLES[@]}))
-#TOTRUNS=$(($NUMRUN*4))
 
 declare -A cosched_times
 
@@ -82,44 +41,12 @@ function print_help {
 function clean_out {
 	rm /tmp/$OUTFILENAME.log
 }
-
-function setup {
-	# Block GPUs frequency
-	(amdconfig --adapter=all --od-setclocks=300,400 --input=$XORG_CONF)
-
-	# Set cpufreq governor to 'performance'
-	echo "cpufreq governors:"
-	for i in `seq 0 7`;do
-		cpu_gov=$(cat /sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_governor)
-		echo "cpu"$i": "$cpu_gov
-		if [ $cpuf_gov ! "performance" ]; then
-			echo "Please setting the cpufreq governor to performance..."
-			eval `cpufreq-set -c` $i `-g performance`
-			exit
-		fi
-	done
-
-	case $1 in
-		1)	# No OpenCL command profiling!
-			unset BBQUE_RTLIB_OPTS
-			;;
-		"-h")
-			print_help
-			;;
-		*)
-			BBQUE_RTLIB_OPTS="o1"
-	esac
-
-#	printf "Total number of test runs = %d\n" $TOTRUNS
-#	echo ${#SAMPLES[@]}
-#	exit
-}
-
 sample_cmdline=(
 "$SAMPLE_PREFIX""nbody -i 500000 -x 32768 -q"
 "$SAMPLE_PREFIX""stereomatch -i 1500 --path_img_ref /home/ccaffarri/BOSP/contrib/ocl-samples/StereoMatching/tsukuba --fps 20"
 "$SAMPLE_PREFIX""fluidsimulation2D -q -i 80"
 "$SAMPLE_PREFIX""montecarlo -i 1 -c 256")
+# =============================================================
 
 #1: Sample
 #2: Number of instances
@@ -198,26 +125,11 @@ function launch {
 # $3 = number of instances
 # $4 = application parameter value
 
-function print_test_header {
-	printf "============================================\n"
-	printf "| BBQ Test run    : %-3d / %-16d | \n" $2 $NUMRUN
-	echo   "--------------------------------------------"
-	printf "| SAMPLE          : %-17s      | \n" $1
-	printf "| Instances       : %-17d      | \n" $3
-	printf "| Parameter value : %-17d      | \n" $4
-	printf "============================================  \n"
-}
 
 ## Start ##
+# Import setup data
+source setupSamples.sh
 setup $1
-
-# Create output directory
-if [ ! -d "$OUTDIR" ]; then
-	mkdir $OUTDIR
-fi
-TESTDIR=$OUTDIR/$DATETIME
-mkdir $TESTDIR
-
 
 ###################### Scenario based experiments #############################
 

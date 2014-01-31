@@ -15,65 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-# ========================== Setup data ==================================
+# ===================== Setup =================================
 
-BOSP_BASE=${BOSP_BASE:-"/home/ccaffarri/BOSP"}
-DATETIME=`date +%Y%m%d_%H%M%S`
-DATETIME_STR=`date`
-
-NUMRUN=${NUMRUN:-5}
-NUMINST=${NUMINST:-"1 2 3 4"}
-#NUMINST=${NUMINST:-"4"}
-AWM=${AWM:-"0"}
-DEVICES=${DEVICES:-"cpu gpu"}
 AMD_SAMPLE_PREFIX="/opt/AMDAPP/samples/opencl/bin/x86_64/"
-OUTDIR=${OUTDIR:-$BOSP_BASE"/out/var/ocl"}
-OUTFILENAME="BbqueOCLStats"
-DATADIR_PREFIX=${DATADIR_PREFIX:-"/tmp"}
-XORG_CONF="/etc/X11/xorg.conf_gpu"
-
-# ========================== Samples data ==================================
-ocl_names=(nbody fluidsimulation2D montecarlo)
-#AMD_SAMPLES="NBody FluidSimulation2D MonteCarloAsian"
-#AMD_SAMPLES="NBody MonteCarloAsian"
-AMD_SAMPLES="NBody"
-#AMD_SAMPLES="MonteCarloAsian"
-#AMD_SAMPLES="FluidSimulation2D MonteCarloAsian"
-#SEL=$1
-ARGS=("" "-x" "" "-c")
-# Number of particles
-#NB_PARAMS=(32768 16384 8192 4096 2048 1024)
-NB_PARAMS=(32768)
-# Number of steps
-#MC_PARAMS=(8 16 32 64 128 256)
-MC_PARAMS=(256)
-# Number of iterations per sample execution
-NUMITER=(0 1000 2000 5)
-
-
-function setup {
-	# Block GPUs frequency
-	(amdconfig --adapter=all --od-setclocks=300,400 --input=$XORG_CONF)
-
-	# Set cpufreq governor to 'performance'
-	echo "cpufreq governors:"
-	for i in `seq 0 7`;do
-		cpu_gov=$(cat /sys/devices/system/cpu/cpu"$i"/cpufreq/scaling_governor)
-		echo "cpu"$i": "$cpu_gov
-		if [ ! $cpuf_gov = "performance" ]; then
-			echo "Please set the cpufreq governor to performance!"
-			exit
-		fi
-	done
-
-	# Create output directory
-	if [ ! -d "$OUTDIR" ]; then
-		mkdir $OUTDIR
-	fi
-	TESTDIR=$OUTDIR/$DATETIME
-	mkdir $TESTDIR
-	echo "Created directory: " $TESTDIR
-}
 
 function run_sample {
 	for i in `seq 1 $2`; do
@@ -89,21 +33,8 @@ $AMD_SAMPLE_PREFIX"NBody -i 300 -x 32768 -q -t"
 $AMD_SAMPLE_PREFIX"FluidSimulation2D -i 1000 -q -t"
 $AMD_SAMPLE_PREFIX"MonteCarloAsian -i 10 -c 256 -t")
 
-# $1 = sample
-# $2 = current number of run
-# $3 = number of instances
-# $4 = application parameter value
 
-function print_test_header {
-	printf "============================================\n"
-	printf "| BBQ Test run    : %-3d / %-16d | \n" $2 $NUMRUN
-	echo   "--------------------------------------------"
-	printf "| SAMPLE          : %-17s      | \n" $1
-	printf "| Instances       : %-17d      | \n" $3
-	printf "| Parameter value : %-17d      | \n" $4
-	printf "============================================  \n"
-}
-
+# =============================================================
 
 #1: Sample
 #2: Number of instances
@@ -190,6 +121,8 @@ function launch {
 
 
 #################### Start the test ######################################
+# Import setup data
+source setupSamples.sh
 setup
 
 
