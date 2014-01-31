@@ -109,8 +109,11 @@
 /** Use Test Platform Data */
 #cmakedefine CONFIG_BBQUE_TEST_PLATFORM_DATA
 
-/** Use Test Platform Data */
+/** Enable OpenCL applications support */
 #cmakedefine CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+
+/** OpenCL vendor library */
+#define BBQUE_PATH_OPENCL_LIB "${OPENCL_LIBRARY}"
 
 /** Performance Counters Support */
 #cmakedefine CONFIG_BBQUE_RTLIB_PERF_SUPPORT

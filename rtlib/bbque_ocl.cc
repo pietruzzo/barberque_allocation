@@ -1212,7 +1212,8 @@ clEnqueueBarrierWithWaitList(
 
 // Initialize OpenCL wrappers
 void rtlib_ocl_init() {
-	void *handle = dlopen("/opt/AMDAPP/lib/x86_64/libOpenCL.so", RTLD_LOCAL | RTLD_LAZY);
+	fprintf(stderr, FD("OpenCL library: %s\n"), BBQUE_PATH_OPENCL_LIB);
+	void *handle = dlopen(BBQUE_PATH_OPENCL_LIB, RTLD_LOCAL | RTLD_LAZY);
 
 	rtlib_ocl.getPlatformIDs = (getPlatformIDs_t) dlsym(handle, "clGetPlatformIDs");
 	rtlib_ocl.getPlatformInfo = (getPlatformInfo_t) dlsym(handle, "clGetPlatformInfo");
