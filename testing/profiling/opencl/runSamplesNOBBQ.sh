@@ -19,20 +19,12 @@
 
 AMD_SAMPLE_PREFIX="/opt/AMDAPP/samples/opencl/bin/x86_64/"
 
-function run_sample {
-	for i in `seq 1 $2`; do
-		printf "Running up to %d instances " $2
-		($1 -q -i ${NUMITER[$SEL]} $3 $4 -t &)
-	done
-	wait
-}
-
 ### GPU coscheduling scenarios
 sample_cmdline=(
-$AMD_SAMPLE_PREFIX"NBody -i 300 -x 32768 -q -t"
-$AMD_SAMPLE_PREFIX"FluidSimulation2D -i 1000 -q -t"
-$AMD_SAMPLE_PREFIX"MonteCarloAsian -i 10 -c 256 -t")
-
+	$AMD_SAMPLE_PREFIX"NBody -i 250 -x 32768 -q -t"
+	$AMD_SAMPLE_PREFIX"FluidSimulation2D -i 10000 -q"
+	$AMD_SAMPLE_PREFIX"MonteCarloAsian -i 10 -c 256"
+)
 
 # =============================================================
 
@@ -43,19 +35,7 @@ $AMD_SAMPLE_PREFIX"MonteCarloAsian -i 10 -c 256 -t")
 function run_sample {
 	for i in `seq 1 $2`; do
 		printf "Running up to %d instances " $2
-		(BBQUE_RTLIB_OPTS="o1" $1 -q -i ${NUMITER[$SEL]} $3 $4 &)
-	done
-	wait
-}
-
-function run_stereomatch {
-	for i in `seq 1 $2`; do
-		printf "Running up to %d instances " $2
-	#	echo "BBQUE_RTLIB_OPTS=o1 $1 -i" $NUMITER \
-	#		"--path_img_ref "$BOSP_BASE"/contrib/ocl-samples/StereoMatching/tsukuba" $3 $4 > nist
-		(BBQUE_RTLIB_OPTS="o1" $1 -i ${NUMITER[$SEL]}\
-			--path_img_ref $BOSP_BASE/contrib/ocl-samples/StereoMatching/tsukuba
-			$3 $4 &)
+		($1 -q -i ${NUMITER[$SEL]} $3 $4 -t &)
 	done
 	wait
 }
@@ -119,17 +99,15 @@ function launch {
 }
 
 
-
 #################### Start the test ######################################
 # Import setup data
 source setupSamples.sh
 setup
 
-
 case $1 in
 	1)	# Evaluate the GPU co-scheduling combinations
 		for ((r=1; r <=$NUMRUN; ++r)); do
-			printf " ################## RUN[%d] #################" $r
+			printf " ################## RUN[%d] #################\n" $r
 			launchScenarios
 		done
 		exit 1
@@ -139,7 +117,6 @@ case $1 in
 		;;
 
 esac
-
 
 
 for s in $AMD_SAMPLES; do

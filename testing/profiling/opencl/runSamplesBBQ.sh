@@ -25,27 +25,13 @@ SAMPLE_PREFIX=${SAMPLE_PREFIX:-$SAMPLE_DIR"/bbque-ocl-"}
 
 declare -A cosched_times
 
-
-function print_help {
-	echo "#################################"
-	echo "#        Select sample!         #"
-	echo "#===============================#"
-	echo "# 0) fluidsimulation2D          #"
-	echo "# 1) nbody                      #"
-	echo "# 2) montecarlo                 #"
-	echo "# 3) mandelbrot                 #"
-	echo "# 4) stereomatch                #"
-	echo "#################################"
-}
-
-function clean_out {
-	rm /tmp/$OUTFILENAME.log
-}
 sample_cmdline=(
-"$SAMPLE_PREFIX""nbody -i 500000 -x 32768 -q"
-"$SAMPLE_PREFIX""stereomatch -i 1500 --path_img_ref /home/ccaffarri/BOSP/contrib/ocl-samples/StereoMatching/tsukuba --fps 20"
-"$SAMPLE_PREFIX""fluidsimulation2D -q -i 80"
-"$SAMPLE_PREFIX""montecarlo -i 1 -c 256")
+	"$SAMPLE_PREFIX""nbody -i 500000 -x 32768 -q"
+	"$SAMPLE_PREFIX""stereomatch -i 1500 --path_img_ref "$BOSP_BASE"/contrib/ocl-samples/StereoMatching/tsukuba --fps 20"
+	"$SAMPLE_PREFIX""fluidsimulation2D -q -i 200"
+	"$SAMPLE_PREFIX""montecarlo -i 1 -c 256"
+)
+
 # =============================================================
 
 #1: Sample
@@ -120,13 +106,23 @@ function launch {
 
 }
 
-# $1 = sample
-# $2 = current number of run
-# $3 = number of instances
-# $4 = application parameter value
+function print_help {
+	echo "#################################"
+	echo "#        Select sample!         #"
+	echo "#===============================#"
+	echo "# 0) fluidsimulation2D          #"
+	echo "# 1) nbody                      #"
+	echo "# 2) montecarlo                 #"
+	echo "# 3) mandelbrot                 #"
+	echo "# 4) stereomatch                #"
+	echo "#################################"
+}
 
+function clean_out {
+	rm /tmp/$OUTFILENAME.log
+}
 
-## Start ##
+###################### Start the test #########################################
 # Import setup data
 source setupSamples.sh
 setup $1
