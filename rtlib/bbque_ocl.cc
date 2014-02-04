@@ -1312,6 +1312,47 @@ void rtlib_ocl_init() {
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NDRANGE_KERNEL,  "clEnqueueNDRangeKernel"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_TASK,            "clEnqueueTask"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NATIVE_KERNEL,   "clEnqueueNativeKernel"));
+
+	// Initialize the list of all the devices
+	rtlib_init_devices();
+}
+
+void rtlib_init_devices() {
+	cl_int status;
+	cl_platform_id platform = nullptr;
+	cl_device_type dev_type = CL_DEVICE_TYPE_ALL;
+
+	// Get platform
+	status = rtlib_ocl.getPlatformIDs(0, NULL, &rtlib_ocl.num_platforms);
+	if (status != CL_SUCCESS) {
+		fprintf(stderr, FE("OCL: Unable to find OpenCL platforms"));
+		return;
+	}
+	rtlib_ocl.platforms = (cl_platform_id *) malloc(
+		sizeof(cl_platform_id) * rtlib_ocl.num_platforms);
+	status = rtlib_ocl.getPlatformIDs(
+		rtlib_ocl.num_platforms, rtlib_ocl.platforms, NULL);
+
+	// NOTE: A single platform is actually supported
+	platform = rtlib_ocl.platforms[0];
+
+	// Get devices
+	status = rtlib_ocl.getDeviceIDs(
+		platform, dev_type, 0, NULL, &rtlib_ocl.num_devices);
+	if (status != CL_SUCCESS) {
+		fprintf(stderr, FE("OCL: Error [%d] in getting number of OpenCL devices\n"), status);
+		return;
+	}
+	rtlib_ocl.devices = (cl_device_id *) malloc(
+		sizeof(cl_device_id) * rtlib_ocl.num_devices);
+	status  = rtlib_ocl.getDeviceIDs(
+		platform, dev_type, rtlib_ocl.num_devices, rtlib_ocl.devices, NULL);
+	if (status != CL_SUCCESS) {
+		fprintf(stderr, FE("OCL: Error [%d] in getting OpenCL deviced list\n"), status);
+		return;
+	}
+	fprintf(stderr, FD("OCL: OpenCL devices found: %d [byte=%d] \n"),
+		rtlib_ocl.num_devices, sizeof(rtlib_ocl.devices));
 }
 
 void rtlib_ocl_set_device(uint8_t device_id, RTLIB_ExitCode_t status) {
