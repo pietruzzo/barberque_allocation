@@ -74,7 +74,6 @@ clGetDeviceIDs(
 		cl_uint *num_devices)
 		CL_API_SUFFIX__VERSION_1_0 {
 	DB2 (fprintf(stderr, FD("Calling clGetDeviceIDs()...\n")));
-	cl_int result;
 
 	if (num_devices != NULL) {
 		if (rtlib_ocl.status != RTLIB_EXC_GWM_BLOCKED)
@@ -86,25 +85,20 @@ clGetDeviceIDs(
 	if (devices == NULL)
 		return CL_SUCCESS;
 
-	cl_device_id * devs = new cl_device_id[OCL_NUM_DEVICES];
-	result = rtlib_ocl.getDeviceIDs(
-			platform, CL_DEVICE_TYPE_ALL, OCL_NUM_DEVICES,
-			devs, NULL);
-
 	DB (
 	cl_device_type dev_type;
 	char dev_name[1024];
 	for (uint8_t i = 0; i < OCL_NUM_DEVICES; ++i) {
-		clGetDeviceInfo(devs[i], CL_DEVICE_TYPE, sizeof(dev_type), &dev_type, NULL);
-		clGetDeviceInfo(devs[i], CL_DEVICE_NAME, 1024, dev_name, NULL);
+		clGetDeviceInfo(rtlib_ocl.devices[i], CL_DEVICE_TYPE, sizeof(dev_type), &dev_type, NULL);
+		clGetDeviceInfo(rtlib_ocl.devices[i], CL_DEVICE_NAME, 1024, dev_name, NULL);
 		fprintf(stderr, "OCL: Device type: %d, Name: %s\n", (int) dev_type, dev_name);
 	});
 
-	(*devices) = devs[rtlib_ocl.device_id];
-	DB (fprintf(stderr, FD("OCL: clGetDeviceIDs [BBQ-Device -> %d]\n"),
+	(*devices) = rtlib_ocl.devices[rtlib_ocl.device_id];
+	DB (fprintf(stderr, FD("OCL: clGetDeviceIDs [BarbequeRTRM assigned: %d]\n"),
 			rtlib_ocl.device_id));
 
-	return result;
+	return CL_SUCCESS;
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
