@@ -204,12 +204,11 @@ clGetContextInfo(
 	if (param_value == NULL)
 		return CL_SUCCESS;
 
-	cl_device_id devs[OCL_NUM_DEVICES];
+	cl_device_id * dev = &rtlib_ocl.devices[rtlib_ocl.device_id];
 	result = rtlib_ocl.getContextInfo(
-			context, param_name, sizeof(cl_device_id)*2,
-			&devs, NULL);
-
-	memcpy(param_value, &devs[rtlib_ocl.device_id], sizeof(cl_device_id));
+			context, param_name, sizeof(cl_device_id),
+			(*dev), NULL);
+	memcpy(param_value, dev, sizeof(cl_device_id));
 
 	return result;
 }
