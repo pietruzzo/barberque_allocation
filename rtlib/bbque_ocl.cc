@@ -1348,7 +1348,7 @@ void rtlib_init_devices() {
 		fprintf(stderr, FE("OCL: Error [%d] in getting OpenCL deviced list\n"), status);
 		return;
 	}
-	fprintf(stderr, FD("OCL: OpenCL devices found: %d [byte=%d] \n"),
+	fprintf(stderr, FD("OCL: OpenCL devices found: %u [byte=%lu] \n"),
 		rtlib_ocl.num_devices, sizeof(rtlib_ocl.devices));
 }
 
