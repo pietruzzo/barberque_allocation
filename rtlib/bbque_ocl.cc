@@ -210,7 +210,10 @@ clGetContextInfo(
 			(*dev), NULL);
 	memcpy(param_value, dev, sizeof(cl_device_id));
 
-	return result;
+	// FIXME: This forces a successful exit. It is unclear why the native
+	// call returns a CL_INVALID_VALUE error although the wrong conditions
+	// explained in the API documentation do not hold.
+	return CL_SUCCESS;
 }
 
 /* Command Queue APIs */
