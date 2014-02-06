@@ -41,7 +41,7 @@
 ################################################################################
 # Scheduling policy parameters
 [SchedPol]
-binding.domain = sys.cpu
+binding.domain = sys.cpu,sys.gpu
 
 # Global contribution parameters [0,100]
 [SchedPol.Contrib]
