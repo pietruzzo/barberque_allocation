@@ -34,6 +34,7 @@
 #define CL_CMD_QUEUED_TIME 0
 #define CL_CMD_SUBMIT_TIME 1
 #define CL_CMD_EXEC_TIME   2
+#define CL_TAG "opencl"
 
 namespace bac = boost::accumulators;
 

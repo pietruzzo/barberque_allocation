@@ -2164,21 +2164,21 @@ void BbqueRPC::OclPrintCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue
 		snprintf(x_buff, 100, "%p_%s_exec",
 			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
 		x_str.assign(x_buff);
-		DUMP_MOST_METRIC("ocl", (q_str + "_sum_ms").c_str(), SUM(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (q_str + "_min_ms").c_str(), MIN(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (q_str + "_max_ms").c_str(), MAX(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (q_str + "_avg_ms").c_str(), MEAN(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (q_str + "_std_ms").c_str(), STDDEV(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_sum_ms").c_str(), SUM(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_min_ms").c_str(), MIN(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_max_ms").c_str(), MAX(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_avg_ms").c_str(), MEAN(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_std_ms").c_str(), STDDEV(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_sum_ms").c_str(), SUM(EXEC), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_min_ms").c_str(), MIN(EXEC), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_max_ms").c_str(), MAX(EXEC), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_avg_ms").c_str(), MEAN(EXEC), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_std_ms").c_str(), STDDEV(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_sum_ms").c_str(), SUM(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_min_ms").c_str(), MIN(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_max_ms").c_str(), MAX(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_avg_ms").c_str(), MEAN(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_std_ms").c_str(), STDDEV(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_sum_ms").c_str(), SUM(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_min_ms").c_str(), MIN(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_max_ms").c_str(), MAX(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_avg_ms").c_str(), MEAN(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_std_ms").c_str(), STDDEV(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_sum_ms").c_str(), SUM(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_min_ms").c_str(), MIN(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_max_ms").c_str(), MAX(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_avg_ms").c_str(), MEAN(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_std_ms").c_str(), STDDEV(EXEC), "%.3f");
 	}
 }
 
@@ -2198,21 +2198,21 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queu
 		snprintf(x_buff, 100, "%p_%s_%p_exec",
 			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ct->first);
 		x_str.assign(x_buff);
-		DUMP_MOST_METRIC("ocl", (q_str + "_sum_ms").c_str(), SUM(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (q_str + "_min_ms").c_str(), MIN(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (q_str + "_max_ms").c_str(), MAX(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (q_str + "_avg_ms").c_str(), MEAN(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (q_str + "_std_ms").c_str(), STDDEV(QUEUED), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_sum_ms").c_str(), SUM(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_min_ms").c_str(), MIN(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_max_ms").c_str(), MAX(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_avg_ms").c_str(), MEAN(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (s_str + "_std_ms").c_str(), STDDEV(SUBMIT), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_sum_ms").c_str(), SUM(EXEC), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_min_ms").c_str(), MIN(EXEC), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_max_ms").c_str(), MAX(EXEC), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_avg_ms").c_str(), MEAN(EXEC), "%.3f");
-		DUMP_MOST_METRIC("ocl", (x_str + "_std_ms").c_str(), STDDEV(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_sum_ms").c_str(), SUM(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_min_ms").c_str(), MIN(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_max_ms").c_str(), MAX(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_avg_ms").c_str(), MEAN(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (q_str + "_std_ms").c_str(), STDDEV(QUEUED), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_sum_ms").c_str(), SUM(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_min_ms").c_str(), MIN(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_max_ms").c_str(), MAX(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_avg_ms").c_str(), MEAN(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (s_str + "_std_ms").c_str(), STDDEV(SUBMIT), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_sum_ms").c_str(), SUM(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_min_ms").c_str(), MIN(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_max_ms").c_str(), MAX(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_avg_ms").c_str(), MEAN(EXEC), "%.3f");
+		DUMP_MOST_METRIC(CL_TAG, (x_str + "_std_ms").c_str(), STDDEV(EXEC), "%.3f");
 	}
 }
 
