@@ -1095,9 +1095,17 @@ clEnqueueUnmapMemObject(
 		const cl_event *event_wait_list,
 		cl_event *event)
 		CL_API_SUFFIX__VERSION_1_0 {
+	cl_int status;
 	DB2(fprintf(stderr, FD("Calling clEnqueueUnmapMemObject()...\n")));
-	return rtlib_ocl.enqueueUnmapMemObject(command_queue, memobj, mapped_ptr,
+	EVENT_RC_CONTROL(event);
+	status = rtlib_ocl.enqueueUnmapMemObject(
+		command_queue, memobj, mapped_ptr,
 		num_events_in_wait_list, event_wait_list, event);
+	if (status != CL_SUCCESS) {
+		fprintf(stderr, FE("OCL: Error [%d] in clEnqueueUnmapMemObject()\n"), status);
+	}
+	rtlib_ocl_coll_event(command_queue, event, __builtin_return_address(0));
+	return status;
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
@@ -1213,8 +1221,9 @@ clEnqueueBarrierWithWaitList(
 // Initialize OpenCL wrappers
 void rtlib_ocl_init() {
 	fprintf(stderr, FD("OpenCL library: %s\n"), BBQUE_PATH_OPENCL_LIB);
-	void *handle = dlopen(BBQUE_PATH_OPENCL_LIB, RTLD_LOCAL | RTLD_LAZY);
 
+	// Native OpenCL calls
+	void *handle = dlopen(BBQUE_PATH_OPENCL_LIB, RTLD_LOCAL | RTLD_LAZY);
 	rtlib_ocl.getPlatformIDs = (getPlatformIDs_t) dlsym(handle, "clGetPlatformIDs");
 	rtlib_ocl.getPlatformInfo = (getPlatformInfo_t) dlsym(handle, "clGetPlatformInfo");
 	rtlib_ocl.getDeviceIDs = (getDeviceIDs_t) dlsym(handle, "clGetDeviceIDs");
@@ -1296,6 +1305,7 @@ void rtlib_ocl_init() {
 	rtlib_ocl.flush = (flush_t) dlsym(handle, "clFlush");
 	rtlib_ocl.finish = (finish_t) dlsym(handle, "clFinish");
 
+	// Command labels (for profiling output)
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_BUFFER,       "clEnqueueReadBuffer"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_BUFFER_RECT,  "clEnqueueReadBufferRect"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_WRITE_BUFFER,      "clEnqueueWriteBuffer"));
@@ -1309,6 +1319,7 @@ void rtlib_ocl_init() {
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_COPY_BUFFER_TO_IMAGE, "clEnqueueCopyBufferToImage"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_MAP_BUFFER,      "clEnqueueMapBuffer"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_MAP_IMAGE,       "clEnqueueMapImage"));
+	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_UNMAP_MEM_OBJECT,"clEnqueueUnmapMemObject"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NDRANGE_KERNEL,  "clEnqueueNDRangeKernel"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_TASK,            "clEnqueueTask"));
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_NATIVE_KERNEL,   "clEnqueueNativeKernel"));
