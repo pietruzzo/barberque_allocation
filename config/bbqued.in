@@ -76,7 +76,6 @@ check_controllers() {
 				echo 'To continue, they have to be placed on the same hierarchy.'
 
 				read -p 'Proceed with the unmounting (Y/n)? ' ANS
-
 				if [ -z "$ANS" ]; then
 					ANS='y'
 				fi
@@ -87,13 +86,17 @@ check_controllers() {
 					exit 1
 				fi
 
-				grep cgroups /proc/mounts | cut -d' ' -f2 | \
+				grep cgroup /proc/mounts | cut -d' ' -f2 | \
 				while read C; do
 					[ -d $C ] || continue
-					echo "Unmounting [$C] controller..."
-					sudo umount $C
+					case "$C" in
+					*cpuset$*|*memory$*|*cpu$*|*cpuacct$*)
+						echo "Unmounting [$C] controller..."
+						sudo umount $C
+					esac;
 				done
 		fi
+
 
 		# Mount BBQ required hierarchies
 		mount -t cgroup -o cpuset,memory,cpu,cpuacct bbque_cgroups \
