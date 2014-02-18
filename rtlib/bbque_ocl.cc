@@ -92,7 +92,7 @@ clGetDeviceIDs(
 	DB (
 	cl_device_type dev_type;
 	char dev_name[1024];
-	for (uint8_t i = 0; i < OCL_NUM_DEVICES; ++i) {
+	for (uint8_t i = 0; i < rtlib_ocl.num_devices; ++i) {
 		clGetDeviceInfo(rtlib_ocl.devices[i], CL_DEVICE_TYPE, sizeof(dev_type), &dev_type, NULL);
 		clGetDeviceInfo(rtlib_ocl.devices[i], CL_DEVICE_NAME, 1024, dev_name, NULL);
 		fprintf(stderr, "OCL: Device type: %d, Name: %s\n", (int) dev_type, dev_name);
