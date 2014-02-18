@@ -24,6 +24,7 @@
 #include "bbque/rtlib.h"
 #include "bbque/rtlib/bbque_ocl.h"
 #include "bbque/utils/utility.h"
+#include "bbque/pp/opencl.h"
 
 #undef  BBQUE_LOG_MODULE
 #define BBQUE_LOG_MODULE "rtl.ocl"
@@ -1330,6 +1331,7 @@ void rtlib_ocl_init() {
 
 void rtlib_init_devices() {
 	cl_int status;
+	char platform_name[128];
 	cl_platform_id platform = nullptr;
 	cl_device_type dev_type = CL_DEVICE_TYPE_ALL;
 
@@ -1344,8 +1346,16 @@ void rtlib_init_devices() {
 	status = rtlib_ocl.getPlatformIDs(
 		rtlib_ocl.num_platforms, rtlib_ocl.platforms, NULL);
 
-	// NOTE: A single platform is actually supported
-	platform = rtlib_ocl.platforms[0];
+	// NOTE: A single platform is actually supported, the one labeled as BBQ
+	for (uint8_t i = 0; i < rtlib_ocl.num_platforms; ++i) {
+		status = rtlib_ocl.getPlatformInfo(
+			rtlib_ocl.platforms[i], CL_PLATFORM_VENDOR,
+			sizeof(platform_name), platform_name, NULL);
+		if (!strcmp(platform_name, BBQUE_OCL_PLATFORM_NAME)) {
+			platform = rtlib_ocl.platforms[i];
+			break;
+		}
+	}
 
 	// Get devices
 	status = rtlib_ocl.getDeviceIDs(
