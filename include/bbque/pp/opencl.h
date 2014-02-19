@@ -29,7 +29,9 @@
 #include "bbque/app/application.h"
 #include "bbque/res/identifier.h"
 
-#define BBQUE_OCL_PLATFORM_NAME "Advanced Micro Devices, Inc."
+#define AMD_PLATFORM_NAME   "AMD Accelerated Parallel Processing"
+#define INTEL_PLATFORM_NAME "Intel(R) OpenCL"
+#define BBQUE_PLATFORM_NAME AMD_PLATFORM_NAME
 
 
 using bbque::app::AppPtr_t;

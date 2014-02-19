@@ -1349,9 +1349,9 @@ void rtlib_init_devices() {
 	// NOTE: A single platform is actually supported, the one labeled as BBQ
 	for (uint8_t i = 0; i < rtlib_ocl.num_platforms; ++i) {
 		status = rtlib_ocl.getPlatformInfo(
-			rtlib_ocl.platforms[i], CL_PLATFORM_VENDOR,
+			rtlib_ocl.platforms[i], CL_PLATFORM_NAME,
 			sizeof(platform_name), platform_name, NULL);
-		if (!strcmp(platform_name, BBQUE_OCL_PLATFORM_NAME)) {
+		if (!strcmp(platform_name, BBQUE_PLATFORM_NAME)) {
 			platform = rtlib_ocl.platforms[i];
 			break;
 		}

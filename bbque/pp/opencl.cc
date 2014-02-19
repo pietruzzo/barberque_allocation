@@ -65,10 +65,11 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 
 	for (uint8_t i = 0; i < num_platforms; ++i) {
 		status = clGetPlatformInfo(
-				platforms[i], CL_PLATFORM_VENDOR,
+				platforms[i], CL_PLATFORM_NAME,
 				sizeof(platform_name), platform_name, NULL);
 
-		if (!strcmp(platform_name, BBQUE_OCL_PLATFORM_NAME)) {
+		if (!strcmp(platform_name, BBQUE_PLATFORM_NAME)) {
+				logger->Info("PLAT OCL: Platform selected: %s", platform_name);
 				platform = platforms[i];
 				break;
 		}
