@@ -59,14 +59,15 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 		logger->Error("PLAT OCL: Platform error %d", status);
 		return PLATFORM_ERROR;
 	}
-	logger->Info("PLAT OCL: %d platform(s) found", num_platforms);
+	logger->Info("PLAT OCL: Number of platform(s) found: %d", num_platforms);
 	platforms = new cl_platform_id[num_platforms];
 	status = clGetPlatformIDs(num_platforms, platforms, NULL);
 
 	for (uint8_t i = 0; i < num_platforms; ++i) {
 		status = clGetPlatformInfo(
-				platforms[i], CL_PLATFORM_NAME,
-				sizeof(platform_name), platform_name, NULL);
+				platforms[i], CL_PLATFORM_NAME,	sizeof(platform_name),
+				platform_name, NULL);
+		logger->Info("PLAT OCL: P[%d]: %s", i, platform_name);
 
 		if (!strcmp(platform_name, BBQUE_PLATFORM_NAME)) {
 				logger->Info("PLAT OCL: Platform selected: %s", platform_name);
@@ -82,7 +83,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 		logger->Error("PLAT OCL: Device error %d", status);
 		return DEVICE_ERROR;
 	}
-	logger->Info("PLAT OCL: %d device(s) found", num_devices);
+	logger->Info("PLAT OCL: Number of device(s) found: %d", num_devices);
 	devices = new cl_device_id[num_devices];
 	status  = clGetDeviceIDs(platform, dev_type, num_devices, devices, NULL);
 
@@ -129,18 +130,22 @@ OpenCLProxy::GetDeviceIterator(ResourceIdentifier::Type_t r_type) {
 OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 	cl_int status;
 	cl_device_type dev_type;
+	char dev_name[64];
 	char resourcePath[] = "sys0.gpu256.pe256";
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	for (uint8_t i = 0; i < num_devices; ++i) {
 		status = clGetDeviceInfo(
-				devices[i],	CL_DEVICE_TYPE,
-				sizeof(dev_type), &dev_type, NULL);
+				devices[i],	CL_DEVICE_NAME, sizeof(dev_name),
+				dev_name, NULL);
+		status = clGetDeviceInfo(
+				devices[i],	CL_DEVICE_TYPE, sizeof(dev_type),
+				&dev_type, NULL);
 		if (status != CL_SUCCESS) {
 			logger->Error("PLAT OCL: Device info error %d", status);
 			return DEVICE_ERROR;
 		}
-		logger->Info("PLAT OCL: Device type %d", dev_type);
+		logger->Info("PLAT OCL: D[%d]: %s", i, dev_name);
 		
 		switch (dev_type) {
 		case CL_DEVICE_TYPE_GPU:
