@@ -45,9 +45,6 @@ typedef cl_int (*getPlatformIDs_t)(cl_uint, cl_platform_id *, cl_uint *);
 typedef cl_int (*getPlatformInfo_t)(cl_platform_id, cl_platform_info, size_t, void *, size_t *);
 typedef cl_int (*getDeviceIDs_t)(cl_platform_id, cl_device_type, cl_uint, cl_device_id *, cl_uint *);
 typedef cl_int (*getDeviceInfo_t)(cl_device_id, cl_device_info, size_t, void *, size_t *);
-typedef cl_int (*createSubDevices_t)(cl_device_id, const cl_device_partition_property *, cl_uint, cl_device_id *, cl_uint *);
-typedef cl_int (*retainDevice_t)(cl_device_id);
-typedef cl_int (*releaseDevice_t)(cl_device_id);
 typedef cl_context (*createContext_t)(const cl_context_properties *, cl_uint, const cl_device_id *, void (CL_CALLBACK *)(const char *, const void *, size_t, void *), void *, cl_int *);
 typedef cl_context (*createContextFromType_t)(const cl_context_properties *, cl_device_type, void (CL_CALLBACK *)(const char *, const void *, size_t, void *), void *, cl_int *);
 typedef cl_int (*retainContext_t)(cl_context);
@@ -59,7 +56,6 @@ typedef cl_int (*releaseCommandQueue_t)(cl_command_queue);
 typedef cl_int (*getCommandQueueInfo_t)(cl_command_queue, cl_command_queue_info, size_t, void *, size_t *);
 typedef cl_mem (*createBuffer_t)(cl_context, cl_mem_flags, size_t, void *, cl_int *);
 typedef cl_mem (*createSubBuffer_t)(cl_mem, cl_mem_flags, cl_buffer_create_type, const void *, cl_int *);
-typedef cl_mem (*createImage_t)(cl_context, cl_mem_flags, const cl_image_format *, const cl_image_desc *, void *, cl_int *);
 typedef cl_int (*retainMemObject_t)(cl_mem);
 typedef cl_int (*releaseMemObject_t)(cl_mem);
 typedef cl_int (*getSupportedImageFormats_t)(cl_context, cl_mem_flags, cl_mem_object_type, cl_uint, cl_image_format *, cl_uint *);
@@ -72,13 +68,9 @@ typedef cl_int (*releaseSampler_t)(cl_sampler);
 typedef cl_int (*getSamplerInfo_t)(cl_sampler, cl_sampler_info, size_t,void *, size_t *);
 typedef cl_program (*createProgramWithSource_t)(cl_context, cl_uint, const char **, const size_t *, cl_int *);
 typedef cl_program (*createProgramWithBinary_t)(cl_context, cl_uint, const cl_device_id *, const size_t *, const unsigned char **, cl_int *, cl_int *);
-typedef cl_program (*createProgramWithBuiltInKernels_t)(cl_context, cl_uint, const cl_device_id *, const char *, cl_int *);
 typedef cl_int (*retainProgram_t)(cl_program);
 typedef cl_int (*releaseProgram_t)(cl_program);
 typedef cl_int (*buildProgram_t)(cl_program, cl_uint, const cl_device_id *, const char *, void (CL_CALLBACK *)(cl_program, void *), void *);
-typedef cl_int (*compileProgram_t)(cl_program, cl_uint, const cl_device_id *, const char *, cl_uint, const cl_program *, const char **, void (CL_CALLBACK *)(cl_program, void *), void *);
-typedef cl_program (*linkProgram_t)(cl_context, cl_uint, const cl_device_id *, const char *, cl_uint, const cl_program *, void (CL_CALLBACK *)(cl_program, void *), void *, cl_int *);
-typedef cl_int (*unloadPlatformCompiler_t)(cl_platform_id);
 typedef cl_int (*getProgramInfo_t)(cl_program, cl_program_info, size_t, void *, size_t *);
 typedef cl_int (*getProgramBuildInfo_t)(cl_program, cl_device_id, cl_program_build_info, size_t, void *, size_t *);
 typedef cl_kernel (*createKernel_t)(cl_program, const char *, cl_int *);
@@ -87,7 +79,6 @@ typedef cl_int (*retainKernel_t)(cl_kernel);
 typedef cl_int (*releaseKernel_t)(cl_kernel);
 typedef cl_int (*setKernelArg_t)(cl_kernel, cl_uint, size_t, const void *);
 typedef cl_int (*getKernelInfo_t)(cl_kernel, cl_kernel_info, size_t, void *, size_t *);
-typedef cl_int (*getKernelArgInfo_t)(cl_kernel, cl_uint, cl_kernel_arg_info, size_t, void *, size_t *);
 typedef cl_int (*getKernelWorkGroupInfo_t)(cl_kernel, cl_device_id, cl_kernel_work_group_info, size_t, void *, size_t *);
 typedef cl_int (*waitForEvents_t)(cl_uint, const cl_event *);
 typedef cl_int (*getEventInfo_t)(cl_event, cl_event_info, size_t, void *, size_t *);
@@ -103,24 +94,36 @@ typedef cl_int (*enqueueReadBuffer_t)(cl_command_queue, cl_mem, cl_bool, size_t,
 typedef cl_int (*enqueueReadBufferRect_t)(cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, const size_t *, size_t, size_t, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueWriteBuffer_t)(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueWriteBufferRect_t)(cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, const size_t *, size_t, size_t, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
-typedef cl_int (*enqueueFillBuffer_t)(cl_command_queue, cl_mem, const void *, size_t, size_t,	size_t,	cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueCopyBuffer_t)(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueCopyBufferRect_t)(cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, const size_t *, size_t, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueReadImage_t)(cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueWriteImage_t)(cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
-typedef cl_int (*enqueueFillImage_t)(cl_command_queue, cl_mem, const void *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueCopyImage_t)(cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueCopyImageToBuffer_t)(cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, size_t, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueCopyBufferToImage_t)(cl_command_queue, cl_mem, cl_mem, size_t, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
 typedef void* (*enqueueMapBuffer_t)(cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *);
 typedef void* (*enqueueMapImage_t)(cl_command_queue, cl_mem, cl_bool, cl_map_flags, const size_t *, const size_t *, size_t *, size_t *, cl_uint, const cl_event *, cl_event *, cl_int *);
 typedef cl_int (*enqueueUnmapMemObject_t)(cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *);
-typedef cl_int (*enqueueMigrateMemObjects_t)(cl_command_queue, cl_uint, const cl_mem *, cl_mem_migration_flags, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueNDRangeKernel_t)(cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueTask_t)(cl_command_queue, cl_kernel, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueNativeKernel_t)(cl_command_queue, void (CL_CALLBACK *)(void *), void *, size_t, cl_uint, const cl_mem *, const void **, cl_uint, const cl_event *, cl_event *);
+
+#ifdef CL_API_SUFFIX__VERSION_1_2
+typedef cl_int (*createSubDevices_t)(cl_device_id, const cl_device_partition_property *, cl_uint, cl_device_id *, cl_uint *);
+typedef cl_int (*retainDevice_t)(cl_device_id);
+typedef cl_int (*releaseDevice_t)(cl_device_id);
+typedef cl_mem (*createImage_t)(cl_context, cl_mem_flags, const cl_image_format *, const cl_image_desc *, void *, cl_int *);
+typedef cl_int (*getKernelArgInfo_t)(cl_kernel, cl_uint, cl_kernel_arg_info, size_t, void *, size_t *);
+typedef cl_int (*compileProgram_t)(cl_program, cl_uint, const cl_device_id *, const char *, cl_uint, const cl_program *, const char **, void (CL_CALLBACK *)(cl_program, void *), void *);
+typedef cl_program (*linkProgram_t)(cl_context, cl_uint, const cl_device_id *, const char *, cl_uint, const cl_program *, void (CL_CALLBACK *)(cl_program, void *), void *, cl_int *);
+typedef cl_int (*unloadPlatformCompiler_t)(cl_platform_id);
+typedef cl_program (*createProgramWithBuiltInKernels_t)(cl_context, cl_uint, const cl_device_id *, const char *, cl_int *);
+typedef cl_int (*enqueueFillBuffer_t)(cl_command_queue, cl_mem, const void *, size_t, size_t,	size_t,	cl_uint, const cl_event *, cl_event *);
+typedef cl_int (*enqueueFillImage_t)(cl_command_queue, cl_mem, const void *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
+typedef cl_int (*enqueueMigrateMemObjects_t)(cl_command_queue, cl_uint, const cl_mem *, cl_mem_migration_flags, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueMarkerWithWaitList_t)(cl_command_queue, cl_uint, const cl_event *, cl_event *);
 typedef cl_int (*enqueueBarrierWithWaitList_t)(cl_command_queue, cl_uint, const cl_event *, cl_event *);
+#endif
 
 
 struct RTLIB_OpenCL {
@@ -128,9 +131,6 @@ struct RTLIB_OpenCL {
 	getPlatformInfo_t getPlatformInfo;
 	getDeviceIDs_t     getDeviceIDs;
 	getDeviceInfo_t    getDeviceInfo;
-	createSubDevices_t createSubDevices;
-	retainDevice_t     retainDevice;
-	releaseDevice_t    releaseDevice;
 	createContext_t         createContext;
 	createContextFromType_t createContextFromType;
 	retainContext_t         retainContext;
@@ -142,7 +142,6 @@ struct RTLIB_OpenCL {
 	getCommandQueueInfo_t getCommandQueueInfo;
 	createBuffer_t                   createBuffer;
 	createSubBuffer_t                createSubBuffer;
-	createImage_t                    createImage;
 	retainMemObject_t                retainMemObject;
 	releaseMemObject_t               releaseMemObject;
 	getSupportedImageFormats_t       getSupportedImageFormats;
@@ -155,13 +154,9 @@ struct RTLIB_OpenCL {
 	getSamplerInfo_t getSamplerInfo;
 	createProgramWithSource_t         createProgramWithSource;
 	createProgramWithBinary_t         createProgramWithBinary;
-	createProgramWithBuiltInKernels_t createProgramWithBuiltInKernels;
 	retainProgram_t                   retainProgram;
 	releaseProgram_t                  releaseProgram;
 	buildProgram_t                    buildProgram;
-	compileProgram_t                  compileProgram;
-	linkProgram_t                     linkProgram;
-	unloadPlatformCompiler_t          unloadPlatformCompiler;
 	getProgramInfo_t                  getProgramInfo;
 	getProgramBuildInfo_t             getProgramBuildInfo;
 	createKernel_t           createKernel;
@@ -170,7 +165,6 @@ struct RTLIB_OpenCL {
 	releaseKernel_t          releaseKernel;
 	setKernelArg_t           setKernelArg;
 	getKernelInfo_t          getKernelInfo;
-	getKernelArgInfo_t       getKernelArgInfo;
 	getKernelWorkGroupInfo_t getKernelWorkGroupInfo;
 	waitForEvents_t      waitForEvents;
 	getEventInfo_t       getEventInfo;
@@ -186,24 +180,36 @@ struct RTLIB_OpenCL {
 	enqueueReadBufferRect_t      enqueueReadBufferRect;
 	enqueueWriteBuffer_t         enqueueWriteBuffer;
 	enqueueWriteBufferRect_t     enqueueWriteBufferRect;
-	enqueueFillBuffer_t          enqueueFillBuffer;
 	enqueueCopyBuffer_t          enqueueCopyBuffer;
 	enqueueCopyBufferRect_t      enqueueCopyBufferRect;
 	enqueueReadImage_t           enqueueReadImage;
 	enqueueWriteImage_t          enqueueWriteImage;
-	enqueueFillImage_t           enqueueFillImage;
 	enqueueCopyImage_t           enqueueCopyImage;
 	enqueueCopyImageToBuffer_t   enqueueCopyImageToBuffer;
 	enqueueCopyBufferToImage_t   enqueueCopyBufferToImage;
 	enqueueMapBuffer_t           enqueueMapBuffer;
 	enqueueMapImage_t            enqueueMapImage;
 	enqueueUnmapMemObject_t      enqueueUnmapMemObject;
-	enqueueMigrateMemObjects_t   enqueueMigrateMemObjects;
 	enqueueNDRangeKernel_t       enqueueNDRangeKernel;
 	enqueueTask_t                enqueueTask;
 	enqueueNativeKernel_t        enqueueNativeKernel;
+
+#ifdef CL_API_SUFFIX__VERSION_1_2
+	createSubDevices_t createSubDevices;
+	retainDevice_t     retainDevice;
+	releaseDevice_t    releaseDevice;
+	getKernelArgInfo_t                getKernelArgInfo;
+	compileProgram_t                  compileProgram;
+	linkProgram_t                     linkProgram;
+	unloadPlatformCompiler_t          unloadPlatformCompiler;
+	createProgramWithBuiltInKernels_t createProgramWithBuiltInKernels;
+	createImage_t                createImage;
+	enqueueFillBuffer_t          enqueueFillBuffer;
+	enqueueFillImage_t           enqueueFillImage;
+	enqueueMigrateMemObjects_t   enqueueMigrateMemObjects;
 	enqueueMarkerWithWaitList_t  enqueueMarkerWithWaitList;
 	enqueueBarrierWithWaitList_t enqueueBarrierWithWaitList;
+#endif
 
 	/** Number of OpenCL platforms on the system */
 	cl_uint num_platforms;
@@ -275,21 +281,6 @@ clGetDeviceInfo(
 		void *,
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
-
-CL_API_ENTRY  cl_int CL_API_CALL
-clCreateSubDevices(
-		cl_device_id,
-		const cl_device_partition_property *,
-		cl_uint,
-		cl_device_id *,
-		cl_uint *)
-		CL_API_SUFFIX__VERSION_1_2;
-
-CL_API_ENTRY  cl_int CL_API_CALL
-clRetainDevice(cl_device_id) CL_API_SUFFIX__VERSION_1_2;
-
-CL_API_ENTRY  cl_int CL_API_CALL
-clReleaseDevice(cl_device_id) CL_API_SUFFIX__VERSION_1_2;
 
 /* Context APIs  */
 CL_API_ENTRY  cl_context CL_API_CALL
@@ -369,15 +360,6 @@ clCreateSubBuffer(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_1;
 
-CL_API_ENTRY  cl_mem CL_API_CALL
-clCreateImage(
-		cl_context,
-		cl_mem_flags,
-		const cl_image_format *,
-		const cl_image_desc *,
-		void *,
-		cl_int *)
-		CL_API_SUFFIX__VERSION_1_2;
 
 CL_API_ENTRY  cl_int CL_API_CALL
 clRetainMemObject(cl_mem) CL_API_SUFFIX__VERSION_1_0;
@@ -465,14 +447,6 @@ clCreateProgramWithBinary(
 		cl_int *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-CL_API_ENTRY  cl_program CL_API_CALL
-clCreateProgramWithBuiltInKernels(
-		cl_context,
-		cl_uint,
-		const cl_device_id *,
-		const char *,
-		cl_int *)
-		CL_API_SUFFIX__VERSION_1_2;
 
 CL_API_ENTRY  cl_int CL_API_CALL
 clRetainProgram(cl_program) CL_API_SUFFIX__VERSION_1_0;
@@ -490,34 +464,6 @@ clBuildProgram(
 		void *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-CL_API_ENTRY  cl_int CL_API_CALL
-clCompileProgram(
-		cl_program,
-		cl_uint,
-		const cl_device_id *,
-		const char *,
-		cl_uint,
-		const cl_program *,
-		const char **,
-		void (CL_CALLBACK *)(cl_program, void *),
-		void *)
-		CL_API_SUFFIX__VERSION_1_2;
-
-CL_API_ENTRY  cl_program CL_API_CALL
-clLinkProgram(
-		cl_context,
-		cl_uint,
-		const cl_device_id *,
-		const char *,
-		cl_uint,
-		const cl_program *,
-		void (CL_CALLBACK *)(cl_program, void *),
-		void *,
-		cl_int *)
-		CL_API_SUFFIX__VERSION_1_2;
-
-CL_API_ENTRY  cl_int CL_API_CALL
-clUnloadPlatformCompiler(cl_platform_id) CL_API_SUFFIX__VERSION_1_2;
 
 CL_API_ENTRY  cl_int CL_API_CALL
 clGetProgramInfo(
@@ -577,15 +523,6 @@ clGetKernelInfo(
 		size_t *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-CL_API_ENTRY  cl_int CL_API_CALL
-clGetKernelArgInfo(
-		cl_kernel,
-		cl_uint,
-		cl_kernel_arg_info,
-		size_t,
-		void *,
-		size_t *)
-		CL_API_SUFFIX__VERSION_1_2;
 
 CL_API_ENTRY  cl_int CL_API_CALL
 clGetKernelWorkGroupInfo(
@@ -719,18 +656,6 @@ clEnqueueWriteBufferRect(
 		cl_event *)
 		CL_API_SUFFIX__VERSION_1_1;
 
-CL_API_ENTRY  cl_int CL_API_CALL
-clEnqueueFillBuffer(
-		cl_command_queue,
-		cl_mem,
-		const void *,
-		size_t,
-		size_t,
-		size_t,
-		cl_uint,
-		const cl_event *,
-		cl_event *)
-		CL_API_SUFFIX__VERSION_1_2;
 
 CL_API_ENTRY  cl_int CL_API_CALL
 clEnqueueCopyBuffer(
@@ -792,17 +717,6 @@ clEnqueueWriteImage(
 		cl_event *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-CL_API_ENTRY  cl_int CL_API_CALL
-clEnqueueFillImage(
-		cl_command_queue,
-		cl_mem,
-		const void *,
-		const size_t *,
-		const size_t *,
-		cl_uint,
-		const cl_event *,
-		cl_event *)
-		CL_API_SUFFIX__VERSION_1_2;
 
 CL_API_ENTRY  cl_int CL_API_CALL
 clEnqueueCopyImage(
@@ -883,16 +797,6 @@ clEnqueueUnmapMemObject(
 		cl_event *)
 		CL_API_SUFFIX__VERSION_1_0;
 
-CL_API_ENTRY  cl_int CL_API_CALL
-clEnqueueMigrateMemObjects(
-		cl_command_queue,
-		cl_uint,
-		const cl_mem *,
-		cl_mem_migration_flags,
-		cl_uint,
-		const cl_event *,
-		cl_event *)
-		CL_API_SUFFIX__VERSION_1_2;
 
 CL_API_ENTRY cl_int CL_API_CALL
 clEnqueueNDRangeKernel(
@@ -930,6 +834,95 @@ clEnqueueNativeKernel(
 		cl_event *)
 		CL_API_SUFFIX__VERSION_1_0;
 
+/****************************************************************************
+ * OpenCL specification version 1.2 additions                               *
+ ****************************************************************************/
+#ifdef CL_API_SUFFIX__VERSION_1_2
+
+CL_API_ENTRY  cl_int CL_API_CALL
+clGetKernelArgInfo(
+		cl_kernel,
+		cl_uint,
+		cl_kernel_arg_info,
+		size_t,
+		void *,
+		size_t *)
+		CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_int CL_API_CALL
+clCreateSubDevices(
+		cl_device_id,
+		const cl_device_partition_property *,
+		cl_uint,
+		cl_device_id *,
+		cl_uint *)
+		CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_int CL_API_CALL
+clRetainDevice(cl_device_id) CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_int CL_API_CALL
+clReleaseDevice(cl_device_id) CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_int CL_API_CALL
+clCompileProgram(
+		cl_program,
+		cl_uint,
+		const cl_device_id *,
+		const char *,
+		cl_uint,
+		const cl_program *,
+		const char **,
+		void (CL_CALLBACK *)(cl_program, void *),
+		void *)
+		CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_program CL_API_CALL
+clLinkProgram(
+		cl_context,
+		cl_uint,
+		const cl_device_id *,
+		const char *,
+		cl_uint,
+		const cl_program *,
+		void (CL_CALLBACK *)(cl_program, void *),
+		void *,
+		cl_int *)
+		CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_int CL_API_CALL
+clUnloadPlatformCompiler(cl_platform_id) CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_program CL_API_CALL
+clCreateProgramWithBuiltInKernels(
+		cl_context,
+		cl_uint,
+		const cl_device_id *,
+		const char *,
+		cl_int *)
+		CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_mem CL_API_CALL
+clCreateImage(
+		cl_context,
+		cl_mem_flags,
+		const cl_image_format *,
+		const cl_image_desc *,
+		void *,
+		cl_int *)
+		CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_int CL_API_CALL
+clEnqueueMigrateMemObjects(
+		cl_command_queue,
+		cl_uint,
+		const cl_mem *,
+		cl_mem_migration_flags,
+		cl_uint,
+		const cl_event *,
+		cl_event *)
+		CL_API_SUFFIX__VERSION_1_2;
+
 CL_API_ENTRY  cl_int CL_API_CALL
 clEnqueueMarkerWithWaitList(
 		cl_command_queue,
@@ -945,6 +938,34 @@ clEnqueueBarrierWithWaitList(
 		const cl_event *,
 		cl_event *)
 		CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_int CL_API_CALL
+clEnqueueFillImage(
+		cl_command_queue,
+		cl_mem,
+		const void *,
+		const size_t *,
+		const size_t *,
+		cl_uint,
+		const cl_event *,
+		cl_event *)
+		CL_API_SUFFIX__VERSION_1_2;
+
+CL_API_ENTRY  cl_int CL_API_CALL
+clEnqueueFillBuffer(
+		cl_command_queue,
+		cl_mem,
+		const void *,
+		size_t,
+		size_t,
+		size_t,
+		cl_uint,
+		const cl_event *,
+		cl_event *)
+		CL_API_SUFFIX__VERSION_1_2;
+
+#endif //CL_API_SUFFIX__VERSION_1_2
+
 
 #ifdef  __cplusplus
 }

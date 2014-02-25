@@ -118,6 +118,8 @@ clGetDeviceInfo(
 	return rtlib_ocl.getDeviceInfo(device, param_name, param_value_size, param_value, param_value_size_ret);
 }
 
+#ifdef CL_API_SUFFIX__VERSION_1_2
+
 CL_API_ENTRY cl_int CL_API_CALL
 clCreateSubDevices(
 		cl_device_id in_device,
@@ -141,6 +143,161 @@ clReleaseDevice(cl_device_id device) CL_API_SUFFIX__VERSION_1_2 {
 	DB2 (fprintf(stderr, FD("Calling clReleaseDevice()...\n")));
 	return rtlib_ocl.releaseDevice(device);
 }
+
+CL_API_ENTRY cl_int CL_API_CALL
+clGetKernelArgInfo(
+		cl_kernel kernel,
+		cl_uint arg_indx,
+		cl_kernel_arg_info param_name,
+		size_t param_value_size,
+		void *param_value,
+		size_t *param_value_size_ret)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clGetKernelArgInfo()...\n")));
+	return rtlib_ocl.getKernelArgInfo(kernel, arg_indx, param_name,
+		param_value_size, param_value, param_value_size_ret);
+}
+
+CL_API_ENTRY cl_mem CL_API_CALL
+clCreateImage(
+		cl_context context,
+		cl_mem_flags flags,
+		const cl_image_format *image_format,
+		const cl_image_desc *image_desc,
+		void *host_ptr,
+		cl_int *errcode_ret)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2 (fprintf(stderr, FD("Calling clCreateImage()...\n")));
+	return rtlib_ocl.createImage(context, flags, image_format, image_desc,
+		host_ptr, errcode_ret);
+}
+
+CL_API_ENTRY cl_program CL_API_CALL
+clCreateProgramWithBuiltInKernels(
+		cl_context context,
+		cl_uint num_devices,
+		const cl_device_id *device_list,
+		const char *kernel_names,
+		cl_int *errcode_ret)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clCreateProgramWithBuiltInKernels()...\n")));
+	return rtlib_ocl.createProgramWithBuiltInKernels(context, num_devices,
+		device_list, kernel_names, errcode_ret);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clCompileProgram(
+		cl_program program,
+		cl_uint num_devices,
+		const cl_device_id *device_list,
+		const char *options,
+		cl_uint num_input_headers,
+		const cl_program *input_headers,
+		const char **header_include_names,
+		void (CL_CALLBACK *pfn_notify)(cl_program program, void *user_data),
+		void *user_data)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clCompileProgram()...\n")));
+	return rtlib_ocl.compileProgram(program, num_devices, device_list, options,
+		num_input_headers, input_headers, header_include_names, (*pfn_notify), user_data);
+}
+
+CL_API_ENTRY cl_program CL_API_CALL
+clLinkProgram(
+		cl_context context,
+		cl_uint num_devices,
+		const cl_device_id *device_list,
+		const char *options,
+		cl_uint num_input_programs,
+		const cl_program *input_programs,
+		void (CL_CALLBACK *pfn_notify)(cl_program program, void *user_data),
+		void *user_data,
+		cl_int *errcode_ret)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clLinkProgram()...\n")));
+	return rtlib_ocl.linkProgram(context, num_devices, device_list, options,
+		num_input_programs, input_programs, (*pfn_notify), user_data, errcode_ret);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clUnloadPlatformCompiler(cl_platform_id platform) CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clUnloadPlatformCompiler()...\n")));
+	return rtlib_ocl.unloadPlatformCompiler(platform);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueFillBuffer(
+		cl_command_queue command_queue,
+		cl_mem buffer,
+		const void *pattern,
+		size_t pattern_size,
+		size_t offset,
+		size_t size,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clEnqueueFillBuffer()...\n")));
+	return rtlib_ocl.enqueueFillBuffer(command_queue, buffer, pattern, pattern_size,
+		offset, size, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueFillImage(
+		cl_command_queue command_queue,
+		cl_mem image,
+		const void *fill_color,
+		const size_t *origin,
+		const size_t *region,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clEnqueueFillImage()...\n")));
+	return rtlib_ocl.enqueueFillImage(command_queue, image, fill_color, origin,
+		region, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueMigrateMemObjects(
+		cl_command_queue command_queue,
+		cl_uint num_mem_objects,
+		const cl_mem *mem_objects,
+		cl_mem_migration_flags flags,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clEnqueueMigrateMemObjects()...\n")));
+	return rtlib_ocl.enqueueMigrateMemObjects(command_queue, num_mem_objects,
+		mem_objects, flags, num_events_in_wait_list, event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueMarkerWithWaitList(
+		cl_command_queue command_queue,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clEnqueueMarkerWithWaitList()...\n")));
+	return rtlib_ocl.enqueueMarkerWithWaitList(command_queue, num_events_in_wait_list,
+		event_wait_list, event);
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueBarrierWithWaitList(
+		cl_command_queue command_queue,
+		cl_uint num_events_in_wait_list,
+		const cl_event *event_wait_list,
+		cl_event *event)
+		CL_API_SUFFIX__VERSION_1_2 {
+	DB2(fprintf(stderr, FD("Calling clEnqueueBarrierWithWaitList()...\n")));
+	return rtlib_ocl.enqueueBarrierWithWaitList(command_queue,
+	num_events_in_wait_list, event_wait_list, event);
+}
+
+#endif
 
 /* Context APIs  */
 CL_API_ENTRY cl_context CL_API_CALL
@@ -281,20 +438,6 @@ clCreateSubBuffer(
 		buffer_create_info, errcode_ret);
 }
 
-CL_API_ENTRY cl_mem CL_API_CALL
-clCreateImage(
-		cl_context context,
-		cl_mem_flags flags,
-		const cl_image_format *image_format,
-		const cl_image_desc *image_desc,
-		void *host_ptr,
-		cl_int *errcode_ret)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2 (fprintf(stderr, FD("Calling clCreateImage()...\n")));
-	return rtlib_ocl.createImage(context, flags, image_format, image_desc,
-		host_ptr, errcode_ret);
-}
-
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainMemObject(cl_mem memobj) CL_API_SUFFIX__VERSION_1_0 {
 	DB2 (fprintf(stderr, FD("Calling clRetainMemObject()...\n")));
@@ -424,19 +567,6 @@ clCreateProgramWithBinary(
 		lengths, binaries, binary_status, errcode_ret);
 }
 
-CL_API_ENTRY cl_program CL_API_CALL
-clCreateProgramWithBuiltInKernels(
-		cl_context context,
-		cl_uint num_devices,
-		const cl_device_id *device_list,
-		const char *kernel_names,
-		cl_int *errcode_ret)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clCreateProgramWithBuiltInKernels()...\n")));
-	return rtlib_ocl.createProgramWithBuiltInKernels(context, num_devices,
-		device_list, kernel_names, errcode_ret);
-}
-
 CL_API_ENTRY cl_int CL_API_CALL
 clRetainProgram(cl_program program) CL_API_SUFFIX__VERSION_1_0 {
 	DB2(fprintf(stderr, FD("Calling clRetainProgram()...\n")));
@@ -463,45 +593,6 @@ clBuildProgram(
 		(*pfn_notify), user_data);
 }
 
-CL_API_ENTRY cl_int CL_API_CALL
-clCompileProgram(
-		cl_program program,
-		cl_uint num_devices,
-		const cl_device_id *device_list,
-		const char *options,
-		cl_uint num_input_headers,
-		const cl_program *input_headers,
-		const char **header_include_names,
-		void (CL_CALLBACK *pfn_notify)(cl_program program, void *user_data),
-		void *user_data)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clCompileProgram()...\n")));
-	return rtlib_ocl.compileProgram(program, num_devices, device_list, options,
-		num_input_headers, input_headers, header_include_names, (*pfn_notify), user_data);
-}
-
-CL_API_ENTRY cl_program CL_API_CALL
-clLinkProgram(
-		cl_context context,
-		cl_uint num_devices,
-		const cl_device_id *device_list,
-		const char *options,
-		cl_uint num_input_programs,
-		const cl_program *input_programs,
-		void (CL_CALLBACK *pfn_notify)(cl_program program, void *user_data),
-		void *user_data,
-		cl_int *errcode_ret)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clLinkProgram()...\n")));
-	return rtlib_ocl.linkProgram(context, num_devices, device_list, options,
-		num_input_programs, input_programs, (*pfn_notify), user_data, errcode_ret);
-}
-
-CL_API_ENTRY cl_int CL_API_CALL
-clUnloadPlatformCompiler(cl_platform_id platform) CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clUnloadPlatformCompiler()...\n")));
-	return rtlib_ocl.unloadPlatformCompiler(platform);
-}
 
 CL_API_ENTRY cl_int CL_API_CALL
 clGetProgramInfo(
@@ -588,19 +679,6 @@ clGetKernelInfo(
 		param_value, param_value_size_ret);
 }
 
-CL_API_ENTRY cl_int CL_API_CALL
-clGetKernelArgInfo(
-		cl_kernel kernel,
-		cl_uint arg_indx,
-		cl_kernel_arg_info param_name,
-		size_t param_value_size,
-		void *param_value,
-		size_t *param_value_size_ret)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clGetKernelArgInfo()...\n")));
-	return rtlib_ocl.getKernelArgInfo(kernel, arg_indx, param_name,
-		param_value_size, param_value, param_value_size_ret);
-}
 
 CL_API_ENTRY cl_int CL_API_CALL
 clGetKernelWorkGroupInfo(
@@ -820,23 +898,6 @@ clEnqueueWriteBufferRect(
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueFillBuffer(
-		cl_command_queue command_queue,
-		cl_mem buffer,
-		const void *pattern,
-		size_t pattern_size,
-		size_t offset,
-		size_t size,
-		cl_uint num_events_in_wait_list,
-		const cl_event *event_wait_list,
-		cl_event *event)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clEnqueueFillBuffer()...\n")));
-	return rtlib_ocl.enqueueFillBuffer(command_queue, buffer, pattern, pattern_size,
-		offset, size, num_events_in_wait_list, event_wait_list, event);
-}
-
-CL_API_ENTRY cl_int CL_API_CALL
 clEnqueueCopyBuffer(
 		cl_command_queue command_queue,
 		cl_mem src_buffer,
@@ -943,21 +1004,6 @@ clEnqueueWriteImage(
 	return status;
 }
 
-CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueFillImage(
-		cl_command_queue command_queue,
-		cl_mem image,
-		const void *fill_color,
-		const size_t *origin,
-		const size_t *region,
-		cl_uint num_events_in_wait_list,
-		const cl_event *event_wait_list,
-		cl_event *event)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clEnqueueFillImage()...\n")));
-	return rtlib_ocl.enqueueFillImage(command_queue, image, fill_color, origin,
-		region, num_events_in_wait_list, event_wait_list, event);
-}
 
 CL_API_ENTRY cl_int CL_API_CALL
 clEnqueueCopyImage(
@@ -1109,20 +1155,6 @@ clEnqueueUnmapMemObject(
 	return status;
 }
 
-CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueMigrateMemObjects(
-		cl_command_queue command_queue,
-		cl_uint num_mem_objects,
-		const cl_mem *mem_objects,
-		cl_mem_migration_flags flags,
-		cl_uint num_events_in_wait_list,
-		const cl_event *event_wait_list,
-		cl_event *event)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clEnqueueMigrateMemObjects()...\n")));
-	return rtlib_ocl.enqueueMigrateMemObjects(command_queue, num_mem_objects,
-		mem_objects, flags, num_events_in_wait_list, event_wait_list, event);
-}
 
 CL_API_ENTRY cl_int CL_API_CALL
 clEnqueueNDRangeKernel(
@@ -1195,29 +1227,6 @@ clEnqueueNativeKernel(
 	return status;
 }
 
-CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueMarkerWithWaitList(
-		cl_command_queue command_queue,
-		cl_uint num_events_in_wait_list,
-		const cl_event *event_wait_list,
-		cl_event *event)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clEnqueueMarkerWithWaitList()...\n")));
-	return rtlib_ocl.enqueueMarkerWithWaitList(command_queue, num_events_in_wait_list,
-		event_wait_list, event);
-}
-
-CL_API_ENTRY cl_int CL_API_CALL
-clEnqueueBarrierWithWaitList(
-		cl_command_queue command_queue,
-		cl_uint num_events_in_wait_list,
-		const cl_event *event_wait_list,
-		cl_event *event)
-		CL_API_SUFFIX__VERSION_1_2 {
-	DB2(fprintf(stderr, FD("Calling clEnqueueBarrierWithWaitList()...\n")));
-	return rtlib_ocl.enqueueBarrierWithWaitList(command_queue,
-	num_events_in_wait_list, event_wait_list, event);
-}
 
 // Initialize OpenCL wrappers
 void rtlib_ocl_init() {
@@ -1229,9 +1238,6 @@ void rtlib_ocl_init() {
 	rtlib_ocl.getPlatformInfo = (getPlatformInfo_t) dlsym(handle, "clGetPlatformInfo");
 	rtlib_ocl.getDeviceIDs = (getDeviceIDs_t) dlsym(handle, "clGetDeviceIDs");
 	rtlib_ocl.getDeviceInfo = (getDeviceInfo_t) dlsym(handle, "clGetDeviceInfo");
-	rtlib_ocl.createSubDevices = (createSubDevices_t) dlsym(handle, "clCreateSubDevices");
-	rtlib_ocl.retainDevice = (retainDevice_t) dlsym(handle, "clRetainDevice");
-	rtlib_ocl.releaseDevice = (releaseDevice_t) dlsym(handle, "clReleaseDevice");
 	rtlib_ocl.createContext = (createContext_t) dlsym(handle, "clCreateContext");
 	rtlib_ocl.createContextFromType = (createContextFromType_t) dlsym(handle, "clCreateContextFromType");
 	rtlib_ocl.retainContext = (retainContext_t) dlsym(handle, "clRetainContext");
@@ -1243,7 +1249,6 @@ void rtlib_ocl_init() {
 	rtlib_ocl.getCommandQueueInfo = (getCommandQueueInfo_t) dlsym(handle, "clGetCommandQueueInfo");
 	rtlib_ocl.createBuffer = (createBuffer_t) dlsym(handle, "clCreateBuffer");
 	rtlib_ocl.createSubBuffer = (createSubBuffer_t) dlsym(handle, "clCreateSubBuffer");
-	rtlib_ocl.createImage = (createImage_t) dlsym(handle, "clCreateImage");
 	rtlib_ocl.retainMemObject = (retainMemObject_t) dlsym(handle, "clRetainMemObject");
 	rtlib_ocl.releaseMemObject = (releaseMemObject_t) dlsym(handle, "clReleaseMemObject");
 	rtlib_ocl.getSupportedImageFormats = (getSupportedImageFormats_t) dlsym(handle, "clGetSupportedImageFormats");
@@ -1256,13 +1261,9 @@ void rtlib_ocl_init() {
 	rtlib_ocl.getSamplerInfo = (getSamplerInfo_t) dlsym(handle, "clGetSamplerInfo");
 	rtlib_ocl.createProgramWithSource = (createProgramWithSource_t) dlsym(handle, "clCreateProgramWithSource");
 	rtlib_ocl.createProgramWithBinary = (createProgramWithBinary_t) dlsym(handle, "clCreateProgramWithBinary");
-	rtlib_ocl.createProgramWithBuiltInKernels = (createProgramWithBuiltInKernels_t) dlsym(handle, "clCreateProgramWithBuiltInKernels");
 	rtlib_ocl.retainProgram = (retainProgram_t) dlsym(handle, "clRetainProgram");
 	rtlib_ocl.releaseProgram = (releaseProgram_t) dlsym(handle, "clReleaseProgram");
 	rtlib_ocl.buildProgram = (buildProgram_t) dlsym(handle, "clBuildProgram");
-	rtlib_ocl.compileProgram = (compileProgram_t) dlsym(handle, "clCompileProgram");
-	rtlib_ocl.linkProgram = (linkProgram_t) dlsym(handle, "clLinkProgram");
-	rtlib_ocl.unloadPlatformCompiler = (unloadPlatformCompiler_t) dlsym(handle, "clUnloadPlatformCompiler");
 	rtlib_ocl.getProgramInfo = (getProgramInfo_t) dlsym(handle, "clGetProgramInfo");
 	rtlib_ocl.getProgramBuildInfo = (getProgramBuildInfo_t) dlsym(handle, "clGetProgramBuildInfo");
 	rtlib_ocl.createKernel = (createKernel_t) dlsym(handle, "clCreateKernel");
@@ -1271,7 +1272,6 @@ void rtlib_ocl_init() {
 	rtlib_ocl.releaseKernel = (releaseKernel_t) dlsym(handle, "clReleaseKernel");
 	rtlib_ocl.setKernelArg = (setKernelArg_t) dlsym(handle, "clSetKernelArg");
 	rtlib_ocl.getKernelInfo = (getKernelInfo_t) dlsym(handle, "clGetKernelInfo");
-	rtlib_ocl.getKernelArgInfo = (getKernelArgInfo_t) dlsym(handle, "clGetKernelArgInfo");
 	rtlib_ocl.getKernelWorkGroupInfo = (getKernelWorkGroupInfo_t) dlsym(handle, "clGetKernelWorkGroupInfo");
 	rtlib_ocl.waitForEvents = (waitForEvents_t) dlsym(handle, "clWaitForEvents");
 	rtlib_ocl.getEventInfo = (getEventInfo_t) dlsym(handle, "clGetEventInfo");
@@ -1285,26 +1285,43 @@ void rtlib_ocl_init() {
 	rtlib_ocl.enqueueReadBufferRect = (enqueueReadBufferRect_t) dlsym(handle, "clEnqueueReadBufferRect");
 	rtlib_ocl.enqueueWriteBuffer = (enqueueWriteBuffer_t) dlsym(handle, "clEnqueueWriteBuffer");
 	rtlib_ocl.enqueueWriteBufferRect = (enqueueWriteBufferRect_t) dlsym(handle, "clEnqueueWriteBufferRect");
-	rtlib_ocl.enqueueFillBuffer = (enqueueFillBuffer_t) dlsym(handle, "clEnqueueFillBuffer");
 	rtlib_ocl.enqueueCopyBuffer = (enqueueCopyBuffer_t) dlsym(handle, "clEnqueueCopyBuffer");
 	rtlib_ocl.enqueueCopyBufferRect = (enqueueCopyBufferRect_t) dlsym(handle, "clEnqueueCopyBufferRect");
 	rtlib_ocl.enqueueReadImage = (enqueueReadImage_t) dlsym(handle, "clEnqueueReadImage");
 	rtlib_ocl.enqueueWriteImage = (enqueueWriteImage_t) dlsym(handle, "clEnqueueWriteImage");
-	rtlib_ocl.enqueueFillImage = (enqueueFillImage_t) dlsym(handle, "clEnqueueFillImage");
 	rtlib_ocl.enqueueCopyImage = (enqueueCopyImage_t) dlsym(handle, "clEnqueueCopyImage");
 	rtlib_ocl.enqueueCopyImageToBuffer = (enqueueCopyImageToBuffer_t) dlsym(handle, "clEnqueueCopyImageToBuffer");
 	rtlib_ocl.enqueueCopyBufferToImage = (enqueueCopyBufferToImage_t) dlsym(handle, "clEnqueueCopyBufferToImage");
 	rtlib_ocl.enqueueMapBuffer = (enqueueMapBuffer_t) dlsym(handle, "clEnqueueMapBuffer");
 	rtlib_ocl.enqueueMapImage = (enqueueMapImage_t) dlsym(handle, "clEnqueueMapImage");
 	rtlib_ocl.enqueueUnmapMemObject = (enqueueUnmapMemObject_t) dlsym(handle, "clEnqueueUnmapMemObject");
-	rtlib_ocl.enqueueMigrateMemObjects = (enqueueMigrateMemObjects_t) dlsym(handle, "clEnqueueMigrateMemObjects");
 	rtlib_ocl.enqueueNDRangeKernel = (enqueueNDRangeKernel_t) dlsym(handle, "clEnqueueNDRangeKernel");
 	rtlib_ocl.enqueueTask = (enqueueTask_t) dlsym(handle, "clEnqueueTask");
 	rtlib_ocl.enqueueNativeKernel = (enqueueNativeKernel_t) dlsym(handle, "clEnqueueNativeKernel");
-	rtlib_ocl.enqueueMarkerWithWaitList = (enqueueMarkerWithWaitList_t) dlsym(handle, "clEnqueueMarkerWithWaitList");
-	rtlib_ocl.enqueueBarrierWithWaitList = (enqueueBarrierWithWaitList_t) dlsym(handle, "clEnqueueBarrierWithWaitList");
 	rtlib_ocl.flush = (flush_t) dlsym(handle, "clFlush");
 	rtlib_ocl.finish = (finish_t) dlsym(handle, "clFinish");
+
+#ifdef CL_API_SUFFIX__VERSION_1_2
+	rtlib_ocl.createSubDevices = (createSubDevices_t) dlsym(handle, "clCreateSubDevices");
+	rtlib_ocl.retainDevice     = (retainDevice_t) dlsym(handle, "clRetainDevice");
+	rtlib_ocl.releaseDevice    = (releaseDevice_t) dlsym(handle, "clReleaseDevice");
+	rtlib_ocl.getKernelArgInfo = (getKernelArgInfo_t) dlsym(handle, "clGetKernelArgInfo");
+	rtlib_ocl.compileProgram   = (compileProgram_t) dlsym(handle, "clCompileProgram");
+	rtlib_ocl.linkProgram      = (linkProgram_t) dlsym(handle, "clLinkProgram");
+	rtlib_ocl.unloadPlatformCompiler =
+		(unloadPlatformCompiler_t) dlsym(handle, "clUnloadPlatformCompiler");
+	rtlib_ocl.createProgramWithBuiltInKernels =
+		(createProgramWithBuiltInKernels_t) dlsym(handle, "clCreateProgramWithBuiltInKernels");
+	rtlib_ocl.createImage       = (createImage_t) dlsym(handle, "clCreateImage");
+	rtlib_ocl.enqueueFillBuffer = (enqueueFillBuffer_t) dlsym(handle, "clEnqueueFillBuffer");
+	rtlib_ocl.enqueueFillImage  = (enqueueFillImage_t) dlsym(handle, "clEnqueueFillImage");
+	rtlib_ocl.enqueueMigrateMemObjects   =
+		(enqueueMigrateMemObjects_t) dlsym(handle, "clEnqueueMigrateMemObjects");
+	rtlib_ocl.enqueueMarkerWithWaitList  =
+		(enqueueMarkerWithWaitList_t) dlsym(handle, "clEnqueueMarkerWithWaitList");
+	rtlib_ocl.enqueueBarrierWithWaitList =
+		(enqueueBarrierWithWaitList_t) dlsym(handle, "clEnqueueBarrierWithWaitList");
+#endif
 
 	// Command labels (for profiling output)
 	ocl_cmd_str.insert(CmdStrPair_t(CL_COMMAND_READ_BUFFER,       "clEnqueueReadBuffer"));
