@@ -2156,13 +2156,13 @@ void BbqueRPC::OclPrintCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue
 	std::string q_str, s_str, x_str;
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
 		snprintf(q_buff, 100, "%p_%s_queue",
-			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
+			(void *) cmd_queue, ocl_cmd_str[it_ct->first].c_str());
 		q_str.assign(q_buff);
 		snprintf(s_buff, 100, "%p_%s_submit",
-			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
+			(void *) cmd_queue, ocl_cmd_str[it_ct->first].c_str());
 		s_str.assign(s_buff);
 		snprintf(x_buff, 100, "%p_%s_exec",
-			cmd_queue, ocl_cmd_str[it_ct->first].c_str());
+			(void *) cmd_queue, ocl_cmd_str[it_ct->first].c_str());
 		x_str.assign(x_buff);
 		DUMP_MOST_METRIC(CL_TAG, (q_str + "_sum_ms").c_str(), SUM(QUEUED), "%.3f");
 		DUMP_MOST_METRIC(CL_TAG, (q_str + "_min_ms").c_str(), MIN(QUEUED), "%.3f");
@@ -2190,13 +2190,13 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queu
 	for (it_ct = stPtr->addr_prof.begin(); it_ct != stPtr->addr_prof.end(); it_ct++) {
 		cmd_type = rtlib_ocl_get_command_type(it_ct->first);
 		snprintf(q_buff, 100, "%p_%s_%p_queue",
-			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ct->first);
+			(void *) cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ct->first);
 		q_str.assign(q_buff);
 		snprintf(s_buff, 100, "%p_%s_%p_submit",
-			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ct->first);
+			(void *) cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ct->first);
 		s_str.assign(s_buff);
 		snprintf(x_buff, 100, "%p_%s_%p_exec",
-			cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ct->first);
+			(void *) cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ct->first);
 		x_str.assign(x_buff);
 		DUMP_MOST_METRIC(CL_TAG, (q_str + "_sum_ms").c_str(), SUM(QUEUED), "%.3f");
 		DUMP_MOST_METRIC(CL_TAG, (q_str + "_min_ms").c_str(), MIN(QUEUED), "%.3f");
@@ -2261,7 +2261,6 @@ void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
 	AwmStatsMap_t::iterator it;
 	pAwmStats_t pstats;
 	uint8_t awm_id;
-	uint8_t count = 0;
 
 #ifdef OCL_STATS_FILE
 	outfd = fopen(OCL_FILE_PATH, "a");
@@ -2303,7 +2302,7 @@ void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd
 				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
 				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
 				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f ||\n",
-			cmd_queue, ocl_cmd_str[it_ct->first].c_str(),
+			(void *) cmd_queue, ocl_cmd_str[it_ct->first].c_str(),
 			SUM(QUEUED), (100 * SUM(QUEUED))/otot, (100 * SUM(QUEUED))/vtot_q,
 			MEAN(QUEUED), STDDEV(QUEUED),
 			SUM(SUBMIT), (100 * SUM(SUBMIT))/otot, (100 * SUM(SUBMIT))/vtot_s,
@@ -2325,7 +2324,7 @@ void BbqueRPC::OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cm
 				"%8.3f | %8.3f | %8.3f || "
 				"%8.3f | %8.3f | %8.3f || "
 				"%8.3f | %8.3f | %8.3f ||\n",
-			cmd_queue, it_ct->first, ocl_cmd_str[cmd_type].c_str(),
+			(void *) cmd_queue, it_ct->first, ocl_cmd_str[cmd_type].c_str(),
 			SUM(QUEUED), MEAN(QUEUED), STDDEV(QUEUED),
 			SUM(SUBMIT), MEAN(SUBMIT), STDDEV(SUBMIT),
 			SUM(EXEC), MEAN(EXEC), STDDEV(EXEC));
