@@ -234,7 +234,10 @@ public:
 	 * @see WorkingModeConfIF
 	 */
 	size_t BindResource(ResourceIdentifier::Type_t r_type,
-			ResID_t src_ID,	ResID_t dst_ID, size_t b_refn = 0);
+			ResID_t src_ID,	ResID_t dst_ID, size_t b_refn = 0,
+			ResourceIdentifier::Type_t filter_rtype =
+				ResourceIdentifier::UNDEFINED,
+			ResourceBitset * filter_mask = nullptr);
 
 	std::string BindingStr(	ResourceIdentifier::Type_t r_type,
 			ResID_t src_ID, ResID_t dst_ID, size_t b_refn);

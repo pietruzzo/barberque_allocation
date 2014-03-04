@@ -159,7 +159,9 @@ size_t WorkingMode::BindResource(
 		ResourceIdentifier::Type_t r_type,
 		ResID_t src_ID,
 		ResID_t dst_ID,
-		size_t b_refn) {
+		size_t b_refn,
+		ResourceIdentifier::Type_t filter_rtype,
+		ResourceBitset * filter_mask) {
 	UsagesMap_t * src_pum;
 	uint32_t b_count;
 	size_t n_refn;
@@ -183,7 +185,9 @@ size_t WorkingMode::BindResource(
 	}
 
 	// Binding
-	b_count = ResourceBinder::Bind(	*src_pum, r_type, src_ID, dst_ID, bind_pum);
+	b_count = ResourceBinder::Bind(
+			*src_pum, r_type, src_ID, dst_ID, bind_pum,
+			filter_rtype, filter_mask);
 	if (b_count == 0) {
 		logger->Warn("[%s] BindResource: nothing to bind", str_id);
 		return 0;

@@ -68,7 +68,10 @@ public:
 	 * about its ID.
 	 */
 	virtual size_t BindResource(ResourceIdentifier::Type_t r_type,
-			ResID_t src_ID, ResID_t dst_ID, size_t b_refn = 0) = 0;
+			ResID_t src_ID, ResID_t dst_ID, size_t b_refn = 0,
+			ResourceIdentifier::Type_t filter_child_rtype =
+				ResourceIdentifier::UNDEFINED,
+			ResourceBitset * filter_mask = nullptr) = 0;
 
 	/**
 	 * @brief Clear the resource binding to schedule
