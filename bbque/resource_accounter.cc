@@ -433,19 +433,39 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		UsagesMapPtr_t const & pum,
 		ResourceIdentifier::Type_t r_type,
 		ResourceIdentifier::Type_t r_scope_type) const {
-	UsagesMap_t::iterator uit;
-	ResourcePathPtr_t ppath;
-	UsagePtr_t pusage;
-	uint64_t usage = 0;
 
 	if (pum == nullptr) {
 		logger->Fatal("GetUsageAmount: empty map");
 		return 0;
 	}
 
-	for (uit = pum->begin(); uit != pum->end(); ++uit) {
-		ppath  = (*uit).first;
-		pusage = (*uit).second;
+	UsagesMap_t::const_iterator b_it = pum->begin();
+	UsagesMap_t::const_iterator e_it = pum->end();
+	return  GetAmountFromUsagesMap(b_it, e_it, r_type, r_scope_type);
+}
+
+uint64_t ResourceAccounter::GetUsageAmount(
+		UsagesMap_t const & um,
+		ResourceIdentifier::Type_t r_type,
+		ResourceIdentifier::Type_t r_scope_type) const {
+
+	UsagesMap_t::const_iterator b_it = um.begin();
+	UsagesMap_t::const_iterator e_it = um.end();
+	return  GetAmountFromUsagesMap(b_it, e_it, r_type, r_scope_type);
+}
+
+uint64_t ResourceAccounter::GetAmountFromUsagesMap(
+		UsagesMap_t::const_iterator & begin,
+		UsagesMap_t::const_iterator & end,
+		ResourceIdentifier::Type_t r_type,
+		ResourceIdentifier::Type_t r_scope_type) const {
+	UsagesMap_t::const_iterator uit;
+	uint64_t amount = 0;
+
+	uit = begin;
+	for ( ; uit != end; ++uit) {
+		ResourcePathPtr_t ppath = (*uit).first;
+		UsagePtr_t pusage = (*uit).second;
 
 		logger->Debug("GetUsageAmount: type:{%-3s} scope:{%-3s}",
 			ResourceIdentifier::TypeStr[r_type],
@@ -457,12 +477,12 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		// Get the amount used
 		if (ppath->Type() != r_type)
 			continue;
-		usage += pusage->GetAmount();
+		amount += pusage->GetAmount();
 	}
 
 	logger->Debug("GetUsageAmount: R{%-3s} U = %" PRIu64 "",
-			ResourceIdentifier::TypeStr[r_type], usage);
-	return usage;
+			ResourceIdentifier::TypeStr[r_type], amount);
+	return amount;
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(

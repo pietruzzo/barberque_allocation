@@ -179,12 +179,18 @@ public:
 	 *
 	 * @param pum A map of Usage pointers
 	 * @param r_type The type of resource to query
+	 * @param r_scope_type The scope under which consider the resource
 	 *
 	 * @return The amount of resource usage
 	 */
 	uint64_t GetUsageAmount(UsagesMapPtr_t const & pum,
 			ResourceIdentifier::Type_t r_type,
 			ResourceIdentifier::Type_t r_scope_type = Resource::UNDEFINED) const;
+
+	uint64_t GetUsageAmount(UsagesMap_t const & um,
+			ResourceIdentifier::Type_t r_type,
+			ResourceIdentifier::Type_t r_scope_type = Resource::UNDEFINED) const;
+
 
 	/**
 	 * @brief Show the system resources status
@@ -569,6 +575,26 @@ private:
 	uint64_t QueryStatus(ResourcePtrList_t const & rsrc_list,
 				QueryOption_t q_opt, RViewToken_t vtok = 0,
 				AppSPtr_t papp = AppSPtr_t()) const;
+
+	/**
+	 * @brief Get the cumulative amount of resource usage, given iterators of
+	 * a UsagesMap.
+	 *
+	 * This is an internal member function called by all the versions of the
+	 * public member function GetUsageAmount().
+	 *
+	 * @param begin UsagesMap begin iterator
+	 * @param end   UsagesMap end iterator
+	 * @param r_type       The type of resource to query
+	 * @param r_scope_type The scope under which consider the resource
+	 *
+	 * @return The amount of resource usage
+	 */
+	uint64_t GetAmountFromUsagesMap(
+			UsagesMap_t::const_iterator & begin,
+			UsagesMap_t::const_iterator & end,
+			ResourceIdentifier::Type_t r_type,
+			ResourceIdentifier::Type_t r_scope_type = Resource::UNDEFINED) const;
 
 	/**
 	 * @brief Check the resource availability for a whole set
