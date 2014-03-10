@@ -45,11 +45,11 @@ KERN_USLEEP_PERC="0 5 10 15 20 25"
 EXTRA="Sleep"
 
 # ========================== Samples data ==================================
-ocl_names=(nbody stereomatch fluidsimulation2D montecarlo)
-AMD_SAMPLES="NBody FluidSimulation2D MonteCarloAsianDP"
+ocl_names=(nbody stereomatch fluidsimulation2D montecarlo mandelbrot)
+AMD_SAMPLES="NBody FluidSimulation2D MonteCarloAsianDP Mandelbrot"
 #AMD_SAMPLES="MonteCarloAsianDP"
 
-SAMPLES=("nbody stereomatch fluidsimulation2D montecarlo")
+SAMPLES=("nbody stereomatch fluidsimulation2D montecarlo mandelbrot")
 #SAMPLES="nbody montecarlo"
 #SAMPLES="nbody fluidsimulation2D montecarlo"
 #SAMPLES="stereomatch"

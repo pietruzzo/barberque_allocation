@@ -124,18 +124,22 @@ for s in $AMD_SAMPLES; do
 	#SAMPLE=${SAMPLES[$SEL]}
 	SAMPLE=$s
 	SEL=""
-	CS=${s:0:1}
+	CS=${s:0:2}
 	case $CS in
-		"N")
+		"NB")
 			SEL=1
 			PVALUES=${NB_PARAMS[@]}
 			;;
-		"F")
+		"Fl")
 			SEL=2
 			;;
-		"M")
+		"Mo")
 			SEL=3
 			PVALUES=${MC_PARAMS[@]}
+			;;
+		# -- 4: Stereomatching missing here --
+		"Ma")
+			SEL=5
 			;;
 		*)
 			SEL=0
@@ -178,6 +182,25 @@ for s in $AMD_SAMPLES; do
 					echo $AMD_SAMPLE_PREFIX$SAMPLE -i ${NUMITER[$SEL]} ${ARGS[$SEL]} $p -t
 					START=$(date +%s)
 					(run_sample $AMD_SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./getAdapterInfoNOBBQ.awk
+					END=$(date +%s)
+					DIFF=$((END-START))
+					ADAPTER_INFO=$(cat /tmp/OCLSampleRuntime.dat)
+					IFS=" " read -ra INFO <<< "$ADAPTER_INFO"
+					printf "%d %d %d %d %d\n" $DIFF ${INFO[0]} ${INFO[1]} ${INFO[2]} ${INFO[3]} >> $OUTFILENAME
+					printf "%d %d %d %d %d\n" $DIFF ${INFO[0]} ${INFO[1]} ${INFO[2]} ${INFO[3]}
+					sleep 2
+				done
+			done
+		else
+		# --- Mandelbrot --- #
+			for p in $PVALUES; do
+				OUTFILENAME=$TESTDIR/"NOBBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P"$p"-Runtime.dat"
+				printf "[%s] Output file: %s\n" $SAMPLE $OUTFILENAME
+				for ((r=1; r <=$NUMRUN; ++r)); do
+					print_test_header $SAMPLE $r $i $p
+					echo $AMD_SAMPLE_PREFIX$SAMPLE -i ${NUMITER[$SEL]} ${ARGS[$SEL]} --double
+					START=$(date +%s)
+					(run_sample $AMD_SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} --double) 2>&1 |./getAdapterInfoNOBBQ.awk
 					END=$(date +%s)
 					DIFF=$((END-START))
 					ADAPTER_INFO=$(cat /tmp/OCLSampleRuntime.dat)

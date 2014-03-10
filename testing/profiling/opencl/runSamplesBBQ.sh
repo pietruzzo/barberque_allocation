@@ -155,22 +155,25 @@ for s in $SAMPLES; do
 	#SAMPLE=${SAMPLES[$SEL]}
 	SAMPLE=$s
 	SEL=""
-	CS=${s:0:1}
+	CS=${s:0:2}
 	case $CS in
-		"n")	#NBody
+		"nb")	#NBody
 			SEL=1
 			PVALUES=${NB_PARAMS[@]}
 			;;
-		"s")	#Stereomatching
+		"st")	#Stereomatching
 			SEL=2
-			PVALUES=${SM_PARAMS[@]}
 			;;
-		"f")	#Fluidsimulation2D
+		"fl")	#Fluidsimulation2D
 			SEL=3
 			;;
-		"m")	#Montecarlo
+		"mo")	#Montecarlo
 			SEL=4
 			PVALUES=${MC_PARAMS[@]}
+			;;
+		"ma")	#Mandelbrot
+			SEL=5
+			PVALUES=${MA_PARAMS[@]}
 			;;
 		*)
 			SEL=0
@@ -186,8 +189,9 @@ for s in $SAMPLES; do
 		# Remove BBQ generated log file
 		clean_out
 
+		case $SEL in
 		# --- FluidSimulation2D --- #
-		if [ $SEL == 3 ]; then
+			"3")
 			printf "[%s] No application parameters\n" $SAMPLE
 			for ((r=1; r <=$NUMRUN; ++r)); do
 				p=0
@@ -202,24 +206,25 @@ for s in $SAMPLES; do
 				sleep 3
 			done
 			printf "Finish\n\n" >> /tmp/$OUTFILENAME.log
+			;;
 		# --- Stereomatching --- #
-		elif [ $SEL == 2 ]; then
-			for p in $PVALUES; do
-				echo $BOSP_BASE"/contrib/ocl-samples/StereoMatching/tsukuba"
-				for ((r=1; r <=$NUMRUN; ++r)); do
-					print_test_header $SAMPLE $r $i $p
-					echo $SAMPLE_PREFIX$SAMPLE -i ${NUMITER[$SEL]} ${ARGS[$SEL]} $p
-					START=$(date +%s)
-					(run_stereomatch $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./getAdapterInfo.awk
-					END=$(date +%s)
-					DIFF=$((END-START))
-					printf "Time: %d s\n" $DIFF | tee -a /tmp/$OUTFILENAME.log
-					printf "Param: %d\n" $p     >> /tmp/$OUTFILENAME.log
-					sleep 3
-				done
-				printf "Finish\n\n" >> /tmp/$OUTFILENAME.log
+			"2")
+			echo $BOSP_BASE"/contrib/ocl-samples/StereoMatching/tsukuba"
+			for ((r=1; r <=$NUMRUN; ++r)); do
+				print_test_header $SAMPLE $r $i
+				echo $SAMPLE_PREFIX$SAMPLE -i ${NUMITER[$SEL]} ${ARGS[$SEL]}
+				START=$(date +%s)
+				(run_stereomatch $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]}) 2>&1 |./getAdapterInfo.awk
+				#(run_stereomatch $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]}) |./getAdapterInfo.awk
+				END=$(date +%s)
+				DIFF=$((END-START))
+				printf "Time: %d s\n" $DIFF | tee -a /tmp/$OUTFILENAME.log
+				printf "Param: %d\n"      >> /tmp/$OUTFILENAME.log
+				sleep 2
 			done
-		else
+			printf "Finish\n\n" >> /tmp/$OUTFILENAME.log
+			;;
+			"1" | "4")
 		# --- Nbody, Montecarlo --- #
 			for p in $PVALUES; do
 				for ((r=1; r <=$NUMRUN; ++r)); do
@@ -236,7 +241,24 @@ for s in $SAMPLES; do
 				done
 				printf "Finish\n\n" >> /tmp/$OUTFILENAME.log
 			done
-		fi
+			;;
+		# --- Mandelbrot --- #
+			"5")
+			for ((r=1; r <=$NUMRUN; ++r)); do
+				print_test_header $SAMPLE $r $i
+				echo $SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]} ${ARGS[$SEL]}
+				START=$(date +%s)
+				(run_sample $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} --double) 2>&1 |./getAdapterInfo.awk
+				END=$(date +%s)
+				DIFF=$((END-START))
+				printf "Time: %d s\n" $DIFF | tee -a /tmp/$OUTFILENAME.log
+				printf "Param: %d\n"  >> /tmp/$OUTFILENAME.log
+				sleep 2
+			done
+			printf "Finish\n\n" >> /tmp/$OUTFILENAME.log
+			;;
+		esac
+
 		# Extract data
 		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-P" -f extractData.awk /tmp/$OUTFILENAME.log
 		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P" -f extractData.awk /tmp/$OUTFILENAME.log
