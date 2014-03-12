@@ -32,7 +32,8 @@ SUBDIR_PREFIX=$DATETIME
 DATADIR_PREFIX=${DATADIR_PREFIX:-"/tmp"}
 
 XORG_CONF="/etc/X11/xorg.conf_gpu"
-SEL=$1
+OCL_PROF="o0:M"
+SEL=""
 
 # Frequency values
 GPU_CORE_FREQ=300
@@ -48,6 +49,7 @@ EXTRA="Sleep"
 ocl_names=(nbody stereomatch fluidsimulation2D montecarlo mandelbrot)
 AMD_SAMPLES="NBody FluidSimulation2D MonteCarloAsianDP Mandelbrot"
 #AMD_SAMPLES="MonteCarloAsianDP"
+AMD_TIME_OPT=""
 
 SAMPLES=("nbody stereomatch fluidsimulation2D montecarlo mandelbrot")
 #SAMPLES="nbody"
@@ -137,19 +139,9 @@ function setup {
 	fi
 	echo "Output directory: " $TESTDIR
 
-	# BBQ OpenCL profiling option
-	case $1 in
-		1)	# No OpenCL command profiling!
-			unset BBQUE_RTLIB_OPTS
-			;;
-		"-h")
-			print_help
-			;;
-		*)
-			BBQUE_RTLIB_OPTS="o1"
-	esac
-#	printf "Total number of test runs = %d\n" $TOTRUNS
-#	echo ${#SAMPLES[@]}
-#	exit
+	# Timing/profiling enabled?
+	if [ $OCL_PROF ]; then
+		AMD_TIME_OPT="-t"
+	fi
 }
 
