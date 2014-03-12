@@ -50,32 +50,38 @@ AMD_SAMPLES="NBody FluidSimulation2D MonteCarloAsianDP Mandelbrot"
 #AMD_SAMPLES="MonteCarloAsianDP"
 
 SAMPLES=("nbody stereomatch fluidsimulation2D montecarlo mandelbrot")
-#SAMPLES="nbody montecarlo"
-#SAMPLES="nbody fluidsimulation2D montecarlo"
-#SAMPLES="stereomatch"
+#SAMPLES="nbody"
+#SAMPLES="montecarlo"
+#SAMPLES="nbody stereomatch fluidsimulation2D montecarlo mandelbrot"
+#SAMPLES="stereomatch fluidsimulation2D"
 #SAMPLES="fluidsimulation2D"
-ARGS=("" "-x" "--fps" "" "-c")
+SAMPLES="mandelbrot"
+ARGS=("" "-x" "" "" "-c" "")
+
+# Number of iterations per sample execution
+#          nbody
+#          |   stereomatch
+#          |   |   fluidsim
+#          |   |   |   montecarlo
+#          |   |   |   |  mandelbrot
+NUMITER=(0 100 5 100 3 1000)
+#NUMITER=(0 25 5 10 3 100)
+#NUMITER=(0 10 20 90 1)
+#TOTRUNS=$(($NUMRUN*${#SAMPLES[@]}))
+#TOTRUNS=$(($NUMRUN*4))
+
 
 # Number of NBody particles
-NB_PARAMS=(32768 8192 2048)
+NB_PARAMS=(32768)
+#NB_PARAMS=(32768 8192 2048)
 #NB_PARAMS=(32768 16384 8192 4096 2048 1024)
 #NB_PARAMS=(16384)
 
 # Number of MonteCarloAsianDP steps
 #MC_PARAMS=(8 16 32 64 128 256)
-MC_PARAMS=(8 32 128)
-#MC_PARAMS=(128)
-#MC_PARAMS=(64)
-
-# StereoMatching FPS
-#SM_PARAMS=(1 3 5 10 15 20)
-SM_PARAMS=(5 10 20)
-
-# Number of iterations per sample execution
-NUMITER=(0 200 500 50 1)
-#NUMITER=(0 10 20 90 1)
-#TOTRUNS=$(($NUMRUN*${#SAMPLES[@]}))
-#TOTRUNS=$(($NUMRUN*4))
+#MC_PARAMS=(8 32 128)
+#MC_PARAMS=(256)
+MC_PARAMS=(64)
 
 
 # $1 = sample

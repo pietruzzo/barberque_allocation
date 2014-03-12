@@ -30,7 +30,7 @@ BEGIN {
 
 /^Finish/ {
   j = nr_cmds;
-  printf("%s, runs=%d, cmds=%d)\n", outfile, i, j);
+  #printf("%s, runs=%d, cmds=%d)\n", outfile, i, j);
   for (i--; i >= 0; --i) {
     printf("%s %d %d %d %d\n", row[i,1], row[i,2], row[i,3], row[i,4], row[i,5]) \
 	>> outfile""row[i,0]"-Runtime.dat";

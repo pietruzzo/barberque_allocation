@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2012  Politecnico di Milano
+# Copyright (C) 2014  Politecnico di Milano
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ sample_cmdline=(
 #4: Parameter value
 function run_sample {
 	for i in `seq 1 $2`; do
-		printf "Running up to %d instances " $2
+		printf "Running up to %d instance(s)\n" $2
 		(BBQUE_RTLIB_OPTS=$OCLPROF $1 -q -i ${NUMITER[$SEL]} $3 $4 &)
 	done
 	wait
@@ -46,7 +46,7 @@ function run_sample {
 
 function run_stereomatch {
 	for i in `seq 1 $2`; do
-		printf "Running up to %d instances " $2
+		printf "Running up to %d instance(s)\n" $2
 	#	echo "BBQUE_RTLIB_OPTS=o1 $1 -i" $NUMITER \
 	#		"--path_img_ref "$BOSP_BASE"/contrib/ocl-samples/StereoMatching/tsukuba" $3 $4 > nist
 		(BBQUE_RTLIB_OPTS="o1" $1 -i ${NUMITER[$SEL]} \
@@ -55,17 +55,13 @@ function run_stereomatch {
 	wait
 }
 
-function launchScenarios {
+function run_gpu_cosched_scenario {
 	declare -A cosched_times
 	echo "...Run scenarios..."
 	for i in `seq 0 3`; do
 		for j in `seq 0 3`; do
-			#if [ "$i" -eq "$j" ]; then
-				#echo " --- Skipping --- " $i $j
-				#continue
-			#fi
-			echo "Running... " ${ocl_names[$i]} ${ocl_names[$j]}
-			startSamples $i $j
+			printf "[%s, %s]...\n " ${ocl_names[$i]} ${ocl_names[$j]}
+			startSamplePair $i $j
 			#sleep 3
 		done
 	done
@@ -81,15 +77,17 @@ function launchScenarios {
 	echo ${cosched_times[@]}
 }
 
-function startSamples {
-	launch $1 $2 > /dev/null 2>1 &
-	sleep 2
-	launch $2 $1 > /dev/null 2>1 &
+function startSamplePair {
+	launchBBQSample $1 $2 > /dev/null 2>&1 &
+#	launchBBQSample $1 $2  &
+	sleep 1
+	launchBBQSample $2 $1 > /dev/null 2>&1 &
+#	launchBBQSample $2 $1  &
 	wait
 }
 
-function launch {
-	echo ":::: Launching: " ${sample_cmdline[$1]}
+function launchBBQSample {
+	echo " BBQ: " ${sample_cmdline[$1]}
 	local start_t=0
 	local end_t=0
 	local diff_t=0
@@ -101,87 +99,24 @@ function launch {
 	echo "In matrix ->" ${cosched_times[$1,$2]}
 	echo ${cosched_times[$1,$2]}" " >> \
 		$TESTDIR"/GPUcs-"${ocl_names[$1]}"_"${ocl_names[$2]}".dat"
-
 }
 
 function print_help {
-	echo "#################################"
-	echo "#        Select sample!         #"
-	echo "#===============================#"
-	echo "# 0) fluidsimulation2D          #"
-	echo "# 1) nbody                      #"
-	echo "# 2) montecarlo                 #"
-	echo "# 3) mandelbrot                 #"
-	echo "# 4) stereomatch                #"
-	echo "#################################"
+	echo " : Default execution"
+	echo "1: GPU co-scheduling execution"
+	echo "2: GPU exclusive execution"
+	echo "3: Heterogeneous scenario"
 }
 
 function clean_out {
 	rm /tmp/$OUTFILENAME.log
 }
 
-###################### Start the test #########################################
-# Import setup data
-source setupSamples.sh
-setup $1
 
-###################### Scenario based experiments #############################
-
-case $1 in
-	1)	# Evaluate the GPU co-scheduling combinations
-		launchScenarios
-		exit 1
-		;;
-	"-h")
-		print_help
-		;;
-
-esac
-
-###############################################################################
-
-
-####################### Samples explorations ##################################
-
-
-if [ $BBQ = 0 ]; then
-	echo "*************** Test WITHOUT The BarbequeRTRM *******************"
-	SAMPLE_PREFIX=$AMD_SAMPLE_DIR
-	SAMPLES=$AMD_SAMPLES
-fi
-
-for s in $SAMPLES; do
-	# Launch sample
-	#SAMPLE=${SAMPLES[$SEL]}
-	SAMPLE=$s
-	SEL=""
-	CS=${s:0:2}
-	case $CS in
-		"nb")	#NBody
-			SEL=1
-			PVALUES=${NB_PARAMS[@]}
-			;;
-		"st")	#Stereomatching
-			SEL=2
-			;;
-		"fl")	#Fluidsimulation2D
-			SEL=3
-			;;
-		"mo")	#Montecarlo
-			SEL=4
-			PVALUES=${MC_PARAMS[@]}
-			;;
-		"ma")	#Mandelbrot
-			SEL=5
-			PVALUES=${MA_PARAMS[@]}
-			;;
-		*)
-			SEL=0
-			printf "No parameters for %s\n" $s
-			;;
-	esac
-
-	printf "==================== (SEL=%s) ================\n" $SAMPLE $SEL
+function run_test {
+	SAMPLE=$1
+	SEL=$2
+	printf "==================== (SEL=%d: %s) ================\n" $SEL $SAMPLE
 	printf "Parameter set = [%s]\n" $PVALUES
 
 	for i in $NUMINST; do
@@ -232,6 +167,7 @@ for s in $SAMPLES; do
 					echo $SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]} ${ARGS[$SEL]} $p
 					START=$(date +%s)
 					(run_sample $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) 2>&1 |./getAdapterInfo.awk
+					#(run_sample $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} $p) |./getAdapterInfo.awk
 					END=$(date +%s)
 					DIFF=$((END-START))
 					#printf "Time: %d s\n" $DIFF >> /tmp/$OUTFILENAME.log
@@ -246,7 +182,7 @@ for s in $SAMPLES; do
 			"5")
 			for ((r=1; r <=$NUMRUN; ++r)); do
 				print_test_header $SAMPLE $r $i
-				echo $SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]} ${ARGS[$SEL]}
+				echo $SAMPLE_PREFIX$SAMPLE -q -i ${NUMITER[$SEL]} ${ARGS[$SEL]} --double
 				START=$(date +%s)
 				(run_sample $SAMPLE_PREFIX$SAMPLE $i ${ARGS[$SEL]} --double) 2>&1 |./getAdapterInfo.awk
 				END=$(date +%s)
@@ -262,6 +198,68 @@ for s in $SAMPLES; do
 		# Extract data
 		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-P" -f extractData.awk /tmp/$OUTFILENAME.log
 		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P" -f extractData.awk /tmp/$OUTFILENAME.log
+
+
+
+###################### Start the test #########################################
+
+# BBQ or not BBQ?
+if [ $BBQ == 0 ]; then
+	echo "*************** Test WITHOUT The BarbequeRTRM *******************"
+	SAMPLE_PREFIX=$AMD_SAMPLE_DIR
+	SAMPLES=$AMD_SAMPLES
+fi
+if [ $BBQ == 1 ] && [ ! -f $BOSP_BASE/out/var/run/bbqued.pid ]; then
+	echo "ERROR: BarbequeRTRM not running!"
+	exit 2
+fi
+
+# Import setup data
+setup $1
+
+# Type of experiment (recipes setup)
+case $1 in
+	1)	# Evaluate the GPU co-scheduling combinations
+		run_gpu_cosched_scenario
+		exit 1
+		;;
+	0 | 2 | 3)
+		;;
+	*)
+		print_help
+		;;
+
+esac
+
+# Samples set iteration
+for s in $SAMPLES; do
+	SAMPLE=$s
+	SEL=""
+	CS=${s:0:2}
+	case $CS in
+		"nb")	#NBody
+			SEL=1
+			PVALUES=${NB_PARAMS[@]}
+			;;
+		"st")	#Stereomatching
+			SEL=2
+			;;
+		"fl")	#Fluidsimulation2D
+			SEL=3
+			;;
+		"mo")	#Montecarlo
+			SEL=4
+			PVALUES=${MC_PARAMS[@]}
+			;;
+		"ma")	#Mandelbrot
+			SEL=5
+			PVALUES=${MA_PARAMS[@]}
+			;;
+		*)
+			SEL=0
+			printf "No parameters for %s\n" $s
+			;;
+	esac
 	done
 done
 

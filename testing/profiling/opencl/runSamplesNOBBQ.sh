@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2012  Politecnico di Milano
+# Copyright (C) 2014  Politecnico di Milano
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,17 +40,13 @@ function run_sample {
 	wait
 }
 
-function launchScenarios {
+function run_gpu_cosched_scenario {
 	declare -A cosched_times
 	echo "...Run scenarios..."
 	for i in `seq 0 2`; do
 		for j in `seq 0 2`; do
-			#if [ "$i" -eq "$j" ]; then
-				#echo " --- Skipping --- " $i $j
-				#continue
-			#fi
-			echo "Running... " ${ocl_names[$i]} ${ocl_names[$j]}
-			startSamples $i $j
+			printf "[%s, %s]...\n" ${ocl_names[$i]} ${ocl_names[$j]}
+			startSamplePair $i $j 0
 			#sleep 3
 		done
 	done
@@ -66,17 +62,25 @@ function launchScenarios {
 	echo ${cosched_times[@]}
 }
 
-function startSamples {
+function startSamplePair {
 	#launch $1 $2 > /dev/null 2>1 &
-	launch $1 $2  &
-	sleep 2
-	#launch $2 $1 > /dev/null 2>1 &
-	launch $2 $1  &
+	if [ $3 -eq "0" ]; then
+		launchNoBBQSample $1 $2  &
+	elif [ $3 -eq "0" ]; then
+		launchBBQSample $1 $2 > /dev/null 2>&1 &
+	fi
+
+	sleep 1
+	if [ $3 -eq "0" ]; then
+		launchNoBBQSample $2 $1  &
+	elif [ $3 -eq "0" ]; then
+		launchBBQSample $2 $1 > /dev/null 2>&1 &
+	fi
 	wait
 }
 
-function launch {
-	echo ":::: Launching: " ${sample_cmdline[$1]}
+function launchNoBBQSample {
+	echo " NOBBQ: " ${sample_cmdline[$1]}
 	local start_t=0
 	local end_t=0
 	local diff_t=0
@@ -108,7 +112,7 @@ case $1 in
 	1)	# Evaluate the GPU co-scheduling combinations
 		for ((r=1; r <=$NUMRUN; ++r)); do
 			printf " ################## RUN[%d] #################\n" $r
-			launchScenarios
+			run_gpu_cosched_scenario
 		done
 		exit 1
 		;;
@@ -121,7 +125,6 @@ esac
 
 for s in $AMD_SAMPLES; do
 	# Launch sample
-	#SAMPLE=${SAMPLES[$SEL]}
 	SAMPLE=$s
 	SEL=""
 	CS=${s:0:2}
