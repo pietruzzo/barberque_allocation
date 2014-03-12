@@ -159,7 +159,7 @@ for s in $AMD_SAMPLES; do
 		# --- FluidSimulation2D --- #
 		if [ $SEL == 2 ]; then
 			printf "[%s] No application parameters\n" $SAMPLE
-			OUTFILENAME=$OUTDIR/$DATETIME/"NOBBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P0-Runtime.dat"
+			OUTFILENAME=$TESTDIR/"NOBBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P0-Runtime.dat"
 			printf "[%s] Output file: %s\n" $SAMPLE $OUTFILENAME
 			for ((r=1; r <=$NUMRUN; ++r)); do
 				print_test_header $SAMPLE $r $i $p
@@ -178,7 +178,7 @@ for s in $AMD_SAMPLES; do
 		# --- Nbody, Montecarlo --- #
 			for p in $PVALUES; do
 				printf "[%s] Parameter value = %d\n" $SAMPLE $p
-				OUTFILENAME=$OUTDIR/$DATETIME/"NOBBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P"$p"-Runtime.dat" 
+				OUTFILENAME=$TESTDIR/"NOBBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P"$p"-Runtime.dat"
 				printf "[%s] Output file: %s\n" $SAMPLE $OUTFILENAME
 				for ((r=1; r <=$NUMRUN; ++r)); do
 					print_test_header $SAMPLE $r $i $p

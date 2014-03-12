@@ -196,8 +196,12 @@ function run_test {
 		esac
 
 		# Extract data
-		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-P" -f extractData.awk /tmp/$OUTFILENAME.log
-		awk -v outfile=$OUTDIR/$DATETIME/"BBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-P" -f extractData.awk /tmp/$OUTFILENAME.log
+		awk -v outfile=$TESTDIR/"BBQ-"$SAMPLE"-N"$i"-S"$KSLEEP"-P" \
+				-f extractData.awk /tmp/$OUTFILENAME.log
+		awk -v outfile=$TESTDIR/"BBQ-"$SAMPLE"-N"$i"-I"${NUMITER[$SEL]}"-S"$KSLEEP"-P" \
+				-f extractData.awk /tmp/$OUTFILENAME.log
+	done
+}
 
 
 
