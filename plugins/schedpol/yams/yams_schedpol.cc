@@ -1118,6 +1118,10 @@ void YamsSchedPol::CowsAggregateResults() {
 	float result = 0.0;
 	logger->Info("COWS: ----------- Results aggregation ------------");
 
+	if (cows_info.norm_stats[COWS_STALLS] == 0) cows_info.norm_stats[COWS_STALLS]++;
+	if (cows_info.norm_stats[COWS_IRET] == 0) cows_info.norm_stats[COWS_IRET]++;
+	if (cows_info.norm_stats[COWS_FLOPS] == 0) cows_info.norm_stats[COWS_FLOPS]++;
+
 	// Normalizing
 	logger->Info(" ======================================================"
 			"==================");
