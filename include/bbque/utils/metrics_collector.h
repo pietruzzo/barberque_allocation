@@ -37,7 +37,7 @@
 #include <boost/accumulators/statistics/variance.hpp>
 
 using namespace boost::accumulators;
-using bbque::plugins::LoggerIF;
+using bbque::plugins::Logger;
 using bbque::utils::Timer;
 using bbque::CommandHandler;
 
@@ -392,7 +392,7 @@ private:
 	/**
 	 * @brief The logger to use.
 	 */
-	LoggerIF *logger;
+	Logger *logger;
 
 	/**
 	 * @brief Map of all registered metrics

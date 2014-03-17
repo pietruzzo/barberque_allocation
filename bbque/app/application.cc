@@ -81,7 +81,7 @@ Application::Application(std::string const & _name,
 	awms.recipe_vect.resize(MAX_NUM_AWM);
 
 	// Get a logger
-	bp::LoggerIF::Configuration conf(APPLICATION_NAMESPACE);
+	bp::Logger::Configuration conf(APPLICATION_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	assert(logger);
 

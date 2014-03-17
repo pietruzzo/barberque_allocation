@@ -69,7 +69,7 @@ private:
 	/**
 	 * @brief The logger used by the resource manager.
 	 */
-	plugins::LoggerIF *logger;
+	plugins::Logger *logger;
 
 	/**
 	 * @biref Ture if a platform configuration has been successfully loaded

@@ -24,7 +24,7 @@
 #include "bbque/plugins/logger.h"
 #include "bbque/utils/metrics_collector.h"
 
-using bbque::plugins::LoggerIF;
+using bbque::plugins::Logger;
 using bbque::utils::MetricsCollector;
 
 namespace bbque {
@@ -68,7 +68,7 @@ private:
 	/**
 	 * @brief The logger used by the resource manager.
 	 */
-	LoggerIF *logger;
+	Logger *logger;
 
 	/**
 	 * @brief The Resource Scheduler module

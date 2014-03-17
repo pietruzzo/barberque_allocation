@@ -174,7 +174,7 @@ ResourceManager::Setup() {
 
 	//---------- Get a logger module
 	std::string logger_name(RESOURCE_MANAGER_NAMESPACE);
-	bp::LoggerIF::Configuration conf(logger_name.c_str());
+	bp::Logger::Configuration conf(logger_name.c_str());
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		fprintf(stderr, "RM: Logger module creation FAILED\n");

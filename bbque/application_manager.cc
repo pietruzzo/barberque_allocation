@@ -69,7 +69,7 @@ ApplicationManager::ApplicationManager() :
 	cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
 
 	// Get a logger
-	bp::LoggerIF::Configuration conf(APPLICATION_MANAGER_NAMESPACE);
+	bp::Logger::Configuration conf(APPLICATION_MANAGER_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	assert(logger);
 

@@ -174,7 +174,7 @@ public:
 private:
 
 	/** System logger instance */
-	LoggerIF *logger;
+	Logger *logger;
 
 	/** Configuration manager instance */
 	ConfigurationManager & cm;

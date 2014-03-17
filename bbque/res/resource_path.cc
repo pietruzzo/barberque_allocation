@@ -33,7 +33,7 @@ ResourcePath::ResourcePath(std::string const & r_path):
 	ExitCode_t result;
 
 	// Get a logger module
-	bp::LoggerIF::Configuration conf(MODULE_NAMESPACE);
+	bp::Logger::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	logger->Debug("RP{%s} object construction", r_path.c_str());
 

@@ -31,14 +31,14 @@ namespace bbque { namespace utils {
  * This defines a console based logger to be used for logging if a more
  * advanced logger module is not available
  */
-class ConsoleLogger : public bbque::plugins::LoggerIF {
+class ConsoleLogger : public bbque::plugins::Logger {
 
 public:
 
 	/**
 	 * Build a new configured console logger
 	 */
-	ConsoleLogger(plugins::LoggerIF::Configuration const & data,
+	ConsoleLogger(plugins::Logger::Configuration const & data,
 			std::string const & id);
 
 	/**

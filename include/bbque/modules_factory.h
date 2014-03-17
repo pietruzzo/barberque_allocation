@@ -54,10 +54,10 @@ public:
 			const std::string & id = TEST_NAMESPACE);
 
 	/**
-	 * Get a reference to a module implementing the LoggerIF interface
+	 * Get a reference to a module implementing the Logger interface
 	 */
-	static plugins::LoggerIF * GetLoggerModule(
-			plugins::LoggerIF::Configuration const & data,
+	static plugins::Logger * GetLoggerModule(
+			plugins::Logger::Configuration const & data,
 			std::string const & id = LOGGER_NAMESPACE);
 
 	/**

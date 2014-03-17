@@ -105,7 +105,7 @@ MetricsCollector & MetricsCollector::GetInstance() {
 MetricsCollector::MetricsCollector() {
 
 	//---------- Get a logger module
-	bp::LoggerIF::Configuration conf(METRICS_COLLECTOR_NAMESPACE);
+	bp::Logger::Configuration conf(METRICS_COLLECTOR_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		fprintf(stderr, "MC: Logger module creation FAILED\n");

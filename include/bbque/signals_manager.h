@@ -125,7 +125,7 @@ private:
 	  /**
 	   * @brief The logger used by the resource manager.
 	   */
-	  plugins::LoggerIF *logger;
+	  plugins::Logger *logger;
 
 	  /**
 	   * @brief Table of concrete SignalHandlers

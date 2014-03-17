@@ -65,7 +65,7 @@ ResourceAccounter::ResourceAccounter() :
 
 	// Get a logger
 	std::string logger_name(RESOURCE_ACCOUNTER_NAMESPACE);
-	plugins::LoggerIF::Configuration conf(logger_name.c_str());
+	plugins::Logger::Configuration conf(logger_name.c_str());
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	assert(logger);
 

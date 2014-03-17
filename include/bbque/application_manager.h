@@ -32,7 +32,7 @@
 
 using bbque::app::Application;
 using bbque::utils::Deferrable;
-using bbque::plugins::LoggerIF;
+using bbque::plugins::Logger;
 using bbque::plugins::RecipeLoaderIF;
 using bbque::CommandHandler;
 
@@ -342,7 +342,7 @@ public:
 private:
 
 	/** The logger used by the application manager */
-	LoggerIF  *logger;
+	Logger  *logger;
 
 	/** The recipe loader module used to parse recipes */
 	RecipeLoaderIF * rloader;

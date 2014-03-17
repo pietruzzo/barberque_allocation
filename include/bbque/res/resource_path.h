@@ -223,7 +223,7 @@ public:
 private:
 
 	/** Logger instance */
-	bp::LoggerIF *logger;
+	bp::Logger *logger;
 
 	/** Resource identifiers: one for each level of the the path */
 	std::vector<ResourceIdentifierPtr_t> identifiers;

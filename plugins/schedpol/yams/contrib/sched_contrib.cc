@@ -56,7 +56,7 @@ SchedContrib::SchedContrib(
 
 	// Get a logger instance
 	snprintf(logname, 16, MODULE_NAMESPACE".%s", name);
-	plugins::LoggerIF::Configuration conf(logname);
+	plugins::Logger::Configuration conf(logname);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 }
 

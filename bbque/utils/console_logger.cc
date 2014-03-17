@@ -25,7 +25,7 @@
 namespace bbque { namespace utils {
 
 
-ConsoleLogger::ConsoleLogger(plugins::LoggerIF::Configuration const & data,
+ConsoleLogger::ConsoleLogger(plugins::Logger::Configuration const & data,
 				std::string const & id) {
 
 }

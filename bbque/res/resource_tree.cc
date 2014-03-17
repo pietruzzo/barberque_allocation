@@ -34,7 +34,7 @@ ResourceTree::ResourceTree():
 	count(0) {
 
 	// Get a logger
-	bp::LoggerIF::Configuration conf(RESOURCE_TREE_NAMESPACE);
+	bp::Logger::Configuration conf(RESOURCE_TREE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	assert(logger);
 

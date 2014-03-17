@@ -38,7 +38,7 @@ RandomSchedPol::RandomSchedPol() :
 	dist(0, 100) {
 
 	// Get a logger
-	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
+	plugins::Logger::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		if (daemonized)

@@ -39,7 +39,7 @@ namespace bbque { namespace plugins {
  *
  * This defines a Log4CPP based Logger plugin.
  */
-class Log4CppLogger : public LoggerIF {
+class Log4CppLogger : public Logger {
 
 public:
 

@@ -38,7 +38,7 @@ TestPlatformData::TestPlatformData() :
 
 	//---------- Get a logger module
 	std::string logger_name(TEST_PLATFORM_DATA_NAMESPACE);
-	plugins::LoggerIF::Configuration conf(logger_name.c_str());
+	plugins::Logger::Configuration conf(logger_name.c_str());
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		fprintf(stderr, "TPD: Logger module creation FAILED\n");

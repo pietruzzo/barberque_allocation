@@ -34,7 +34,7 @@ AndroidLogger::~AndroidLogger() {
 //----- static plugin interface
 
 void * AndroidLogger::Create(PF_ObjectParams * params) {
-	LoggerIF::Configuration * conf = (LoggerIF::Configuration*) params->data;
+	Logger::Configuration * conf = (Logger::Configuration*) params->data;
 	return new AndroidLogger(conf->category);
 }
 

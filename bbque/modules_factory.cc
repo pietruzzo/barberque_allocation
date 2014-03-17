@@ -46,8 +46,8 @@ plugins::TestIF * ModulesFactory::GetTestModule(const std::string & id) {
  */
 typedef bp::ObjectAdapter<bp::LoggerAdapter, C_Logger> Logger_ObjectAdapter;
 
-plugins::LoggerIF * ModulesFactory::GetLoggerModule(
-		plugins::LoggerIF::Configuration const & data,
+plugins::Logger * ModulesFactory::GetLoggerModule(
+		plugins::Logger::Configuration const & data,
 		std::string const & id) {
 	bu::ConsoleLogger *logger = NULL;
 
@@ -67,7 +67,7 @@ plugins::LoggerIF * ModulesFactory::GetLoggerModule(
 		module = (void*)(logger);
 	}
 
-	return (plugins::LoggerIF *) module;
+	return (plugins::Logger *) module;
 }
 
 plugins::RPCChannelIF * ModulesFactory::GetRPCChannelModule(

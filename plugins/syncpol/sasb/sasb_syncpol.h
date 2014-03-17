@@ -94,7 +94,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	LoggerIF *logger = NULL;
+	Logger *logger = NULL;
 
 	/**
 	 * @brief Keep track of the best estimation for the sync latency

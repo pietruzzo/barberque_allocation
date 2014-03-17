@@ -68,7 +68,7 @@ ProfileManager::ProfileManager() :
 
 	//---------- Get a logger module
 	std::string logger_name(PROFILE_MANAGER_NAMESPACE);
-	bp::LoggerIF::Configuration conf(logger_name.c_str());
+	bp::Logger::Configuration conf(logger_name.c_str());
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		fprintf(stderr, "OM: Logger module creation FAILED\n");

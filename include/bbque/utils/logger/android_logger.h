@@ -36,7 +36,7 @@ namespace bbque { namespace plugins {
  *
  * This defines a Log4CPP based Logger plugin.
  */
-class AndroidLogger : public LoggerIF {
+class AndroidLogger : public Logger {
 
 public:
 

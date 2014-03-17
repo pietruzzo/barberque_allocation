@@ -107,7 +107,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	LoggerIF *logger;
+	Logger *logger;
 
 	/**
 	 * Set true when the recipe loader has been configured.

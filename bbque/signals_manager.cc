@@ -39,7 +39,7 @@ SignalsManager::SignalsManager() :
 	quitEn(SIGQUIT, ResourceManager::BBQ_ABORT) {
 
 	//---------- Get a logger module
-	bp::LoggerIF::Configuration conf(SIGNALS_MANAGER_NAMESPACE);
+	bp::Logger::Configuration conf(SIGNALS_MANAGER_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		fprintf(stderr, "SM: Logger module creation FAILED\n");

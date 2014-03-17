@@ -65,7 +65,7 @@ WorkingMode::WorkingMode(uint8_t _id,
 	resources.binding_masks.resize(ResourceIdentifier::TYPE_COUNT);
 
 	// Get a logger
-	bp::LoggerIF::Configuration conf(AWM_NAMESPACE);
+	bp::Logger::Configuration conf(AWM_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 
 	// Set the log string id

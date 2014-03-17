@@ -66,7 +66,7 @@ namespace bbque { namespace plugins {
 
 
 // Forward declaration
-class LoggerIF;
+class Logger;
 
 /**
  * @class YamsSchedPol
@@ -163,7 +163,7 @@ private:
 	MetricsCollector & mc;
 
 	/** System logger instance */
-	LoggerIF *logger = NULL;
+	Logger *logger = NULL;
 
 	/** System view instance */
 	System * sv = NULL;

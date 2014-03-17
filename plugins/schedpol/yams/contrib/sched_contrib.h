@@ -252,7 +252,7 @@ public:
 protected:
 
 	 /** Logger */
-	 LoggerIF * logger = NULL;
+	 Logger * logger = NULL;
 
 	 /** Configuration manager instance */
 	 ConfigurationManager & cm;

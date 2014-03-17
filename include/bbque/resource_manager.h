@@ -40,7 +40,7 @@
 #include <map>
 
 using bbque::plugins::PluginManager;
-using bbque::plugins::LoggerIF;
+using bbque::plugins::Logger;
 using bbque::utils::MetricsCollector;
 using bbque::utils::Deferrable;
 using bbque::utils::Worker;
@@ -148,7 +148,7 @@ private:
 	/**
 	 * @brief The logger used by the resource manager.
 	 */
-	LoggerIF *logger;
+	Logger *logger;
 
 	/**
 	 * Reference to supported platform services class.

@@ -26,7 +26,7 @@
 
 #define AWM_NAMESPACE "bq.awm"
 
-using bbque::plugins::LoggerIF;
+using bbque::plugins::Logger;
 
 namespace bbque { namespace app {
 
@@ -324,7 +324,7 @@ private:
 	};
 
 	/** The logger used by the application manager */
-	LoggerIF  *logger = NULL;
+	Logger  *logger = NULL;
 
 	/**
 	 * A pointer to the Application descriptor containing the

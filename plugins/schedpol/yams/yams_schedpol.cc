@@ -97,7 +97,7 @@ YamsSchedPol::YamsSchedPol():
 	mc(bu::MetricsCollector::GetInstance()) {
 
 	// Get a logger
-	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
+	plugins::Logger::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (logger)
 		logger->Info("yams: Built a new dynamic object[%p]", this);

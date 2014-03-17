@@ -96,7 +96,7 @@ SchedulerManager::SchedulerManager() :
 	std::string opt_policy;
 
 	//---------- Get a logger module
-	bp::LoggerIF::Configuration conf(SCHEDULER_MANAGER_NAMESPACE);
+	bp::Logger::Configuration conf(SCHEDULER_MANAGER_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		fprintf(stderr, "RS: Logger module creation FAILED\n");

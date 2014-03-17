@@ -39,7 +39,7 @@ using bbque::res::RViewToken_t;
 namespace bbque { namespace plugins {
 
 // Forward declaration
-class LoggerIF;
+class Logger;
 
 /**
  * @brief The Random resource scheduler heuristic plugin.
@@ -77,7 +77,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	LoggerIF *logger;
+	Logger *logger;
 
 	/** Configuration manager instance */
 	ConfigurationManager & cm;

@@ -87,7 +87,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	plugins::LoggerIF *logger;
+	plugins::Logger *logger;
 
 	/**
 	 * @brief Thrue if the channel has been correctly initalized

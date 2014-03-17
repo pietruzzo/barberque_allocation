@@ -51,7 +51,7 @@ int Worker::Setup(const char *name, const char *logname) {
 	this->name = name;
 
 	//---------- Get a logger module
-	plugins::LoggerIF::Configuration conf(logname);
+	plugins::Logger::Configuration conf(logname);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (logger == NULL) {
 		fprintf(stderr, FE("Worker[%s]: setup FAILED"

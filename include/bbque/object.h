@@ -71,7 +71,7 @@ protected:
 	/**
 	 * The pointer to logger of this object
 	 */
-	std::unique_ptr<plugins::LoggerIF> logger;
+	std::unique_ptr<plugins::Logger> logger;
 
 	/**
 	 * @brief   Build a new object

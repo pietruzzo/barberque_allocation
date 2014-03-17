@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_LOGGER_H_
-#define BBQUE_LOGGER_H_
+#ifndef BBQUE_UTILS_LOGGER_H_
+#define BBQUE_UTILS_LOGGER_H_
 
 #include "bbque/config.h"
 
@@ -40,11 +40,11 @@ namespace bbque { namespace plugins {
  * This defines the basic logging services which are provided to each Barbeque
  * components. The object class defines logging and modules name.
  */
-class LoggerIF {
+class Logger {
 
 public:
 
-	virtual ~LoggerIF() {};
+	virtual ~Logger() {};
 
 //----- Objects initialization data
 
@@ -129,4 +129,4 @@ public:
 
 } // namespace bbque
 
-#endif // BBQUE_LOGGER_H_
+#endif // BBQUE_UTILS_LOGGER_H_

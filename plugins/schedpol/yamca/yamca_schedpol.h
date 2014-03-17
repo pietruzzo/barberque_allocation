@@ -41,7 +41,7 @@ namespace bbque { namespace plugins {
 
 
 // Forward declaration
-class LoggerIF;
+class Logger;
 
 /**
  * @brief The YaMCA resource scheduler heuristic
@@ -91,7 +91,7 @@ public:
 private:
 
 	/** System logger instance */
-	LoggerIF *logger = NULL;
+	Logger *logger = NULL;
 
 	/** Resource accounter instance */
 	ResourceAccounter & rsrc_acct;

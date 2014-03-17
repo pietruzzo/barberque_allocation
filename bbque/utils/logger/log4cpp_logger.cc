@@ -68,7 +68,7 @@ Log4CppLogger::~Log4CppLogger() {
 //----- static plugin interface
 
 void * Log4CppLogger::Create(PF_ObjectParams * params) {
-	LoggerIF::Configuration * conf = (LoggerIF::Configuration*) params->data;
+	Logger::Configuration * conf = (Logger::Configuration*) params->data;
 
 	if (!Configure(params))
 		return NULL;

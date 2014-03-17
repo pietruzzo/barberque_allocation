@@ -183,7 +183,7 @@ public:
 private:
 
 	/** The logger used by the resource accounter */
-	bp::LoggerIF  *logger;
+	bp::Logger  *logger;
 
 	/** Pointer to the root of the tree*/
 	ResourceNode_t * root;

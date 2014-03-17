@@ -43,7 +43,7 @@ FifoRPC::FifoRPC(std::string const & fifo_dir) :
 	rpc_fifo_fd(0) {
 
 	// Get a logger
-	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
+	plugins::Logger::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		if (daemonized)

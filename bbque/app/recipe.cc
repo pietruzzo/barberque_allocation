@@ -36,7 +36,7 @@ Recipe::Recipe(std::string const & name):
 
 	// Get a logger
 	std::string logger_name(RECIPE_NAMESPACE"." + name);
-	bp::LoggerIF::Configuration conf(logger_name.c_str());
+	bp::Logger::Configuration conf(logger_name.c_str());
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	assert(logger);
 
