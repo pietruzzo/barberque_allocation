@@ -31,6 +31,7 @@
 #define MODULE_NAMESPACE SCHEDULER_POLICY_NAMESPACE "." SC_MANAGER_NAMESPACE
 #define MODULE_CONFIG    SCHEDULER_POLICY_CONFIG "." SC_MANAGER_CONFIG
 
+namespace bu = bbque::utils;
 
 namespace bbque { namespace plugins {
 
@@ -174,7 +175,7 @@ public:
 private:
 
 	/** System logger instance */
-	Logger *logger;
+	bu::Logger *logger;
 
 	/** Configuration manager instance */
 	ConfigurationManager & cm;

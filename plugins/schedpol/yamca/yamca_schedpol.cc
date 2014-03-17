@@ -82,7 +82,7 @@ YamcaSchedPol::YamcaSchedPol():
 	mc(bu::MetricsCollector::GetInstance()) {
 
 	// Get a logger
-	plugins::Logger::Configuration conf(MODULE_NAMESPACE);
+	bu::Logger::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 
 	if (logger)

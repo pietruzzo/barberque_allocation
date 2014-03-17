@@ -29,6 +29,7 @@
 #include <csignal>
 
 using bbque::ResourceManager;
+namespace bu = bbque::utils;
 
 #define WORKER_NAMESPACE "bq.wk"
 #define MODULE_NAMESPACE WORKER_NAMESPACE
@@ -51,7 +52,7 @@ int Worker::Setup(const char *name, const char *logname) {
 	this->name = name;
 
 	//---------- Get a logger module
-	plugins::Logger::Configuration conf(logname);
+	bu::Logger::Configuration conf(logname);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (logger == NULL) {
 		fprintf(stderr, FE("Worker[%s]: setup FAILED"

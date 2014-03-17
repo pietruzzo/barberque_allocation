@@ -25,6 +25,7 @@
 #include "bbque/res/resource_utils.h"
 #include "bbque/utils/utility.h"
 
+namespace bu = bbque::utils;
 
 namespace bbque { namespace res {
 
@@ -34,7 +35,7 @@ ResourceTree::ResourceTree():
 	count(0) {
 
 	// Get a logger
-	bp::Logger::Configuration conf(RESOURCE_TREE_NAMESPACE);
+	bu::Logger::Configuration conf(RESOURCE_TREE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	assert(logger);
 

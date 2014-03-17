@@ -24,6 +24,7 @@
 #define MODULE_NAMESPACE "bq.tpd"
 
 namespace br = bbque::res;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -38,7 +39,7 @@ TestPlatformData::TestPlatformData() :
 
 	//---------- Get a logger module
 	std::string logger_name(TEST_PLATFORM_DATA_NAMESPACE);
-	plugins::Logger::Configuration conf(logger_name.c_str());
+	bu::Logger::Configuration conf(logger_name.c_str());
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		fprintf(stderr, "TPD: Logger module creation FAILED\n");

@@ -25,6 +25,8 @@
 
 #define TEST_PLATFORM_DATA_NAMESPACE "bq.tpd"
 
+namespace bu = bbque::utils;
+
 namespace bbque {
 
 /**
@@ -69,7 +71,7 @@ private:
 	/**
 	 * @brief The logger used by the resource manager.
 	 */
-	plugins::Logger *logger;
+	bu::Logger *logger;
 
 	/**
 	 * @biref Ture if a platform configuration has been successfully loaded

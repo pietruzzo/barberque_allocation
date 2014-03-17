@@ -30,6 +30,8 @@
 # include <sys/signal.h>
 #endif
 
+namespace bu = bbque::utils;
+
 namespace bbque {
 
 /**
@@ -125,7 +127,7 @@ private:
 	  /**
 	   * @brief The logger used by the resource manager.
 	   */
-	  plugins::Logger *logger;
+	  bu::Logger *logger;
 
 	  /**
 	   * @brief Table of concrete SignalHandlers

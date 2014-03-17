@@ -33,7 +33,8 @@
 
 #define SYNCHRONIZATION_MANAGER_NAMESPACE "bq.ym"
 
-using bbque::plugins::Logger;
+namespace bu = bbque::utils;
+
 using bbque::plugins::SynchronizationPolicyIF;
 
 using bbque::utils::Timer;
@@ -96,7 +97,7 @@ private:
 	/**
 	 * @brief The logger to use.
 	 */
-	Logger *logger;
+	bu::Logger *logger;
 
 	/**
 	 * @brief The synchronizaiton policy plugin to use

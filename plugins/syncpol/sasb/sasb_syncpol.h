@@ -31,6 +31,8 @@
 #define MODULE_NAMESPACE \
 	SYNCHRONIZATION_POLICY_NAMESPACE "." SYNCHRONIZATION_POLICY_NAME
 
+namespace bu = bbque::utils;
+
 using bbque::utils::Timer;
 using bbque::utils::MetricsCollector;
 
@@ -94,7 +96,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	Logger *logger = NULL;
+	bu::Logger *logger = NULL;
 
 	/**
 	 * @brief Keep track of the best estimation for the sync latency

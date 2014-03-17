@@ -37,6 +37,8 @@
 #define MODULE_NAMESPACE RECIPE_LOADER_NAMESPACE".xml"
 #define MODULE_CONFIG RECIPE_LOADER_CONFIG".xml"
 
+namespace bu = bbque::utils;
+
 using bbque::app::Application;
 using bbque::app::AppPtr_t;
 using bbque::app::AwmPtr_t;
@@ -107,7 +109,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	Logger *logger;
+	bu::Logger *logger;
 
 	/**
 	 * Set true when the recipe loader has been configured.

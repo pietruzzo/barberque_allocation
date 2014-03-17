@@ -54,6 +54,8 @@
 #define YAMS_BD_SC_COUNT  2
 #define YAMS_SC_COUNT (YAMS_AWM_SC_COUNT + YAMS_BD_SC_COUNT)
 
+namespace bu = bbque::utils;
+
 using bbque::res::RViewToken_t;
 using bbque::utils::Timer;
 using bbque::utils::MetricsCollector;
@@ -66,7 +68,7 @@ namespace bbque { namespace plugins {
 
 
 // Forward declaration
-class Logger;
+class bu::Logger;
 
 /**
  * @class YamsSchedPol
@@ -163,7 +165,7 @@ private:
 	MetricsCollector & mc;
 
 	/** System logger instance */
-	Logger *logger = NULL;
+	bu::Logger *logger = NULL;
 
 	/** System view instance */
 	System * sv = NULL;

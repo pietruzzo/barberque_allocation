@@ -43,6 +43,7 @@
 	for (usage_it = rsrc_usages.begin(); \
 			usage_it != end_usage; ++usage_it)
 
+namespace bu = bbque::utils;
 
 namespace bbque { namespace plugins {
 
@@ -252,7 +253,7 @@ public:
 protected:
 
 	 /** Logger */
-	 Logger * logger = NULL;
+	 bu::Logger * logger = NULL;
 
 	 /** Configuration manager instance */
 	 ConfigurationManager & cm;

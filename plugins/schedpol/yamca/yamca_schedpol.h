@@ -30,6 +30,8 @@
 
 #define RSRC_CLUSTER "sys.cpu"
 
+namespace bu = bbque::utils;
+
 using bbque::res::RViewToken_t;
 using bbque::utils::Timer;
 using bbque::utils::MetricsCollector;
@@ -41,7 +43,7 @@ namespace bbque { namespace plugins {
 
 
 // Forward declaration
-class Logger;
+class bu::Logger;
 
 /**
  * @brief The YaMCA resource scheduler heuristic
@@ -91,7 +93,7 @@ public:
 private:
 
 	/** System logger instance */
-	Logger *logger = NULL;
+	bu::Logger *logger = NULL;
 
 	/** Resource accounter instance */
 	ResourceAccounter & rsrc_acct;

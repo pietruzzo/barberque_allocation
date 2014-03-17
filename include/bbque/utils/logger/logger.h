@@ -32,7 +32,7 @@
  */
 #define FORMAT_DEBUG(fmt) "%25s:%05d - " fmt, __FILE__, __LINE__
 
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
 /**
  * @brief The basic class for each Barbeque component
@@ -125,7 +125,7 @@ public:
 
 };
 
-} // namespace plugins
+} // namespace utils
 
 } // namespace bbque
 

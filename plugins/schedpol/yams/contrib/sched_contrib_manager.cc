@@ -31,6 +31,7 @@
 #include "sc_migration.h"
 // ...:: ADD_SC ::...
 
+namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
 namespace bbque { namespace plugins {
@@ -76,7 +77,7 @@ SchedContribManager::SchedContribManager(
 	bd_info(_bd_info) {
 
 	// Get a logger
-	plugins::Logger::Configuration conf(MODULE_NAMESPACE);
+	bu::Logger::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (logger)
 		logger->Info("Built a new dynamic object[%p]", this);

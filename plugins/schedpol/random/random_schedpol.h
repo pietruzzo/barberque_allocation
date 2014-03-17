@@ -33,13 +33,15 @@
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
+namespace bu = bbque::utils;
+
 using bbque::app::AppCPtr_t;
 using bbque::res::RViewToken_t;
 
 namespace bbque { namespace plugins {
 
 // Forward declaration
-class Logger;
+class bu::Logger;
 
 /**
  * @brief The Random resource scheduler heuristic plugin.

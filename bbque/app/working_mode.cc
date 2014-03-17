@@ -32,7 +32,7 @@
 #include "bbque/utils/utility.h"
 
 namespace br = bbque::res;
-namespace bp = bbque::plugins;
+namespace bu = bbque::utils;
 
 using br::ResourcePathUtils;
 using br::ResourceBinder;
@@ -65,7 +65,7 @@ WorkingMode::WorkingMode(uint8_t _id,
 	resources.binding_masks.resize(ResourceIdentifier::TYPE_COUNT);
 
 	// Get a logger
-	bp::Logger::Configuration conf(AWM_NAMESPACE);
+	bu::Logger::Configuration conf(AWM_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 
 	// Set the log string id

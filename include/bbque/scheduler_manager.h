@@ -28,7 +28,8 @@
 #include "bbque/plugins/logger.h"
 #include "bbque/plugins/scheduler_policy.h"
 
-using bbque::plugins::Logger;
+namespace bu = bbque::utils;
+
 using bbque::plugins::SchedulerPolicyIF;
 
 using bbque::utils::Timer;
@@ -94,7 +95,7 @@ private:
 	/**
 	 * @brief The logger used by the resource manager.
 	 */
-	Logger *logger;
+	bu::Logger *logger;
 
 	/**
 	 * @brief The currently used optimization policy

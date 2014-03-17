@@ -32,6 +32,7 @@
 
 namespace ba = bbque::app;
 namespace br = bbque::res;
+namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
 using ba::WorkingModeStatusIF;
@@ -53,7 +54,7 @@ po::variables_map xmlrloader_opts_value;
 
 XMLRecipeLoader::XMLRecipeLoader() {
 	// Get a logger
-	plugins::Logger::Configuration conf(MODULE_NAMESPACE);
+	bu::Logger::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 	if (!logger) {
 		if (daemonized)
