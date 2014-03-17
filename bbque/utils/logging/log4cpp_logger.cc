@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "log4cpp_logger.h"
+#include <bbque/utils/logging/log4cpp_logger.h>
 
 #include <log4cpp/Category.hh>
 #include <log4cpp/Priority.hh>

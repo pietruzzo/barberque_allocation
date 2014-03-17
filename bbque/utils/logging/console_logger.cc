@@ -15,122 +15,100 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "android_logger.h"
+#include <bbque/utils/logging/console_logger.h>
 
-#include <android/log.h>
+#include <cstdarg>
+#include <cstdio>
 
 #define LOG_MAX_SENTENCE 256
 
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
-AndroidLogger::AndroidLogger(char const * cat) :
-	category(cat) {
-
-}
-
-AndroidLogger::~AndroidLogger() {
-}
-
-//----- static plugin interface
-
-void * AndroidLogger::Create(PF_ObjectParams * params) {
-	Logger::Configuration * conf = (Logger::Configuration*) params->data;
-	return new AndroidLogger(conf->category);
-}
-
-int32_t AndroidLogger::Destroy(void * plugin) {
-	if (!plugin)
-		return -1;
-	delete (AndroidLogger *)plugin;
-	return 0;
-}
-
-//----- Logger plugin interface
+//----- Logger Interface
 
 #ifdef BBQUE_DEBUG
-void AndroidLogger::Debug(const char *fmt, ...) {
+void ConsoleLogger::Debug(const char *fmt, ...) {
 	va_list args;
 	char str[LOG_MAX_SENTENCE];
 
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_DEBUG, category.c_str(), str);
+	fprintf(stderr, "[DBG] %s\n", str);
 }
 #endif
 
-void AndroidLogger::Info(const char *fmt, ...) {
+void ConsoleLogger::Info(const char *fmt, ...) {
 	va_list args;
 	char str[LOG_MAX_SENTENCE];
 
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_VERBOSE, category.c_str(), str); 
-
+	fprintf(stderr, "[INF] %s\n", str);
 }
 
-void AndroidLogger::Notice(const char *fmt, ...) {
+void ConsoleLogger::Notice(const char *fmt, ...) {
 	va_list args;
 	char str[LOG_MAX_SENTENCE];
 
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_INFO, category.c_str(), str); 
+	fprintf(stderr, "[NOT] %s\n", str);
 }
 
-void AndroidLogger::Warn(const char *fmt, ...) {
+void ConsoleLogger::Warn(const char *fmt, ...) {
 	va_list args;
 	char str[LOG_MAX_SENTENCE];
 
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_WARN, category.c_str(), str); 
+	fprintf(stderr, "[WRN] %s\n", str);
 }
 
-void AndroidLogger::Error(const char *fmt, ...) {
+void ConsoleLogger::Error(const char *fmt, ...) {
 	va_list args;
 	char str[LOG_MAX_SENTENCE];
 
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_ERROR, category.c_str(), str); 
+	fprintf(stderr, "[ERR] %s\n", str);
 }
 
-void AndroidLogger::Crit(const char *fmt, ...) {
+void ConsoleLogger::Crit(const char *fmt, ...) {
 	va_list args;
 	char str[LOG_MAX_SENTENCE];
 
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_ERROR, category.c_str(), str); 
+	fprintf(stderr, "[CRT] %s\n", str);
 }
 
-void AndroidLogger::Alert(const char *fmt, ...) {
+void ConsoleLogger::Alert(const char *fmt, ...) {
 	va_list args;
 	char str[LOG_MAX_SENTENCE];
 
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_ERROR, category.c_str(), str); 
+	fprintf(stderr, "[ALR] %s\n", str);
 }
 
-void AndroidLogger::Fatal(const char *fmt, ...) {
+void ConsoleLogger::Fatal(const char *fmt, ...) {
 	va_list args;
 	char str[LOG_MAX_SENTENCE];
 
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_FATAL, category.c_str(), str); 
+	fprintf(stderr, "[FAT] %s\n", str);
 }
 
-} // namespace plugins
+} // namespace utils
 
 } // namespace bbque
 

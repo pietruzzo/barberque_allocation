@@ -1,6 +1,6 @@
 
 # Build subdirs
-add_subdirectory(logger)
+add_subdirectory(logging)
 
 # Add sources in the current directory to the target binary
 set (BBQUE_UTILS_SRC timer deferrable worker)
