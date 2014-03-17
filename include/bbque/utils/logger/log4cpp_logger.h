@@ -18,10 +18,9 @@
 #ifndef BBQUE_LOG4CPP_LOGGER_H_
 #define BBQUE_LOG4CPP_LOGGER_H_
 
-#include "bbque/plugins/logger.h"
-#include "bbque/plugins/plugin.h"
-
 #include "bbque/config.h"
+
+#include "bbque/utils/logger/logger.h"
 
 #include <cstdint>
 #include <log4cpp/Category.hh>
@@ -29,36 +28,26 @@
 #define MODULE_NAMESPACE LOGGER_NAMESPACE".log4cpp"
 #define MODULE_CONFIG LOGGER_CONFIG".log4cpp"
 
-// These are the parameters received by the PluginManager on create calls
-struct PF_ObjectParams;
-
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
 /**
- * @brief The basic class for each Barbeque component
- *
- * This defines a Log4CPP based Logger plugin.
+ * @brief A Log4CPP based Logger
  */
 class Log4CppLogger : public Logger {
 
 public:
 
-//----- static plugin interface
+	/**
+	 * @brief Build a new Log4CPP based logger
+	 * @param conf the logger configuration
+	 */
+	static std::unique_ptr<Logger>
+	GetInstance(Configuration const & conf);
 
 	/**
-	 *
+	 * \brief Logger dtor
 	 */
-	static void * Create(PF_ObjectParams * params);
-
-	/**
-	 *
-	 */
-	static int32_t Destroy(void * logger);
-
-	/**
-	 *
-	 */
-	virtual ~Log4CppLogger();
+	virtual ~Log4CppLogger() {};
 
 //----- Logger module interface
 
@@ -112,19 +101,23 @@ public:
 	 */
 	void Fatal(const char *fmt, ...);
 
-
 private:
 
 	/**
 	 * Set true to use colors for logging
 	 */
-	bool use_colors;
+	bool use_colors = true;
 
 	/**
 	 * Set true when the logger has been configured.
 	 * This is done by parsing a configuration file the first time a Logger is created.
 	 */
-	static bool configured;
+	static bool configured = false;
+
+	/**
+	 * The Log4CPP configuration file to use
+	 */
+	static std::string conf_file_path;
 
 	/**
 	 * @brief The logger reference
@@ -133,21 +126,16 @@ private:
 	log4cpp::Category & logger;
 
 	/**
-	 * @brief Build a new Barbeque component
-	 * Each Barbeque component is associated to a logger category whose
-	 * name is prefixed by "bbque."
-	 * @param logName the log category, this name is (forcely) prepended by the
-	 * 	class namespace "bbque."
+	 * \brief Build a logger with the specified configuration
 	 */
-	Log4CppLogger(char const * category);
-
+	Log4CppLogger(Configuration const & conf);
 
 	/**
 	 * @brief   Load Logger configuration
-	 * @return  true if the configuration has been properly loaded and object
-	 * could be built, false otherwise
+	 * @return  true if the configuration has been properly loaded and a Log4CPP
+	 * 			logger could be successfully build, false otherwise.
 	 */
-	static bool Configure(PF_ObjectParams * params);
+	virtual bool Configure(Configuration const & conf);
 
 };
 

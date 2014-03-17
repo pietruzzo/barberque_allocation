@@ -1,13 +1,21 @@
 
+# Build subdirs
+add_subdirectory(logger)
+
 # Add sources in the current directory to the target binary
 set (BBQUE_UTILS_SRC timer deferrable worker)
 set (BBQUE_UTILS_SRC ${BBQUE_UTILS_SRC} metrics_collector)
 set (BBQUE_UTILS_SRC ${BBQUE_UTILS_SRC} attributes_container)
-set (BBQUE_UTILS_SRC ${BBQUE_UTILS_SRC} console_logger)
 if (CONFIG_BBQUE_RTLIB_PERF_SUPPORT)
 	set (BBQUE_UTILS_SRC ${BBQUE_UTILS_SRC} perf)
 endif (CONFIG_BBQUE_RTLIB_PERF_SUPPORT)
 
 #Add as library
 add_library(bbque_utils STATIC ${BBQUE_UTILS_SRC})
+
+# Linking dependencies
+target_link_libraries(
+	bbque_utils
+	bbque_logger
+)
 

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bbque/utils/console_logger.h"
+#include "bbque/utils/logger/console_logger.h"
 
 #include <cstdarg>
 #include <cstdio>
@@ -24,14 +24,9 @@
 
 namespace bbque { namespace utils {
 
+//----- Logger Interface
 
-ConsoleLogger::ConsoleLogger(plugins::Logger::Configuration const & data,
-				std::string const & id) {
-
-}
-
-//----- Logger plugin interface
-
+#ifdef BBQUE_DEBUG
 void ConsoleLogger::Debug(const char *fmt, ...) {
 	va_list args;
 	char str[LOG_MAX_SENTENCE];
@@ -41,6 +36,7 @@ void ConsoleLogger::Debug(const char *fmt, ...) {
 	va_end(args);
 	fprintf(stderr, "[DBG] %s\n", str);
 }
+#endif
 
 void ConsoleLogger::Info(const char *fmt, ...) {
 	va_list args;

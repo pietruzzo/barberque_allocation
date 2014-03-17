@@ -53,100 +53,61 @@ namespace po = boost::program_options;
 #define LOG4CPP_COLOR_ALERT	LOG4CPP_COLOR_LRED
 #define LOG4CPP_COLOR_FATAL	LOG4CPP_COLOR_RED
 
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
 bool Log4CppLogger::configured = false;
 
-Log4CppLogger::Log4CppLogger(char const * category) :
-	use_colors(true),
-	logger(l4::Category::getInstance(category)) {
+Log4CppLogger::Log4CppLogger(Configuration const & conf) :
+	Logger(conf),
+	logger(l4::Category::getInstance(conf.category)) {
 }
 
-Log4CppLogger::~Log4CppLogger() {
+std::unique_ptr<Logger>
+Log4CppLogger::GetInstance(Configuration const & conf) {
+	if (!configured && !Configure(conf))
+		return nullptr;
+	return new Log4CppLogger(conf);
 }
 
-//----- static plugin interface
+#ifdef BBQUE_DEBUG
+# define BBQUE_CONF_FILENAME =  "bbque.conf_dbg";
+#else
+# define BBQUE_CONF_FILENAME =  "bbque.conf";
+#endif
 
-void * Log4CppLogger::Create(PF_ObjectParams * params) {
-	Logger::Configuration * conf = (Logger::Configuration*) params->data;
+bool Log4CppLogger::Configure(Configuration const & conf) {
+	ConfigurationManager &cm = ConfigurationManager::GetInstance();
+	std::unique_ptr<Logger> logger = ConsoleLogger::GetInstance(conf);
 
-	if (!Configure(params))
-		return NULL;
-
-	return new Log4CppLogger(conf->category);
-}
-
-int32_t Log4CppLogger::Destroy(void * plugin) {
-	if (!plugin)
-		return -1;
-	delete (Log4CppLogger *)plugin;
-	return 0;
-}
-
-bool Log4CppLogger::Configure(PF_ObjectParams * params) {
-
-	if (configured)
-		return true;
-
-	// Declare the supported options
-	static std::string conf_file_path;
+	// Define Log4CPP configuration options
 	po::options_description log4cpp_opts_desc("Log4CPP Options");
 	log4cpp_opts_desc.add_options()
-		(MODULE_CONFIG".conf_file", po::value<std::string>
-#ifdef BBQUE_DEBUG
-		 (&conf_file_path)->default_value(
-			 BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/bbque.conf_dbg"),
-#else
-		 (&conf_file_path)->default_value(
-			 BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/bbque.conf"),
-#endif
-		 "configuration file path")
-		;
+		(MODULE_CONFIG".conf_file",
+			po::value<std::string>(&conf_file_path)->default_value(
+				BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/" BBQUE_CONF_FILENAME),
+				"configuration file path");
 	static po::variables_map log4cpp_opts_value;
 
+	logger->Info("Using Log4CppLogger configuration file [%s]",
+			conf_file_path.c_str());
 
-	// Get configuration params
-	PF_Service_ConfDataIn data_in;
-	data_in.opts_desc = &log4cpp_opts_desc;
-	PF_Service_ConfDataOut data_out;
-	data_out.opts_value = &log4cpp_opts_value;
-	PF_ServiceData sd;
-	sd.id = MODULE_NAMESPACE;
-	sd.request = &data_in;
-	sd.response = &data_out;
-
-	int32_t response = params->platform_services->InvokeService(
-			PF_SERVICE_CONF_DATA, sd);
-	if (response!=PF_SERVICE_DONE)
-		return NULL;
-
-	if (daemonized)
-		syslog(LOG_INFO, "Using Log4CppLogger configuration file [%s]",
-				conf_file_path.c_str());
-	else
-		fprintf(stdout, FI("Using Log4CppLogger configuration file [%s]\n"),
-				conf_file_path.c_str());
+	// Parsing BBQUE configuration file
+	cm.ParseConfigurationFile(log4cpp_opts_desc, log4cpp_opts_value);
 
 	// Setting up Appender, layout and Category
 	try {
 		l4::PropertyConfigurator::configure(conf_file_path);
-		configured = true;
 	} catch (log4cpp::ConfigureFailure & e) {
-
-		if (daemonized)
-			syslog(LOG_INFO, "Log4CppLogger configuration FAILED (Error %s)",
-					e.what());
-		else
-			fprintf(stdout, FI("Log4CppLogger configuration FAILED (Error %s)\n"),
-					e.what());
+		logger->"Log4CppLogger configuration FAILED (Error %s)", e.what());
 		return false;
 	}
 
+	configured = true;
 	return true;
 
 }
 
-//----- Logger plugin interface
+//----- Logger interface
 
 #ifdef BBQUE_DEBUG
 void Log4CppLogger::Debug(const char *fmt, ...) {
@@ -275,7 +236,7 @@ void Log4CppLogger::Fatal(const char *fmt, ...) {
 	}
 }
 
-} // namespace plugins
+} // namespace utils
 
 } // namespace bbque
 

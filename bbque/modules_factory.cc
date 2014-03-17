@@ -41,35 +41,6 @@ plugins::TestIF * ModulesFactory::GetTestModule(const std::string & id) {
 	return (plugins::TestIF *) module;
 }
 
-/**
- * Specialize the ObjectAdapter template for Logger plugins
- */
-typedef bp::ObjectAdapter<bp::LoggerAdapter, C_Logger> Logger_ObjectAdapter;
-
-plugins::Logger * ModulesFactory::GetLoggerModule(
-		plugins::Logger::Configuration const & data,
-		std::string const & id) {
-	bu::ConsoleLogger *logger = NULL;
-
-	// Build a object adapter for the Logger
-	Logger_ObjectAdapter loa;
-
-	void * module = bp::PluginManager::GetInstance().
-		CreateObject(id, (void*)&data, &loa);
-
-	// Since this is a critical module, if the logger modules is not able to
-	// successifully load, we fall-back to a dummy (console based) logger
-	// implementation.
-	if (!module) {
-		logger = new bu::ConsoleLogger(data, id);
-		logger->Error("Logger module loading/configuration FAILED");
-		logger->Warn("Using (dummy) console logger");
-		module = (void*)(logger);
-	}
-
-	return (plugins::Logger *) module;
-}
-
 plugins::RPCChannelIF * ModulesFactory::GetRPCChannelModule(
     std::string const & id) {
 	return RPCProxy::GetInstance(id);

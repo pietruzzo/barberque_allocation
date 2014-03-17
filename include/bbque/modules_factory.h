@@ -20,7 +20,6 @@
 
 //----- Supported plugin interfaces
 #include "bbque/plugins/test_adapter.h"
-#include "bbque/plugins/logger_adapter.h"
 //#include "bbque/plugins/rpc_channel_adapter.h"
 #include "bbque/plugins/recipe_loader.h"
 //----- Supported C++ only plugin interfaces
@@ -52,13 +51,6 @@ public:
 	 */
 	static plugins::TestIF * GetTestModule(
 			const std::string & id = TEST_NAMESPACE);
-
-	/**
-	 * Get a reference to a module implementing the Logger interface
-	 */
-	static plugins::Logger * GetLoggerModule(
-			plugins::Logger::Configuration const & data,
-			std::string const & id = LOGGER_NAMESPACE);
 
 	/**
 	 * Get a reference to a module implementing the RPCChannelIF interface

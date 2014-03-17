@@ -20,6 +20,10 @@
 
 #include "bbque/config.h"
 
+#include "bbque/utils/logger/console_logger.h"
+#include "bbque/utils/logger/log4cpp_logger.h"
+#include "bbque/utils/logger/android_logger.h"
+
 // The prefix for logging statements category
 #define LOGGER_NAMESPACE "bq.log"
 // The prefix for configuration file attributes
@@ -44,8 +48,6 @@ class Logger {
 
 public:
 
-	virtual ~Logger() {};
-
 //----- Objects initialization data
 
 	typedef enum Priority {
@@ -59,16 +61,36 @@ public:
 		FATAL
 	} Priority;
 
-	class Configuration {
-	public:
-		Configuration(const char * cat, Priority prio = WARN) :
-			category(cat),
-			default_prio(prio) {};
-
+	struct Configuration {
+		Configuration(
+				const char * category,
+				const char * identity,
+				Priority priority = WARN) :
+			category(category),
+			identity(identity),
+			priority(priority) {};
 		char const * category;
-		Priority default_prio;
+		char const * identity;
+		Priority priority;
+	} & configuration;
 
-	};
+	static inline std::unique_ptr<Logger>
+	GetLogger(Configuration const & conf) {
+		std::unique_ptr<Logger> logger;
+#ifdef CONFIG_EXTERNAL_LOG4CPP
+		logger = Log4CppLogger::GetInstance(conf);
+#endif
+		// Since this is a critical module, a fall-back dummy (console based) logger
+		// implementation is always available.
+		if (!logger) {
+			logger = ConsoleLogger::GetInstance(conf);
+			logger->Error("Logger module loading/configuration FAILED");
+			logger->Warn("Using (dummy) console logger");
+		}
+		return logger;
+	}
+
+	virtual ~Logger() {};
 
 //----- Objects interface
 
@@ -122,6 +144,11 @@ public:
 	 * \param fmt the message to log
 	 */
 	virtual void Fatal(const char *fmt, ...) = 0;
+
+protected:
+
+	Logger(Configuration const & conf) :
+		configuration(conf) {}; // Do not allows direct instantiations
 
 };
 

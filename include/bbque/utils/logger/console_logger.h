@@ -26,20 +26,23 @@
 namespace bbque { namespace utils {
 
 /**
- * @brief The basic class for each Barbeque component
+ * \brief A basic Console based Logger
  *
- * This defines a console based logger to be used for logging if a more
+ * This defines a console based logger to be used for logging in case a more
  * advanced logger module is not available
  */
-class ConsoleLogger : public bbque::plugins::Logger {
+class ConsoleLogger : public Logger {
 
 public:
 
 	/**
-	 * Build a new configured console logger
+	 * \brief Build a new Log4CPP based logger
+	 * \param conf the logger configuration
 	 */
-	ConsoleLogger(plugins::Logger::Configuration const & data,
-			std::string const & id);
+	static std::unique_ptr<Logger>
+	GetInstance(Configuration const & conf) {
+		return new ConsoleLogger(conf);
+	}
 
 	/**
 	 *
@@ -48,11 +51,13 @@ public:
 
 //----- Logger module interface
 
+#ifdef BBQUE_DEBUG
 	/**
 	 * \brief Send a log message with the priority DEBUG
 	 * \param fmt the message to log
 	 */
 	void Debug(const char *fmt, ...);
+#endif
 
 	/**
 	 * \brief Send a log message with the priority INFO
@@ -95,6 +100,14 @@ public:
 	 * \param fmt the message to log
 	 */
 	void Fatal(const char *fmt, ...);
+
+private:
+
+	/**
+	 * \brief Build a new Console Logger
+	 */
+	ConsoleLogger(Configuration const & conf) :
+		Logger(conf) { }
 
 };
 
