@@ -30,7 +30,7 @@
 #include "bbque/rtlib.h"
 #include "bbque/app/application_conf.h"
 #include "bbque/app/recipe.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
 
 #define APPLICATION_NAMESPACE "bq.app"

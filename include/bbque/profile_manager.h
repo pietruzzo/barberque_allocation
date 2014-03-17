@@ -21,7 +21,7 @@
 #include "bbque/config.h"
 #include "bbque/application_manager.h"
 #include "bbque/scheduler_manager.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/metrics_collector.h"
 
 using bbque::plugins::Logger;

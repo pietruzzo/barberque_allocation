@@ -18,7 +18,7 @@
 #ifndef BBQUE_UTILS_CONSOLE_LOGGER_H_
 #define BBQUE_UTILS_CONSOLE_LOGGER_H_
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 
 #include <memory>
 #include <cstdint>

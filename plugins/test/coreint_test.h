@@ -22,7 +22,7 @@
 #include <vector>
 #include "bbque/system_view.h"
 #include "bbque/app/application.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/test.h"
 

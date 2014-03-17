@@ -25,7 +25,7 @@
 
 #include "bbque/res/resource_utils.h"
 #include "bbque/res/resource_tree.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
 #include "bbque/cpp11/thread.h"
 

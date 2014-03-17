@@ -22,7 +22,7 @@
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/test.h"
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 
 #define APROX_NAMESPACE "aprox"
 

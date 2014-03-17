@@ -19,7 +19,7 @@
 #define BBQUE_TEST_PLATFORM_DATA_H_
 
 #include "bbque/config.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugin_manager.h"
 
 

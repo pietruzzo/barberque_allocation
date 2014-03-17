@@ -22,7 +22,7 @@
 #include "bbque/cpp11/chrono.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/cpp11/thread.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/worker.h"
 #include "bbque/utils/timer.h"

@@ -22,7 +22,7 @@
 #include "bbque/app/application.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/resource_path.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/resource_accounter.h"
 
 #include <iostream>

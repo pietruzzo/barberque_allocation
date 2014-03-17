@@ -26,7 +26,7 @@
 #include "bbque/cpp11/thread.h"
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "contrib/sched_contrib_manager.h"
 
 namespace bu = bbque::utils;

@@ -19,7 +19,7 @@
 #define BBQUE_SASB_SYNCPOL_H_
 
 #include "bbque/plugins/synchronization_policy.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/plugin.h"
 
 #include "bbque/utils/timer.h"

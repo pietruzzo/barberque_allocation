@@ -20,7 +20,7 @@
 
 #include <memory>
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/exception.h"
 
 #define THROW throw bbque::Exception(__FILE__, __LINE__)

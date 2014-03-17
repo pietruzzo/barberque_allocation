@@ -30,7 +30,7 @@
 
 #include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/plugin.h"
 #include "bbque/utils/attributes_container.h"
 

@@ -30,7 +30,7 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/command_manager.h"
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/timer.h"
 #include "bbque/utils/deferrable.h"
 #include "bbque/utils/metrics_collector.h"

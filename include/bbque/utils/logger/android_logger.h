@@ -18,7 +18,7 @@
 #ifndef BBQUE_ANDROID_LOGGER_H_
 #define BBQUE_ANDROID_LOGGER_H_
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/plugin.h"
 
 #include "bbque/config.h"

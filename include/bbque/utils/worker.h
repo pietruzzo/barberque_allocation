@@ -24,7 +24,7 @@
 #include "bbque/cpp11/mutex.h"
 #include "bbque/cpp11/condition_variable.h"
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 
 namespace bbque { namespace utils {
 

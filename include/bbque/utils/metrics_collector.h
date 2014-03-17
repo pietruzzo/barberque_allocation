@@ -18,7 +18,7 @@
 #ifndef BBQUE_METRICS_COLLECTOR_H_
 #define BBQUE_METRICS_COLLECTOR_H_
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/timer.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/command_manager.h"

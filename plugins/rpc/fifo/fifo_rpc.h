@@ -22,7 +22,7 @@
 
 #include "bbque/plugins/rpc_channel.h"
 #include "bbque/plugins/plugin.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 
 #include <cstdint>
 

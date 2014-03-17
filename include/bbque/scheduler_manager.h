@@ -25,7 +25,7 @@
 #include "bbque/utils/timer.h"
 #include "bbque/utils/metrics_collector.h"
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/scheduler_policy.h"
 
 namespace bu = bbque::utils;

@@ -22,7 +22,7 @@
 
 #include "bbque/app/working_mode_conf.h"
 #include "bbque/res/bitset.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 
 #define AWM_NAMESPACE "bq.awm"
 

@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/res/resources.h"
 #include "bbque/res/resource_utils.h"
 

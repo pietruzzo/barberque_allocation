@@ -26,7 +26,7 @@
 #include "bbque/utils/timer.h"
 #include "bbque/utils/metrics_collector.h"
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/synchronization_policy.h"
 
 # define BBQUE_DEFAULT_SYNCHRONIZATION_MANAGER_POLICY "sasb"

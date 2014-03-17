@@ -22,7 +22,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/attributes_container.h"
 #include "bbque/res/resource_constraints.h"
 

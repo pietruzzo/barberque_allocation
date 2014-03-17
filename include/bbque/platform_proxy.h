@@ -19,7 +19,7 @@
 #define BBQUE_PLATFORM_PROXY_H_
 
 #include "bbque/config.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/app/application.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/cpp11/thread.h"
