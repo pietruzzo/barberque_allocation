@@ -20,7 +20,6 @@
 
 #include "bbque/resource_accounter_status.h"
 
-
 namespace bbque {
 
 /**

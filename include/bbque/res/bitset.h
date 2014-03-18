@@ -22,7 +22,6 @@
 
 #include "bbque/res/identifier.h"
 
-
 namespace bbque { namespace res {
 
 /**
