@@ -84,7 +84,7 @@ public:
 		/** Resource pointer descriptor list */
 		ResourcePtrList_t rsrcs;
 		/** The IDs of all the possible bindings */
-		std::vector<ResID_t> ids;
+		std::vector<br::ResID_t> ids;
 		/** Keep track the bindings without available processing elements */
 		ResourceBitset full;
 	} BindingInfo_t;
@@ -104,7 +104,7 @@ public:
 		 * @param _pawm AWM to evaluate
 		 * @param _bid Cluster ID for resource binding
 		 */
-		EvalEntity_t(AppCPtr_t _papp, AwmPtr_t _pawm, ResID_t _bid):
+		EvalEntity_t(AppCPtr_t _papp, AwmPtr_t _pawm, br::ResID_t _bid):
 			papp(_papp),
 			pawm(_pawm),
 			bind_id(_bid) {
@@ -116,7 +116,7 @@ public:
 		/** Candidate AWM */
 		AwmPtr_t pawm;
 		/** Candidate cluster for resource binding */
-		ResID_t bind_id;
+		br::ResID_t bind_id;
 		/** Identifier string */
 		char str_id[40];
 
@@ -136,7 +136,7 @@ public:
 		}
 
 		/** Set the binding ID to track */
-		inline void SetBindingID(ResID_t bid) {
+		inline void SetBindingID(br::ResID_t bid) {
 			bind_id = bid;
 			_BuildStr();
 		}
@@ -180,7 +180,7 @@ public:
 		 * @param _metr The related scheduling metrics (also "application
 		 * value")
 		 */
-		SchedEntity_t(AppCPtr_t _papp, AwmPtr_t _pawm, ResID_t _bid,
+		SchedEntity_t(AppCPtr_t _papp, AwmPtr_t _pawm, br::ResID_t _bid,
 				float _metr):
 			EvalEntity_t(_papp, _pawm, _bid),
 			metrics(_metr) {

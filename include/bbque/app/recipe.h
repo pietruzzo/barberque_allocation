@@ -32,9 +32,7 @@
 #define MAX_NUM_AWM 	255
 
 namespace bu = bbque::utils;
-
-using bbque::res::ResourceConstraint;
-using bbque::utils::AttributesContainer;
+namespace br = bbque::res;
 
 namespace bbque {
 
@@ -56,17 +54,17 @@ typedef std::shared_ptr<WorkingMode> AwmPtr_t;
 /** Vector of shared pointer to WorkingMode*/
 typedef std::vector<AwmPtr_t> AwmPtrVect_t;
 /** Shared pointer to Constraint object */
-typedef std::shared_ptr<ResourceConstraint> ConstrPtr_t;
+typedef std::shared_ptr<br::ResourceConstraint> ConstrPtr_t;
 /** Map of Constraints pointers, with the resource path as key*/
 typedef std::map<ResourcePathPtr_t, ConstrPtr_t> ConstrMap_t;
 
 /**
  * @brief Attribute structure for plugin specific data
  */
-typedef struct PluginAttr: public AttributesContainer::Attribute {
+typedef struct PluginAttr: public bu::AttributesContainer::Attribute {
 	/** Constructor */
 	PluginAttr(std::string const & _ns, std::string const & _key):
-		AttributesContainer::Attribute(_ns, _key) {}
+		bu::AttributesContainer::Attribute(_ns, _key) {}
 
 	/** Attribute value: a string object */
 	std::string str;
@@ -84,7 +82,7 @@ typedef std::shared_ptr<PluginAttr_t> PluginAttrPtr_t;
  * one recipe, but a single instance must specify the one upon which base its
  * execution.
  */
-class Recipe: public AttributesContainer {
+class Recipe: public bu::AttributesContainer {
 
 friend class Application;
 

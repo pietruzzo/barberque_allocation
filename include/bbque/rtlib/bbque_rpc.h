@@ -48,8 +48,8 @@
 #undef  MODULE_NAMESPACE
 #define MODULE_NAMESPACE "rpc"
 
-using bbque::utils::Timer;
 using namespace boost::accumulators;
+namespace bu = bbque::utils;
 
 namespace bbque { namespace rtlib {
 
@@ -318,7 +318,7 @@ protected:
 		std::condition_variable cv;
 
 		/** The High-Resolution timer used for profiling */
-		Timer exc_tmr;
+		bu::Timer exc_tmr;
 		/** The time [ms] spent on waiting for an AWM being assigned */
 		uint32_t time_blocked = 0;
 		/** The time [ms] spent on reconfigurations */
@@ -328,7 +328,7 @@ protected:
 
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 		/** Performance counters */
-		utils::Perf perf;
+		bu::Perf perf;
 		/** Map of registered Perf counter IDs */
 		PerfRegisteredEventsMap_t events_map;
 #endif // CONFIG_BBQUE_RTLIB_PERF_SUPPORT

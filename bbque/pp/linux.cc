@@ -592,20 +592,20 @@ LinuxPP::GetResourceMapping(AppPtr_t papp, UsagesMapPtr_t pum,
 	memset(prlb->mems, 0, 3*MaxMemsCount);
 
 	// Set the amount of CPUs and MEMORY
-	prlb->amount_cpus = ra.GetUsageAmount(pum, Resource::PROC_ELEMENT);
-	prlb->amount_memb = ra.GetUsageAmount(pum, Resource::MEMORY);
+	prlb->amount_cpus = ra.GetUsageAmount(pum, br::Resource::PROC_ELEMENT);
+	prlb->amount_memb = ra.GetUsageAmount(pum, br::Resource::MEMORY);
 
 	// Sockets and nodes
-	socket_ids = papp->NextAWM()->BindingSet(Resource::SYSTEM);
-	node_ids = papp->NextAWM()->BindingSet(Resource::CPU);
+	socket_ids = papp->NextAWM()->BindingSet(br::Resource::SYSTEM);
+	node_ids = papp->NextAWM()->BindingSet(br::Resource::CPU);
 	prlb->socket_id = log(socket_ids.ToULong()) / log(2);
 	prlb->node_id   = log(node_ids.ToULong())   / log(2);
 	logger->Debug("PLAT LNX: Map resources @ Machine Socket [%d], NUMA Node [%d]",
 			prlb->socket_id, prlb->node_id);
 
 	// CPUs and MEMORY cgroup new attributes value
-	BuildSocketCGAttr(prlb->cpus, pum, node_ids, Resource::PROC_ELEMENT, papp, rvt);
-	BuildSocketCGAttr(prlb->mems, pum, node_ids, Resource::MEMORY, papp, rvt);
+	BuildSocketCGAttr(prlb->cpus, pum, node_ids, br::Resource::PROC_ELEMENT, papp, rvt);
+	BuildSocketCGAttr(prlb->mems, pum, node_ids, br::Resource::MEMORY, papp, rvt);
 	logger->Debug("PLAT LNX: [%s] => {HwThreads [%s: %" PRIu64 " %], "
 			"NUMA nodes[%d: %" PRIu64 " Bytes]}",
 			papp->StrId(),
@@ -627,9 +627,9 @@ void LinuxPP::BuildSocketCGAttr(
 	br::ResID_t cpu_id;
 
 	for (cpu_id = cpu_mask.FirstSet(); cpu_id <= cpu_mask.LastSet(); ++cpu_id) {
-		r_mask = ResourceBinder::GetMask(pum, r_type, Resource::CPU, cpu_id, papp, rvt);
+		r_mask = br::ResourceBinder::GetMask(pum, r_type, br::Resource::CPU, cpu_id, papp, rvt);
 		logger->Debug("PLAT LNX: Socket attributes '%-3s' = {%s}",
-				ResourceIdentifier::TypeStr[r_type],
+				br::ResourceIdentifier::TypeStr[r_type],
 				r_mask.ToStringCG().c_str());
 
 		// Memory or cores IDs string

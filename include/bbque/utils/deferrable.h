@@ -33,7 +33,6 @@ using std::chrono::time_point;
 using std::chrono::milliseconds;
 using std::chrono::system_clock;
 
-using bbque::plugins::Logger;
 using bbque::utils::Timer;
 using bbque::utils::Worker;
 

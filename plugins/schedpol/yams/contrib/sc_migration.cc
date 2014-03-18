@@ -48,7 +48,7 @@ SCMigration::_Compute(
 		r_mask = evl_ent.papp->CurrentAWM()->BindingSet(bd_info.type);
 		logger->Debug("%s: is migrating to %s{%s}",
 				evl_ent.StrId(),
-				ResourceIdentifier::TypeStr[bd_info.type],
+				br::ResourceIdentifier::TypeStr[bd_info.type],
 				r_mask.ToStringCG().c_str());
 		ctrib = 0.0;
 		return SC_SUCCESS;

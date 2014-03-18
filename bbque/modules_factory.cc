@@ -19,8 +19,6 @@
 #include "bbque/plugin_manager.h"
 #include "bbque/plugins/object_adapter.h"
 
-#include "bbque/utils/console_logger.h"
-
 namespace bp = bbque::plugins;
 namespace bu = bbque::utils;
 

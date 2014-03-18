@@ -38,14 +38,13 @@ typedef size_t RViewToken_t;
 typedef std::shared_ptr<Resource> ResourcePtr_t;
 typedef std::list<ResourcePtr_t> ResourcePtrList_t;
 }
+namespace br = bbque::res;
 
 namespace app {
 class ApplicationStatusIF;
 typedef std::shared_ptr<ApplicationStatusIF> AppSPtr_t;
 }
-
-using namespace bbque::res;
-using namespace bbque::app;
+namespace ba = bbque::app;
 
 /**
  * @brief Resource accounting data
@@ -131,7 +130,7 @@ public:
 	 */
 	virtual uint64_t Total(std::string const & path) const = 0;
 
-	virtual uint64_t Total(ResourcePathPtr_t ppath,
+	virtual uint64_t Total(br::ResourcePathPtr_t ppath,
 			PathClass_t rpc = EXACT) const = 0;
 
 	/**
@@ -163,7 +162,7 @@ public:
 	 *
 	 * @return The total amount of resource
 	 */
-	virtual uint64_t Total(ResourcePtrList_t & rsrc_list) const = 0;
+	virtual uint64_t Total(br::ResourcePtrList_t & rsrc_list) const = 0;
 
 	/**
 	 * @brief Total amount of not reserved resource
@@ -176,7 +175,7 @@ public:
 	 *
 	 * @return The total amount of not reserved resource
 	 */
-	virtual uint64_t Unreserved(ResourcePtrList_t & rsrc_list) const = 0;
+	virtual uint64_t Unreserved(br::ResourcePtrList_t & rsrc_list) const = 0;
 
 	/**
 	 * @brief Amount of resource available
@@ -192,12 +191,12 @@ public:
 	 *
 	 * @return The amount of resource available
 	 */
-	virtual uint64_t Available(std::string const & path, RViewToken_t vtok = 0,
-			AppSPtr_t papp = AppSPtr_t()) const = 0;
+	virtual uint64_t Available(std::string const & path, br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const = 0;
 
-	virtual uint64_t Available(ResourcePathPtr_t ppath,
-			PathClass_t rpc = EXACT, RViewToken_t vtok = 0,
-			AppSPtr_t papp = AppSPtr_t()) const = 0;
+	virtual uint64_t Available(br::ResourcePathPtr_t ppath,
+			PathClass_t rpc = EXACT, br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const = 0;
 
 	/**
 	 * @brief Amount of resources available
@@ -219,8 +218,8 @@ public:
 	 *
 	 * @return The amount of resource available
 	 */
-	virtual uint64_t Available(ResourcePtrList_t & rsrc_list,
-			RViewToken_t vtok = 0, AppSPtr_t papp = AppSPtr_t()) const = 0;
+	virtual uint64_t Available(br::ResourcePtrList_t & rsrc_list,
+			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const = 0;
 
 	/**
 	 * @brief Amount of resources used
@@ -233,11 +232,11 @@ public:
 	 *
 	 * @return The used amount of resource
 	 */
-	virtual uint64_t Used(std::string const & path, RViewToken_t vtok = 0)
+	virtual uint64_t Used(std::string const & path, br::RViewToken_t vtok = 0)
 		const = 0;
 
-	virtual uint64_t Used(ResourcePathPtr_t ppath,
-			PathClass_t rpc = EXACT, RViewToken_t vtok = 0) const = 0;
+	virtual uint64_t Used(br::ResourcePathPtr_t ppath,
+			PathClass_t rpc = EXACT, br::RViewToken_t vtok = 0) const = 0;
 
 	/**
 	 * @brief Amount of resources used
@@ -256,7 +255,7 @@ public:
 	 *
 	 * @return The used amount of resource
 	 */
-	virtual uint64_t Used(ResourcePtrList_t & rsrc_list, RViewToken_t vtok = 0)
+	virtual uint64_t Used(br::ResourcePtrList_t & rsrc_list, br::RViewToken_t vtok = 0)
 		const = 0;
 
 	/**
@@ -271,7 +270,7 @@ public:
 	 *
 	 * @return The number of referenced resource descriptors
 	 */
-	virtual uint16_t Count(ResourcePathPtr_t path) const = 0;
+	virtual uint16_t Count(br::ResourcePathPtr_t path) const = 0;
 
 	/**
 	 * @brief The number of resources of a given type
@@ -280,7 +279,7 @@ public:
 	 *
 	 * @return How many resources of a type have been registered
 	 */
-	virtual uint16_t CountPerType(ResourceIdentifier::Type_t type) const = 0;
+	virtual uint16_t CountPerType(br::ResourceIdentifier::Type_t type) const = 0;
 
 	/**
 	 * @brief The number of resource types
@@ -294,16 +293,16 @@ public:
 	 *
 	 * @return A list filled of resource types
 	 */
-	virtual std::list<Resource::Type_t> GetTypesList() const = 0;
+	virtual std::list<br::Resource::Type_t> GetTypesList() const = 0;
 
 	/**
 	 * @brief Get a resource descriptor
 	 * @param path Resource path
 	 * @return A shared pointer to the resource descriptor
 	 */
-	virtual ResourcePtr_t GetResource(std::string const & path) const = 0;
+	virtual br::ResourcePtr_t GetResource(std::string const & path) const = 0;
 
-	virtual ResourcePtr_t GetResource(ResourcePathPtr_t ppath) const = 0;
+	virtual br::ResourcePtr_t GetResource(br::ResourcePathPtr_t ppath) const = 0;
 
 	/**
 	 * @brief Get a list of resource descriptors
@@ -316,10 +315,10 @@ public:
 	 * @param temp_path Template path to match
 	 * @return The list of resource descriptors matching the template path
 	 */
-	virtual ResourcePtrList_t GetResources(std::string const & temp_path)
+	virtual br::ResourcePtrList_t GetResources(std::string const & temp_path)
 		const = 0;
 
-	virtual ResourcePtrList_t GetResources(ResourcePathPtr_t ppath) const = 0;
+	virtual br::ResourcePtrList_t GetResources(br::ResourcePathPtr_t ppath) const = 0;
 
 	/**
 	 * @brief Check the existence of a resource
@@ -328,7 +327,7 @@ public:
 	 */
 	virtual bool ExistResource(std::string const & path) const = 0;
 
-	virtual bool ExistResource(ResourcePathPtr_t ppath) const = 0;
+	virtual bool ExistResource(br::ResourcePathPtr_t ppath) const = 0;
 };
 
 }   // namespace bbque

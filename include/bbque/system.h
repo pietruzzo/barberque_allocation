@@ -21,10 +21,8 @@
 #include "bbque/application_manager.h"
 #include "bbque/resource_accounter.h"
 
-using bbque::app::ApplicationStatusIF;
-using bbque::app::AppCPtr_t;
-using bbque::res::ResourcePtr_t;
-using bbque::res::ResourcePtrList_t;
+namespace ba = bbque::app;
+namespace br = bbque::res;
 
 namespace bbque {
 
@@ -55,14 +53,14 @@ public:
 	/**
 	 * @brief Return the first app at the specified priority
 	 */
-	inline AppCPtr_t GetFirstWithPrio(AppPrio_t prio, AppsUidMapIt & ait) {
+	inline ba::AppCPtr_t GetFirstWithPrio(AppPrio_t prio, AppsUidMapIt & ait) {
 		return am.GetFirst(prio, ait);
 	}
 
 	/**
 	 * @brief Return the next app at the specified priority
 	 */
-	inline AppCPtr_t GetNextWithPrio(AppPrio_t prio, AppsUidMapIt & ait) {
+	inline ba::AppCPtr_t GetNextWithPrio(AppPrio_t prio, AppsUidMapIt & ait) {
 		return am.GetNext(prio, ait);
 	}
 
@@ -70,35 +68,35 @@ public:
 	/**
 	 * @brief Return the map containing all the ready applications
 	 */
-	inline AppCPtr_t GetFirstReady(AppsUidMapIt & ait) {
-		return am.GetFirst(ApplicationStatusIF::READY, ait);
+	inline ba::AppCPtr_t GetFirstReady(AppsUidMapIt & ait) {
+		return am.GetFirst(ba::ApplicationStatusIF::READY, ait);
 	}
 
-	inline AppCPtr_t GetNextReady(AppsUidMapIt & ait) {
-		return am.GetNext(ApplicationStatusIF::READY, ait);
+	inline ba::AppCPtr_t GetNextReady(AppsUidMapIt & ait) {
+		return am.GetNext(ba::ApplicationStatusIF::READY, ait);
 	}
 
 	/**
 	 * @brief Map of running applications (descriptors)
 	 */
-	inline AppCPtr_t GetFirstRunning(AppsUidMapIt & ait) {
-		return am.GetFirst(ApplicationStatusIF::RUNNING, ait);
+	inline ba::AppCPtr_t GetFirstRunning(AppsUidMapIt & ait) {
+		return am.GetFirst(ba::ApplicationStatusIF::RUNNING, ait);
 	}
 
-	inline AppCPtr_t GetNextRunning(AppsUidMapIt & ait) {
-		return am.GetNext(ApplicationStatusIF::RUNNING, ait);
+	inline ba::AppCPtr_t GetNextRunning(AppsUidMapIt & ait) {
+		return am.GetNext(ba::ApplicationStatusIF::RUNNING, ait);
 	}
 
 	/**
 	 * @brief Map of blocked applications (descriptors)
 	 */
 
-	inline AppCPtr_t GetFirstBlocked(AppsUidMapIt & ait) {
-		return am.GetFirst(ApplicationStatusIF::BLOCKED, ait);
+	inline ba::AppCPtr_t GetFirstBlocked(AppsUidMapIt & ait) {
+		return am.GetFirst(ba::ApplicationStatusIF::BLOCKED, ait);
 	}
 
-	inline AppCPtr_t GetNextBlocked(AppsUidMapIt & ait) {
-		return am.GetNext(ApplicationStatusIF::BLOCKED, ait);
+	inline ba::AppCPtr_t GetNextBlocked(AppsUidMapIt & ait) {
+		return am.GetNext(ba::ApplicationStatusIF::BLOCKED, ait);
 	}
 
 	/**
@@ -111,14 +109,14 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	inline bool HasApplications(ApplicationStatusIF::State_t state) {
+	inline bool HasApplications(ba::ApplicationStatusIF::State_t state) {
 		return am.HasApplications(state);
 	}
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	inline bool HasApplications(ApplicationStatusIF::SyncState_t sync_state) {
+	inline bool HasApplications(ba::ApplicationStatusIF::SyncState_t sync_state) {
 		return am.HasApplications(sync_state);
 	}
 
@@ -132,14 +130,14 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	inline uint16_t ApplicationsCount(ApplicationStatusIF::State_t state) {
+	inline uint16_t ApplicationsCount(ba::ApplicationStatusIF::State_t state) {
 		return am.AppsCount(state);
 	}
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	inline uint16_t ApplicationsCount(ApplicationStatusIF::SyncState_t state) {
+	inline uint16_t ApplicationsCount(ba::ApplicationStatusIF::SyncState_t state) {
 		return am.AppsCount(state);
 	}
 
@@ -157,17 +155,17 @@ public:
 	 * @see ResourceAccounterStatusIF::Available()
 	 */
 	inline uint64_t ResourceAvailable(std::string const & path,
-			RViewToken_t vtok = 0, AppCPtr_t papp = AppCPtr_t()) const {
+			br::RViewToken_t vtok = 0, ba::AppCPtr_t papp = ba::AppCPtr_t()) const {
 		return ra.Available(path, vtok, papp);
 	}
 
 	inline uint64_t ResourceAvailable(ResourcePathPtr_t ppath,
-			RViewToken_t vtok = 0, AppSPtr_t papp = AppSPtr_t()) const {
+			br::RViewToken_t vtok = 0, AppSPtr_t papp = AppSPtr_t()) const {
 		return ra.Available(ppath, ResourceAccounter::UNDEFINED, vtok, papp);
 	}
 
-	inline uint64_t ResourceAvailable(ResourcePtrList_t & rsrc_list,
-			RViewToken_t vtok = 0, AppCPtr_t papp = AppCPtr_t()) const {
+	inline uint64_t ResourceAvailable(br::ResourcePtrList_t & rsrc_list,
+			br::RViewToken_t vtok = 0, ba::AppCPtr_t papp = ba::AppCPtr_t()) const {
 		return ra.Available(rsrc_list, vtok, papp);
 	}
 
@@ -182,7 +180,7 @@ public:
 		return ra.Total(ppath, ResourceAccounter::UNDEFINED);
 	}
 
-	inline uint64_t ResourceTotal(ResourcePtrList_t & rsrc_list) const {
+	inline uint64_t ResourceTotal(br::ResourcePtrList_t & rsrc_list) const {
 		return ra.Total(rsrc_list);
 	}
 
@@ -190,29 +188,29 @@ public:
 	 * @see ResourceAccounterStatusIF::Used()
 	 */
 	inline uint64_t ResourceUsed(std::string const & path,
-			RViewToken_t vtok = 0) const {
+			br::RViewToken_t vtok = 0) const {
 		return ra.Used(path, vtok);
 	}
 
 	inline uint64_t ResourceUsed(ResourcePathPtr_t ppath,
-			RViewToken_t vtok = 0) const {
+			br::RViewToken_t vtok = 0) const {
 		return ra.Used(ppath, ResourceAccounter::UNDEFINED, vtok);
 	}
 
-	inline uint64_t ResourceUsed(ResourcePtrList_t & rsrc_list,
-			RViewToken_t vtok = 0) const {
+	inline uint64_t ResourceUsed(br::ResourcePtrList_t & rsrc_list,
+			br::RViewToken_t vtok = 0) const {
 		return ra.Used(rsrc_list, vtok);
 	}
 
 	/**
 	 * @see ResourceAccounterStatusIF::Count()
 	 */
-	inline int16_t ResourceCount(ResourcePath & path) const;
+	inline int16_t ResourceCount(br::ResourcePath & path) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF::CountPerType()
 	 */
-	inline uint16_t ResourceCountPerType(Resource::Type_t type) const {
+	inline uint16_t ResourceCountPerType(br::Resource::Type_t type) const {
 		return ra.CountPerType(type);
 	}
 
@@ -226,29 +224,29 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF::ResourceTypesList()
 	 */
-	inline std::list<Resource::Type_t> ResourceTypesList() const {
+	inline std::list<br::Resource::Type_t> ResourceTypesList() const {
 		return ra.GetTypesList();
 	}
 
 	/**
 	 * @see ResourceAccounterStatusIF::GetResource()
 	 */
-	inline ResourcePtr_t GetResource(std::string const & path) const {
+	inline br::ResourcePtr_t GetResource(std::string const & path) const {
 		return ra.GetResource(path);
 	}
 
-	inline ResourcePtr_t GetResource(ResourcePathPtr_t ppath) const {
+	inline br::ResourcePtr_t GetResource(ResourcePathPtr_t ppath) const {
 		return ra.GetResource(ppath);
 	}
 
 	/**
 	 * @see ResourceAccounterStatusIF::GetResources()
 	 */
-	inline ResourcePtrList_t GetResources(std::string const & temp_path) const {
+	inline br::ResourcePtrList_t GetResources(std::string const & temp_path) const {
 		return ra.GetResources(temp_path);
 	}
 
-	inline ResourcePtrList_t GetResources(ResourcePathPtr_t ppath) const {
+	inline br::ResourcePtrList_t GetResources(ResourcePathPtr_t ppath) const {
 		return ra.GetResources(ppath);
 	}
 
@@ -268,14 +266,14 @@ public:
 	 * @see ResourceAccounterConfIF::GetView()
 	 */
 	inline ResourceAccounterStatusIF::ExitCode_t GetResourceStateView(
-			std::string req_id, RViewToken_t & tok) {
+			std::string req_id, br::RViewToken_t & tok) {
 		return ra.GetView(req_id, tok);
 	}
 
 	/**
 	 * @see ResourceAccounterConfIF::PutView()
 	 */
-	inline void PutResourceStateView(RViewToken_t tok) {
+	inline void PutResourceStateView(br::RViewToken_t tok) {
 		return ra.PutView(tok);
 	}
 

@@ -17,13 +17,12 @@
 
 #include "random_schedpol.h"
 
-#include "bbque/modules_factory.h"
 #include "bbque/system.h"
 #include "bbque/app/application.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/resource_path.h"
-#include "bbque/utils/logging/logger.h"
 #include "bbque/resource_accounter.h"
+#include "bbque/utils/logging/logger.h"
 
 #include <iostream>
 
@@ -60,7 +59,7 @@ RandomSchedPol::RandomSchedPol() :
 	ResourcePath rp(binding_domain);
 	binding_type = rp.Type();
 	logger->Debug("Binding domain:'%s' Type:%s",
-			binding_domain.c_str(), ResourceIdentifier::TypeStr[binding_type]);
+			binding_domain.c_str(), br::ResourceIdentifier::TypeStr[binding_type]);
 }
 
 RandomSchedPol::~RandomSchedPol() {

@@ -45,7 +45,7 @@ void Usage::SetResourcesList(ResourcePtrList_t & r_list) {
 
 void Usage::SetResourcesList(
 		ResourcePtrList_t & r_list,
-		ResourceIdentifier::Type_t filter_rtype,
+		br::ResourceIdentifier::Type_t filter_rtype,
 		ResourceBitset & filter_mask) {
 	ResourcePtrListIterator_t r_it;
 

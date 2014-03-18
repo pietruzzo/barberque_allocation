@@ -22,11 +22,12 @@
 #include <list>
 #include <string>
 
+#include "bbque/config.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/rtlib.h"
 #include "bbque/utils/attributes_container.h"
 
-using bbque::utils::AttributesContainer;
+namespace bu = bbque::utils;
 
 namespace bbque { namespace app {
 
@@ -55,7 +56,7 @@ typedef std::list<AwmPtr_t> AwmPtrList_t;
  * name, priority, current  working mode and scheduled state, next working
  * mode and scheduled state, and the list of all the active working modes
  */
-class ApplicationStatusIF: public AttributesContainer {
+class ApplicationStatusIF: public bu::AttributesContainer {
 
 public:
 

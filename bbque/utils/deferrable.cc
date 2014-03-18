@@ -16,12 +16,9 @@
  */
 
 #include "bbque/utils/deferrable.h"
-#include "bbque/modules_factory.h"
 
 #define DEFERRABLE_NAMESPACE "bq.df"
 #define MODULE_NAMESPACE DEFERRABLE_NAMESPACE
-
-namespace bp = bbque::plugins;
 
 namespace bbque { namespace utils {
 

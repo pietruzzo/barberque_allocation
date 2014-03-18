@@ -45,9 +45,9 @@
 #define RP_ADD_SAMPLE(METRICS, INDEX, COUNT) \
 	mc.AddSample(METRICS[INDEX].mh, COUNT);
 
-namespace bu = bbque::utils;
 namespace bp = bbque::plugins;
-namespace br = bbque::rtlib;
+namespace bl = bbque::rtlib;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -175,11 +175,11 @@ ssize_t RPCProxy::RecvMessage(rpc_msg_ptr_t & msg) {
 	RP_ADD_SAMPLE(metrics, RP_RX_QUEUE, size);
 
 	logger->Debug("PRXY RPC: dq [typ: %2d:%-8s, sze: %3d, inq: %3d]",
-		msg->typ, br::RPC_MessageStr(msg->typ), size, msg_queue.size());
+		msg->typ, bl::RPC_MessageStr(msg->typ), size, msg_queue.size());
 
 	logger->Info("PRXY RPC: <=== %05d::%02d [%2d:%-8s]",
 		msg->app_pid, msg->exc_id,
-		msg->typ, br::RPC_MessageStr(msg->typ)
+		msg->typ, bl::RPC_MessageStr(msg->typ)
 		);
 
 	return size;
@@ -199,7 +199,7 @@ ssize_t RPCProxy::SendMessage(plugin_data_t & pd,
 
 	logger->Info("PRXY RPC: ===> %05d::%02d [%2d:%-8s]",
 		msg->app_pid, msg->exc_id,
-		msg->typ, br::RPC_MessageStr(msg->typ)
+		msg->typ, bl::RPC_MessageStr(msg->typ)
 		);
 
 	// Collect stats on TX messages
@@ -255,7 +255,7 @@ void RPCProxy::Task() {
 		queue_ready_cv.notify_one();
 
 		logger->Debug("PRXY RPC: eq [typ: %2d:%-8s, sze: %3d, inq: %3d]",
-			msg->typ, br::RPC_MessageStr(msg->typ), size, msg_queue.size());
+			msg->typ, bl::RPC_MessageStr(msg->typ), size, msg_queue.size());
 
 	}
 

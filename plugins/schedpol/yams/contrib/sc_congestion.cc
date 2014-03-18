@@ -41,9 +41,9 @@ SCCongestion::SCCongestion(
 		;
 
 	// Congestion penalties
-	for (int i = 1; i < ResourceIdentifier::TYPE_COUNT; ++i) {
+	for (int i = 1; i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
 		snprintf(conf_str, 50, SC_CONF_BASE_STR"%s.penalty.%s",
-				name, ResourceIdentifier::TypeStr[i]);
+				name, br::ResourceIdentifier::TypeStr[i]);
 
 		opts_desc.add_options()
 			(conf_str,
@@ -56,17 +56,17 @@ SCCongestion::SCCongestion(
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	// Boundaries enforcement (0 <= penalty <= 100)
-	for (int i = 1; i < ResourceIdentifier::TYPE_COUNT; ++i) {
+	for (int i = 1; i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
 		if (penalties_int[i] > 100) {
 			logger->Warn("penalty.%s out of range [0,100]: "
 					"found %d. Setting to %d",
-					ResourceIdentifier::TypeStr[i],
+					br::ResourceIdentifier::TypeStr[i],
 					penalties_int[i], SC_CONG_DEFAULT_PENALTY);
 			penalties_int[i] = SC_CONG_DEFAULT_PENALTY;
 		}
 		penalties[i] = static_cast<float>(penalties_int[i]) / 100.0;
 		logger->Debug("penalty.%-3s: %.2f",
-				ResourceIdentifier::TypeStr[i], penalties[i]);
+				br::ResourceIdentifier::TypeStr[i], penalties[i]);
 	}
 }
 
@@ -110,7 +110,7 @@ SCCongestion::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 					evl_ent.StrId(), r_path->ToString().c_str(),
 					rl.free, pusage->GetAmount());
 			if ((rl.free == 0) &&
-				(r_path->Type() == ResourceIdentifier::PROC_ELEMENT))
+				(r_path->Type() == br::ResourceIdentifier::PROC_ELEMENT))
 				return SC_RSRC_NO_PE;
 			return SC_RSRC_UNAVL;
 		}

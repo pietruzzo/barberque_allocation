@@ -44,7 +44,7 @@ WorkingMode::WorkingMode():
 	hidden(false) {
 	resources.sched_bindings.resize(MAX_R_ID_NUM);
 	resources.binding_masks.resize(
-		static_cast<uint16_t>(ResourceIdentifier::TYPE_COUNT));
+		static_cast<uint16_t>(br::ResourceIdentifier::TYPE_COUNT));
 	// Set the log string id
 	strncpy(str_id, "", 12);
 }
@@ -61,7 +61,7 @@ WorkingMode::WorkingMode(uint8_t _id,
 
 	// Init the size of the scheduling bindings vector
 	resources.sched_bindings.resize(MAX_R_ID_NUM);
-	resources.binding_masks.resize(ResourceIdentifier::TYPE_COUNT);
+	resources.binding_masks.resize(br::ResourceIdentifier::TYPE_COUNT);
 
 	// Get a logger
 	logger = bu::Logger::GetLogger(AWM_NAMESPACE);
@@ -156,9 +156,9 @@ uint64_t WorkingMode::ResourceUsageAmount(
 }
 
 WorkingMode::ExitCode_t WorkingMode::BindResource(
-		ResourceIdentifier::Type_t r_type,
-		ResID_t src_ID,
-		ResID_t dst_ID,
+		br::ResourceIdentifier::Type_t r_type,
+		br::ResID_t src_ID,
+		br::ResID_t dst_ID,
 		uint16_t b_id) {
 	uint32_t b_count;
 	UsagesMap_t::const_iterator b_it, b_end;
@@ -178,7 +178,7 @@ WorkingMode::ExitCode_t WorkingMode::BindResource(
 		return WM_RSRC_MISS_BIND;
 	}
 	logger->Debug("%s BindResource: R{%s} b_id[%d] size:%d count:%d",
-			str_id, ResourceIdentifier::StringFromType(r_type),
+			str_id, br::ResourceIdentifier::StringFromType(r_type),
 			b_id, bind_pum->size(), b_count);
 
 	// Store the resource binding
@@ -196,21 +196,21 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(uint16_t b_id) {
 		return WM_BIND_ID_OVERFLOW;
 
 	// Update the resource binding bitmask (for each type)
-	for (r_type = ResourceIdentifier::SYSTEM;
-			r_type < ResourceIdentifier::TYPE_COUNT; ++r_type) {
+	for (r_type = br::ResourceIdentifier::SYSTEM;
+			r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
 
 		// Update the binding mask
 		BindingInfo & r_mask(resources.binding_masks[r_type]);
 		new_mask = ResourceBinder::GetMask(
 				resources.sched_bindings[b_id],
-				static_cast<ResourceIdentifier::Type_t>(r_type));
+				static_cast<br::ResourceIdentifier::Type_t>(r_type));
 		r_mask.prev = r_mask.curr;
 		r_mask.curr = new_mask;
 
 		// Set the flag if changed and print a log message
 		r_mask.changed = r_mask.prev != new_mask;
 		logger->Debug("%s SetBinding: R{%-3s} changed? [%d]",
-				str_id, ResourceIdentifier::TypeStr[r_type], r_mask.changed);
+				str_id, br::ResourceIdentifier::TypeStr[r_type], r_mask.changed);
 	}
 
 	// Set the new binding / resource usages map
@@ -223,25 +223,25 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(uint16_t b_id) {
 void WorkingMode::ClearResourceBinding() {
 	uint8_t r_type = 0;
 	resources.sync_bindings->clear();
-	for (; r_type < ResourceIdentifier::TYPE_COUNT; ++r_type) {
+	for (; r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
 		resources.binding_masks[r_type].curr =
 			resources.binding_masks[r_type].prev;
 	}
 }
 
 ResourceBitset WorkingMode::BindingSet(
-		ResourceIdentifier::Type_t r_type) const {
+		br::ResourceIdentifier::Type_t r_type) const {
 	BindingInfo const & bi(resources.binding_masks[r_type]);
 	return bi.curr;
 }
 
 ResourceBitset WorkingMode::BindingSetPrev(
-		ResourceIdentifier::Type_t r_type) const {
+		br::ResourceIdentifier::Type_t r_type) const {
    return resources.binding_masks[r_type].prev;
 }
 
 bool WorkingMode::BindingChanged(
-		ResourceIdentifier::Type_t r_type) const {
+		br::ResourceIdentifier::Type_t r_type) const {
    return resources.binding_masks[r_type].changed;
 }
 

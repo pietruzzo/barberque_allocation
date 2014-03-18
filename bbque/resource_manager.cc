@@ -20,7 +20,6 @@
 #include "bbque/cpp11/chrono.h"
 
 #include "bbque/configuration_manager.h"
-#include "bbque/plugin_manager.h"
 #include "bbque/signals_manager.h"
 #include "bbque/application_manager.h"
 

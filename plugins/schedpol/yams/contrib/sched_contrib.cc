@@ -51,7 +51,7 @@ SchedContrib::SchedContrib(
 	name[SC_NAME_MAX_LEN-1] = '\0';
 
 	// Array of Maximum Saturation Levels parameters
-	for (int i = 0; i < ResourceIdentifier::TYPE_COUNT; ++i)
+	for (int i = 0; i < br::ResourceIdentifier::TYPE_COUNT; ++i)
 		msl_params[i] = static_cast<float> (params[i]) / 100.0;
 
 	// Get a logger instance

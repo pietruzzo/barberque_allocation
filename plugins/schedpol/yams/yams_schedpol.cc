@@ -116,7 +116,7 @@ YamsSchedPol::YamsSchedPol():
 	bindings.type = rp.Type();
 	logger->Debug("Binding domain:'%s' Type:%s",
 			bindings.domain.c_str(),
-			ResourceIdentifier::TypeStr[bindings.type]);
+			br::ResourceIdentifier::TypeStr[bindings.type]);
 
 	// Instantiate the SchedContribManager
 	scm = new SchedContribManager(sc_types, bindings, YAMS_SC_COUNT);
@@ -209,7 +209,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	logger->Debug("Init: SchedContribs: %d", YAMS_SC_COUNT);
 
 	// Init Reconfig contribution
-	ResID_t first_id = *(bindings.ids.begin());
+	br::ResID_t first_id = *(bindings.ids.begin());
 	sc_recf = scm->GetContrib(SchedContribManager::RECONFIG);
 	if (sc_recf == nullptr) {
 		logger->Error("Init: SchedContrib 'RECONFIG' missing");
@@ -369,11 +369,11 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 
 void YamsSchedPol::InsertWorkingModes(AppCPtr_t const & papp) {
 	std::list<std::thread> awm_thds;
-	std::vector<ResID_t>::iterator ids_it;
-	std::vector<ResID_t>::iterator end_ids;
+	std::vector<br::ResID_t>::iterator ids_it;
+	std::vector<br::ResID_t>::iterator end_ids;
 	AwmPtrList_t const * awms = nullptr;
 	AwmPtrList_t::const_iterator awm_it;
-	ResID_t bd_id = R_ID_NONE;
+	br::ResID_t bd_id = R_ID_NONE;
 	float metrics = 0.0;
 
 	// For each binding domain (e.g., CPU node) evaluate the AWM
@@ -498,7 +498,7 @@ void YamsSchedPol::AggregateContributes(SchedEntityPtr_t pschd) {
 YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(SchedEntityPtr_t pschd) {
 	WorkingModeStatusIF::ExitCode_t awm_result;
 	AwmPtr_t & pawm(pschd->pawm);
-	ResID_t & bd_id(pschd->bind_id);
+	br::ResID_t & bd_id(pschd->bind_id);
 
 	// Binding of the AWM resource into the current cluster.
 	// Since the policy handles more than one binding per AWM the resource

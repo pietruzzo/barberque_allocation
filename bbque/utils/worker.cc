@@ -18,8 +18,8 @@
 #include "bbque/utils/worker.h"
 
 #include "bbque/configuration_manager.h"
-#include "bbque/utils/utility.h"
 #include "bbque/resource_manager.h"
+#include "bbque/utils/utility.h"
 
 #include <sys/stat.h>
 #include <unistd.h>

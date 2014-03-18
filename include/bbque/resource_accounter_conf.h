@@ -53,7 +53,7 @@ public:
 	 * @return RA_SUCCESS if a valid token has been returned.
 	 * RA_ERR_MISS_PATH if the identifier path is empty.
 	 */
-	virtual ExitCode_t GetView(std::string who_req, RViewToken_t & tok) = 0;
+	virtual ExitCode_t GetView(std::string who_req, br::RViewToken_t & tok) = 0;
 
 	/**
 	 * @brief Release a resources state view
@@ -62,7 +62,7 @@ public:
 	 *
 	 * @param tok The token used as reference to the resources state view.
 	 */
-	virtual void PutView(RViewToken_t tok) = 0;
+	virtual void PutView(br::RViewToken_t tok) = 0;
 
 };
 

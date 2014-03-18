@@ -31,7 +31,7 @@
 
 namespace bb = bbque;
 namespace bu = bbque::utils;
-namespace br = bbque::rtlib;
+namespace bl = bbque::rtlib;
 
 // Setup logging
 #undef  BBQUE_LOG_MODULE
@@ -45,7 +45,7 @@ bu::Timer bbque_tmr(true);
 /**
  * A pointer to the Barbeque RPC communication channel
  */
-static br::BbqueRPC *rpc = NULL;
+static bl::BbqueRPC *rpc = NULL;
 
 /**
  * The collection of RTLib services accessible from applications.
@@ -256,7 +256,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 	rtlib_services.Notify.Release = rtlib_notify_release;
 
 	// Building a communication channel
-	rpc = br::BbqueRPC::GetInstance();
+	rpc = bl::BbqueRPC::GetInstance();
 	if (!rpc) {
 		fprintf(stderr, FE("RPC communication channel build FAILED\n"));
 		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;

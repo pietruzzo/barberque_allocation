@@ -22,7 +22,6 @@
 #include "bbque/platform_services.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/resource_manager.h"
-#include "bbque/modules_factory.h"
 #include "bbque/signals_manager.h"
 
 #include "bbque/utils/timer.h"
