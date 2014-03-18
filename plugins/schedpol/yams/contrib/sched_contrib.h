@@ -253,7 +253,7 @@ public:
 protected:
 
 	 /** Logger */
-	 bu::Logger * logger = NULL;
+	 std::unique_ptr<bu::Logger> logger;
 
 	 /** Configuration manager instance */
 	 ConfigurationManager & cm;

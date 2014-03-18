@@ -35,8 +35,7 @@ ResourceTree::ResourceTree():
 	count(0) {
 
 	// Get a logger
-	bu::Logger::Configuration conf(RESOURCE_TREE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(RESOURCE_TREE_NAMESPACE);
 	assert(logger);
 
 	// Initialize the root node

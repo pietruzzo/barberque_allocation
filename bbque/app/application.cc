@@ -27,7 +27,6 @@
 #include "bbque/application_manager.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/app/recipe.h"
-#include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/resource_path.h"
@@ -81,8 +80,7 @@ Application::Application(std::string const & _name,
 	awms.recipe_vect.resize(MAX_NUM_AWM);
 
 	// Get a logger
-	bp::Logger::Configuration conf(APPLICATION_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(APPLICATION_NAMESPACE);
 	assert(logger);
 
 	// Format the EXC string identifier

@@ -23,6 +23,7 @@
 #include "bbque/configuration_manager.h"
 #include "bbque/scheduler_manager.h"
 #include "bbque/plugins/plugin.h"
+#include "bbque/utils/logging/logger.h"
 
 #include "contrib/sched_contrib_manager.h"
 
@@ -65,10 +66,6 @@ using bbque::utils::MetricsCollector;
 struct PF_ObjectParams;
 
 namespace bbque { namespace plugins {
-
-
-// Forward declaration
-class bu::Logger;
 
 /**
  * @class YamsSchedPol
@@ -165,7 +162,7 @@ private:
 	MetricsCollector & mc;
 
 	/** System logger instance */
-	bu::Logger *logger = NULL;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** System view instance */
 	System * sv = NULL;

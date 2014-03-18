@@ -324,7 +324,7 @@ private:
 	};
 
 	/** The logger used by the application manager */
-	bu::Logger  *logger = NULL;
+	std::shared_ptr<bu::Logger> logger;
 
 	/**
 	 * A pointer to the Application descriptor containing the

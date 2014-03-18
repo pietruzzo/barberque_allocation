@@ -88,7 +88,7 @@ public:
 private:
 
 	/** The logger used by the test */
-	LoggerIF  *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** System view instance */
 	SystemView & sv;

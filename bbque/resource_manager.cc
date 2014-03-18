@@ -21,7 +21,6 @@
 
 #include "bbque/configuration_manager.h"
 #include "bbque/plugin_manager.h"
-#include "bbque/modules_factory.h"
 #include "bbque/signals_manager.h"
 #include "bbque/application_manager.h"
 
@@ -173,14 +172,8 @@ ResourceManager::ExitCode_t
 ResourceManager::Setup() {
 
 	//---------- Get a logger module
-	std::string logger_name(RESOURCE_MANAGER_NAMESPACE);
-	bp::Logger::Configuration conf(logger_name.c_str());
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		fprintf(stderr, "RM: Logger module creation FAILED\n");
-		assert(logger);
-		return SETUP_FAILED;
-	}
+	logger = bu::Logger::GetLogger(RESOURCE_MANAGER_NAMESPACE);
+	assert(logger);
 
 	//---------- Loading configuration
 	ConfigurationManager & cm = ConfigurationManager::GetInstance();

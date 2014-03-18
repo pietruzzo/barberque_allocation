@@ -35,7 +35,7 @@
 
 #define APPLICATION_NAMESPACE "bq.app"
 
-using bbque::plugins::Logger;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -471,7 +471,7 @@ public:
 private:
 
 	/** The logger used by the application */
-	Logger  *logger = NULL;
+	std::unique_ptr<bu::Logger> logger = NULL;
 
 	/** The application name */
 	std::string name;

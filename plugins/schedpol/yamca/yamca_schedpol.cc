@@ -82,14 +82,8 @@ YamcaSchedPol::YamcaSchedPol():
 	mc(bu::MetricsCollector::GetInstance()) {
 
 	// Get a logger
-	bu::Logger::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-
-	if (logger)
-		logger->Info("YaMCA: Built a new dynamic object[%p]\n", this);
-	else
-		std::cout << "YaMCA: Build new dynamic object ["
-			<< this << "]" << std::endl;
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	assert(logger);
 
 	// Resource view counter
 	tok_counter = 0;

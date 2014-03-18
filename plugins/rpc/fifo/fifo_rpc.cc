@@ -43,23 +43,14 @@ FifoRPC::FifoRPC(std::string const & fifo_dir) :
 	rpc_fifo_fd(0) {
 
 	// Get a logger
-	plugins::Logger::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		if (daemonized)
-			syslog(LOG_INFO, "Build FIFO rpc plugin [%p] FAILED "
-					"(Error: missing logger module)", (void*)this);
-		else
-			fprintf(stdout, FI("Build FIFO rpc plugin [%p] FAILED "
-					"(Error: missing logger module)\n"), (void*)this);
-	}
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	assert(logger);
 
 	// Ignore SIGPIPE, which will otherwise result into a BBQ termination.
 	// Indeed, in case of write errors the timeouts allows BBQ to react to
 	// the application not responding or disappearing.
 	signal(SIGPIPE, SIG_IGN);
 
-	assert(logger);
 	logger->Debug("Built FIFO rpc object @%p", (void*)this);
 
 }

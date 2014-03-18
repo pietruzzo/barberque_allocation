@@ -69,8 +69,7 @@ ApplicationManager::ApplicationManager() :
 	cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
 
 	// Get a logger
-	bp::Logger::Configuration conf(APPLICATION_MANAGER_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(APPLICATION_MANAGER_NAMESPACE);
 	assert(logger);
 
 	//  Get the recipe loader instance

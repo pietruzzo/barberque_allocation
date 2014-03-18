@@ -19,12 +19,12 @@
 
 #include <android/log.h>
 
+#include <cstdarg>
 #include <cstdint>
-#include <string>
 
 #define LOG_MAX_SENTENCE 256
 
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
 //----- Logger interface
 

@@ -55,9 +55,8 @@ SchedContrib::SchedContrib(
 		msl_params[i] = static_cast<float> (params[i]) / 100.0;
 
 	// Get a logger instance
-	snprintf(logname, 16, MODULE_NAMESPACE".%s", name);
-	bu::Logger::Configuration conf(logname);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(logname);
+	assert(logger);
 }
 
 SchedContrib::~SchedContrib() {

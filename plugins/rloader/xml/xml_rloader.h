@@ -109,7 +109,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	bu::Logger *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * Set true when the recipe loader has been configured.

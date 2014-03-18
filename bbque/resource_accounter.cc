@@ -29,7 +29,6 @@
 #include <string>
 #include <sstream>
 
-#include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/platform_services.h"
 #include "bbque/app/working_mode.h"
@@ -64,9 +63,7 @@ ResourceAccounter::ResourceAccounter() :
 	cm(CommandManager::GetInstance()) {
 
 	// Get a logger
-	std::string logger_name(RESOURCE_ACCOUNTER_NAMESPACE);
-	plugins::Logger::Configuration conf(logger_name.c_str());
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(RESOURCE_ACCOUNTER_NAMESPACE);
 	assert(logger);
 
 	// Init the system resources state view

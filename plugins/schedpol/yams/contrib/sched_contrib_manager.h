@@ -175,7 +175,7 @@ public:
 private:
 
 	/** System logger instance */
-	bu::Logger *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** Configuration manager instance */
 	ConfigurationManager & cm;

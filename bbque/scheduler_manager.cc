@@ -96,12 +96,8 @@ SchedulerManager::SchedulerManager() :
 	std::string opt_policy;
 
 	//---------- Get a logger module
-	bu::Logger::Configuration conf(SCHEDULER_MANAGER_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		fprintf(stderr, "RS: Logger module creation FAILED\n");
-		assert(logger);
-	}
+	logger = bu::Logger::GetLogger(SCHEDULER_MANAGER_NAMESPACE);
+	assert(logger);
 
 	logger->Debug("Starting resource scheduler...");
 	//---------- Loading module configuration

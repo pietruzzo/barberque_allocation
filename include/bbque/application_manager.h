@@ -32,9 +32,10 @@
 
 using bbque::app::Application;
 using bbque::utils::Deferrable;
-using bbque::plugins::Logger;
 using bbque::plugins::RecipeLoaderIF;
 using bbque::CommandHandler;
+
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -342,7 +343,7 @@ public:
 private:
 
 	/** The logger used by the application manager */
-	Logger  *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** The recipe loader module used to parse recipes */
 	RecipeLoaderIF * rloader;

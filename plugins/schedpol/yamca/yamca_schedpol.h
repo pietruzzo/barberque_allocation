@@ -23,6 +23,7 @@
 #include "bbque/scheduler_manager.h"
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/plugins/plugin.h"
+#include "bbque/utils/logging/logger.h"
 
 #define SCHEDULER_POLICY_NAME "yamca"
 #define MODULE_NAMESPACE SCHEDULER_POLICY_NAMESPACE "." SCHEDULER_POLICY_NAME
@@ -40,10 +41,6 @@ using bbque::utils::MetricsCollector;
 struct PF_ObjectParams;
 
 namespace bbque { namespace plugins {
-
-
-// Forward declaration
-class bu::Logger;
 
 /**
  * @brief The YaMCA resource scheduler heuristic
@@ -93,7 +90,7 @@ public:
 private:
 
 	/** System logger instance */
-	bu::Logger *logger = NULL;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** Resource accounter instance */
 	ResourceAccounter & rsrc_acct;

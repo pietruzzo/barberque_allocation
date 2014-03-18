@@ -22,6 +22,7 @@
 #include "bbque/app/application.h"
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/plugins/plugin.h"
+#include "bbque/utils/logging/logger.h"
 
 #include <cstdint>
 #include <random>
@@ -39,9 +40,6 @@ using bbque::app::AppCPtr_t;
 using bbque::res::RViewToken_t;
 
 namespace bbque { namespace plugins {
-
-// Forward declaration
-class bu::Logger;
 
 /**
  * @brief The Random resource scheduler heuristic plugin.
@@ -79,7 +77,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	Logger *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** Configuration manager instance */
 	ConfigurationManager & cm;

@@ -19,7 +19,6 @@
 
 #include <string>
 
-#include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/resource_accounter.h"
 
@@ -65,8 +64,7 @@ WorkingMode::WorkingMode(uint8_t _id,
 	resources.binding_masks.resize(ResourceIdentifier::TYPE_COUNT);
 
 	// Get a logger
-	bu::Logger::Configuration conf(AWM_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(AWM_NAMESPACE);
 
 	// Set the log string id
 	snprintf(str_id, 15, "AWM{%d,%s}", id, name.c_str());

@@ -19,7 +19,6 @@
 
 #include "bbque/configuration_manager.h"
 #include "bbque/utils/utility.h"
-#include "bbque/modules_factory.h"
 #include "bbque/resource_manager.h"
 
 #include <sys/stat.h>
@@ -37,7 +36,6 @@ namespace bu = bbque::utils;
 namespace bbque { namespace utils {
 
 Worker::Worker() :
-	logger(NULL),
 	name("undef"),
 	done(false),
 	worker_tid(0) {
@@ -52,16 +50,8 @@ int Worker::Setup(const char *name, const char *logname) {
 	this->name = name;
 
 	//---------- Get a logger module
-	bu::Logger::Configuration conf(logname);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (logger == NULL) {
-		fprintf(stderr, FE("Worker[%s]: setup FAILED"
-			"(Error: unable to configure logger [%s])\n"),
-				name, logname);
-		// This should NEVER happens, keep this just for debugging
-		assert(logger != NULL);
-		return -1;
-	}
+	logger = Logger::GetLogger(logname);
+	assert(logger);
 
 	logger->Debug("Worker[%s]: Setup completed", name);
 	return 0;

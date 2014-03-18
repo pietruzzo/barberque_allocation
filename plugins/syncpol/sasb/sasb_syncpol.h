@@ -96,7 +96,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	bu::Logger *logger = NULL;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief Keep track of the best estimation for the sync latency

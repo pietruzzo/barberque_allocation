@@ -37,9 +37,9 @@
 // Max length for the resource view token string
 #define TOKEN_PATH_MAX_LEN 30
 
-using bbque::plugins::Logger;
 using bbque::app::AppSPtr_t;
 
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -447,7 +447,7 @@ private:
 	} sync_ssn;
 
 	/** The logger used by the resource accounter */
-	Logger  *logger = NULL;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** The Application Manager component */
 	bbque::ApplicationManager & am;

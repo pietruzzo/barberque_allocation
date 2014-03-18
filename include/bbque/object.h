@@ -41,6 +41,8 @@
 # define DEBUG(fmt, ...) do {} while (0)
 #endif // BBQUE_DEBUG
 
+namespace bu = bbque::utils;
+
 namespace bbque {
 
 /**
@@ -71,7 +73,7 @@ protected:
 	/**
 	 * The pointer to logger of this object
 	 */
-	std::unique_ptr<plugins::Logger> logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief   Build a new object

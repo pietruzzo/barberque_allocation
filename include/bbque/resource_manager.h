@@ -40,11 +40,12 @@
 #include <map>
 
 using bbque::plugins::PluginManager;
-using bbque::plugins::Logger;
 using bbque::utils::MetricsCollector;
 using bbque::utils::Deferrable;
 using bbque::utils::Worker;
 using bbque::CommandHandler;
+
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -148,7 +149,7 @@ private:
 	/**
 	 * @brief The logger used by the resource manager.
 	 */
-	Logger *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * Reference to supported platform services class.

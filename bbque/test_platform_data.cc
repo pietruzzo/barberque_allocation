@@ -38,13 +38,8 @@ TestPlatformData::TestPlatformData() :
 		platformLoaded(false) {
 
 	//---------- Get a logger module
-	std::string logger_name(TEST_PLATFORM_DATA_NAMESPACE);
-	bu::Logger::Configuration conf(logger_name.c_str());
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		fprintf(stderr, "TPD: Logger module creation FAILED\n");
-		assert(logger);
-	}
+	logger = bu::Logger::GetLogger(TEST_PLATFORM_DATA_NAMESPACE);
+	assert(logger);
 
 }
 

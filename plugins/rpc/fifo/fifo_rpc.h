@@ -31,6 +31,8 @@
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
+namespace bu = bbque::utils;
+
 namespace bbque { namespace plugins {
 
 /**
@@ -87,7 +89,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	plugins::Logger *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief Thrue if the channel has been correctly initalized

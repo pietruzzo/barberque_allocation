@@ -112,12 +112,8 @@ SynchronizationManager::SynchronizationManager() :
 	std::string sync_policy;
 
 	//---------- Get a logger module
-	up::Logger::Configuration conf(SYNCHRONIZATION_MANAGER_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		fprintf(stderr, "YM: Logger module creation FAILED\n");
-		assert(logger);
-	}
+	logger = bu::Logger::GetLogger(SYNCHRONIZATION_MANAGER_NAMESPACE);
+	assert(logger);
 
 	logger->Debug("Starting synchronization manager...");
 

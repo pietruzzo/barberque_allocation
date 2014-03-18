@@ -183,7 +183,7 @@ public:
 private:
 
 	/** The logger used by the resource accounter */
-	bu::Logger  *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** Pointer to the root of the tree*/
 	ResourceNode_t * root;

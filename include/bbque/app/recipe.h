@@ -31,7 +31,8 @@
 // Maximum number of Application Working Modes manageable
 #define MAX_NUM_AWM 	255
 
-using bbque::plugins::Logger;
+namespace bu = bbque::utils;
+
 using bbque::res::ResourceConstraint;
 using bbque::utils::AttributesContainer;
 
@@ -189,7 +190,7 @@ public:
 private:
 
 	/** The logger used by the application */
-	Logger  *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * Starting from a common recipes root directory, each recipe file

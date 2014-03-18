@@ -54,18 +54,9 @@ po::variables_map xmlrloader_opts_value;
 
 XMLRecipeLoader::XMLRecipeLoader() {
 	// Get a logger
-	bu::Logger::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		if (daemonized)
-			syslog(LOG_INFO, "Build XML RecipeLoader plugin [%p] FAILED "
-					"(Error: missing logger module)", (void*)this);
-		else
-			fprintf(stdout, FI("Build XML RecipeLoader plugin [%p] FAILED "
-					"(Error: missing logger module)\n"), (void*)this);
-	}
-
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
+
 	logger->Debug("Built XML RecipeLoader object @%p", (void*)this);
 }
 

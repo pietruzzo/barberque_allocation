@@ -97,7 +97,7 @@ private:
 	/**
 	 * @brief The logger to use.
 	 */
-	bu::Logger *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief The synchronizaiton policy plugin to use

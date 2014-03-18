@@ -77,13 +77,8 @@ SchedContribManager::SchedContribManager(
 	bd_info(_bd_info) {
 
 	// Get a logger
-	bu::Logger::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (logger)
-		logger->Info("Built a new dynamic object[%p]", this);
-	else
-		fprintf(stderr, FI("%s: Built new dynamic object [%p]\n"),
-				SC_MANAGER_NAMESPACE, (void *)this);
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	assert(logger);
 
 	// Parse the configuration parameters
 	if (!SchedContribManager::config_ready) {

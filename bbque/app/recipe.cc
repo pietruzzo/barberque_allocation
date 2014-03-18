@@ -19,7 +19,6 @@
 
 #include <cstring>
 
-#include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/resource_path.h"
@@ -36,8 +35,7 @@ Recipe::Recipe(std::string const & name):
 
 	// Get a logger
 	std::string logger_name(RECIPE_NAMESPACE"." + name);
-	bp::Logger::Configuration conf(logger_name.c_str());
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(logger_name.c_str());
 	assert(logger);
 
 	// Clear normalization info

@@ -97,12 +97,8 @@ YamsSchedPol::YamsSchedPol():
 	mc(bu::MetricsCollector::GetInstance()) {
 
 	// Get a logger
-	bu::Logger::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (logger)
-		logger->Info("yams: Built a new dynamic object[%p]", this);
-	else
-		fprintf(stderr, FI("yams: Built new dynamic object [%p]\n"), (void *)this);
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	assert(logger);
 
 	// Binding domain resource path
 	po::options_description opts_desc("Scheduling policy parameters");

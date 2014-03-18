@@ -127,7 +127,7 @@ private:
 	  /**
 	   * @brief The logger used by the resource manager.
 	   */
-	  bu::Logger *logger;
+	  std::unique_ptr<bu::Logger> logger;
 
 	  /**
 	   * @brief Table of concrete SignalHandlers
