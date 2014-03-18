@@ -26,6 +26,8 @@
 
 #include "bbque/utils/logging/logger.h"
 
+namespace bu = bbque::utils;
+
 namespace bbque { namespace utils {
 
 /**
@@ -102,7 +104,7 @@ protected:
 	/**
 	 * @brief The logger used by the worker thread
 	 */
-	plugins::LoggerIF *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief The name of the worker thread

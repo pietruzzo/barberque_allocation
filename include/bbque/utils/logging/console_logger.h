@@ -18,10 +18,10 @@
 #ifndef BBQUE_UTILS_CONSOLE_LOGGER_H_
 #define BBQUE_UTILS_CONSOLE_LOGGER_H_
 
+#include "bbque/config.h"
 #include "bbque/utils/logging/logger.h"
 
 #include <memory>
-#include <cstdint>
 
 namespace bbque { namespace utils {
 
@@ -41,7 +41,7 @@ public:
 	 */
 	static std::unique_ptr<Logger>
 	GetInstance(Configuration const & conf) {
-		return new ConsoleLogger(conf);
+		return std::unique_ptr<Logger>(new ConsoleLogger(conf));
 	}
 
 	/**

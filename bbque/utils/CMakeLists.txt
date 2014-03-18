@@ -16,6 +16,6 @@ add_library(bbque_utils STATIC ${BBQUE_UTILS_SRC})
 # Linking dependencies
 target_link_libraries(
 	bbque_utils
-	bbque_logger
+	-Wl,-whole-archive bbque_logger -Wl,-no-whole-archive
 )
 

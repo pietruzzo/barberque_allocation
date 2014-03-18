@@ -15,13 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <bbque/utils/logging/log4cpp_logger.h>
+#include "bbque/utils/logging/log4cpp_logger.h"
+#include "bbque/utils/logging/console_logger.h"
+
+#include "bbque/configuration_manager.h"
 
 #include <log4cpp/Category.hh>
 #include <log4cpp/Priority.hh>
 #include <log4cpp/PropertyConfigurator.hh>
 
-#include "bbque/utils/utility.h"
+#include <boost/program_options.hpp>
 
 namespace l4 = log4cpp;
 namespace po = boost::program_options;
@@ -53,9 +56,17 @@ namespace po = boost::program_options;
 #define LOG4CPP_COLOR_ALERT	LOG4CPP_COLOR_LRED
 #define LOG4CPP_COLOR_FATAL	LOG4CPP_COLOR_RED
 
+#ifdef BBQUE_DEBUG
+# define BBQUE_CONF_FILENAME "bbque.conf_dbg";
+#else
+# define BBQUE_CONF_FILENAME "bbque.conf";
+#endif
+#define BBQUE_LOG4CPP_CONFPATH BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/" BBQUE_CONF_FILENAME
+
 namespace bbque { namespace utils {
 
 bool Log4CppLogger::configured = false;
+std::string Log4CppLogger::conf_file_path = BBQUE_LOG4CPP_CONFPATH;
 
 Log4CppLogger::Log4CppLogger(Configuration const & conf) :
 	Logger(conf),
@@ -66,14 +77,8 @@ std::unique_ptr<Logger>
 Log4CppLogger::GetInstance(Configuration const & conf) {
 	if (!configured && !Configure(conf))
 		return nullptr;
-	return new Log4CppLogger(conf);
+	return std::unique_ptr<Logger>(new Log4CppLogger(conf));
 }
-
-#ifdef BBQUE_DEBUG
-# define BBQUE_CONF_FILENAME =  "bbque.conf_dbg";
-#else
-# define BBQUE_CONF_FILENAME =  "bbque.conf";
-#endif
 
 bool Log4CppLogger::Configure(Configuration const & conf) {
 	ConfigurationManager &cm = ConfigurationManager::GetInstance();
@@ -82,11 +87,10 @@ bool Log4CppLogger::Configure(Configuration const & conf) {
 	// Define Log4CPP configuration options
 	po::options_description log4cpp_opts_desc("Log4CPP Options");
 	log4cpp_opts_desc.add_options()
-		(MODULE_CONFIG".conf_file",
-			po::value<std::string>(&conf_file_path)->default_value(
-				BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/" BBQUE_CONF_FILENAME),
-				"configuration file path");
-	static po::variables_map log4cpp_opts_value;
+		(MODULE_CONFIG ".conf_file", po::value<std::string>
+			(&conf_file_path)->default_value(conf_file_path.c_str()),
+			"configuration file path");
+	po::variables_map log4cpp_opts_value;
 
 	logger->Info("Using Log4CppLogger configuration file [%s]",
 			conf_file_path.c_str());
@@ -98,7 +102,8 @@ bool Log4CppLogger::Configure(Configuration const & conf) {
 	try {
 		l4::PropertyConfigurator::configure(conf_file_path);
 	} catch (log4cpp::ConfigureFailure & e) {
-		logger->"Log4CppLogger configuration FAILED (Error %s)", e.what());
+		logger->Error("Log4CppLogger configuration FAILED (Error %s)",
+				e.what());
 		return false;
 	}
 

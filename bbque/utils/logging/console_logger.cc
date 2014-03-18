@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <bbque/utils/logging/console_logger.h>
+#include "bbque/utils/logging/console_logger.h"
 
 #include <cstdarg>
 #include <cstdio>

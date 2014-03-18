@@ -124,7 +124,6 @@ if (CONFIG_TARGET_LINUX)
 target_link_libraries(
 	barbeque
 	${CGroup_LIBRARIES}
-	-Wl,-whole-archive bbque_logger_log4cpp -Wl,-no-whole-archive
 	-ldl -lrt
 )
 endif (CONFIG_TARGET_LINUX)
@@ -135,7 +134,6 @@ target_link_libraries(
 	barbeque
 	bbque_android
 	-Wl,-whole-archive bbque_cpp11 -Wl,-no-whole-archive
-	-Wl,-whole-archive bbque_logger_android -Wl,-no-whole-archive
 )
 endif (CONFIG_TARGET_ANDROID)
 

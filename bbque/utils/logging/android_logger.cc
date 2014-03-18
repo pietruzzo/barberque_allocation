@@ -19,33 +19,14 @@
 
 #include <android/log.h>
 
+#include <cstdint>
+#include <string>
+
 #define LOG_MAX_SENTENCE 256
 
 namespace bbque { namespace plugins {
 
-AndroidLogger::AndroidLogger(char const * cat) :
-	category(cat) {
-
-}
-
-AndroidLogger::~AndroidLogger() {
-}
-
-//----- static plugin interface
-
-void * AndroidLogger::Create(PF_ObjectParams * params) {
-	Logger::Configuration * conf = (Logger::Configuration*) params->data;
-	return new AndroidLogger(conf->category);
-}
-
-int32_t AndroidLogger::Destroy(void * plugin) {
-	if (!plugin)
-		return -1;
-	delete (AndroidLogger *)plugin;
-	return 0;
-}
-
-//----- Logger plugin interface
+//----- Logger interface
 
 #ifdef BBQUE_DEBUG
 void AndroidLogger::Debug(const char *fmt, ...) {
@@ -130,7 +111,7 @@ void AndroidLogger::Fatal(const char *fmt, ...) {
 	__android_log_print(ANDROID_LOG_FATAL, category.c_str(), str); 
 }
 
-} // namespace plugins
+} // namespace utils
 
 } // namespace bbque
 

@@ -15,18 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_LOG4CPP_LOGGER_H_
-#define BBQUE_LOG4CPP_LOGGER_H_
+#ifndef BBQUE_UTILS_LOG4CPP_LOGGER_H_
+#define BBQUE_UTILS_LOG4CPP_LOGGER_H_
 
 #include "bbque/config.h"
+#include "bbque/utils/logging/logger.h"
 
-#include "bbque/utils/logger/logger.h"
+#include <memory>
+#include <string>
 
-#include <cstdint>
 #include <log4cpp/Category.hh>
 
-#define MODULE_NAMESPACE LOGGER_NAMESPACE".log4cpp"
-#define MODULE_CONFIG LOGGER_CONFIG".log4cpp"
+#define MODULE_NAMESPACE LOGGER_NAMESPACE ".log4cpp"
+#define MODULE_CONFIG LOGGER_CONFIG ".log4cpp"
 
 namespace bbque { namespace utils {
 
@@ -112,7 +113,7 @@ private:
 	 * Set true when the logger has been configured.
 	 * This is done by parsing a configuration file the first time a Logger is created.
 	 */
-	static bool configured = false;
+	static bool configured;
 
 	/**
 	 * The Log4CPP configuration file to use
@@ -135,7 +136,7 @@ private:
 	 * @return  true if the configuration has been properly loaded and a Log4CPP
 	 * 			logger could be successfully build, false otherwise.
 	 */
-	virtual bool Configure(Configuration const & conf);
+	static bool Configure(Configuration const & conf);
 
 };
 
@@ -143,4 +144,4 @@ private:
 
 } // namespace bbque
 
-#endif // BBQUE_LOG4CPP_LOGGER_H_
+#endif // BBQUE_UTILS_LOG4CPP_LOGGER_H_

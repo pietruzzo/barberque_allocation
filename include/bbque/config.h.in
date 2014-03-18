@@ -118,6 +118,9 @@
 /** CGroups Support */
 #cmakedefine CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
 
+/** Log4CPP Support */
+#cmakedefine CONFIG_EXTERNAL_LOG4CPP
+
 /** Enabled YaMS Scheduling policy parallel execution */
 #cmakedefine CONFIG_BBQUE_SP_YAMS_PARALLEL
 

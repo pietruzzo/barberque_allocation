@@ -20,16 +20,13 @@
 
 #include "bbque/config.h"
 
-#include "bbque/utils/logger/console_logger.h"
-#include "bbque/utils/logger/log4cpp_logger.h"
-#include "bbque/utils/logger/android_logger.h"
+#include <memory>
+#include <string>
 
 // The prefix for logging statements category
 #define LOGGER_NAMESPACE "bq.log"
 // The prefix for configuration file attributes
 #define LOGGER_CONFIG "logger"
-
-#include <string>
 
 /**
  * Prepend file and line number to the logMessage
@@ -64,7 +61,7 @@ public:
 	struct Configuration {
 		Configuration(
 				const char * category,
-				const char * identity,
+				const char * identity = "undef",
 				Priority priority = WARN) :
 			category(category),
 			identity(identity),
@@ -72,23 +69,10 @@ public:
 		char const * category;
 		char const * identity;
 		Priority priority;
-	} & configuration;
+	};
 
-	static inline std::unique_ptr<Logger>
-	GetLogger(Configuration const & conf) {
-		std::unique_ptr<Logger> logger;
-#ifdef CONFIG_EXTERNAL_LOG4CPP
-		logger = Log4CppLogger::GetInstance(conf);
-#endif
-		// Since this is a critical module, a fall-back dummy (console based) logger
-		// implementation is always available.
-		if (!logger) {
-			logger = ConsoleLogger::GetInstance(conf);
-			logger->Error("Logger module loading/configuration FAILED");
-			logger->Warn("Using (dummy) console logger");
-		}
-		return logger;
-	}
+	static std::unique_ptr<Logger>
+	GetLogger(Configuration const & conf);
 
 	virtual ~Logger() {};
 
@@ -147,8 +131,16 @@ public:
 
 protected:
 
-	Logger(Configuration const & conf) :
-		configuration(conf) {}; // Do not allows direct instantiations
+	Configuration const & configuration;
+
+	/**
+	 * \brief Logger ctor
+	 *
+	 * The Logger constructor is private since direct instantiations are not
+	 * allowed, while the GetLogger factory method must be used to properly
+	 * configure the logger.
+	 */
+	Logger(Configuration const & conf);
 
 };
 
