@@ -18,13 +18,11 @@
 #include "bbque/utils/logging/log4cpp_logger.h"
 #include "bbque/utils/logging/console_logger.h"
 
-#include "bbque/configuration_manager.h"
-
 #include <log4cpp/Category.hh>
 #include <log4cpp/Priority.hh>
 #include <log4cpp/PropertyConfigurator.hh>
 
-#include <boost/program_options.hpp>
+#include <fstream>
 
 namespace l4 = log4cpp;
 namespace po = boost::program_options;
@@ -56,17 +54,9 @@ namespace po = boost::program_options;
 #define LOG4CPP_COLOR_ALERT	LOG4CPP_COLOR_LRED
 #define LOG4CPP_COLOR_FATAL	LOG4CPP_COLOR_RED
 
-#ifdef BBQUE_DEBUG
-# define BBQUE_CONF_FILENAME "bbque.conf_dbg";
-#else
-# define BBQUE_CONF_FILENAME "bbque.conf";
-#endif
-#define BBQUE_LOG4CPP_CONFPATH BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/" BBQUE_CONF_FILENAME
-
 namespace bbque { namespace utils {
 
 bool Log4CppLogger::configured = false;
-std::string Log4CppLogger::conf_file_path = BBQUE_LOG4CPP_CONFPATH;
 
 Log4CppLogger::Log4CppLogger(Configuration const & conf) :
 	Logger(conf),
@@ -80,9 +70,22 @@ Log4CppLogger::GetInstance(Configuration const & conf) {
 	return std::unique_ptr<Logger>(new Log4CppLogger(conf));
 }
 
+void Log4CppLogger::ParseConfigurationFile(
+		po::options_description const & opts_desc,
+		po::variables_map & opts) {
+	std::ifstream in(conf_file_path);
+
+	// Parse configuration file (allowing for unregistered options)
+	po::store(po::parse_config_file(in, opts_desc, true), opts);
+	po::notify(opts);
+
+}
+
 bool Log4CppLogger::Configure(Configuration const & conf) {
-	ConfigurationManager &cm = ConfigurationManager::GetInstance();
 	std::unique_ptr<Logger> logger = ConsoleLogger::GetInstance(conf);
+
+	if (conf_file_path == "")
+		return false;
 
 	// Define Log4CPP configuration options
 	po::options_description log4cpp_opts_desc("Log4CPP Options");
@@ -96,7 +99,7 @@ bool Log4CppLogger::Configure(Configuration const & conf) {
 			conf_file_path.c_str());
 
 	// Parsing BBQUE configuration file
-	cm.ParseConfigurationFile(log4cpp_opts_desc, log4cpp_opts_value);
+	ParseConfigurationFile(log4cpp_opts_desc, log4cpp_opts_value);
 
 	// Setting up Appender, layout and Category
 	try {

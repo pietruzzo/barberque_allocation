@@ -26,6 +26,10 @@
 
 #include <log4cpp/Category.hh>
 
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
+
 #define MODULE_NAMESPACE LOGGER_NAMESPACE ".log4cpp"
 #define MODULE_CONFIG LOGGER_CONFIG ".log4cpp"
 
@@ -116,11 +120,6 @@ private:
 	static bool configured;
 
 	/**
-	 * The Log4CPP configuration file to use
-	 */
-	static std::string conf_file_path;
-
-	/**
 	 * @brief The logger reference
 	 * Use this logger reference, related to the 'log' category, to log your messages
 	 */
@@ -130,6 +129,13 @@ private:
 	 * \brief Build a logger with the specified configuration
 	 */
 	Log4CppLogger(Configuration const & conf);
+
+	/**
+	 * @brief   Parse the Log4CPP configuration file
+	 */
+	static void ParseConfigurationFile(
+			po::options_description const & opts_desc,
+			po::variables_map & opts);
 
 	/**
 	 * @brief   Load Logger configuration

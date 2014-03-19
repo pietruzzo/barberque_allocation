@@ -71,6 +71,11 @@ public:
 		Priority priority;
 	};
 
+	static void
+	SetConfigurationFile(std::string const & filepath) {
+		conf_file_path = filepath;
+	}
+
 	static std::unique_ptr<Logger>
 	GetLogger(Configuration const & conf);
 
@@ -130,6 +135,8 @@ public:
 	virtual void Fatal(const char *fmt, ...) = 0;
 
 protected:
+
+	static std::string conf_file_path;
 
 	Configuration const & configuration;
 
