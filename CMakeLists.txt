@@ -42,11 +42,7 @@ set (BBQUE_PATH_CMAKE      "usr/share/bbque")
 set (BBQUE_PATH_VAR        "var/bbque")
 
 # Barbeque configuration file
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set (BBQUE_CONF_FILE "bbque.conf_dbg")
-else (CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set (BBQUE_CONF_FILE "bbque.conf")
-endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+set (BBQUE_CONF_FILE "bbque.conf")
 
 # Setup the CGroup-based Platform Integration Layers (PIL)
 set (BBQUE_PIL_CGROUP_MOUNT "mnt/cgroup")
