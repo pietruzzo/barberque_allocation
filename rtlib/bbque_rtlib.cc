@@ -20,6 +20,7 @@
 #include "bbque/version.h"
 #include "bbque/utils/timer.h"
 #include "bbque/utils/utility.h"
+#include "bbque/utils/logging/logger.h"
 
 #include "bbque/rtlib/bbque_rpc.h"
 
@@ -201,6 +202,7 @@ static void rtlib_notify_release(
 
 static const char *rtlib_app_name;
 static uint8_t rtlib_initialized = 0;
+static std::unique_ptr<bu::Logger> logger;
 
 #include "bbque_errors.cc"
 
@@ -214,9 +216,12 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 
 	assert(rtlib_initialized==0);
 
+	// Get a Logger module
+	logger = bu::Logger::GetLogger(BBQUE_LOG_MODULE);
+
 	// Welcome screen
-	fprintf(stderr, FI("Barbeque RTLIB (ver. %s)\n"), g_git_version);
-	fprintf(stderr, FI("Built: " __DATE__  " " __TIME__ "\n"));
+	logger->Info("Barbeque RTLIB (ver. %s)\n", g_git_version);
+	logger->Info("Built: " __DATE__  " " __TIME__ "\n");
 
 	// Data structure initialization
 	rtlib_services.version.major = RTLIB_VERSION_MAJOR;
@@ -258,15 +263,14 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 	// Building a communication channel
 	rpc = bl::BbqueRPC::GetInstance();
 	if (!rpc) {
-		fprintf(stderr, FE("RPC communication channel build FAILED\n"));
+		logger->Error("RPC communication channel build FAILED");
 		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
 
 	// Initializing the RPC communication channel
 	result = rpc->Init(name);
 	if (result!=RTLIB_OK) {
-		fprintf(stderr, FE("RPC communication channel "
-					"initialization FAILED\n"));
+		logger->Error("RPC communication channel initialization FAILED");
 		return RTLIB_BBQUE_UNREACHABLE;
 	}
 
@@ -281,12 +285,12 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 __attribute__((destructor))
 static void RTLIB_Exit(void) {
 
-	DB(fprintf(stderr, FD("Barbeque RTLIB, Cleanup and release\n")));
+	logger->Debug("Barbeque RTLIB, Cleanup and release");
 
 	if (!rtlib_initialized)
 		return;
 
-	// Close the RPC FIFO channel thus releasin all BBQUE resource used by
+	// Close the RPC FIFO channel thus releasing all BBQUE resource used by
 	// this application
 	assert(rpc);
 
