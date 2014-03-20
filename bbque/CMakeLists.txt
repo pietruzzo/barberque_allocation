@@ -78,6 +78,9 @@ if (CONFIG_TARGET_ANDROID)
   add_subdirectory(android)
 endif (CONFIG_TARGET_ANDROID)
 
+# Add "Power management" support
+add_subdirectory(pm)
+
 
 # Add "barbeque" target binary
 set (BARBEQUE_SRC barbeque version object configuration_manager console_logger)
@@ -112,6 +115,7 @@ target_link_libraries(
 	bbque_utils
 	bbque_resources
 	bbque_apps
+	bbque_pwrm
 	${Boost_LIBRARIES}
 )
 
