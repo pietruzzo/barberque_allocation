@@ -174,10 +174,15 @@ if (CONFIG_EXTERNAL_LIBCG)
 	find_package(CGroup REQUIRED)
 endif (CONFIG_EXTERNAL_LIBCG)
 
+
+## AMD Display Library
+set (ADL_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX})
+
 # Add compilation dependencies
 include_directories(
 	${Boost_INCLUDE_DIRS}
 	${CGroup_INCLUDE_DIRS}
+	${ADL_INCLUDE_DIRS}
 )
 
 # Add linking dependencies
