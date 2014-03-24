@@ -59,21 +59,20 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 
 	for (uint8_t i = 0; i < num_platforms; ++i) {
 		status = clGetPlatformInfo(
-				platforms[i], CL_PLATFORM_NAME,	sizeof(platform_name),
-				platform_name, NULL);
+			platforms[i], CL_PLATFORM_NAME,	sizeof(platform_name),
+			platform_name, NULL);
 		logger->Info("PLAT OCL: P[%d]: %s", i, platform_name);
 
 		if (!strcmp(platform_name, BBQUE_PLATFORM_NAME)) {
-				logger->Info("PLAT OCL: Platform selected: %s", platform_name);
-				platform = platforms[i];
-				break;
+			logger->Info("PLAT OCL: Platform selected: %s", platform_name);
+			platform = platforms[i];
+			break;
 		}
 	}
 
 	// Get devices
 	status = clGetDeviceIDs(platform, dev_type, 0, NULL, &num_devices);
-	if (status != CL_SUCCESS)
-	{
+	if (status != CL_SUCCESS) {
 		logger->Error("PLAT OCL: Device error %d", status);
 		return DEVICE_ERROR;
 	}
@@ -126,35 +125,45 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 	cl_device_type dev_type;
 	char dev_name[64];
 	char resourcePath[] = "sys0.gpu256.pe256";
+	ResourceIdentifier::Type_t r_type = ResourceIdentifier::UNDEFINED;
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
-	for (uint8_t i = 0; i < num_devices; ++i) {
+	for (uint16_t dev_id = 0; dev_id < num_devices; ++dev_id) {
 		status = clGetDeviceInfo(
-				devices[i],	CL_DEVICE_NAME, sizeof(dev_name),
-				dev_name, NULL);
+				devices[dev_id], CL_DEVICE_NAME,
+				sizeof(dev_name), dev_name, NULL);
 		status = clGetDeviceInfo(
-				devices[i],	CL_DEVICE_TYPE, sizeof(dev_type),
-				&dev_type, NULL);
+				devices[dev_id], CL_DEVICE_TYPE,
+				sizeof(dev_type), &dev_type, NULL);
 		if (status != CL_SUCCESS) {
 			logger->Error("PLAT OCL: Device info error %d", status);
 			return DEVICE_ERROR;
 		}
-		logger->Info("PLAT OCL: D[%d]: %s", i, dev_name);
-		
+
+		if (dev_type != CL_DEVICE_TYPE_CPU &&
+			dev_type != CL_DEVICE_TYPE_GPU) {
+			logger->Warn("PLAT OCL: Unexpected device type [%d]",
+				dev_type);
+			continue;
+		}
+
 		switch (dev_type) {
 		case CL_DEVICE_TYPE_GPU:
-			// TODO: resource path
-			snprintf(resourcePath+5, 12, "gpu%hu.pe0", i);
+			snprintf(resourcePath+5, 12, "gpu%hu.pe0", dev_id);
 			ra.RegisterResource(resourcePath, "", 100);
-			InsertDeviceID(ResourceIdentifier::GPU, i);
+			r_type = ResourceIdentifier::GPU;
 			break;
 		case CL_DEVICE_TYPE_CPU:
-			InsertDeviceID(ResourceIdentifier::CPU, i);
-			break;
-
-		default:
+			r_type = ResourceIdentifier::CPU;
+			memset(resourcePath, '\0', strlen(resourcePath));
 			break;
 		}
+
+		InsertDeviceID(r_type, dev_id);
+		logger->Info("PLAT OCL: D[%d]: {%s}, type: [%s], path: [%s]",
+			dev_id, dev_name,
+			ResourceIdentifier::TypeStr[r_type],
+			resourcePath);
 	}
 
 	return SUCCESS;
@@ -176,10 +185,6 @@ void OpenCLProxy::InsertDeviceID(
 
 	pdev_ids = device_ids[r_type];
 	pdev_ids->push_back(dev_id);
-	logger->Info("PLAT OCL: Device '%s'[%d] ID = %d",
-		ResourceIdentifier::TypeStr[r_type],
-		pdev_ids->size(),
-		pdev_ids->at(pdev_ids->size()-1));
 }
 
 OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(

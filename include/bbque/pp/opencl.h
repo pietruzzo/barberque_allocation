@@ -82,19 +82,20 @@ public:
 
 private:
 
+	/*** Constructor */
 	OpenCLProxy();
 
+	/*** Logger instance */
 	LoggerIF * logger;
 
-
-	/** Number of platforms  */
+	/*** Number of platforms */
 	cl_uint num_platforms = 0;
-	/** Number of devices  */
+	/*** Number of devices   */
 	cl_uint num_devices   = 0;
 
-	/** Platform descriptors */
+	/*** Platform descriptors */
 	cl_platform_id * platforms = nullptr;
-	/** Device descriptors */
+	/*** Device descriptors   */
 	cl_device_id   * devices   = nullptr;
 
 	/*** Map with all the device IDs for each type available   */
@@ -104,13 +105,19 @@ private:
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
 		ResourceIdentifier::Type_t r_type);
 
-	/** Append a device ID in the map of all the IDs */
+	/**
+	 * @brief Append device ID per device type
+	 *
+	 * @param r_type The resource type (usually Resource::CPU or Resource::GPU)
+	 * @param dev_id The OpenCL device ID
+	 */
 	void InsertDeviceID(ResourceIdentifier::Type_t r_type, uint8_t dev_id);
 
 	/**
 	 * @brief Register device resources
 	 */
 	ExitCode_t RegisterDevices();
+
 };
 
 } // namespace bbque
