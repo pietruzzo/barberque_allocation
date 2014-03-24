@@ -43,6 +43,7 @@ namespace bbque {
 
 typedef std::vector<uint8_t> VectorUInt8_t;
 typedef std::shared_ptr<VectorUInt8_t> VectorUInt8Ptr_t;
+typedef std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
 
 class OpenCLProxy {
 
@@ -96,12 +97,12 @@ private:
 	/** Device descriptors */
 	cl_device_id   * devices   = nullptr;
 
-	/** Map with all the device IDs for each type available */
-	std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t> device_ids;
+	/*** Map with all the device IDs for each type available   */
+	ResourceTypeIDMap_t   device_ids;
 
 	/** Retrieve the iterator for the vector of device IDs, given a type */
-	std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>::iterator
-	GetDeviceIterator(ResourceIdentifier::Type_t r_type);
+	ResourceTypeIDMap_t::iterator GetDeviceIterator(
+		ResourceIdentifier::Type_t r_type);
 
 	/** Append a device ID in the map of all the IDs */
 	void InsertDeviceID(ResourceIdentifier::Type_t r_type, uint8_t dev_id);

@@ -89,7 +89,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 
 
 VectorUInt8Ptr_t OpenCLProxy::GetDeviceIDs(ResourceIdentifier::Type_t r_type) {
-	std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>::iterator d_it;
+	ResourceTypeIDMap_t::iterator d_it;
 	d_it = GetDeviceIterator(r_type);
 	if (d_it == device_ids.end()) {
 		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
@@ -101,7 +101,7 @@ VectorUInt8Ptr_t OpenCLProxy::GetDeviceIDs(ResourceIdentifier::Type_t r_type) {
 
 
 uint8_t OpenCLProxy::GetDevicesNum(ResourceIdentifier::Type_t r_type) {
-	std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>::iterator d_it;
+	ResourceTypeIDMap_t::iterator d_it;
 	d_it = GetDeviceIterator(r_type);
 	if (d_it == device_ids.end()) {
 		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
@@ -112,7 +112,7 @@ uint8_t OpenCLProxy::GetDevicesNum(ResourceIdentifier::Type_t r_type) {
 }
 
 
-std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>::iterator
+ResourceTypeIDMap_t::iterator
 OpenCLProxy::GetDeviceIterator(ResourceIdentifier::Type_t r_type) {
 	if (platforms == nullptr) {
 		logger->Error("PLAT OCL: Missing OpenCL platforms");
@@ -164,7 +164,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 void OpenCLProxy::InsertDeviceID(
 		ResourceIdentifier::Type_t r_type,
 		uint8_t dev_id) {
-	std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t>::iterator d_it;
+	ResourceTypeIDMap_t::iterator d_it;
 	VectorUInt8Ptr_t pdev_ids;
 	d_it = GetDeviceIterator(r_type);
 	if (d_it == device_ids.end()) {
