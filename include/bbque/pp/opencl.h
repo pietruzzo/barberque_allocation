@@ -18,6 +18,7 @@
 #ifndef BBQUE_LINUX_OCLPROXY_H_
 #define BBQUE_LINUX_OCLPROXY_H_
 
+#include <list>
 #include <map>
 #include <memory>
 #include <string>
@@ -41,9 +42,12 @@ using bbque::plugins::LoggerIF;
 
 namespace bbque {
 
+typedef std::list<ResourcePathPtr_t> ResourcePathList_t;
+typedef std::shared_ptr<ResourcePathList_t> ResourcePathListPtr_t;
 typedef std::vector<uint8_t> VectorUInt8_t;
 typedef std::shared_ptr<VectorUInt8_t> VectorUInt8Ptr_t;
 typedef std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
+typedef std::map<ResourceIdentifier::Type_t, ResourcePathListPtr_t> ResourceTypePathMap_t;
 
 class OpenCLProxy {
 
@@ -80,6 +84,11 @@ public:
 	 */
 	VectorUInt8Ptr_t GetDeviceIDs(ResourceIdentifier::Type_t r_type);
 
+	/**
+	 * @brief Set of OpenCL device resource path for a given type
+	 */
+	ResourcePathListPtr_t GetDevicePaths(ResourceIdentifier::Type_t r_type);
+
 private:
 
 	/*** Constructor */
@@ -100,6 +109,8 @@ private:
 
 	/*** Map with all the device IDs for each type available   */
 	ResourceTypeIDMap_t   device_ids;
+	/*** Map with all the device paths for each type available */
+	ResourceTypePathMap_t device_paths;
 
 	/** Retrieve the iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
@@ -112,6 +123,15 @@ private:
 	 * @param dev_id The OpenCL device ID
 	 */
 	void InsertDeviceID(ResourceIdentifier::Type_t r_type, uint8_t dev_id);
+
+	/**
+	 * @brief Append resource path per device type
+	 *
+	 * @param r_type The resource type (usually Resource::CPU or Resource::GPU)
+	 * @param dev_p_str A resource path referencing a device of the type in the key
+	 */
+	void InsertDevicePath(
+		ResourceIdentifier::Type_t r_type, std::string const & dev_rp_str);
 
 	/**
 	 * @brief Register device resources

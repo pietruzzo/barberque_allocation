@@ -21,6 +21,7 @@
 
 #include "bbque/resource_accounter.h"
 #include "bbque/res/binder.h"
+#include "bbque/res/resource_path.h"
 #include "bbque/app/working_mode.h"
 
 #define MODULE_NAMESPACE "bq.pp.ocl"
@@ -110,6 +111,17 @@ uint8_t OpenCLProxy::GetDevicesNum(ResourceIdentifier::Type_t r_type) {
 	return d_it->second->size();
 }
 
+ResourcePathListPtr_t OpenCLProxy::GetDevicePaths(ResourceIdentifier::Type_t r_type) {
+	ResourceTypePathMap_t::iterator p_it;
+	p_it = device_paths.find(r_type);
+	if (p_it == device_paths.end()) {
+		logger->Error("PLAT OCL: No OpenCL devices of type  '%s'",
+			ResourceIdentifier::TypeStr[r_type]);
+		return nullptr;
+	}
+	return p_it->second;
+}
+
 
 ResourceTypeIDMap_t::iterator
 OpenCLProxy::GetDeviceIterator(ResourceIdentifier::Type_t r_type) {
@@ -160,6 +172,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 		}
 
 		InsertDeviceID(r_type, dev_id);
+		InsertDevicePath(r_type, resourcePath);
 		logger->Info("PLAT OCL: D[%d]: {%s}, type: [%s], path: [%s]",
 			dev_id, dev_name,
 			ResourceIdentifier::TypeStr[r_type],
@@ -185,6 +198,24 @@ void OpenCLProxy::InsertDeviceID(
 
 	pdev_ids = device_ids[r_type];
 	pdev_ids->push_back(dev_id);
+}
+
+void OpenCLProxy::InsertDevicePath(
+		ResourceIdentifier::Type_t r_type,
+		std::string const & dev_path_str) {
+	ResourceTypePathMap_t::iterator p_it;
+	ResourcePathListPtr_t pdev_paths;
+	p_it = device_paths.find(r_type);
+	if (p_it == device_paths.end()) {
+		device_paths.insert(
+			std::pair<ResourceIdentifier::Type_t, ResourcePathListPtr_t>
+				(r_type, ResourcePathListPtr_t(new ResourcePathList_t))
+		);
+	}
+
+	ResourcePathPtr_t rp(new ResourcePath(dev_path_str));
+	pdev_paths = device_paths[r_type];
+	pdev_paths->push_back(rp);
 }
 
 OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(
