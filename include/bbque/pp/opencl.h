@@ -85,13 +85,16 @@ private:
 
 	LoggerIF * logger;
 
-	/** OpenCL platforms */
-	cl_uint num_platforms;
-	cl_platform_id * platforms;
 
-	/** OpenCL devices */
-	cl_uint num_devices;
-	cl_device_id   * devices;
+	/** Number of platforms  */
+	cl_uint num_platforms = 0;
+	/** Number of devices  */
+	cl_uint num_devices   = 0;
+
+	/** Platform descriptors */
+	cl_platform_id * platforms = nullptr;
+	/** Device descriptors */
+	cl_device_id   * devices   = nullptr;
 
 	/** Map with all the device IDs for each type available */
 	std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t> device_ids;

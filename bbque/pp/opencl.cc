@@ -35,13 +35,7 @@ OpenCLProxy & OpenCLProxy::GetInstance() {
 	return instance;
 }
 
-OpenCLProxy::OpenCLProxy():
-	num_platforms(0),
-	platforms(nullptr),
-	num_devices(0),
-	devices(nullptr) {
-
-	// Get a logger
+OpenCLProxy::OpenCLProxy() {
 	LoggerIF::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 }
