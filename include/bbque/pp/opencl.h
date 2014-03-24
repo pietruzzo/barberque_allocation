@@ -64,6 +64,8 @@ public:
 	 */
 	static OpenCLProxy & GetInstance();
 
+	~OpenCLProxy();
+
 	/**
 	 * @brief Load OpenCL platform data 
 	 */

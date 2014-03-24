@@ -41,6 +41,13 @@ OpenCLProxy::OpenCLProxy() {
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 }
 
+OpenCLProxy::~OpenCLProxy() {
+	delete platforms;
+	delete devices;
+	device_ids.clear();
+	device_paths.clear();
+}
+
 
 OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 	cl_int status;
