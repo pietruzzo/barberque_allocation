@@ -716,22 +716,28 @@ void ResourceAccounter::_ReleaseResources(AppSPtr_t papp, RViewToken_t vtok) {
 
 
 ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
-		ResourcePathPtr_t ppath, uint64_t amount) {
-	ResourcePtrList_t rlist;
-	rlist = resources.findList(*(ppath.get()), RT_MATCH_MIXED);
-	ResourcePtrListIterator_t rit = rlist.begin();
-
+		ResourcePathPtr_t ppath,
+		uint64_t amount) {
+	Resource::ExitCode_t rresult;
+	ResourcePtrList_t const & rlist(
+		resources.findList(*(ppath.get()), RT_MATCH_MIXED));
 	logger->Info("Reserving [%" PRIu64 "] for [%s] resources...",
 			amount, ppath->ToString().c_str());
 
-	if (rit == rlist.end()) {
+	if (rlist.empty()) {
 		logger->Error("Resource reservation FAILED "
 				"(Error: resource [%s] not matching)",
 				ppath->ToString().c_str());
 		return RA_FAILED;
 	}
-	for ( ; rit != rlist.end(); ++rit) {
-		(*rit)->Reserve(amount);
+
+	for (ResourcePtr_t r: rlist) {
+		rresult = r->Reserve(amount);
+		if (rresult != Resource::RS_SUCCESS) {
+			logger->Warn("Reservation: Exceeding value [%" PRIu64 "] for [%s]",
+				amount, ppath->ToString().c_str());
+			return RA_FAILED;
+		}
 	}
 
 	return RA_SUCCESS;
