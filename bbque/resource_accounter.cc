@@ -743,6 +743,23 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 	return RA_SUCCESS;
 }
 
+ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
+		std::string const & path,
+		uint64_t amount) {
+	ResourcePathPtr_t ppath(new ResourcePath(path));
+	logger->Info("Reserve: built %d from %s", ppath.get(), path.c_str());
+
+	if (ppath == nullptr) {
+		logger->Fatal("Reserve resource FAILED "
+			"(Error: path [%s] does not reference a specific resource.",
+			path.c_str());
+		return RA_ERR_INVALID_PATH;
+	}
+
+	return ReserveResources(ppath, amount);
+}
+
+
 bool  ResourceAccounter::IsOfflineResource(ResourcePathPtr_t ppath) const {
 	ResourcePtrList_t rlist;
 	rlist = resources.findList(*(ppath.get()), RT_MATCH_MIXED);
