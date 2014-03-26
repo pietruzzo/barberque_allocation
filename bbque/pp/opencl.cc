@@ -36,7 +36,12 @@ OpenCLProxy & OpenCLProxy::GetInstance() {
 	return instance;
 }
 
-OpenCLProxy::OpenCLProxy() {
+OpenCLProxy::OpenCLProxy():
+#ifdef CONFIG_BBQUE_PIL_GPU_PM
+		gpu_rp(new ResourcePath("sys.gpu")),
+		pm(PowerManager::GetInstance(gpu_rp))
+#endif
+ {
 	LoggerIF::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
 }
@@ -91,11 +96,50 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 	// Register into the resource accounter
 	RegisterDevices();
 
+	// Power management support
+#ifdef CONFIG_BBQUE_PIL_GPU_PM
+	HwSetup();
+#endif
+
 	return SUCCESS;
 }
 
 void OpenCLProxy::Task() {
 }
+
+#ifdef CONFIG_BBQUE_PIL_GPU_PM
+void OpenCLProxy::HwSetup() {
+	uint32_t min, max, step;
+	int s_min, s_max, s_step;
+	int ps_count;
+	ResourcePathListPtr_t pgpu_paths(
+		GetDevicePaths(ResourceIdentifier::GPU));
+	for (auto gpu_rp: *(pgpu_paths.get())) {
+		pm.GetFanSpeedInfo(gpu_rp, min, max, step);
+		logger->Info("PLAT OCL: [%s] Fanspeed range: [%4d, %4d, s:%2d] RPM ",
+			gpu_rp->ToString().c_str(), min, max, step);
+
+		pm.GetVoltageInfo(gpu_rp, min, max, step);
+		logger->Info("PLAT OCL: [%s] Voltage range:  [%4d, %4d, s:%2d] mV ",
+			gpu_rp->ToString().c_str(), min, max, step);
+
+		pm.GetClockFrequencyInfo(gpu_rp, min, max, step);
+		logger->Info("PLAT OCL: [%s] ClkFreq range:  [%4d, %4d, s:%2d] MHz ",
+			gpu_rp->ToString().c_str(),
+			min/1000, max/1000, step/1000);
+
+		pm.GetPowerStatesInfo(gpu_rp, s_min,s_max, s_step);
+		logger->Info("PLAT OCL: [%s] Power states:   [%4d, %4d, s:%2d] ",
+			gpu_rp->ToString().c_str(), s_min, s_max, s_step);
+
+		pm.GetPerformanceStatesCount(gpu_rp, ps_count);
+		logger->Info("PLAT OCL: [%s] Performance states: %2d",
+			gpu_rp->ToString().c_str(), ps_count);
+//		pm.SetFanSpeed(gpu_rp,PowerManager::FanSpeedType::PERCENT, 5);
+//		pm.ResetFanSpeed(gpu_rp);
+	}
+}
+#endif // CONFIG_BBQUE_PIL_GPU_PM
 
 VectorUInt8Ptr_t OpenCLProxy::GetDeviceIDs(ResourceIdentifier::Type_t r_type) {
 	ResourceTypeIDMap_t::iterator d_it;

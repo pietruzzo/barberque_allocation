@@ -26,8 +26,10 @@
 
 #include <CL/cl.h>
 
+#include "bbque/config.h"
 #include "bbque/modules_factory.h"
 #include "bbque/app/application.h"
+#include "bbque/pm/power_manager.h"
 #include "bbque/res/identifier.h"
 #include "bbque/utils/worker.h"
 
@@ -118,6 +120,17 @@ private:
 	/** Retrieve the iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
 		ResourceIdentifier::Type_t r_type);
+
+#ifdef CONFIG_BBQUE_PIL_GPU_PM
+	/*** Resource path prefix for the power manager instance */
+	ResourcePathPtr_t gpu_rp;
+
+	/*** Power Manager instance */
+	PowerManager & pm;
+
+	/*** Initial setup of hardware parameters */
+	void HwSetup();
+#endif
 
 	/**
 	 * @brief Append device ID per device type
