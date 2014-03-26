@@ -412,15 +412,15 @@ public:
 	int CommandsCb(int argc, char *argv[]);
 
 	/**
-	 * @brief Handler for the shell command that allows to specify a reserved
-	 * amount of resources. This means that such amount will not be allocable.
+	 * @brief Handler for the shell command that allows to redefine the total
+	 * amount of resource that can be allocated.
 	 *
 	 * @param r_path The resource path (char string)
-	 * @value value  The amount to reserve
+	 * @value value  The new total amount
 	 *
-	 * @return 0 if success, an positive integer value otherwise
+	 * @return 0 if success, a positive integer value otherwise
 	 */
-	int ReserveHandler(char * r_path, char * value);
+	int SetQuotaHandler(char * r_path, char * value);
 
 private:
 

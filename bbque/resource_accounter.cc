@@ -79,10 +79,10 @@ ResourceAccounter::ResourceAccounter() :
 	sync_ssn.count = 0;
 
 	// Register set quota command
-#define CMD_RESERVE "reserve"
-	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_RESERVE,
+#define CMD_SET_QUOTA "set_quota"
+	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_SET_QUOTA,
 		static_cast<CommandHandler*>(this),
-		"Reserve (offline) a CPU quota of a single processing element");
+		"Set a new amount of resource that can be allocated");
 }
 
 ResourceAccounter::~ResourceAccounter() {
@@ -1332,14 +1332,14 @@ int ResourceAccounter::CommandsCb(int argc, char *argv[]) {
 	char * command_id  = argv[0] + cmd_offset;
 	logger->Info("Processing command [%s]", command_id);
 
-	// Reserve CPU quota
-	if (!strncmp(CMD_RESERVE, command_id, strlen(CMD_RESERVE))) {
+	// Set a new resource total quota
+	if (!strncmp(CMD_SET_QUOTA, command_id, strlen(CMD_SET_QUOTA))) {
 		if (argc != 3) {
-			logger->Error("'%s' expecting 2 parameters.", CMD_RESERVE);
-			logger->Error("Ex: 'bq.ra.%s sys0.cpu0.pe0 80'", CMD_RESERVE);
+			logger->Error("'%s' expecting 2 parameters.", CMD_SET_QUOTA);
+			logger->Error("Ex: 'bq.ra.%s sys0.cpu0.pe0 80'", CMD_SET_QUOTA);
 			return 1;
 		}
-		return ReserveHandler(argv[1], argv[2]);
+		return SetQuotaHandler(argv[1], argv[2]);
 	}
 
 	logger->Error("Unexpected command: %s", command_id);
@@ -1347,18 +1347,18 @@ int ResourceAccounter::CommandsCb(int argc, char *argv[]) {
 	return 0;
 }
 
-int ResourceAccounter::ReserveHandler(char * r_path, char * value) {
-	uint64_t quota = atoi(value);
+int ResourceAccounter::SetQuotaHandler(char * r_path, char * value) {
+	uint64_t amount = atoi(value);
 
-	ExitCode_t ra_result = UpdateResource(r_path, "", quota);
+	ExitCode_t ra_result = UpdateResource(r_path, "", amount);
 	if (ra_result != RA_SUCCESS) {
-		logger->Error("ReserveHandler: "
-				"cannot reserve %" PRIu64 " from '%s'", quota, r_path);
+		logger->Error("SetQuotaHandler: "
+			"cannot set quota %" PRIu64 " to [%s]", amount, r_path);
 		return 2;
 	}
 
-	logger->Info("ReserveHandler: "
-				"reserved %" PRIu64 " from '%s'", quota, r_path);
+	logger->Info("SetQuotaHandler: "
+			"set quota %" PRIu64 " to [%s]", amount, r_path);
 	PrintStatusReport(0, true);
 
 	return 0;
