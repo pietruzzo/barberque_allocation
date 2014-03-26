@@ -273,8 +273,11 @@ ResourcePathPtr_t const ResourceAccounter::GetPath(
 	std::map<std::string, ResourcePathPtr_t>::const_iterator rp_it;
 	// Retrieve the resource path object
 	rp_it = r_paths.find(path_str);
-	if (rp_it == r_paths.end())
+	if (rp_it == r_paths.end()) {
+		logger->Warn("GetPath: No resource path object for [%s]",
+			path_str.c_str());
 		return ResourcePathPtr_t();
+	}
 	return (*rp_it).second;
 }
 
@@ -609,10 +612,10 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	}
 
 	pres  = GetResource(ppath);
-	if (!pres) {
+	if (pres == nullptr) {
 		logger->Fatal("Updating resource FAILED "
-				"(Error: resource [%s] not found",
-				ppath->ToString().c_str());
+			"(Error: resource [%s] not found",
+			ppath->ToString().c_str());
 		return RA_ERR_NOT_REGISTERED;
 	}
 
