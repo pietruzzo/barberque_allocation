@@ -16,12 +16,16 @@ config BBQUE_TEST_PLATFORM_DATA
   application development and integration, without worry about daemon
   setup or requiring to run the daemon as root.
 
+menu "OpenCL support"
+
 config BBQUE_PIL_OPENCL_SUPPORT
-  bool "Enable OpenCL support"
+  bool "Enable OpenCL run-time management support"
   default n
   depends on TARGET_LINUX
   ---help---
   Enable the support for run-time resource management of OpenCL applications
+
+endmenu
 
 
 comment "Plugins Management"
