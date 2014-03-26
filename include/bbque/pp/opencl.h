@@ -29,6 +29,7 @@
 #include "bbque/modules_factory.h"
 #include "bbque/app/application.h"
 #include "bbque/res/identifier.h"
+#include "bbque/utils/worker.h"
 
 #define AMD_PLATFORM_NAME   "AMD Accelerated Parallel Processing"
 #define INTEL_PLATFORM_NAME "Intel(R) OpenCL"
@@ -49,7 +50,7 @@ typedef std::shared_ptr<VectorUInt8_t> VectorUInt8Ptr_t;
 typedef std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
 typedef std::map<ResourceIdentifier::Type_t, ResourcePathListPtr_t> ResourceTypePathMap_t;
 
-class OpenCLProxy {
+class OpenCLProxy: public Worker {
 
 public:
 
@@ -139,6 +140,14 @@ private:
 	 * @brief Register device resources
 	 */
 	ExitCode_t RegisterDevices();
+
+	/**
+	 * @brief The OpenCL platform monitoring thread
+	 *
+	 * Peridic calls to the platform-specific power management support can
+	 * be done (if enabled)
+	 */
+	void Task();
 
 };
 

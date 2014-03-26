@@ -94,6 +94,8 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 	return SUCCESS;
 }
 
+void OpenCLProxy::Task() {
+}
 
 VectorUInt8Ptr_t OpenCLProxy::GetDeviceIDs(ResourceIdentifier::Type_t r_type) {
 	ResourceTypeIDMap_t::iterator d_it;
