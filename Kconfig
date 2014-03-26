@@ -25,6 +25,13 @@ config BBQUE_PIL_OPENCL_SUPPORT
   ---help---
   Enable the support for run-time resource management of OpenCL applications
 
+config  BBQUE_PIL_GPU_PM
+  bool "Enable GPU power-thermal monitoring"
+  default n
+  depends on BBQUE_PIL_OPENCL_SUPPORT
+  ---help---
+  Enable the support for run-time resource management of OpenCL applications
+
 endmenu
 
 
