@@ -601,6 +601,13 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 
 	// Lookup for the resource to be updated
 	ppath = GetPath(_path);
+	if (ppath == nullptr) {
+		logger->Fatal("Updating resource FAILED "
+			"(Error: path [%s] does not reference a specific resource",
+			_path.c_str());
+		return RA_ERR_INVALID_PATH;
+	}
+
 	pres  = GetResource(ppath);
 	if (!pres) {
 		logger->Fatal("Updating resource FAILED "

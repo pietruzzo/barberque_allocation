@@ -89,6 +89,8 @@ public:
 
 		/** Resource has not been registered at boot */
 		RA_ERR_NOT_REGISTERED,
+		/** The resource path specified is not valid */
+		RA_ERR_INVALID_PATH,
 		/** Amount exceeding registered total amount */
 		RA_ERR_OVERFLOW,
 
