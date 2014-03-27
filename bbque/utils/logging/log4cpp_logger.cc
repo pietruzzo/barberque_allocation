@@ -92,7 +92,7 @@ bool Log4CppLogger::Configure(Configuration const & conf) {
 			"configuration file path");
 	po::variables_map log4cpp_opts_value;
 
-	logger->Info("Using Log4CppLogger configuration file [%s]",
+	logger->Debug("Using Log4CppLogger configuration file [%s]",
 			conf_file_path.c_str());
 
 	// Parsing BBQUE configuration file
