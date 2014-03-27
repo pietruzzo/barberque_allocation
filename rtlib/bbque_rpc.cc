@@ -20,6 +20,7 @@
 #include "bbque/rtlib/rpc_fifo_client.h"
 #include "bbque/rtlib/rpc_unmanaged_client.h"
 #include "bbque/app/application.h"
+#include "bbque/utils/logging/console_logger.h"
 
 #include <cstdio>
 #include <sys/stat.h>
@@ -73,6 +74,7 @@ BbqueRPC::~BbqueRPC(void) {
 	excMap_t::iterator it;
 	pregExCtx_t prec;
 
+	logger = bu::ConsoleLogger::GetInstance(BBQUE_LOG_MODULE);
 	logger->Debug("BbqueRPC dtor");
 
 	// Dump out execution statistics

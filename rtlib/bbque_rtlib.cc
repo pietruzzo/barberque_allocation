@@ -21,6 +21,7 @@
 #include "bbque/utils/timer.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/logging/logger.h"
+#include "bbque/utils/logging/console_logger.h"
 
 #include "bbque/rtlib/bbque_rpc.h"
 
@@ -285,6 +286,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 __attribute__((destructor))
 static void RTLIB_Exit(void) {
 
+	logger = bu::ConsoleLogger::GetInstance(BBQUE_LOG_MODULE);
 	logger->Debug("Barbeque RTLIB, Cleanup and release");
 
 	if (!rtlib_initialized)
