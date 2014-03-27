@@ -25,7 +25,7 @@
 
 namespace bbque { namespace utils {
 
-std::string Logger::conf_file_path = "";
+std::string Logger::conf_file_path = BBQUE_RTLIB_CONF_FILEPATH;
 
 Logger::Logger(Configuration const & conf) :
 	configuration(conf) {

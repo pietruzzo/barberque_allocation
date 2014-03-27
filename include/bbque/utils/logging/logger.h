@@ -136,6 +136,12 @@ public:
 
 protected:
 
+	/**
+	 * The BarbequeRTMR always defines its configuration file, thus the
+	 * default value is configured for the RTLib. This allows applications
+	 * which does not specify a custon configuration, to always get a
+	 * default one.
+	 */
 	static std::string conf_file_path;
 
 	Configuration const & configuration;

@@ -84,9 +84,6 @@ void Log4CppLogger::ParseConfigurationFile(
 bool Log4CppLogger::Configure(Configuration const & conf) {
 	std::unique_ptr<Logger> logger = ConsoleLogger::GetInstance(conf);
 
-	if (conf_file_path == "")
-		return false;
-
 	// Define Log4CPP configuration options
 	po::options_description log4cpp_opts_desc("Log4CPP Options");
 	log4cpp_opts_desc.add_options()
