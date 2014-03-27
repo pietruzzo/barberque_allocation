@@ -25,9 +25,12 @@
 #include "bbque/app/working_mode.h"
 
 #define MODULE_NAMESPACE "bq.pp.ocl"
+#define MODULE_CONFIG    "PlatformProxy.OpenCL"
 
 
 using bbque::res::ResourceIdentifier;
+
+namespace po = boost::program_options;
 
 namespace bbque {
 
@@ -37,13 +40,28 @@ OpenCLProxy & OpenCLProxy::GetInstance() {
 }
 
 OpenCLProxy::OpenCLProxy():
-#ifdef CONFIG_BBQUE_PIL_GPU_PM
+#ifndef CONFIG_BBQUE_PIL_GPU_PM
+		cm(ConfigurationManager::GetInstance())
+#else
+		cm(ConfigurationManager::GetInstance()),
 		gpu_rp(new ResourcePath("sys.gpu")),
 		pm(PowerManager::GetInstance(gpu_rp))
 #endif
  {
 	LoggerIF::Configuration conf(MODULE_NAMESPACE);
 	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+#ifdef CONFIG_BBQUE_PIL_GPU_PM
+	//---------- Loading configuration
+	po::options_description opts_desc("Resource Manager Options");
+	opts_desc.add_options()
+		(MODULE_CONFIG ".hw.monitor_period_ms",
+		 po::value<int32_t>
+		 (&hw_monitor.period_ms)->default_value(-1),
+		 "The period [ms] of activation of the periodic platform"
+			" status reading");
+	po::variables_map opts_vm;
+	cm.ParseConfigurationFile(opts_desc, opts_vm);
+#endif
 }
 
 OpenCLProxy::~OpenCLProxy() {
@@ -99,12 +117,17 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 	// Power management support
 #ifdef CONFIG_BBQUE_PIL_GPU_PM
 	HwSetup();
+	Start();
 #endif
-
 	return SUCCESS;
 }
 
 void OpenCLProxy::Task() {
+#ifdef CONFIG_BBQUE_PIL_GPU_PM
+	if (hw_monitor.period_ms < 0)
+		return;
+	HwReadStatus();
+#endif
 }
 
 #ifdef CONFIG_BBQUE_PIL_GPU_PM
@@ -139,7 +162,48 @@ void OpenCLProxy::HwSetup() {
 //		pm.ResetFanSpeed(gpu_rp);
 	}
 }
+
+void OpenCLProxy::HwReadStatus() {
+	HWStatus_t hs;
+
+	if (device_paths.empty()) {
+		logger->Warn("PLAT OCL: No resource path of devices found");
+		return;
+	}
+	ResourcePathListPtr_t const & pgpu_paths(
+		device_paths[ResourceIdentifier::GPU]);
+
+	logger->Debug("PLAT OCL: Start monitoring [t=%d ms]...",
+		hw_monitor.period_ms);
+	while(1) {
+		for (auto grp: *(pgpu_paths.get())) {
+			// Adapter ID
+			hs.id = grp->GetID(ResourceIdentifier::GPU);
+			// GPU status
+			pm.GetLoad(grp, hs.load);
+			pm.GetTemperature(grp, hs.temp);
+			pm.GetClockFrequency(grp, hs.freq_c);
+			pm.GetFanSpeed(
+				grp, PowerManager::FanSpeedType::PERCENT,
+				hs.fan);
+			pm.GetVoltage(grp, hs.mvolt);
+			pm.GetPerformanceState(grp, hs.pstate);
+			pm.GetPowerState(grp, hs.wstate);
+			logger->Debug("PLAT PRX: GPU [%s] "
+				"Load: %3d%, Temp: %3d°C, Freq: %4dMHz, "
+				"Fan: %3d%, Volt: %4dmV, PState: %2d, WState: %d",
+				grp->ToString().c_str(),
+				hs.load, hs.temp, hs.freq_c/1000, hs.fan, hs.mvolt,
+				hs.pstate, hs.wstate);
+		}
+		std::this_thread::sleep_for(
+			std::chrono::milliseconds(hw_monitor.period_ms));
+	}
+}
+	}
+}
 #endif // CONFIG_BBQUE_PIL_GPU_PM
+
 
 VectorUInt8Ptr_t OpenCLProxy::GetDeviceIDs(ResourceIdentifier::Type_t r_type) {
 	ResourceTypeIDMap_t::iterator d_it;

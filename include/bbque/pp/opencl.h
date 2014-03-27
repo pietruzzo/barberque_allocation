@@ -27,6 +27,7 @@
 #include <CL/cl.h>
 
 #include "bbque/config.h"
+#include "bbque/configuration_manager.h"
 #include "bbque/modules_factory.h"
 #include "bbque/app/application.h"
 #include "bbque/pm/power_manager.h"
@@ -99,6 +100,8 @@ private:
 	/*** Constructor */
 	OpenCLProxy();
 
+	/*** Configuration manager instance */
+	ConfigurationManager & cm;
 	/*** Logger instance */
 	LoggerIF * logger;
 
@@ -122,14 +125,36 @@ private:
 		ResourceIdentifier::Type_t r_type);
 
 #ifdef CONFIG_BBQUE_PIL_GPU_PM
+
+	struct HWStatus_t {
+		int      id      =-1;
+		uint32_t load    = 0;
+		uint32_t temp    = 0;
+		uint32_t freq_c  = 0;
+		uint32_t freq_m  = 0;
+		uint32_t fan     = 0;
+		uint32_t mvolt   = 0;
+		int      pstate  = 0;
+		int      wstate  = 0;
+	};
+
+	/*** HW monitoring parameters */
+	struct HWMonitor_t {
+		/** Monitoring period in milliseconds (configurable) */
+		int32_t     period_ms = -1;
+	} hw_monitor;
 	/*** Resource path prefix for the power manager instance */
 	ResourcePathPtr_t gpu_rp;
 
 	/*** Power Manager instance */
 	PowerManager & pm;
 
+
 	/*** Initial setup of hardware parameters */
 	void HwSetup();
+
+	/*** Read status of the hardware platform in terms of */
+	void HwReadStatus();
 #endif
 
 	/**
