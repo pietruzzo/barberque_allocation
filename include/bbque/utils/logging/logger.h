@@ -47,22 +47,22 @@ public:
 
 //----- Objects initialization data
 
-	typedef enum Priority {
-		DEBUG,
-		INFO,
-		NOTICE,
-		WARN,
-		ERROR,
-		CRIT,
-		ALERT,
-		FATAL
-	} Priority;
+	enum Priority {
+		DEBUG_LEVEL,
+		INFO_LEVEL,
+		NOTICE_LEVEL,
+		WARN_LEVEL,
+		ERROR_LEVEL,
+		CRIT_LEVEL,
+		ALERT_LEVEL,
+		FATAL_LEVEL
+	};
 
 	struct Configuration {
 		Configuration(
 				const char * category,
 				const char * identity = "undef",
-				Priority priority = WARN) :
+				Priority priority = WARN_LEVEL) :
 			category(category),
 			identity(identity),
 			priority(priority) {};
