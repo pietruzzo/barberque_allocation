@@ -348,7 +348,7 @@ clGetContextInfo(
         size_t *param_value_size_ret)
         CL_API_SUFFIX__VERSION_1_0 {
 	DB2 (fprintf(stderr, FD("Calling clGetContextInfo()...\n")));
-	cl_int result;
+	cl_int result = CL_SUCCESS;
 
 	if (param_name != CL_CONTEXT_DEVICES) {
 		return rtlib_ocl.getContextInfo(
@@ -360,7 +360,7 @@ clGetContextInfo(
 		(*param_value_size_ret) = sizeof(cl_device_id);
 
 	if (param_value == NULL)
-		return CL_SUCCESS;
+		return result;
 
 	cl_device_id * dev = &rtlib_ocl.devices[rtlib_ocl.device_id];
 	result = rtlib_ocl.getContextInfo(
