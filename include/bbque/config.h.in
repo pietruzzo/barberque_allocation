@@ -90,6 +90,13 @@
 /** The Sync protocol TIMEOUT */
 #define BBQUE_SYNCP_TIMEOUT ${BBQUE_RPC_TIMEOUT}
 
+/** The RTLib configuration file */
+#define BBQUE_RTLIB_CONF_FILE "${BBQUE_RTLIB_CONF_FILE}"
+
+/** The full path and filename of the RTLib configuration file */
+#define BBQUE_RTLIB_CONF_FILEPATH BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/" BBQUE_RTLIB_CONF_FILE
+
+
 /*******************************************************************************
  * BarbequeRTRM Supported Features
  ******************************************************************************/

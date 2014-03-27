@@ -27,6 +27,10 @@ configure_file (
 	"${PROJECT_BINARY_DIR}/config/bbque.conf_dbg"
 )
 configure_file (
+	"${PROJECT_SOURCE_DIR}/config/rtlib.conf.in"
+	"${PROJECT_BINARY_DIR}/config/rtlib.conf"
+)
+configure_file (
 	"${PROJECT_SOURCE_DIR}/config/bbque_2parma_demo2.conf.in"
 	"${PROJECT_BINARY_DIR}/config/bbque_2parma_demo2.conf"
 )
@@ -154,6 +158,9 @@ install (FILES "${PROJECT_BINARY_DIR}/config/bbque.conf"
 		DESTINATION ${BBQUE_PATH_CONF}
 		COMPONENT BarbequeRTRM)
 install (FILES "${PROJECT_BINARY_DIR}/config/bbque.conf_dbg"
+		DESTINATION ${BBQUE_PATH_CONF}
+		COMPONENT BarbequeRTRM)
+install (FILES "${PROJECT_BINARY_DIR}/config/rtlib.conf"
 		DESTINATION ${BBQUE_PATH_CONF}
 		COMPONENT BarbequeRTRM)
 install (FILES "${PROJECT_BINARY_DIR}/config/bbque_2parma_demo2.conf"

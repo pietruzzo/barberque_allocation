@@ -43,6 +43,7 @@ set (BBQUE_PATH_VAR        "var/bbque")
 
 # Barbeque configuration file
 set (BBQUE_CONF_FILE "bbque.conf")
+set (BBQUE_RTLIB_CONF_FILE "rtlib.conf")
 
 # Setup the CGroup-based Platform Integration Layers (PIL)
 set (BBQUE_PIL_CGROUP_MOUNT "mnt/cgroup")
