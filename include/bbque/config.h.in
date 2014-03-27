@@ -54,9 +54,6 @@
 /** The Barbeque DAEMON run-directory path */
 #define BBQUE_DAEMON_RUNDIR "${BBQUE_DAEMON_RUNDIR}"
 
-/** The Barbeque configuration file */
-#define BBQUE_CONF_FILE "${BBQUE_CONF_FILE}"
-
 /** The installation path */
 #define BBQUE_PATH_PREFIX "${CONFIG_BOSP_RUNTIME_PATH}"
 
@@ -89,6 +86,12 @@
 
 /** The Sync protocol TIMEOUT */
 #define BBQUE_SYNCP_TIMEOUT ${BBQUE_RPC_TIMEOUT}
+
+/** The Barbeque configuration file */
+#define BBQUE_CONF_FILE "${BBQUE_CONF_FILE}"
+
+/** The full path and filename of the BarbequeRTRM configuration file */
+#define BBQUE_CONF_FILEPATH BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/" BBQUE_CONF_FILE
 
 /** The RTLib configuration file */
 #define BBQUE_RTLIB_CONF_FILE "${BBQUE_RTLIB_CONF_FILE}"
