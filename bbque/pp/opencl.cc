@@ -379,6 +379,11 @@ void OpenCLProxy::InsertDeviceID(
 
 	pdev_ids = device_ids[r_type];
 	pdev_ids->push_back(dev_id);
+	// Resource path to GPU memory
+	char gpu_mem_path[] = "sys0.gpu256.mem256";
+	snprintf(gpu_mem_path+5, 12, "gpu%hu.mem0", dev_id);
+	gpu_mem_paths.insert(std::pair<int, ResourcePathPtr_t>(
+		dev_id, ResourcePathPtr_t(new ResourcePath(gpu_mem_path))));
 }
 
 void OpenCLProxy::InsertDevicePath(

@@ -55,6 +55,7 @@ typedef std::shared_ptr<VectorUInt8_t> VectorUInt8Ptr_t;
 typedef std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
 typedef std::map<ResourceIdentifier::Type_t, ResourcePathListPtr_t> ResourceTypePathMap_t;
 typedef std::map<int, std::ofstream *> DevFileMap_t;
+typedef std::map<int, ResourcePathPtr_t> DevPathMap_t;
 
 class OpenCLProxy: public Worker {
 
@@ -128,6 +129,8 @@ private:
 	/*** Map with all the device paths for each type available */
 	ResourceTypePathMap_t device_paths;
 
+	/*** Map with the resource paths of GPUs memory */
+	DevPathMap_t gpu_mem_paths;
 
 	/** Retrieve the iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
