@@ -74,7 +74,7 @@ public:
 	~OpenCLProxy();
 
 	/**
-	 * @brief Load OpenCL platform data 
+	 * @brief Load OpenCL platform data
 	 */
 	ExitCode_t LoadPlatformData();
 
@@ -105,23 +105,29 @@ private:
 
 	/*** Configuration manager instance */
 	ConfigurationManager & cm;
+
 	/*** Logger instance */
 	LoggerIF * logger;
 
+
 	/*** Number of platforms */
 	cl_uint num_platforms = 0;
+
 	/*** Number of devices   */
 	cl_uint num_devices   = 0;
 
 	/*** Platform descriptors */
 	cl_platform_id * platforms = nullptr;
+
 	/*** Device descriptors   */
 	cl_device_id   * devices   = nullptr;
 
 	/*** Map with all the device IDs for each type available   */
 	ResourceTypeIDMap_t   device_ids;
+
 	/*** Map with all the device paths for each type available */
 	ResourceTypePathMap_t device_paths;
+
 
 	/** Retrieve the iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
@@ -159,7 +165,6 @@ private:
 
 	/*** Power Manager instance */
 	PowerManager & pm;
-
 
 	/*** Initial setup of hardware parameters */
 	void HwSetup();
