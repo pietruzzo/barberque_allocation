@@ -323,8 +323,10 @@ AMDPowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) 
 		khz = activity_map[adapter_id]->iEngineClock * 10;
 	else if (r_type == ResourceIdentifier::MEMORY)
 		khz = activity_map[adapter_id]->iMemoryClock * 10;
-	else
+	else {
+		logger->Warn("ADL: Invalid resource path [%s]", rp->ToString().c_str());
 		return PMResult::ERR_RSRC_INVALID_PATH;
+	}
 
 	return PMResult::OK;
 }
