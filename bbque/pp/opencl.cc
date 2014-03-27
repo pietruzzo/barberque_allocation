@@ -310,7 +310,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 	cl_int status;
 	cl_device_type dev_type;
 	char dev_name[64];
-	char resourcePath[] = "sys0.gpu256.pe256";
+	char gpu_pe_path[]  = "sys0.gpu256.pe256";
 	ResourceIdentifier::Type_t r_type = ResourceIdentifier::UNDEFINED;
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
@@ -335,8 +335,8 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 
 		switch (dev_type) {
 		case CL_DEVICE_TYPE_GPU:
-			snprintf(resourcePath+5, 12, "gpu%hu.pe0", dev_id);
-			ra.RegisterResource(resourcePath, "", 100);
+			snprintf(gpu_pe_path+5, 12, "gpu%hu.pe0", dev_id);
+			ra.RegisterResource(gpu_pe_path, "", 100);
 			r_type = ResourceIdentifier::GPU;
 #ifdef CONFIG_BBQUE_PIL_GPU_PM
 			device_data.insert(
@@ -348,16 +348,16 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 			break;
 		case CL_DEVICE_TYPE_CPU:
 			r_type = ResourceIdentifier::CPU;
-			memset(resourcePath, '\0', strlen(resourcePath));
+			memset(gpu_pe_path, '\0', strlen(gpu_pe_path));
 			break;
 		}
 
 		InsertDeviceID(r_type, dev_id);
-		InsertDevicePath(r_type, resourcePath);
+		InsertDevicePath(r_type, gpu_pe_path);
 		logger->Info("PLAT OCL: D[%d]: {%s}, type: [%s], path: [%s]",
 			dev_id, dev_name,
 			ResourceIdentifier::TypeStr[r_type],
-			resourcePath);
+			gpu_pe_path);
 	}
 
 	return SUCCESS;
