@@ -27,6 +27,22 @@
 #define MODULE_NAMESPACE "bq.pp.ocl"
 #define MODULE_CONFIG    "PlatformProxy.OpenCL"
 
+#define HWS_DUMP_FILE_FMT "%s/BBQ-PlatformStatus-GPU%d.dat"
+
+#define HWS_DUMP_HEADER \
+	"# Columns legend:\n"\
+	"#\n"\
+	"# 1: Adapter (GPU) ID \n"\
+	"# 2: Load (%)\n"\
+	"# 3: Temperature (°C)\n"\
+	"# 4: Core frequency (MHz)\n"\
+	"# 5: Mem frequency (MHz)\n"\
+	"# 6: Fanspeed (%)\n"\
+	"# 7: Voltage (mV)\n"\
+	"# 8: Performance level\n"\
+	"# 9: Power state\n"\
+	"#\n"
+;
 
 using bbque::res::ResourceIdentifier;
 
@@ -59,8 +75,15 @@ OpenCLProxy::OpenCLProxy():
 		 (&hw_monitor.period_ms)->default_value(-1),
 		 "The period [ms] of activation of the periodic platform"
 			" status reading");
+	opts_desc.add_options()
+		(MODULE_CONFIG ".hw.monitor_dump_dir",
+		 po::value<std::string>
+		 (&hw_monitor.dump_dir)->default_value(""),
+		 "The output directory for the status data dump files");
 	po::variables_map opts_vm;
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
+	// Enable HW status dump?
+	hw_monitor.dump_enabled = hw_monitor.dump_dir.compare("") != 0;
 #endif
 }
 
@@ -69,8 +92,10 @@ OpenCLProxy::~OpenCLProxy() {
 	delete devices;
 	device_ids.clear();
 	device_paths.clear();
+#ifdef CONFIG_BBQUE_PIL_GPU_PM
+	device_data.clear();
+#endif
 }
-
 
 OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 	cl_int status;
@@ -165,6 +190,7 @@ void OpenCLProxy::HwSetup() {
 
 void OpenCLProxy::HwReadStatus() {
 	HWStatus_t hs;
+	char status_line[100];
 
 	if (device_paths.empty()) {
 		logger->Warn("PLAT OCL: No resource path of devices found");
@@ -195,13 +221,44 @@ void OpenCLProxy::HwReadStatus() {
 				grp->ToString().c_str(),
 				hs.load, hs.temp, hs.freq_c/1000, hs.fan, hs.mvolt,
 				hs.pstate, hs.wstate);
+			// Dump status?
+			if (!hw_monitor.dump_enabled)
+				break;
+			snprintf(status_line, 100,
+				"%d %d %d %d %d %d %d %d %d\n",
+				hs.id, hs.load, hs.temp,
+				hs.freq_c/1000, hs.freq_m/1000,	hs.fan, hs.mvolt,
+				hs.pstate, hs.wstate);
+			DumpToFile(hs.id, status_line, std::ios::app);
 		}
 		std::this_thread::sleep_for(
 			std::chrono::milliseconds(hw_monitor.period_ms));
 	}
 }
+
+void OpenCLProxy::DumpToFile(
+		int dev_id, const char * line, std::ios_base::openmode om) {
+	char fp[128];
+	snprintf(fp, 128, HWS_DUMP_FILE_FMT, hw_monitor.dump_dir.c_str(), dev_id);
+	logger->Debug("Dump > [%s]: %s", fp, line);
+
+	device_data[dev_id]->open(fp, om);
+	if (!device_data[dev_id]->is_open()) {
+		logger->Warn("PLAT OCL: Dump file not open");
+		return;
 	}
+	*device_data[dev_id] << line;
+	if (device_data[dev_id]->fail()) {
+		logger->Error("PLAT OCL: Dump failed [F:%d, B:%d]",
+			device_data[dev_id]->fail(),
+			device_data[dev_id]->bad());
+		*device_data[dev_id] << "Error";
+		*device_data[dev_id] << std::endl;
+		return;
+	}
+	device_data[dev_id]->close();
 }
+
 #endif // CONFIG_BBQUE_PIL_GPU_PM
 
 
@@ -281,6 +338,13 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 			snprintf(resourcePath+5, 12, "gpu%hu.pe0", dev_id);
 			ra.RegisterResource(resourcePath, "", 100);
 			r_type = ResourceIdentifier::GPU;
+#ifdef CONFIG_BBQUE_PIL_GPU_PM
+			device_data.insert(
+				std::pair<int, std::ofstream *>(
+					dev_id,
+					new std::ofstream()));
+			DumpToFile(dev_id, HWS_DUMP_HEADER );
+#endif
 			break;
 		case CL_DEVICE_TYPE_CPU:
 			r_type = ResourceIdentifier::CPU;

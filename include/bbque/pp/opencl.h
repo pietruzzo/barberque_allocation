@@ -18,7 +18,9 @@
 #ifndef BBQUE_LINUX_OCLPROXY_H_
 #define BBQUE_LINUX_OCLPROXY_H_
 
+#include <fstream>
 #include <list>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <string>
@@ -52,6 +54,7 @@ typedef std::vector<uint8_t> VectorUInt8_t;
 typedef std::shared_ptr<VectorUInt8_t> VectorUInt8Ptr_t;
 typedef std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
 typedef std::map<ResourceIdentifier::Type_t, ResourcePathListPtr_t> ResourceTypePathMap_t;
+typedef std::map<int, std::ofstream *> DevFileMap_t;
 
 class OpenCLProxy: public Worker {
 
@@ -142,7 +145,15 @@ private:
 	struct HWMonitor_t {
 		/** Monitoring period in milliseconds (configurable) */
 		int32_t     period_ms = -1;
+		/** Dump monitoring data on file   */
+		bool        dump_enabled = false;
+		/** Dump monitoring data directory */
+		std::string dump_dir;
 	} hw_monitor;
+
+	/*** Dump file stream pointers per adapter */
+	DevFileMap_t device_data;
+
 	/*** Resource path prefix for the power manager instance */
 	ResourcePathPtr_t gpu_rp;
 
@@ -155,6 +166,18 @@ private:
 
 	/*** Read status of the hardware platform in terms of */
 	void HwReadStatus();
+
+	/**
+	 * @brief Dump a text line to file
+	 *
+	 * @param dev_id Adapter (GPU) id
+	 * @param line Line to dump
+	 * @param om C++ stream open mode
+	 */
+	void DumpToFile(
+		int dev_id, const char * line,
+		std::ios_base::openmode om = std::ios::out);
+
 #endif
 
 	/**
