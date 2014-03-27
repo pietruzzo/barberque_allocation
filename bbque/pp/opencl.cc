@@ -209,6 +209,7 @@ void OpenCLProxy::HwReadStatus() {
 			pm.GetLoad(grp, hs.load);
 			pm.GetTemperature(grp, hs.temp);
 			pm.GetClockFrequency(grp, hs.freq_c);
+			pm.GetClockFrequency(gpu_mem_paths[hs.id], hs.freq_m);
 			pm.GetFanSpeed(
 				grp, PowerManager::FanSpeedType::PERCENT,
 				hs.fan);
