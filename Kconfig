@@ -16,7 +16,7 @@ config BBQUE_TEST_PLATFORM_DATA
   application development and integration, without worry about daemon
   setup or requiring to run the daemon as root.
 
-menu "OpenCL support"
+menu "OpenCL Support"
 
 config BBQUE_PIL_OPENCL_SUPPORT
   bool "Enable OpenCL run-time management support"
@@ -26,6 +26,7 @@ config BBQUE_PIL_OPENCL_SUPPORT
   default n
   ---help---
   Enable the support for run-time resource management of OpenCL applications.
+
 config  BBQUE_PIL_GPU_PM
   bool "Enable GPU(s) power thermal monitoring"
   depends on BBQUE_PIL_OPENCL_SUPPORT
@@ -33,7 +34,7 @@ config  BBQUE_PIL_GPU_PM
   ---help---
   Enable the support for run-time monitoring of the GPU(s) power thermal status.
 
-endmenu
+endmenu # OpenCL Support
 
 
 comment "Plugins Management"
