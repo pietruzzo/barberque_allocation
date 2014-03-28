@@ -21,6 +21,8 @@ menu "OpenCL support"
 config BBQUE_PIL_OPENCL_SUPPORT
   bool "Enable OpenCL run-time management support"
   depends on TARGET_LINUX
+  select EXTERNAL_OPENCL
+  select BBQUE_OPENCL_DEFAULT_AMD
   default n
   ---help---
   Enable the support for run-time resource management of OpenCL applications.
