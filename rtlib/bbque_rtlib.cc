@@ -73,7 +73,7 @@ std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
  * The map contains OpenCL command types and their respective string values
  */
 std::map<cl_command_type, std::string> ocl_cmd_str;
-std::map<void *, cl_command_type>      ocl_addr_cmd;
+std::map<void *, cl_command_type> ocl_addr_cmd;
 
 #endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 

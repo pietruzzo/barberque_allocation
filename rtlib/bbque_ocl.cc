@@ -39,6 +39,7 @@ extern "C" {
 
 static std::unique_ptr<bu::Logger> logger;
 
+//#define DB2(x) x
 #define DB2(x)
 
 extern const char *rtlib_app_name;
