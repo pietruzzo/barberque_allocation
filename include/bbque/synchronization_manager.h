@@ -26,14 +26,15 @@
 #include "bbque/utils/timer.h"
 #include "bbque/utils/metrics_collector.h"
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/synchronization_policy.h"
 
 # define BBQUE_DEFAULT_SYNCHRONIZATION_MANAGER_POLICY "sasb"
 
 #define SYNCHRONIZATION_MANAGER_NAMESPACE "bq.ym"
 
-using bbque::plugins::LoggerIF;
+namespace bu = bbque::utils;
+
 using bbque::plugins::SynchronizationPolicyIF;
 
 using bbque::utils::Timer;
@@ -96,7 +97,7 @@ private:
 	/**
 	 * @brief The logger to use.
 	 */
-	LoggerIF *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief The synchronizaiton policy plugin to use

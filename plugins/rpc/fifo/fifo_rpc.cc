@@ -17,8 +17,6 @@
 
 #include "fifo_rpc.h"
 
-#include "bbque/modules_factory.h"
-
 #include "bbque/config.h"
 #include <boost/filesystem.hpp>
 
@@ -31,7 +29,7 @@
 #include <fcntl.h>
 #include <csignal>
 
-namespace br = bbque::rtlib;
+namespace bl = bbque::rtlib;
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
@@ -43,23 +41,14 @@ FifoRPC::FifoRPC(std::string const & fifo_dir) :
 	rpc_fifo_fd(0) {
 
 	// Get a logger
-	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		if (daemonized)
-			syslog(LOG_INFO, "Build FIFO rpc plugin [%p] FAILED "
-					"(Error: missing logger module)", (void*)this);
-		else
-			fprintf(stdout, FI("Build FIFO rpc plugin [%p] FAILED "
-					"(Error: missing logger module)\n"), (void*)this);
-	}
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	assert(logger);
 
 	// Ignore SIGPIPE, which will otherwise result into a BBQ termination.
 	// Indeed, in case of write errors the timeouts allows BBQ to react to
 	// the application not responding or disappearing.
 	signal(SIGPIPE, SIG_IGN);
 
-	assert(logger);
 	logger->Debug("Built FIFO rpc object @%p", (void*)this);
 
 }
@@ -183,7 +172,7 @@ int FifoRPC::Poll() {
 }
 
 ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
-	br::rpc_fifo_header_t hdr;
+	bl::rpc_fifo_header_t hdr;
 	void *fifo_buff_ptr;
 	ssize_t result;
 	ssize_t bytes;
@@ -225,41 +214,41 @@ ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
 
 	// Recover the payload start pointer
 	switch (hdr.rpc_msg_type) {
-	case br::RPC_APP_PAIR:
+	case bl::RPC_APP_PAIR:
 
 		result = ::read(rpc_fifo_fd,
-			&(((br::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->rpc_fifo),
+			&(((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->rpc_fifo),
 			hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
 		if (unlikely(result == -1))
 			goto exit_read_failed;
 
-		msg = (rpc_msg_ptr_t)&(((br::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl);
+		msg = (rpc_msg_ptr_t)&(((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl);
 		logger->Debug("FIFO RPC: Rx FIFO_HDR [sze: %hd, off: %hd, typ: %hd] "
 				"RPC_HDR [typ: %d, pid: %d, eid: %hd]",
-			((br::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.fifo_msg_size,
-			((br::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.rpc_msg_offset,
-			((br::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.rpc_msg_type,
-			((br::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.typ,
-			((br::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.app_pid,
-			((br::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.exc_id
+			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.fifo_msg_size,
+			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.rpc_msg_offset,
+			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.rpc_msg_type,
+			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.typ,
+			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.app_pid,
+			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.exc_id
 		     );
 		break;
 	default:
 		result = ::read(rpc_fifo_fd,
-			&(((br::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl),
+			&(((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl),
 			hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
 		if (unlikely(result == -1))
 			goto exit_read_failed;
 
-		msg = &(((br::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl);
+		msg = &(((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl);
 		logger->Debug("FIFO RPC: Rx FIFO_HDR [sze: %hd, off: %hd, typ: %hd] "
 				"RPC_HDR [typ: %d, pid: %d, eid: %hd]",
-			((br::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.fifo_msg_size,
-			((br::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.rpc_msg_offset,
-			((br::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.rpc_msg_type,
-			((br::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.typ,
-			((br::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.app_pid,
-			((br::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.exc_id
+			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.fifo_msg_size,
+			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.rpc_msg_offset,
+			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.rpc_msg_type,
+			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.typ,
+			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.app_pid,
+			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.exc_id
 		     );
 	}
 	// Recovery the payload size to be returned
@@ -290,7 +279,7 @@ RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
 	fifo_data_t * pd;
 	fs::path fifo_path(conf_fifo_dir);
 	boost::system::error_code ec;
-	br::rpc_fifo_APP_PAIR_t * hdr;
+	bl::rpc_fifo_APP_PAIR_t * hdr;
 	int fd;
 
 
@@ -298,10 +287,10 @@ RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
 	assert(initialized);
 
 	// We should also have a valid RPC message
-	assert(msg->typ == br::RPC_APP_PAIR);
+	assert(msg->typ == bl::RPC_APP_PAIR);
 
 	// Get a reference to FIFO header
-	hdr = container_of(msg, br::rpc_fifo_APP_PAIR_t, pyl);
+	hdr = container_of(msg, bl::rpc_fifo_APP_PAIR_t, pyl);
 	logger->Debug("FIFO RPC: plugin data initialization...");
 
 	// Build fifo path
@@ -376,7 +365,7 @@ void FifoRPC::ReleasePluginData(plugin_data_t & pd) {
 ssize_t FifoRPC::SendMessage(plugin_data_t & pd, rpc_msg_ptr_t msg,
 		size_t count) {
 	fifo_data_t * ppd = (fifo_data_t*)pd.get();
-	br::rpc_fifo_GENERIC_t *fifo_msg;
+	bl::rpc_fifo_GENERIC_t *fifo_msg;
 	ssize_t error;
 
 	assert(rpc_fifo_fd);
@@ -389,8 +378,8 @@ ssize_t FifoRPC::SendMessage(plugin_data_t & pd, rpc_msg_ptr_t msg,
 
 	// Build a new message of the required type
 	// NOTE all BBQ generated command have the sam FIFO layout
-	fifo_msg = (br::rpc_fifo_GENERIC_t*)::malloc(
-			offsetof(br::rpc_fifo_GENERIC_t, pyl) + count);
+	fifo_msg = (bl::rpc_fifo_GENERIC_t*)::malloc(
+			offsetof(bl::rpc_fifo_GENERIC_t, pyl) + count);
 
 	// Copy the RPC message into the FIFO msg
 	::memcpy(&(fifo_msg->pyl), msg, count);
@@ -402,8 +391,8 @@ ssize_t FifoRPC::SendMessage(plugin_data_t & pd, rpc_msg_ptr_t msg,
 			ppd->app_fifo_filename);
 
 	// Send the RPC FIFO message
-	fifo_msg->hdr.fifo_msg_size = offsetof(br::rpc_fifo_GENERIC_t, pyl) + count;
-	fifo_msg->hdr.rpc_msg_offset = offsetof(br::rpc_fifo_GENERIC_t, pyl);
+	fifo_msg->hdr.fifo_msg_size = offsetof(bl::rpc_fifo_GENERIC_t, pyl) + count;
+	fifo_msg->hdr.rpc_msg_offset = offsetof(bl::rpc_fifo_GENERIC_t, pyl);
 	fifo_msg->hdr.rpc_msg_type = msg->typ;
 	error = ::write(ppd->app_fifo_fd, fifo_msg, fifo_msg->hdr.fifo_msg_size);
 	if (error == -1) {
@@ -420,11 +409,11 @@ void FifoRPC::FreeMessage(rpc_msg_ptr_t & msg) {
 
 	// Recover the beginning of the FIFO message
 	switch (msg->typ) {
-	case br::RPC_APP_PAIR:
-		fifo_msg = (void*)container_of(msg, br::rpc_fifo_APP_PAIR_t, pyl);
+	case bl::RPC_APP_PAIR:
+		fifo_msg = (void*)container_of(msg, bl::rpc_fifo_APP_PAIR_t, pyl);
 		break;
 	default:
-		fifo_msg = (void*)container_of(msg, br::rpc_fifo_GENERIC_t, pyl);
+		fifo_msg = (void*)container_of(msg, bl::rpc_fifo_GENERIC_t, pyl);
 		break;
 	}
 

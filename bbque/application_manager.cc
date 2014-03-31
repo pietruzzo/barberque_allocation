@@ -52,7 +52,6 @@ namespace br = bbque::res;
 namespace bp = bbque::plugins;
 namespace po = boost::program_options;
 
-using br::ResourceIdentifier;
 using std::chrono::milliseconds;
 
 namespace bbque {
@@ -69,8 +68,7 @@ ApplicationManager::ApplicationManager() :
 	cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
 
 	// Get a logger
-	bp::LoggerIF::Configuration conf(APPLICATION_MANAGER_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(APPLICATION_MANAGER_NAMESPACE);
 	assert(logger);
 
 	//  Get the recipe loader instance
@@ -792,16 +790,16 @@ void ApplicationManager::PrintStatusReport(bool verbose) {
 		if (awm) {
 			// MIGRATE case => must see previous set of the same AWM
 			if ((awm == next_awm) &&
-				(awm->BindingChanged(ResourceIdentifier::CPU)))
+				(awm->BindingChanged(br::ResourceIdentifier::CPU)))
 				snprintf(b_set, 12, "%s{%s}",
-						ResourceIdentifier::TypeStr[ResourceIdentifier::CPU],
+						br::ResourceIdentifier::TypeStr[br::ResourceIdentifier::CPU],
 						awm->BindingSetPrev(
-							ResourceIdentifier::CPU).ToStringCG().c_str());
+							br::ResourceIdentifier::CPU).ToStringCG().c_str());
 			else
 				snprintf(b_set, 12, "%s{%s}",
-						ResourceIdentifier::TypeStr[ResourceIdentifier::CPU],
+						br::ResourceIdentifier::TypeStr[br::ResourceIdentifier::CPU],
 						awm->BindingSet(
-							ResourceIdentifier::CPU).ToStringCG().c_str());
+							br::ResourceIdentifier::CPU).ToStringCG().c_str());
 
 			snprintf(curr_awm_cl, 12, "%02d:%s", awm->Id(), b_set);
 			snprintf(curr_awm_str, 12, "%s", awm->Name().c_str());
@@ -810,9 +808,9 @@ void ApplicationManager::PrintStatusReport(bool verbose) {
 		// Next AWM
 		if (next_awm) {
 			snprintf(b_set, 12, "%s{%s}",
-					ResourceIdentifier::TypeStr[ResourceIdentifier::CPU],
+					br::ResourceIdentifier::TypeStr[br::ResourceIdentifier::CPU],
 					next_awm->BindingSet(
-						ResourceIdentifier::CPU).ToStringCG().c_str());
+						br::ResourceIdentifier::CPU).ToStringCG().c_str());
 			snprintf(next_awm_cl, 12, "%02d:%s", next_awm->Id(), b_set);
 		}
 

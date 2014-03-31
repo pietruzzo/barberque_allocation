@@ -31,6 +31,7 @@
 #include "sc_migration.h"
 // ...:: ADD_SC ::...
 
+namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
 namespace bbque { namespace plugins {
@@ -74,13 +75,8 @@ SchedContribManager::SchedContribManager(
 	bd_info(_bd_info) {
 
 	// Get a logger
-	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (logger)
-		logger->Info("Built a new dynamic object[%p]", this);
-	else
-		fprintf(stderr, FI("%s: Built new dynamic object [%p]\n"),
-				SC_MANAGER_NAMESPACE, (void *)this);
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	assert(logger);
 
 	// Parse the configuration parameters
 	if (!SchedContribManager::config_ready) {
@@ -246,12 +242,12 @@ void SchedContribManager::ParseConfiguration() {
 
 	// Global configuration parameters
 	for (int j = 0; j < SchedContrib::SC_CONFIG_COUNT; ++j) {
-		offset = j * ResourceIdentifier::TYPE_COUNT;
+		offset = j * br::ResourceIdentifier::TYPE_COUNT;
 		// 1. Maximum saturation levels (MSL)
-		for (int i = 1; i < ResourceIdentifier::TYPE_COUNT; ++i) {
+		for (int i = 1; i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
 			snprintf(conf_opts[i+offset], 30, SC_CONF_BASE_STR"%s.%s",
 					SchedContrib::ConfigParamsStr[j],
-					ResourceIdentifier::TypeStr[i]);
+					br::ResourceIdentifier::TypeStr[i]);
 			opts_desc.add_options()
 				(conf_opts[i+offset],
 				 po::value<uint16_t>
@@ -265,8 +261,8 @@ void SchedContribManager::ParseConfiguration() {
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	// MSL boundaries enforcement (0 <= MSL <= 100)
-	for (int i = 1; i < ResourceIdentifier::TYPE_COUNT; ++i) {
-		offset = SchedContrib::SC_MSL * ResourceIdentifier::TYPE_COUNT;
+	for (int i = 1; i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
+		offset = SchedContrib::SC_MSL * br::ResourceIdentifier::TYPE_COUNT;
 		logger->Debug("%s: %d",	conf_opts[i+offset],sc_cfg_params[i+offset]);
 		if (sc_cfg_params[i] > 100) {
 			logger->Warn("'%s' out of range [0,100]: found %d. Setting to %d",

@@ -20,7 +20,7 @@
 
 #include <memory>
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/exception.h"
 
 #define THROW throw bbque::Exception(__FILE__, __LINE__)
@@ -40,6 +40,8 @@
 #else
 # define DEBUG(fmt, ...) do {} while (0)
 #endif // BBQUE_DEBUG
+
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -71,7 +73,7 @@ protected:
 	/**
 	 * The pointer to logger of this object
 	 */
-	std::unique_ptr<plugins::LoggerIF> logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief   Build a new object

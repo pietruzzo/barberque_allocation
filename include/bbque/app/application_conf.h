@@ -20,7 +20,6 @@
 
 #include "bbque/app/application_status.h"
 
-
 namespace bbque {
 
 namespace res {

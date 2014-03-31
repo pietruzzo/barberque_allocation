@@ -25,6 +25,7 @@
 #include "bbque/res/resource_utils.h"
 #include "bbque/utils/utility.h"
 
+namespace bu = bbque::utils;
 
 namespace bbque { namespace res {
 
@@ -34,8 +35,7 @@ ResourceTree::ResourceTree():
 	count(0) {
 
 	// Get a logger
-	bp::LoggerIF::Configuration conf(RESOURCE_TREE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(RESOURCE_TREE_NAMESPACE);
 	assert(logger);
 
 	// Initialize the root node
@@ -68,7 +68,7 @@ ResourcePtr_t & ResourceTree::insert(ResourcePath const & rsrc_path) {
 	curr_node = root;
 	path_end  = rsrc_path.End();
 	for (path_it = rsrc_path.Begin(); path_it != path_end; ++path_it) {
-		ResourceIdentifierPtr_t const & prid(*path_it);
+		br::ResourceIdentifierPtr_t const & prid(*path_it);
 		// No children -> add the first one
 		if (curr_node->children.empty()) {
 			ResourcePtr_t pres(new Resource(prid->Type(), prid->ID()));
@@ -132,7 +132,7 @@ bool ResourceTree::findNode(
 	tree_end = curr_node->children.end();
 	for (tree_it = curr_node->children.begin(); tree_it != tree_end; ++tree_it) {
 		ResourcePtr_t & pres((*tree_it)->data);
-		ResourceIdentifierPtr_t & prid(*path_it);
+		br::ResourceIdentifierPtr_t & prid(*path_it);
 		found = false;
 
 		// Compare the resource identities (type and ID)

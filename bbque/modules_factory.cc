@@ -19,20 +19,10 @@
 #include "bbque/plugin_manager.h"
 #include "bbque/plugins/object_adapter.h"
 
-#include "bbque/console_logger.h"
-
 namespace bp = bbque::plugins;
+namespace bu = bbque::utils;
 
 namespace bbque {
-
-ModulesFactory::ModulesFactory() {
-}
-
-ModulesFactory & ModulesFactory::GetInstance() {
-	static ModulesFactory instance;
-	return instance;
-}
-
 
 /**
  * Specialize the ObjectAdapter template for Test plugins
@@ -40,8 +30,6 @@ ModulesFactory & ModulesFactory::GetInstance() {
 typedef bp::ObjectAdapter<bp::TestAdapter, C_Test> Test_ObjectAdapter;
 
 plugins::TestIF * ModulesFactory::GetTestModule(const std::string & id) {
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
 	// Build a object adapter for the TestModule
 	Test_ObjectAdapter toa;
 
@@ -51,37 +39,6 @@ plugins::TestIF * ModulesFactory::GetTestModule(const std::string & id) {
 	return (plugins::TestIF *) module;
 }
 
-/**
- * Specialize the ObjectAdapter template for Logger plugins
- */
-typedef bp::ObjectAdapter<bp::LoggerAdapter, C_Logger> Logger_ObjectAdapter;
-
-plugins::LoggerIF * ModulesFactory::GetLoggerModule(
-		plugins::LoggerIF::Configuration const & data,
-		std::string const & id) {
-	std::shared_ptr<bp::ConsoleLogger> logger;
-
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
-	// Build a object adapter for the Logger
-	Logger_ObjectAdapter loa;
-
-	void * module = bp::PluginManager::GetInstance().
-		CreateObject(id, (void*)&data, &loa);
-
-	// Since this is a critical module, if the logger modules is not able to
-	// successifully load, we fall-back to a dummy (console based) logger
-	// implementation.
-	if (!module) {
-		logger = bp::ConsoleLogger::GetInstance();
-		logger->Error("Logger module loading/configuration FAILED");
-		logger->Warn("Using (dummy) console logger");
-		module = (void*)(logger.get());
-	}
-
-	return (plugins::LoggerIF *) module;
-}
-
 plugins::RPCChannelIF * ModulesFactory::GetRPCChannelModule(
     std::string const & id) {
 	return RPCProxy::GetInstance(id);
@@ -89,9 +46,6 @@ plugins::RPCChannelIF * ModulesFactory::GetRPCChannelModule(
 
 plugins::RecipeLoaderIF * ModulesFactory::GetRecipeLoaderModule(
     std::string const & id) {
-
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
 
 	// RecipeLoader is just implemented in C++ thus it doesn't
 	// require a real ObjectAdapter
@@ -104,9 +58,6 @@ plugins::RecipeLoaderIF * ModulesFactory::GetRecipeLoaderModule(
 plugins::SchedulerPolicyIF * ModulesFactory::GetSchedulerPolicyModule(
 		std::string const & id) {
 
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
-
 	// SchedulerPolicy is just implemented in C++ thus it doesn't
 	// require a real ObjectAdapter
 	void * module = bp::PluginManager::GetInstance().
@@ -117,9 +68,6 @@ plugins::SchedulerPolicyIF * ModulesFactory::GetSchedulerPolicyModule(
 
 plugins::SynchronizationPolicyIF * ModulesFactory::GetSynchronizationPolicyModule(
 		std::string const & id) {
-
-	// Ensure ModulesFactory initialization
-	ModulesFactory::GetInstance();
 
 	// SchedulerPolicy is just implemented in C++ thus it doesn't
 	// require a real ObjectAdapter

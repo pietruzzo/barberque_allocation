@@ -30,7 +30,7 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/command_manager.h"
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/timer.h"
 #include "bbque/utils/deferrable.h"
 #include "bbque/utils/metrics_collector.h"
@@ -40,11 +40,12 @@
 #include <map>
 
 using bbque::plugins::PluginManager;
-using bbque::plugins::LoggerIF;
 using bbque::utils::MetricsCollector;
 using bbque::utils::Deferrable;
 using bbque::utils::Worker;
 using bbque::CommandHandler;
+
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -148,7 +149,7 @@ private:
 	/**
 	 * @brief The logger used by the resource manager.
 	 */
-	LoggerIF *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * Reference to supported platform services class.

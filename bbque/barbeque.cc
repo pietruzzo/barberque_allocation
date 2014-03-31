@@ -22,11 +22,11 @@
 #include "bbque/platform_services.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/resource_manager.h"
-#include "bbque/modules_factory.h"
 #include "bbque/signals_manager.h"
 
 #include "bbque/utils/timer.h"
 #include "bbque/utils/utility.h"
+#include "bbque/utils/logging/logger.h"
 
 #include "bbque/plugins/test.h"
 
@@ -39,6 +39,7 @@ namespace po = boost::program_options;
 
 /* The global timer, this can be used to get the time since Barbeque start */
 bu::Timer bbque_tmr(true);
+std::unique_ptr<bu::Logger> logger;
 
 int Tests(bp::PluginManager & pm) {
 	const bp::PluginManager::RegistrationMap & rm = pm.GetRegistrationMap();
@@ -50,13 +51,12 @@ int Tests(bp::PluginManager & pm) {
 				strlen(TEST_NAMESPACE),TEST_NAMESPACE)))
 		return false;
 
-	fprintf(stdout, FI("Entering Testing Mode\n"));
+	logger->Info("Entering Testing Mode");
 
 	do {
 		bu::Timer test_tmr;
 
-		fprintf(stdout, "\n" FI("___ Testing [%s]...\n"),
-				(*near_match).first.c_str());
+		logger->Info("___ Testing [%s]...", (*near_match).first.c_str());
 
 		bp::TestIF * tms = bb::ModulesFactory::GetTestModule(
 				(*near_match).first);
@@ -65,15 +65,14 @@ int Tests(bp::PluginManager & pm) {
 		tms->Test();
 		test_tmr.stop();
 
-		fprintf(stdout, FI("___ completed, [%11.6f]s\n"),
-				test_tmr.getElapsedTime());
+		logger->Info("___ completed, [%11.6f]s", test_tmr.getElapsedTime());
 
 		near_match++;
 
 	} while (near_match != rm.end() &&
 			((*near_match).first.compare(0,5,"test.")) == 0 );
 
-	fprintf(stdout, "\n\n" FI("All tests completed\n\n"));
+	logger->Warn("All tests completed");
 	return EXIT_SUCCESS;
 }
 
@@ -86,9 +85,9 @@ daemonize(const char *name, const char *uid,
 static void DaemonizeBBQ(bb::ConfigurationManager & cm) {
 	int result;
 
-	fprintf(stderr, "Starting BarbequeRTRM as daemon [%s], running with uid [%s]...\n",
+	logger->Notice("Starting BarbequeRTRM as daemon [%s], running with uid [%s]...",
 			cm.GetDaemonName().c_str(), cm.GetUID().c_str());
-	fprintf(stderr, "Using configuration file [%s]\n",
+	logger->Notice("Using configuration file [%s]",
 			cm.GetConfigurationFile().c_str());
 
 	// Daemonize this process
@@ -106,7 +105,7 @@ static void DaemonizeBBQ(bb::ConfigurationManager & cm) {
 	}
 
 	syslog(LOG_ERR, "Daemonization FAILED, terminate BBQ");
-	fprintf(stderr, "FAILED\n");
+	logger->Fatal("FAILED");
 	exit(EXIT_FAILURE);
 
 }
@@ -121,6 +120,10 @@ int main(int argc, char *argv[]) {
 	bb::ConfigurationManager & cm = bb::ConfigurationManager::GetInstance();
 	cm.ParseCommandLine(argc, argv);
 
+	// Setup Logger configuration
+	Logger::SetConfigurationFile(cm.GetConfigurationFile());
+	logger = Logger::GetLogger(MODULE_NAMESPACE);
+
 	// Check if we should run as daemon
 	if (cm.RunAsDaemon()) {
 		syslog(LOG_INFO, "Starting BBQ daemon (ver. %s)...", g_git_version);
@@ -130,10 +133,10 @@ int main(int argc, char *argv[]) {
 		DaemonizeBBQ(cm);
 	} else {
 		// Welcome screen
-		fprintf(stdout, FI("Starting BBQ (ver. %s)...\n"), g_git_version);
-		fprintf(stdout, FI("BarbequeRTRM build time: " __DATE__  " " __TIME__ "\n"));
-		fprintf(stdout, FI("                 flavor: " BBQUE_BUILD_FLAVOR "\n"));
-		fprintf(stdout, FI("               compiler: gcc v" STR(GCC_VERSION) "\n"));
+		logger->Info("Starting BBQ (ver. %s)...", g_git_version);
+		logger->Info("BarbequeRTRM build time: " __DATE__  " " __TIME__);
+		logger->Info("                 flavor: " BBQUE_BUILD_FLAVOR);
+		logger->Info("               compiler: gcc v" STR(GCC_VERSION));
 	}
 
 	// Initialization
@@ -147,7 +150,7 @@ int main(int argc, char *argv[]) {
 			syslog(LOG_INFO, "Loading plugins from dir [%s]...",
 					cm.GetPluginsDir().c_str());
 		else
-			fprintf(stdout, FI("Loading plugins from dir [%s]...\n"),
+			logger->Info("Loading plugins from dir [%s]...",
 					cm.GetPluginsDir().c_str());
 		pm.LoadAll(cm.GetPluginsDir());
 	}
@@ -176,7 +179,7 @@ bbq_exit:
 		syslog(LOG_INFO, "BBQ daemon termination [%s]",
 				(exit_code == EXIT_FAILURE) ? "FAILURE" : "SUCCESS" );
 	else
-		fprintf(stdout, FI("BBQ termination [%s]\n"),
+		logger->Info("BBQ termination [%s]",
 				(exit_code == EXIT_FAILURE) ? "FAILURE" : "SUCCESS" );
 
 	closelog();

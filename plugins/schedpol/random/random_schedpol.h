@@ -22,6 +22,7 @@
 #include "bbque/app/application.h"
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/plugins/plugin.h"
+#include "bbque/utils/logging/logger.h"
 
 #include <cstdint>
 #include <random>
@@ -33,13 +34,12 @@
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
+namespace bu = bbque::utils;
+
 using bbque::app::AppCPtr_t;
 using bbque::res::RViewToken_t;
 
 namespace bbque { namespace plugins {
-
-// Forward declaration
-class LoggerIF;
 
 /**
  * @brief The Random resource scheduler heuristic plugin.
@@ -77,7 +77,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	LoggerIF *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** Configuration manager instance */
 	ConfigurationManager & cm;

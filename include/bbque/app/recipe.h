@@ -22,7 +22,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/attributes_container.h"
 #include "bbque/res/resource_constraints.h"
 
@@ -31,9 +31,8 @@
 // Maximum number of Application Working Modes manageable
 #define MAX_NUM_AWM 	255
 
-using bbque::plugins::LoggerIF;
-using bbque::res::ResourceConstraint;
-using bbque::utils::AttributesContainer;
+namespace bu = bbque::utils;
+namespace br = bbque::res;
 
 namespace bbque {
 
@@ -55,17 +54,17 @@ typedef std::shared_ptr<WorkingMode> AwmPtr_t;
 /** Vector of shared pointer to WorkingMode*/
 typedef std::vector<AwmPtr_t> AwmPtrVect_t;
 /** Shared pointer to Constraint object */
-typedef std::shared_ptr<ResourceConstraint> ConstrPtr_t;
+typedef std::shared_ptr<br::ResourceConstraint> ConstrPtr_t;
 /** Map of Constraints pointers, with the resource path as key*/
 typedef std::map<ResourcePathPtr_t, ConstrPtr_t> ConstrMap_t;
 
 /**
  * @brief Attribute structure for plugin specific data
  */
-typedef struct PluginAttr: public AttributesContainer::Attribute {
+typedef struct PluginAttr: public bu::AttributesContainer::Attribute {
 	/** Constructor */
 	PluginAttr(std::string const & _ns, std::string const & _key):
-		AttributesContainer::Attribute(_ns, _key) {}
+		bu::AttributesContainer::Attribute(_ns, _key) {}
 
 	/** Attribute value: a string object */
 	std::string str;
@@ -83,7 +82,7 @@ typedef std::shared_ptr<PluginAttr_t> PluginAttrPtr_t;
  * one recipe, but a single instance must specify the one upon which base its
  * execution.
  */
-class Recipe: public AttributesContainer {
+class Recipe: public bu::AttributesContainer {
 
 friend class Application;
 
@@ -189,7 +188,7 @@ public:
 private:
 
 	/** The logger used by the application */
-	LoggerIF  *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * Starting from a common recipes root directory, each recipe file

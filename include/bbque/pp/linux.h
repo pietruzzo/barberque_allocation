@@ -73,10 +73,10 @@
  */
 #define PLAT_LNX_ATTRIBUTE PLATFORM_PROXY_NAMESPACE".lnx"
 
-using bbque::res::UsagePtr_t;
-using bbque::res::ResourcePtr_t;
-using bbque::utils::AttributesContainer;
-using bbque::CommandHandler;
+namespace bb = bbque;
+namespace ba = bbque::app;
+namespace br = bbque::res;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -84,7 +84,7 @@ namespace bbque {
  * @brief The Linux Platform Proxy module
  * @ingroup sec20_pp_linux
  */
-class LinuxPP : public PlatformProxy, public CommandHandler {
+class LinuxPP : public PlatformProxy, public bb::CommandHandler {
 
 public:
 
@@ -141,8 +141,8 @@ private:
 
 	typedef std::shared_ptr<RLinuxBindings_t> RLinuxBindingsPtr_t;
 
-	typedef struct CGroupData : public AttributesContainer::Attribute {
-		AppPtr_t papp; /** The controlled application */
+	typedef struct CGroupData : public bu::AttributesContainer::Attribute {
+		ba::AppPtr_t papp; /** The controlled application */
 #define BBQUE_LINUXPP_CGROUP_PATH_MAX 22 // "bbque/12345:ABCDEF:00";
 		char cgpath[BBQUE_LINUXPP_CGROUP_PATH_MAX];
 		struct cgroup *pcg;
@@ -150,7 +150,7 @@ private:
 		struct cgroup_controller *pc_cpuset;
 		struct cgroup_controller *pc_memory;
 
-		CGroupData(AppPtr_t pa) :
+		CGroupData(ba::AppPtr_t pa) :
 			Attribute(PLAT_LNX_ATTRIBUTE, "cgroup"),
 			papp(pa), pcg(NULL), pc_cpu(NULL),
 			pc_cpuset(NULL), pc_memory(NULL) {
@@ -263,32 +263,32 @@ private:
 	 */
 	ExitCode_t _LoadPlatformData();
 	ExitCode_t _RefreshPlatformData();
-	ExitCode_t _Setup(AppPtr_t papp);
-	ExitCode_t _Release(AppPtr_t papp);
+	ExitCode_t _Setup(ba::AppPtr_t papp);
+	ExitCode_t _Release(ba::AppPtr_t papp);
 
-	ExitCode_t _ReclaimResources(AppPtr_t papp);
+	ExitCode_t _ReclaimResources(ba::AppPtr_t papp);
 
-	ExitCode_t _MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
-		RViewToken_t rvt, bool excl);
+	ExitCode_t _MapResources(ba::AppPtr_t papp, br::UsagesMapPtr_t pres,
+		br::RViewToken_t rvt, bool excl);
 
 /**
  * @}
  * @}
  */
 
-	ExitCode_t GetResourceMapping(AppPtr_t papp, UsagesMapPtr_t pum,
-		RViewToken_t rvt, RLinuxBindingsPtr_t prlb);
+	ExitCode_t GetResourceMapping(ba::AppPtr_t papp, br::UsagesMapPtr_t pum,
+		br::RViewToken_t rvt, RLinuxBindingsPtr_t prlb);
 
-	void BuildSocketCGAttr(char * dest, UsagesMapPtr_t pum,
-			ResourceBitset const & cpu_mask, Resource::Type_t r_type,
-			AppPtr_t papp, RViewToken_t rvt);
+	void BuildSocketCGAttr(char * dest, br::UsagesMapPtr_t pum,
+			br::ResourceBitset const & cpu_mask, br::Resource::Type_t r_type,
+			ba::AppPtr_t papp, br::RViewToken_t rvt);
 
 	ExitCode_t BuildCGroup(CGroupDataPtr_t &pcgd);
 
 	ExitCode_t BuildSilosCG(CGroupDataPtr_t &pcgd);
-	ExitCode_t BuildAppCG(AppPtr_t papp, CGroupDataPtr_t &pcgd);
+	ExitCode_t BuildAppCG(ba::AppPtr_t papp, CGroupDataPtr_t &pcgd);
 
-	ExitCode_t GetCGroupData(AppPtr_t papp, CGroupDataPtr_t &pcgd);
+	ExitCode_t GetCGroupData(ba::AppPtr_t papp, CGroupDataPtr_t &pcgd);
 	ExitCode_t SetupCGroup(CGroupDataPtr_t &pcgd, RLinuxBindingsPtr_t prlb,
 			bool excl = false, bool move = true);
 

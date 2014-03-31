@@ -20,8 +20,7 @@
 
 #include "bbque/app/working_mode_status.h"
 
-using bbque::res::ResID_t;
-using bbque::res::ResourceIdentifier;
+namespace br = bbque::res;
 
 namespace bbque { namespace app {
 
@@ -67,11 +66,11 @@ public:
 	 * @note Use R_ID_ANY if you want to bind the resource without care
 	 * about its ID.
 	 */
-	virtual size_t BindResource(ResourceIdentifier::Type_t r_type,
-			ResID_t src_ID, ResID_t dst_ID, size_t b_refn = 0,
-			ResourceIdentifier::Type_t filter_child_rtype =
-				ResourceIdentifier::UNDEFINED,
-			ResourceBitset * filter_mask = nullptr) = 0;
+	virtual size_t BindResource(br::ResourceIdentifier::Type_t r_type,
+			br::ResID_t src_ID, br::ResID_t dst_ID, size_t b_refn = 0,
+			br::ResourceIdentifier::Type_t filter_child_rtype =
+				br::ResourceIdentifier::UNDEFINED,
+			br::ResourceBitset * filter_mask = nullptr) = 0;
 
 	/**
 	 * @brief Clear the resource binding to schedule

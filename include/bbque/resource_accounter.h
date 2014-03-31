@@ -25,7 +25,7 @@
 
 #include "bbque/res/resource_utils.h"
 #include "bbque/res/resource_tree.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
 #include "bbque/cpp11/thread.h"
 
@@ -37,25 +37,25 @@
 // Max length for the resource view token string
 #define TOKEN_PATH_MAX_LEN 30
 
-using bbque::plugins::LoggerIF;
-using bbque::app::AppSPtr_t;
-
+namespace ba = bbque::app;
+namespace br = bbque::res;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
 
 /** Map of map of Usage descriptors. Key: Application UID*/
-typedef std::map<AppUid_t, UsagesMapPtr_t> AppUsagesMap_t;
+typedef std::map<AppUid_t, br::UsagesMapPtr_t> AppUsagesMap_t;
 /** Shared pointer to a map of pair Application/Usages */
 typedef std::shared_ptr<AppUsagesMap_t> AppUsagesMapPtr_t;
 /** Map of AppUsagesMap_t having the resource state view token as key */
-typedef std::map<RViewToken_t, AppUsagesMapPtr_t> AppUsagesViewsMap_t;
+typedef std::map<br::RViewToken_t, AppUsagesMapPtr_t> AppUsagesViewsMap_t;
 /** Set of pointers to the resources allocated under a given state view*/
-typedef std::set<ResourcePtr_t> ResourceSet_t;
+typedef std::set<br::ResourcePtr_t> ResourceSet_t;
 /** Shared pointer to ResourceSet_t */
 typedef std::shared_ptr<ResourceSet_t> ResourceSetPtr_t;
 /** Map of ResourcesSetPtr_t. The key is the view token */
-typedef std::map<RViewToken_t, ResourceSetPtr_t> ResourceViewsMap_t;
+typedef std::map<br::RViewToken_t, ResourceSetPtr_t> ResourceViewsMap_t;
 
 // Forward declarations
 class ApplicationManager;
@@ -84,47 +84,47 @@ public:
 	 */
 	uint64_t Total(std::string const & path) const;
 
-	uint64_t Total(ResourcePtrList_t & rsrc_list) const;
+	uint64_t Total(br::ResourcePtrList_t & rsrc_list) const;
 
-	uint64_t Total(ResourcePathPtr_t ppath,	PathClass_t rpc = EXACT) const;
+	uint64_t Total(br::ResourcePathPtr_t ppath,	PathClass_t rpc = EXACT) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
 	uint64_t Available(std::string const & path,
-			RViewToken_t vtok = 0, AppSPtr_t papp = AppSPtr_t()) const;
+			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
-	uint64_t Available(ResourcePtrList_t & rsrc_list,
-			RViewToken_t vtok = 0, AppSPtr_t papp = AppSPtr_t()) const;
+	uint64_t Available(br::ResourcePtrList_t & rsrc_list,
+			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
-	uint64_t Available(ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
-			RViewToken_t vtok = 0, AppSPtr_t papp = AppSPtr_t()) const;
+	uint64_t Available(br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
+			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint64_t Used(std::string const & path, RViewToken_t vtok = 0) const;
+	uint64_t Used(std::string const & path, br::RViewToken_t vtok = 0) const;
 
-	uint64_t Used(ResourcePtrList_t & rsrc_list, RViewToken_t vtok = 0) const;
+	uint64_t Used(br::ResourcePtrList_t & rsrc_list, br::RViewToken_t vtok = 0) const;
 
-	uint64_t Used(ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
-			RViewToken_t vtok = 0) const;
+	uint64_t Used(br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
+			br::RViewToken_t vtok = 0) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
 	uint64_t Unreserved(std::string const & path) const;
 
-	uint64_t Unreserved(ResourcePtrList_t & rsrc_list) const;
+	uint64_t Unreserved(br::ResourcePtrList_t & rsrc_list) const;
 
-	uint64_t Unreserved(ResourcePathPtr_t ppath) const;
+	uint64_t Unreserved(br::ResourcePathPtr_t ppath) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint16_t Count(ResourcePathPtr_t ppath) const;
+	uint16_t Count(br::ResourcePathPtr_t ppath) const;
 
-	uint16_t CountPerType(ResourceIdentifier::Type_t type) const;
+	uint16_t CountPerType(br::ResourceIdentifier::Type_t type) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -136,30 +136,30 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	inline std::list<Resource::Type_t> GetTypesList() const {
+	inline std::list<br::Resource::Type_t> GetTypesList() const {
 		return r_types;
 	}
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	ResourcePtr_t GetResource(std::string const & path) const;
+	br::ResourcePtr_t GetResource(std::string const & path) const;
 
-	ResourcePtr_t GetResource(ResourcePathPtr_t ppath) const;
+	br::ResourcePtr_t GetResource(br::ResourcePathPtr_t ppath) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	ResourcePtrList_t GetResources(std::string const & path) const;
+	br::ResourcePtrList_t GetResources(std::string const & path) const;
 
-	ResourcePtrList_t GetResources(ResourcePathPtr_t ppath) const;
+	br::ResourcePtrList_t GetResources(br::ResourcePathPtr_t ppath) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
 	bool ExistResource(std::string const & path) const;
 
-	bool ExistResource(ResourcePathPtr_t ppath) const;
+	bool ExistResource(br::ResourcePathPtr_t ppath) const;
 
 	/**
 	 * @brief Get the resource path object related to a string
@@ -172,7 +172,7 @@ public:
 	 *
 	 * @return A shared pointer to a ResourcePath object
 	 */
-	ResourcePathPtr_t const GetPath(std::string const & path_str) const;
+	br::ResourcePathPtr_t const GetPath(std::string const & path_str) const;
 
 	/**
 	 * @brief Get the cumulative amount of resource usage
@@ -183,13 +183,13 @@ public:
 	 *
 	 * @return The amount of resource usage
 	 */
-	uint64_t GetUsageAmount(UsagesMapPtr_t const & pum,
-			ResourceIdentifier::Type_t r_type,
-			ResourceIdentifier::Type_t r_scope_type = Resource::UNDEFINED) const;
+	uint64_t GetUsageAmount(br::UsagesMapPtr_t const & pum,
+			br::ResourceIdentifier::Type_t r_type,
+			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED) const;
 
-	uint64_t GetUsageAmount(UsagesMap_t const & um,
-			ResourceIdentifier::Type_t r_type,
-			ResourceIdentifier::Type_t r_scope_type = Resource::UNDEFINED) const;
+	uint64_t GetUsageAmount(br::UsagesMap_t const & um,
+			br::ResourceIdentifier::Type_t r_type,
+			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED) const;
 
 
 	/**
@@ -201,7 +201,7 @@ public:
 	 * @param vtok Token of the resources state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
-	void PrintStatusReport(RViewToken_t vtok = 0, bool verbose = false) const;
+	void PrintStatusReport(br::RViewToken_t vtok = 0, bool verbose = false) const;
 
 	/**
 	 * @brief Print details about how resource usage is partitioned among
@@ -211,7 +211,7 @@ public:
 	 * @param vtok The token referencing the resource state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
-	void PrintAppDetails(ResourcePathPtr_t path, RViewToken_t vtok,
+	void PrintAppDetails(br::ResourcePathPtr_t path, br::RViewToken_t vtok,
 			bool verbose) const;
 
 	/**
@@ -261,8 +261,8 @@ public:
 	 * RA_ERR_USAGE_EXC if the resource set required is not completely
 	 * available.
 	 */
-	ExitCode_t BookResources(AppSPtr_t papp,
-			UsagesMapPtr_t const & rsrc_usages, RViewToken_t vtok = 0);
+	ExitCode_t BookResources(ba::AppSPtr_t papp,
+			br::UsagesMapPtr_t const & rsrc_usages, br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Release the resources
@@ -275,7 +275,7 @@ public:
 	 * @param papp The application holding the resources
 	 * @param vtok The token referencing the resource state view
 	 */
-	void ReleaseResources(AppSPtr_t papp, RViewToken_t vtok = 0);
+	void ReleaseResources(ba::AppSPtr_t papp, br::RViewToken_t vtok = 0);
 
 
 	/**
@@ -299,12 +299,12 @@ public:
 	 * @return RA_SUCCESS if the reservation has been completed correctly,
 	 * RA_FAILED otherwise.
 	 */
-	ExitCode_t  ReserveResources(ResourcePathPtr_t ppath, uint64_t amount);
+	ExitCode_t  ReserveResources(br::ResourcePathPtr_t ppath, uint64_t amount);
 
 	ExitCode_t  ReserveResources(std::string const & path, uint64_t amount);
 
 
-	bool  IsOfflineResource(ResourcePathPtr_t ppath) const;
+	bool  IsOfflineResource(br::ResourcePathPtr_t ppath) const;
 
 	ExitCode_t  OfflineResources(std::string const & path);
 
@@ -322,25 +322,25 @@ public:
 	 *
 	 * @return true when resources are being reshuffled
 	 */
-	bool IsReshuffling(UsagesMapPtr_t const & pum_current,
-			UsagesMapPtr_t const & pum_next);
+	bool IsReshuffling(br::UsagesMapPtr_t const & pum_current,
+			br::UsagesMapPtr_t const & pum_next);
 
 	/**
 	 * @see ResourceAccounterConfIF
 	 */
-	ExitCode_t GetView(std::string who_req, RViewToken_t & tok);
+	ExitCode_t GetView(std::string who_req, br::RViewToken_t & tok);
 
 	/**
 	 * @see ResourceAccounterConfIF
 	 */
-	void PutView(RViewToken_t tok);
+	void PutView(br::RViewToken_t tok);
 
 	/**
 	 * @brief Get the system resource state view
 	 *
 	 * @return The token of the system view
 	 */
-	inline RViewToken_t GetSystemView() {
+	inline br::RViewToken_t GetSystemView() {
 		return sys_view_token;
 	}
 
@@ -349,7 +349,7 @@ public:
 	 *
 	 * @return The token of the scheduled view
 	 */
-	inline RViewToken_t GetScheduledView() {
+	inline br::RViewToken_t GetScheduledView() {
 		return sch_view_token;
 	}
 
@@ -358,7 +358,7 @@ public:
 	 *
 	 * @return The token of the system view
 	 */
-	void SetScheduledView(RViewToken_t svt);
+	void SetScheduledView(br::RViewToken_t svt);
 
 	/**
 	 * @brief Start a synchronized mode session
@@ -386,7 +386,7 @@ public:
 	 *
 	 * @return @see ExitCode_t
 	 */
-	ExitCode_t SyncAcquireResources(AppSPtr_t const & papp);
+	ExitCode_t SyncAcquireResources(ba::AppSPtr_t const & papp);
 
 	/**
 	 * @brief Abort a synchronized mode session
@@ -449,14 +449,14 @@ private:
 		/** If true a synchronization session has started */
 		bool started;
 		/** Token for the temporary resource view */
-		RViewToken_t view;
+		br::RViewToken_t view;
 		/** Count the number of session elapsed */
 		uint32_t count;
 
 	} sync_ssn;
 
 	/** The logger used by the resource accounter */
-	LoggerIF  *logger = NULL;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** The Application Manager component */
 	bbque::ApplicationManager & am;
@@ -468,19 +468,19 @@ private:
 	std::recursive_mutex status_mtx;
 
 	/** The tree of all the resources in the system.*/
-	ResourceTree resources;
+	br::ResourceTree resources;
 
 	/** The set of all the resource paths registered */
 	std::set<std::string> paths;
 
 	/** The resource paths registered (strings and objects) */
-	std::map<std::string, ResourcePathPtr_t> r_paths;
+	std::map<std::string, br::ResourcePathPtr_t> r_paths;
 
 	/** Counter for the total number of registered resources */
-	std::map<Resource::Type_t, uint16_t> r_count;
+	std::map<br::Resource::Type_t, uint16_t> r_count;
 
 	/** List that keeps track of the managed resource types */
-	std::list<Resource::Type_t> r_types;
+	std::list<br::Resource::Type_t> r_types;
 
 	/** Keep track of the max length between resources path string */
 	uint8_t path_max_len = 0;
@@ -510,7 +510,7 @@ private:
 	/**
 	 * The token referencing the system resources state (default view).
 	 */
-	RViewToken_t sys_view_token;
+	br::RViewToken_t sys_view_token;
 
 	/**
 	 * @brief Token referencing the view on scheduled resources
@@ -520,7 +520,7 @@ private:
 	 * committed, i.e. resources usage synchronized, this has the same value
 	 * of sys_view_token.
 	 */
-	RViewToken_t sch_view_token = 0;
+	br::RViewToken_t sch_view_token = 0;
 
 	/**
 	 * Default constructor
@@ -561,7 +561,7 @@ private:
 	 *
 	 * @return A list of pointers (shared) to resource descriptors
 	 */
-	ResourcePtrList_t GetList(ResourcePathPtr_t ppath,
+	br::ResourcePtrList_t GetList(br::ResourcePathPtr_t ppath,
 			PathClass_t rpc = EXACT) const;
 
 	/**
@@ -575,9 +575,9 @@ private:
 	 *
 	 * @return The value of the attribute request
 	 */
-	uint64_t QueryStatus(ResourcePtrList_t const & rsrc_list,
-				QueryOption_t q_opt, RViewToken_t vtok = 0,
-				AppSPtr_t papp = AppSPtr_t()) const;
+	uint64_t QueryStatus(br::ResourcePtrList_t const & rsrc_list,
+				QueryOption_t q_opt, br::RViewToken_t vtok = 0,
+				ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @brief Get the cumulative amount of resource usage, given iterators of
@@ -594,10 +594,10 @@ private:
 	 * @return The amount of resource usage
 	 */
 	uint64_t GetAmountFromUsagesMap(
-			UsagesMap_t::const_iterator & begin,
-			UsagesMap_t::const_iterator & end,
-			ResourceIdentifier::Type_t r_type,
-			ResourceIdentifier::Type_t r_scope_type = Resource::UNDEFINED) const;
+			br::UsagesMap_t::const_iterator & begin,
+			br::UsagesMap_t::const_iterator & end,
+			br::ResourceIdentifier::Type_t r_type,
+			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED) const;
 
 	/**
 	 * @brief Check the resource availability for a whole set
@@ -608,8 +608,8 @@ private:
 	 * @return RA_SUCCESS if all the resources are availables,
 	 * RA_ERR_USAGE_EXC otherwise.
 	 */
-	ExitCode_t CheckAvailability(UsagesMapPtr_t const & usages,
-			RViewToken_t vtok = 0, AppSPtr_t papp = AppSPtr_t()) const;
+	ExitCode_t CheckAvailability(br::UsagesMapPtr_t const & usages,
+			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @brief Get a pointer to the map of applications resource usages
@@ -624,7 +624,7 @@ private:
 	 * @return RA_SUCCESS if the map is found. RA_ERR_MISS_VIEW if the token
 	 * doesn't match any state view.
 	 */
-	ExitCode_t GetAppUsagesByView(RViewToken_t vtok,
+	ExitCode_t GetAppUsagesByView(br::RViewToken_t vtok,
 			AppUsagesMapPtr_t &	apps_usages);
 
 	/**
@@ -637,8 +637,8 @@ private:
 	 * @param app The application acquiring the resources
 	 * @param vtok The token referencing the resource state view
 	 */
-	ExitCode_t IncBookingCounts(UsagesMapPtr_t const & app_usages,
-			AppSPtr_t const & papp, RViewToken_t vtok = 0);
+	ExitCode_t IncBookingCounts(br::UsagesMapPtr_t const & app_usages,
+			ba::AppSPtr_t const & papp, br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Book a single resource
@@ -653,8 +653,8 @@ private:
 	 * @return RA_ERR_USAGE_EXC if the usage required overcome the
 	 * availability. RA_SUCCESS otherwise.
 	 */
-	ExitCode_t DoResourceBooking(AppSPtr_t const & papp,
-			UsagePtr_t & pusage, RViewToken_t vtok);
+	ExitCode_t DoResourceBooking(ba::AppSPtr_t const & papp,
+			br::UsagePtr_t & pusage, br::RViewToken_t vtok);
 
 
 	/**
@@ -665,7 +665,7 @@ private:
 	 *
 	 * @see ReleaseResources
 	 */
-	void _ReleaseResources(AppSPtr_t papp, RViewToken_t vtok = 0);
+	void _ReleaseResources(ba::AppSPtr_t papp, br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Allocate a quota of resource in the scheduling case
@@ -678,8 +678,8 @@ private:
 	 * @param requested The amount of resource required
 	 * @param vtok The token referencing the resource state view
 	 */
-	void SchedResourceBooking(AppSPtr_t const & papp, ResourcePtr_t & rsrc,
-			uint64_t & requested, RViewToken_t vtok);
+	void SchedResourceBooking(ba::AppSPtr_t const & papp, br::ResourcePtr_t & rsrc,
+			uint64_t & requested, br::RViewToken_t vtok);
 
 	/**
 	 * @brief Allocate a quota of resource in the synchronization case
@@ -692,7 +692,7 @@ private:
 	 * @param rsrc The resource descriptor of the resource binding
 	 * @param requested The amount of resource required
 	 */
-	void SyncResourceBooking(AppSPtr_t const & papp, ResourcePtr_t & rsrc,
+	void SyncResourceBooking(ba::AppSPtr_t const & papp, br::ResourcePtr_t & rsrc,
 			uint64_t & requested);
 
 	/**
@@ -705,8 +705,8 @@ private:
 	 * @param app The application releasing the resources
 	 * @param vtok The token referencing the resource state view
 	 */
-	void DecBookingCounts(UsagesMapPtr_t const & app_usages,
-			AppSPtr_t const & app, RViewToken_t vtok = 0);
+	void DecBookingCounts(br::UsagesMapPtr_t const & app_usages,
+			ba::AppSPtr_t const & app, br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Unbook a single resource
@@ -718,8 +718,8 @@ private:
 	 * @param pusage Usage object
 	 * @param vtok The token referencing the resource state view
 	 */
-	void UndoResourceBooking(AppSPtr_t const & papp, UsagePtr_t & pusage,
-			RViewToken_t vtok);
+	void UndoResourceBooking(ba::AppSPtr_t const & papp, br::UsagePtr_t & pusage,
+			br::RViewToken_t vtok);
 
 	/**
 	 * @brief Init the synchronized mode session
@@ -765,7 +765,7 @@ private:
 	 * @param tok The token used as reference to the resources view.
 	 * @return The token referencing the system state view.
 	 */
-	RViewToken_t SetView(RViewToken_t vtok);
+	br::RViewToken_t SetView(br::RViewToken_t vtok);
 
 };
 

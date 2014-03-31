@@ -24,6 +24,7 @@
 #include "bbque/scheduler_manager.h"
 #include "bbque/command_manager.h"
 #include "bbque/plugins/plugin.h"
+#include "bbque/utils/logging/logger.h"
 
 #include "contrib/sched_contrib_manager.h"
 
@@ -75,6 +76,7 @@
 	using namespace boost::accumulators;
 #endif
 
+namespace bu = bbque::utils;
 
 using bbque::res::RViewToken_t;
 using bbque::utils::Timer;
@@ -84,10 +86,6 @@ using bbque::utils::MetricsCollector;
 struct PF_ObjectParams;
 
 namespace bbque { namespace plugins {
-
-
-// Forward declaration
-class LoggerIF;
 
 /**
  * @class YamsSchedPol
@@ -216,7 +214,7 @@ private:
 	CommandManager &cmm;
 
 	/** System logger instance */
-	LoggerIF *logger = NULL;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** System view instance */
 	System * sv = NULL;

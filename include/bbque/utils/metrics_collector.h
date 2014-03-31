@@ -18,7 +18,7 @@
 #ifndef BBQUE_METRICS_COLLECTOR_H_
 #define BBQUE_METRICS_COLLECTOR_H_
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/timer.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/command_manager.h"
@@ -37,7 +37,6 @@
 #include <boost/accumulators/statistics/variance.hpp>
 
 using namespace boost::accumulators;
-using bbque::plugins::LoggerIF;
 using bbque::utils::Timer;
 using bbque::CommandHandler;
 
@@ -392,7 +391,7 @@ private:
 	/**
 	 * @brief The logger to use.
 	 */
-	LoggerIF *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief Map of all registered metrics

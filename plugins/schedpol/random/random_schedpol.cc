@@ -17,18 +17,18 @@
 
 #include "random_schedpol.h"
 
-#include "bbque/modules_factory.h"
 #include "bbque/system.h"
 #include "bbque/app/application.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/resource_path.h"
-#include "bbque/plugins/logger.h"
 #include "bbque/resource_accounter.h"
+#include "bbque/utils/logging/logger.h"
 
 #include <iostream>
 
 namespace ba = bbque::app;
 namespace br = bbque::res;
+namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
 namespace bbque { namespace plugins {
@@ -38,18 +38,9 @@ RandomSchedPol::RandomSchedPol() :
 	dist(0, 100) {
 
 	// Get a logger
-	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		if (daemonized)
-			syslog(LOG_INFO, "Build RANDOM schedpol plugin [%p] FAILED "
-					"(Error: missing logger module)", (void*)this);
-		else
-			fprintf(stdout, FI("Build RANDOM schedpol plugin [%p] FAILED "
-					"(Error: missing logger module)\n"), (void*)this);
-	}
-
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
+
 	logger->Debug("Built RANDOM SchedPol object @%p", (void*)this);
 
 	// Resource binding domain information
@@ -68,7 +59,7 @@ RandomSchedPol::RandomSchedPol() :
 	ResourcePath rp(binding_domain);
 	binding_type = rp.Type();
 	logger->Debug("Binding domain:'%s' Type:%s",
-			binding_domain.c_str(), ResourceIdentifier::TypeStr[binding_type]);
+			binding_domain.c_str(), br::ResourceIdentifier::TypeStr[binding_type]);
 }
 
 RandomSchedPol::~RandomSchedPol() {

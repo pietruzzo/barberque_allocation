@@ -17,11 +17,9 @@
 
 #include "bbque/signals_manager.h"
 
-#include "bbque/modules_factory.h"
-
 #define SIGNALS_MANAGER_NAMESPACE "bq.sig"
 
-namespace bp = bbque::plugins;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -39,12 +37,8 @@ SignalsManager::SignalsManager() :
 	quitEn(SIGQUIT, ResourceManager::BBQ_ABORT) {
 
 	//---------- Get a logger module
-	bp::LoggerIF::Configuration conf(SIGNALS_MANAGER_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		fprintf(stderr, "SM: Logger module creation FAILED\n");
-		assert(logger);
-	}
+	logger = bu::Logger::GetLogger(SIGNALS_MANAGER_NAMESPACE);
+	assert(logger);
 
 	//---------- Registering handlers
 	RegisterHandler(SIGUSR1, &usr1En);

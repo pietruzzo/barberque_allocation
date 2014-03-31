@@ -30,11 +30,11 @@ namespace bbque { namespace res {
 
 uint32_t ResourceBinder::Bind(
 		UsagesMap_t const & src_um,
-		ResourceIdentifier::Type_t r_type,
-		ResID_t	src_r_id,
-		ResID_t dst_r_id,
+		br::ResourceIdentifier::Type_t r_type,
+		br::ResID_t	src_r_id,
+		br::ResID_t dst_r_id,
 		UsagesMapPtr_t dst_pum,
-		ResourceIdentifier::Type_t filter_rtype,
+		br::ResourceIdentifier::Type_t filter_rtype,
 		ResourceBitset * filter_mask) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	UsagesMap_t::const_iterator src_it, src_end;
@@ -43,7 +43,7 @@ uint32_t ResourceBinder::Bind(
 	uint32_t count = 0;
 
 	// Sanity check
-	if (r_type >= ResourceIdentifier::TYPE_COUNT)
+	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
 		return 0;
 
 	// Proceed with the resource binding...
@@ -74,7 +74,7 @@ uint32_t ResourceBinder::Bind(
 		// Create a new Usage object and set the binding list
 		UsagePtr_t dst_pusage(new Usage(src_pusage->GetAmount()));
 		r_list = ra.GetResources(dst_ppath);
-		if ((filter_rtype != ResourceIdentifier::UNDEFINED)
+		if ((filter_rtype != br::ResourceIdentifier::UNDEFINED)
 				&& (filter_mask != nullptr))
 			dst_pusage->SetResourcesList(r_list, filter_rtype, *filter_mask);
 		else
@@ -89,13 +89,13 @@ uint32_t ResourceBinder::Bind(
 
 ResourceBitset ResourceBinder::GetMask(
 		UsagesMapPtr_t pum,
-		ResourceIdentifier::Type_t r_type) {
+		br::ResourceIdentifier::Type_t r_type) {
 	UsagesMap_t::iterator pum_it;
 	ResourceBitset r_mask;
-	ResID_t r_id;
+	br::ResID_t r_id;
 
 	// Sanity check
-	if (r_type >= ResourceIdentifier::TYPE_COUNT)
+	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
 		return r_mask;
 
 	// Scan the resource usages map
@@ -113,13 +113,13 @@ ResourceBitset ResourceBinder::GetMask(
 
 ResourceBitset ResourceBinder::GetMask(
 		UsagesMap_t const & um,
-		ResourceIdentifier::Type_t r_type) {
+		br::ResourceIdentifier::Type_t r_type) {
 	UsagesMap_t::const_iterator um_it;
 	ResourceBitset r_mask;
-	ResID_t r_id;
+	br::ResID_t r_id;
 
 	// Sanity check
-	if (r_type >= ResourceIdentifier::TYPE_COUNT)
+	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
 		return r_mask;
 
 	// Scan the resource usages map
@@ -137,25 +137,25 @@ ResourceBitset ResourceBinder::GetMask(
 
 ResourceBitset ResourceBinder::GetMask(
 		UsagesMapPtr_t pum,
-		ResourceIdentifier::Type_t r_type,
-		ResourceIdentifier::Type_t r_scope_type,
-		ResID_t r_scope_id,
+		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResID_t r_scope_id,
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
 	UsagesMap_t::iterator pum_it;
-	ResourceIdentifier::Type_t rp_type;
+	br::ResourceIdentifier::Type_t rp_type;
 	ResourceBitset r_mask;
-	ResID_t rs_id;
+	br::ResID_t rs_id;
 
 	// Sanity check
-	if ((r_type >= ResourceIdentifier::TYPE_COUNT)       ||
-		(r_scope_type >= ResourceIdentifier::TYPE_COUNT) ||
+	if ((r_type >= br::ResourceIdentifier::TYPE_COUNT)       ||
+		(r_scope_type >= br::ResourceIdentifier::TYPE_COUNT) ||
 		(r_scope_id < 0))
 		return r_mask;
 
 	DB(fprintf(stderr, FD("GetMask: scope='%s%d' r='%s' view=%lu\n"),
-				ResourceIdentifier::TypeStr[r_scope_type], r_scope_id,
-				ResourceIdentifier::TypeStr[r_type], vtok););
+				br::ResourceIdentifier::TypeStr[r_scope_type], r_scope_id,
+				br::ResourceIdentifier::TypeStr[r_type], vtok););
 
 	// Scan the resource usages map
 	for (pum_it = pum->begin();	pum_it != pum->end(); ++pum_it) {
@@ -180,14 +180,14 @@ ResourceBitset ResourceBinder::GetMask(
 
 ResourceBitset ResourceBinder::GetMask(
 		ResourcePtrList_t const & rpl,
-		ResourceIdentifier::Type_t r_type,
+		br::ResourceIdentifier::Type_t r_type,
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
 	ResourcePtrList_t::const_iterator rpl_it;
 	ResourceBitset r_mask;
 
 	// Sanity check
-	if (r_type >= ResourceIdentifier::TYPE_COUNT)
+	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
 		return r_mask;
 
 	// Scan the resource usages map

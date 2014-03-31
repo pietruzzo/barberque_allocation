@@ -20,6 +20,7 @@
 #include "bbque/rtlib/rpc_fifo_client.h"
 #include "bbque/rtlib/rpc_unmanaged_client.h"
 #include "bbque/app/application.h"
+#include "bbque/utils/logging/console_logger.h"
 
 #include <cstdio>
 #include <sys/stat.h>
@@ -37,25 +38,30 @@ namespace bu = bbque::utils;
 
 namespace bbque { namespace rtlib {
 
+std::unique_ptr<bu::Logger> BbqueRPC::logger;
+
 BbqueRPC * BbqueRPC::GetInstance() {
 	static BbqueRPC * instance = NULL;
 
 	if (instance)
 		return instance;
 
+	// Get a Logger module
+	logger = bu::Logger::GetLogger(BBQUE_LOG_MODULE);
+
 	// Parse environment configuration
 	ParseOptions();
 
 #ifdef CONFIG_BBQUE_RTLIB_UNMANAGED_SUPPORT
 	if (envUnmanaged) {
-		fprintf(stderr, FW("Running in UNMANAGED MODE\n"));
+		logger->Warn("Running in UNMANAGED MODE");
 		instance = new BbqueRPC_UNMANAGED_Client();
 		goto channel_done;
 	}
 #endif
 
 #ifdef CONFIG_BBQUE_RPC_FIFO
-	DB(fprintf(stderr, FD("Using FIFO RPC channel\n")));
+	logger->Debug("Using FIFO RPC channel");
 	instance = new BbqueRPC_FIFO_Client();
 #else
 #error RPC Channel NOT defined
@@ -72,7 +78,8 @@ BbqueRPC::~BbqueRPC(void) {
 	excMap_t::iterator it;
 	pregExCtx_t prec;
 
-	DB(fprintf(stderr, FD("BbqueRPC dtor\n")));
+	logger = bu::ConsoleLogger::GetInstance(BBQUE_LOG_MODULE);
+	logger->Debug("BbqueRPC dtor");
 
 	// Dump out execution statistics
 	it = exc_map.begin();
@@ -118,14 +125,14 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 	size_t nchr = 0;
 #endif
 
-	DB(fprintf(stderr, FD("Parsing environment options...\n")));
+	logger->Debug("Parsing environment options...");
 
 	// Look-for the expected RTLIB configuration variable
 	env = getenv("BBQUE_RTLIB_OPTS");
 	if (!env)
 		return RTLIB_OK;
 
-	DB(fprintf(stderr, FD("BBQUE_RTLIB_OPTS: [%s]\n"), env));
+	logger->Debug("BBQUE_RTLIB_OPTS: [%s]", env);
 
 	// Tokenize configuration options
 	strncpy(buff, env, sizeof(buff));
@@ -134,7 +141,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 	// Parsing all options (only single char opts are supported)
 	while (opt) {
 
-		DB(fprintf(stderr, FD("OPT: %s\n"), opt));
+		logger->Debug("OPT: %s", opt);
 
 		switch (opt[0]) {
 		case 'G':
@@ -154,7 +161,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 						BBQUE_RTLIB_OPTS_TAG_MAX,
 						"%s:", opt+1);
 			}
-			fprintf(stderr, FI("Enabling MOST output [tag: %s]\n"),
+			logger->Info("Enabling MOST output [tag: %s]",
 					envMetricsTag[0] ? envMetricsTag : "-");
 			break;
 		case 'O':
@@ -166,7 +173,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			envUnmanaged = true;
 			if (*(opt+1))
 				sscanf(opt+1, "%d", &envUnmanagedAWM);
-			DB(fprintf(stderr, FW("Enabling UNMANAGED mode\n")));
+			logger->Warn("Enabling UNMANAGED mode");
 			break;
 		case 'b':
 			// Enabling "big numbers" notations
@@ -182,9 +189,9 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			// ... with the specified verbosity level
 			sscanf(opt+1, "%d", &envDetailedRun);
 			if (envPerfCount) {
-				fprintf(stderr, FI("Enabling Perf Counters [verbosity: %d]\n"), envDetailedRun);
+				logger->Info("Enabling Perf Counters [verbosity: %d]", envDetailedRun);
 			} else {
-				fprintf(stderr, FE("WARN: Perf Counters NOT available\n"));
+				logger->Error("WARN: Perf Counters NOT available");
 			}
 			break;
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
@@ -195,9 +202,9 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			// # of RAW perf counters
 			sscanf(opt+1, "%d", &envRawPerfCount);
 			if (envRawPerfCount > 0) {
-				fprintf(stderr, FI("Enabling %d RAW Perf Counters\n"), envRawPerfCount);
+				logger->Info("Enabling %d RAW Perf Counters", envRawPerfCount);
 			} else {
-				fprintf(stderr, FW("Expected RAW Perf Counters\n"));
+				logger->Warn("Expected RAW Perf Counters");
 				break;
 			}
 
@@ -252,7 +259,7 @@ RTLIB_ExitCode_t BbqueRPC::Init(const char *name) {
 	RTLIB_ExitCode_t exitCode;
 
 	if (initialized) {
-		fprintf(stderr, FW("RTLIB already initialized for app [%d:%s]\n"),
+		logger->Warn("RTLIB already initialized for app [%d:%s]",
 				appTrdPid, name);
 		return RTLIB_OK;
 	}
@@ -260,18 +267,17 @@ RTLIB_ExitCode_t BbqueRPC::Init(const char *name) {
 	// Getting application PID
 	appTrdPid = gettid();
 
-	DB(fprintf(stderr, FD("Initializing app [%d:%s]\n"),
-				appTrdPid, name));
+	logger->Debug("Initializing app [%d:%s]", appTrdPid, name);
 
 	exitCode = _Init(name);
 	if (exitCode != RTLIB_OK) {
-		fprintf(stderr, FE("Initialization FAILED\n"));
+		logger->Error("Initialization FAILED");
 		return exitCode;
 	}
 
 	initialized = true;
 
-	DB(fprintf(stderr, FD("Initialation DONE\n")));
+	logger->Debug("Initialation DONE");
 	return RTLIB_OK;
 
 }
@@ -300,11 +306,11 @@ RTLIB_ExecutionContextHandler_t BbqueRPC::Register(
 	assert(initialized);
 	assert(name && params);
 
-	fprintf(stderr, FI("Registering EXC [%s]...\n"), name);
+	logger->Info("Registering EXC [%s]...", name);
 
 	if (!initialized) {
-		fprintf(stderr, FE("Registering EXC [%s] FAILED "
-					"(Error: RTLIB not initialized)\n"), name);
+		logger->Error("Registering EXC [%s] FAILED "
+					"(Error: RTLIB not initialized)", name);
 		return NULL;
 	}
 
@@ -312,8 +318,8 @@ RTLIB_ExecutionContextHandler_t BbqueRPC::Register(
 	for( ; it != end; ++it) {
 		prec = (*it).second;
 		if (prec->name == name) {
-			fprintf(stderr, FE("Registering EXC [%s] FAILED "
-				"(Error: EXC already registered)\n"), name);
+			logger->Error("Registering EXC [%s] FAILED "
+				"(Error: EXC already registered)", name);
 			assert(prec->name != name);
 			return NULL;
 		}
@@ -327,9 +333,8 @@ RTLIB_ExecutionContextHandler_t BbqueRPC::Register(
 	// Calling the Low-level registration
 	result = _Register(prec);
 	if (result != RTLIB_OK) {
-		DB(fprintf(stderr, FE("Registering EXC [%s] FAILED "
-			"(Error %d: %s)\n"),
-			name, result, RTLIB_ErrorStr(result)));
+		DB(logger->Error("Registering EXC [%s] FAILED "
+			"(Error %d: %s)", name, result, RTLIB_ErrorStr(result)));
 		return NULL;
 	}
 
@@ -352,8 +357,8 @@ BbqueRPC::pregExCtx_t BbqueRPC::getRegistered(
 
 	// Checking for library initialization
 	if (!initialized) {
-		fprintf(stderr, FE("EXC [%p] lookup FAILED "
-			"(Error: RTLIB not initialized)\n"), (void*)ech);
+		logger->Error("EXC [%p] lookup FAILED "
+			"(Error: RTLIB not initialized)", (void*)ech);
 		assert(initialized);
 		return pregExCtx_t();
 	}
@@ -365,8 +370,8 @@ BbqueRPC::pregExCtx_t BbqueRPC::getRegistered(
 			break;
 	}
 	if (it == end) {
-		fprintf(stderr, FE("EXC [%p] lookup FAILED "
-			"(Error: EXC not registered)\n"), (void*)ech);
+		logger->Error("EXC [%p] lookup FAILED "
+			"(Error: EXC not registered)", (void*)ech);
 		assert(it != end);
 		return pregExCtx_t();
 	}
@@ -379,15 +384,15 @@ BbqueRPC::pregExCtx_t BbqueRPC::getRegistered(uint8_t exc_id) {
 
 	// Checking for library initialization
 	if (!initialized) {
-		fprintf(stderr, FE("EXC [%d] lookup FAILED "
-			"(Error: RTLIB not initialized)\n"), exc_id);
+		logger->Error("EXC [%d] lookup FAILED "
+			"(Error: RTLIB not initialized)", exc_id);
 		assert(initialized);
 		return pregExCtx_t();
 	}
 
 	if (it == exc_map.end()) {
-		fprintf(stderr, FE("EXC [%d] lookup FAILED "
-			"(Error: EXC not registered)\n"), exc_id);
+		logger->Error("EXC [%d] lookup FAILED "
+			"(Error: EXC not registered)", exc_id);
 		assert(it != exc_map.end());
 		return pregExCtx_t();
 	}
@@ -404,8 +409,8 @@ void BbqueRPC::Unregister(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Unregister EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("Unregister EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return;
 	}
 
@@ -414,10 +419,8 @@ void BbqueRPC::Unregister(
 	// Calling the low-level unregistration
 	result = _Unregister(prec);
 	if (result != RTLIB_OK) {
-		DB(fprintf(stderr, FE("Unregister EXC [%p:%s] FAILED "
-				"(Error %d: %s)\n"),
-				(void*)ech, prec->name.c_str(), result,
-				RTLIB_ErrorStr(result)));
+		DB(logger->Error("Unregister EXC [%p:%s] FAILED (Error %d: %s)",
+				(void*)ech, prec->name.c_str(), result, RTLIB_ErrorStr(result)));
 		return;
 	}
 
@@ -436,8 +439,7 @@ void BbqueRPC::UnregisterAll() {
 
 	// Checking for library initialization
 	if (!initialized) {
-		fprintf(stderr, FE("EXCs cleanup FAILED "
-			"(Error: RTLIB not initialized)\n"));
+		logger->Error("EXCs cleanup FAILED (Error: RTLIB not initialized)");
 		assert(initialized);
 		return;
 	}
@@ -454,10 +456,8 @@ void BbqueRPC::UnregisterAll() {
 		// Calling the low-level unregistration
 		result = _Unregister(prec);
 		if (result != RTLIB_OK) {
-			DB(fprintf(stderr, FE("Unregister EXC [%s] FAILED "
-							"(Error %d: %s)\n"),
-						prec->name.c_str(), result,
-						RTLIB_ErrorStr(result)));
+			DB(logger->Error("Unregister EXC [%s] FAILED (Error %d: %s)",
+						prec->name.c_str(), result, RTLIB_ErrorStr(result)));
 			return;
 		}
 
@@ -477,8 +477,8 @@ RTLIB_ExitCode_t BbqueRPC::Enable(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Enabling EXC [%p] FAILED "
-				"(Error: EXC not registered)\n"), (void*)ech);
+		logger->Error("Enabling EXC [%p] FAILED "
+				"(Error: EXC not registered)", (void*)ech);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -487,10 +487,8 @@ RTLIB_ExitCode_t BbqueRPC::Enable(
 	// Calling the low-level enable function
 	result = _Enable(prec);
 	if (result != RTLIB_OK) {
-		DB(fprintf(stderr, FE("Enabling EXC [%p:%s] FAILED "
-				"(Error %d: %s)\n"),
-				(void*)ech, prec->name.c_str(), result,
-				RTLIB_ErrorStr(result)));
+		DB(logger->Error("Enabling EXC [%p:%s] FAILED (Error %d: %s)",
+				(void*)ech, prec->name.c_str(), result, RTLIB_ErrorStr(result)));
 		return RTLIB_EXC_ENABLE_FAILED;
 	}
 
@@ -511,9 +509,8 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Disabling EXC [%p] STOP "
-				"(Error: EXC not registered)\n"),
-				(void*)ech);
+		logger->Error("Disabling EXC [%p] STOP "
+				"(Error: EXC not registered)", (void*)ech);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -522,10 +519,8 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 	// Calling the low-level disable function
 	result = _Disable(prec);
 	if (result != RTLIB_OK) {
-		DB(fprintf(stderr, FE("Disabling EXC [%p:%s] FAILED "
-				"(Error %d: %s)\n"),
-				(void*)ech, prec->name.c_str(), result,
-				RTLIB_ErrorStr(result)));
+		DB(logger->Error("Disabling EXC [%p:%s] FAILED (Error %d: %s)",
+				(void*)ech, prec->name.c_str(), result, RTLIB_ErrorStr(result)));
 		return RTLIB_EXC_DISABLE_FAILED;
 	}
 
@@ -549,8 +544,7 @@ RTLIB_ExitCode_t BbqueRPC::SetupStatistics(pregExCtx_t prec) {
 
 	// Check if this is a newly selected AWM
 	if (!pstats) {
-		DB(fprintf(stderr, FD("Setup stats for AWM [%d]\n"),
-					prec->awm_id));
+		logger->Debug("Setup stats for AWM [%d]", prec->awm_id);
 		pstats = prec->stats[prec->awm_id] =
 			pAwmStats_t(new AwmStats_t);
 
@@ -617,8 +611,7 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 				_cycles, pstats->time_processing,
 				_min, _max, _avg, _var);
 		} else {
-			fprintf(stderr, FD("%8s-%d %5d %6d %7d "
-					"(%7.3f,%7.3f)(%7.3f,%7.3f)\n"),
+			logger->Debug("%8s-%d %5d %6d %7d (%7.3f,%7.3f)(%7.3f,%7.3f)",
 				prec->name.c_str(), awm_id, pstats->count,
 				_cycles, pstats->time_processing,
 				_min, _max, _avg, _var);
@@ -723,7 +716,7 @@ RTLIB_ExitCode_t BbqueRPC::SetCGroupPath(pregExCtx_t prec) {
 
 	procfd = ::fopen("/proc/mounts", "r");
 	if (!procfd) {
-		fprintf(stderr, FE("Mounts read FAILED (Error %d: %s)\n"),
+		logger->Error("Mounts read FAILED (Error %d: %s)",
 					errno, strerror(errno));
 		return RTLIB_EXC_CGROUP_NONE;
 	}
@@ -752,16 +745,14 @@ RTLIB_ExitCode_t BbqueRPC::SetCGroupPath(pregExCtx_t prec) {
 	}
 
 	if (count == BBQUE_RPC_CGOUPS_PATH_MAX) {
-		fprintf(stderr,
-			FE("CGroups mount identification FAILED"
-				"(Error: path longer than %d chars)\n"),
+		logger->Error("CGroups mount identification FAILED"
+				"(Error: path longer than %d chars)",
 				BBQUE_RPC_CGOUPS_PATH_MAX-1);
 		return RTLIB_EXC_CGROUP_NONE;
 	}
 
 	if (!cgMount[0]) {
-		fprintf(stderr,
-			FE("CGroups mount identification FAILED\n"));
+		logger->Error("CGroups mount identification FAILED");
 		return RTLIB_EXC_CGROUP_NONE;
 	}
 
@@ -775,15 +766,13 @@ RTLIB_ExitCode_t BbqueRPC::SetCGroupPath(pregExCtx_t prec) {
 	// Check CGroups access
 	struct stat cgstat;
 	if (stat(buff, &cgstat)) {
-		fprintf(stderr,
-			FE("CGroup [%s] access FAILED (Error %d: %s)\n"),
+		logger->Error("CGroup [%s] access FAILED (Error %d: %s)",
 				buff, errno, strerror(errno));
 		return RTLIB_EXC_CGROUP_NONE;
 	}
 
 	pathCGroup = std::string(buff);
-	DB(fprintf(stderr, FD("Application CGroup [%s] FOUND\n"),
-				pathCGroup.c_str()));
+	logger->Debug("Application CGroup [%s] FOUND", pathCGroup.c_str());
 
 	return RTLIB_OK;
 
@@ -803,13 +792,13 @@ void BbqueRPC::DumpMemoryReport(pregExCtx_t prec) {
 	snprintf(buff, 256, "%s/memory.stat", GetCGroupPath().c_str());
 	memfd = ::fopen(buff, "r");
 	if (!memfd) {
-		fprintf(stderr, FE("Opening MEMORY stats FAILED (Error %d: %s)\n"),
+		logger->Error("Opening MEMORY stats FAILED (Error %d: %s)",
 					errno, strerror(errno));
 		return;
 	}
 
 	while (fgets(buff, 256, memfd)) {
-		DB(fprintf(stderr, FD("Memory Read [%s]\n"), buff));
+		logger->Debug("Memory Read [%s]", buff);
 		sscanf(buff, "%32s %" PRIu64, metric, &value);
 		DUMP_MOST_METRIC("memory", metric, value, "%" PRIu64);
 	}
@@ -861,10 +850,8 @@ void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
 	// TIMER: Get RUNNING
 	last_cycle_ms = prec->exc_tmr.getElapsedTimeMs();
 
-	DB(fprintf(stderr, FD("Last cycle time %10.3f[ms] for "
-					"EXC [%s:%02hu]\n"),
-				last_cycle_ms,
-				prec->name.c_str(), prec->exc_id));
+	logger->Debug("Last cycle time %10.3f[ms] for EXC [%s:%02hu]",
+				last_cycle_ms, prec->name.c_str(), prec->exc_id);
 
 	// Update running counters
 	pstats->time_processing += last_cycle_ms;
@@ -880,8 +867,7 @@ void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
 	double _max = max(pstats->samples);
 	double _avg = mean(pstats->samples);
 	double _var = variance(pstats->samples);
-	fprintf(stderr, FD("#%08d: m: %.3f, M: %.3f, "
-			"a: %.3f, v: %.3f) [ms]\n"),
+	logger->Debug("#%08d: m: %.3f, M: %.3f, a: %.3f, v: %.3f) [ms]",
 		_count, _min, _max, _avg, _var);
 	)
 
@@ -929,18 +915,17 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 	std::unique_lock<std::mutex> rec_ul(prec->mtx);
 
 	if (!isEnabled(prec)) {
-		DB(fprintf(stderr, FD("Get AWM FAILED "
-				"(Error: EXC not enabled)\n")));
+		logger->Debug("Get AWM FAILED (Error: EXC not enabled)");
 		return RTLIB_EXC_GWM_FAILED;
 	}
 
 	if (isBlocked(prec)) {
-		DB(fprintf(stderr, FD("BLOCKED\n")));
+		logger->Debug("BLOCKED");
 		return RTLIB_EXC_GWM_BLOCKED;
 	}
 
 	if (isSyncMode(prec) && !isAwmValid(prec)) {
-		DB(fprintf(stderr, FD("SYNC Pending\n")));
+		logger->Debug("SYNC Pending");
 		// Update AWM statistics
 		// This is required to save the sync_time of the last
 		// completed cycle, thus having a correct cycles count
@@ -950,11 +935,11 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 
 	if (!isSyncMode(prec) && !isAwmValid(prec)) {
 		// This is the case to send a GWM to Barbeque
-		DB(fprintf(stderr, FD("NOT valid AWM\n")));
+		logger->Debug("NOT valid AWM");
 		return RTLIB_EXC_GWM_FAILED;
 	}
 
-	DB(fprintf(stderr, FD("Valid AWM assigned\n")));
+	logger->Debug("Valid AWM assigned");
 	wm->awm_id = prec->awm_id;
 
 	// Update AWM statistics
@@ -1011,7 +996,7 @@ RTLIB_ExitCode_t BbqueRPC::WaitForSyncDone(pregExCtx_t prec) {
 	std::unique_lock<std::mutex> rec_ul(prec->mtx);
 
 	while (isEnabled(prec) && !isSyncDone(prec)) {
-		DB(fprintf(stderr, FD("Waiting for reconfiguration to complete...\n")));
+		logger->Debug("Waiting for reconfiguration to complete...");
 		prec->cv.wait(rec_ul);
 	}
 
@@ -1037,18 +1022,16 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Getting WM for EXC [%p] FAILED "
-			"(Error: EXC not registered)\n"),
-			(void*)ech);
+		logger->Error("Getting WM for EXC [%p] FAILED "
+			"(Error: EXC not registered)", (void*)ech);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	if (unlikely(prec->ctrlTrdPid == 0)) {
 		// Keep track of the Control Thread PID
 		prec->ctrlTrdPid = gettid();
-		DB(fprintf(stderr, FD("Tracking control thread PID [%d] "
-						"for EXC [%d]...\n"),
-					prec->ctrlTrdPid, prec->exc_id));
+		logger->Debug("Tracking control thread PID [%d] for EXC [%d]...",
+					prec->ctrlTrdPid, prec->exc_id);
 	}
 
 #ifdef CONFIG_BBQUE_RTLIB_UNMANAGED_SUPPORT
@@ -1073,7 +1056,7 @@ do_gwm:
 #endif
 
 	// Checking if a valid AWM has been assigned
-	DB(fprintf(stderr, FD("Looking for assigned AWM...\n")));
+	logger->Debug("Looking for assigned AWM...");
 	result = GetAssignedWorkingMode(prec, wm);
 	if (result == RTLIB_OK) {
 		setSyncDone(prec);
@@ -1095,10 +1078,8 @@ do_gwm:
 
 	if (!isSyncMode(prec) && (result == RTLIB_EXC_GWM_FAILED)) {
 
-		DB(fprintf(stderr, FD("AWM not assigned, "
-					"sending schedule request to RTRM...\n")));
-		DB(fprintf(stderr, FI(
-				"[%s:%02hu] ===> BBQ::ScheduleRequest()\n"),
+		logger->Debug("AWM not assigned, sending schedule request to RTRM...");
+		DB(logger->Info("[%s:%02hu] ===> BBQ::ScheduleRequest()",
 				prec->name.c_str(), prec->exc_id));
 		// Calling the low-level start
 		result = _ScheduleRequest(prec);
@@ -1112,7 +1093,7 @@ do_gwm:
 				(result == RTLIB_EXC_GWM_BLOCKED));
 	}
 
-	DB(fprintf(stderr, FD("Waiting for assigned AWM...\n")));
+	logger->Debug("Waiting for assigned AWM...");
 
 	// Waiting for an AWM being assigned
 	result = WaitForWorkingMode(prec, wm);
@@ -1139,20 +1120,17 @@ do_reconf:
 	case RTLIB_EXC_GWM_RECONF:
 	case RTLIB_EXC_GWM_MIGREC:
 	case RTLIB_EXC_GWM_MIGRATE:
-		DB(fprintf(stderr, FI(
-				"[%s:%02hu] <------------- AWM [%02d] --\n"),
-				prec->name.c_str(), prec->exc_id,
-				prec->awm_id));
+		DB(logger->Info("[%s:%02hu] <------------- AWM [%02d] --",
+				prec->name.c_str(), prec->exc_id, prec->awm_id));
 		break;
 	case RTLIB_EXC_GWM_BLOCKED:
-		DB(fprintf(stderr, FI(
-				"[%s:%02hu] <---------------- BLOCKED --\n"),
+		DB(logger->Info("[%s:%02hu] <---------------- BLOCKED --",
 				prec->name.c_str(), prec->exc_id));
 		break;
 	default:
-		DB(fprintf(stderr, FE("Execution context [%s] GWM FAILED "
-					"(Error: Invalid event [%d])\n"),
-				prec->name.c_str(), prec->event));
+		DB(logger->Error("Execution context [%s] GWM FAILED "
+					"(Error: Invalid event [%d])",
+					prec->name.c_str(), prec->event));
 		assert(prec->event >= RTLIB_EXC_GWM_START);
 		assert(prec->event <= RTLIB_EXC_GWM_BLOCKED);
 		break;
@@ -1162,10 +1140,8 @@ do_reconf:
 
 exit_gwm_failed:
 
-	DB(fprintf(stderr, FE("Execution context [%s] GWM FAILED "
-					"(Error %d: %s)\n"),
-				prec->name.c_str(), result,
-				RTLIB_ErrorStr(result)));
+	DB(logger->Error("Execution context [%s] GWM FAILED (Error %d: %s)",
+				prec->name.c_str(), result, RTLIB_ErrorStr(result)));
 	return RTLIB_EXC_GWM_FAILED;
 
 }
@@ -1195,10 +1171,8 @@ uint32_t BbqueRPC::GetSyncLatency(pregExCtx_t prec) {
 	else
 		syncDelay = 0;
 
-	DB(fprintf(stderr, FD("Expected sync time in %10.3f[ms] for "
-					"EXC [%s:%02hu]\n"),
-				syncDelay,
-				prec->name.c_str(), prec->exc_id));
+	logger->Debug("Expected sync time in %10.3f[ms] for EXC [%s:%02hu]",
+				syncDelay, prec->name.c_str(), prec->exc_id);
 
 	return ceil(syncDelay);
 }
@@ -1227,8 +1201,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
 
 	prec = getRegistered(msg.hdr.exc_id);
 	if (!prec) {
-		fprintf(stderr, FE("SyncP_1 (Pre-Change) EXC [%d] FAILED "
-				"(Error: Execution Context not registered)\n"),
+		logger->Error("SyncP_1 (Pre-Change) EXC [%d] FAILED "
+				"(Error: Execution Context not registered)",
 				msg.hdr.exc_id);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
@@ -1248,13 +1222,10 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 		prec->dev_id = msg.dev;
 #endif
-		fprintf(stderr, FI("SyncP_1 (Pre-Change) EXC [%d], "
-					"Action [%d], Assigned AWM [%d]\n"),
-				msg.hdr.exc_id,
-				msg.event, msg.awm);
+		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned AWM [%d]",
+				msg.hdr.exc_id, msg.event, msg.awm);
 	} else {
-		fprintf(stderr, FI("SyncP_1 (Pre-Change) EXC [%d], "
-					"Action [%d:BLOCKED]\n"),
+		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d:BLOCKED]",
 				msg.hdr.exc_id, msg.event);
 	}
 
@@ -1268,9 +1239,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
 
 	rec_ul.unlock();
 
-	DB(fprintf(stderr, FD("SyncP_1 (Pre-Change) EXC [%d], "
-				"SyncLatency [%u]\n"),
-				msg.hdr.exc_id, syncLatency));
+	logger->Debug("SyncP_1 (Pre-Change) EXC [%d], SyncLatency [%u]",
+				msg.hdr.exc_id, syncLatency);
 
 	result = _SyncpPreChangeResp(msg.hdr.token, prec, syncLatency);
 
@@ -1282,8 +1252,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
 
 	// Force a DoChange, which will not be forwarded by the BBQ daemon if
 	// the Sync Point forcing support is disabled
-	fprintf(stderr, FI("SyncP_3 (Do-Change) EXC [%d]\n"),
-			msg.hdr.exc_id);
+	logger->Info("SyncP_3 (Do-Change) EXC [%d]", msg.hdr.exc_id);
 	return SyncP_DoChangeNotify(prec);
 
 #else
@@ -1309,20 +1278,20 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_SyncChangeNotify(
 
 	prec = getRegistered(msg.hdr.exc_id);
 	if (!prec) {
-		fprintf(stderr, FE("SyncP_2 (Sync-Change) EXC [%d] FAILED "
-				"(Error: Execution Context not registered)\n"),
+		logger->Error("SyncP_2 (Sync-Change) EXC [%d] FAILED "
+				"(Error: Execution Context not registered)",
 				msg.hdr.exc_id);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	result = SyncP_SyncChangeNotify(prec);
 	if (result != RTLIB_OK) {
-		fprintf(stderr, FW("SyncP_2 (Sync-Change) EXC [%d] CRITICAL "
-				"(Warning: Overpassing Synchronization time)\n"),
+		logger->Warn("SyncP_2 (Sync-Change) EXC [%d] CRITICAL "
+				"(Warning: Overpassing Synchronization time)",
 				msg.hdr.exc_id);
 	}
 
-	fprintf(stderr, FI("SyncP_2 (Sync-Change) EXC [%d]\n"),
+	logger->Info("SyncP_2 (Sync-Change) EXC [%d]",
 			msg.hdr.exc_id);
 
 	_SyncpSyncChangeResp(msg.hdr.token, prec, result);
@@ -1355,8 +1324,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(
 
 	prec = getRegistered(msg.hdr.exc_id);
 	if (!prec) {
-		fprintf(stderr, FE("SyncP_3 (Do-Change) EXC [%d] FAILED "
-				"(Error: Execution Context not registered)\n"),
+		logger->Error("SyncP_3 (Do-Change) EXC [%d] FAILED "
+				"(Error: Execution Context not registered)",
 				msg.hdr.exc_id);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
@@ -1365,8 +1334,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(
 
 	// NOTE this command should not generate a response, it is just a notification
 
-	fprintf(stderr, FI("SyncP_3 (Do-Change) EXC [%d]\n"),
-			msg.hdr.exc_id);
+	logger->Info("SyncP_3 (Do-Change) EXC [%d]", msg.hdr.exc_id);
 
 	return result;
 }
@@ -1384,21 +1352,20 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(
 
 	prec = getRegistered(msg.hdr.exc_id);
 	if (!prec) {
-		fprintf(stderr, FE("SyncP_4 (Post-Change) EXC [%d] FAILED "
-				"(Error: Execution Context not registered)\n"),
+		logger->Error("SyncP_4 (Post-Change) EXC [%d] FAILED "
+				"(Error: Execution Context not registered)",
 				msg.hdr.exc_id);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	result = SyncP_PostChangeNotify(prec);
 	if (result != RTLIB_OK) {
-		fprintf(stderr, FW("SyncP_4 (Post-Change) EXC [%d] CRITICAL "
-				"(Warning: Reconfiguration timeout)\n"),
+		logger->Warn("SyncP_4 (Post-Change) EXC [%d] CRITICAL "
+				"(Warning: Reconfiguration timeout)",
 				msg.hdr.exc_id);
 	}
 
-	fprintf(stderr, FI("SyncP_4 (Post-Change) EXC [%d]\n"),
-			msg.hdr.exc_id);
+	logger->Info("SyncP_4 (Post-Change) EXC [%d]", msg.hdr.exc_id);
 
 	_SyncpPostChangeResp(msg.hdr.token, prec, result);
 
@@ -1420,18 +1387,16 @@ RTLIB_ExitCode_t BbqueRPC::Set(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Constraining EXC [%p] "
-				"(Error: EXC not registered)\n"), (void*)ech);
+		logger->Error("Constraining EXC [%p] "
+				"(Error: EXC not registered)", (void*)ech);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	// Calling the low-level enable function
 	result = _Set(prec, constraints, count);
 	if (result != RTLIB_OK) {
-		DB(fprintf(stderr, FE("Constraining EXC [%p:%s] FAILED "
-				"(Error %d: %s)\n"),
-				(void*)ech, prec->name.c_str(), result,
-				RTLIB_ErrorStr(result)));
+		DB(logger->Error("Constraining EXC [%p:%s] FAILED (Error %d: %s)",
+				(void*)ech, prec->name.c_str(), result, RTLIB_ErrorStr(result)));
 		return RTLIB_EXC_ENABLE_FAILED;
 	}
 
@@ -1447,18 +1412,16 @@ RTLIB_ExitCode_t BbqueRPC::Clear(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Clear constraints for EXC [%p] "
-				"(Error: EXC not registered)\n"), (void*)ech);
+		logger->Error("Clear constraints for EXC [%p] "
+				"(Error: EXC not registered)", (void*)ech);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	// Calling the low-level enable function
 	result = _Clear(prec);
 	if (result != RTLIB_OK) {
-		DB(fprintf(stderr, FE("Clear contraints for EXC [%p:%s] FAILED "
-				"(Error %d: %s)\n"),
-				(void*)ech, prec->name.c_str(), result,
-				RTLIB_ErrorStr(result)));
+		DB(logger->Error("Clear constraints for EXC [%p:%s] FAILED (Error %d: %s)",
+				(void*)ech, prec->name.c_str(), result, RTLIB_ErrorStr(result)));
 		return RTLIB_EXC_ENABLE_FAILED;
 	}
 
@@ -1475,25 +1438,23 @@ RTLIB_ExitCode_t BbqueRPC::GGap(
 
 	// Enforce the Goal-Gap domain
 	if (unlikely(percent > 100)) {
-		fprintf(stderr, FE("Set Gaol-Gap for EXC [%p] "
-				"(Error: out-of-bound)\n"), (void*)ech);
+		logger->Error("Set Goal-Gap for EXC [%p] "
+				"(Error: out-of-bound)", (void*)ech);
 		return RTLIB_ERROR;
 	}
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Set Gaol-Gap for EXC [%p] "
-				"(Error: EXC not registered)\n"), (void*)ech);
+		logger->Error("Set Goal-Gap for EXC [%p] "
+				"(Error: EXC not registered)", (void*)ech);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	// Calling the low-level enable function
 	result = _GGap(prec, percent);
 	if (result != RTLIB_OK) {
-		DB(fprintf(stderr, FE("Set Goal-Gap for EXC [%p:%s] FAILED "
-				"(Error %d: %s)\n"),
-				(void*)ech, prec->name.c_str(), result,
-				RTLIB_ErrorStr(result)));
+		logger->Error("Set Goal-Gap for EXC [%p:%s] FAILED (Error %d: %s)",
+				(void*)ech, prec->name.c_str(), result,RTLIB_ErrorStr(result));
 		return RTLIB_EXC_ENABLE_FAILED;
 	}
 
@@ -2346,8 +2307,8 @@ AppUid_t BbqueRPC::GetUid(RTLIB_ExecutionContextHandler_t ech) {
 	assert(ech);
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Unregister EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("Unregister EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 	assert(isRegistered(prec) == true);
@@ -2370,8 +2331,8 @@ RTLIB_ExitCode_t BbqueRPC::SetCPS(
 	assert(ech);
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Unregister EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("Unregister EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 	assert(isRegistered(prec) == true);
@@ -2383,7 +2344,7 @@ RTLIB_ExitCode_t BbqueRPC::SetCPS(
 		prec->cps_expect = static_cast<float>(1e3) / prec->cps_max;
 	}
 
-	fprintf(stderr, FI("Set cycle-rate @ %.3f[Hz] (%.3f[ms])\n"),
+	logger->Info("Set cycle-rate @ %.3f[Hz] (%.3f[ms])",
 				prec->cps_max, prec->cps_expect);
 	return RTLIB_OK;
 
@@ -2404,17 +2365,15 @@ void BbqueRPC::ForceCPS(pregExCtx_t prec) {
 
 	// Compute last cycle run time
 	tnow = bbque_tmr.getElapsedTimeMs();
-	DB(fprintf(stderr, FD("TP: %.4f, TN: %.4f\n"),
-				prec->cps_tstart, tnow));
+	logger->Debug("TP: %.4f, TN: %.4f", prec->cps_tstart, tnow);
 	cycle_time = tnow - prec->cps_tstart;
 	delay_ms = prec->cps_expect - cycle_time;
 
 	// Enforce CPS if needed
 	if (cycle_time < prec->cps_expect) {
 		sleep_us = 1e3 * static_cast<uint32_t>(delay_ms);
-		DB(fprintf(stderr, FD("Cycle Time: %3.3f[ms], ET: %3.3f[ms], "
-						"Sleep time %u [us]\n"),
-					cycle_time, prec->cps_expect, sleep_us));
+		logger->Debug("Cycle Time: %3.3f[ms], ET: %3.3f[ms], Sleep time %u [us]",
+					cycle_time, prec->cps_expect, sleep_us);
 		usleep(sleep_us);
 	}
 
@@ -2434,8 +2393,8 @@ void BbqueRPC::NotifySetup(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Unregister EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("Unregister EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return;
 	}
 
@@ -2456,8 +2415,8 @@ void BbqueRPC::NotifyInit(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("Unregister EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("Unregister EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return;
 	}
 
@@ -2477,8 +2436,8 @@ void BbqueRPC::NotifyExit(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("NotifyExit EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("NotifyExit EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return;
 	}
 
@@ -2493,7 +2452,7 @@ void BbqueRPC::NotifyExit(
 
 void BbqueRPC::NotifyPreConfigure(
 	RTLIB_ExecutionContextHandler_t ech) {
-	DB(fprintf(stderr, FD("===> NotifyConfigure\n")));
+	logger->Debug("===> NotifyConfigure");
 	(void)ech;
 	pregExCtx_t prec;
 
@@ -2518,13 +2477,13 @@ void BbqueRPC::NotifyPostConfigure(
 	assert(ech);
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("NotifyPostConfigure EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("NotifyPostConfigure EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return;
 	}
 	assert(isRegistered(prec) == true);
 
-	DB(fprintf(stderr, FD("<=== NotifyConfigure\n")));
+	logger->Debug("<=== NotifyConfigure");
 
 	// CPS Enforcing initialization
 	if ((prec->cps_expect != 0) || (prec->cps_tstart == 0))
@@ -2546,14 +2505,14 @@ void BbqueRPC::NotifyPreRun(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("NotifyPreRun EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("NotifyPreRun EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return;
 	}
 
 	assert(isRegistered(prec) == true);
 
-	DB(fprintf(stderr, FD("===> NotifyRun\n")));
+	logger->Debug("===> NotifyRun");
 	if (!envGlobal && PerfRegisteredEvents(prec)) {
 		if (unlikely(envOverheads)) {
 			PerfDisable(prec);
@@ -2572,14 +2531,14 @@ void BbqueRPC::NotifyPostRun(
 
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("NotifyPostRun EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("NotifyPostRun EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return;
 	}
 
 	assert(isRegistered(prec) == true);
 
-	DB(fprintf(stderr, FD("<=== NotifyRun\n")));
+	logger->Debug("<=== NotifyRun");
 
 	if (!envGlobal && PerfRegisteredEvents(prec)) {
 		if (unlikely(envOverheads)) {
@@ -2598,7 +2557,7 @@ void BbqueRPC::NotifyPostRun(
 
 void BbqueRPC::NotifyPreMonitor(
 	RTLIB_ExecutionContextHandler_t ech) {
-	DB(fprintf(stderr, FD("===> NotifyMonitor\n")));
+	logger->Debug("===> NotifyMonitor");
 	(void)ech;
 }
 
@@ -2609,13 +2568,13 @@ void BbqueRPC::NotifyPostMonitor(
 	assert(ech);
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("NotifyPostMonitor EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("NotifyPostMonitor EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
 		return;
 	}
 	assert(isRegistered(prec) == true);
 
-	DB(fprintf(stderr, FD("<=== NotifyMonitor\n")));
+	logger->Debug("<=== NotifyMonitor");
 
 	// CPS Enforcing
 	if (prec->cps_expect != 0)
@@ -2626,31 +2585,31 @@ void BbqueRPC::NotifyPostMonitor(
 
 void BbqueRPC::NotifyPreSuspend(
 	RTLIB_ExecutionContextHandler_t ech) {
-	DB(fprintf(stderr, FD("===> NotifySuspend\n")));
+	logger->Debug("===> NotifySuspend");
 	(void)ech;
 }
 
 void BbqueRPC::NotifyPostSuspend(
 	RTLIB_ExecutionContextHandler_t ech) {
-	DB(fprintf(stderr, FD("<=== NotifySuspend\n")));
+	logger->Debug("<=== NotifySuspend");
 	(void)ech;
 }
 
 void BbqueRPC::NotifyPreResume(
 	RTLIB_ExecutionContextHandler_t ech) {
-	DB(fprintf(stderr, FD("===> NotifyResume\n")));
+	logger->Debug("===> NotifyResume");
 	(void)ech;
 }
 
 void BbqueRPC::NotifyPostResume(
 	RTLIB_ExecutionContextHandler_t ech) {
-	DB(fprintf(stderr, FD("<=== NotifyResume\n")));
+	logger->Debug("<=== NotifyResume");
 	(void)ech;
 }
 
 void BbqueRPC::NotifyRelease(
 	RTLIB_ExecutionContextHandler_t ech) {
-	DB(fprintf(stderr, FD("===> NotifyRelease\n")));
+	logger->Debug("===> NotifyRelease");
 	(void)ech;
 }
 

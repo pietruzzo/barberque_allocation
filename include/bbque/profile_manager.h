@@ -21,11 +21,12 @@
 #include "bbque/config.h"
 #include "bbque/application_manager.h"
 #include "bbque/scheduler_manager.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/metrics_collector.h"
 
-using bbque::plugins::LoggerIF;
 using bbque::utils::MetricsCollector;
+
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -68,7 +69,7 @@ private:
 	/**
 	 * @brief The logger used by the resource manager.
 	 */
-	LoggerIF *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief The Resource Scheduler module

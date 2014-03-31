@@ -27,6 +27,10 @@ configure_file (
 	"${PROJECT_BINARY_DIR}/config/bbque.conf_dbg"
 )
 configure_file (
+	"${PROJECT_SOURCE_DIR}/config/rtlib.conf.in"
+	"${PROJECT_BINARY_DIR}/config/rtlib.conf"
+)
+configure_file (
 	"${PROJECT_SOURCE_DIR}/config/bbque_2parma_demo2.conf.in"
 	"${PROJECT_BINARY_DIR}/config/bbque_2parma_demo2.conf"
 )
@@ -83,7 +87,7 @@ add_subdirectory(pm)
 
 
 # Add "barbeque" target binary
-set (BARBEQUE_SRC barbeque version object configuration_manager console_logger)
+set (BARBEQUE_SRC barbeque version object configuration_manager)
 set (BARBEQUE_SRC platform_services dynamic_library ${BARBEQUE_SRC})
 set (BARBEQUE_SRC plugin_manager modules_factory ${BARBEQUE_SRC})
 set (BARBEQUE_SRC resource_manager application_manager ${BARBEQUE_SRC})
@@ -131,7 +135,6 @@ if (CONFIG_TARGET_LINUX)
 target_link_libraries(
 	barbeque
 	${CGroup_LIBRARIES}
-	-Wl,-whole-archive bbque_logger_log4cpp -Wl,-no-whole-archive
 	-ldl -lrt
 )
 endif (CONFIG_TARGET_LINUX)
@@ -142,7 +145,6 @@ target_link_libraries(
 	barbeque
 	bbque_android
 	-Wl,-whole-archive bbque_cpp11 -Wl,-no-whole-archive
-	-Wl,-whole-archive bbque_logger_android -Wl,-no-whole-archive
 )
 endif (CONFIG_TARGET_ANDROID)
 
@@ -174,6 +176,9 @@ install (FILES "${PROJECT_BINARY_DIR}/config/bbque.conf"
 		DESTINATION ${BBQUE_PATH_CONF}
 		COMPONENT BarbequeRTRM)
 install (FILES "${PROJECT_BINARY_DIR}/config/bbque.conf_dbg"
+		DESTINATION ${BBQUE_PATH_CONF}
+		COMPONENT BarbequeRTRM)
+install (FILES "${PROJECT_BINARY_DIR}/config/rtlib.conf"
 		DESTINATION ${BBQUE_PATH_CONF}
 		COMPONENT BarbequeRTRM)
 install (FILES "${PROJECT_BINARY_DIR}/config/bbque_2parma_demo2.conf"

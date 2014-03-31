@@ -44,10 +44,10 @@ SCFairness::SCFairness(
 		;
 
 	// Fairness penalties
-	for (int i = ResourceIdentifier::GROUP;
-			 i < ResourceIdentifier::TYPE_COUNT; ++i) {
+	for (int i = br::ResourceIdentifier::GROUP;
+			 i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
 		snprintf(conf_str, 50, SC_CONF_BASE_STR"%s.penalty.%s",
-				name, ResourceIdentifier::TypeStr[i]);
+				name, br::ResourceIdentifier::TypeStr[i]);
 		opts_desc.add_options()
 			(conf_str,
 			 po::value<uint16_t>
@@ -59,17 +59,17 @@ SCFairness::SCFairness(
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	// Boundaries enforcement (0 <= penalty <= 100)
-	for (int i = ResourceIdentifier::GROUP;
-			 i < ResourceIdentifier::TYPE_COUNT; ++i) {
+	for (int i = br::ResourceIdentifier::GROUP;
+			 i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
 		if (penalties_int[i] > 100) {
 			logger->Warn("penalty.%s out of range [0,100]: "
 					"found %d. Setting to %d",
-					ResourceIdentifier::TypeStr[i],
+					br::ResourceIdentifier::TypeStr[i],
 					penalties_int[i], SC_FAIR_DEFAULT_PENALTY);
 			penalties_int[i] = SC_FAIR_DEFAULT_PENALTY;
 		}
 		logger->Debug("penalty.%-3s: %.2f",
-				ResourceIdentifier::TypeStr[i],
+				br::ResourceIdentifier::TypeStr[i],
 				static_cast<float>(penalties_int[i]) / 100.0);
 	}
 }
@@ -81,7 +81,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 	char r_path_str[20];
 	uint64_t bd_r_avail;
 	AppPrio_t priority;
-	std::vector<ResID_t>::iterator ids_it;
+	std::vector<br::ResID_t>::iterator ids_it;
 	std::list<Resource::Type_t>::iterator type_it;
 
 	// Applications/EXC to schedule, given the priority level
@@ -98,7 +98,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 	for (; type_it != r_types.end(); ++type_it) {
 		snprintf(r_path_str, 20, "%s.%s",
 				bd_info.domain.c_str(),
-				ResourceIdentifier::TypeStr[*type_it]);
+				br::ResourceIdentifier::TypeStr[*type_it]);
 
 		// Look for the binding domain with the lowest availability
 		r_avail[*type_it] = sv->ResourceAvailable(r_path_str, vtok);
@@ -107,11 +107,11 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 
 		ids_it = bd_info.ids.begin();
 		for (; ids_it != bd_info.ids.end(); ++ids_it) {
-			ResID_t bd_id = *ids_it;
+			br::ResID_t bd_id = *ids_it;
 			snprintf(r_path_str, 20, "%s%d.%s",
 					bd_info.domain.c_str(),
 					bd_id,
-					ResourceIdentifier::TypeStr[*type_it]);
+					br::ResourceIdentifier::TypeStr[*type_it]);
 			bd_r_avail = sv->ResourceAvailable(r_path_str, vtok);
 			logger->Debug("R{%s} availability : % " PRIu64,
 					r_path_str, bd_r_avail);
@@ -121,7 +121,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 				min_bd_r_avail[*type_it] = bd_r_avail;
 				logger->Debug("R{%s} minAV of %s\t: %" PRIu64,
 						r_path_str,
-						ResourceIdentifier::TypeStr[*type_it],
+						br::ResourceIdentifier::TypeStr[*type_it],
 						min_bd_r_avail[*type_it]);
 			}
 
@@ -130,7 +130,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 				max_bd_r_avail[*type_it] = bd_r_avail;
 				logger->Debug("R{%s} maxAV of %s\t: %" PRIu64,
 						r_path_str,
-						ResourceIdentifier::TypeStr[*type_it],
+						br::ResourceIdentifier::TypeStr[*type_it],
 						max_bd_r_avail[*type_it]);
 			}
 		}

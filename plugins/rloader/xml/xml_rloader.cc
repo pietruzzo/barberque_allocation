@@ -27,11 +27,12 @@
 #include "bbque/app/application.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/resource_constraints.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
 
 namespace ba = bbque::app;
 namespace br = bbque::res;
+namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
 using ba::WorkingModeStatusIF;
@@ -53,18 +54,9 @@ po::variables_map xmlrloader_opts_value;
 
 XMLRecipeLoader::XMLRecipeLoader() {
 	// Get a logger
-	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		if (daemonized)
-			syslog(LOG_INFO, "Build XML RecipeLoader plugin [%p] FAILED "
-					"(Error: missing logger module)", (void*)this);
-		else
-			fprintf(stdout, FI("Build XML RecipeLoader plugin [%p] FAILED "
-					"(Error: missing logger module)\n"), (void*)this);
-	}
-
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
+
 	logger->Debug("Built XML RecipeLoader object @%p", (void*)this);
 }
 

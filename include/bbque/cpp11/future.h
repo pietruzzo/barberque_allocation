@@ -31,7 +31,7 @@
 #include "bbque/cpp11/gnu/future.h"
 #endif // CONFIG_TARGET_SUPPORT_CPP11
 
-#if GCC_TAG >= 47
+#if (__cplusplus >= 201103L)
 # define FutureStatus_t std::future_status
 # define FutureTimedout(S) (S == std::future_status::timeout)
 #else

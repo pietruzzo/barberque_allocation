@@ -23,12 +23,15 @@
 #include "bbque/scheduler_manager.h"
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/plugins/plugin.h"
+#include "bbque/utils/logging/logger.h"
 
 #define SCHEDULER_POLICY_NAME "yamca"
 #define MODULE_NAMESPACE SCHEDULER_POLICY_NAMESPACE "." SCHEDULER_POLICY_NAME
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
 #define RSRC_CLUSTER "sys.cpu"
+
+namespace bu = bbque::utils;
 
 using bbque::res::RViewToken_t;
 using bbque::utils::Timer;
@@ -38,10 +41,6 @@ using bbque::utils::MetricsCollector;
 struct PF_ObjectParams;
 
 namespace bbque { namespace plugins {
-
-
-// Forward declaration
-class LoggerIF;
 
 /**
  * @brief The YaMCA resource scheduler heuristic
@@ -91,7 +90,7 @@ public:
 private:
 
 	/** System logger instance */
-	LoggerIF *logger = NULL;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** Resource accounter instance */
 	ResourceAccounter & rsrc_acct;

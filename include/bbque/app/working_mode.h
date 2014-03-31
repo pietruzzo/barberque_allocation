@@ -22,11 +22,12 @@
 
 #include "bbque/app/working_mode_conf.h"
 #include "bbque/res/bitset.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 
 #define AWM_NAMESPACE "bq.awm"
 
-using bbque::plugins::LoggerIF;
+namespace br = bbque::res;
+namespace bu = bbque::utils;
 
 namespace bbque { namespace app {
 
@@ -210,12 +211,12 @@ public:
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	uint64_t ResourceUsageAmount(ResourcePathPtr_t ppath) const;
+	uint64_t ResourceUsageAmount(br::ResourcePathPtr_t ppath) const;
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline UsagesMap_t const & RecipeResourceUsages() const {
+	inline br::UsagesMap_t const & RecipeResourceUsages() const {
 		return resources.requested;
 	}
 
@@ -233,20 +234,20 @@ public:
 	/**
 	 * @see WorkingModeConfIF
 	 */
-	size_t BindResource(ResourceIdentifier::Type_t r_type,
-			ResID_t src_ID,	ResID_t dst_ID, size_t b_refn = 0,
-			ResourceIdentifier::Type_t filter_rtype =
-				ResourceIdentifier::UNDEFINED,
-			ResourceBitset * filter_mask = nullptr);
+	size_t BindResource(br::ResourceIdentifier::Type_t r_type,
+			br::ResID_t src_ID,	br::ResID_t dst_ID, size_t b_refn = 0,
+			br::ResourceIdentifier::Type_t filter_rtype =
+				br::ResourceIdentifier::UNDEFINED,
+			br::ResourceBitset * filter_mask = nullptr);
 
-	std::string BindingStr(	ResourceIdentifier::Type_t r_type,
-			ResID_t src_ID, ResID_t dst_ID, size_t b_refn);
+	std::string BindingStr(	br::ResourceIdentifier::Type_t r_type,
+			br::ResID_t src_ID, br::ResID_t dst_ID, size_t b_refn);
 
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	UsagesMapPtr_t GetSchedResourceBinding(size_t b_refn) const;
+	br::UsagesMapPtr_t GetSchedResourceBinding(size_t b_refn) const;
 
 	/**
 	 * @brief Set the resource binding to schedule
@@ -278,7 +279,7 @@ public:
 	 *
 	 * @return A shared pointer to a map of Usage objects
 	 */
-	inline UsagesMapPtr_t GetResourceBinding() const {
+	inline br::UsagesMapPtr_t GetResourceBinding() const {
 		return resources.sync_bindings;
 	}
 
@@ -299,17 +300,17 @@ public:
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	ResourceBitset BindingSet(ResourceIdentifier::Type_t r_type) const;
+	br::ResourceBitset BindingSet(br::ResourceIdentifier::Type_t r_type) const;
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	ResourceBitset BindingSetPrev(ResourceIdentifier::Type_t r_type) const;
+	br::ResourceBitset BindingSetPrev(br::ResourceIdentifier::Type_t r_type) const;
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	bool BindingChanged(ResourceIdentifier::Type_t r_type) const;
+	bool BindingChanged(br::ResourceIdentifier::Type_t r_type) const;
 
 private:
 
@@ -321,15 +322,15 @@ private:
 	 */
 	struct BindingInfo {
 		/** Save the previous set of clusters bound */
-		ResourceBitset prev;
+		br::ResourceBitset prev;
 		/** The current set of clusters bound */
-		ResourceBitset curr;
+		br::ResourceBitset curr;
 		/** True if current set differs from previous */
 		bool changed;
 	};
 
 	/** The logger used by the application manager */
-	LoggerIF  *logger = NULL;
+	std::shared_ptr<bu::Logger> logger;
 
 	/**
 	 * A pointer to the Application descriptor containing the
@@ -378,18 +379,18 @@ private:
 		/**
 		 * The map of resources usages from the recipe
 		 */
-		UsagesMap_t requested;
+		br::UsagesMap_t requested;
 		/**
 		 * The temporary map of resource bindings. This is built by the
 		 * BindResource calls
 		 */
-		std::map<size_t, UsagesMapPtr_t> sched_bindings;
+		std::map<size_t, br::UsagesMapPtr_t> sched_bindings;
 		/**
 		 * The map of the resource bindings allocated for the working mode.
 		 * This is set by SetResourceBinding() as a commit of the
 		 * bindings performed, reasonably by the scheduling policy.
 		 */
-		UsagesMapPtr_t sync_bindings;
+		br::UsagesMapPtr_t sync_bindings;
 		/**
 		 *Info regarding bindings per resource
 		 */

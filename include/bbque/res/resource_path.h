@@ -31,6 +31,7 @@
 #define MAX_LEN_RPATH_STR 	(MAX_NUM_LEVELS * MAX_R_NAME_LEN)
 
 namespace bp = bbque::plugins;
+namespace bu = bbque::utils;
 
 namespace bbque { namespace res {
 
@@ -223,7 +224,7 @@ public:
 private:
 
 	/** Logger instance */
-	bp::LoggerIF *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** Resource identifiers: one for each level of the the path */
 	std::vector<ResourceIdentifierPtr_t> identifiers;

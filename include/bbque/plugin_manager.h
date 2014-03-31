@@ -150,7 +150,7 @@ public:
 	 * defined using a proper namespace syntax. Each plugin object should
 	 * implement a certain object interface and thus are expected to have a
 	 * name within this interface namespace. In instance, a Log4Cpp object
-	 * implementing the LoggerIF interface, should be names "logger.log4cpp".
+	 * implementing the Logger interface, should be names "logger.log4cpp".
 	 * This naming allow to match the name and build such an object by
 	 * requiring the plugin manager either a (generic) "logger." object, or a
 	 * more specific "logger.log4cpp" object.

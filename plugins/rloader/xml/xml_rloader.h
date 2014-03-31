@@ -30,12 +30,14 @@
 
 #include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/plugin.h"
 #include "bbque/utils/attributes_container.h"
 
 #define MODULE_NAMESPACE RECIPE_LOADER_NAMESPACE".xml"
 #define MODULE_CONFIG RECIPE_LOADER_CONFIG".xml"
+
+namespace bu = bbque::utils;
 
 using bbque::app::Application;
 using bbque::app::AppPtr_t;
@@ -107,7 +109,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	LoggerIF *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * Set true when the recipe loader has been configured.

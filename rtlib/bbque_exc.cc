@@ -33,7 +33,7 @@
 
 // Setup logging
 #undef  BBQUE_LOG_MODULE
-#define BBQUE_LOG_MODULE "aem"
+#define BBQUE_LOG_MODULE "exc"
 #undef  BBQUE_LOG_UID
 #define BBQUE_LOG_UID rtlib->Utils.GetChUid()
 
@@ -54,15 +54,16 @@ BbqueEXC::BbqueEXC(std::string const & name,
 
 	assert(rtlib);
 
-	fprintf(stderr, FI("Initializing a new EXC [%s]...\n"),
-			name.c_str());
+	// Get a Logger module
+	logger = bu::Logger::GetLogger(BBQUE_LOG_MODULE);
+
+	logger->Info("Initializing a new EXC [%s]...", name.c_str());
 
 	//--- Register
 	assert(rtlib->Register);
 	exc_hdl = rtlib->Register(name.c_str(), &exc_params);
 	if (!exc_hdl) {
-		fprintf(stderr, FE("Registering EXC [%s] FAILED\n"),
-				name.c_str());
+		logger->Error("Registering EXC [%s] FAILED", name.c_str());
 		// TODO set initialization not completed
 		return;
 	}
@@ -97,13 +98,13 @@ RTLIB_ExitCode_t BbqueEXC::_Enable() {
 	if (enabled)
 		return RTLIB_OK;
 
-	fprintf(stderr, FI("Enabling EXC [%s] (@%p)...\n"),
+	logger->Info("Enabling EXC [%s] (@%p)...",
 			exc_name.c_str(), (void*)exc_hdl);
 
 	assert(rtlib->Enable);
 	result = rtlib->Enable(exc_hdl);
 	if (result != RTLIB_OK) {
-		fprintf(stderr, FE("Enabling EXC [%s] (@%p) FAILED\n"),
+		logger->Error("Enabling EXC [%s] (@%p) FAILED",
 				exc_name.c_str(), (void*)exc_hdl);
 		return result;
 	}
@@ -132,7 +133,7 @@ RTLIB_ExitCode_t BbqueEXC::Disable() {
 	if (!enabled)
 		return RTLIB_OK;
 
-	fprintf(stderr, FI("Disabling control loop for EXC [%s] (@%p)...\n"),
+	logger->Info("Disabling control loop for EXC [%s] (@%p)...",
 			exc_name.c_str(), (void*)exc_hdl);
 
 	//--- Notify the control-thread we are STOPPED
@@ -140,7 +141,7 @@ RTLIB_ExitCode_t BbqueEXC::Disable() {
 	ctrl_cv.notify_all();
 
 	//--- Disable the EXC
-	fprintf(stderr, FI("Disabling EXC [%s] (@%p)...\n"),
+	logger->Info("Disabling EXC [%s] (@%p)...",
 			exc_name.c_str(), (void*)exc_hdl);
 
 	assert(rtlib->Disable);
@@ -176,7 +177,7 @@ RTLIB_ExitCode_t BbqueEXC::Terminate() {
 		return RTLIB_OK;
 
 	// Unregister the EXC
-	fprintf(stderr, FI("Unregistering EXC [%s] (@%p)...\n"),
+	logger->Info("Unregistering EXC [%s] (@%p)...",
 			exc_name.c_str(), (void*)exc_hdl);
 
 	assert(rtlib->Unregister);
@@ -192,7 +193,7 @@ RTLIB_ExitCode_t BbqueEXC::Terminate() {
 		return RTLIB_OK;
 	}
 
-	fprintf(stderr, FI("Terminating control loop for EXC [%s] (@%p)...\n"),
+	logger->Info("Terminating control loop for EXC [%s] (@%p)...",
 			exc_name.c_str(), (void*)exc_hdl);
 
 	// Notify the control thread we are done
@@ -209,8 +210,8 @@ RTLIB_ExitCode_t BbqueEXC::Terminate() {
 RTLIB_ExitCode_t BbqueEXC::WaitCompletion() {
 	std::unique_lock<std::mutex> ctrl_ul(ctrl_mtx);
 
-	fprintf(stderr, FI("Waiting for EXC [%s] control "
-				"loop termination...\n"), exc_name.c_str());
+	logger->Info("Waiting for EXC [%s] control loop termination...",
+			exc_name.c_str());
 
 	while (!terminated)
 		ctrl_cv.wait(ctrl_ul);
@@ -224,8 +225,7 @@ RTLIB_ExitCode_t BbqueEXC::WaitCompletion() {
 
 RTLIB_ExitCode_t BbqueEXC::onSetup() {
 
-	DB(fprintf(stderr, FW("<< Default setup of EXC [%s]  >>\n"),
-				exc_name.c_str()));
+	DB(logger->Warn("<< Default setup of EXC [%s]  >>", exc_name.c_str()));
 	DB(::usleep(10000));
 
 	return RTLIB_OK;
@@ -233,9 +233,8 @@ RTLIB_ExitCode_t BbqueEXC::onSetup() {
 
 RTLIB_ExitCode_t BbqueEXC::onConfigure(uint8_t awm_id) {
 
-	DB(fprintf(stderr, FW("<< Default switching of EXC [%s] "
-					"into AWM [%d], latency 10[ms] >>\n"),
-				exc_name.c_str(), awm_id));
+	DB(logger->Warn("<< Default switching of EXC [%s] into AWM [%d], latency 10[ms] >>",
+			exc_name.c_str(), awm_id));
 	DB(::usleep(10000));
 
 	return RTLIB_OK;
@@ -243,9 +242,8 @@ RTLIB_ExitCode_t BbqueEXC::onConfigure(uint8_t awm_id) {
 
 RTLIB_ExitCode_t BbqueEXC::onSuspend() {
 
-	DB(fprintf(stderr, FW("<< Default suspending of EXC [%s],"
-					"latency 10[ms] >>\n"),
-				exc_name.c_str()));
+	DB(logger->Warn("<< Default suspending of EXC [%s], latency 10[ms] >>",
+			exc_name.c_str()));
 	DB(::usleep(10000));
 
 	return RTLIB_OK;
@@ -253,9 +251,8 @@ RTLIB_ExitCode_t BbqueEXC::onSuspend() {
 
 RTLIB_ExitCode_t BbqueEXC::onResume() {
 
-	DB(fprintf(stderr, FW("<< Default resume of EXC [%s],"
-					"latency 10[ms] >>\n"),
-				exc_name.c_str()));
+	DB(logger->Warn("<< Default resume of EXC [%s], latency 10[ms] >>",
+			exc_name.c_str()));
 	DB(::usleep(10000));
 
 	return RTLIB_OK;
@@ -267,11 +264,9 @@ RTLIB_ExitCode_t BbqueEXC::onRun() {
 	if (cycles_count >= BBQUE_RTLIB_DEFAULT_CYCLES)
 		return RTLIB_EXC_WORKLOAD_NONE;
 
-	DB(fprintf(stderr, FW("<< Default onRun: EXC [%s], AWM[%02d], "
-					"cycle [%d/%d], latency %d[ms] >>\n"),
-				exc_name.c_str(), wmp.awm_id,
-				cycles_count+1, BBQUE_RTLIB_DEFAULT_CYCLES,
-				100*(wmp.awm_id+1)));
+	DB(logger->Warn("<< Default onRun: EXC [%s], AWM[%02d], cycle [%d/%d], latency %d[ms] >>",
+				exc_name.c_str(), wmp.awm_id, cycles_count+1,
+				BBQUE_RTLIB_DEFAULT_CYCLES, 100*(wmp.awm_id+1)));
 	DB(::usleep((wmp.awm_id+1)*100000));
 
 	return RTLIB_OK;
@@ -279,9 +274,8 @@ RTLIB_ExitCode_t BbqueEXC::onRun() {
 
 RTLIB_ExitCode_t BbqueEXC::onMonitor() {
 
-	DB(fprintf(stderr, FW("<< Default monitoring of EXC [%s],"
-					"latency 1[ms] >>\n"),
-				exc_name.c_str()));
+	DB(logger->Warn("<< Default monitoring of EXC [%s], latency 1[ms] >>",
+			exc_name.c_str()));
 	DB(::usleep(1000));
 
 	return RTLIB_OK;
@@ -289,8 +283,7 @@ RTLIB_ExitCode_t BbqueEXC::onMonitor() {
 
 RTLIB_ExitCode_t BbqueEXC::onRelease() {
 
-	DB(fprintf(stderr, FW("<< Default release of EXC [%s]  >>\n"),
-				exc_name.c_str()));
+	DB(logger->Warn("<< Default release of EXC [%s]  >>", exc_name.c_str()));
 	DB(::usleep(10000));
 
 	return RTLIB_OK;
@@ -309,13 +302,13 @@ const char *BbqueEXC::GetChUid() const {
  ******************************************************************************/
 
 RTLIB_ExitCode_t BbqueEXC::SetCPS(float cps) {
-	DB(fprintf(stderr, FD("Set cycles-rate to [%.3f] [Hz] for EXC [%s] (@%p)...\n"),
+	DB(logger->Debug("Set cycles-rate to [%.3f] [Hz] for EXC [%s] (@%p)...",
 			cps, exc_name.c_str(), (void*)exc_hdl));
 	return rtlib->CPS.Set(exc_hdl, cps);
 }
 
 RTLIB_ExitCode_t BbqueEXC::SetCTimeUs(uint32_t us) {
-	DB(fprintf(stderr, FD("Set cycles-time to [%" PRIu32 "] [us] for EXC [%s] (@%p)...\n"),
+	DB(logger->Debug("Set cycles-time to [%" PRIu32 "] [us] for EXC [%s] (@%p)...",
 			us, exc_name.c_str(), (void*)exc_hdl));
 	return rtlib->CPS.SetCTimeUs(exc_hdl, us);
 }
@@ -334,7 +327,7 @@ RTLIB_ExitCode_t BbqueEXC::SetConstraints(
 	assert(rtlib->SetConstraints);
 
 	//--- Assert constraints on this EXC
-	fprintf(stderr, FI("Set [%d] constraints for EXC [%s] (@%p)...\n"),
+	logger->Info("Set [%d] constraints for EXC [%s] (@%p)...",
 			count, exc_name.c_str(), (void*)exc_hdl);
 	result = rtlib->SetConstraints(exc_hdl, constraints, count);
 
@@ -349,7 +342,7 @@ RTLIB_ExitCode_t BbqueEXC::ClearConstraints() {
 	assert(rtlib->ClearConstraints);
 
 	//--- Clear constraints on this EXC
-	fprintf(stderr, FI("Clear ALL constraints for EXC [%s] (@%p)...\n"),
+	logger->Info("Clear ALL constraints for EXC [%s] (@%p)...",
 			exc_name.c_str(), (void*)exc_hdl);
 	result = rtlib->ClearConstraints(exc_hdl);
 
@@ -364,7 +357,7 @@ RTLIB_ExitCode_t BbqueEXC::SetGoalGap(uint8_t percent) {
 	assert(rtlib->SetConstraints);
 
 	//--- Assert a Goal-Gap on this EXC
-	fprintf(stderr, FI("Set [%d] Goal-Gap for EXC [%s] (@%p)...\n"),
+	logger->Info("Set [%d] Goal-Gap for EXC [%s] (@%p)...",
 			percent, exc_name.c_str(), (void*)exc_hdl);
 	result = rtlib->SetGoalGap(exc_hdl, percent);
 
@@ -378,8 +371,7 @@ RTLIB_ExitCode_t BbqueEXC::SetGoalGap(uint8_t percent) {
 RTLIB_ExitCode_t BbqueEXC::Setup() {
 	RTLIB_ExitCode_t result;
 
-	DB(fprintf(stderr, FD("CL 0. Setup EXC [%s]...\n"),
-			exc_name.c_str()));
+	DB(logger->Debug("CL 0. Setup EXC [%s]...", exc_name.c_str()));
 
 	result = onSetup();
 	return result;
@@ -397,8 +389,7 @@ bool BbqueEXC::WaitEnable() {
 RTLIB_ExitCode_t BbqueEXC::GetWorkingMode() {
 	RTLIB_ExitCode_t result;
 
-	DB(fprintf(stderr, FD("CL 1. Get AWM for EXC [%s]...\n"),
-			exc_name.c_str()));
+	DB(logger->Debug("CL 1. Get AWM for EXC [%s]...", exc_name.c_str()));
 
 	assert(rtlib->GetWorkingMode);
 	result = rtlib->GetWorkingMode(exc_hdl, &wmp, RTLIB_SYNC_STATELESS);
@@ -441,13 +432,12 @@ RTLIB_ExitCode_t BbqueEXC::Suspend() {
 
 RTLIB_ExitCode_t BbqueEXC::Reconfigure(RTLIB_ExitCode_t result) {
 
-	DB(fprintf(stderr, FD("CL 2. Reconfigure check for EXC [%s]...\n"),
-				exc_name.c_str()));
+	DB(logger->Debug("CL 2. Reconfigure check for EXC [%s]...",
+			exc_name.c_str()));
 
 	switch (result) {
 	case RTLIB_OK:
-		DB(fprintf(stderr, FD("CL 2-1. Continue to run "
-				"on the assigned AWM [%d] for EXC [%s]\n"),
+		DB(logger->Debug("CL 2-1. Continue to run on the assigned AWM [%d] for EXC [%s]",
 				wmp.awm_id, exc_name.c_str()));
 		return result;
 
@@ -455,21 +445,19 @@ RTLIB_ExitCode_t BbqueEXC::Reconfigure(RTLIB_ExitCode_t result) {
 	case RTLIB_EXC_GWM_RECONF:
 	case RTLIB_EXC_GWM_MIGREC:
 	case RTLIB_EXC_GWM_MIGRATE:
-		DB(fprintf(stderr, FD("CL 2-2. Switching EXC [%s] "
-				"to AWM [%02d]...\n"),
+		DB(logger->Debug("CL 2-2. Switching EXC [%s] to AWM [%02d]...",
 				exc_name.c_str(), wmp.awm_id));
 		Configure(wmp.awm_id, result);
 		return result;
 
 	case RTLIB_EXC_GWM_BLOCKED:
-		DB(fprintf(stderr, FD("CL 2-3. Suspending EXC [%s]...\n"),
+		DB(logger->Debug("CL 2-3. Suspending EXC [%s]...",
 				exc_name.c_str()));
 		Suspend();
 		return result;
 
 	default:
-		DB(fprintf(stderr, FE("GetWorkingMode for EXC [%s] FAILED "
-					"(Error: Invalid event [%d])\n"),
+		DB(logger->Error("GetWorkingMode for EXC [%s] FAILED (Error: Invalid event [%d])",
 					exc_name.c_str(), result));
 		assert(result >= RTLIB_EXC_GWM_START);
 		assert(result <= RTLIB_EXC_GWM_BLOCKED);
@@ -482,9 +470,8 @@ RTLIB_ExitCode_t BbqueEXC::Reconfigure(RTLIB_ExitCode_t result) {
 RTLIB_ExitCode_t BbqueEXC::Run() {
 	RTLIB_ExitCode_t result;
 
-	DB(fprintf(stderr, FD("CL 3. Run EXC [%s], cycle [%010d], "
-					"AWM[%02d]...\n"),
-				exc_name.c_str(), cycles_count+1, wmp.awm_id));
+	DB(logger->Debug("CL 3. Run EXC [%s], cycle [%010d], AWM[%02d]...",
+			exc_name.c_str(), cycles_count+1, wmp.awm_id));
 
 	rtlib->Notify.PreRun(exc_hdl);
 
@@ -504,8 +491,7 @@ RTLIB_ExitCode_t BbqueEXC::Monitor() {
 	// Account executed cycles
 	cycles_count++;
 
-	DB(fprintf(stderr, FD("CL 4. Monitor EXC [%s]...\n"),
-				exc_name.c_str()));
+	DB(logger->Debug("CL 4. Monitor EXC [%s]...", exc_name.c_str()));
 
 	rtlib->Notify.PreMonitor(exc_hdl);
 	result = onMonitor();
@@ -519,8 +505,7 @@ RTLIB_ExitCode_t BbqueEXC::Monitor() {
 RTLIB_ExitCode_t BbqueEXC::Release() {
 	RTLIB_ExitCode_t result;
 
-	DB(fprintf(stderr, FD("CL 5. Release EXC [%s]...\n"),
-			exc_name.c_str()));
+	DB(logger->Debug("CL 5. Release EXC [%s]...", exc_name.c_str()));
 
 	result = onRelease();
 	return result;
@@ -535,15 +520,14 @@ void BbqueEXC::ControlLoop() {
 
 	// Set the thread name
 	if (unlikely(prctl(PR_SET_NAME, (long unsigned int)"bq.cloop", 0, 0, 0)))
-		fprintf(stderr, "Set name FAILED! (Error: %s)\n",
-				strerror(errno));
+		logger->Error("Set name FAILED! (Error: %s)", strerror(errno));
 
 	// Wait for the EXC being STARTED
 	while (!started)
 		ctrl_cv.wait(ctrl_ul);
 	ctrl_ul.unlock();
 
-	DB(fprintf(stderr, FD("EXC [%s] control thread [%d] started...\n"),
+	DB(logger->Debug("EXC [%s] control thread [%d] started...",
 				exc_name.c_str(), gettid()));
 
 	assert(enabled == true);
@@ -553,8 +537,7 @@ void BbqueEXC::ControlLoop() {
 
 	// Setup the EXC
 	if (Setup() != RTLIB_OK) {
-		fprintf(stderr, FE("Setup EXC [%s] FAILED!\n"),
-				exc_name.c_str());
+		logger->Error("Setup EXC [%s] FAILED!", exc_name.c_str());
 		goto exit_setup;
 	}
 
@@ -601,8 +584,7 @@ exit_setup:
 	// Exit notification
 	rtlib->Notify.Exit(exc_hdl);
 
-	DB(fprintf(stderr, FI("Control-loop for EXC [%s] TERMINATED\n"),
-				exc_name.c_str()));
+	DB(logger->Info("Control-loop for EXC [%s] TERMINATED", exc_name.c_str()));
 
 	//--- Notify the control-thread is TERMINATED
 	ctrl_ul.lock();

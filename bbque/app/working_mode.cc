@@ -19,7 +19,6 @@
 
 #include <string>
 
-#include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/resource_accounter.h"
 
@@ -32,7 +31,7 @@
 #include "bbque/utils/utility.h"
 
 namespace br = bbque::res;
-namespace bp = bbque::plugins;
+namespace bu = bbque::utils;
 
 using br::ResourcePathUtils;
 using br::ResourceBinder;
@@ -44,7 +43,7 @@ namespace bbque { namespace app {
 WorkingMode::WorkingMode():
 	hidden(false) {
 	resources.binding_masks.resize(
-		static_cast<uint16_t>(ResourceIdentifier::TYPE_COUNT));
+		static_cast<uint16_t>(br::ResourceIdentifier::TYPE_COUNT));
 	// Set the log string id
 	strncpy(str_id, "", 12);
 }
@@ -60,11 +59,10 @@ WorkingMode::WorkingMode(uint8_t _id,
 	_value > 0 ? value.recpv = _value : value.recpv = 0;
 
 	// Init the size of the scheduling bindings vector
-	resources.binding_masks.resize(ResourceIdentifier::TYPE_COUNT);
+	resources.binding_masks.resize(br::ResourceIdentifier::TYPE_COUNT);
 
 	// Get a logger
-	bp::LoggerIF::Configuration conf(AWM_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(AWM_NAMESPACE);
 
 	// Set the log string id
 	snprintf(str_id, 15, "AWM{%d,%s}", id, name.c_str());
@@ -156,12 +154,12 @@ uint64_t WorkingMode::ResourceUsageAmount(
 }
 
 size_t WorkingMode::BindResource(
-		ResourceIdentifier::Type_t r_type,
-		ResID_t src_ID,
-		ResID_t dst_ID,
+		br::ResourceIdentifier::Type_t r_type,
+		br::ResID_t src_ID,
+		br::ResID_t dst_ID,
 		size_t b_refn,
-		ResourceIdentifier::Type_t filter_rtype,
-		ResourceBitset * filter_mask) {
+		br::ResourceIdentifier::Type_t filter_rtype,
+		br::ResourceBitset * filter_mask) {
 	UsagesMap_t * src_pum;
 	uint32_t b_count;
 	size_t n_refn;
@@ -238,19 +236,19 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
 	}
 
 	// Update the resource binding bitmask (for each type)
-	for (r_type = ResourceIdentifier::SYSTEM;
-			r_type < ResourceIdentifier::TYPE_COUNT; ++r_type) {
+	for (r_type = br::ResourceIdentifier::SYSTEM;
+			r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
 		BindingInfo & r_mask(resources.binding_masks[r_type]);
 		new_mask = ResourceBinder::GetMask(
 				resources.sched_bindings[b_refn],
-				static_cast<ResourceIdentifier::Type_t>(r_type));
+				static_cast<br::ResourceIdentifier::Type_t>(r_type));
 		r_mask.prev = r_mask.curr;
 		r_mask.curr = new_mask;
 
 		// Set the flag if changed and print a log message
 		r_mask.changed = r_mask.prev != new_mask;
 		logger->Debug("%s SetBinding: R{%-3s} changed? [%d]",
-				str_id, ResourceIdentifier::TypeStr[r_type], r_mask.changed);
+				str_id, br::ResourceIdentifier::TypeStr[r_type], r_mask.changed);
 	}
 
 	// Trash all the remaining scheduling bindings
@@ -263,25 +261,25 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
 void WorkingMode::ClearResourceBinding() {
 	uint8_t r_type = 0;
 	resources.sync_bindings->clear();
-	for (; r_type < ResourceIdentifier::TYPE_COUNT; ++r_type) {
+	for (; r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
 		resources.binding_masks[r_type].curr =
 			resources.binding_masks[r_type].prev;
 	}
 }
 
 ResourceBitset WorkingMode::BindingSet(
-		ResourceIdentifier::Type_t r_type) const {
+		br::ResourceIdentifier::Type_t r_type) const {
 	BindingInfo const & bi(resources.binding_masks[r_type]);
 	return bi.curr;
 }
 
 ResourceBitset WorkingMode::BindingSetPrev(
-		ResourceIdentifier::Type_t r_type) const {
+		br::ResourceIdentifier::Type_t r_type) const {
    return resources.binding_masks[r_type].prev;
 }
 
 bool WorkingMode::BindingChanged(
-		ResourceIdentifier::Type_t r_type) const {
+		br::ResourceIdentifier::Type_t r_type) const {
    return resources.binding_masks[r_type].changed;
 }
 

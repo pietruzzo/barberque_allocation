@@ -15,43 +15,54 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_CONSOLE_LOGGER_H_
-#define BBQUE_CONSOLE_LOGGER_H_
+#ifndef BBQUE_UTILS_LOG4CPP_LOGGER_H_
+#define BBQUE_UTILS_LOG4CPP_LOGGER_H_
 
-#include "bbque/plugins/logger.h"
+#include "bbque/config.h"
+#include "bbque/utils/logging/logger.h"
 
 #include <memory>
-#include <cstdint>
+#include <string>
 
-namespace bbque { namespace plugins {
+#include <log4cpp/Category.hh>
+
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
+
+#define MODULE_NAMESPACE LOGGER_NAMESPACE ".log4cpp"
+#define MODULE_CONFIG LOGGER_CONFIG ".log4cpp"
+
+namespace bbque { namespace utils {
 
 /**
- * @brief The basic class for each Barbeque component
- *
- * This defines a console based logger to be used for logging if a more
- * advanced logger module is not available
+ * @brief A Log4CPP based Logger
  */
-class ConsoleLogger : public LoggerIF {
+class Log4CppLogger : public Logger {
 
 public:
 
 	/**
-	 * Return a singleton instance of the console logger
+	 * @brief Build a new Log4CPP based logger
+	 * @param conf the logger configuration
 	 */
-	static std::shared_ptr<ConsoleLogger> GetInstance(void);
+	static std::unique_ptr<Logger>
+	GetInstance(Configuration const & conf);
 
 	/**
-	 *
+	 * \brief Logger dtor
 	 */
-	virtual ~ConsoleLogger() {};
+	virtual ~Log4CppLogger() {};
 
 //----- Logger module interface
 
+#ifdef BBQUE_DEBUG
 	/**
 	 * \brief Send a log message with the priority DEBUG
 	 * \param fmt the message to log
 	 */
 	void Debug(const char *fmt, ...);
+#endif
 
 	/**
 	 * \brief Send a log message with the priority INFO
@@ -95,10 +106,48 @@ public:
 	 */
 	void Fatal(const char *fmt, ...);
 
+private:
+
+	/**
+	 * Set true to use colors for logging
+	 */
+	bool use_colors = true;
+
+	/**
+	 * Set true when the logger has been configured.
+	 * This is done by parsing a configuration file the first time a Logger is created.
+	 */
+	static bool configured;
+
+	/**
+	 * @brief The logger reference
+	 * Use this logger reference, related to the 'log' category, to log your messages
+	 */
+	log4cpp::Category & logger;
+
+	/**
+	 * \brief Build a logger with the specified configuration
+	 */
+	Log4CppLogger(Configuration const & conf);
+
+	/**
+	 * @brief   Parse the Log4CPP configuration file
+	 */
+	static void ParseConfigurationFile(
+			po::options_description const & opts_desc,
+			po::variables_map & opts);
+
+	/**
+	 * @brief   Load Logger configuration
+	 * @return  true if the configuration has been properly loaded and a Log4CPP
+	 * 			logger could be successfully build, false otherwise.
+	 */
+	static bool Configure(Configuration const & conf);
+
 };
 
 } // namespace plugins
 
 } // namespace bbque
 
-#endif // BBQUE_CONSOLE_LOGGER_H_
+#endif // BBQUE_UTILS_LOG4CPP_LOGGER_H_

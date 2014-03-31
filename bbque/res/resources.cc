@@ -27,7 +27,7 @@ namespace bbque { namespace res {
  *****************************************************************************/
 
 Resource::Resource(std::string const & res_path, uint64_t tot):
-	ResourceIdentifier(UNDEFINED, 0),
+	br::ResourceIdentifier(UNDEFINED, 0),
 	total(tot),
 	reserved(0),
 	offline(false) {
@@ -46,8 +46,8 @@ Resource::Resource(std::string const & res_path, uint64_t tot):
 	av_profile.lastOnlineTime = 0;
 }
 
-Resource::Resource(ResourceIdentifier::Type_t type, ResID_t id, uint64_t tot):
-	ResourceIdentifier(type, id),
+Resource::Resource(br::ResourceIdentifier::Type_t type, br::ResID_t id, uint64_t tot):
+	br::ResourceIdentifier(type, id),
 	total(tot),
 	reserved(0),
 	offline(false) {

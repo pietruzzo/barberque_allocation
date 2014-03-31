@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/res/resources.h"
 #include "bbque/res/resource_utils.h"
 
@@ -50,7 +50,7 @@
 #define RT_MATCH_MIXED  4 // ...10x
 
 
-namespace bp = bbque::plugins;
+namespace bu = bbque::utils;
 
 namespace bbque { namespace res {
 
@@ -183,7 +183,7 @@ public:
 private:
 
 	/** The logger used by the resource accounter */
-	bp::LoggerIF  *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** Pointer to the root of the tree*/
 	ResourceNode_t * root;

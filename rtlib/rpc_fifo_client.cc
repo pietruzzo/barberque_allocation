@@ -27,6 +27,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
+namespace bu = bbque::utils;
+
 // Setup logging
 #undef  BBQUE_LOG_MODULE
 #define BBQUE_LOG_MODULE "rpc.fif"
@@ -34,9 +36,9 @@
 #define BBQUE_LOG_UID GetChUid()
 
 #define RPC_FIFO_SEND_SIZE(RPC_MSG, SIZE)\
-DB(fprintf(stderr, FD("Tx [" #RPC_MSG "] Request "\
+logger->Debug("Tx [" #RPC_MSG "] Request "\
 				"FIFO_HDR [sze: %hd, off: %hd, typ: %hd], "\
-				"RPC_HDR [typ: %d, pid: %d, eid: %" PRIu8 "], Bytes: %" PRIu32 "...\n"),\
+				"RPC_HDR [typ: %d, pid: %d, eid: %" PRIu8 "], Bytes: %" PRIu32 "...\n",\
 	rf_ ## RPC_MSG.hdr.fifo_msg_size,\
 	rf_ ## RPC_MSG.hdr.rpc_msg_offset,\
 	rf_ ## RPC_MSG.hdr.rpc_msg_type,\
@@ -44,9 +46,9 @@ DB(fprintf(stderr, FD("Tx [" #RPC_MSG "] Request "\
 	rf_ ## RPC_MSG.pyl.hdr.app_pid,\
 	rf_ ## RPC_MSG.pyl.hdr.exc_id,\
 	(uint32_t)SIZE\
-));\
+);\
 if(::write(server_fifo_fd, (void*)&rf_ ## RPC_MSG, SIZE) <= 0) {\
-	fprintf(stderr, FE("write to BBQUE fifo FAILED [%s]\n"),\
+	logger->Error("write to BBQUE fifo FAILED [%s]\n",\
 		bbque_fifo_path.c_str());\
 	return RTLIB_BBQUE_CHANNEL_WRITE_FAILED;\
 }
@@ -54,16 +56,15 @@ if(::write(server_fifo_fd, (void*)&rf_ ## RPC_MSG, SIZE) <= 0) {\
 #define RPC_FIFO_SEND(RPC_MSG)\
 	RPC_FIFO_SEND_SIZE(RPC_MSG, FIFO_PKT_SIZE(RPC_MSG))
 
-
 namespace bbque { namespace rtlib {
 
 BbqueRPC_FIFO_Client::BbqueRPC_FIFO_Client() :
 	BbqueRPC() {
-	DB(fprintf(stderr, FD("Building FIFO RPC channel\n")));
+	logger->Debug("Building FIFO RPC channel");
 }
 
 BbqueRPC_FIFO_Client::~BbqueRPC_FIFO_Client() {
-	DB(fprintf(stderr, FD("BbqueRPC_FIFO_Client dtor\n")));
+	logger->Debug("BbqueRPC_FIFO_Client dtor");
 	ChannelRelease();
 }
 
@@ -85,14 +86,14 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelRelease() {
 	};
 	int error;
 
-	DB(fprintf(stderr, FD("Releasing FIFO RPC channel\n")));
+	logger->Debug("Releasing FIFO RPC channel");
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(APP_EXIT);
 
 	// Sending the same message to the Fetch Thread
 	if (::write(client_fifo_fd, (void*)&rf_APP_EXIT, FIFO_PKT_SIZE(APP_EXIT)) <= 0) {
-		fprintf(stderr, FE("Notify fetch thread FAILED, FORCED EXIT\n"));
+		logger->Error("Notify fetch thread FAILED, FORCED EXIT");
 	} else {
 		// Joining fetch thread
 		ChTrd.join();
@@ -101,8 +102,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelRelease() {
 	// Closing the private FIFO
 	error = ::unlink(app_fifo_path.c_str());
 	if (error) {
-		fprintf(stderr, FE("FAILED unlinking the application FIFO [%s] "
-					"(Error %d: %s)\n"),
+		logger->Error("FAILED unlinking the application FIFO [%s] (Error %d: %s)",
 				app_fifo_path.c_str(), errno, strerror(errno));
 		return RTLIB_BBQUE_CHANNEL_TEARDOWN_FAILED;
 	}
@@ -117,15 +117,13 @@ void BbqueRPC_FIFO_Client::RpcBbqResp() {
 	// Read response RPC header
 	bytes = ::read(client_fifo_fd, (void*)&chResp, RPC_PKT_SIZE(resp));
 	if (bytes<=0) {
-		fprintf(stderr, FE("FAILED read from app fifo [%s] "
-					"(Error %d: %s)\n"),
-				app_fifo_path.c_str(),
-				errno, strerror(errno));
+		logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+				app_fifo_path.c_str(), errno, strerror(errno));
 		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
 	}
 
 	// Notify about reception of a new response
-	DB(fprintf(stderr, FI("Notify response [%d]\n"), chResp.result));
+	DB(logger->Info("Notify response [%d]", chResp.result));
 	chResp_cv.notify_one();
 }
 
@@ -133,15 +131,13 @@ void BbqueRPC_FIFO_Client::ChannelFetch() {
 	rpc_fifo_header_t hdr;
 	size_t bytes;
 
-	DB(fprintf(stderr, FD("Waiting for FIFO header...\n")));
+	logger->Debug("Waiting for FIFO header...");
 
 	// Read FIFO header
 	bytes = ::read(client_fifo_fd, (void*)&hdr, FIFO_PKT_SIZE(header));
 	if (bytes<=0) {
-		fprintf(stderr, FE("FAILED read from app fifo [%s] "
-					"(Error %d: %s)\n"),
-				app_fifo_path.c_str(),
-				errno, strerror(errno));
+		logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+				app_fifo_path.c_str(), errno, strerror(errno));
 		assert(bytes==FIFO_PKT_SIZE(header));
 		// Exit the read thread if we are unable to read from the Barbeque
 		// FIXME an error should be notified to the application
@@ -149,11 +145,8 @@ void BbqueRPC_FIFO_Client::ChannelFetch() {
 		return;
 	}
 
-	DB(fprintf(stderr, FD("Rx FIFO_HDR "
-					"[sze: %hd, off: %hd, typ: %hd]\n"),
-				hdr.fifo_msg_size,
-				hdr.rpc_msg_offset,
-				hdr.rpc_msg_type));
+	logger->Debug("Rx FIFO_HDR [sze: %hd, off: %hd, typ: %hd]",
+				hdr.fifo_msg_size, hdr.rpc_msg_offset, hdr.rpc_msg_type);
 
 	// Dispatching the received message
 	switch (hdr.rpc_msg_type) {
@@ -164,40 +157,39 @@ void BbqueRPC_FIFO_Client::ChannelFetch() {
 
 	//--- Application Originated Messages
 	case RPC_APP_RESP:
-		DB(fprintf(stderr, FI("APP_RESP\n")));
+		DB(logger->Info("APP_RESP"));
 		RpcBbqResp();
 		break;
 
 	//--- Execution Context Originated Messages
 	case RPC_EXC_RESP:
-		DB(fprintf(stderr, FI("EXC_RESP\n")));
+		DB(logger->Info("EXC_RESP"));
 		RpcBbqResp();
 		break;
 
 	//--- Barbeque Originated Messages
 	case RPC_BBQ_STOP_EXECUTION:
-		DB(fprintf(stderr, FI("BBQ_STOP_EXECUTION\n")));
+		DB(logger->Info("BBQ_STOP_EXECUTION"));
 		break;
 	case RPC_BBQ_SYNCP_PRECHANGE:
-		DB(fprintf(stderr, FI("BBQ_SYNCP_PRECHANGE\n")));
+		DB(logger->Info("BBQ_SYNCP_PRECHANGE"));
 		RpcBbqSyncpPreChange();
 		break;
 	case RPC_BBQ_SYNCP_SYNCCHANGE:
-		DB(fprintf(stderr, FI("BBQ_SYNCP_SYNCCHANGE\n")));
+		DB(logger->Info("BBQ_SYNCP_SYNCCHANGE"));
 		RpcBbqSyncpSyncChange();
 		break;
 	case RPC_BBQ_SYNCP_DOCHANGE:
-		DB(fprintf(stderr, FI("BBQ_SYNCP_DOCHANGE\n")));
+		DB(logger->Info("BBQ_SYNCP_DOCHANGE"));
 		RpcBbqSyncpDoChange();
 		break;
 	case RPC_BBQ_SYNCP_POSTCHANGE:
-		DB(fprintf(stderr, FI("BBQ_SYNCP_POSTCHANGE\n")));
+		DB(logger->Info("BBQ_SYNCP_POSTCHANGE"));
 		RpcBbqSyncpPostChange();
 		break;
 
 	default:
-		fprintf(stderr, FE("Unknown BBQ response/command [%d]\n"),
-				hdr.rpc_msg_type);
+		logger->Error("Unknown BBQ response/command [%d]", hdr.rpc_msg_type);
 		assert(false);
 		break;
 	}
@@ -208,13 +200,11 @@ void BbqueRPC_FIFO_Client::ChannelTrd(const char *name) {
 
 	// Set the thread name
 	if (unlikely(prctl(PR_SET_NAME, (long unsigned int)"bq.fifo", 0, 0, 0)))
-		fprintf(stderr, "Set name FAILED! (Error: %s)\n",
-				strerror(errno));
+		logger->Error("Set name FAILED! (Error: %s)\n", strerror(errno));
 
 	// Setup the RTLib UID
 	setChId(gettid(), name);
-	DB(fprintf(stderr, FI("channel thread [PID: %d] CREATED\n"),
-				chTrdPid));
+	DB(logger->Info("channel thread [PID: %d] CREATED", chTrdPid));
 	// Notifying the thread has beed started
 	trdStatus_cv.notify_one();
 
@@ -222,13 +212,11 @@ void BbqueRPC_FIFO_Client::ChannelTrd(const char *name) {
 	if (!running)
 		trdStatus_cv.wait(trdStatus_ul);
 
-	DB(fprintf(stderr, FI("channel thread [PID: %d] START\n"),
-				chTrdPid));
+	DB(logger->Info("channel thread [PID: %d] START", chTrdPid));
 	while (!done)
 		ChannelFetch();
 
-	DB(fprintf(stderr, FI("channel thread [PID: %d] END\n"),
-				chTrdPid));
+	DB(logger->Info("channel thread [PID: %d] END", chTrdPid));
 }
 
 #define WAIT_RPC_RESP \
@@ -236,7 +224,7 @@ void BbqueRPC_FIFO_Client::ChannelTrd(const char *name) {
 	chResp_cv.wait_for(chCommand_ul, \
 			std::chrono::milliseconds(BBQUE_RPC_TIMEOUT)); \
 	if (chResp.result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {\
-		fprintf(stderr, FW("RTLIB response TIMEOUT\n")); \
+		logger->Warn("RTLIB response TIMEOUT"); \
 	}
 
 RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelPair(const char *name) {
@@ -263,13 +251,12 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelPair(const char *name) {
 	::strncpy(rf_APP_PAIR.rpc_fifo, app_fifo_filename, BBQUE_FIFO_NAME_LENGTH);
 	::strncpy(rf_APP_PAIR.pyl.app_name, name, RTLIB_APP_NAME_LENGTH);
 
-	DB(fprintf(stderr, FD("Pairing FIFO channels [app: %s, pid: %d]\n"),
-					name, chTrdPid));
+	logger->Debug("Pairing FIFO channels [app: %s, pid: %d]", name, chTrdPid);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(APP_PAIR);
 
-	DB(fprintf(stderr, FD("Waiting BBQUE response...\n")));
+	logger->Debug("Waiting BBQUE response...");
 
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t)chResp.result;
@@ -279,15 +266,13 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup() {
 	RTLIB_ExitCode_t result = RTLIB_OK;
 	int error;
 
-	DB(fprintf(stderr, FI("Initializing channel\n")));
+	DB(logger->Info("Initializing channel"));
 
 	// Opening server FIFO
-	DB(fprintf(stderr, FD("Opening bbque fifo [%s]...\n"),
-				bbque_fifo_path.c_str()));
+	logger->Debug("Opening bbque fifo [%s]...", bbque_fifo_path.c_str());
 	server_fifo_fd = ::open(bbque_fifo_path.c_str(), O_WRONLY|O_NONBLOCK);
 	if (server_fifo_fd < 0) {
-		fprintf(stderr, FE("FAILED opening bbque fifo [%s] "
-					"(Error %d: %s)\n"),
+		logger->Error("FAILED opening bbque fifo [%s] (Error %d: %s)",
 				bbque_fifo_path.c_str(), errno, strerror(errno));
 		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
@@ -295,26 +280,25 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup() {
 	// Setting up application FIFO complete path
 	app_fifo_path += app_fifo_filename;
 
-	DB(fprintf(stderr, FD("Creating [%s]...\n"),
-				app_fifo_path.c_str()));
+	logger->Debug("Creating [%s]...", app_fifo_path.c_str());
 
 	// Creating the client side pipe
 	error = ::mkfifo(app_fifo_path.c_str(), 0644);
 	if (error) {
-		fprintf(stderr, FE("FAILED creating application FIFO [%s]\n"),
+		logger->Error("FAILED creating application FIFO [%s]",
 				app_fifo_path.c_str());
 		result = RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 		goto err_create;
 	}
 
-	DB(fprintf(stderr, FD("Opening R/W...\n")));
+	logger->Debug("Opening R/W...");
 
 	// Opening the client side pipe
 	// NOTE: this is opened R/W to keep it opened even if server
 	// should disconnect
 	client_fifo_fd = ::open(app_fifo_path.c_str(), O_RDWR);
 	if (client_fifo_fd < 0) {
-		fprintf(stderr, FE("FAILED opening application FIFO [%s]\n"),
+		logger->Error("FAILED opening application FIFO [%s]",
 				app_fifo_path.c_str());
 		result = RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 		goto err_open;
@@ -322,11 +306,8 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup() {
 
 	// Ensuring the FIFO is R/W to everyone
 	if (fchmod(client_fifo_fd, S_IRUSR|S_IWUSR|S_IWGRP|S_IWOTH)) {
-		fprintf(stderr,
-			FE("FAILED setting permissions on RPC FIFO [%s] "
-				"(Error %d: %s)"),
-				app_fifo_path.c_str(),
-				errno, strerror(errno));
+		logger->Error("FAILED setting permissions on RPC FIFO [%s] (Error %d: %s)",
+				app_fifo_path.c_str(), errno, strerror(errno));
 		result = RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 		goto err_open;
 	}
@@ -405,16 +386,16 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Register(pregExCtx_t prec) {
 			RTLIB_EXC_NAME_LENGTH);
 	rf_EXC_REGISTER.pyl.lang = prec->exc_params.language;
 
-	DB(fprintf(stderr, FD("Registering EXC [%d:%d:%s:%d]...\n"),
+	logger->Debug("Registering EXC [%d:%d:%s:%d]...",
 				rf_EXC_REGISTER.pyl.hdr.app_pid,
 				rf_EXC_REGISTER.pyl.hdr.exc_id,
 				rf_EXC_REGISTER.pyl.exc_name,
-				rf_EXC_REGISTER.pyl.lang));
+				rf_EXC_REGISTER.pyl.lang);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_REGISTER);
 
-	DB(fprintf(stderr, FD("Waiting BBQUE response...\n")));
+	logger->Debug("Waiting BBQUE response...");
 
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t)chResp.result;
@@ -442,15 +423,15 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Unregister(pregExCtx_t prec) {
 	::strncpy(rf_EXC_UNREGISTER.pyl.exc_name, prec->name.c_str(),
 			RTLIB_EXC_NAME_LENGTH);
 
-	DB(fprintf(stderr, FD("Unregistering EXC [%d:%d:%s]...\n"),
+	logger->Debug("Unregistering EXC [%d:%d:%s]...",
 				rf_EXC_UNREGISTER.pyl.hdr.app_pid,
 				rf_EXC_UNREGISTER.pyl.hdr.exc_id,
-				rf_EXC_UNREGISTER.pyl.exc_name));
+				rf_EXC_UNREGISTER.pyl.exc_name);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_UNREGISTER);
 
-	DB(fprintf(stderr, FD("Waiting BBQUE response...\n")));
+	logger->Debug("Waiting BBQUE response...");
 
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t)chResp.result;
@@ -475,14 +456,14 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Enable(pregExCtx_t prec) {
 		}
 	};
 
-	DB(fprintf(stderr, FD("Enabling EXC [%d:%d]...\n"),
+	logger->Debug("Enabling EXC [%d:%d]...",
 				rf_EXC_START.pyl.hdr.app_pid,
-				rf_EXC_START.pyl.hdr.exc_id));
+				rf_EXC_START.pyl.hdr.exc_id);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_START);
 
-	DB(fprintf(stderr, FD("Waiting BBQUE response...\n")));
+	logger->Debug("Waiting BBQUE response...");
 
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t)chResp.result;
@@ -506,14 +487,14 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Disable(pregExCtx_t prec) {
 		}
 	};
 
-	DB(fprintf(stderr, FD("Disabling EXC [%d:%d]...\n"),
+	logger->Debug("Disabling EXC [%d:%d]...",
 				rf_EXC_STOP.pyl.hdr.app_pid,
-				rf_EXC_STOP.pyl.hdr.exc_id));
+				rf_EXC_STOP.pyl.hdr.exc_id);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_STOP);
 
-	DB(fprintf(stderr, FD("Waiting BBQUE response...\n")));
+	logger->Debug("Waiting BBQUE response...");
 
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t)chResp.result;
@@ -547,10 +528,10 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Set(pregExCtx_t prec,
 	prf_EXC_SET->pyl.hdr.app_pid = chTrdPid;
 	prf_EXC_SET->pyl.hdr.exc_id = prec->exc_id;
 
-	DB(fprintf(stderr, FD("Copying [%d] constraints using buffer @%p "
-					"of [%" PRIu64 "] Bytes...\n"),
+	logger->Debug("Copying [%d] constraints using buffer @%p "
+					"of [%" PRIu64 "] Bytes...",
 				count, (void*)&(prf_EXC_SET->pyl.constraints),
-				(count)*sizeof(RTLIB_Constraint_t)));
+				(count)*sizeof(RTLIB_Constraint_t));
 
 	// Init RPC header
 	prf_EXC_SET->pyl.count = count;
@@ -559,15 +540,16 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Set(pregExCtx_t prec,
 
 	// Sending RPC Request
 	volatile rpc_fifo_EXC_SET_t & rf_EXC_SET = (*prf_EXC_SET);
-	DB(fprintf(stderr, FD("Set [%d] constraints on EXC [%d:%d]...\n"),
-				count, rf_EXC_SET.pyl.hdr.app_pid,
-				rf_EXC_SET.pyl.hdr.exc_id));
+	logger->Debug("Set [%d] constraints on EXC [%d:%d]...",
+				count,
+				rf_EXC_SET.pyl.hdr.app_pid,
+				rf_EXC_SET.pyl.hdr.exc_id);
 	RPC_FIFO_SEND_SIZE(EXC_SET, msg_size);
 
 	// Clean-up the FIFO message
 	::free(prf_EXC_SET);
 
-	DB(fprintf(stderr, FD("Waiting BBQUE response...\n")));
+	logger->Debug("Waiting BBQUE response...");
 
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t)chResp.result;
@@ -591,14 +573,14 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Clear(pregExCtx_t prec) {
 		}
 	};
 
-	DB(fprintf(stderr, FD("Clear constraints for EXC [%d:%d]...\n"),
+	logger->Debug("Clear constraints for EXC [%d:%d]...",
 				rf_EXC_CLEAR.pyl.hdr.app_pid,
-				rf_EXC_CLEAR.pyl.hdr.exc_id));
+				rf_EXC_CLEAR.pyl.hdr.exc_id);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_CLEAR);
 
-	DB(fprintf(stderr, FD("Waiting BBQUE response...\n")));
+	logger->Debug("Waiting BBQUE response...");
 
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t)chResp.result;
@@ -623,14 +605,14 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_GGap(pregExCtx_t prec, uint8_t gap) {
 		}
 	};
 
-	DB(fprintf(stderr, FD("Set Goal-Gap for EXC [%d:%d]...\n"),
+	logger->Debug("Set Goal-Gap for EXC [%d:%d]...",
 				rf_EXC_GGAP.pyl.hdr.app_pid,
-				rf_EXC_GGAP.pyl.hdr.exc_id));
+				rf_EXC_GGAP.pyl.hdr.exc_id);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_GGAP);
 
-	DB(fprintf(stderr, FD("Waiting BBQUE response...\n")));
+	logger->Debug("Waiting BBQUE response...");
 
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t)chResp.result;
@@ -655,14 +637,14 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_ScheduleRequest(pregExCtx_t prec) {
 		}
 	};
 
-	DB(fprintf(stderr, FD("Schedule request for EXC [%d:%d]...\n"),
+	logger->Debug("Schedule request for EXC [%d:%d]...",
 				rf_EXC_SCHEDULE.pyl.hdr.app_pid,
-				rf_EXC_SCHEDULE.pyl.hdr.exc_id));
+				rf_EXC_SCHEDULE.pyl.hdr.exc_id);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_SCHEDULE);
 
-	DB(fprintf(stderr, FD("Waiting BBQUE response...\n")));
+	logger->Debug("Waiting BBQUE response...");
 
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t)chResp.result;
@@ -698,11 +680,11 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPreChangeResp(
 		}
 	};
 
-	DB(fprintf(stderr, FD("PreChange response EXC [%d:%d] "
-					"latency [%d]...\n"),
+	logger->Debug("PreChange response EXC [%d:%d] "
+					"latency [%d]...",
 				rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.hdr.app_pid,
 				rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.hdr.exc_id,
-				rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.syncLatency));
+				rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.syncLatency);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(BBQ_SYNCP_PRECHANGE_RESP);
@@ -718,10 +700,8 @@ void BbqueRPC_FIFO_Client::RpcBbqSyncpPreChange() {
 	bytes = ::read(client_fifo_fd, (void*)&msg,
 			RPC_PKT_SIZE(BBQ_SYNCP_PRECHANGE));
 	if (bytes <= 0) {
-		fprintf(stderr, FE("FAILED read from app fifo [%s] "
-					"(Error %d: %s)\n"),
-				app_fifo_path.c_str(),
-				errno, strerror(errno));
+		logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+				app_fifo_path.c_str(), errno, strerror(errno));
 		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
 	}
 
@@ -758,9 +738,9 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpSyncChangeResp(
 	// Check that the ExitCode can be represented by the response message
 	assert(sync < 256);
 
-	DB(fprintf(stderr, FD("SyncChange response EXC [%d:%d]...\n"),
+	logger->Debug("SyncChange response EXC [%d:%d]...",
 				rf_BBQ_SYNCP_SYNCCHANGE_RESP.pyl.hdr.app_pid,
-				rf_BBQ_SYNCP_SYNCCHANGE_RESP.pyl.hdr.exc_id));
+				rf_BBQ_SYNCP_SYNCCHANGE_RESP.pyl.hdr.exc_id);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(BBQ_SYNCP_SYNCCHANGE_RESP);
@@ -776,10 +756,8 @@ void BbqueRPC_FIFO_Client::RpcBbqSyncpSyncChange() {
 	bytes = ::read(client_fifo_fd, (void*)&msg,
 			RPC_PKT_SIZE(BBQ_SYNCP_SYNCCHANGE));
 	if (bytes <= 0) {
-		fprintf(stderr, FE("FAILED read from app fifo [%s] "
-					"(Error %d: %s)\n"),
-				app_fifo_path.c_str(),
-				errno, strerror(errno));
+		logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+				app_fifo_path.c_str(), errno, strerror(errno));
 		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
 	}
 
@@ -801,10 +779,8 @@ void BbqueRPC_FIFO_Client::RpcBbqSyncpDoChange() {
 	bytes = ::read(client_fifo_fd, (void*)&msg,
 			RPC_PKT_SIZE(BBQ_SYNCP_DOCHANGE));
 	if (bytes <= 0) {
-		fprintf(stderr, FE("FAILED read from app fifo [%s] "
-					"(Error %d: %s)\n"),
-				app_fifo_path.c_str(),
-				errno, strerror(errno));
+		logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+				app_fifo_path.c_str(), errno, strerror(errno));
 		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
 	}
 
@@ -841,9 +817,9 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPostChangeResp(
 	// Check that the ExitCode can be represented by the response message
 	assert(result < 256);
 
-	DB(fprintf(stderr, FD("PostChange response EXC [%d:%d]...\n"),
+	logger->Debug("PostChange response EXC [%d:%d]...",
 				rf_BBQ_SYNCP_POSTCHANGE_RESP.pyl.hdr.app_pid,
-				rf_BBQ_SYNCP_POSTCHANGE_RESP.pyl.hdr.exc_id));
+				rf_BBQ_SYNCP_POSTCHANGE_RESP.pyl.hdr.exc_id);
 
 	// Sending RPC Request
 	RPC_FIFO_SEND(BBQ_SYNCP_POSTCHANGE_RESP);
@@ -859,10 +835,8 @@ void BbqueRPC_FIFO_Client::RpcBbqSyncpPostChange() {
 	bytes = ::read(client_fifo_fd, (void*)&msg,
 			RPC_PKT_SIZE(BBQ_SYNCP_POSTCHANGE));
 	if (bytes <= 0) {
-		fprintf(stderr, FE("FAILED read from app fifo [%s] "
-					"(Error %d: %s)\n"),
-				app_fifo_path.c_str(),
-				errno, strerror(errno));
+		logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+				app_fifo_path.c_str(), errno, strerror(errno));
 		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
 	}
 
@@ -871,9 +845,6 @@ void BbqueRPC_FIFO_Client::RpcBbqSyncpPostChange() {
 
 }
 
-
-
 } // namespace rtlib
 
 } // namespace bbque
-

@@ -65,16 +65,8 @@ SasbSyncPol::SasbSyncPol() :
 	mc(bu::MetricsCollector::GetInstance()) {
 
 	// Get a logger
-	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		if (daemonized)
-			syslog(LOG_ERR, "Build SASB syncpol plugin [%p] FAILED "
-					"(Error: missing logger module)", (void*)this);
-		else
-			fprintf(stdout, FI("Build SASB syncpol plugin [%p] FAILED "
-					"(Error: missing logger module)\n"), (void*)this);
-	}
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	assert(logger);
 
 	//---------- Setup all the module metrics
 	mc.Register(metrics, SM_METRICS_COUNT);

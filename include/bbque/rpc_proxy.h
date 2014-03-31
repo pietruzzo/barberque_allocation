@@ -20,7 +20,7 @@
 
 #include "bbque/plugins/rpc_channel.h"
 #include "bbque/utils/worker.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 
 #include "bbque/utils/metrics_collector.h"
 

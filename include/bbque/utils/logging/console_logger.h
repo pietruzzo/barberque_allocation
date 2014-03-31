@@ -15,47 +15,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_ANDROID_LOGGER_H_
-#define BBQUE_ANDROID_LOGGER_H_
-
-#include "bbque/plugins/logger.h"
-#include "bbque/plugins/plugin.h"
+#ifndef BBQUE_UTILS_CONSOLE_LOGGER_H_
+#define BBQUE_UTILS_CONSOLE_LOGGER_H_
 
 #include "bbque/config.h"
+#include "bbque/utils/logging/logger.h"
 
-#include <cstdint>
-#include <string>
+#include <memory>
 
-// These are the parameters received by the PluginManager on create calls
-struct PF_ObjectParams;
-
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
 /**
- * @brief The basic class for each Barbeque component
+ * \brief A basic Console based Logger
  *
- * This defines a Log4CPP based Logger plugin.
+ * This defines a console based logger to be used for logging in case a more
+ * advanced logger module is not available
  */
-class AndroidLogger : public LoggerIF {
+class ConsoleLogger : public Logger {
 
 public:
 
-//----- static plugin interface
+	/**
+	 * \brief Build a new Log4CPP based logger
+	 * \param conf the logger configuration
+	 */
+	static std::unique_ptr<Logger>
+	GetInstance(Configuration const & conf) {
+		return std::unique_ptr<Logger>(new ConsoleLogger(conf));
+	}
 
 	/**
 	 *
 	 */
-	static void * Create(PF_ObjectParams * params);
-
-	/**
-	 *
-	 */
-	static int32_t Destroy(void * logger);
-
-	/**
-	 *
-	 */
-	virtual ~AndroidLogger();
+	virtual ~ConsoleLogger() {};
 
 //----- Logger module interface
 
@@ -109,31 +101,18 @@ public:
 	 */
 	void Fatal(const char *fmt, ...);
 
-
 private:
 
-	std::string category;
-
 	/**
-	 * @brief Build a new Barbeque component
-	 * Each Barbeque component is associated to a logger category whose
-	 * name is prefixed by "bbque."
-	 * @param logName the log category, this name is (forcely) prepended by the
-	 * 	class namespace "bbque."
+	 * \brief Build a new Console Logger
 	 */
-	AndroidLogger(char const * category);
-
-	/**
-	 * @brief   Load Logger configuration
-	 * @return  true if the configuration has been properly loaded and object
-	 * could be built, false otherwise
-	 */
-	static bool Configure(PF_ObjectParams * params);
+	ConsoleLogger(Configuration const & conf) :
+		Logger(conf) { }
 
 };
 
-} // namespace plugins
+} // namespace utils
 
 } // namespace bbque
 
-#endif // BBQUE_ANDROID_LOGGER_H_
+#endif // BBQUE_UTILS_CONSOLE_LOGGER_H_

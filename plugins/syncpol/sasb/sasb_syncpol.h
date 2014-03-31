@@ -19,7 +19,7 @@
 #define BBQUE_SASB_SYNCPOL_H_
 
 #include "bbque/plugins/synchronization_policy.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/plugin.h"
 
 #include "bbque/utils/timer.h"
@@ -30,6 +30,8 @@
 #define SYNCHRONIZATION_POLICY_NAME "sasb"
 #define MODULE_NAMESPACE \
 	SYNCHRONIZATION_POLICY_NAMESPACE "." SYNCHRONIZATION_POLICY_NAME
+
+namespace bu = bbque::utils;
 
 using bbque::utils::Timer;
 using bbque::utils::MetricsCollector;
@@ -94,7 +96,7 @@ private:
 	/**
 	 * @brief System logger instance
 	 */
-	LoggerIF *logger = NULL;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @brief Keep track of the best estimation for the sync latency

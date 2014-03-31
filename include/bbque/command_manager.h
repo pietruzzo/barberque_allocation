@@ -22,7 +22,7 @@
 
 #include "bbque/utils/utility.h"
 #include "bbque/utils/worker.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/cpp11/thread.h"
 
 #include <poll.h>

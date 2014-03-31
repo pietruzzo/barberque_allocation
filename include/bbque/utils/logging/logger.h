@@ -15,24 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_LOGGER_H_
-#define BBQUE_LOGGER_H_
+#ifndef BBQUE_UTILS_LOGGER_H_
+#define BBQUE_UTILS_LOGGER_H_
 
 #include "bbque/config.h"
+
+#include <memory>
+#include <string>
 
 // The prefix for logging statements category
 #define LOGGER_NAMESPACE "bq.log"
 // The prefix for configuration file attributes
 #define LOGGER_CONFIG "logger"
 
-#include <string>
-
 /**
  * Prepend file and line number to the logMessage
  */
 #define FORMAT_DEBUG(fmt) "%25s:%05d - " fmt, __FILE__, __LINE__
 
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
 /**
  * @brief The basic class for each Barbeque component
@@ -40,35 +41,45 @@ namespace bbque { namespace plugins {
  * This defines the basic logging services which are provided to each Barbeque
  * components. The object class defines logging and modules name.
  */
-class LoggerIF {
+class Logger {
 
 public:
 
-	virtual ~LoggerIF() {};
-
 //----- Objects initialization data
 
-	typedef enum Priority {
-		DEBUG,
-		INFO,
-		NOTICE,
-		WARN,
-		ERROR,
-		CRIT,
-		ALERT,
-		FATAL
-	} Priority;
-
-	class Configuration {
-	public:
-		Configuration(const char * cat, Priority prio = WARN) :
-			category(cat),
-			default_prio(prio) {};
-
-		char const * category;
-		Priority default_prio;
-
+	enum Priority {
+		DEBUG_LEVEL,
+		INFO_LEVEL,
+		NOTICE_LEVEL,
+		WARN_LEVEL,
+		ERROR_LEVEL,
+		CRIT_LEVEL,
+		ALERT_LEVEL,
+		FATAL_LEVEL
 	};
+
+	struct Configuration {
+		Configuration(
+				const char * category,
+				const char * identity = "undef",
+				Priority priority = WARN_LEVEL) :
+			category(category),
+			identity(identity),
+			priority(priority) {};
+		char const * category;
+		char const * identity;
+		Priority priority;
+	};
+
+	static void
+	SetConfigurationFile(std::string const & filepath) {
+		conf_file_path = filepath;
+	}
+
+	static std::unique_ptr<Logger>
+	GetLogger(Configuration const & conf);
+
+	virtual ~Logger() {};
 
 //----- Objects interface
 
@@ -123,10 +134,31 @@ public:
 	 */
 	virtual void Fatal(const char *fmt, ...) = 0;
 
+protected:
+
+	/**
+	 * The BarbequeRTMR always defines its configuration file, thus the
+	 * default value is configured for the RTLib. This allows applications
+	 * which does not specify a custon configuration, to always get a
+	 * default one.
+	 */
+	static std::string conf_file_path;
+
+	Configuration const & configuration;
+
+	/**
+	 * \brief Logger ctor
+	 *
+	 * The Logger constructor is private since direct instantiations are not
+	 * allowed, while the GetLogger factory method must be used to properly
+	 * configure the logger.
+	 */
+	Logger(Configuration const & conf);
+
 };
 
-} // namespace plugins
+} // namespace utils
 
 } // namespace bbque
 
-#endif // BBQUE_LOGGER_H_
+#endif // BBQUE_UTILS_LOGGER_H_

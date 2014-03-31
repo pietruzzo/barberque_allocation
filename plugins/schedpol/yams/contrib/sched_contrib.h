@@ -22,7 +22,7 @@
 
 #include "bbque/configuration_manager.h"
 #include "bbque/plugins/scheduler_policy.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/res/usage.h"
 #include "bbque/res/resource_path.h"
 
@@ -43,6 +43,7 @@
 	for (usage_it = rsrc_usages.begin(); \
 			usage_it != end_usage; ++usage_it)
 
+namespace bu = bbque::utils;
 
 namespace bbque { namespace plugins {
 
@@ -252,7 +253,7 @@ public:
 protected:
 
 	 /** Logger */
-	 LoggerIF * logger = NULL;
+	 std::unique_ptr<bu::Logger> logger;
 
 	 /** Configuration manager instance */
 	 ConfigurationManager & cm;
@@ -376,7 +377,7 @@ protected:
 private:
 
 	 /** Maximum Saturation Levels per resource */
-	 float msl_params[ResourceIdentifier::TYPE_COUNT];
+	 float msl_params[br::ResourceIdentifier::TYPE_COUNT];
 
 };
 

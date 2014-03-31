@@ -25,7 +25,7 @@
 #include "bbque/cpp11/thread.h"
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/res/binder.h"
 #include "contrib/sched_contrib_manager.h"
 #include "bbque/utils/attributes_container.h"
@@ -121,13 +121,8 @@ YamsSchedPol::YamsSchedPol():
 		cmm(CommandManager::GetInstance()) {
 
 	// Get a logger
-	plugins::LoggerIF::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (logger)
-		logger->Info("yams: Built a new dynamic object[%p]", this);
-	else
-		fprintf(stderr, FI("yams: Built new dynamic object [%p]\n"),
-				(void *)this);
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	assert(logger);
 
 	// Load binding domains configuration
 	LoadBindingConfig();
@@ -141,7 +136,7 @@ YamsSchedPol::YamsSchedPol():
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
-	Resource::Type_t bd_type;
+	br::Resource::Type_t bd_type;
 	std::string bd_domains;
 	std::string bd_str;
 	size_t end_pos, beg_pos = 0;
@@ -163,10 +158,10 @@ YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
 		bd_str  = bd_domains.substr(beg_pos, end_pos);
 
 		// Binding domain resource type
-		ResourcePath rp(bd_str);
+		br::ResourcePath rp(bd_str);
 		bd_type = rp.Type();
-		if (bd_type == Resource::UNDEFINED ||
-				bd_type == Resource::TYPE_COUNT) {
+		if (bd_type == br::Resource::UNDEFINED ||
+				bd_type == br::Resource::TYPE_COUNT) {
 			logger->Error("Invalid binding domain type for: %s",
 					bd_str.c_str());
 			beg_pos  = end_pos + 1;
@@ -179,10 +174,10 @@ YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
 		bindings[bd_type]->type   = bd_type;
 		logger->Info("Binding domain:'%s' Type:%s",
 				bindings[bd_type]->domain.c_str(),
-				ResourceIdentifier::TypeStr[bindings[bd_type]->type]);
+				br::ResourceIdentifier::TypeStr[bindings[bd_type]->type]);
 
 		// Instantiate a scheduling contributions manager per binding domain
-		if (bd_type == Resource::GPU) {
+		if (bd_type == br::Resource::GPU) {
 			scms.insert(SchedContribPair_t(
 					bd_type,
 					new SchedContribManager(
@@ -312,12 +307,12 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 		scm->SetViewInfo(sv, vtok);
 		scm->SetBindingInfo(*(bindings[scm_it->first]));
 		logger->Debug("Init: Scheduling contribution manager for R{%s} ready",
-				ResourceIdentifier::TypeStr[scm_it->first]);
+				br::ResourceIdentifier::TypeStr[scm_it->first]);
 
 		// Init Reconfig contribution
 		sc_recf = scm->GetContrib(SchedContribManager::RECONFIG);
 		if (sc_recf != nullptr) {
-			ResID_t first_id = *(bindings[scm_it->first]->ids.begin());
+			br::ResID_t first_id = *(bindings[scm_it->first]->ids.begin());
 			sc_recf->Init(&first_id);
 		}
 	}
@@ -808,8 +803,8 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
 		SchedEntityPtr_t pschd,
 		size_t b_refn) {
 	AwmPtr_t & pawm(pschd->pawm);
-	ResID_t & bd_id(pschd->bind_id);
-	Resource::Type_t & bd_type(pschd->bind_type);
+	br::ResID_t & bd_id(pschd->bind_id);
+	br::Resource::Type_t & bd_type(pschd->bind_type);
 	size_t r_refn;
 
 	// Binding of the AWM resource into the current binding resource ID.

@@ -40,11 +40,9 @@
 #define INTEL_PLATFORM_NAME "Intel(R) OpenCL"
 #define BBQUE_PLATFORM_NAME AMD_PLATFORM_NAME
 
-
-using bbque::app::AppPtr_t;
-using bbque::res::ResourceIdentifier;
-using bbque::plugins::LoggerIF;
-
+namespace ba = bbque::app;
+namespace br = bbque::res;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -52,8 +50,8 @@ typedef std::list<ResourcePathPtr_t> ResourcePathList_t;
 typedef std::shared_ptr<ResourcePathList_t> ResourcePathListPtr_t;
 typedef std::vector<uint8_t> VectorUInt8_t;
 typedef std::shared_ptr<VectorUInt8_t> VectorUInt8Ptr_t;
-typedef std::map<ResourceIdentifier::Type_t, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
-typedef std::map<ResourceIdentifier::Type_t, ResourcePathListPtr_t> ResourceTypePathMap_t;
+typedef std::map<br::ResourceIdentifier::Type_t, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
+typedef std::map<br::ResourceIdentifier::Type_t, ResourcePathListPtr_t> ResourceTypePathMap_t;
 typedef std::map<int, std::ofstream *> DevFileMap_t;
 typedef std::map<int, ResourcePathPtr_t> DevPathMap_t;
 
@@ -82,22 +80,22 @@ public:
 	/**
 	 * @brief OpenCL resource assignment mapping
 	 */
-	ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt);
+	ExitCode_t MapResources(ba::AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt);
 
 	/**
 	 * @brief Number of OpenCL devices of a given resource type
 	 */
-	uint8_t GetDevicesNum(ResourceIdentifier::Type_t r_type);
+	uint8_t GetDevicesNum(br::ResourceIdentifier::Type_t r_type);
 
 	/**
 	 * @brief Set of OpenCL device IDs for a given resource type
 	 */
-	VectorUInt8Ptr_t GetDeviceIDs(ResourceIdentifier::Type_t r_type);
+	VectorUInt8Ptr_t GetDeviceIDs(br::ResourceIdentifier::Type_t r_type);
 
 	/**
 	 * @brief Set of OpenCL device resource path for a given type
 	 */
-	ResourcePathListPtr_t GetDevicePaths(ResourceIdentifier::Type_t r_type);
+	ResourcePathListPtr_t GetDevicePaths(br::ResourceIdentifier::Type_t r_type);
 
 private:
 
@@ -107,9 +105,10 @@ private:
 	/*** Configuration manager instance */
 	ConfigurationManager & cm;
 
-	/*** Logger instance */
-	LoggerIF * logger;
-
+	/**
+	 * @brief The logger used by the power manager.
+	 */
+	std::unique_ptr<bu::Logger> logger;
 
 	/*** Number of platforms */
 	cl_uint num_platforms = 0;
@@ -134,7 +133,7 @@ private:
 
 	/** Retrieve the iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
-		ResourceIdentifier::Type_t r_type);
+		br::ResourceIdentifier::Type_t r_type);
 
 #ifdef CONFIG_BBQUE_PIL_GPU_PM
 
@@ -194,7 +193,7 @@ private:
 	 * @param r_type The resource type (usually Resource::CPU or Resource::GPU)
 	 * @param dev_id The OpenCL device ID
 	 */
-	void InsertDeviceID(ResourceIdentifier::Type_t r_type, uint8_t dev_id);
+	void InsertDeviceID(br::ResourceIdentifier::Type_t r_type, uint8_t dev_id);
 
 	/**
 	 * @brief Append resource path per device type
@@ -203,7 +202,7 @@ private:
 	 * @param dev_p_str A resource path referencing a device of the type in the key
 	 */
 	void InsertDevicePath(
-		ResourceIdentifier::Type_t r_type, std::string const & dev_rp_str);
+		br::ResourceIdentifier::Type_t r_type, std::string const & dev_rp_str);
 
 	/**
 	 * @brief Register device resources

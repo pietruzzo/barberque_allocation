@@ -21,14 +21,15 @@
 
 #include <cstdint>
 
-#include "bbque/plugins/logger.h"
 #include "bbque/res/resource_path.h"
+#include "bbque/utils/logging/logger.h"
 
 #define POWER_MANAGER_NAMESPACE "bq.pm"
 
-using namespace bbque::res;
-using bbque::plugins::LoggerIF;
+namespace br = bbque::res;
+namespace bu = bbque::utils;
 
+using namespace bbque::res;
 
 namespace bbque {
 
@@ -173,7 +174,10 @@ protected:
 
 	bool initialized = false;
 
-	LoggerIF * logger;
+	/**
+	 * @brief The logger used by the power manager.
+	 */
+	std::unique_ptr<bu::Logger> logger;
 
 };
 

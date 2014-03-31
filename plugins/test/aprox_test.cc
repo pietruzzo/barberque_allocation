@@ -28,6 +28,7 @@
 namespace ba = bbque::app;
 namespace bp = bbque::plugins;
 namespace br = bbque::res;
+namespace bu = bbque::utils;
 
 namespace bbque { namespace plugins {
 
@@ -35,10 +36,7 @@ namespace bbque { namespace plugins {
 ApplicationProxyTest::ApplicationProxyTest() {
 
 	// Get a logger
-	std::string logger_name(TEST_NAMESPACE APROX_NAMESPACE);
-	bp::LoggerIF::Configuration conf(logger_name.c_str());
-	logger = std::unique_ptr<bp::LoggerIF>(
-			ModulesFactory::GetLoggerModule(std::cref(conf)));
+	logger = bu::Logger::GetLogger(TEST_NAMESPACE APROX_NAMESPACE));
 	assert(logger);
 
 }

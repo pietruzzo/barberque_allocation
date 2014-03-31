@@ -40,7 +40,6 @@
 #define SCHEDU_APP_TEST_ENABLED	1
 
 namespace ba = bbque::app;
-namespace bp = bbque::plugins;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
@@ -182,9 +181,7 @@ CoreInteractionsTest::CoreInteractionsTest():
 	ra(ResourceAccounter::GetInstance()){
 
 	// Get a logger
-	std::string logger_name(TEST_NAMESPACE COREINT_NAMESPACE);
-	bp::LoggerIF::Configuration conf(logger_name.c_str());
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(TEST_NAMESPACE COREINT_NAMESPACE);
 	assert(logger);
 
 	if (logger)

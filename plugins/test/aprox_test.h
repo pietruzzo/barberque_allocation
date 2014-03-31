@@ -22,11 +22,11 @@
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/test.h"
 
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 
 #define APROX_NAMESPACE "aprox"
 
-using bbque::plugins::LoggerIF;
+namespace bu = bbque::utils;
 
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
@@ -69,7 +69,7 @@ public:
 
 private:
 
-	std::unique_ptr<LoggerIF> logger;
+	std::unique_ptr<Logger> logger;
 
 	/**
 	 * @brief Constructor

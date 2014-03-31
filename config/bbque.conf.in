@@ -105,7 +105,7 @@ rootCategory = ERROR, raFile
 # to redefine the category priority to a value diffent from that of
 # the rootCategory
 ###
-#category.bq = 		INFO
+category.bq = 		INFO
 category.bq.am =	NOTICE
 category.bq.mc =	NOTICE
 category.bq.om =	NOTICE

@@ -15,13 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "log4cpp_logger.h"
+#include "bbque/utils/logging/log4cpp_logger.h"
+#include "bbque/utils/logging/console_logger.h"
 
 #include <log4cpp/Category.hh>
 #include <log4cpp/Priority.hh>
 #include <log4cpp/PropertyConfigurator.hh>
 
-#include "bbque/utils/utility.h"
+#include <fstream>
 
 namespace l4 = log4cpp;
 namespace po = boost::program_options;
@@ -30,123 +31,88 @@ namespace po = boost::program_options;
 
 #define LOG4CPP_COLOR_WHITE	"\033[1;37m%s\033[0m"
 #define LOG4CPP_COLOR_LGRAY	"\033[37m%s\033[0m"
-#define LOG4CPP_COLOR_GRAY	"\033[1;30m%s\033[0m"
+#define LOG4CPP_COLOR_GRAY		"\033[1;30m%s\033[0m"
 #define LOG4CPP_COLOR_BLACK	"\033[30m%s\033[0m"
-#define LOG4CPP_COLOR_RED	"\033[31m%s\033[0m"
-#define LOG4CPP_COLOR_LRED	"\033[1;31m%s\033[0m"
+#define LOG4CPP_COLOR_RED		"\033[31m%s\033[0m"
+#define LOG4CPP_COLOR_LRED		"\033[1;31m%s\033[0m"
 #define LOG4CPP_COLOR_GREEN	"\033[32m%s\033[0m"
 #define LOG4CPP_COLOR_LGREEN	"\033[1;32m%s\033[0m"
 #define LOG4CPP_COLOR_BROWN	"\033[33m%s\033[0m"
 #define LOG4CPP_COLOR_YELLOW	"\033[1;33m%s\033[0m"
-#define LOG4CPP_COLOR_BLUE	"\033[34m%s\033[0m"
+#define LOG4CPP_COLOR_BLUE		"\033[34m%s\033[0m"
 #define LOG4CPP_COLOR_LBLUE	"\033[1;34m%s\033[0m"
 #define LOG4CPP_COLOR_PURPLE	"\033[35m%s\033[0m"
-#define LOG4CPP_COLOR_PINK	"\033[1;35m%s\033[0m"
-#define LOG4CPP_COLOR_CYAN	"\033[36m%s\033[0m"
+#define LOG4CPP_COLOR_PINK		"\033[1;35m%s\033[0m"
+#define LOG4CPP_COLOR_CYAN		"\033[36m%s\033[0m"
 #define LOG4CPP_COLOR_LCYAN	"\033[1;36m%s\033[0m"
 
-#define LOG4CPP_COLOR_INFO	LOG4CPP_COLOR_GREEN
+#define LOG4CPP_COLOR_INFO		LOG4CPP_COLOR_GREEN
 #define LOG4CPP_COLOR_NOTICE	LOG4CPP_COLOR_CYAN
-#define LOG4CPP_COLOR_WARN	LOG4CPP_COLOR_YELLOW
+#define LOG4CPP_COLOR_WARN		LOG4CPP_COLOR_YELLOW
 #define LOG4CPP_COLOR_ERROR	LOG4CPP_COLOR_PURPLE
-#define LOG4CPP_COLOR_CRIT	LOG4CPP_COLOR_PURPLE
+#define LOG4CPP_COLOR_CRIT		LOG4CPP_COLOR_PURPLE
 #define LOG4CPP_COLOR_ALERT	LOG4CPP_COLOR_LRED
 #define LOG4CPP_COLOR_FATAL	LOG4CPP_COLOR_RED
 
-namespace bbque { namespace plugins {
+namespace bbque { namespace utils {
 
 bool Log4CppLogger::configured = false;
 
-Log4CppLogger::Log4CppLogger(char const * category) :
-	use_colors(true),
-	logger(l4::Category::getInstance(category)) {
+Log4CppLogger::Log4CppLogger(Configuration const & conf) :
+	Logger(conf),
+	logger(l4::Category::getInstance(conf.category)) {
 }
 
-Log4CppLogger::~Log4CppLogger() {
+std::unique_ptr<Logger>
+Log4CppLogger::GetInstance(Configuration const & conf) {
+	if (!configured && !Configure(conf))
+		return nullptr;
+	return std::unique_ptr<Logger>(new Log4CppLogger(conf));
 }
 
-//----- static plugin interface
+void Log4CppLogger::ParseConfigurationFile(
+		po::options_description const & opts_desc,
+		po::variables_map & opts) {
+	std::ifstream in(conf_file_path);
 
-void * Log4CppLogger::Create(PF_ObjectParams * params) {
-	LoggerIF::Configuration * conf = (LoggerIF::Configuration*) params->data;
+	// Parse configuration file (allowing for unregistered options)
+	po::store(po::parse_config_file(in, opts_desc, true), opts);
+	po::notify(opts);
 
-	if (!Configure(params))
-		return NULL;
-
-	return new Log4CppLogger(conf->category);
 }
 
-int32_t Log4CppLogger::Destroy(void * plugin) {
-	if (!plugin)
-		return -1;
-	delete (Log4CppLogger *)plugin;
-	return 0;
-}
+bool Log4CppLogger::Configure(Configuration const & conf) {
+	std::unique_ptr<Logger> logger = ConsoleLogger::GetInstance(conf);
 
-bool Log4CppLogger::Configure(PF_ObjectParams * params) {
-
-	if (configured)
-		return true;
-
-	// Declare the supported options
-	static std::string conf_file_path;
+	// Define Log4CPP configuration options
 	po::options_description log4cpp_opts_desc("Log4CPP Options");
 	log4cpp_opts_desc.add_options()
-		(MODULE_CONFIG".conf_file", po::value<std::string>
-#ifdef BBQUE_DEBUG
-		 (&conf_file_path)->default_value(
-			 BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/bbque.conf_dbg"),
-#else
-		 (&conf_file_path)->default_value(
-			 BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/bbque.conf"),
-#endif
-		 "configuration file path")
-		;
-	static po::variables_map log4cpp_opts_value;
+		(MODULE_CONFIG ".conf_file", po::value<std::string>
+			(&conf_file_path)->default_value(conf_file_path.c_str()),
+			"configuration file path");
+	po::variables_map log4cpp_opts_value;
 
+	logger->Debug("Using Log4CppLogger configuration file [%s]",
+			conf_file_path.c_str());
 
-	// Get configuration params
-	PF_Service_ConfDataIn data_in;
-	data_in.opts_desc = &log4cpp_opts_desc;
-	PF_Service_ConfDataOut data_out;
-	data_out.opts_value = &log4cpp_opts_value;
-	PF_ServiceData sd;
-	sd.id = MODULE_NAMESPACE;
-	sd.request = &data_in;
-	sd.response = &data_out;
-
-	int32_t response = params->platform_services->InvokeService(
-			PF_SERVICE_CONF_DATA, sd);
-	if (response!=PF_SERVICE_DONE)
-		return NULL;
-
-	if (daemonized)
-		syslog(LOG_INFO, "Using Log4CppLogger configuration file [%s]",
-				conf_file_path.c_str());
-	else
-		fprintf(stdout, FI("Using Log4CppLogger configuration file [%s]\n"),
-				conf_file_path.c_str());
+	// Parsing BBQUE configuration file
+	ParseConfigurationFile(log4cpp_opts_desc, log4cpp_opts_value);
 
 	// Setting up Appender, layout and Category
 	try {
 		l4::PropertyConfigurator::configure(conf_file_path);
-		configured = true;
 	} catch (log4cpp::ConfigureFailure & e) {
-
-		if (daemonized)
-			syslog(LOG_INFO, "Log4CppLogger configuration FAILED (Error %s)",
-					e.what());
-		else
-			fprintf(stdout, FI("Log4CppLogger configuration FAILED (Error %s)\n"),
-					e.what());
+		logger->Error("Log4CppLogger configuration FAILED (Error %s)",
+				e.what());
 		return false;
 	}
 
+	configured = true;
 	return true;
 
 }
 
-//----- Logger plugin interface
+//----- Logger interface
 
 #ifdef BBQUE_DEBUG
 void Log4CppLogger::Debug(const char *fmt, ...) {
@@ -275,7 +241,7 @@ void Log4CppLogger::Fatal(const char *fmt, ...) {
 	}
 }
 
-} // namespace plugins
+} // namespace utils
 
 } // namespace bbque
 

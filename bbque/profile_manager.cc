@@ -16,7 +16,6 @@
  */
 
 #include "bbque/profile_manager.h"
-#include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/app/application.h"
 
@@ -67,14 +66,8 @@ ProfileManager::ProfileManager() :
 	mc(bu::MetricsCollector::GetInstance()) {
 
 	//---------- Get a logger module
-	std::string logger_name(PROFILE_MANAGER_NAMESPACE);
-	bp::LoggerIF::Configuration conf(logger_name.c_str());
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
-	if (!logger) {
-		fprintf(stderr, "OM: Logger module creation FAILED\n");
-		assert(logger);
-		return;
-	}
+	logger = bu::Logger::GetLogger(PROFILE_MANAGER_NAMESPACE);
+	assert(logger);
 
 	logger->Debug("Starting profile manager...");
 

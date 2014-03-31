@@ -29,9 +29,6 @@
 #include <string>
 #include <sstream>
 
-#include "bbque/modules_factory.h"
-#include "bbque/plugin_manager.h"
-#include "bbque/platform_services.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/application_manager.h"
@@ -64,9 +61,7 @@ ResourceAccounter::ResourceAccounter() :
 	cm(CommandManager::GetInstance()) {
 
 	// Get a logger
-	std::string logger_name(RESOURCE_ACCOUNTER_NAMESPACE);
-	plugins::LoggerIF::Configuration conf(logger_name.c_str());
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	logger = bu::Logger::GetLogger(RESOURCE_ACCOUNTER_NAMESPACE);
 	assert(logger);
 
 	// Init the system resources state view
@@ -383,7 +378,7 @@ inline uint16_t ResourceAccounter::Count(
 }
 
 inline uint16_t ResourceAccounter::CountPerType(
-		ResourceIdentifier::Type_t type) const {
+		br::ResourceIdentifier::Type_t type) const {
 	std::map<Resource::Type_t, uint16_t>::const_iterator it;
 	it =  r_count.find(type);
 	if (it == r_count.end())
@@ -434,8 +429,8 @@ uint64_t ResourceAccounter::QueryStatus(
 
 uint64_t ResourceAccounter::GetUsageAmount(
 		UsagesMapPtr_t const & pum,
-		ResourceIdentifier::Type_t r_type,
-		ResourceIdentifier::Type_t r_scope_type) const {
+		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceIdentifier::Type_t r_scope_type) const {
 
 	if (pum == nullptr) {
 		logger->Fatal("GetUsageAmount: empty map");
@@ -471,8 +466,8 @@ uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		UsagePtr_t pusage = (*uit).second;
 
 		logger->Debug("GetUsageAmount: type:{%-3s} scope:{%-3s}",
-			ResourceIdentifier::TypeStr[r_type],
-			ResourceIdentifier::TypeStr[r_scope_type]);
+			br::ResourceIdentifier::TypeStr[r_type],
+			br::ResourceIdentifier::TypeStr[r_scope_type]);
 
 		if ((r_scope_type != Resource::UNDEFINED)
 			&& (ppath->GetID(r_scope_type) == R_ID_NONE))
@@ -484,7 +479,7 @@ uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 	}
 
 	logger->Debug("GetUsageAmount: R{%-3s} U = %" PRIu64 "",
-			ResourceIdentifier::TypeStr[r_type], amount);
+			br::ResourceIdentifier::TypeStr[r_type], amount);
 	return amount;
 }
 
@@ -552,7 +547,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
 		std::string const & path_str,
 		std::string const & units,
 		uint64_t amount) {
-	ResourceIdentifier::Type_t type;
+	br::ResourceIdentifier::Type_t type;
 
 	// Build a resource path object (from the string)
 	ResourcePathPtr_t ppath(new ResourcePath(path_str));

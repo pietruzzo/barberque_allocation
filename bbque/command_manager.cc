@@ -19,7 +19,6 @@
 
 #include "bbque/configuration_manager.h"
 #include "bbque/utils/utility.h"
-#include "bbque/modules_factory.h"
 
 #include <boost/filesystem.hpp>
 

@@ -23,6 +23,7 @@
 #include "bbque/rtlib/rpc_messages.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/timer.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/cpp11/condition_variable.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/cpp11/thread.h"
@@ -52,8 +53,8 @@
 #undef  MODULE_NAMESPACE
 #define MODULE_NAMESPACE "rpc"
 
-using bbque::utils::Timer;
 using namespace boost::accumulators;
+namespace bu = bbque::utils;
 
 namespace bbque { namespace rtlib {
 
@@ -217,6 +218,8 @@ public:
 
 protected:
 
+	static std::unique_ptr<bu::Logger> logger;
+
 	typedef struct PerfEventAttr {
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 		perf_type_id type;
@@ -331,7 +334,7 @@ protected:
 		std::condition_variable cv;
 
 		/** The High-Resolution timer used for profiling */
-		Timer exc_tmr;
+		bu::Timer exc_tmr;
 		/** The time [ms] spent on waiting for an AWM being assigned */
 		uint32_t time_blocked = 0;
 		/** The time [ms] spent on reconfigurations */
@@ -341,7 +344,7 @@ protected:
 
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 		/** Performance counters */
-		utils::Perf perf;
+		bu::Perf perf;
 		/** Map of registered Perf counter IDs */
 		PerfRegisteredEventsMap_t events_map;
 #endif // CONFIG_BBQUE_RTLIB_PERF_SUPPORT
@@ -374,13 +377,13 @@ protected:
 		return (prec->flags & EXC_FLAGS_AWM_VALID);
 	}
 	inline void setAwmValid(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("AWM  <= Valid [%d:%s:%d]\n"),
-					prec->exc_id, prec->name.c_str(), prec->awm_id));
+		logger->Debug("AWM  <= Valid [%d:%s:%d]",
+					prec->exc_id, prec->name.c_str(), prec->awm_id);
 		prec->flags |= EXC_FLAGS_AWM_VALID;
 	}
 	inline void clearAwmValid(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("AWM  <= Invalid [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("AWM  <= Invalid [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags &= ~EXC_FLAGS_AWM_VALID;
 	}
 
@@ -389,13 +392,13 @@ protected:
 		return (prec->flags & EXC_FLAGS_AWM_WAITING);
 	}
 	inline void setAwmWaiting(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("AWM  <= Waiting [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("AWM  <= Waiting [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags |= EXC_FLAGS_AWM_WAITING;
 	}
 	inline void clearAwmWaiting(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("AWM  <= NOT Waiting [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("AWM  <= NOT Waiting [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags &= ~EXC_FLAGS_AWM_WAITING;
 	}
 
@@ -404,13 +407,13 @@ protected:
 		return (prec->flags & EXC_FLAGS_AWM_ASSIGNED);
 	}
 	inline void setAwmAssigned(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("AWM  <= Assigned [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("AWM  <= Assigned [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags |= EXC_FLAGS_AWM_ASSIGNED;
 	}
 	inline void clearAwmAssigned(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("AWM  <= NOT Assigned [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("AWM  <= NOT Assigned [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags &= ~EXC_FLAGS_AWM_ASSIGNED;
 	}
 
@@ -419,13 +422,13 @@ protected:
 		return (prec->flags & EXC_FLAGS_EXC_SYNC);
 	}
 	inline void setSyncMode(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("SYNC <= Enter [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("SYNC <= Enter [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags |= EXC_FLAGS_EXC_SYNC;
 	}
 	inline void clearSyncMode(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("SYNC <= Exit [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("SYNC <= Exit [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags &= ~EXC_FLAGS_EXC_SYNC;
 	}
 
@@ -434,13 +437,13 @@ protected:
 		return (prec->flags & EXC_FLAGS_EXC_SYNC_DONE);
 	}
 	inline void setSyncDone(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("SYNC <= Done [%d:%s:%d]\n"),
-					prec->exc_id, prec->name.c_str(), prec->awm_id));
+		logger->Debug("SYNC <= Done [%d:%s:%d]",
+					prec->exc_id, prec->name.c_str(), prec->awm_id);
 		prec->flags |= EXC_FLAGS_EXC_SYNC_DONE;
 	}
 	inline void clearSyncDone(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("SYNC <= Pending [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("SYNC <= Pending [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags &= ~EXC_FLAGS_EXC_SYNC_DONE;
 	}
 
@@ -449,13 +452,13 @@ protected:
 		return (prec->flags & EXC_FLAGS_EXC_REGISTERED);
 	}
 	inline void setRegistered(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("EXC  <= Registered [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("EXC  <= Registered [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags |= EXC_FLAGS_EXC_REGISTERED;
 	}
 	inline void clearRegistered(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("EXC  <= Unregistered [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("EXC  <= Unregistered [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags &= ~EXC_FLAGS_EXC_REGISTERED;
 	}
 
@@ -464,13 +467,13 @@ protected:
 		return (prec->flags & EXC_FLAGS_EXC_ENABLED);
 	}
 	inline void setEnabled(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("EXC  <= Enabled [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("EXC  <= Enabled [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags |= EXC_FLAGS_EXC_ENABLED;
 	}
 	inline void clearEnabled(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("EXC  <= Disabled [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("EXC  <= Disabled [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags &= ~EXC_FLAGS_EXC_ENABLED;
 	}
 
@@ -479,13 +482,13 @@ protected:
 		return (prec->flags & EXC_FLAGS_EXC_BLOCKED);
 	}
 	inline void setBlocked(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("EXC  <= Blocked [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("EXC  <= Blocked [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags |= EXC_FLAGS_EXC_BLOCKED;
 	}
 	inline void clearBlocked(pregExCtx_t prec) const {
-		DB(fprintf(stderr, FD("EXC  <= UnBlocked [%d:%s]\n"),
-					prec->exc_id, prec->name.c_str()));
+		logger->Debug("EXC  <= UnBlocked [%d:%s]",
+					prec->exc_id, prec->name.c_str());
 		prec->flags &= ~EXC_FLAGS_EXC_BLOCKED;
 	}
 

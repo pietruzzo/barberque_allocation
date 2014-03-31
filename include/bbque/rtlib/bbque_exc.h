@@ -20,12 +20,15 @@
 
 #include <bbque/rtlib.h>
 #include <bbque/utils/timer.h>
+#include <bbque/utils/logging/logger.h>
 #include <bbque/cpp11/condition_variable.h>
 #include <bbque/cpp11/thread.h>
 
 #include <map>
 #include <memory>
 #include <string>
+
+namespace bu = bbque::utils;
 
 namespace bbque { namespace rtlib {
 
@@ -432,6 +435,11 @@ public:
 	}
 
 protected:
+
+/**
+ * @brief The logger module
+ */
+	std::unique_ptr<bu::Logger> logger;
 
 /**
  * @brief The name of this EXC

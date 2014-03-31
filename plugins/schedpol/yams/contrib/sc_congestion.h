@@ -60,10 +60,10 @@ private:
 	 * Congestion penalties per resource type. This stores the values parsed
 	 * from the configuration file.
 	 */
-	uint16_t penalties_int[ResourceIdentifier::TYPE_COUNT];
+	uint16_t penalties_int[br::ResourceIdentifier::TYPE_COUNT];
 
 	/** Penalty indices */
-	float penalties[ResourceIdentifier::TYPE_COUNT];
+	float penalties[br::ResourceIdentifier::TYPE_COUNT];
 
 	/**
 	 * @brief Compute the congestion contribute

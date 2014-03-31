@@ -28,7 +28,6 @@
 
 #include <sys/epoll.h>
 
-
 namespace bbque { namespace rtlib {
 
 /**

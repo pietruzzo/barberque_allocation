@@ -19,11 +19,13 @@
 #define BBQUE_TEST_PLATFORM_DATA_H_
 
 #include "bbque/config.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugin_manager.h"
 
 
 #define TEST_PLATFORM_DATA_NAMESPACE "bq.tpd"
+
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -69,7 +71,7 @@ private:
 	/**
 	 * @brief The logger used by the resource manager.
 	 */
-	plugins::LoggerIF *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/**
 	 * @biref Ture if a platform configuration has been successfully loaded

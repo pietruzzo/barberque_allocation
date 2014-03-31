@@ -20,7 +20,6 @@
 
 //----- Supported plugin interfaces
 #include "bbque/plugins/test_adapter.h"
-#include "bbque/plugins/logger_adapter.h"
 //#include "bbque/plugins/rpc_channel_adapter.h"
 #include "bbque/plugins/recipe_loader.h"
 //----- Supported C++ only plugin interfaces
@@ -48,22 +47,10 @@ class ModulesFactory {
 public:
 
 	/**
-	 * Get a reference to the (singleton) module factory
-	 */
-	static ModulesFactory & GetInstance();
-
-	/**
 	 * Get a reference to a module implementing the TestIF interface
 	 */
 	static plugins::TestIF * GetTestModule(
 			const std::string & id = TEST_NAMESPACE);
-
-	/**
-	 * Get a reference to a module implementing the LoggerIF interface
-	 */
-	static plugins::LoggerIF * GetLoggerModule(
-			plugins::LoggerIF::Configuration const & data,
-			std::string const & id = LOGGER_NAMESPACE);
 
 	/**
 	 * Get a reference to a module implementing the RPCChannelIF interface

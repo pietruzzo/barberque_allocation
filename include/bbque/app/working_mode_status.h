@@ -27,10 +27,8 @@
 #include "bbque/utils/attributes_container.h"
 #include "bbque/utils/utility.h"
 
-
-using namespace bbque::res;
-using bbque::utils::AttributesContainer;
-
+namespace br = bbque::res;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -61,7 +59,7 @@ typedef std::shared_ptr<ApplicationStatusIF> AppSPtr_t;
  *
  * Read-only interface for the WorkingMode runtime status
  */
-class WorkingModeStatusIF: public AttributesContainer {
+class WorkingModeStatusIF: public bu::AttributesContainer {
 
 public:
 
@@ -120,13 +118,13 @@ public:
 	 * @param r_path Resource path object (shared pointer)
 	 * @return The requested amount
 	 */
-	virtual uint64_t ResourceUsageAmount(ResourcePathPtr_t r_path) const = 0;
+	virtual uint64_t ResourceUsageAmount(br::ResourcePathPtr_t r_path) const = 0;
 
 	/**
 	 * @brief Return a map of all the requested resources
 	 * @return A constant reference to the map of resource usages object
 	 */
-	virtual UsagesMap_t const & RecipeResourceUsages() const = 0;
+	virtual br::UsagesMap_t const & RecipeResourceUsages() const = 0;
 
 	/**
 	 * @brief How many resources the working mode uses
@@ -147,7 +145,7 @@ public:
 	 *
 	 * @return A map of Usage objects
 	 */
-	virtual UsagesMapPtr_t GetSchedResourceBinding(size_t b_id = 0) const = 0;
+	virtual br::UsagesMapPtr_t GetSchedResourceBinding(size_t b_id = 0) const = 0;
 
 	/**
 	 * @brief Get the bitmap of the clusters currently used.
@@ -157,7 +155,7 @@ public:
 	 *
 	 * @return A bitset data structure
 	 */
-	virtual ResourceBitset BindingSet(ResourceIdentifier::Type_t r_type)
+	virtual br::ResourceBitset BindingSet(br::ResourceIdentifier::Type_t r_type)
 		const = 0;
 
 	/**
@@ -168,8 +166,8 @@ public:
 	 *
 	 * @return A bitset data structure
 	 */
-	virtual ResourceBitset BindingSetPrev(
-			ResourceIdentifier::Type_t r_type) const = 0;
+	virtual br::ResourceBitset BindingSetPrev(
+			br::ResourceIdentifier::Type_t r_type) const = 0;
 
 	/**
 	 * @brief Check if clusters used are changed
@@ -181,7 +179,7 @@ public:
 	 *
 	 * @return True if the AWM use a different map of clusters, false otherwise.
 	 */
-	virtual bool BindingChanged(ResourceIdentifier::Type_t r_type) const = 0;
+	virtual bool BindingChanged(br::ResourceIdentifier::Type_t r_type) const = 0;
 
 };
 

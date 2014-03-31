@@ -37,8 +37,9 @@ PowerManager::PowerManager(
 		std::string const & vendor = ""):
 	rsrc_path_domain(rp),
 	vendor(vendor) {
-	LoggerIF::Configuration conf(MODULE_NAMESPACE);
-	logger = ModulesFactory::GetLoggerModule(std::cref(conf));
+	//---------- Get a logger module
+	logger = bu::Logger::GetLogger(POWER_MANAGER_NAMESPACE);
+	assert(logger);
 }
 
 

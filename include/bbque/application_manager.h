@@ -25,16 +25,17 @@
 #include "bbque/application_manager_conf.h"
 #include "bbque/command_manager.h"
 #include "bbque/utils/deferrable.h"
-#include "bbque/plugins/logger.h"
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/recipe_loader.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/command_manager.h"
 
 using bbque::app::Application;
 using bbque::utils::Deferrable;
-using bbque::plugins::LoggerIF;
 using bbque::plugins::RecipeLoaderIF;
 using bbque::CommandHandler;
+
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -342,7 +343,7 @@ public:
 private:
 
 	/** The logger used by the application manager */
-	LoggerIF  *logger;
+	std::unique_ptr<bu::Logger> logger;
 
 	/** The recipe loader module used to parse recipes */
 	RecipeLoaderIF * rloader;
