@@ -56,19 +56,6 @@ target_link_libraries(
 )
 endif (CONFIG_TARGET_ANDROID)
 
-#----- OpenCL
-if (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
-	find_package (OpenCL REQUIRED)
-	include_directories (${OPENCL_INCLUDE_DIR})
-	# Linking dependencies
-	target_link_libraries(
-		bbque_rtlib
-		bbque_utils
-		${Boost_LIBRARIES}
-		${OPENCL_LIBRARY}
-	)
-endif (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
-
 # Use link path ad RPATH
 set_property (TARGET bbque_rtlib PROPERTY
 		INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -79,13 +66,6 @@ set_property (TARGET bbque_rtlib PROPERTY
 set_property (TARGET bbque_rtlib PROPERTY PUBLIC_HEADER
 		${PROJECT_SOURCE_DIR}/include/bbque/rtlib.h
 		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_exc.h)
-
-if (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
-set_property (TARGET bbque_rtlib PROPERTY PUBLIC_HEADER
-		${PROJECT_SOURCE_DIR}/include/bbque/rtlib.h
-		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_exc.h
-		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_ocl.h)
-endif (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
 
 # Install the RTLib
 install (TARGETS bbque_rtlib LIBRARY
