@@ -783,6 +783,7 @@ void BbqueRPC::DumpMemoryReport(pregExCtx_t prec) {
 	uint64_t value;
 	char buff[256];
 	FILE *memfd;
+	(void)prec;
 
 	// Check for CGroups being available
 	if (!GetCGroupPath().length())

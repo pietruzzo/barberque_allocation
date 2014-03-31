@@ -74,6 +74,9 @@ clGetDeviceIDs(
 		cl_device_id *devices,
 		cl_uint *num_devices)
 		CL_API_SUFFIX__VERSION_1_0 {
+	(void)device_type;
+	(void)num_entries;
+
 	DB2 (fprintf(stderr, FD("Calling clGetDeviceIDs()...\n")));
 	if (platform != rtlib_ocl.platforms[0]) {
 		fprintf(stderr, FD("OCL: Invalid platform specified\n"));
