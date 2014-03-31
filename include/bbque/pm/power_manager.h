@@ -29,8 +29,6 @@
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-using namespace bbque::res;
-
 namespace bbque {
 
 

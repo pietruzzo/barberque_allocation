@@ -31,6 +31,7 @@
 #define MODULE_NAMESPACE SCHEDULER_POLICY_NAMESPACE "." SC_MANAGER_NAMESPACE
 #define MODULE_CONFIG    SCHEDULER_POLICY_CONFIG "." SC_MANAGER_CONFIG
 
+namespace br = bbque::res;
 namespace bu = bbque::utils;
 
 namespace bbque { namespace plugins {
@@ -143,7 +144,7 @@ public:
 	 * This sets the resource state view of the current scheduling run, and
 	 * reference to the System interface
 	 */
-	void SetViewInfo(System * sv, RViewToken_t vtok);
+	void SetViewInfo(System * sv, br::RViewToken_t vtok);
 
 	/**
 	 *@brief Set the binding information
@@ -204,7 +205,7 @@ private:
 
 	/** Global config parameters for metrics contributes */
 	static uint16_t
-		sc_cfg_params[SchedContrib::SC_CONFIG_COUNT*Resource::TYPE_COUNT];
+		sc_cfg_params[SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT];
 
 
 	/**

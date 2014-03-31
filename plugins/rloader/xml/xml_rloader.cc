@@ -35,10 +35,6 @@ namespace br = bbque::res;
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-using ba::WorkingModeStatusIF;
-using br::ResourcePathUtils;
-using br::ConvertValue;
-
 namespace bbque { namespace plugins {
 
 
@@ -389,13 +385,13 @@ uint8_t XMLRecipeLoader::LoadResources(ticpp::Element * _xml_elem,
 uint8_t XMLRecipeLoader::AppendToWorkingMode(AwmPtr_t & wm,
 		std::string const & _res_path,
 		uint64_t _res_usage) {
-	WorkingModeStatusIF::ExitCode_t result;
+	ba::WorkingModeStatusIF::ExitCode_t result;
 
 	// Add the resource usage to the working mode
 	result = wm->AddResourceUsage(_res_path, _res_usage);
 
 	// Resource not found: Signal a weak load (some resources are missing)
-	if (result == WorkingModeStatusIF::WM_RSRC_NOT_FOUND) {
+	if (result == ba::WorkingModeStatusIF::WM_RSRC_NOT_FOUND) {
 		logger->Warn("'%s' recipe:\n\tResource '%s' not available.\n",
 				recipe_ptr->Path().c_str(), _res_path.c_str());
 		return __RSRC_WEAK_LOAD;
@@ -438,7 +434,7 @@ uint8_t XMLRecipeLoader::GetResourceAttributes(
 
 	// Convert the usage value accordingly to the units, and then append the
 	// request to the working mode.
-	res_usage = ConvertValue(res_usage, res_units);
+	res_usage = br::ConvertValue(res_usage, res_units);
 	return AppendToWorkingMode(_wm, _res_path, res_usage);
 }
 
@@ -511,7 +507,7 @@ void XMLRecipeLoader::GetPluginData(T _container,
 		plugdata_node->ToElement()->GetText(&value, false);
 
 		// Set the plugin data
-		PluginAttrPtr_t pattr(new PluginAttr_t(_plug_name, key));
+		ba::PluginAttrPtr_t pattr(new ba::PluginAttr_t(_plug_name, key));
 		pattr->str = value;
 		_container->SetAttribute(pattr);
 

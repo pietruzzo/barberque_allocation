@@ -72,7 +72,7 @@ private:
 	uint16_t num_apps = 0;
 
 	/** List of managed resource types */
-	std::list<Resource::Type_t> r_types;
+	std::list<br::Resource::Type_t> r_types;
 
 	/** Resource availabilities */
 	uint64_t r_avail[br::ResourceIdentifier::TYPE_COUNT];

@@ -81,7 +81,7 @@ SchedContrib::Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 }
 
 void SchedContrib::GetResourceThresholds(
-		ResourcePathPtr_t r_path,
+		br::ResourcePathPtr_t r_path,
 		uint64_t rsrc_amount,
 		SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		ResourceThresholds_t & rl) {

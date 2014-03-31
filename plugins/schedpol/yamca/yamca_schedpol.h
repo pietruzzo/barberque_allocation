@@ -31,11 +31,8 @@
 
 #define RSRC_CLUSTER "sys.cpu"
 
+namespace ba = bbque::app;
 namespace bu = bbque::utils;
-
-using bbque::res::RViewToken_t;
-using bbque::utils::Timer;
-using bbque::utils::MetricsCollector;
 
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
@@ -52,7 +49,7 @@ class YamcaSchedPol: public SchedulerPolicyIF {
 public:
 
 	/** The scheduling entity*/
-	typedef std::pair<AppCPtr_t, AwmPtr_t> SchedEntity_t;
+	typedef std::pair<ba::AppCPtr_t, ba::AwmPtr_t> SchedEntity_t;
 
 	/** Map for ordering the scheduling entities */
 	typedef std::multimap<float, SchedEntity_t> SchedEntityMap_t;
@@ -85,7 +82,7 @@ public:
 	 * @see ScheduerPolicyIF
 	 */
 	SchedulerPolicyIF::ExitCode_t
-		Schedule(bbque::System & sv, RViewToken_t & rav);
+		Schedule(bbque::System & sv, br::RViewToken_t & rav);
 
 private:
 
@@ -96,7 +93,7 @@ private:
 	ResourceAccounter & rsrc_acct;
 
 	/** Token for accessing a resources view */
-	RViewToken_t rsrc_view_token = 0;
+	br::RViewToken_t rsrc_view_token = 0;
 
 	/** A counter used for getting always a new clean resources view */
 	uint32_t tok_counter = 0;
@@ -108,7 +105,7 @@ private:
 	std::vector<bool> clusters_full;
 
 	/** Metric collector instance */
-	MetricsCollector & mc;
+	bu::MetricsCollector & mc;
 
 	std::mutex sched_mtx;
 
@@ -128,9 +125,9 @@ private:
 	} SchedPolMetrics_t;
 
 	/** The High-Resolution timer used for profiling */
-	Timer yamca_tmr;
+	bu::Timer yamca_tmr;
 
-	static MetricsCollector::MetricsCollection_t
+	static bu::MetricsCollector::MetricsCollection_t
 		coll_metrics[YAMCA_METRICS_COUNT];
 
 	/**
@@ -183,10 +180,10 @@ private:
 	 * @param cl_id The current cluster for the clustered resources
 	 */
 	ExitCode_t InsertWorkingModes(SchedEntityMap_t & sched_map,
-			AppCPtr_t const & papp, int cl_id);
+			ba::AppCPtr_t const & papp, int cl_id);
 
 	ExitCode_t EvalWorkingMode(SchedEntityMap_t * sched_map,
-			AppCPtr_t const & papp, AwmPtr_t const & wm,
+			ba::AppCPtr_t const & papp, ba::AwmPtr_t const & wm,
 			int cl_id);
 	/**
 	 * @brief Schedule the entities
@@ -206,7 +203,7 @@ private:
 	 * @param papp Application/EXC pointer
 	 * @return true if the Application/EXC must be skipped, false otherwise
 	 */
-	bool CheckSkipConditions(AppCPtr_t const & papp);
+	bool CheckSkipConditions(ba::AppCPtr_t const & papp);
 
 	/**
 	 * @brief Metrics computation
@@ -220,8 +217,8 @@ private:
 	 * @param metrics Metrics value to return
 	 * @return @see ExitCode_t
 	 */
-	ExitCode_t MetricsComputation(AppCPtr_t const & papp,
-			AwmPtr_t const & wm, int cl_id, float & metrics);
+	ExitCode_t MetricsComputation(ba::AppCPtr_t const & papp,
+			ba::AwmPtr_t const & wm, int cl_id, float & metrics);
 
 	/**
 	 * @brief Get resources contention level
@@ -236,7 +233,7 @@ private:
 	 * @param cont_level The contention level value to return
 	 * @return @see ExitCode_t
 	 */
-	ExitCode_t GetContentionLevel(AppCPtr_t const & papp, AwmPtr_t const & wm,
+	ExitCode_t GetContentionLevel(ba::AppCPtr_t const & papp, ba::AwmPtr_t const & wm,
 			int cl_id, float & cont_level);
 
 	/**
@@ -247,8 +244,8 @@ private:
 	 * @param cont_level The contention level value to return
 	 * @return @see ExitCode_t
 	 */
-	ExitCode_t ComputeContentionLevel(AppCPtr_t const & papp,
-			UsagesMapPtr_t const & rsrc_usages, float & cont_level);
+	ExitCode_t ComputeContentionLevel(ba::AppCPtr_t const & papp,
+			br::UsagesMapPtr_t const & rsrc_usages, float & cont_level);
 
 };
 

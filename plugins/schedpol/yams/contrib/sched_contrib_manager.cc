@@ -59,7 +59,7 @@ char const * SchedContribManager::sc_str[SC_COUNT] = {
 float SchedContribManager::sc_weights_norm[SC_COUNT] = {0};
 uint16_t SchedContribManager::sc_weights[SC_COUNT]   = {0};
 uint16_t
-	SchedContribManager::sc_cfg_params[SchedContrib::SC_CONFIG_COUNT*Resource::TYPE_COUNT] = {
+	SchedContribManager::sc_cfg_params[SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT] = {
 	0};
 
 
@@ -176,7 +176,7 @@ SchedContribPtr_t SchedContribManager::GetContrib(Type_t sc_type) {
 	return (*sc_it).second;
 }
 
-void SchedContribManager::SetViewInfo(System * sv, RViewToken_t vtok) {
+void SchedContribManager::SetViewInfo(System * sv, br::RViewToken_t vtok) {
 	std::map<Type_t, SchedContribPtr_t>::iterator sc_it;
 
 	// For each SchedContrib set the resource view information 
@@ -225,7 +225,7 @@ void SchedContribManager::SetWeights(uint16_t new_weights[SC_COUNT]) {
 
 void SchedContribManager::ParseConfiguration() {
 	char weig_opts[SC_COUNT][40];
-	char conf_opts[SchedContrib::SC_CONFIG_COUNT*Resource::TYPE_COUNT][40];
+	char conf_opts[SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT][40];
 	uint16_t offset;
 
 	// Load the weights of the metrics contributes

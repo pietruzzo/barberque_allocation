@@ -31,6 +31,7 @@
 #define MODULE_NAMESPACE APPLICATION_PROXY_NAMESPACE
 
 namespace ba = bbque::app;
+namespace bl = bbque::rtlib;
 namespace br = bbque::res;
 
 namespace bbque {
@@ -72,14 +73,14 @@ ApplicationProxy & ApplicationProxy::GetInstance() {
 	return instance;
 }
 
-rpc_msg_type_t ApplicationProxy::GetNextMessage(pchMsg_t & pChMsg) {
+bl::rpc_msg_type_t ApplicationProxy::GetNextMessage(pchMsg_t & pChMsg) {
 
 	rpc->RecvMessage(pChMsg);
 
 	logger->Debug("APPs PRX: RX [typ: %d, pid: %d]",
 			pChMsg->typ, pChMsg->app_pid);
 
-	return (rpc_msg_type_t)pChMsg->typ;
+	return (bl::rpc_msg_type_t)pChMsg->typ;
 }
 
 /*******************************************************************************
@@ -127,9 +128,9 @@ RTLIB_ExitCode_t ApplicationProxy::StopExecutionSync(AppPtr_t papp) {
 			std::defer_lock);
 	conCtxMap_t::iterator it;
 	pconCtx_t pcon;
-	rpc_msg_BBQ_STOP_t stop_msg = {
+	bl::rpc_msg_BBQ_STOP_t stop_msg = {
 		// FIXME The token should be defined as the thread id
-		{RPC_BBQ_STOP_EXECUTION, 1234,
+		{bl::RPC_BBQ_STOP_EXECUTION, 1234,
 			static_cast<int>(papp->Pid()), papp->ExcId()},
 		{0, 100} // FIXME get a timeout parameter
 	};
@@ -222,8 +223,8 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 	AppPtr_t papp = pcs->papp;
 	pconCtx_t pcon;
 	ssize_t result;
-	rpc_msg_BBQ_SYNCP_PRECHANGE_t syncp_prechange_msg = {
-		{RPC_BBQ_SYNCP_PRECHANGE, pcs->pid,
+	bl::rpc_msg_BBQ_SYNCP_PRECHANGE_t syncp_prechange_msg = {
+		{bl::RPC_BBQ_SYNCP_PRECHANGE, pcs->pid,
 			static_cast<int>(papp->Pid()), papp->ExcId()},
 		(uint8_t)papp->SyncState(),
 		// If the application is BLOCKING we don't have a NextAWM but we also
@@ -235,11 +236,11 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 	if (likely(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
-		ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(Resource::GPU));
-		ResID_t r_id = gpu_ids.FirstSet();
+		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(br::Resource::GPU));
+		br::ResID_t r_id = gpu_ids.FirstSet();
 		// If no GPU have been bound, the CPU is the OpenCL device assigned
 		if ((r_id == R_ID_NONE)  || (r_id == R_ID_ANY)) {
-			VectorUInt8Ptr_t pdev_ids = oclProxy.GetDeviceIDs(Resource::CPU);
+			VectorUInt8Ptr_t pdev_ids = oclProxy.GetDeviceIDs(br::Resource::CPU);
 			r_id  = pdev_ids->at(0);
 		}
 
@@ -285,7 +286,7 @@ RTLIB_ExitCode_t
 ApplicationProxy::SyncP_PreChangeRecv(pcmdSn_t pcs,
 		pPreChangeRsp_t presp) {
 	std::unique_lock<std::mutex> resp_ul(pcs->resp_mtx);
-	rpc_msg_BBQ_SYNCP_PRECHANGE_RESP_t *pmsg_pyl;
+	bl::rpc_msg_BBQ_SYNCP_PRECHANGE_RESP_t *pmsg_pyl;
 	rpc_msg_header_t *pmsg_hdr;
 	std::cv_status ready;
 	pchMsg_t pchMsg;
@@ -307,13 +308,13 @@ ApplicationProxy::SyncP_PreChangeRecv(pcmdSn_t pcs,
 	// Getting command response
 	pchMsg = pcs->pmsg;
 	pmsg_hdr = pchMsg;
-	pmsg_pyl = (rpc_msg_BBQ_SYNCP_PRECHANGE_RESP_t*)pmsg_hdr;
+	pmsg_pyl = (bl::rpc_msg_BBQ_SYNCP_PRECHANGE_RESP_t*)pmsg_hdr;
 
 	logger->Debug("APPs PRX: command response [typ: %d, pid: %d]",
 			pmsg_hdr->typ,
 			pmsg_hdr->app_pid);
 
-	assert(pmsg_hdr->typ == RPC_BBQ_RESP);
+	assert(pmsg_hdr->typ == bl::RPC_BBQ_RESP);
 
 	// Build a new communication context
 	logger->Debug("APPs PRX: PreChangeResp [pid: %d, latency: %u]",
@@ -432,8 +433,8 @@ ApplicationProxy::SyncP_SyncChangeSend(pcmdSn_t pcs) {
 	AppPtr_t papp = pcs->papp;
 	pconCtx_t pcon;
 	ssize_t result;
-	rpc_msg_BBQ_SYNCP_SYNCCHANGE_t syncp_syncchange_msg = {
-		{RPC_BBQ_SYNCP_SYNCCHANGE, pcs->pid,
+	bl::rpc_msg_BBQ_SYNCP_SYNCCHANGE_t syncp_syncchange_msg = {
+		{bl::RPC_BBQ_SYNCP_SYNCCHANGE, pcs->pid,
 			static_cast<int>(papp->Pid()), papp->ExcId()}
 	};
 
@@ -500,7 +501,7 @@ ApplicationProxy::SyncP_SyncChangeRecv(pcmdSn_t pcs,
 			pmsg_hdr->typ,
 			pmsg_hdr->app_pid);
 
-	assert(pmsg_hdr->typ == RPC_BBQ_RESP);
+	assert(pmsg_hdr->typ == bl::RPC_BBQ_RESP);
 
 	// Build a new communication context
 	logger->Debug("APPs PRX: SyncChangeResp [pid: %d]", pmsg_hdr->app_pid);
@@ -620,8 +621,8 @@ ApplicationProxy::SyncP_DoChangeSend(pcmdSn_t pcs) {
 	AppPtr_t papp = pcs->papp;
 	pconCtx_t pcon;
 	ssize_t result;
-	rpc_msg_BBQ_SYNCP_DOCHANGE_t syncp_syncchange_msg = {
-		{RPC_BBQ_SYNCP_DOCHANGE, pcs->pid,
+	bl::rpc_msg_BBQ_SYNCP_DOCHANGE_t syncp_syncchange_msg = {
+		{bl::RPC_BBQ_SYNCP_DOCHANGE, pcs->pid,
 			static_cast<int>(papp->Pid()), papp->ExcId()}
 	};
 
@@ -697,8 +698,8 @@ ApplicationProxy::SyncP_PostChangeSend(pcmdSn_t pcs) {
 	AppPtr_t papp = pcs->papp;
 	pconCtx_t pcon;
 	ssize_t result;
-	rpc_msg_BBQ_SYNCP_POSTCHANGE_t syncp_syncchange_msg = {
-		{RPC_BBQ_SYNCP_POSTCHANGE, pcs->pid,
+	bl::rpc_msg_BBQ_SYNCP_POSTCHANGE_t syncp_syncchange_msg = {
+		{bl::RPC_BBQ_SYNCP_POSTCHANGE, pcs->pid,
 			static_cast<int>(papp->Pid()), papp->ExcId()}
 	};
 
@@ -765,7 +766,7 @@ ApplicationProxy::SyncP_PostChangeRecv(pcmdSn_t pcs,
 			pmsg_hdr->typ,
 			pmsg_hdr->app_pid);
 
-	assert(pmsg_hdr->typ == RPC_BBQ_RESP);
+	assert(pmsg_hdr->typ == bl::RPC_BBQ_RESP);
 
 	// Build a new communication context
 	logger->Debug("APPs PRX: PostChangeResp [pid: %d]", pmsg_hdr->app_pid);
@@ -932,8 +933,8 @@ ApplicationProxy::pconCtx_t ApplicationProxy::GetConnectionContext(
 }
 
 void ApplicationProxy::RpcACK(pconCtx_t pcon, rpc_msg_header_t *pmsg_hdr,
-		rpc_msg_type_t type) {
-	rpc_msg_resp_t resp;
+		bl::rpc_msg_type_t type) {
+	bl::rpc_msg_resp_t resp;
 
 	// Sending response to application
 	logger->Debug("APPs PRX: Send RPC channel ACK " APP_STRID, AppStrId(pcon));
@@ -945,8 +946,8 @@ void ApplicationProxy::RpcACK(pconCtx_t pcon, rpc_msg_header_t *pmsg_hdr,
 }
 
 void ApplicationProxy::RpcNAK(pconCtx_t pcon, rpc_msg_header_t *pmsg_hdr,
-		rpc_msg_type_t type, RTLIB_ExitCode_t error) {
-	rpc_msg_resp_t resp;
+		bl::rpc_msg_type_t type, RTLIB_ExitCode_t error) {
+	bl::rpc_msg_resp_t resp;
 
 	// Sending response to application
 	logger->Debug("APPs PRX: Send RPC channel NAK " APP_STRID ", error [%d]",
@@ -963,7 +964,7 @@ void ApplicationProxy::RpcExcRegister(prqsSn_t prqs) {
 	ApplicationManager &am(ApplicationManager::GetInstance());
 	pchMsg_t pchMsg = prqs->pmsg;
 	rpc_msg_header_t * pmsg_hdr = pchMsg;
-	rpc_msg_EXC_REGISTER_t * pmsg_pyl = (rpc_msg_EXC_REGISTER_t*)pmsg_hdr;
+	bl::rpc_msg_EXC_REGISTER_t * pmsg_pyl = (bl::rpc_msg_EXC_REGISTER_t*)pmsg_hdr;
 	pconCtx_t pcon;
 	AppPtr_t papp;
 
@@ -986,12 +987,12 @@ void ApplicationProxy::RpcExcRegister(prqsSn_t prqs) {
 			"registration FAILED "
 			"(Error: missing recipe or recipe load failure)",
 			ExcStrId(pcon, pmsg_hdr->exc_id), pmsg_pyl->exc_name);
-		RpcNAK(pcon, pmsg_hdr, RPC_EXC_RESP, RTLIB_EXC_MISSING_RECIPE);
+		RpcNAK(pcon, pmsg_hdr, bl::RPC_EXC_RESP, RTLIB_EXC_MISSING_RECIPE);
 		return;
 	}
 
 	// Sending ACK response to application
-	RpcACK(pcon, pmsg_hdr, RPC_EXC_RESP);
+	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
 
 }
 
@@ -999,8 +1000,8 @@ void ApplicationProxy::RpcExcUnregister(prqsSn_t prqs) {
 	ApplicationManager &am(ApplicationManager::GetInstance());
 	pchMsg_t pchMsg = prqs->pmsg;
 	rpc_msg_header_t * pmsg_hdr = pchMsg;
-	rpc_msg_EXC_UNREGISTER_t * pmsg_pyl =
-		(rpc_msg_EXC_UNREGISTER_t*)pmsg_hdr;
+	bl::rpc_msg_EXC_UNREGISTER_t * pmsg_pyl =
+		(bl::rpc_msg_EXC_UNREGISTER_t*)pmsg_hdr;
 	pconCtx_t pcon;
 
 	assert(pchMsg);
@@ -1022,7 +1023,7 @@ void ApplicationProxy::RpcExcUnregister(prqsSn_t prqs) {
 	// This is tracked by Issues tiket #10
 
 	// Sending ACK response to application
-	RpcACK(pcon, pmsg_hdr, RPC_EXC_RESP);
+	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
 
 }
 
@@ -1031,7 +1032,7 @@ void ApplicationProxy::RpcExcSet(prqsSn_t prqs) {
 	ResourceManager &rm(ResourceManager::GetInstance());
 	pchMsg_t pchMsg = prqs->pmsg;
 	rpc_msg_header_t * pmsg_hdr = pchMsg;
-	rpc_msg_EXC_SET_t * pmsg_pyl = (rpc_msg_EXC_SET_t*)pmsg_hdr;
+	bl::rpc_msg_EXC_SET_t * pmsg_pyl = (bl::rpc_msg_EXC_SET_t*)pmsg_hdr;
 	pconCtx_t pcon;
 	ApplicationManager::ExitCode_t result;
 
@@ -1058,12 +1059,12 @@ void ApplicationProxy::RpcExcSet(prqsSn_t prqs) {
 			"[pid: %d, exc: %d] "
 			"set [%d] constraints FAILED",
 			pcon->app_pid, pmsg_hdr->exc_id, pmsg_pyl->count);
-		RpcNAK(pcon, pmsg_hdr, RPC_EXC_RESP, RTLIB_EXC_ENABLE_FAILED);
+		RpcNAK(pcon, pmsg_hdr, bl::RPC_EXC_RESP, RTLIB_EXC_ENABLE_FAILED);
 		return;
 	}
 
 	// Sending ACK response to application
-	RpcACK(pcon, pmsg_hdr, RPC_EXC_RESP);
+	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
 }
 
 void ApplicationProxy::RpcExcClear(prqsSn_t prqs) {
@@ -1090,12 +1091,12 @@ void ApplicationProxy::RpcExcClear(prqsSn_t prqs) {
 			"[pid: %d, exc: %d] "
 			"clear constraints FAILED",
 			pcon->app_pid, pmsg_hdr->exc_id);
-		RpcNAK(pcon, pmsg_hdr, RPC_EXC_RESP, RTLIB_EXC_ENABLE_FAILED);
+		RpcNAK(pcon, pmsg_hdr, bl::RPC_EXC_RESP, RTLIB_EXC_ENABLE_FAILED);
 		return;
 	}
 
 	// Sending ACK response to application
-	RpcACK(pcon, pmsg_hdr, RPC_EXC_RESP);
+	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
 
 }
 
@@ -1104,7 +1105,7 @@ void ApplicationProxy::RpcExcGoalGap(prqsSn_t prqs) {
 	ResourceManager &rm(ResourceManager::GetInstance());
 	pchMsg_t pchMsg = prqs->pmsg;
 	rpc_msg_header_t * pmsg_hdr = pchMsg;
-	rpc_msg_EXC_GGAP_t * pmsg_pyl = (rpc_msg_EXC_GGAP_t*)pmsg_hdr;
+	bl::rpc_msg_EXC_GGAP_t * pmsg_pyl = (bl::rpc_msg_EXC_GGAP_t*)pmsg_hdr;
 	pconCtx_t pcon;
 	ApplicationManager::ExitCode_t result;
 
@@ -1130,12 +1131,12 @@ void ApplicationProxy::RpcExcGoalGap(prqsSn_t prqs) {
 			"[pid: %d, exc: %d] "
 			"set goal-gap FAILED",
 			pcon->app_pid, pmsg_hdr->exc_id);
-		RpcNAK(pcon, pmsg_hdr, RPC_EXC_RESP, RTLIB_EXC_ENABLE_FAILED);
+		RpcNAK(pcon, pmsg_hdr, bl::RPC_EXC_RESP, RTLIB_EXC_ENABLE_FAILED);
 		return;
 	}
 
 	// Sending ACK response to application
-	RpcACK(pcon, pmsg_hdr, RPC_EXC_RESP);
+	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
 
 }
 
@@ -1165,12 +1166,12 @@ void ApplicationProxy::RpcExcStart(prqsSn_t prqs) {
 			"[pid: %d, exc: %d] "
 			"start FAILED",
 			pcon->app_pid, pmsg_hdr->exc_id);
-		RpcNAK(pcon, pmsg_hdr, RPC_EXC_RESP, RTLIB_EXC_ENABLE_FAILED);
+		RpcNAK(pcon, pmsg_hdr, bl::RPC_EXC_RESP, RTLIB_EXC_ENABLE_FAILED);
 		return;
 	}
 
 	// Sending ACK response to application
-	RpcACK(pcon, pmsg_hdr, RPC_EXC_RESP);
+	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
 
 }
 
@@ -1201,7 +1202,7 @@ void ApplicationProxy::RpcExcStop(prqsSn_t prqs) {
 			"[pid: %d, exc: %d] "
 			"stop FAILED",
 			pcon->app_pid, pmsg_hdr->exc_id);
-		RpcNAK(pcon, pmsg_hdr, RPC_EXC_RESP, RTLIB_EXC_DISABLE_FAILED);
+		RpcNAK(pcon, pmsg_hdr, bl::RPC_EXC_RESP, RTLIB_EXC_DISABLE_FAILED);
 		return;
 	}
 
@@ -1210,7 +1211,7 @@ void ApplicationProxy::RpcExcStop(prqsSn_t prqs) {
 	rm.NotifyEvent(ResourceManager::EXC_STOP);
 
 	// Sending ACK response to application
-	RpcACK(pcon, pmsg_hdr, RPC_EXC_RESP);
+	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
 
 }
 
@@ -1236,7 +1237,7 @@ void ApplicationProxy::RpcExcSchedule(prqsSn_t prqs) {
 	rm.NotifyEvent(ResourceManager::EXC_START);
 
 	// Sending ACK response to application
-	RpcACK(pcon, pmsg_hdr, RPC_EXC_RESP);
+	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
 
 }
 
@@ -1245,11 +1246,11 @@ void ApplicationProxy::RpcAppPair(prqsSn_t prqs) {
 			conCtxMap_mtx, std::defer_lock);
 	pchMsg_t pchMsg = prqs->pmsg;
 	rpc_msg_header_t * pmsg_hdr = pchMsg;
-	rpc_msg_APP_PAIR_t * pmsg_pyl = (rpc_msg_APP_PAIR_t*)pmsg_hdr;
+	bl::rpc_msg_APP_PAIR_t * pmsg_pyl = (bl::rpc_msg_APP_PAIR_t*)pmsg_hdr;
 	pconCtx_t pcon;
 
 	// Ensure this application has not yet registerd
-	assert(pmsg_hdr->typ == RPC_APP_PAIR);
+	assert(pmsg_hdr->typ == bl::RPC_APP_PAIR);
 	assert(conCtxMap.find(pmsg_hdr->app_pid) == conCtxMap.end());
 
 	// Build a new communication context
@@ -1304,7 +1305,7 @@ void ApplicationProxy::RpcAppPair(prqsSn_t prqs) {
 	conCtxMap_ul.unlock();
 
 	// Sending ACK response to application
-	RpcACK(pcon, pmsg_hdr, RPC_APP_RESP);
+	RpcACK(pcon, pmsg_hdr, bl::RPC_APP_RESP);
 }
 
 void ApplicationProxy::RpcAppExit(prqsSn_t prqs) {
@@ -1352,56 +1353,56 @@ void ApplicationProxy::RequestExecutor(prqsSn_t prqs) {
 	logger->Debug("APPs PRX [%d:%d]: RequestExecutor START",
 			prqs->pid, prqs->pmsg->typ);
 
-	assert(prqs->pmsg->typ<RPC_EXC_MSGS_COUNT);
+	assert(prqs->pmsg->typ<bl::RPC_EXC_MSGS_COUNT);
 
 	// TODO put here command execution code
 	switch(prqs->pmsg->typ) {
-	case RPC_EXC_REGISTER:
+	case bl::RPC_EXC_REGISTER:
 		logger->Debug("EXC_REGISTER");
 		RpcExcRegister(prqs);
 		break;
 
-	case RPC_EXC_UNREGISTER:
+	case bl::RPC_EXC_UNREGISTER:
 		logger->Debug("EXC_UNREGISTER");
 		RpcExcUnregister(prqs);
 		break;
 
-	case RPC_EXC_SET:
+	case bl::RPC_EXC_SET:
 		logger->Debug("EXC_SET");
 		RpcExcSet(prqs);
 		break;
 
-	case RPC_EXC_CLEAR:
+	case bl::RPC_EXC_CLEAR:
 		logger->Debug("EXC_CLEAR");
 		RpcExcClear(prqs);
 		break;
 
-	case RPC_EXC_GGAP:
+	case bl::RPC_EXC_GGAP:
 		logger->Debug("EXC_GGAP");
 		RpcExcGoalGap(prqs);
 		break;
 
-	case RPC_EXC_START:
+	case bl::RPC_EXC_START:
 		logger->Debug("EXC_START");
 		RpcExcStart(prqs);
 		break;
 
-	case RPC_EXC_STOP:
+	case bl::RPC_EXC_STOP:
 		logger->Debug("EXC_STOP");
 		RpcExcStop(prqs);
 		break;
 
-	case RPC_EXC_SCHEDULE:
+	case bl::RPC_EXC_SCHEDULE:
 		logger->Debug("EXC_SCHEDULE");
 		RpcExcSchedule(prqs);
 		break;
 
-	case RPC_APP_PAIR:
+	case bl::RPC_APP_PAIR:
 		logger->Debug("APP_PAIR");
 		RpcAppPair(prqs);
 		break;
 
-	case RPC_APP_EXIT:
+	case bl::RPC_APP_EXIT:
 		logger->Debug("APP_EXIT");
 		RpcAppExit(prqs);
 		break;
@@ -1453,7 +1454,7 @@ void ApplicationProxy::ProcessRequest(pchMsg_t & pmsg) {
 }
 
 void ApplicationProxy::Task() {
-	rpc_msg_type_t msgType;
+	bl::rpc_msg_type_t msgType;
 	pchMsg_t pmsg;
 
 	logger->Info("APPs PRX: Messages dispatcher STARTED");
@@ -1464,7 +1465,7 @@ void ApplicationProxy::Task() {
 			continue;
 
 		msgType = GetNextMessage(pmsg);
-		if (msgType > RPC_EXC_MSGS_COUNT) {
+		if (msgType > bl::RPC_EXC_MSGS_COUNT) {
 			CompleteTransaction(pmsg);
 			continue;
 		}

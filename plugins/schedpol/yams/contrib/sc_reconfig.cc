@@ -17,6 +17,7 @@
 
 #include "sc_reconfig.h"
 
+namespace br = bbque::res;
 namespace po = boost::program_options;
 
 namespace bbque { namespace plugins {
@@ -41,7 +42,7 @@ SchedContrib::ExitCode_t SCReconfig::Init(void * params) {
 SchedContrib::ExitCode_t
 SCReconfig::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
-	UsagesMap_t::const_iterator usage_it;
+	br::UsagesMap_t::const_iterator usage_it;
 	float reconf_cost  = 0.0;
 	uint64_t rsrc_tot;
 
@@ -53,11 +54,11 @@ SCReconfig::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 
 	// Resource requested by the AWM (from the recipe)
 	for_each_recp_resource_usage(evl_ent, usage_it) {
-		UsagePtr_t const & pusage(usage_it->second);
+		br::UsagePtr_t const & pusage(usage_it->second);
 
 		// Total amount of resource (overall)
-		ResourcePathPtr_t r_path(new ResourcePath(
-			ResourcePathUtils::GetTemplate(usage_it->first->ToString())));
+		ResourcePathPtr_t r_path(new br::ResourcePath(
+			br::ResourcePathUtils::GetTemplate(usage_it->first->ToString())));
 		rsrc_tot = sv->ResourceTotal(r_path);
 		logger->Debug("%s: {%s} R:%" PRIu64 " T:%" PRIu64 "",
 				evl_ent.StrId(), r_path->ToString().c_str(),

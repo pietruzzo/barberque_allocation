@@ -80,7 +80,7 @@ public:
 	/**
 	 * @brief OpenCL resource assignment mapping
 	 */
-	ExitCode_t MapResources(ba::AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt);
+	ExitCode_t MapResources(ba::AppPtr_t papp, br::UsagesMapPtr_t pum, br::RViewToken_t rvt);
 
 	/**
 	 * @brief Number of OpenCL devices of a given resource type

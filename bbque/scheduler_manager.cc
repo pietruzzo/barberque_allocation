@@ -153,7 +153,7 @@ SchedulerManager::Schedule() {
 	ResourceAccounter &ra = ResourceAccounter::GetInstance();
 	System &sv = System::GetInstance();
 	SchedulerPolicyIF::ExitCode result;
-	RViewToken_t svt;
+	br::RViewToken_t svt;
 
 	if (!policy) {
 		logger->Crit("Resource scheduling FAILED (Error: missing policy)");

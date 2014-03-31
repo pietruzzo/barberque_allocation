@@ -56,7 +56,7 @@ RandomSchedPol::RandomSchedPol() :
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	// Binding domain resource type
-	ResourcePath rp(binding_domain);
+	br::ResourcePath rp(binding_domain);
 	binding_type = rp.Type();
 	logger->Debug("Binding domain:'%s' Type:%s",
 			binding_domain.c_str(), br::ResourceIdentifier::TypeStr[binding_type]);
@@ -77,7 +77,7 @@ char const * RandomSchedPol::Name() {
  */
 std::mt19937 rng_engine(time(0));
 
-void RandomSchedPol::ScheduleApp(AppCPtr_t papp) {
+void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ba::AwmPtrList_t::const_iterator it;
 	ba::AwmPtrList_t::const_iterator end;
@@ -146,10 +146,10 @@ RandomSchedPol::Init() {
 }
 
 SchedulerPolicyIF::ExitCode_t
-RandomSchedPol::Schedule(bbque::System & sv, RViewToken_t &rav) {
+RandomSchedPol::Schedule(bbque::System & sv, br::RViewToken_t &rav) {
 	SchedulerPolicyIF::ExitCode_t result;
 	AppsUidMapIt app_it;
-	AppCPtr_t papp;
+	ba::AppCPtr_t papp;
 
 	if (!logger) {
 		assert(logger);

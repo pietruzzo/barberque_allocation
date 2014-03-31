@@ -41,7 +41,7 @@ SchedContrib::ExitCode_t
 SCMigration::_Compute(
 		SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
-	ResourceBitset r_mask;
+	br::ResourceBitset r_mask;
 
 	// Migraton => index := 0
 	if (evl_ent.IsMigrating(bd_info.type)) {

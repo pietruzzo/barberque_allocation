@@ -30,19 +30,20 @@
 #define SC_NAME_MAX_LEN 	11
 
 #define for_each_sched_resource_usage(entity, usage_it) \
-	UsagesMapPtr_t const & rsrc_usages( \
+	br::UsagesMapPtr_t const & rsrc_usages( \
 			entity.pawm->GetSchedResourceBinding(entity.bind_refn)); \
-	UsagesMap_t::const_iterator end_usage(rsrc_usages->end()); \
+	br::UsagesMap_t::const_iterator end_usage(rsrc_usages->end()); \
 	for (usage_it = rsrc_usages->begin(); \
 			usage_it != end_usage; ++usage_it)
 
 #define for_each_recp_resource_usage(entity, usage_it) \
-	UsagesMap_t const & rsrc_usages( \
+	br::UsagesMap_t const & rsrc_usages( \
 			entity.pawm->RecipeResourceUsages()); \
-	UsagesMap_t::const_iterator end_usage(rsrc_usages.end()); \
+	br::UsagesMap_t::const_iterator end_usage(rsrc_usages.end()); \
 	for (usage_it = rsrc_usages.begin(); \
 			usage_it != end_usage; ++usage_it)
 
+namespace br = bbque::res;
 namespace bu = bbque::utils;
 
 namespace bbque { namespace plugins {
@@ -206,7 +207,7 @@ public:
 	 * @param _sv Pointer to the System instance
 	 * @param _vtok The token of scheduling resource state view
 	 */
-	inline void SetViewInfo(System * _sv, RViewToken_t _vtok) {
+	inline void SetViewInfo(System * _sv, br::RViewToken_t _vtok) {
 		sv   = _sv;
 		vtok = _vtok;
 	}
@@ -263,7 +264,7 @@ protected:
 	 System * sv = NULL;
 
 	 /** The token of scheduling resource state view */
-	 RViewToken_t vtok = 0;
+	 br::RViewToken_t vtok = 0;
 
 	 /**
 	  * The base resource path for the binding step.

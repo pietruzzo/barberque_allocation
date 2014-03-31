@@ -31,10 +31,10 @@
 
 #define APPLICATION_PROXY_NAMESPACE "bq.ap"
 
-using namespace bbque::plugins;
-using namespace bbque::rtlib;
-using namespace bbque::app;
-using namespace bbque::utils;
+namespace ba = bbque::app;
+namespace bl = bbque::rtlib;
+namespace bp = bbque::plugins;
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -51,7 +51,7 @@ class OpenCLProxy;
  * be accessed using methods defined by this proxy. Each call requires to
  * specify the application to witch it is addressed and the actual parameters.
  */
-class ApplicationProxy : public Worker {
+class ApplicationProxy : public bu::Worker {
 
 private:
 
@@ -59,7 +59,7 @@ private:
 
 	typedef struct snCtx {
 		std::thread exe;
-		AppPid_t pid;
+		ba::AppPid_t pid;
 	} snCtx_t;
 
 	typedef std::promise<RTLIB_ExitCode> resp_prm_t;
@@ -68,10 +68,10 @@ private:
 
 	typedef std::shared_ptr<resp_ftr_t> prespFtr_t;
 
-	typedef RPCChannelIF::rpc_msg_ptr_t pchMsg_t;
+	typedef bp::RPCChannelIF::rpc_msg_ptr_t pchMsg_t;
 
 	typedef struct cmdSn : public snCtx_t {
-		AppPtr_t papp;
+		ba::AppPtr_t papp;
 		resp_prm_t resp_prm;
 		resp_ftr_t resp_ftr;
 		std::mutex resp_mtx;
@@ -102,9 +102,9 @@ public:
  * Command Sessions
  ******************************************************************************/
 
-	RTLIB_ExitCode StopExecution(AppPtr_t papp);
+	RTLIB_ExitCode StopExecution(ba::AppPtr_t papp);
 
-	RTLIB_ExitCode StopExecutionSync(AppPtr_t papp);
+	RTLIB_ExitCode StopExecutionSync(ba::AppPtr_t papp);
 
 /*******************************************************************************
  * Synchronization Protocol
@@ -123,7 +123,7 @@ public:
 	/**
 	 * @brief Synchronous PreChange
 	 */
-	RTLIB_ExitCode SyncP_PreChange(AppPtr_t papp, pPreChangeRsp_t presp);
+	RTLIB_ExitCode SyncP_PreChange(ba::AppPtr_t papp, pPreChangeRsp_t presp);
 
 	/**
 	 * @brief Get the result of an issued Asynchronous PreChange
@@ -142,7 +142,7 @@ public:
 	/**
 	 * @brief Synchronous SyncChange
 	 */
-	RTLIB_ExitCode SyncP_SyncChange(AppPtr_t papp, pSyncChangeRsp_t presp);
+	RTLIB_ExitCode SyncP_SyncChange(ba::AppPtr_t papp, pSyncChangeRsp_t presp);
 
 	/**
 	 * @brief Get the result of an issued Asynchronous PreChange
@@ -154,7 +154,7 @@ public:
 	/**
 	 * @brief Synchronous DoChange
 	 */
-	RTLIB_ExitCode SyncP_DoChange(AppPtr_t papp);
+	RTLIB_ExitCode SyncP_DoChange(ba::AppPtr_t papp);
 
 
 //----- PostChange
@@ -169,7 +169,7 @@ public:
 	/**
 	 * @brief Synchronous PostChange
 	 */
-	RTLIB_ExitCode SyncP_PostChange(AppPtr_t papp, pPostChangeRsp_t presp);
+	RTLIB_ExitCode SyncP_PostChange(ba::AppPtr_t papp, pPostChangeRsp_t presp);
 
 
 private:
@@ -186,16 +186,16 @@ private:
 
 	typedef struct conCtx {
 		/** The applicaiton PID */
-		AppPid_t app_pid;
+		ba::AppPid_t app_pid;
 		/** The application name */
 		char app_name[RTLIB_APP_NAME_LENGTH];
 		/** The communication channel data to connect the applicaton */
-		RPCChannelIF::plugin_data_t pd;
+		bp::RPCChannelIF::plugin_data_t pd;
 	} conCtx_t;
 
 	typedef std::shared_ptr<conCtx_t> pconCtx_t;
 
-	typedef std::map<AppPid_t, pconCtx_t> conCtxMap_t;
+	typedef std::map<ba::AppPid_t, pconCtx_t> conCtxMap_t;
 
 	conCtxMap_t conCtxMap;
 
@@ -215,7 +215,7 @@ private:
 	 * @param AppPid_t the command session thread ID
 	 * @param pcmdSn_t the command session handler
 	 */
-	typedef std::map<rpc_msg_token_t, pcmdSn_t> cmdSnMap_t;
+	typedef std::map<bl::rpc_msg_token_t, pcmdSn_t> cmdSnMap_t;
 
 	cmdSnMap_t cmdSnMap;
 
@@ -228,14 +228,14 @@ private:
 
 	ApplicationProxy();
 
-	rpc_msg_type_t GetNextMessage(pchMsg_t & pmsg);
+	bl::rpc_msg_type_t GetNextMessage(pchMsg_t & pmsg);
 
 
 /*******************************************************************************
  * Command Sessions
  ******************************************************************************/
 
-	inline pcmdSn_t SetupCmdSession(AppPtr_t papp) const;
+	inline pcmdSn_t SetupCmdSession(ba::AppPtr_t papp) const;
 
 	/**
 	 * @brief Enqueue a command session for response processing
@@ -339,10 +339,10 @@ private:
 	pconCtx_t GetConnectionContext(rpc_msg_header_t *pmsg_hdr);
 
 	void RpcACK(pconCtx_t pcon, rpc_msg_header_t *pmsg_hdr,
-			rpc_msg_type_t type);
+			bl::rpc_msg_type_t type);
 
 	void RpcNAK(pconCtx_t pcon, rpc_msg_header_t * pmsg_hdr,
-			rpc_msg_type_t type,
+			bl::rpc_msg_type_t type,
 			RTLIB_ExitCode error);
 
 	void RequestExecutor(prqsSn_t prqs);

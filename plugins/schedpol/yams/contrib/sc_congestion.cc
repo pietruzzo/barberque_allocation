@@ -83,7 +83,7 @@ SCCongestion::Init(void * params) {
 SchedContrib::ExitCode_t
 SCCongestion::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
-	UsagesMap_t::const_iterator usage_it;
+	br::UsagesMap_t::const_iterator usage_it;
 	ResourceThresholds_t rl;
 	CLEParams_t params;
 	float ru_index;
@@ -96,7 +96,7 @@ SCCongestion::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	// Iterate the whole set of resource usage
 	for_each_sched_resource_usage(evl_ent, usage_it) {
 		ResourcePathPtr_t const & r_path(usage_it->first);
-		UsagePtr_t const & pusage(usage_it->second);
+		br::UsagePtr_t const & pusage(usage_it->second);
 		logger->Debug("%s: {%s}",
 				evl_ent.StrId(), r_path->ToString().c_str());
 

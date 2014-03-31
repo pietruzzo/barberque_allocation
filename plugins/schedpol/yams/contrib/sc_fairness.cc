@@ -82,7 +82,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 	uint64_t bd_r_avail;
 	AppPrio_t priority;
 	std::vector<br::ResID_t>::iterator ids_it;
-	std::list<Resource::Type_t>::iterator type_it;
+	std::list<br::Resource::Type_t>::iterator type_it;
 
 	// Applications/EXC to schedule, given the priority level
 	priority = *(static_cast<AppPrio_t *>(params));
@@ -147,7 +147,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 SchedContrib::ExitCode_t
 SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
-	UsagesMap_t::const_iterator usage_it;
+	br::UsagesMap_t::const_iterator usage_it;
 	CLEParams_t params;
 	float ru_index;
 	float penalty;
@@ -161,7 +161,7 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 
 	// Iterate the whole set of resource usage
 	for_each_recp_resource_usage(evl_ent, usage_it) {
-		UsagePtr_t const & pusage(usage_it->second);
+		br::UsagePtr_t const & pusage(usage_it->second);
 		ResourcePathPtr_t const & r_path(usage_it->first);
 
 		// Binding domain fraction (resource type related)

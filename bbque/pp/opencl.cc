@@ -59,7 +59,7 @@ OpenCLProxy::OpenCLProxy():
 		cm(ConfigurationManager::GetInstance())
 #else
 		cm(ConfigurationManager::GetInstance()),
-		gpu_rp(new ResourcePath("sys.gpu")),
+		gpu_rp(new br::ResourcePath("sys.gpu")),
 		pm(PowerManager::GetInstance(gpu_rp))
 #endif
  {
@@ -384,7 +384,7 @@ void OpenCLProxy::InsertDeviceID(
 	char gpu_mem_path[] = "sys0.gpu256.mem256";
 	snprintf(gpu_mem_path+5, 12, "gpu%hu.mem0", dev_id);
 	gpu_mem_paths.insert(std::pair<int, ResourcePathPtr_t>(
-		dev_id, ResourcePathPtr_t(new ResourcePath(gpu_mem_path))));
+		dev_id, ResourcePathPtr_t(new br::ResourcePath(gpu_mem_path))));
 }
 
 void OpenCLProxy::InsertDevicePath(
@@ -400,15 +400,15 @@ void OpenCLProxy::InsertDevicePath(
 		);
 	}
 
-	ResourcePathPtr_t rp(new ResourcePath(dev_path_str));
+	ResourcePathPtr_t rp(new br::ResourcePath(dev_path_str));
 	pdev_paths = device_paths[r_type];
 	pdev_paths->push_back(rp);
 }
 
 OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(
-		AppPtr_t papp,
-		UsagesMapPtr_t pum,
-		RViewToken_t rvt) {
+		ba::AppPtr_t papp,
+		br::UsagesMapPtr_t pum,
+		br::RViewToken_t rvt) {
 	logger->Warn("PLAT OCL: Please map the application");
 
 	return SUCCESS;

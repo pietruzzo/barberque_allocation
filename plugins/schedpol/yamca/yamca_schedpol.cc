@@ -58,6 +58,8 @@
 	((sizeof(float) + sizeof(SchedEntity_t))*sched_map.size() +\
 	 sizeof(sched_map))
 
+namespace ba = bbque::app;
+namespace br = bbque::res;
 namespace bu = bbque::utils;
 
 namespace bbque { namespace plugins {
@@ -105,7 +107,7 @@ char const * YamcaSchedPol::Name() {
 
 
 SchedulerPolicyIF::ExitCode_t YamcaSchedPol::Schedule(
-		bbque::System & sv, RViewToken_t & rav) {
+		bbque::System & sv, br::RViewToken_t & rav) {
 	ExitCode_t result;
 
 	logger->Debug(
@@ -231,7 +233,7 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::OrderSchedEntity(
 		AppPrio_t prio,
 		int cl_id) {
 	AppsUidMapIt app_it;
-	AppCPtr_t papp;
+	ba::AppCPtr_t papp;
 
 	// Applications to be scheduled
 	papp = sv.GetFirstWithPrio(prio, app_it);
@@ -267,8 +269,8 @@ void YamcaSchedPol::SelectWorkingModes(SchedEntityMap_t & sched_map) {
 
 	// Pick the entity and set the new Application Working Mode
 	for (; se_it != end_se; ++se_it) {
-		AppCPtr_t & papp = (se_it->second).first;
-		AwmPtr_t const & eval_awm((se_it->second).second);
+		ba::AppCPtr_t & papp = (se_it->second).first;
+		ba::AwmPtr_t const & eval_awm((se_it->second).second);
 
 		// Check a set of conditions accordingly to skip current
 		// application/EXC
@@ -299,16 +301,16 @@ void YamcaSchedPol::SelectWorkingModes(SchedEntityMap_t & sched_map) {
 			continue;
 		}
 
-		AwmPtr_t const & new_awm = papp->NextAWM();
+		ba::AwmPtr_t const & new_awm = papp->NextAWM();
 		logger->Info("Selecting: [%s] set to AWM{%d} on clusters map [%s]",
 					papp->StrId(),
 					new_awm->Id(),
-					new_awm->BindingSet(Resource::CPU).ToString().c_str());
+					new_awm->BindingSet(br::Resource::CPU).ToString().c_str());
 	}
 }
 
 
-inline bool YamcaSchedPol::CheckSkipConditions(AppCPtr_t const & papp) {
+inline bool YamcaSchedPol::CheckSkipConditions(ba::AppCPtr_t const & papp) {
 
 	// Skip if the application has been rescheduled yet (with success) or
 	// disabled in the meanwhile
@@ -338,14 +340,14 @@ void join_thread(std::thread & t) {
 
 SchedulerPolicyIF::ExitCode_t YamcaSchedPol::InsertWorkingModes(
 		SchedEntityMap_t & sched_map,
-		AppCPtr_t const & papp,
+		ba::AppCPtr_t const & papp,
 		int cl_id) {
 	std::list<std::thread> awm_thds;
 
 	// Working modes
-	AwmPtrList_t const * awms = papp->WorkingModes();
-	AwmPtrList_t::const_iterator awm_it(awms->begin());
-	AwmPtrList_t::const_iterator end_awm(awms->end());
+	ba::AwmPtrList_t const * awms = papp->WorkingModes();
+	ba::AwmPtrList_t::const_iterator awm_it(awms->begin());
+	ba::AwmPtrList_t::const_iterator end_awm(awms->end());
 
 	for (; awm_it != end_awm; ++awm_it) {
 
@@ -365,8 +367,8 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::InsertWorkingModes(
 
 SchedulerPolicyIF::ExitCode_t YamcaSchedPol::EvalWorkingMode(
 				SchedEntityMap_t * sched_map,
-				AppCPtr_t const & papp,
-				AwmPtr_t const & wm,
+				ba::AppCPtr_t const & papp,
+				ba::AwmPtr_t const & wm,
 				int cl_id) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
 
@@ -419,14 +421,14 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::EvalWorkingMode(
 
 // Functions used by MetricsComputation() to get the migration and
 // reconfiguration overhead
-float GetMigrationOverhead(AppCPtr_t const & papp, AwmPtr_t const & wm,
+float GetMigrationOverhead(ba::AppCPtr_t const & papp, ba::AwmPtr_t const & wm,
 		int cl_id);
-float GetReconfigOverhead(AppCPtr_t const & papp, AwmPtr_t const & wm);
+float GetReconfigOverhead(ba::AppCPtr_t const & papp, ba::AwmPtr_t const & wm);
 
 
 SchedulerPolicyIF::ExitCode_t YamcaSchedPol::MetricsComputation(
-		AppCPtr_t const & papp,
-		AwmPtr_t const & wm,
+		ba::AppCPtr_t const & papp,
+		ba::AwmPtr_t const & wm,
 		int cl_id,
 		float & metrics) {
 	ExitCode_t result;
@@ -458,8 +460,8 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::MetricsComputation(
 }
 
 
-inline float GetMigrationOverhead(AppCPtr_t const & papp,
-		AwmPtr_t const & wm,
+inline float GetMigrationOverhead(ba::AppCPtr_t const & papp,
+		ba::AwmPtr_t const & wm,
 		int cl_id) {
 	// Silence args warnings
 	(void) papp;
@@ -472,8 +474,8 @@ inline float GetMigrationOverhead(AppCPtr_t const & papp,
 }
 
 
-inline float GetReconfigOverhead(AppCPtr_t const & papp,
-		AwmPtr_t const & wm) {
+inline float GetReconfigOverhead(ba::AppCPtr_t const & papp,
+		ba::AwmPtr_t const & wm) {
 	// Silence args warnings
 	(void) papp;
 	(void) wm;
@@ -484,8 +486,8 @@ inline float GetReconfigOverhead(AppCPtr_t const & papp,
 
 
 SchedulerPolicyIF::ExitCode_t YamcaSchedPol::GetContentionLevel(
-		AppCPtr_t const & papp,
-		AwmPtr_t const & wm,
+		ba::AppCPtr_t const & papp,
+		ba::AwmPtr_t const & wm,
 		int cl_id,
 		float & cont_level) {
 	size_t refn;
@@ -502,7 +504,7 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::GetContentionLevel(
 	// Binding of the resources requested by the working mode into the current
 	// cluster. Note: No multi-cluster allocation supported yet!
 	logger->Debug("Contention level: Binding into cluster %d", cl_id);
-	refn = wm->BindResource(Resource::CPU, R_ID_ANY, cl_id, cl_id);
+	refn = wm->BindResource(br::Resource::CPU, R_ID_ANY, cl_id, cl_id);
 	if (refn == 0)
 		logger->Error("Contention level: {AWM %d} [cluster = %d]"
 				"Incomplete resources binding. %d / %d resources bound.",
@@ -517,20 +519,20 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::GetContentionLevel(
 
 
 SchedulerPolicyIF::ExitCode_t YamcaSchedPol::ComputeContentionLevel(
-		AppCPtr_t const & papp,
-		UsagesMapPtr_t const & rsrc_usages,
+		ba::AppCPtr_t const & papp,
+		br::UsagesMapPtr_t const & rsrc_usages,
 		float & cont_level) {
 	uint64_t rsrc_avail;
 	uint64_t min_usage;
 	cont_level = 0;
 
 	// Check the availability of the resources requested
-	UsagesMap_t::const_iterator usage_it(rsrc_usages->begin());
-	UsagesMap_t::const_iterator end_usage(rsrc_usages->end());
+	br::UsagesMap_t::const_iterator usage_it(rsrc_usages->begin());
+	br::UsagesMap_t::const_iterator end_usage(rsrc_usages->end());
 	while (usage_it != end_usage) {
 		// Current resource
 		ResourcePathPtr_t const & rsrc_path(usage_it->first);
-		UsagePtr_t const & pusage(usage_it->second);
+		br::UsagePtr_t const & pusage(usage_it->second);
 
 		// Query resource availability
 		rsrc_avail = rsrc_acct.Available(pusage->GetResourcesList(),
@@ -551,7 +553,7 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::ComputeContentionLevel(
 		}
 
 		// Get the resource usage of the AWM with the min value
-		AwmPtr_t wm_min(papp->LowValueAWM());
+		ba::AwmPtr_t wm_min(papp->LowValueAWM());
 		min_usage =wm_min->ResourceUsageAmount(rsrc_path);
 
 		// Update the contention level (inverse)

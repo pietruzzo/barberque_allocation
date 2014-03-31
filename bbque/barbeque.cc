@@ -121,8 +121,8 @@ int main(int argc, char *argv[]) {
 	cm.ParseCommandLine(argc, argv);
 
 	// Setup Logger configuration
-	Logger::SetConfigurationFile(cm.GetConfigurationFile());
-	logger = Logger::GetLogger(MODULE_NAMESPACE);
+	bu::Logger::SetConfigurationFile(cm.GetConfigurationFile());
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 
 	// Check if we should run as daemon
 	if (cm.RunAsDaemon()) {

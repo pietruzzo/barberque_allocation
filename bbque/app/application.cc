@@ -163,11 +163,11 @@ void Application::InitResourceConstraints() {
 		// Lower bound
 		if (rsrc_constr->lower > 0)
 				SetResourceConstraint(rsrc_path,
-						ResourceConstraint::LOWER_BOUND, rsrc_constr->lower);
+						br::ResourceConstraint::LOWER_BOUND, rsrc_constr->lower);
 		// Upper bound
 		if (rsrc_constr->upper > 0)
 				SetResourceConstraint(rsrc_path,
-						ResourceConstraint::UPPER_BOUND, rsrc_constr->upper);
+						br::ResourceConstraint::UPPER_BOUND, rsrc_constr->upper);
 	}
 
 	logger->Debug("%d resource constraints from the recipe",
@@ -637,7 +637,7 @@ Application::ExitCode_t Application::Unschedule() {
 }
 
 Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
-		RViewToken_t vtok, size_t b_refn) {
+		br::RViewToken_t vtok, size_t b_refn) {
 	std::unique_lock<std::recursive_mutex> schedule_ul(schedule.mtx);
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceAccounter::ExitCode_t booking;
@@ -1101,8 +1101,8 @@ void Application::FinalizeEnabledWorkingModes() {
 bool Application::UsageOutOfBounds(AwmPtr_t & awm) {
 	ConstrMap_t::iterator rsrc_constr_it;
 	ConstrMap_t::iterator end_rsrc_constr(rsrc_constraints.end());
-	UsagesMap_t::const_iterator usage_it(awm->RecipeResourceUsages().begin());
-	UsagesMap_t::const_iterator end_usage(awm->RecipeResourceUsages().end());
+	br::UsagesMap_t::const_iterator usage_it(awm->RecipeResourceUsages().begin());
+	br::UsagesMap_t::const_iterator end_usage(awm->RecipeResourceUsages().end());
 
 	// Check if there are constraints on the resource usages
 	for (; usage_it != end_usage; ++usage_it) {
@@ -1111,7 +1111,7 @@ bool Application::UsageOutOfBounds(AwmPtr_t & awm) {
 			continue;
 
 		// Check if the usage value is out of the constraint bounds
-		UsagePtr_t const & pusage(usage_it->second);
+		br::UsagePtr_t const & pusage(usage_it->second);
 		if ((pusage->GetAmount() < rsrc_constr_it->second->lower) ||
 			(pusage->GetAmount() > rsrc_constr_it->second->upper))
 			return true;
@@ -1135,7 +1135,7 @@ void Application::UpdateEnabledWorkingModes() {
 
 Application::ExitCode_t Application::SetResourceConstraint(
 		ResourcePathPtr_t r_path,
-		ResourceConstraint::BoundType_t b_type,
+		br::ResourceConstraint::BoundType_t b_type,
 				uint64_t _value) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
@@ -1150,12 +1150,12 @@ Application::ExitCode_t Application::SetResourceConstraint(
 	ConstrMap_t::iterator it_con(rsrc_constraints.find(r_path));
 	if (it_con == rsrc_constraints.end()) {
 		rsrc_constraints.insert(ConstrPair_t(r_path,
-					ConstrPtr_t(new ResourceConstraint)));
+					ConstrPtr_t(new br::ResourceConstraint)));
 	}
 
 	// Set the constraint bound value (if value exists overwrite it)
 	switch(b_type) {
-	case ResourceConstraint::LOWER_BOUND:
+	case br::ResourceConstraint::LOWER_BOUND:
 		rsrc_constraints[r_path]->lower = _value;
 		if (rsrc_constraints[r_path]->upper < _value)
 			rsrc_constraints[r_path]->upper =
@@ -1165,7 +1165,7 @@ Application::ExitCode_t Application::SetResourceConstraint(
 				r_path->ToString().c_str(), _value);
 		break;
 
-	case ResourceConstraint::UPPER_BOUND:
+	case br::ResourceConstraint::UPPER_BOUND:
 		rsrc_constraints[r_path]->upper = _value;
 		if (rsrc_constraints[r_path]->lower > _value)
 			rsrc_constraints[r_path]->lower = 0;
@@ -1183,7 +1183,7 @@ Application::ExitCode_t Application::SetResourceConstraint(
 
 Application::ExitCode_t Application::ClearResourceConstraint(
 		ResourcePathPtr_t r_path,
-		ResourceConstraint::BoundType_t b_type) {
+		br::ResourceConstraint::BoundType_t b_type) {
 	// Lookup the constraint by resource pathname
 	ConstrMap_t::iterator it_con(rsrc_constraints.find(r_path));
 	if (it_con == rsrc_constraints.end()) {
@@ -1194,13 +1194,13 @@ Application::ExitCode_t Application::ClearResourceConstraint(
 
 	// Reset the constraint
 	switch (b_type) {
-	case ResourceConstraint::LOWER_BOUND :
+	case br::ResourceConstraint::LOWER_BOUND :
 		it_con->second->lower = 0;
 		if (it_con->second->upper == std::numeric_limits<uint64_t>::max())
 			rsrc_constraints.erase(it_con);
 		break;
 
-	case ResourceConstraint::UPPER_BOUND :
+	case br::ResourceConstraint::UPPER_BOUND :
 		it_con->second->upper = std::numeric_limits<uint64_t>::max();
 		if (it_con->second->lower == 0)
 			rsrc_constraints.erase(it_con);
@@ -1224,9 +1224,9 @@ uint64_t Application::GetResourceUsageStat(std::string const & rsrc_path,
 
 	// AWMs (enabled)
 	for (; awm_it != awm_end; ++awm_it) {
-		UsagesMap_t const & awm_usages = (*awm_it)->RecipeResourceUsages();
-		UsagesMap_t::const_iterator rsrc_it(awm_usages.begin());
-		UsagesMap_t::const_iterator rsrc_end(awm_usages.end());
+		br::UsagesMap_t const & awm_usages = (*awm_it)->RecipeResourceUsages();
+		br::UsagesMap_t::const_iterator rsrc_it(awm_usages.begin());
+		br::UsagesMap_t::const_iterator rsrc_end(awm_usages.end());
 
 		// Resources
 		for (; rsrc_it != rsrc_end; ++rsrc_it) {
@@ -1234,8 +1234,8 @@ uint64_t Application::GetResourceUsageStat(std::string const & rsrc_path,
 			uint64_t curr_usage = ((*rsrc_it).second)->GetAmount();
 
 			// Is current resource the one required?
-			ResourcePath stat_rp(rsrc_path);
-			if (stat_rp.Compare(*(rp.get())) == ResourcePath::EQUAL_TYPES)
+			br::ResourcePath stat_rp(rsrc_path);
+			if (stat_rp.Compare(*(rp.get())) == br::ResourcePath::EQUAL_TYPES)
 				continue;
 
 			// Cumulate the resource usage and update min or max

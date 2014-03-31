@@ -34,10 +34,9 @@
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
+namespace ba = bbque::app;
+namespace br = bbque::res;
 namespace bu = bbque::utils;
-
-using bbque::app::AppCPtr_t;
-using bbque::res::RViewToken_t;
 
 namespace bbque { namespace plugins {
 
@@ -70,7 +69,7 @@ public:
 	char const * Name();
 
 	SchedulerPolicyIF::ExitCode_t
-		Schedule(bbque::System & sv, RViewToken_t & rav);
+		Schedule(bbque::System & sv, br::RViewToken_t & rav);
 
 private:
 
@@ -83,7 +82,7 @@ private:
 	ConfigurationManager & cm;
 
 	/** Token for accessing a resources view */
-	RViewToken_t ra_view = 0;
+	br::RViewToken_t ra_view = 0;
 
 	/** A counter used for getting always a new clean resources view */
 	uint32_t ra_view_count = 0;
@@ -92,7 +91,7 @@ private:
 	std::string binding_domain;
 
 	/** The type of resource for the binding step */
-	Resource::Type_t binding_type;
+	br::Resource::Type_t binding_type;
 	
 	/**
 	 * @brief Random Number Generator engine used for AWM selection
@@ -121,7 +120,7 @@ private:
 	/**
 	 * @brief Randonly select an AWM for the application
 	 */
-	void ScheduleApp(AppCPtr_t papp);
+	void ScheduleApp(ba::AppCPtr_t papp);
 };
 
 } // namespace plugins

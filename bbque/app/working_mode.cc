@@ -33,10 +33,6 @@
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-using br::ResourcePathUtils;
-using br::ResourceBinder;
-using br::ResourceIdentifier;
-
 namespace bbque { namespace app {
 
 
@@ -80,7 +76,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	// Build a resource path object
-	ResourcePathPtr_t ppath(new ResourcePath(rsrc_path));
+	ResourcePathPtr_t ppath(new br::ResourcePath(rsrc_path));
 	if (!ppath) {
 		logger->Error("%s AddResourceUsage: {%s} invalid resource path",
 				str_id,	rsrc_path.c_str());
@@ -95,9 +91,9 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	}
 
 	// Insert a new resource usage object in the map
-	UsagePtr_t pusage(UsagePtr_t(new Usage(required_amount)));
+	br::UsagePtr_t pusage(br::UsagePtr_t(new br::Usage(required_amount)));
 	resources.requested.insert(
-			std::pair<ResourcePathPtr_t, UsagePtr_t>(ppath, pusage));
+			std::pair<ResourcePathPtr_t, br::UsagePtr_t>(ppath, pusage));
 	logger->Debug("%s AddResourceUsage: added {%s}\t[usage: %" PRIu64 "]",
 			str_id, ppath->ToString().c_str(), required_amount);
 
@@ -106,7 +102,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 
 WorkingMode::ExitCode_t WorkingMode::Validate() {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	UsagesMap_t::iterator usage_it, it_end;
+	br::UsagesMap_t::iterator usage_it, it_end;
 	uint64_t total_amount;
 
 	// Initialization
@@ -118,7 +114,7 @@ WorkingMode::ExitCode_t WorkingMode::Validate() {
 	for (; usage_it != it_end; ++usage_it) {
 		// Current resource: path and amount required
 		ResourcePathPtr_t const & rcp_path(usage_it->first);
-		UsagePtr_t & rcp_pusage(usage_it->second);
+		br::UsagePtr_t & rcp_pusage(usage_it->second);
 
 		// Check the total amount available. Hide the AWM if the current total
 		// amount available cannot satisfy the amount required.
@@ -141,12 +137,12 @@ WorkingMode::ExitCode_t WorkingMode::Validate() {
 
 uint64_t WorkingMode::ResourceUsageAmount(
 		ResourcePathPtr_t ppath) const {
-	UsagesMap_t::const_iterator r_it(resources.requested.begin());
-	UsagesMap_t::const_iterator r_end(resources.requested.end());
+	br::UsagesMap_t::const_iterator r_it(resources.requested.begin());
+	br::UsagesMap_t::const_iterator r_end(resources.requested.end());
 
 	for (; r_it != r_end; ++r_it) {
 		ResourcePathPtr_t const & wm_rp(r_it->first);
-		if (ppath->Compare(*(wm_rp.get())) == ResourcePath::NOT_EQUAL)
+		if (ppath->Compare(*(wm_rp.get())) == br::ResourcePath::NOT_EQUAL)
 			continue;
 		return r_it->second->GetAmount();
 	}
@@ -160,13 +156,13 @@ size_t WorkingMode::BindResource(
 		size_t b_refn,
 		br::ResourceIdentifier::Type_t filter_rtype,
 		br::ResourceBitset * filter_mask) {
-	UsagesMap_t * src_pum;
+	br::UsagesMap_t * src_pum;
 	uint32_t b_count;
 	size_t n_refn;
-	std::map<size_t, UsagesMapPtr_t>::iterator pum_it;
+	std::map<size_t, br::UsagesMapPtr_t>::iterator pum_it;
 
 	// Allocate a new temporary resource usages map
-	UsagesMapPtr_t bind_pum(UsagesMapPtr_t(new UsagesMap_t()));
+	br::UsagesMapPtr_t bind_pum(br::UsagesMapPtr_t(new br::UsagesMap_t()));
 
 	if (b_refn == 0) {
 		logger->Debug("[%s] BindResource: binding resources from recipe", str_id);
@@ -183,7 +179,7 @@ size_t WorkingMode::BindResource(
 	}
 
 	// Binding
-	b_count = ResourceBinder::Bind(
+	b_count = br::ResourceBinder::Bind(
 			*src_pum, r_type, src_ID, dst_ID, bind_pum,
 			filter_rtype, filter_mask);
 	if (b_count == 0) {
@@ -195,26 +191,26 @@ size_t WorkingMode::BindResource(
 	n_refn = std::hash<std::string>()(BindingStr(r_type, src_ID, dst_ID, b_refn));
 	resources.sched_bindings[n_refn] = bind_pum;
 	logger->Info("[%s] BindResource: R{%s} refn[%ld] size:%d count:%d",
-			str_id, ResourceIdentifier::StringFromType(r_type),
+			str_id, br::ResourceIdentifier::StringFromType(r_type),
 			n_refn, bind_pum->size(), b_count);
 	return n_refn;
 }
 
 std::string WorkingMode::BindingStr(
-		ResourceIdentifier::Type_t r_type,
-		ResID_t src_ID,
-		ResID_t dst_ID,
+		br::ResourceIdentifier::Type_t r_type,
+		br::ResID_t src_ID,
+		br::ResID_t dst_ID,
 		size_t b_refn) {
 	char tail_str[40];
-	std::string str(ResourceIdentifier::TypeStr[r_type]);
+	std::string str(br::ResourceIdentifier::TypeStr[r_type]);
 	snprintf(tail_str, 40, ",%d,%d,%ld", src_ID, dst_ID, b_refn);
 	str.append(tail_str);
 	logger->Debug("BindingStr: %s", str.c_str());
 	return str;
 }
 
-UsagesMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
-	std::map<size_t, UsagesMapPtr_t>::const_iterator sched_it;
+br::UsagesMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
+	std::map<size_t, br::UsagesMapPtr_t>::const_iterator sched_it;
 	sched_it = resources.sched_bindings.find(b_refn);
 	if (sched_it == resources.sched_bindings.end()) {
 		logger->Error("GetSchedResourceBinding: "
@@ -225,7 +221,7 @@ UsagesMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
 }
 
 WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
-	ResourceBitset new_mask, temp_mask;
+	br::ResourceBitset new_mask, temp_mask;
 	uint8_t r_type;
 
 	// Set the new binding / resource usages map
@@ -239,7 +235,7 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
 	for (r_type = br::ResourceIdentifier::SYSTEM;
 			r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
 		BindingInfo & r_mask(resources.binding_masks[r_type]);
-		new_mask = ResourceBinder::GetMask(
+		new_mask = br::ResourceBinder::GetMask(
 				resources.sched_bindings[b_refn],
 				static_cast<br::ResourceIdentifier::Type_t>(r_type));
 		r_mask.prev = r_mask.curr;
@@ -267,13 +263,13 @@ void WorkingMode::ClearResourceBinding() {
 	}
 }
 
-ResourceBitset WorkingMode::BindingSet(
+br::ResourceBitset WorkingMode::BindingSet(
 		br::ResourceIdentifier::Type_t r_type) const {
 	BindingInfo const & bi(resources.binding_masks[r_type]);
 	return bi.curr;
 }
 
-ResourceBitset WorkingMode::BindingSetPrev(
+br::ResourceBitset WorkingMode::BindingSetPrev(
 		br::ResourceIdentifier::Type_t r_type) const {
    return resources.binding_masks[r_type].prev;
 }

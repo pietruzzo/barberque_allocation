@@ -37,7 +37,7 @@
 /** Metrics (class SAMPLE) declaration */
 #define YAMS_SAMPLE_METRIC(NAME, DESC)\
  {SCHEDULER_MANAGER_NAMESPACE ".yams." NAME, DESC, \
-	 MetricsCollector::SAMPLE, 0, NULL, 0}
+	 bu::MetricsCollector::SAMPLE, 0, NULL, 0}
 /** Reset the timer used to evaluate metrics */
 #define YAMS_RESET_TIMING(TIMER) \
 	TIMER.start();
@@ -76,11 +76,9 @@
 	using namespace boost::accumulators;
 #endif
 
+namespace ba = bbque::app;
+namespace br = bbque::res;
 namespace bu = bbque::utils;
-
-using bbque::res::RViewToken_t;
-using bbque::utils::Timer;
-using bbque::utils::MetricsCollector;
 
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
@@ -125,7 +123,7 @@ public:
 	/**
 	 * @see SchedulerPolicyIF
 	 */
-	ExitCode_t Schedule(System & sys_if, RViewToken_t & rav);
+	ExitCode_t Schedule(System & sys_if, br::RViewToken_t & rav);
 
 	/**
 	 * @see CommandHandler
@@ -208,7 +206,7 @@ private:
 	ResourceAccounter & ra;
 
 	/** Metric collector instance */
-	MetricsCollector & mc;
+	bu::MetricsCollector & mc;
 
 	/** Command manager instance */
 	CommandManager &cmm;
@@ -220,7 +218,7 @@ private:
 	System * sv = NULL;
 
 	/** Token for accessing a resources view */
-	RViewToken_t vtok = 0;
+	br::RViewToken_t vtok = 0;
 
 	/** A counter used for getting always a new clean resources view */
 	uint32_t vtok_count = 0;
@@ -284,12 +282,12 @@ private:
 #endif
 
 	/** Manager for the scheduling contributions set */
-	typedef std::pair<Resource::Type_t, SchedContribManager *> SchedContribPair_t;
-	std::map<Resource::Type_t, SchedContribManager *> scms;
+	typedef std::pair<br::Resource::Type_t, SchedContribManager *> SchedContribPair_t;
+	std::map<br::Resource::Type_t, SchedContribManager *> scms;
 
 	/** Collect information on binding domains */
-	typedef std::pair<Resource::Type_t, BindingInfo_t *> BindingPair_t;
-	std::map<Resource::Type_t, BindingInfo_t *>  bindings;
+	typedef std::pair<br::Resource::Type_t, BindingInfo_t *> BindingPair_t;
+	std::map<br::Resource::Type_t, BindingInfo_t *>  bindings;
 
 
 	/** Mutex */
@@ -297,14 +295,14 @@ private:
 
 
 	/** The High-Resolution timer used for profiling */
-	Timer yams_tmr;
+	bu::Timer yams_tmr;
 
 	/** Statistical metrics of the scheduling policy */
-	static MetricsCollector::MetricsCollection_t
+	static bu::MetricsCollector::MetricsCollection_t
 		coll_metrics[YAMS_METRICS_COUNT];
 
 	/** Statistical metrics for single contributes */
-	static MetricsCollector::MetricsCollection_t
+	static bu::MetricsCollector::MetricsCollection_t
 		coll_mct_metrics[YAMS_SC_COUNT];
 
 
@@ -381,7 +379,7 @@ private:
 	 *
 	 * @param papp Shared pointer to the Application/EXC to schedule
 	 */
-	void InsertWorkingModes(AppCPtr_t const & papp);
+	void InsertWorkingModes(ba::AppCPtr_t const & papp);
 
 	/**
 	 * @brief Evaluate an AWM
@@ -398,7 +396,7 @@ private:
 	 * @param pschd The scheduling entity to evaluate
 	 */
 	void GetSchedContribValue(SchedEntityPtr_t pschd,
-			ResourceIdentifier::Type_t bd_type,
+			br::ResourceIdentifier::Type_t bd_type,
 			SchedContribManager::Type_t sc_type,
 			float & sc_value);
 
@@ -421,9 +419,9 @@ private:
 	 * @param pschd_parent SchedEntity_t to fill (in case)
 	 */
 	void EvalDomains(
-			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
-			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
-			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator & last_it);
+			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
+			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
+			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator & last_it);
 
 	/**
 	 * @brief Recursive evaluation of bindings
@@ -437,9 +435,9 @@ private:
 	 * YAMS_SUCCESS otherwise
 	 */
 	ExitCode_t EvalBindings(
-			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
-			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
-			std::map<Resource::Type_t, SchedEntityPtr_t>::iterator & next_it,
+			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
+			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
+			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator & next_it,
 			SchedEntityPtr_t pschd_parent);
 
 	/**
@@ -468,7 +466,7 @@ private:
 	void CowsSetup();
 
 	/**
-	 * @brief COWS: Evaluate a Binding
+	 * @brief COWS: Evaluate a
 	 *
 	 * @param pschd The scheduling entity to evaluate
 	 */
@@ -540,7 +538,7 @@ private:
 	 * @param papp Shared pointer to the Application/EXC to schedule
 	 * @return true if the Application/EXC must be skipped, false otherwise
 	 */
-	inline bool CheckSkipConditions(AppCPtr_t const & papp) {
+	inline bool CheckSkipConditions(ba::AppCPtr_t const & papp) {
 		// Skip if the application has been rescheduled yet (with success) or
 		// disabled in the meanwhile
 		if (!papp->Active() && !papp->Blocking()) {

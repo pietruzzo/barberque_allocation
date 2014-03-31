@@ -17,8 +17,8 @@
 
 #include "sc_value.h"
 
-using namespace bbque::res;
-
+namespace ba = bbque::app;
+namespace br = bbque::res;
 namespace po = boost::program_options;
 
 namespace bbque { namespace plugins {
@@ -69,8 +69,8 @@ SchedContrib::ExitCode_t
 SCValue::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
 	std::string rsrc_tmp_path;
-	UsagesMap_t::const_iterator usage_it;
-	AwmPtr_t const & curr_awm(evl_ent.papp->CurrentAWM());
+	br::UsagesMap_t::const_iterator usage_it;
+	ba::AwmPtr_t const & curr_awm(evl_ent.papp->CurrentAWM());
 	float nap = 0.0;
 
 	// Initialize the index contribute to the AWM static value

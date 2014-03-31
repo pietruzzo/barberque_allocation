@@ -30,8 +30,8 @@
 // The default base resource path for the binding step
 #define SCHEDULER_DEFAULT_BINDING_DOMAIN "sys.cpu"
 
-using namespace bbque::app;
-using namespace bbque::res;
+namespace ba = bbque::app;
+namespace br = bbque::res;
 
 namespace bbque { namespace plugins {
 
@@ -76,17 +76,17 @@ public:
 		/** The base resource path for the binding step */
 		std::string domain;
 		/** The type of resource to bind (e.g. CPU, GROUP,...) */
-		Resource::Type_t type;
+		br::Resource::Type_t type;
 		/** Number of managed resource types */
-		std::list<Resource::Type_t> r_types;
+		std::list<br::Resource::Type_t> r_types;
 		/** Number of binding domains on the platform	 */
 		uint16_t num;
 		/** Resource pointer descriptor list */
-		ResourcePtrList_t rsrcs;
+		br::ResourcePtrList_t rsrcs;
 		/** The IDs of all the possible bindings */
 		std::vector<br::ResID_t> ids;
 		/** Keep track the bindings without available processing elements */
-		ResourceBitset full;
+		br::ResourceBitset full;
 	} BindingInfo_t;
 
 	/**
@@ -104,7 +104,7 @@ public:
 		 * @param _pawm AWM to evaluate
 		 * @param _bid Cluster ID for resource binding
 		 */
-		EvalEntity_t(AppCPtr_t _papp, AwmPtr_t _pawm, br::ResID_t _bid):
+		EvalEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, br::ResID_t _bid):
 			papp(_papp),
 			pawm(_pawm),
 			bind_id(_bid) {
@@ -112,9 +112,9 @@ public:
 		};
 
 		/** Application/EXC to schedule */
-		AppCPtr_t papp;
+		ba::AppCPtr_t papp;
 		/** Candidate AWM */
-		AwmPtr_t pawm;
+		ba::AwmPtr_t pawm;
 		/** Candidate cluster for resource binding */
 		br::ResID_t bind_id;
 		/** Type of resource for the candidate binding */
@@ -136,7 +136,7 @@ public:
 			if ((bind_id != R_ID_NONE) && (bind_id != R_ID_ANY))
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B:%s%d}",
 						papp->StrId(), pawm->Id(),
-						ResourceIdentifier::TypeStr[bind_type],
+						br::ResourceIdentifier::TypeStr[bind_type],
 						bind_id);
 			else
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B: -}",
@@ -155,7 +155,7 @@ public:
 		 * previous one (given the type of resource referenced by the such
 		 * domain)
 		 */
-		inline bool IsMigrating(Resource::Type_t r_type) const {
+		inline bool IsMigrating(br::Resource::Type_t r_type) const {
 			return (papp->CurrentAWM() &&
 					!(papp->CurrentAWM()->BindingSet(r_type).Test(bind_id)));
 		}
@@ -189,7 +189,7 @@ public:
 		 * @param _metr The related scheduling metrics (also "application
 		 * value")
 		 */
-		SchedEntity_t(AppCPtr_t _papp, AwmPtr_t _pawm, br::ResID_t _bid,
+		SchedEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, br::ResID_t _bid,
 				float _metr):
 			EvalEntity_t(_papp, _pawm, _bid),
 			metrics(_metr) {
