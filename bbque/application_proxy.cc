@@ -229,7 +229,8 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		(uint8_t)papp->SyncState(),
 		// If the application is BLOCKING we don't have a NextAWM but we also
 		// don't care at RTLib side about the value of this parameter
-		0
+		0,
+		R_ID_NONE,
 	};
 
 	// Set the next AWM only if the application is not going to be blocked

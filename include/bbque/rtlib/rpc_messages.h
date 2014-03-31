@@ -231,7 +231,7 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE {
 	uint16_t awm;
 #ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
 	/** Assigned OpenCL device */
-	uint8_t dev;
+	int8_t dev;
 #endif
 } rpc_msg_BBQ_SYNCP_PRECHANGE_t;
 
