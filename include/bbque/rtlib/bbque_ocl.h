@@ -33,7 +33,7 @@
 	cl_event local_event; \
 	if (ev == NULL) ev = &local_event;
 
-#define OCL_PROF_OUTDIR "/tmp"
+#define OCL_PROF_OUTDIR BBQUE_PATH_VAR "/ocl"
 
 #ifdef __cplusplus
 extern "C" {
