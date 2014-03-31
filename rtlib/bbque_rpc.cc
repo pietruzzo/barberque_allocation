@@ -2250,7 +2250,7 @@ void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
 
 void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
 	std::map<cl_command_type, AccArray_t>::iterator it_ct;
-	double_t otot, vtot_q, vtot_s, vtot_e = 0;
+	double_t otot = 0, vtot_q = 0, vtot_s = 0, vtot_e = 0;
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
 		vtot_q += SUM(QUEUED);
 		vtot_s += SUM(SUBMIT);
