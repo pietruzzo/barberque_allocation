@@ -1983,7 +1983,7 @@ void BbqueRPC::PerfPrintStats(pregExCtx_t prec, pAwmStats_t pstats) {
 
 			// Get AWM average and stddev running time
 			avg_value = mean(ppes->samples);
-			std_value = sqrt(variance(ppes->samples));
+			std_value = sqrt(static_cast<double>(variance(ppes->samples)));
 
 			PrintNoisePct(std_value, avg_value);
 		}
@@ -2022,7 +2022,7 @@ void BbqueRPC::PerfPrintStats(pregExCtx_t prec, pAwmStats_t pstats) {
 
 		// Get AWM average and stddev running time
 		avg_value = mean(pstats->samples);
-		std_value = sqrt(variance(pstats->samples));
+		std_value = sqrt(static_cast<double>(variance(pstats->samples)));
 
 		fprintf(stderr, " %18.6f cycle time [ms]", avg_value);
 		if (count(pstats->samples) > 1) {
@@ -2083,7 +2083,7 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
 #define MEAN(v) \
 	mean(it_ct->second[CL_CMD_ ## v ## _TIME])*1e-06
 #define STDDEV(v) \
-	sqrt(variance(it_ct->second[CL_CMD_ ## v ## _TIME]))*1e-06
+	sqrt(static_cast<double>(variance(it_ct->second[CL_CMD_ ## v ## _TIME])))*1e-06
 
 void BbqueRPC::OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status) {
 	rtlib_ocl_set_device(device_id, status);
