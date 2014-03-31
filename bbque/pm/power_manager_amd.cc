@@ -77,15 +77,15 @@ int AMDPowerManager::InitLibrary() {
 	}
 
 	// Initialization functions
-	ODCaps          = (ADL_OD_CAPS)     dlsym(adlib, SYM_ADL_OD_CAPS);
-	ODParamsGet     = (ADL_OD_PARAMS_GET)     dlsym(adlib, SYM_ADL_OD_PARAMS_GET);
-	MainCtrlCreate  = (ADL_MAIN_CTRL_CREATE)  dlsym(adlib, SYM_ADL_MAIN_CTRL_CREATE);
-	MainCtrlDestroy = (ADL_MAIN_CTRL_DESTROY) dlsym(adlib, SYM_ADL_MAIN_CTRL_DESTROY);
+	*(void **) (&ODCaps          ) = dlsym(adlib, SYM_ADL_OD_CAPS);
+	*(void **) (&ODParamsGet     ) = dlsym(adlib, SYM_ADL_OD_PARAMS_GET);
+	*(void **) (&MainCtrlCreate  ) = dlsym(adlib, SYM_ADL_MAIN_CTRL_CREATE);
+	*(void **) (&MainCtrlDestroy ) = dlsym(adlib, SYM_ADL_MAIN_CTRL_DESTROY);
 	// General adapters API
-	AdapterNumberGet = (ADL_ADAPTER_NUMBER_GET) dlsym(adlib, SYM_ADL_ADAPTER_NUMBER_GET);
-	AdapterActiveGet = (ADL_ADAPTER_ACTIVE_GET) dlsym(adlib, SYM_ADL_ADAPTER_ACTIVE_GET);
-	AdapterInfoGet   = (ADL_ADAPTER_INFO_GET)   dlsym(adlib, SYM_ADL_ADAPTER_INFO_GET);
-	AdapterAccessGet = (ADL_ADAPTER_ACCESS_GET) dlsym(adlib, SYM_ADL_ADAPTER_ACCESS_GET);
+	*(void **) (&AdapterNumberGet ) = dlsym(adlib, SYM_ADL_ADAPTER_NUMBER_GET);
+	*(void **) (&AdapterActiveGet ) = dlsym(adlib, SYM_ADL_ADAPTER_ACTIVE_GET);
+	*(void **) (&AdapterInfoGet   ) = dlsym(adlib, SYM_ADL_ADAPTER_INFO_GET);
+	*(void **) (&AdapterAccessGet ) = dlsym(adlib, SYM_ADL_ADAPTER_ACCESS_GET);
 	if (ODCaps == NULL
 		|| ODParamsGet      == NULL
 		|| MainCtrlCreate   == NULL
@@ -97,16 +97,16 @@ int AMDPowerManager::InitLibrary() {
 		return 2;
 	}
 	// OverDrive related API
-	ODCurrentActivityGet = (ADL_OD_CURRACTIVITY_GET) dlsym(adlib, SYM_ADL_OD_CURRACTIVITY_GET);
-	ODTemperatureGet     = (ADL_OD_TEMPERATURE_GET)  dlsym(adlib, SYM_ADL_OD_TEMPERATURE_GET);
-	ODFanSpeedGet        = (ADL_OD_FANSPEED_GET)     dlsym(adlib, SYM_ADL_OD_FANSPEED_GET);
-	ODFanSpeedSet        = (ADL_OD_FANSPEED_SET)     dlsym(adlib, SYM_ADL_OD_FANSPEED_SET);
-	ODFanSpeed2DfSet     = (ADL_OD_FANSPEED2DF_SET)  dlsym(adlib, SYM_ADL_OD_FANSPEED2DF_SET);
-	ODFanSpeedInfoGet    = (ADL_OD_FANSPEEDINFO_GET) dlsym(adlib, SYM_ADL_OD_FANSPEEDINFO_GET);
-	ODPowerCtrlCaps      = (ADL_OD_POWERCTRL_CAPS)    dlsym(adlib, SYM_ADL_OD_POWERCTRL_CAPS);
-	ODPowerCtrlInfoGet   = (ADL_OD_POWERCTRLINFO_GET) dlsym(adlib, SYM_ADL_OD_POWERCTRLINFO_GET);
-	ODPowerCtrlGet       = (ADL_OD_POWERCTRL_GET)     dlsym(adlib, SYM_ADL_OD_POWERCTRL_GET);
-	ODPowerCtrlSet       = (ADL_OD_POWERCTRL_SET)     dlsym(adlib, SYM_ADL_OD_POWERCTRL_SET);
+	*(void **) (&ODCurrentActivityGet ) = dlsym(adlib, SYM_ADL_OD_CURRACTIVITY_GET);
+	*(void **) (&ODTemperatureGet     ) = dlsym(adlib, SYM_ADL_OD_TEMPERATURE_GET);
+	*(void **) (&ODFanSpeedGet        ) = dlsym(adlib, SYM_ADL_OD_FANSPEED_GET);
+	*(void **) (&ODFanSpeedSet        ) = dlsym(adlib, SYM_ADL_OD_FANSPEED_SET);
+	*(void **) (&ODFanSpeed2DfSet     ) = dlsym(adlib, SYM_ADL_OD_FANSPEED2DF_SET);
+	*(void **) (&ODFanSpeedInfoGet    ) = dlsym(adlib, SYM_ADL_OD_FANSPEEDINFO_GET);
+	*(void **) (&ODPowerCtrlCaps      ) = dlsym(adlib, SYM_ADL_OD_POWERCTRL_CAPS);
+	*(void **) (&ODPowerCtrlInfoGet   ) = dlsym(adlib, SYM_ADL_OD_POWERCTRLINFO_GET);
+	*(void **) (&ODPowerCtrlGet       ) = dlsym(adlib, SYM_ADL_OD_POWERCTRL_GET);
+	*(void **) (&ODPowerCtrlSet       ) = dlsym(adlib, SYM_ADL_OD_POWERCTRL_SET);
 
 	return 0;
 }
