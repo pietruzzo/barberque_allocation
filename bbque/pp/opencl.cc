@@ -42,7 +42,6 @@
 	"# 8: Performance level\n"\
 	"# 9: Power state\n"\
 	"#\n"
-;
 
 namespace br = bbque::res;
 namespace po = boost::program_options;
