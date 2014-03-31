@@ -409,6 +409,9 @@ OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(
 		ba::AppPtr_t papp,
 		br::UsagesMapPtr_t pum,
 		br::RViewToken_t rvt) {
+	(void)papp;
+	(void)pum;
+	(void)rvt;
 	logger->Warn("PLAT OCL: Please map the application");
 
 	return SUCCESS;
