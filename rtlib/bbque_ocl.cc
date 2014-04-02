@@ -1389,6 +1389,9 @@ void rtlib_init_devices() {
 	cl_platform_id platform = nullptr;
 	cl_device_type dev_type = CL_DEVICE_TYPE_ALL;
 
+	// By default, at the beginning, we have any device assigned
+	rtlib_ocl_set_device(R_ID_ANY, RTLIB_EXC_GWM_BLOCKED);
+
 	// Get platform
 	status = rtlib_ocl.getPlatformIDs(0, NULL, &rtlib_ocl.num_platforms);
 	if (status != CL_SUCCESS) {
