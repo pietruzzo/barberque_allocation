@@ -105,17 +105,25 @@ clGetDeviceIDs(
 		return CL_INVALID_PLATFORM;
 	}
 
-	if (num_devices != NULL) {
-		if (rtlib_ocl.status != RTLIB_EXC_GWM_BLOCKED)
-			(*num_devices) = 1;
-		else
-			(*num_devices) = 0;
+	if (rtlib_ocl.device_id == R_ID_ANY) {
+		DB2(logger->Debug("clGetDeviceIDs: AWM not assigned, call forwarding..."));
+		return rtlib_ocl.getDeviceIDs(platform, device_type,
+				num_entries, devices, num_devices);
+	}
+
+	if (num_devices && rtlib_ocl.device_id == R_ID_NONE) {
+		(*num_devices) = 0;
 	}
 
 	if (devices == NULL)
 		return CL_SUCCESS;
 
-	DB (
+	// Single device forcing
+	assert(rtlib_ocl.device_id >= 0);
+	if (num_devices)
+		(*num_devices) = 1;
+
+	DB(
 	cl_device_type dev_type;
 	char dev_name[1024];
 	for (uint8_t i = 0; i < rtlib_ocl.num_devices; ++i) {
