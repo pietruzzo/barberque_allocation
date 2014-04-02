@@ -55,8 +55,15 @@ clGetPlatformIDs(
 		cl_platform_id *platforms,
 		cl_uint *num_platforms)
 		CL_API_SUFFIX__VERSION_1_0 {
-	DB2(logger->Debug("Calling clGetPlatformIDs()..."));
-	return rtlib_ocl.getPlatformIDs(num_entries, platforms, num_platforms);
+	DB2(logger->Debug("Calling clGetPlatformIDs(num_entries: %u, *platforms: %p, *num_platforms: %p)...",
+			num_entries, platforms, num_platforms));
+	cl_int result = rtlib_ocl.getPlatformIDs(num_entries, platforms, num_platforms);
+	DB2(
+	if (num_platforms != nullptr)
+		logger->Debug("Result clGetPlatformIDs(platforms: %p, num_platforms: %d)...",
+			platforms, *num_platforms);
+	)
+	return result;
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
@@ -67,8 +74,15 @@ clGetPlatformInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	DB2(logger->Debug("Calling clGetPlatformInfo()..."));
-	return rtlib_ocl.getPlatformInfo(platform, param_name, param_value_size, param_value, param_value_size_ret);
+	DB2(logger->Debug("Calling clGetPlatformInfo(platform: %p, param_name: %u, param_value_size: %d,*param_value: %p, *param_value_size_ret: %p)...",
+			platform, param_name, param_value_size, param_value, param_value_size_ret));
+	cl_int result = rtlib_ocl.getPlatformInfo(platform, param_name, param_value_size, param_value, param_value_size_ret);
+	DB2(
+	if (param_value != nullptr && param_value_size_ret != nullptr) {
+		logger->Debug("Result clGetPlatformInfo(param_value: %p, param_value_size_ret: %d)...",
+				param_value, *param_value_size_ret);
+	})
+	return result;
 }
 
 /* Device APIs */
@@ -83,7 +97,9 @@ clGetDeviceIDs(
 	(void)device_type;
 	(void)num_entries;
 
-	DB2(logger->Debug("Calling clGetDeviceIDs()..."));
+	DB2(logger->Debug("Calling clGetDeviceIDs(platform: %p, device_type: %u, num_entries: %u, devices: %p, num_devices: %p)...",
+			platform, device_type, num_entries, devices, num_devices));
+
 	if (platform != rtlib_ocl.platforms[0]) {
 		logger->Debug("OCL: Invalid platform specified");
 		return CL_INVALID_PLATFORM;
@@ -109,8 +125,8 @@ clGetDeviceIDs(
 	});
 
 	(*devices) = rtlib_ocl.devices[rtlib_ocl.device_id];
-	DB(logger->Debug("OCL: clGetDeviceIDs [BarbequeRTRM assigned: %d]",
-			rtlib_ocl.device_id));
+	DB(logger->Debug("OCL: clGetDeviceIDs [BarbequeRTRM assigned: %d @ %p]",
+			rtlib_ocl.device_id, (*devices)));
 
 	return CL_SUCCESS;
 }
@@ -123,8 +139,15 @@ clGetDeviceInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	DB2(logger->Debug("Calling clGetDeviceInfo()..."));
-	return rtlib_ocl.getDeviceInfo(device, param_name, param_value_size, param_value, param_value_size_ret);
+	DB2(logger->Debug("Calling clGetDeviceInfo(device: %p, param_name: %u, param_value_size: %d, param_value: %p, param_value_size_ret: %p)...",
+			device, param_name, param_value_size, param_value, param_value_size_ret));
+	cl_int result = rtlib_ocl.getDeviceInfo(device, param_name, param_value_size, param_value, param_value_size_ret);
+	DB2(
+	if (param_value != nullptr && param_value_size_ret != nullptr) {
+		logger->Debug("Result clGetDeviceInfo(param_value: %p, param_value_size: %p, param_value_size_ret: %d)...",
+				param_value, param_value_size, *param_value_size_ret);
+	})
+	return result;
 }
 
 #ifdef CL_API_SUFFIX__VERSION_1_2
@@ -331,9 +354,12 @@ clCreateContextFromType(
 		void *user_data,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	DB2(logger->Debug("Calling clCreateContextFromType()..."));
-	return rtlib_ocl.createContextFromType(properties, device_type, (*pfn_notify),
+	DB2(logger->Debug("Calling clCreateContextFromType(properties: %p, device_type: 0x%08X)...",
+			properties, device_type));
+	cl_context context = rtlib_ocl.createContextFromType(properties, device_type, (*pfn_notify),
 		user_data, errcode_ret);
+	DB2(logger->Debug("Result clCreateContextFromType [%p]...", context));
+	return context;
 }
 
 CL_API_ENTRY cl_int CL_API_CALL
@@ -391,8 +417,9 @@ clCreateCommandQueue(
 		cl_command_queue_properties properties,
 		cl_int *errcode_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	DB2(logger->Debug("Calling clCreateCommandQueue()..."));
 	properties |= CL_QUEUE_PROFILING_ENABLE;
+	DB2(logger->Debug("Calling clCreateCommandQueue(context: %p, device: %p, properties: 0x%08X, <...>)...",
+			context, device, properties));
 	return rtlib_ocl.createCommandQueue(context, device, properties, errcode_ret);
 }
 
@@ -1399,8 +1426,12 @@ void rtlib_init_devices() {
 		logger->Error("OCL: Error [%d] in getting OpenCL deviced list", status);
 		return;
 	}
-	logger->Debug("OCL: OpenCL devices found: %u [byte=%lu] ",
-		rtlib_ocl.num_devices, sizeof(rtlib_ocl.devices));
+	logger->Debug("OCL: OpenCL devices found: %u [descriptors size: %lu]",
+		rtlib_ocl.num_devices, sizeof(cl_device_id));
+	logger->Debug("OCL: Devices descriptors @%p", rtlib_ocl.devices);
+	for (int i = 0; i < rtlib_ocl.num_devices; ++i)
+		logger->Debug("     Device #%02d @%p", i, rtlib_ocl.devices[i]);
+
 }
 
 void rtlib_ocl_set_device(uint8_t device_id, RTLIB_ExitCode_t status) {

@@ -247,8 +247,17 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		}
 
 		syncp_prechange_msg.dev = r_id;
-		logger->Info("APPs PRX: [%s] OpenCL device assigned: %d",
-			 papp->StrId(), r_id);
+		switch(r_id) {
+		case R_ID_NONE:
+			logger->Info("APPs PRX: [%s] NO OpenCL device assigned");
+			break;
+		case R_ID_ANY:
+			logger->Info("APPs PRX: [%s] NO OpenCL device forcing");
+			break;
+		default:
+			logger->Info("APPs PRX: [%s] OpenCL device assigned: %d",
+					papp->StrId(), r_id);
+		}
 #endif
 	}
 
