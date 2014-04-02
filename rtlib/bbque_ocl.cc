@@ -393,7 +393,9 @@ clGetContextInfo(
 	DB2(logger->Debug("Calling clGetContextInfo()..."));
 	cl_int result = CL_SUCCESS;
 
-	if (param_name != CL_CONTEXT_DEVICES) {
+	if (rtlib_ocl.device_id == R_ID_ANY
+			|| param_name != CL_CONTEXT_DEVICES) {
+		DB2(logger->Debug("clGetContextInfo: call forwarding..."));
 		return rtlib_ocl.getContextInfo(
 				context, param_name, param_value_size,
 				param_value, param_value_size_ret);
