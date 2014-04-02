@@ -220,7 +220,7 @@ struct RTLIB_OpenCL {
 	/** Set of OpenCL devices to consider */
 	cl_device_id   * devices;
 	/** Assigned OpenCL device ID */
-	uint8_t device_id;
+	int8_t device_id;
 	/** Track the execution status */
 	RTLIB_ExitCode_t status;
 };

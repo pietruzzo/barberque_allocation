@@ -245,7 +245,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 			r_id  = pdev_ids->at(0);
 		}
 
-		syncp_prechange_msg.dev = (uint8_t) r_id;
+		syncp_prechange_msg.dev = r_id;
 		logger->Info("APPs PRX: [%s] OpenCL device assigned: %d",
 			 papp->StrId(), r_id);
 #endif
