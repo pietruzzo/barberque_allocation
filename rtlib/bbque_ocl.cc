@@ -401,12 +401,16 @@ clGetContextInfo(
 				param_value, param_value_size_ret);
 	}
 
+	// First call - The first call is used just to collect the size
+	// required to properly setup the value container
 	if (param_value_size_ret != NULL)
 		(*param_value_size_ret) = sizeof(cl_device_id);
 
 	if (param_value == NULL)
 		return result;
 
+	// Second call - The second call is used to collect the values which count
+	// has been identified by the first call.
 	cl_device_id * dev = &rtlib_ocl.devices[rtlib_ocl.device_id];
 	result = rtlib_ocl.getContextInfo(
 			context, param_name, sizeof(cl_device_id),
@@ -1413,7 +1417,7 @@ void rtlib_init_devices() {
 	status = rtlib_ocl.getPlatformIDs(
 		rtlib_ocl.num_platforms, rtlib_ocl.platforms, NULL);
 
-	// NOTE: A single platform is actually supported, the one labeled as BBQ
+	// NOTE: Single platform supported, the default selected via menuconfig
 	for (uint8_t i = 0; i < rtlib_ocl.num_platforms; ++i) {
 		status = rtlib_ocl.getPlatformInfo(
 			rtlib_ocl.platforms[i], CL_PLATFORM_NAME,
