@@ -17,6 +17,7 @@
 
 #include "bbque/application_proxy.h"
 
+#include "bbque/config.h"
 #include "bbque/application_manager.h"
 #include "bbque/resource_manager.h"
 #include "bbque/modules_factory.h"
