@@ -56,55 +56,8 @@ void __stdcall ADL_Main_Memory_Free ( void** lpBuffer )
 }
 
 AMDPowerManager::AMDPowerManager() {
-	// Init references to library functions
-	if (InitLibrary() != 0)
-		return;
 	// Retrieve information about the GPU(s) of the system
 	LoadAdaptersInfo();
-}
-
-
-int AMDPowerManager::InitLibrary() {
-	// Load AMD Display Library
-	adlib = dlopen(ADL_NAME, RTLD_LAZY|RTLD_GLOBAL);
-	if (adlib == NULL) {
-		logger->Fatal("ADL: Unable to load '%s'", ADL_NAME);
-		return 1;
-	}
-
-	// Initialization functions
-	*(void **) (&ODCaps          ) = dlsym(adlib, SYM_ADL_OD_CAPS);
-	*(void **) (&ODParamsGet     ) = dlsym(adlib, SYM_ADL_OD_PARAMS_GET);
-	*(void **) (&MainCtrlCreate  ) = dlsym(adlib, SYM_ADL_MAIN_CTRL_CREATE);
-	*(void **) (&MainCtrlDestroy ) = dlsym(adlib, SYM_ADL_MAIN_CTRL_DESTROY);
-	// General adapters API
-	*(void **) (&AdapterNumberGet ) = dlsym(adlib, SYM_ADL_ADAPTER_NUMBER_GET);
-	*(void **) (&AdapterActiveGet ) = dlsym(adlib, SYM_ADL_ADAPTER_ACTIVE_GET);
-	*(void **) (&AdapterInfoGet   ) = dlsym(adlib, SYM_ADL_ADAPTER_INFO_GET);
-	*(void **) (&AdapterAccessGet ) = dlsym(adlib, SYM_ADL_ADAPTER_ACCESS_GET);
-	if (ODCaps == NULL
-		|| ODParamsGet      == NULL
-		|| MainCtrlCreate   == NULL
-		|| MainCtrlDestroy  == NULL
-		|| AdapterNumberGet == NULL
-		|| AdapterActiveGet == NULL
-		|| AdapterInfoGet   == NULL) {
-		logger->Fatal("ADL: Cannot load library functions in '%s'", ADL_NAME);
-		return 2;
-	}
-	// OverDrive related API
-	*(void **) (&ODCurrentActivityGet ) = dlsym(adlib, SYM_ADL_OD_CURRACTIVITY_GET);
-	*(void **) (&ODTemperatureGet     ) = dlsym(adlib, SYM_ADL_OD_TEMPERATURE_GET);
-	*(void **) (&ODFanSpeedGet        ) = dlsym(adlib, SYM_ADL_OD_FANSPEED_GET);
-	*(void **) (&ODFanSpeedSet        ) = dlsym(adlib, SYM_ADL_OD_FANSPEED_SET);
-	*(void **) (&ODFanSpeed2DfSet     ) = dlsym(adlib, SYM_ADL_OD_FANSPEED2DF_SET);
-	*(void **) (&ODFanSpeedInfoGet    ) = dlsym(adlib, SYM_ADL_OD_FANSPEEDINFO_GET);
-	*(void **) (&ODPowerCtrlCaps      ) = dlsym(adlib, SYM_ADL_OD_POWERCTRL_CAPS);
-	*(void **) (&ODPowerCtrlInfoGet   ) = dlsym(adlib, SYM_ADL_OD_POWERCTRLINFO_GET);
-	*(void **) (&ODPowerCtrlGet       ) = dlsym(adlib, SYM_ADL_OD_POWERCTRL_GET);
-	*(void **) (&ODPowerCtrlSet       ) = dlsym(adlib, SYM_ADL_OD_POWERCTRL_SET);
-
-	return 0;
 }
 
 void AMDPowerManager::LoadAdaptersInfo() {
@@ -114,7 +67,7 @@ void AMDPowerManager::LoadAdaptersInfo() {
 	ODStatus_t od_status;
 	ADLODParameters od_params;
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
@@ -122,7 +75,7 @@ void AMDPowerManager::LoadAdaptersInfo() {
 	}
 
 	// Adapters enumeration
-	ADL_Err = AdapterNumberGet(context, &adapters_count);
+	ADL_Err = ADL2_Adapter_NumberOfAdapters_Get(context, &adapters_count);
 	if (adapters_count < 1) {
 		logger->Error("ADL: No adapters available on the system");
 		return;
@@ -130,7 +83,7 @@ void AMDPowerManager::LoadAdaptersInfo() {
 	logger->Debug("ADL: Adapters (GPUs) count = %d", adapters_count);
 
 	for (int i = 0; i < adapters_count; ++i) {
-		ADL_Err = AdapterActiveGet(context, i, &status);
+		ADL_Err = ADL2_Adapter_Active_Get(context, i, &status);
 		if (ADL_Err != ADL_OK || status == ADL_FALSE) {
 			logger->Debug("Skipping '%d' [Err:%d] ", i, ADL_Err);
 			continue;
@@ -143,16 +96,13 @@ void AMDPowerManager::LoadAdaptersInfo() {
 				i, ActivityPtr_t(new ADLPMActivity)));
 
 		// Power control capabilities
-		if (ODPowerCtrlCaps != NULL) {
-			ODPowerCtrlCaps(context, i, &power_caps);
-			power_caps_map.insert(
-				std::pair<int, int>(i, power_caps));
-		}
+		ADL2_Overdrive5_PowerControl_Caps(context, i, &power_caps);
+		power_caps_map.insert(std::pair<int, int>(i, power_caps));
 		logger->Info("ADL: [A%d] Power control capabilities: %d",
 			i, power_caps_map[i]);
 
 		// Overdrive information
-		ODCaps(context, i,
+		ADL2_Overdrive_Caps(context, i,
 			&od_status.supported, &od_status.enabled,
 			&od_status.version);
 		if (ADL_Err != ADL_OK) {
@@ -169,7 +119,7 @@ void AMDPowerManager::LoadAdaptersInfo() {
 			od_status_map[i].version);
 
 		// Overdrive parameters
-		ADL_Err = ODParamsGet(context, i, &od_params);
+		ADL_Err = ADL2_Overdrive5_ODParameters_Get(context, i, &od_params);
 		if (ADL_Err != ADL_OK) {
 			logger->Error("ADL: Overdrive parameters read failed [%d]",
 				ADL_Err);
@@ -182,7 +132,7 @@ void AMDPowerManager::LoadAdaptersInfo() {
 
 	initialized = true;
 	logger->Info("ADL: Adapters information initialized");
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 }
 
 AMDPowerManager::~AMDPowerManager() {
@@ -190,9 +140,7 @@ AMDPowerManager::~AMDPowerManager() {
 		_ResetFanSpeed(adapter.second);
 	}
 
-	if (MainCtrlDestroy == NULL)
-		return;
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 	logger->Info("ADL: Control destroyed");
 
 	adapters_map.clear();
@@ -230,20 +178,20 @@ AMDPowerManager::GetActivity(int adapter_id) {
 	if (activity == nullptr)
 		return PMResult::ERR_RSRC_INVALID_PATH;
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	if (ODCurrentActivityGet == NULL || !initialized) {
+	if (!initialized) {
 		logger->Warn("ADL: Cannot get GPU(s) activity");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
-	ADL_Err = ODCurrentActivityGet(context, adapter_id, activity.get());
-	MainCtrlDestroy(context);
+	ADL_Err = ADL2_Overdrive5_CurrentActivity_Get(context, adapter_id, activity.get());
+	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
 }
 
@@ -271,19 +219,19 @@ AMDPowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius)
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 	CHECK_OD_VERSION(adapter_id);
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	if (ODTemperatureGet == NULL || !initialized) {
+	if (!initialized) {
 		logger->Warn("ADL: Cannot get GPU(s) temperature");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
-	ADL_Err = ODTemperatureGet(context, adapter_id, 0, &temp);
+	ADL_Err = ADL2_Overdrive5_Temperature_Get(context, adapter_id, 0, &temp);
 	if (ADL_Err != ADL_OK) {
 		logger->Error(
 			"ADL: [A%d] Temperature not available [%d]",
@@ -294,7 +242,7 @@ AMDPowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius)
 	logger->Debug("ADL: [A%d] Temperature : %d °C",
 		adapter_id, celsius);
 
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
 }
 
@@ -417,14 +365,14 @@ AMDPowerManager::GetFanSpeed(
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 	CHECK_OD_VERSION(adapter_id);
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	if (ODFanSpeedGet == NULL || !initialized) {
+	if (!initialized) {
 		logger->Warn("ADL: Cannot get GPU(s) fan speed");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
@@ -435,7 +383,7 @@ AMDPowerManager::GetFanSpeed(
 	else if (fs_type == FanSpeedType::RPM)
 		fan.iSpeedType = ADL_DL_FANCTRL_SPEED_TYPE_RPM;
 
-	ADL_Err = ODFanSpeedGet(context, adapter_id, 0, &fan);
+	ADL_Err = ADL2_Overdrive5_FanSpeed_Get(context, adapter_id, 0, &fan);
 	if (ADL_Err != ADL_OK) {
 		logger->Error(
 			"ADL: [A%d] Fan speed adapter not available [%d]",
@@ -445,7 +393,7 @@ AMDPowerManager::GetFanSpeed(
 	value = fan.iFanSpeed;
 	logger->Debug("ADL: [A%d] Fan speed: %d % ", adapter_id, value);
 
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
 }
 
@@ -463,25 +411,25 @@ AMDPowerManager::GetFanSpeedInfo(
 		return PMResult::ERR_NOT_INITIALIZED;
 	}
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	if (ODFanSpeedInfoGet == NULL || !initialized) {
+	if (!initialized) {
 		logger->Warn("ADL: Cannot get GPU(s) fan speed information");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
 	ADLFanSpeedInfo fan;
-	ADL_Err  = ODFanSpeedInfoGet(context, adapter_id, 0, &fan);
+	ADL_Err  = ADL2_Overdrive5_FanSpeedInfo_Get(context, adapter_id, 0, &fan);
 	rpm_min  = fan.iMinRPM;
 	rpm_max  = fan.iMaxRPM;
 	rpm_step = 0;
 
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
 }
 
@@ -496,14 +444,14 @@ AMDPowerManager::SetFanSpeed(
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 	CHECK_OD_VERSION(adapter_id);
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	if (ODFanSpeedSet == NULL || !initialized) {
+	if (!initialized) {
 		logger->Warn("ADL: Cannot get GPU(s) fan speed");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
@@ -514,7 +462,7 @@ AMDPowerManager::SetFanSpeed(
 		fan.iSpeedType = ADL_DL_FANCTRL_SPEED_TYPE_RPM;
 
 	fan.iFanSpeed = value;
-	ADL_Err = ODFanSpeedSet(context, adapter_id, 0, &fan);
+	ADL_Err = ADL2_Overdrive5_FanSpeed_Set(context, adapter_id, 0, &fan);
 	if (ADL_Err != ADL_OK) {
 		logger->Error(
 			"ADL: [A%d] Fan speed set failed [%d]",
@@ -522,7 +470,7 @@ AMDPowerManager::SetFanSpeed(
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
 }
 
@@ -539,19 +487,19 @@ AMDPowerManager::_ResetFanSpeed(int adapter_id) {
 
 	CHECK_OD_VERSION(adapter_id);
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	if (ODFanSpeed2DfSet == NULL || !initialized) {
+	if (!initialized) {
 		logger->Warn("ADL: Cannot get GPU(s) fan speed");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
-	ADL_Err = ODFanSpeed2DfSet(context, adapter_id, 0);
+	ADL_Err = ADL2_Overdrive5_FanSpeedToDefault_Set(context, adapter_id, 0);
 	if (ADL_Err != ADL_OK) {
 		logger->Error(
 			"ADL: [A%d] Fan speed reset failed [%d]",
@@ -559,7 +507,7 @@ AMDPowerManager::_ResetFanSpeed(int adapter_id) {
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
 }
 
@@ -579,25 +527,25 @@ AMDPowerManager::GetPowerStatesInfo(
 		return PMResult::ERR_NOT_INITIALIZED;
 	}
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	if (ODPowerCtrlInfoGet == NULL || !initialized) {
+	if (!initialized) {
 		logger->Warn("ADL: Cannot get GPU(s) fan speed information");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
 	ADLPowerControlInfo pwr_info;
-	ADL_Err = ODPowerCtrlInfoGet(context, adapter_id, &pwr_info);
+	ADL_Err = ADL2_Overdrive5_PowerControlInfo_Get(context, adapter_id, &pwr_info);
 	min  = pwr_info.iMinValue;
 	max  = pwr_info.iMaxValue;
 	step = pwr_info.iStepValue;
 
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
 }
 
@@ -611,19 +559,19 @@ AMDPowerManager::GetPowerState(ResourcePathPtr_t const & rp, int & state) {
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 	CHECK_OD_VERSION(adapter_id);
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	if (ODPowerCtrlGet == NULL || !initialized) {
+	if (!initialized) {
 		logger->Warn("ADL: Cannot get GPU(s) power state");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
-	ADL_Err = ODPowerCtrlGet(context, adapter_id, &state, &dflt);
+	ADL_Err = ADL2_Overdrive5_PowerControl_Get(context, adapter_id, &state, &dflt);
 	if (ADL_Err != ADL_OK) {
 		logger->Error(
 			"ADL: [A%d] Power control not available [%d]",
@@ -631,7 +579,7 @@ AMDPowerManager::GetPowerState(ResourcePathPtr_t const & rp, int & state) {
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
 }
 
@@ -642,19 +590,19 @@ AMDPowerManager::SetPowerState(ResourcePathPtr_t const & rp, int state) {
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 	CHECK_OD_VERSION(adapter_id);
 
-	ADL_Err = MainCtrlCreate(
+	ADL_Err = ADL2_Main_ControlX2_Create(
 		ADL_Main_Memory_Alloc, 1, &context, ADL_THREADING_LOCKED);
 	if (ADL_Err != ADL_OK) {
 		logger->Error("ADL: Control initialization failed");
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	if (ODPowerCtrlSet == NULL || !initialized) {
+	if (!initialized) {
 		logger->Warn("ADL: Cannot set GPU(s) power state");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
-	ADL_Err = ODPowerCtrlSet(context, adapter_id, state);
+	ADL_Err = ADL2_Overdrive5_PowerControl_Set(context, adapter_id, state);
 	if (ADL_Err != ADL_OK) {
 		logger->Error(
 			"ADL: [A%d] Power state set failed [%d]",
@@ -662,7 +610,7 @@ AMDPowerManager::SetPowerState(ResourcePathPtr_t const & rp, int state) {
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	MainCtrlDestroy(context);
+	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
 }
 

@@ -25,72 +25,43 @@
 #define ADL_NAME       "libatiadlxx.so"
 #define ADL_OD_VERSION	5
 
+extern "C" {
 
-/** ADL **/
-#define SYM_ADL_MAIN_CTRL_CREATE   "ADL2_Main_ControlX2_Create"
-typedef int ( *ADL_MAIN_CTRL_CREATE )
-	( ADL_MAIN_MALLOC_CALLBACK, int, ADL_CONTEXT_HANDLE * , ADLThreadingModel);
+// Main
+int ADL2_Main_ControlX2_Create (ADL_MAIN_MALLOC_CALLBACK, int, ADL_CONTEXT_HANDLE * , ADLThreadingModel);
+int ADL2_Main_Control_Destroy (ADL_CONTEXT_HANDLE);
 
-#define SYM_ADL_MAIN_CTRL_DESTROY  "ADL2_Main_Control_Destroy"
-typedef int ( *ADL_MAIN_CTRL_DESTROY )(ADL_CONTEXT_HANDLE);
+// Adapter
+int ADL2_Adapter_Active_Get (ADL_CONTEXT_HANDLE, int, int* );
+//int ADL_Adapter_AdapterInfo_Get ( LPAdapterInfo, int );
+int ADL2_Adapter_Accessibility_Get (ADL_CONTEXT_HANDLE, int, int * );
+int ADL2_Adapter_AdapterInfoX2_Get (ADL_CONTEXT_HANDLE, LPAdapterInfo * );
+int ADL2_Adapter_Clock_Get (int, int* , int* );
+int ADL2_Adapter_NumberOfAdapters_Get (ADL_CONTEXT_HANDLE, int* );
 
-#define SYM_ADL_ADAPTER_NUMBER_GET "ADL2_Adapter_NumberOfAdapters_Get"
-typedef int ( *ADL_ADAPTER_NUMBER_GET ) (ADL_CONTEXT_HANDLE, int* );
+// OverDrive
+int ADL2_Overdrive_Caps (ADL_CONTEXT_HANDLE, int, int * , int *, int *);
 
-#define SYM_ADL_ADAPTER_ACTIVE_GET "ADL2_Adapter_Active_Get"
-typedef int ( *ADL_ADAPTER_ACTIVE_GET ) (ADL_CONTEXT_HANDLE, int, int* );
+// OverDrive 5
+int ADL2_Overdrive5_CurrentActivity_Get (ADL_CONTEXT_HANDLE, int, ADLPMActivity *);
 
-//#define SYM_ADL_ADAPTER_INFO_GET   "ADL_Adapter_AdapterInfo_Get"
-//typedef int ( *ADL_ADAPTER_INFO_GET ) ( LPAdapterInfo, int );
+int ADL2_Overdrive5_FanSpeed_Get (ADL_CONTEXT_HANDLE, int,  int, ADLFanSpeedValue *);
+int ADL2_Overdrive5_FanSpeed_Set (ADL_CONTEXT_HANDLE, int,  int, ADLFanSpeedValue *);
+int ADL2_Overdrive5_FanSpeedToDefault_Set (ADL_CONTEXT_HANDLE, int,  int);
+int ADL2_Overdrive5_FanSpeedInfo_Get (ADL_CONTEXT_HANDLE, int, int, ADLFanSpeedInfo *);
 
-#define SYM_ADL_ADAPTER_INFO_GET   "ADL2_Adapter_AdapterInfoX2_Get"
-typedef int ( *ADL_ADAPTER_INFO_GET ) (ADL_CONTEXT_HANDLE, LPAdapterInfo * );
+int ADL2_Overdrive5_ODParameters_Get (ADL_CONTEXT_HANDLE, int, ADLODParameters *);
 
-#define SYM_ADL_ADAPTER_ACCESS_GET "ADL2_Adapter_Accessibility_Get"
-typedef int ( *ADL_ADAPTER_ACCESS_GET ) (ADL_CONTEXT_HANDLE, int, int * );
+int ADL2_Overdrive5_PowerControl_Caps (ADL_CONTEXT_HANDLE, int, int *);
+int ADL2_Overdrive5_PowerControl_Get (ADL_CONTEXT_HANDLE, int, int *, int *);
+int ADL2_Overdrive5_PowerControl_Set (ADL_CONTEXT_HANDLE, int, int);
+int ADL2_Overdrive5_PowerControlInfo_Get (ADL_CONTEXT_HANDLE, int, ADLPowerControlInfo *);
 
-#define SYM_ADL_OD_CURRACTIVITY_GET "ADL2_Overdrive5_CurrentActivity_Get"
-typedef int ( *ADL_OD_CURRACTIVITY_GET) (ADL_CONTEXT_HANDLE, int, ADLPMActivity *);
+int ADL2_Overdrive5_Temperature_Get (ADL_CONTEXT_HANDLE, int, int, ADLTemperature *);
 
-#define SYM_ADL_OD_TEMPERATURE_GET  "ADL2_Overdrive5_Temperature_Get"
-typedef int ( *ADL_OD_TEMPERATURE_GET) (ADL_CONTEXT_HANDLE, int, int, ADLTemperature *);
-
-#define SYM_ADL_OD_FANSPEED_GET  "ADL2_Overdrive5_FanSpeed_Get"
-typedef int ( *ADL_OD_FANSPEED_GET ) (ADL_CONTEXT_HANDLE, int,  int, ADLFanSpeedValue *);
-
-#define SYM_ADL_OD_FANSPEED_SET  "ADL2_Overdrive5_FanSpeed_Set"
-typedef int ( *ADL_OD_FANSPEED_SET ) (ADL_CONTEXT_HANDLE, int,  int, ADLFanSpeedValue *);
-
-#define SYM_ADL_OD_FANSPEED2DF_SET  "ADL2_Overdrive5_FanSpeedToDefault_Set"
-typedef int ( *ADL_OD_FANSPEED2DF_SET ) (ADL_CONTEXT_HANDLE, int,  int);
-
-#define SYM_ADL_OD_FANSPEEDINFO_GET  "ADL2_Overdrive5_FanSpeedInfo_Get"
-typedef int ( *ADL_OD_FANSPEEDINFO_GET ) (ADL_CONTEXT_HANDLE, int, int, ADLFanSpeedInfo *);
-
-#define SYM_ADL_OD_POWERCTRL_CAPS  "ADL2_Overdrive5_PowerControl_Caps"
-typedef int ( *ADL_OD_POWERCTRL_CAPS) (ADL_CONTEXT_HANDLE, int, int *);
-
-#define SYM_ADL_OD_POWERCTRL_GET  "ADL2_Overdrive5_PowerControl_Get"
-typedef int ( *ADL_OD_POWERCTRL_GET) (ADL_CONTEXT_HANDLE, int, int *, int *);
-
-#define SYM_ADL_OD_POWERCTRL_SET  "ADL2_Overdrive5_PowerControl_Set"
-typedef int ( *ADL_OD_POWERCTRL_SET) (ADL_CONTEXT_HANDLE, int, int);
-
-#define SYM_ADL_OD_POWERCTRLINFO_GET  "ADL2_Overdrive5_PowerControlInfo_Get"
-typedef int ( *ADL_OD_POWERCTRLINFO_GET) (ADL_CONTEXT_HANDLE, int, ADLPowerControlInfo *);
-
-#define SYM_ADL_OD_CAPS  "ADL2_Overdrive_Caps"
-typedef int ( *ADL_OD_CAPS) (ADL_CONTEXT_HANDLE, int, int * , int *, int *);
-
-#define SYM_ADL_OD_PARAMS_GET  "ADL2_Overdrive5_ODParameters_Get"
-typedef int ( *ADL_OD_PARAMS_GET) (ADL_CONTEXT_HANDLE, int, ADLODParameters *);
-
-
-typedef int ( *ADL_ADAPTER_CLOCK_GET) ( int, int* , int* );
-/** */
+}
 
 using namespace bbque::res;
-
 
 namespace bbque {
 
@@ -218,28 +189,6 @@ private:
 		int version;
 	};
 
-	/** Pointers to ADL functions */
-
-	ADL_MAIN_CTRL_CREATE   MainCtrlCreate;
-	ADL_MAIN_CTRL_DESTROY  MainCtrlDestroy;
-	ADL_ADAPTER_CLOCK_GET    AdapterObservedClockInfoGet;
-	ADL_ADAPTER_NUMBER_GET   AdapterNumberGet;
-	ADL_ADAPTER_ACTIVE_GET   AdapterActiveGet;
-	ADL_ADAPTER_INFO_GET     AdapterInfoGet;
-	ADL_ADAPTER_ACCESS_GET   AdapterAccessGet;
-	ADL_OD_CAPS              ODCaps;
-	ADL_OD_PARAMS_GET        ODParamsGet;
-	ADL_OD_TEMPERATURE_GET   ODTemperatureGet;
-	ADL_OD_FANSPEED_GET      ODFanSpeedGet;
-	ADL_OD_FANSPEEDINFO_GET  ODFanSpeedInfoGet;
-	ADL_OD_FANSPEED_SET      ODFanSpeedSet;
-	ADL_OD_FANSPEED2DF_SET   ODFanSpeed2DfSet;
-	ADL_OD_CURRACTIVITY_GET  ODCurrentActivityGet;
-	ADL_OD_POWERCTRL_GET      ODPowerCtrlGet;
-	ADL_OD_POWERCTRL_SET      ODPowerCtrlSet;
-	ADL_OD_POWERCTRL_CAPS     ODPowerCtrlCaps;
-	ADL_OD_POWERCTRLINFO_GET  ODPowerCtrlInfoGet;
-
 	/*** ADL context for thread-safety purpose */
 	ADL_CONTEXT_HANDLE  context;
 
@@ -271,13 +220,6 @@ private:
 
 	/*** AMD Overdrive status parameters */
 	std::map<int, ADLODParameters> od_params_map;
-
-	/**
-	 * @brief Initialized ADL function pointers
-	 *
-	 * @return 0 if success, 1 otherwise
-	 */
-	int InitLibrary();
 
 	/**
 	 * @brief Load adapters information
