@@ -1,7 +1,9 @@
 
-comment "BarbequeRTRM Daemon Configuration"
+################################################################################
+# Platform Configuration
+################################################################################
 
-comment "PIL Configuration"
+menu "Platform Setup"
 
 config BBQUE_TEST_PLATFORM_DATA
   bool "Use Test Platform Data (TPD)"
@@ -55,12 +57,50 @@ config  BBQUE_PM_AMD
 
 endmenu # Power Management
 
-comment "Plugins Management"
+endmenu # PIL Configuration
 
-menu "Scheduling Policy"
+################################################################################
+# Policies
+################################################################################
+
+menu "Optimization Policy"
   source "barbeque/plugins/schedpol/Kconfig"
 
+comment "Advanced Options"
+
+config BBQUE_SP_YAMS_PARALLEL
+  bool "YaMS parallelized execution"
+  default y
+  ---help---
+  Build the YaMS policy with support for parallelized metrics computation.
+
+  Select this option if you plan to run the BarbequeRTRM daemon on a multi-core
+  host machine.
+
+  If unsure, say Y
+
+config BBQUE_SP_COWS_BINDING
+  bool "Co-scheduling workloads (COWS) binding"
+  depends on !BBQUE_PIL_OPENCL_SUPPORT
+  default n
+  ---help---
+  Enable this option only if the recipes feature information about some
+  performance counters based statistics. and the scheduling policy implements
+  the support to exploit such information. This potentially leads to a more
+  effective binding (i.e. selection of the resource domain of the AWM) in order
+  to establish whether it is better to co-schedule applications on the same
+  resource binding domain (e.g., CPU node) or spread them among different
+  domains.
+
+  If unsure, say N
+
 endmenu
+
+################################################################################
+# RTLib
+################################################################################
+
+menu "Run-Time Library (RTLib)"
 
 choice
   prompt "RPC Channel"
@@ -72,11 +112,8 @@ choice
 
 endchoice
 
-
-comment "RTLib Configuration"
-
 config BBQUE_RTLIB_PERF_SUPPORT
-  bool "Enable Performance Counters support on RTLib"
+  bool "Performance Counters Profiling Support"
   depends on TARGET_LINUX
   default y
   ---help---
@@ -89,7 +126,7 @@ config BBQUE_RTLIB_PERF_SUPPORT
   performance counters, such as some Android devices with older kernels.
 
 config BBQUE_RTLIB_CGROUPS_SUPPORT
-  bool "Enable CGroups support on RTLib"
+  bool "CGroups Profiling Support"
   depends on TARGET_LINUX
   depends on !BBQUE_TEST_PLATFORM_DATA
   default n if BBQUE_TEST_PLATFORM_DATA
@@ -104,20 +141,8 @@ config BBQUE_RTLIB_CGROUPS_SUPPORT
   or using CGroups for run-time resources management, such as some Android
   devices.
 
-
-menu "Advanced options"
-
-config BBQUE_BUILD_DEBUG
-  bool "Build a DEBUG version"
-  default n
-  ---help---
-  Build the BarbequeRTRM with DEBUGGING support enabled.
-
-  This will produce a version of both the daemon and the RTLib with much more
-  logging messages and debug symbols, which is suitable for debugging purposes.
-
 config BBQUE_RTLIB_UNMANAGED_SUPPORT
-  bool "Enable UNMANAGED support on RTLib"
+  bool "Unmanaged Applications Support"
   depends on TARGET_LINUX
   default y
   ---help---
@@ -138,55 +163,11 @@ config BBQUE_RTLIB_UNMANAGED_SUPPORT
 
   Say NO to this option if unsure.
 
-config BBQUE_APP_PRIO_LEVELS
-  int "Number of priority levels"
-  default 5
-  ---help---
-  Applications are scheduled according to their priority which is a value
-  ranging from 0 (highest priority) to a defined minimum value.
-
-  Recipies define the priority of the corresponding Application.
-
-config BBQUE_BUILD_TESTS
-  bool "Build the TEST suite"
-  default n
-  ---help---
-  Build the BarbequeRTRM test suite.
-
-  This will build also the set of regression tests used to verify framework
-  stability during development.
-  NOTE: this is an experimental and not completed feaure, leave un-selected is
-  unsure.
-
-comment "Scheduling Policies Configuration"
-
-config BBQUE_SP_YAMS_PARALLEL
-  bool "YaMS parallelized execution"
-  default y
-  ---help---
-  Build the YaMS policy with support for parallelized metrics computation.
-
-  Select this option if you plan to run the BarbequeRTRM daemon on a multi-core
-  host machine.
-
-config BBQUE_SP_COWS_BINDING
-  bool "Co-scheduling workloads (COWS) binding"
-  depends on !BBQUE_PIL_OPENCL_SUPPORT
-  default n
-  ---help---
-  Enable this option only if the recipes feature information about some
-  performance counters based statistics. and the scheduling policy implements
-  the support to exploit such information. This potentially leads to a more
-  effective binding (i.e. selection of the resource domain of the AWM) in order
-  to establish whether it is better to co-schedule applications on the same
-  resource binding domain (e.g., CPU node) or spread them among different
-  domains.
-
-comment "Synchronization Policies Configuration"
+comment "Advanced Options"
 
 config BBQUE_YM_SYNC_FORCE
-  bool "Synchronization point forcing (EXPERIMENTAL)"
-  default y
+  bool "Synchronization point forcing"
+  default n
   ---help---
   Enable the Sync Point forcing via Synchronization Manager and RTLib.
 
@@ -207,10 +188,10 @@ config BBQUE_YM_SYNC_FORCE
         could lead to a reconfiguration miss for some applications.
         Use this feature at your own risk.
 
-  If unsure, select Y
+  If unsure, select N
 
 config BBQUE_YP_SASB_ASYNC
-  bool "SASB asynchronous calls"
+  bool "Parallelized re-configurations"
   default n if TARGET_ANDROID
   default y
   ---help---
@@ -223,5 +204,44 @@ config BBQUE_YP_SASB_ASYNC
 
   Select this option if you plan to run the BarbequeRTRM daemon on a multi-core
   host machine and with a average high number of concurrent applications.
+
+  If unsure, select Y. Select N for Android targets.
+
+endmenu # RTLib Configuration
+
+################################################################################
+# Advanced Options
+################################################################################
+
+menu "Advanced Options"
+
+config BBQUE_BUILD_DEBUG
+  bool "Build DEBUG version"
+  default n
+  ---help---
+  Build the BarbequeRTRM with DEBUGGING support enabled.
+
+  This will produce a version of both the daemon and the RTLib with much more
+  logging messages and debug symbols, which is suitable for debugging purposes.
+
+config BBQUE_APP_PRIO_LEVELS
+  int "Number of priority levels"
+  default 5
+  ---help---
+  Applications are scheduled according to their priority which is a value
+  ranging from 0 (highest priority) to a defined minimum value.
+
+  Recipies define the priority of the corresponding Application.
+
+config BBQUE_BUILD_TESTS
+  bool "Build the TEST suite"
+  default n
+  ---help---
+  Build the BarbequeRTRM test suite.
+
+  This will build also the set of regression tests used to verify framework
+  stability during development.
+  NOTE: this is an experimental and not completed feaure, leave un-selected is
+  unsure.
 
 endmenu # Advanced options
