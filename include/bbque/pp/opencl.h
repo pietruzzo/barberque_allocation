@@ -135,7 +135,7 @@ private:
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
 		br::ResourceIdentifier::Type_t r_type);
 
-#ifdef CONFIG_BBQUE_PIL_GPU_PM
+#ifdef CONFIG_BBQUE_PM
 
 	struct HWStatus_t {
 		int      id      =-1;
@@ -185,7 +185,7 @@ private:
 		int dev_id, const char * line,
 		std::ios_base::openmode om = std::ios::out);
 
-#endif
+#endif // CONFIG_BBQUE_PM
 
 	/**
 	 * @brief Append device ID per device type

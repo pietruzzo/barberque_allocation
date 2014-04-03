@@ -19,6 +19,7 @@
 
 #include "bbque/pp/opencl.h"
 
+#include "bbque/config.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_path.h"
@@ -54,7 +55,7 @@ OpenCLProxy & OpenCLProxy::GetInstance() {
 }
 
 OpenCLProxy::OpenCLProxy():
-#ifndef CONFIG_BBQUE_PIL_GPU_PM
+#ifndef CONFIG_BBQUE_PM
 		cm(ConfigurationManager::GetInstance())
 #else
 		cm(ConfigurationManager::GetInstance()),
@@ -65,7 +66,7 @@ OpenCLProxy::OpenCLProxy():
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
-#ifdef CONFIG_BBQUE_PIL_GPU_PM
+#ifdef CONFIG_BBQUE_PM
 	//---------- Loading configuration
 	po::options_description opts_desc("Resource Manager Options");
 	opts_desc.add_options()
@@ -91,7 +92,7 @@ OpenCLProxy::~OpenCLProxy() {
 	delete devices;
 	device_ids.clear();
 	device_paths.clear();
-#ifdef CONFIG_BBQUE_PIL_GPU_PM
+#ifdef CONFIG_BBQUE_PM
 	device_data.clear();
 #endif
 }
@@ -139,7 +140,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 	RegisterDevices();
 
 	// Power management support
-#ifdef CONFIG_BBQUE_PIL_GPU_PM
+#ifdef CONFIG_BBQUE_PM
 	HwSetup();
 	Start();
 #endif
@@ -147,14 +148,14 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 }
 
 void OpenCLProxy::Task() {
-#ifdef CONFIG_BBQUE_PIL_GPU_PM
+#ifdef CONFIG_BBQUE_PM
 	if (hw_monitor.period_ms < 0)
 		return;
 	HwReadStatus();
 #endif
 }
 
-#ifdef CONFIG_BBQUE_PIL_GPU_PM
+#ifdef CONFIG_BBQUE_PM
 void OpenCLProxy::HwSetup() {
 	uint32_t min, max, step;
 	int s_min, s_max, s_step;
@@ -259,7 +260,7 @@ void OpenCLProxy::DumpToFile(
 	device_data[dev_id]->close();
 }
 
-#endif // CONFIG_BBQUE_PIL_GPU_PM
+#endif // CONFIG_BBQUE_PM
 
 
 VectorUInt8Ptr_t OpenCLProxy::GetDeviceIDs(br::ResourceIdentifier::Type_t r_type) {
@@ -338,7 +339,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 			snprintf(gpu_pe_path+5, 12, "gpu%hu.pe0", dev_id);
 			ra.RegisterResource(gpu_pe_path, "", 100);
 			r_type = br::ResourceIdentifier::GPU;
-#ifdef CONFIG_BBQUE_PIL_GPU_PM
+#ifdef CONFIG_BBQUE_PM
 			device_data.insert(
 				std::pair<int, std::ofstream *>(
 					dev_id,
