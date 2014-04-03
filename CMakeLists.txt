@@ -176,14 +176,17 @@ if (CONFIG_EXTERNAL_OPENCL)
 endif (CONFIG_EXTERNAL_OPENCL)
 
 ## AMD Display Library
-set (ADL_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX})
+if (CONFIG_BBQUE_PM_AMD)
+	set(ADL_ROOT_DIR ${CMAKE_SOURCE_DIR}/include/bbque/pm)
+	find_package(ADL REQUIRED)
+endif (CONFIG_BBQUE_PM_AMD)
 
 # Add compilation dependencies
 include_directories(
 	${Boost_INCLUDE_DIRS}
 	${CGroup_INCLUDE_DIRS}
 	${OPENCL_INCLUDE_DIR}
-	${ADL_INCLUDE_DIRS}
+	${ADL_INCLUDE_DIR}
 )
 
 # Add linking dependencies

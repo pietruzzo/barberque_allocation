@@ -16,7 +16,11 @@
  */
 
 #include "bbque/pm/power_manager.h"
+#include "bbque/config.h"
 
+#ifdef CONFIG_BBQUE_PM_AMD
+# include "bbque/pm/power_manager_amd.h"
+#endif
 
 #define MODULE_NAMESPACE POWER_MANAGER_NAMESPACE
 
@@ -36,6 +40,12 @@ PowerManager::PowerManager() {
 	assert(logger);
 
 	logger->Info("Initialize PowerManager...");
+
+#ifdef CONFIG_BBQUE_PM_AMD
+	// Initialize the AMD GPU power manager
+	logger->Notice("Using AMD provider for GPUs power management");
+	gpu = std::unique_ptr<PowerManager>(new AMDPowerManager());
+#endif // CONFIG_BBQUE_PM_AMD
 
 }
 

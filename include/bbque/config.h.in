@@ -125,6 +125,9 @@
 /** Enable Power Management support */
 #cmakedefine CONFIG_BBQUE_PM
 
+/** Enable AMD Power Management support */
+#cmakedefine CONFIG_BBQUE_PM_AMD
+
 /** OpenCL vendor library */
 #define BBQUE_PATH_OPENCL_LIB "${OPENCL_LIBRARY}"
 
