@@ -106,9 +106,9 @@ else (CONFIG_BBQUE_TEST_PLATFORM_DATA)
 	set (BARBEQUE_SRC pp/linux ${BARBEQUE_SRC})
  endif (CONFIG_TARGET_LINUX)
 endif (CONFIG_BBQUE_TEST_PLATFORM_DATA)
-if (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
+if (CONFIG_BBQUE_OPENCL)
 	set (BARBEQUE_SRC pp/opencl ${BARBEQUE_SRC})
-endif (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
+endif (CONFIG_BBQUE_OPENCL)
 
 
 add_executable (barbeque ${BARBEQUE_SRC})
@@ -148,16 +148,13 @@ target_link_libraries(
 )
 endif (CONFIG_TARGET_ANDROID)
 
-#----- OpenCL
-if (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
-	find_package (OpenCL REQUIRED)
-	include_directories (${OPENCL_INCLUDE_DIR})
-	# Linking dependencies
-	target_link_libraries(
-		barbeque
-		${OPENCL_LIBRARY}
-	)
-endif (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
+# Linking dependencyes for OpenCL support
+if (CONFIG_BBQUE_OPENCL)
+target_link_libraries(
+	barbeque
+	${OPENCL_LIBRARY}
+)
+endif (CONFIG_BBQUE_OPENCL)
 
 
 # Use link path ad RPATH

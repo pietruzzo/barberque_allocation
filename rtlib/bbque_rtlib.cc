@@ -24,7 +24,7 @@
 #include "bbque/utils/logging/console_logger.h"
 
 #include "bbque/rtlib/bbque_rpc.h"
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
   #include "bbque/rtlib/bbque_ocl.h"
 #endif
 
@@ -57,7 +57,7 @@ static bl::BbqueRPC *rpc = NULL;
  */
 RTLIB_Services_t rtlib_services;
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 /**
  * The collection of RTLib wrapped OpenCL functions.
  */
@@ -75,7 +75,7 @@ std::map<cl_command_queue, QueueProfPtr_t> ocl_queues_prof;
 std::map<cl_command_type, std::string> ocl_cmd_str;
 std::map<void *, cl_command_type> ocl_addr_cmd;
 
-#endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif // CONFIG_BBQUE_OPENCL
 
 static RTLIB_ExecutionContextHandler_t rtlib_register(const char *name,
 		const RTLIB_ExecutionContextParams_t *params) {
@@ -284,7 +284,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 	rtlib_services.Notify.PostResume = rtlib_notify_post_resume;
 	rtlib_services.Notify.Release = rtlib_notify_release;
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	// OpenCL support initialization
 	rtlib_ocl_init();
 #endif

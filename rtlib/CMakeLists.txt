@@ -18,9 +18,9 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
 
 set (RTLIB_SRC bbque_rtlib bbque_rpc ${PROJECT_BINARY_DIR}/bbque/version.cc)
 set (RTLIB_SRC bbque_exc ${RTLIB_SRC})
-if (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
+if (CONFIG_BBQUE_OPENCL)
 	set (RTLIB_SRC bbque_ocl ${RTLIB_SRC})
-endif (CONFIG_BBQUE_PIL_OPENCL_SUPPORT)
+endif (CONFIG_BBQUE_OPENCL)
 
 if (CONFIG_BBQUE_RPC_FIFO)
 	set (RTLIB_SRC rpc_fifo_client ${RTLIB_SRC})

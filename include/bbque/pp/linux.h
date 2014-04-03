@@ -26,7 +26,7 @@
 
 #include <libcgroup.h>
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 #include "bbque/pp/opencl.h"
 #endif
 
@@ -103,7 +103,7 @@ public:
 
 private:
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	OpenCLProxy & oclProxy;
 #endif
 	/**

@@ -38,7 +38,7 @@ namespace bu = bbque::utils;
 
 namespace bbque {
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 class OpenCLProxy;
 #endif
 
@@ -88,7 +88,7 @@ private:
 	} cmdRsp_t;
 
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	OpenCLProxy & oclProxy;
 #endif
 

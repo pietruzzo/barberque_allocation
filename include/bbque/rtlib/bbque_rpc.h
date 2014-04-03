@@ -32,7 +32,7 @@
 # include "bbque/utils/perf.h"
 #endif
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 #include "bbque/rtlib/bbque_ocl_stats.h"
 #endif
 
@@ -279,10 +279,10 @@ protected:
 		PerfEventStatsMapByConf_t events_conf_map;
 #endif // CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 		/** Map of OpenCL profiling info */
 		OclEventsStatsMap_t ocl_events_map;
-#endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif // CONFIG_BBQUE_OPENCL
 
 		/** The mutex protecting concurrent access to statistical data */
 		std::mutex stats_mtx;
@@ -324,7 +324,7 @@ protected:
 		RTLIB_ExitCode_t event = RTLIB_OK;
 		/** The ID of the assigned AWM (if valid) */
 		uint8_t awm_id = 0;
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 		/** The ID of the assigned OpenCL device */
 		uint8_t dev_id;
 #endif
@@ -496,7 +496,7 @@ protected:
 /*******************************************************************************
  *    OpenCL support
  ******************************************************************************/
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	void OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status);
 	void OclClearStats();
 	void OclCollectStats(uint8_t awm_id, OclEventsStatsMap_t & ocl_events_map);
@@ -508,7 +508,7 @@ protected:
 	void OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
 	void OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
 
-#endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif // CONFIG_BBQUE_OPENCL
 
 #define OCL_STATS_FILE 1
 #ifdef OCL_STATS_FILE
@@ -529,10 +529,10 @@ protected:
 	static bool envNoKernel;
 	static bool envCsvOutput;
 	static bool envMOSTOutput;
-#ifdef  CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef  CONFIG_BBQUE_OPENCL
 	static bool envOCLProf;
 	static int  envOCLProfLevel;
-#endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif //CONFIG_BBQUE_OPENCL
 #define BBQUE_RTLIB_OPTS_TAG_MAX 6
 	// The array +2 is due to:
 	// - the ending namespace separator ":"

@@ -25,7 +25,7 @@
 #include "bbque/utils/utility.h"
 #include "bbque/cpp11/chrono.h"
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 #include "bbque/pp/opencl.h"
 #endif
 
@@ -38,7 +38,7 @@ namespace br = bbque::res;
 namespace bbque {
 
 ApplicationProxy::ApplicationProxy() : Worker()
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	, oclProxy(OpenCLProxy::GetInstance())
 #endif
 {
@@ -237,7 +237,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 	// Set the next AWM only if the application is not going to be blocked
 	if (likely(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(br::Resource::GPU));
 		br::ResID_t r_id = gpu_ids.FirstSet();
 		// If no GPU have been bound, the CPU is the OpenCL device assigned

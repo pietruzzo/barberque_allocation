@@ -18,7 +18,7 @@ config BBQUE_TEST_PLATFORM_DATA
 
 menu "OpenCL Support"
 
-config BBQUE_PIL_OPENCL_SUPPORT
+config BBQUE_OPENCL
   bool "Enable OpenCL run-time management support"
   depends on TARGET_LINUX
   select EXTERNAL_OPENCL

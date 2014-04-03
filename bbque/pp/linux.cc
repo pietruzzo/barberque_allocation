@@ -61,7 +61,7 @@ namespace bbque {
 
 LinuxPP::LinuxPP() :
 	PlatformProxy(),
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	oclProxy(OpenCLProxy::GetInstance()),
 #endif
 	controller("cpuset"),
@@ -574,7 +574,7 @@ LinuxPP::_LoadPlatformData() {
 	// Release the iterator
 	cgroup_walk_tree_end(&node_it);
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	// Load OpenCL platforms and devices
 	oclProxy.LoadPlatformData();
 #endif
@@ -1002,7 +1002,7 @@ LinuxPP::ExitCode_t
 LinuxPP::_MapResources(AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt,
 		bool excl) {
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	// Map resources for OpenCL applications
 	logger->Debug("PLAT LNX: Programming language = %d", papp->Language());
 	if (papp->Language() == RTLIB_LANG_OPENCL) {

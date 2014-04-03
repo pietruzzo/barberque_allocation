@@ -25,7 +25,7 @@
 #include <cstdio>
 #include <sys/stat.h>
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
   #include "bbque/rtlib/bbque_ocl.h"
 #endif
 
@@ -105,10 +105,10 @@ int  BbqueRPC::envRawPerfCount = 0;
 bool BbqueRPC::envNoKernel = false;
 bool BbqueRPC::envCsvOutput = false;
 bool BbqueRPC::envMOSTOutput = false;
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 bool BbqueRPC::envOCLProf = false;
 int  BbqueRPC::envOCLProfLevel = 0;
-#endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif //CONFIG_BBQUE_OPENCL
 char BbqueRPC::envMetricsTag[BBQUE_RTLIB_OPTS_TAG_MAX+2] = "";
 bool BbqueRPC::envBigNum = false;
 bool BbqueRPC::envUnmanaged = false;
@@ -228,14 +228,14 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			break;
 #endif //CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 		case 'o':
 			// Enabling OpenCL Profiling Output on file
 			envOCLProf = true;
 			sscanf(opt+1, "%d", &envOCLProfLevel);
 			fprintf(stderr, "Enabling OpenCL profiling [verbosity: %d]\n", envOCLProfLevel);
 			break;
-#endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif //CONFIG_BBQUE_OPENCL
 
 		case 's':
 			// Setting CSV separator
@@ -692,11 +692,11 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 		// Dump Performance Counters for this AWM
 		PerfPrintStats(prec, pstats);
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 		// Dump OpenCL profiling info for each AWM
 		if (envOCLProf)
 			OclPrintStats(pstats);
-#endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif //CONFIG_BBQUE_OPENCL
 
 	}
 
@@ -835,11 +835,11 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 
 	DumpStatsConsole(prec, verbose);
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	// Dump OpenCL profiling info for each AWM
 	if (envOCLProf)
 		OclDumpStatsConsole(prec);
-#endif //CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif //CONFIG_BBQUE_OPENCL
 }
 
 void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
@@ -1220,7 +1220,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
 	// Set the new required AWM (if not being blocked)
 	if (prec->event != RTLIB_EXC_GWM_BLOCKED) {
 		prec->awm_id = msg.awm;
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 		prec->dev_id = msg.dev;
 #endif
 		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned AWM [%d]",
@@ -2073,7 +2073,7 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
 /*******************************************************************************
  *    OpenCL support
  ******************************************************************************/
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 
 #define SUM(v) \
 	sum(it_ct->second[CL_CMD_ ## v ## _TIME])*1e-06
@@ -2295,7 +2295,7 @@ void BbqueRPC::OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cm
 }
 
 
-#endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif // CONFIG_BBQUE_OPENCL
 
 /*******************************************************************************
  *    Utility Functions
@@ -2465,7 +2465,7 @@ void BbqueRPC::NotifyPreConfigure(
 		return;
 	}
 	assert(isRegistered(prec) == true);
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	fprintf(stderr, FD("NotifyPreConfigure - OCL Device: %d\n"), prec->dev_id);
 	OclSetDevice(prec->dev_id, prec->event);
 #endif
@@ -2492,7 +2492,7 @@ void BbqueRPC::NotifyPostConfigure(
 
 	(void)ech;
 
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	// Clear pre-run OpenCL command events
 	OclClearStats();
 #endif
@@ -2549,11 +2549,11 @@ void BbqueRPC::NotifyPostRun(
 			PerfCollectStats(prec);
 		}
 	}
-#ifdef CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#ifdef CONFIG_BBQUE_OPENCL
 	if (envOCLProf)
 		OclCollectStats(prec->awm_id, prec->pAwmStats->ocl_events_map);
 
-#endif // CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#endif // CONFIG_BBQUE_OPENCL
 }
 
 void BbqueRPC::NotifyPreMonitor(

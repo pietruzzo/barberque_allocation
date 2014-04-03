@@ -120,7 +120,7 @@
 #cmakedefine CONFIG_BBQUE_TEST_PLATFORM_DATA
 
 /** Enable OpenCL applications support */
-#cmakedefine CONFIG_BBQUE_PIL_OPENCL_SUPPORT
+#cmakedefine CONFIG_BBQUE_OPENCL
 
 /** Enable GPU power/thermal management */
 #cmakedefine CONFIG_BBQUE_PIL_GPU_PM
