@@ -162,6 +162,14 @@ protected:
 	 */
 	std::unique_ptr<bu::Logger> logger;
 
+	/*
+	 * @brief A GPU specific PM provider
+	 *
+	 * NOTE: this implementation supports a single GPU vendor, which must be
+	 * defined at configuration time.
+	 */
+	std::unique_ptr<PowerManager> gpu;
+
 };
 
 }

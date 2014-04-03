@@ -47,8 +47,10 @@ PowerManager::~PowerManager() {
 
 PowerManager::PMResult PowerManager::GetLoad(
 		ResourcePathPtr_t const & rp, uint32_t &perc) {
-	(void)perc;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetLoad(rp, perc);
 	default:
 		break;
 	}
@@ -60,8 +62,10 @@ PowerManager::PMResult PowerManager::GetLoad(
 
 PowerManager::PMResult PowerManager::GetTemperature(
 		ResourcePathPtr_t const & rp, uint32_t &celsius) {
-	(void)celsius;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetTemperature(rp, celsius);
 	default:
 		break;
 	}
@@ -73,8 +77,10 @@ PowerManager::PMResult PowerManager::GetTemperature(
 
 PowerManager::PMResult
 PowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) {
-	(void)khz;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetClockFrequency(rp, khz);
 	default:
 		break;
 	}
@@ -89,10 +95,10 @@ PowerManager::GetClockFrequencyInfo(
 		uint32_t &khz_min,
 		uint32_t &khz_max,
 		uint32_t &khz_step) {
-	(void)khz_min;
-	(void)khz_max;
-	(void)khz_step;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetClockFrequencyInfo(rp, khz_min, khz_max, khz_step);
 	default:
 		break;
 	}
@@ -103,9 +109,10 @@ PowerManager::GetClockFrequencyInfo(
 
 PowerManager::PMResult
 PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
-	(void)rp;
-	(void)khz;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->SetClockFrequency(rp, khz);
 	default:
 		break;
 	}
@@ -117,8 +124,10 @@ PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
 
 PowerManager::PMResult
 PowerManager::GetVoltage(ResourcePathPtr_t const & rp, uint32_t &volt) {
-	(void)volt;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetVoltage(rp, volt);
 	default:
 		break;
 	}
@@ -133,10 +142,10 @@ PowerManager::GetVoltageInfo(
 		uint32_t &volt_min,
 		uint32_t &volt_max,
 		uint32_t &volt_step) {
-	(void)volt_min;
-	(void)volt_max;
-	(void)volt_step;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetVoltageInfo(rp, volt_min, volt_max, volt_step);
 	default:
 		break;
 	}
@@ -151,9 +160,10 @@ PowerManager::GetFanSpeed(
 		ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t &value) {
-	(void)fs_type;
-	(void)value;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetFanSpeed(rp, fs_type, value);
 	default:
 		break;
 	}
@@ -168,10 +178,10 @@ PowerManager::GetFanSpeedInfo(
 		uint32_t &rpm_min,
 		uint32_t &rpm_max,
 		uint32_t &rpm_step) {
-	(void)rpm_min;
-	(void)rpm_max;
-	(void)rpm_step;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetFanSpeedInfo(rp, rpm_min, rpm_max, rpm_step);
 	default:
 		break;
 	}
@@ -185,9 +195,10 @@ PowerManager::SetFanSpeed(
 		ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t value) {
-	(void)fs_type;
-	(void)value;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->SetFanSpeed(rp, fs_type, value);
 	default:
 		break;
 	}
@@ -199,6 +210,9 @@ PowerManager::SetFanSpeed(
 PowerManager::PMResult
 PowerManager::ResetFanSpeed(ResourcePathPtr_t const & rp) {
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->ResetFanSpeed(rp);
 	default:
 		break;
 	}
@@ -210,8 +224,10 @@ PowerManager::ResetFanSpeed(ResourcePathPtr_t const & rp) {
 
 PowerManager::PMResult
 PowerManager::GetPowerUsage(ResourcePathPtr_t const & rp, uint32_t &mwatt) {
-	(void)mwatt;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetPowerUsage(rp, mwatt);
 	default:
 		break;
 	}
@@ -225,9 +241,10 @@ PowerManager::GetPowerInfo(
 		ResourcePathPtr_t const & rp,
 		uint32_t &mwatt_min,
 		uint32_t &mwatt_max) {
-	(void)mwatt_min;
-	(void)mwatt_max;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetPowerInfo(rp, mwatt_min, mwatt_max);
 	default:
 		break;
 	}
@@ -238,8 +255,10 @@ PowerManager::GetPowerInfo(
 
 PowerManager::PMResult
 PowerManager::GetPowerState(ResourcePathPtr_t const & rp, int &state) {
-	(void)state;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetPowerState(rp, state);
 	default:
 		break;
 	}
@@ -252,10 +271,10 @@ PowerManager::PMResult
 PowerManager::GetPowerStatesInfo(
 	ResourcePathPtr_t const & rp,
 	int & min, int & max, int & step) {
-	(void)min;
-	(void)max;
-	(void)step;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetPowerStatesInfo(rp, min, max, step);
 	default:
 		break;
 	}
@@ -266,8 +285,10 @@ PowerManager::GetPowerStatesInfo(
 
 PowerManager::PMResult
 PowerManager::SetPowerState(ResourcePathPtr_t const & rp, int state) {
-	(void)state;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->SetPowerState(rp, state);
 	default:
 		break;
 	}
@@ -279,8 +300,10 @@ PowerManager::SetPowerState(ResourcePathPtr_t const & rp, int state) {
 
 PowerManager::PMResult
 PowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, int &state) {
-	(void)state;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetPerformanceState(rp, state);
 	default:
 		break;
 	}
@@ -291,8 +314,10 @@ PowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, int &state) {
 
 PowerManager::PMResult
 PowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, int &count) {
-	(void)count;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetPerformanceStatesCount(rp, count);
 	default:
 		break;
 	}
@@ -303,8 +328,10 @@ PowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, int &count
 
 PowerManager::PMResult
 PowerManager::SetPerformanceState(ResourcePathPtr_t const & rp, int state) {
-	(void)state;
 	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->SetPerformanceState(rp, state);
 	default:
 		break;
 	}
