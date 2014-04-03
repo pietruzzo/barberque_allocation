@@ -107,7 +107,7 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	AMDPowerManager(ResourcePathPtr_t rp, std::string const & vendor);
+	AMDPowerManager();
 
 	~AMDPowerManager();
 
@@ -207,6 +207,8 @@ public:
 	PMResult GetPerformanceStatesCount(ResourcePathPtr_t const & rp, int &count);
 
 private:
+
+	bool initialized = false;
 
 	typedef std::shared_ptr<ADLPMActivity> ActivityPtr_t;
 

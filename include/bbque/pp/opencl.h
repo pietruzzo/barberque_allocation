@@ -162,9 +162,6 @@ private:
 	/*** Dump file stream pointers per adapter */
 	DevFileMap_t device_data;
 
-	/*** Resource path prefix for the power manager instance */
-	ResourcePathPtr_t gpu_rp;
-
 	/*** Power Manager instance */
 	PowerManager & pm;
 

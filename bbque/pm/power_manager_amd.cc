@@ -55,11 +55,7 @@ void __stdcall ADL_Main_Memory_Free ( void** lpBuffer )
     }
 }
 
-AMDPowerManager::AMDPowerManager(
-		ResourcePathPtr_t rp,
-		std::string const & vendor = ""):
-	PowerManager(rp, vendor) {
-
+AMDPowerManager::AMDPowerManager() {
 	// Init references to library functions
 	if (InitLibrary() != 0)
 		return;

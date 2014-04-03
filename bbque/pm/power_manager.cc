@@ -17,29 +17,26 @@
 
 #include "bbque/pm/power_manager.h"
 
-#define POWER_MANAGER AMDPowerManager
-#include "bbque/pm/power_manager_amd.h"
 
 #define MODULE_NAMESPACE POWER_MANAGER_NAMESPACE
 
 namespace bbque {
 
 
-PowerManager & PowerManager::GetInstance(
-		ResourcePathPtr_t rp,
-		std::string const & vendor) {
-	static POWER_MANAGER instance(rp, vendor);
+PowerManager & PowerManager::GetInstance() {
+	static PowerManager instance;
 	return instance;
 }
 
-PowerManager::PowerManager(
-		ResourcePathPtr_t rp,
-		std::string const & vendor = ""):
-	rsrc_path_domain(rp),
-	vendor(vendor) {
-	//---------- Get a logger module
+
+PowerManager::PowerManager() {
+
+	// Get a logger module
 	logger = bu::Logger::GetLogger(POWER_MANAGER_NAMESPACE);
 	assert(logger);
+
+	logger->Info("Initialize PowerManager...");
+
 }
 
 
@@ -50,24 +47,39 @@ PowerManager::~PowerManager() {
 
 PowerManager::PMResult PowerManager::GetLoad(
 		ResourcePathPtr_t const & rp, uint32_t &perc) {
-	(void)rp;
 	(void)perc;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetLoad not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 
 PowerManager::PMResult PowerManager::GetTemperature(
 		ResourcePathPtr_t const & rp, uint32_t &celsius) {
-	(void)rp;
 	(void)celsius;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetTemperature not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 
 PowerManager::PMResult
 PowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) {
-	(void)rp;
 	(void)khz;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetClockFrequency not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -77,10 +89,15 @@ PowerManager::GetClockFrequencyInfo(
 		uint32_t &khz_min,
 		uint32_t &khz_max,
 		uint32_t &khz_step) {
-	(void)rp;
 	(void)khz_min;
 	(void)khz_max;
 	(void)khz_step;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetClockFrequencyInfo not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -88,14 +105,25 @@ PowerManager::PMResult
 PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
 	(void)rp;
 	(void)khz;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) SetClockFrequency not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 
 PowerManager::PMResult
 PowerManager::GetVoltage(ResourcePathPtr_t const & rp, uint32_t &volt) {
-	(void)rp;
 	(void)volt;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetVoltage not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -105,10 +133,15 @@ PowerManager::GetVoltageInfo(
 		uint32_t &volt_min,
 		uint32_t &volt_max,
 		uint32_t &volt_step) {
-	(void)rp;
 	(void)volt_min;
 	(void)volt_max;
 	(void)volt_step;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetVoltageInfo not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -118,9 +151,14 @@ PowerManager::GetFanSpeed(
 		ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t &value) {
-	(void)rp;
 	(void)fs_type;
 	(void)value;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetFanSpeed not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -130,10 +168,15 @@ PowerManager::GetFanSpeedInfo(
 		uint32_t &rpm_min,
 		uint32_t &rpm_max,
 		uint32_t &rpm_step) {
-	(void)rp;
 	(void)rpm_min;
 	(void)rpm_max;
 	(void)rpm_step;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetFanSpeedInfo not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -142,23 +185,38 @@ PowerManager::SetFanSpeed(
 		ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t value) {
-	(void)rp;
 	(void)fs_type;
 	(void)value;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) SetFanSpeed not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::ResetFanSpeed(ResourcePathPtr_t const & rp) {
-	(void)rp;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) ResetFanSpeed not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 
 PowerManager::PMResult
 PowerManager::GetPowerUsage(ResourcePathPtr_t const & rp, uint32_t &mwatt) {
-	(void)rp;
 	(void)mwatt;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetPowerUsage not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -167,16 +225,26 @@ PowerManager::GetPowerInfo(
 		ResourcePathPtr_t const & rp,
 		uint32_t &mwatt_min,
 		uint32_t &mwatt_max) {
-	(void)rp;
 	(void)mwatt_min;
 	(void)mwatt_max;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetPowerInfo not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::GetPowerState(ResourcePathPtr_t const & rp, int &state) {
-	(void)rp;
 	(void)state;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetPowerState not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -184,39 +252,64 @@ PowerManager::PMResult
 PowerManager::GetPowerStatesInfo(
 	ResourcePathPtr_t const & rp,
 	int & min, int & max, int & step) {
-	(void)rp;
 	(void)min;
 	(void)max;
 	(void)step;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetPowerStatesInfo not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::SetPowerState(ResourcePathPtr_t const & rp, int state) {
-	(void)rp;
 	(void)state;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) SetPowerState not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 
 PowerManager::PMResult
 PowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, int &state) {
-	(void)rp;
 	(void)state;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetPerformanceState not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, int &count) {
-	(void)rp;
 	(void)count;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetPerformanceStatesCount not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::SetPerformanceState(ResourcePathPtr_t const & rp, int state) {
-	(void)rp;
 	(void)state;
+	switch (rp->Type()) {
+	default:
+		break;
+	}
+	logger->Warn("(PM) SetPerformanceState not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->Type()]);
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 

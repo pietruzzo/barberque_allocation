@@ -59,18 +59,9 @@ public:
 		RPM
 	};
 
-	static PowerManager & GetInstance(
-		ResourcePathPtr_t rp, std::string const & vendor = "");
-
+	static PowerManager & GetInstance();
 
 	virtual ~PowerManager();
-
-
-	/** */
-	std::string const & GetVendor() {
-		return vendor;
-	}
-
 
 	/** Runtime activity load */
 
@@ -164,13 +155,7 @@ public:
 
 protected:
 
-	PowerManager(ResourcePathPtr_t rp, std::string const & vendor);
-
-	ResourcePathPtr_t rsrc_path_domain;
-
-	std::string const & vendor;
-
-	bool initialized = false;
+	PowerManager();
 
 	/**
 	 * @brief The logger used by the power manager.

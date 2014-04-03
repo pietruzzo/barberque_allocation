@@ -59,8 +59,7 @@ OpenCLProxy::OpenCLProxy():
 		cm(ConfigurationManager::GetInstance())
 #else
 		cm(ConfigurationManager::GetInstance()),
-		gpu_rp(new br::ResourcePath("sys.gpu")),
-		pm(PowerManager::GetInstance(gpu_rp))
+		pm(PowerManager::GetInstance())
 #endif
  {
 	//---------- Get a logger module
