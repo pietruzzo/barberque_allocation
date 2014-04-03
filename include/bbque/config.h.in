@@ -122,8 +122,8 @@
 /** Enable OpenCL applications support */
 #cmakedefine CONFIG_BBQUE_OPENCL
 
-/** Enable GPU power/thermal management */
-#cmakedefine CONFIG_BBQUE_PIL_GPU_PM
+/** Enable Power Management support */
+#cmakedefine CONFIG_BBQUE_PM
 
 /** OpenCL vendor library */
 #define BBQUE_PATH_OPENCL_LIB "${OPENCL_LIBRARY}"

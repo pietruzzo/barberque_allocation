@@ -81,9 +81,9 @@ endif (NOT CONFIG_TARGET_SUPPORT_CPP11)
 if (CONFIG_TARGET_ANDROID)
   add_subdirectory(android)
 endif (CONFIG_TARGET_ANDROID)
-
-# Add "Power management" support
-add_subdirectory(pm)
+if (CONFIG_BBQUE_PM)
+  add_subdirectory(pm)
+endif (CONFIG_BBQUE_PM)
 
 
 # Add "barbeque" target binary
@@ -119,7 +119,6 @@ target_link_libraries(
 	bbque_utils
 	bbque_resources
 	bbque_apps
-	bbque_pwrm
 	${Boost_LIBRARIES}
 )
 
@@ -156,6 +155,13 @@ target_link_libraries(
 )
 endif (CONFIG_BBQUE_OPENCL)
 
+# Linking PowerManagement support
+if (CONFIG_BBQUE_PM)
+target_link_libraries(
+	barbeque
+	bbque_pm
+)
+endif (CONFIG_BBQUE_PM)
 
 # Use link path ad RPATH
 set_property(TARGET barbeque PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
