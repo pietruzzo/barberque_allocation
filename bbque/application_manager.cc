@@ -759,15 +759,26 @@ inline void BuildStateStr(AppPtr_t papp, char * state_str) {
 }
 
 
+#define GET_OBJ_RESOURCE(awm, r_type, r_bset) \
+	r_type = br::ResourceIdentifier::GPU; \
+	r_bset = awm->BindingSet(r_type); \
+	if (r_bset.Count() == 0) { \
+		r_type = br::ResourceIdentifier::CPU; \
+		r_bset = awm->BindingSet(r_type); \
+	}
+
+
 void ApplicationManager::PrintStatusReport(bool verbose) {
 	AppsUidMapIt app_it;
 	AppPtr_t papp;
 	char line[80];
 	char state_str[10];
-	char curr_awm_cl[15] = "-";
-	char next_awm_cl[15] = "-";
-	char curr_awm_str[12] = "-";
-	char b_set[MAX_R_ID_NUM];
+	char binding_str[10];
+	char curr_awm_set[15]  = "";
+	char next_awm_set[15]  = "";
+	char curr_awm_name[12] = "";
+	br::ResourceIdentifier::Type_t r_type;
+	br::ResourceBitset r_bset;
 
 	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV1);
 	PRINT_NOTICE_IF_VERBOSE(verbose, RP_HEAD);
@@ -775,49 +786,50 @@ void ApplicationManager::PrintStatusReport(bool verbose) {
 
 	papp = GetFirst(app_it);
 	while (papp) {
-		ba::AwmPtr_t const & awm = papp->CurrentAWM();
-		ba::AwmPtr_t const & next_awm = papp->NextAWM();
+		ba::AwmPtr_t const & awm(papp->CurrentAWM());
+		ba::AwmPtr_t const & next_awm(papp->NextAWM());
 
 		// Reset AWM name (default for EXCs not running)
-		curr_awm_str[0] = '-';
-		curr_awm_str[1] = 0;
-		curr_awm_cl[0] = '-';
-		curr_awm_cl[1] = 0;
-		next_awm_cl[0] = '-';
-		next_awm_cl[1] = 0;
+		strncpy(curr_awm_name, "-", sizeof(curr_awm_name));
+		strncpy(curr_awm_set,  "-", sizeof(curr_awm_set));
+		strncpy(next_awm_set,  "-", sizeof(next_awm_set));
 
 		// Current AWM
 		if (awm) {
+			GET_OBJ_RESOURCE(awm, r_type, r_bset);
 			// MIGRATE case => must see previous set of the same AWM
 			if ((awm == next_awm) &&
-				(awm->BindingChanged(br::ResourceIdentifier::CPU)))
-				snprintf(b_set, 12, "%s{%s}",
-						br::ResourceIdentifier::TypeStr[br::ResourceIdentifier::CPU],
-						awm->BindingSetPrev(
-							br::ResourceIdentifier::CPU).ToStringCG().c_str());
-			else
-				snprintf(b_set, 12, "%s{%s}",
-						br::ResourceIdentifier::TypeStr[br::ResourceIdentifier::CPU],
-						awm->BindingSet(
-							br::ResourceIdentifier::CPU).ToStringCG().c_str());
+				((awm->BindingChanged(br::ResourceIdentifier::GPU)) ||
+					(awm->BindingChanged(br::ResourceIdentifier::CPU)))) {
+				r_bset = awm->BindingSetPrev(r_type);
+			}
+			else {
+				r_bset = awm->BindingSet(r_type);
+			}
 
-			snprintf(curr_awm_cl, 12, "%02d:%s", awm->Id(), b_set);
-			snprintf(curr_awm_str, 12, "%s", awm->Name().c_str());
+			// Binding string
+			snprintf(binding_str, sizeof(binding_str), "%s{%s}",
+					br::ResourceIdentifier::TypeStr[r_type],
+					r_bset.ToStringCG().c_str());
+			snprintf(curr_awm_set,  sizeof(curr_awm_set), "%02d:%s",
+					awm->Id(), binding_str);
+			snprintf(curr_awm_name, sizeof(curr_awm_name), "%s",
+					awm->Name().c_str());
 		}
 
 		// Next AWM
 		if (next_awm) {
-			snprintf(b_set, 12, "%s{%s}",
-					br::ResourceIdentifier::TypeStr[br::ResourceIdentifier::CPU],
-					next_awm->BindingSet(
-						br::ResourceIdentifier::CPU).ToStringCG().c_str());
-			snprintf(next_awm_cl, 12, "%02d:%s", next_awm->Id(), b_set);
+			GET_OBJ_RESOURCE(next_awm, r_type, r_bset);
+			snprintf(binding_str, sizeof(binding_str), "%s{%s}",
+					br::ResourceIdentifier::TypeStr[r_type],
+					r_bset.ToStringCG().c_str());
+			snprintf(next_awm_set, 12, "%02d:%s", next_awm->Id(), binding_str);
 		}
 
 		// State/Sync
 		BuildStateStr(papp, state_str);
 		snprintf(line, 80, "| %16s | %10s | %11s | %11s | %-11s |",
-				papp->StrId(), state_str, curr_awm_cl, next_awm_cl, curr_awm_str);
+				papp->StrId(), state_str, curr_awm_set, next_awm_set, curr_awm_name);
 
 		// Print the row
 		PRINT_NOTICE_IF_VERBOSE(verbose, line);
