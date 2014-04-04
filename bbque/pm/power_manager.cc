@@ -34,10 +34,15 @@ PowerManager & PowerManager::GetInstance() {
 
 
 PowerManager::PowerManager() {
+	static bool initialized = false;
 
 	// Get a logger module
 	logger = bu::Logger::GetLogger(POWER_MANAGER_NAMESPACE);
 	assert(logger);
+
+	// Block recursion on vendor specific construction
+	if (initialized) return;
+	initialized = true;
 
 	logger->Info("Initialize PowerManager...");
 
