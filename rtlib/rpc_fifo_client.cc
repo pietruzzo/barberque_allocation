@@ -19,6 +19,7 @@
 
 #include "bbque/rtlib/rpc_messages.h"
 #include "bbque/utils/utility.h"
+#include "bbque/utils/logging/console_logger.h"
 #include "bbque/config.h"
 
 #include <sys/prctl.h>
@@ -64,6 +65,7 @@ BbqueRPC_FIFO_Client::BbqueRPC_FIFO_Client() :
 }
 
 BbqueRPC_FIFO_Client::~BbqueRPC_FIFO_Client() {
+	logger = bu::ConsoleLogger::GetInstance(BBQUE_LOG_MODULE);
 	logger->Debug("BbqueRPC_FIFO_Client dtor");
 	ChannelRelease();
 }
