@@ -155,6 +155,23 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 	return OK;
 }
 
+br::ResourceIdentifier::Type_t ResourcePath::ParentType(
+		br::ResourceIdentifier::Type_t r_type) const {
+	// Find the index of the given resource type
+	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
+	index_it = types_idx.find(r_type);
+	if (index_it == types_idx.end())
+		return br::ResourceIdentifier::UNDEFINED;
+
+	// Retrieve the position of the parent
+	int8_t parent_index = index_it->second - 1;
+	if (parent_index < 0)
+		return br::ResourceIdentifier::UNDEFINED;
+
+	// Parent type
+	return identifiers.at(parent_index)->Type();
+}
+
 br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 		br::ResourceIdentifier::Type_t r_type) const {
 	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;

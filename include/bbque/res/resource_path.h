@@ -165,6 +165,16 @@ public:
 		return global_type;
 	}
 
+	/**
+	 * @brief Get the type of the parent of a resource type in the path
+	 *
+	 * Example: The parent type of 'mem' in "sys.cpu.mem" is 'cpu'
+	 *
+	 * @return The related @ref ResourceIdentifier::Type_t value
+	 **/
+	ResourceIdentifier::Type_t ParentType(
+		br::ResourceIdentifier::Type_t r_type = br::ResourceIdentifier::PROC_ELEMENT) const;
+
 	/** Iterators **/
 
 	ResourcePath::Iterator Begin() {
