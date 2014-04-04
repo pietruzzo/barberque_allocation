@@ -216,11 +216,11 @@ void OpenCLProxy::HwReadStatus() {
 			pm.GetPerformanceState(grp, hs.pstate);
 			pm.GetPowerState(grp, hs.wstate);
 			logger->Debug("PLAT PRX: GPU [%s] "
-				"Load: %3d%, Temp: %3d°C, Freq: %4dMHz, "
+				"Load: %3d%, Temp: %3d°C, CoreFreq: %4dMHz, MemFreq: %4dMHz "
 				"Fan: %3d%, Volt: %4dmV, PState: %2d, WState: %d",
 				grp->ToString().c_str(),
-				hs.load, hs.temp, hs.freq_c/1000, hs.fan, hs.mvolt,
-				hs.pstate, hs.wstate);
+				hs.load, hs.temp, hs.freq_c/1000, hs.freq_m/1000,
+				hs.fan, hs.mvolt, hs.pstate, hs.wstate);
 			// Dump status?
 			if (!hw_monitor.dump_enabled)
 				break;
