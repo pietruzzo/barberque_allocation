@@ -23,7 +23,7 @@
 #define  GET_PLATFORM_ADAPTER_ID(rp, adapter_id) \
 	int adapter_id = GetAdapterId(rp); \
 	if (adapter_id < 0) { \
-		logger->Error("ADL: Path '%s' does not resolve a resource"); \
+		logger->Error("ADL: The path does not resolve a resource"); \
 		return PMResult::ERR_RSRC_INVALID_PATH; \
 	}
 
@@ -151,9 +151,11 @@ AMDPowerManager::~AMDPowerManager() {
 
 int AMDPowerManager::GetAdapterId(ResourcePathPtr_t const & rp) const {
 	std::map<ResID_t, int>::const_iterator it;
+	if (rp == nullptr)
+		return -1;
 	it = adapters_map.find(rp->GetID(ResourceIdentifier::GPU));
 	if (it == adapters_map.end())
-		return -1;
+		return -2;
 	return it->second;
 }
 
