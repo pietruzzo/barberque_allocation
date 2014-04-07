@@ -47,6 +47,12 @@ PowerManager::PowerManager() {
 
 	logger->Info("Initialize PowerManager...");
 
+	// Register command to set device fan speed
+#define CMD_FANSPEED_SET "fanspeed_set"
+	cm->RegisterCommand(MODULE_NAMESPACE "." CMD_FANSPEED_SET,
+		static_cast<CommandHandler*>(this),
+		"Set the speed of the fan (percentage value)");
+
 #ifdef CONFIG_BBQUE_PM_AMD
 	// Initialize the AMD GPU power manager
 	logger->Notice("Using AMD provider for GPUs power management");
@@ -357,7 +363,7 @@ PowerManager::SetPerformanceState(ResourcePathPtr_t const & rp, int state) {
 }
 
 int PowerManager::CommandsCb(int argc, char *argv[]) {
-	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE);
+	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
 	char * command_id  = argv[0] + cmd_offset;
 
 	logger->Info("Processing command [%s]", command_id);
@@ -372,8 +378,46 @@ int PowerManager::CommandsCb(int argc, char *argv[]) {
 		return 2;
 	}
 
+	// Set fan speed
+	if (!strncmp(CMD_FANSPEED_SET, command_id, strlen(CMD_FANSPEED_SET))) {
+		if (argc != 3) {
+			logger->Error("(PM) Usage: "
+				"'%s.%s  sys[0-9].gpu[0-9] [0..100]' ",
+				MODULE_NAMESPACE, CMD_FANSPEED_SET);
+			return 3;
+		}
+
+		uint8_t speed_perc = atoi(argv[2]);
+		return FanSpeedSetHandler(rp, speed_perc);
+	}
+
 	logger->Error("Unexpected command: %s", command_id);
 	return 0;
 }
+
+int PowerManager::FanSpeedSetHandler(
+		br::ResourcePathPtr_t const & rp,
+		uint8_t speed_perc) {
+	if (speed_perc > 100) {
+		logger->Error("(PM) Invalid value (%d). Expected [0..100]");
+		return 4;
+	}
+	switch (rp->Type()) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu)  {
+			logger->Warn("(PM) No power manager available for GPU(s)");
+			return 4;
+		}
+		logger->Notice("Setting fan speed of %s to %d %",
+				rp->ToString().c_str(), speed_perc);
+		gpu->SetFanSpeed(rp, FanSpeedType::PERCENT, speed_perc);
+		break;
+	default:
+		return 5;
+	}
+
+	return 0;
+}
+
 } // namespace bbque
 

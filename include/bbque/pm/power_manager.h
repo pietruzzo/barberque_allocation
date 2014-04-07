@@ -178,6 +178,16 @@ protected:
 	 */
 	std::unique_ptr<PowerManager> gpu;
 
+	/*
+	 * @brief Command handler for setting a device fan speed
+	 *
+	 * @param rp The resource path referencing the device (e.g. sys0.gpu0)
+	 * @param rp The percentage speed value to set
+	 *
+	 * @return 0 for success, a positive number otherwise
+	 */
+	int FanSpeedSetHandler(
+		br::ResourcePathPtr_t const & rp, uint8_t speed_perc);
 };
 
 }
