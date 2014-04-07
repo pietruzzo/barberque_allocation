@@ -1500,7 +1500,7 @@ void rtlib_ocl_prof_run(
 		// Resume previously stored statistics
 		QueueProfPtr_t stPtr = it_cq->second;
 		if (awm_ocl_events[cq] != nullptr) {
-			stPtr->cmd_prof = awm_ocl_events[cq]->cmd_prof;
+			stPtr->cmd_prof  = awm_ocl_events[cq]->cmd_prof;
 			stPtr->addr_prof = awm_ocl_events[cq]->addr_prof;
 		}
 
@@ -1546,11 +1546,11 @@ void acc_command_stats(
 		accs[CL_CMD_SUBMIT_TIME](submit_time);
 		accs[CL_CMD_EXEC_TIME](exec_time);
 		stPtr->cmd_prof.insert(CmdProfPair_t(cmd_type, accs));
-	} else {
-		it_ct->second[CL_CMD_QUEUED_TIME](queued_time);
-		it_ct->second[CL_CMD_SUBMIT_TIME](submit_time);
-		it_ct->second[CL_CMD_EXEC_TIME](exec_time);
+		return;
 	}
+	it_ct->second[CL_CMD_QUEUED_TIME](queued_time);
+	it_ct->second[CL_CMD_SUBMIT_TIME](submit_time);
+	it_ct->second[CL_CMD_EXEC_TIME](exec_time);
 }
 
 void acc_address_stats(
@@ -1567,11 +1567,11 @@ void acc_address_stats(
 		accs[CL_CMD_SUBMIT_TIME](submit_time);
 		accs[CL_CMD_EXEC_TIME](exec_time);
 		stPtr->addr_prof.insert(AddrProfPair_t(addr, accs));
-	} else {
-		it_ca->second[CL_CMD_QUEUED_TIME](queued_time);
-		it_ca->second[CL_CMD_SUBMIT_TIME](submit_time);
-		it_ca->second[CL_CMD_EXEC_TIME](exec_time);
+		return;
 	}
+	it_ca->second[CL_CMD_QUEUED_TIME](queued_time);
+	it_ca->second[CL_CMD_SUBMIT_TIME](submit_time);
+	it_ca->second[CL_CMD_EXEC_TIME](exec_time);
 }
 
 void dump_command_prof_info(
@@ -1615,8 +1615,7 @@ void acc_command_event_info(
 	cl_ulong ev_end_time    = (cl_ulong)0;
 
 	// Extract event times
-	clGetEventInfo(
-			event, CL_EVENT_COMMAND_TYPE, sizeof(cl_command_type),
+	clGetEventInfo(event, CL_EVENT_COMMAND_TYPE, sizeof(cl_command_type),
 			&cmd_type, NULL);
 	status = clGetEventProfilingInfo(
 		event,
@@ -1664,8 +1663,8 @@ void acc_command_event_info(
 
 	// Accumulate event times for this command
 	double queued_time = (double)(ev_submit_time - ev_queued_time);
-	double submit_time = (double)(ev_start_time - ev_submit_time);
-	double exec_time   = (double)(ev_end_time - ev_start_time);
+	double submit_time = (double)(ev_start_time  - ev_submit_time);
+	double exec_time   = (double)(ev_end_time    - ev_start_time);
 	acc_command_stats(stPtr, cmd_type, queued_time, submit_time, exec_time);
 
 	// Collects stats for command instances
