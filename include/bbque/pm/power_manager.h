@@ -21,6 +21,7 @@
 
 #include <cstdint>
 
+#include "bbque/command_manager.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/logging/logger.h"
 
@@ -32,7 +33,7 @@ namespace bu = bbque::utils;
 namespace bbque {
 
 
-class PowerManager {
+class PowerManager: public CommandHandler {
 
 public:
 	enum class PMResult {
@@ -153,9 +154,16 @@ public:
 	virtual PMResult SetPerformanceState(
 		ResourcePathPtr_t const & rp, int value);
 
+	int CommandsCb(int argc, char *argv[]);
+
 protected:
 
 	PowerManager();
+
+	/**
+	 * Command manager instance
+	 */
+	CommandManager * cm;
 
 	/**
 	 * @brief The logger used by the power manager.

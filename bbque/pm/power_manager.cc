@@ -35,6 +35,7 @@ PowerManager & PowerManager::GetInstance() {
 
 PowerManager::PowerManager() {
 	static bool initialized = false;
+	cm = &(CommandManager::GetInstance());
 
 	// Get a logger module
 	logger = bu::Logger::GetLogger(POWER_MANAGER_NAMESPACE);
@@ -355,5 +356,24 @@ PowerManager::SetPerformanceState(ResourcePathPtr_t const & rp, int state) {
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
+int PowerManager::CommandsCb(int argc, char *argv[]) {
+	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE);
+	char * command_id  = argv[0] + cmd_offset;
+
+	logger->Info("Processing command [%s]", command_id);
+	if (argc < 2) {
+		logger->Error("(PM) Invalid command format");
+		return 1;
+	}
+
+	br::ResourcePathPtr_t rp(new br::ResourcePath(argv[1]));
+	if (rp == nullptr) {
+		logger->Error("(PM) Please specify a valid resource path");
+		return 2;
+	}
+
+	logger->Error("Unexpected command: %s", command_id);
+	return 0;
+}
 } // namespace bbque
 
