@@ -1583,10 +1583,8 @@ void dump_command_prof_info(
 		void * addr) {
 	FILE *dump_file;
 	char buffer [100];
-	snprintf(buffer, 100, "%s/PROFOCL-%s-AWM%d-%s.dat",
-		OCL_PROF_OUTDIR,
-		rtlib_services.Utils.GetChUid(),
-		awm_id,
+	snprintf(buffer, 100, OCL_PROF_FMT, OCL_PROF_OUTDIR,
+		rtlib_services.Utils.GetChUid(), awm_id,
 		ocl_cmd_str[cmd_type].c_str());
 	dump_file = fopen(buffer, "a");
 	if (dump_file) {
