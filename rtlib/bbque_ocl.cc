@@ -1587,14 +1587,17 @@ void dump_command_prof_info(
 		rtlib_services.Utils.GetChUid(), awm_id,
 		ocl_cmd_str[cmd_type].c_str());
 	dump_file = fopen(buffer, "a");
-	if (dump_file) {
-		fprintf(dump_file, "%f %f %f %f %p\n",
-			bbque_tmr.getElapsedTimeMs(),
-			queued_time*1e-06,
-			submit_time*1e-06,
-			exec_time*1e-06,
-			addr);
+	if (!dump_file) {
+		logger->Error("OCL: Error %s not open", buffer);
+		return;
 	}
+
+	fprintf(dump_file, "%f %f %f %f %p\n",
+		bbque_tmr.getElapsedTimeMs(),
+		queued_time*1e-06,
+		submit_time*1e-06,
+		exec_time*1e-06,
+		addr);
 	fclose(dump_file);
 }
 
