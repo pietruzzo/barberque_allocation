@@ -1446,7 +1446,7 @@ void rtlib_init_devices() {
 	logger->Debug("OCL: OpenCL devices found: %u [descriptors size: %lu]",
 		rtlib_ocl.num_devices, sizeof(cl_device_id));
 	logger->Debug("OCL: Devices descriptors @%p", rtlib_ocl.devices);
-	for (int i = 0; i < rtlib_ocl.num_devices; ++i)
+	for (uint8_t i = 0; i < rtlib_ocl.num_devices; ++i)
 		logger->Debug("     Device #%02d @%p", i, rtlib_ocl.devices[i]);
 
 }
