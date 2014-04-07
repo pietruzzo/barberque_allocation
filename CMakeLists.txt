@@ -40,6 +40,7 @@ set (BBQUE_PATH_APPS       "usr/bin")
 set (BBQUE_PATH_DOCS       "usr/share/bbque")
 set (BBQUE_PATH_CMAKE      "usr/share/bbque")
 set (BBQUE_PATH_VAR        "var/bbque")
+set (BBQUE_PATH_TEMP       "/tmp")
 
 # Barbeque configuration file
 set (BBQUE_CONF_FILE "bbque.conf")

@@ -63,6 +63,9 @@
 /** The 'conf' installation path */
 #define BBQUE_PATH_CONF "${BBQUE_PATH_CONF}"
 
+/** The 'temporary' directory path */
+#define BBQUE_PATH_TEMP "${BBQUE_PATH_TEMP}"
+
 /** The 'recipes' installation path */
 #define BBQUE_PATH_RECIPES "${BBQUE_PATH_RECIPES}"
 
