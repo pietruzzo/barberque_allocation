@@ -111,8 +111,10 @@ clGetDeviceIDs(
 				num_entries, devices, num_devices);
 	}
 
-	if (num_devices && rtlib_ocl.device_id == R_ID_NONE) {
-		(*num_devices) = 0;
+	if (num_devices) {
+		rtlib_ocl.device_id == R_ID_NONE ?
+			(*num_devices) = 0 :
+			(*num_devices) = 1;
 	}
 
 	if (devices == NULL)
@@ -120,8 +122,6 @@ clGetDeviceIDs(
 
 	// Single device forcing
 	assert(rtlib_ocl.device_id >= 0);
-	if (num_devices)
-		(*num_devices) = 1;
 
 	DB(
 	cl_device_type dev_type;
