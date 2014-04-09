@@ -30,6 +30,7 @@
 
 #include "bbque/config.h"
 #include "bbque/configuration_manager.h"
+#include "bbque/command_manager.h"
 #include "bbque/modules_factory.h"
 #include "bbque/app/application.h"
 #include "bbque/pm/power_manager.h"
@@ -55,7 +56,7 @@ typedef std::map<br::ResourceIdentifier::Type_t, ResourcePathListPtr_t> Resource
 typedef std::map<int, std::ofstream *> DevFileMap_t;
 typedef std::map<int, ResourcePathPtr_t> DevPathMap_t;
 
-class OpenCLProxy: public Worker {
+class OpenCLProxy: public Worker, public CommandHandler {
 
 public:
 
@@ -104,6 +105,9 @@ private:
 
 	/*** Configuration manager instance */
 	ConfigurationManager & cm;
+
+	/*** Command manager instance */
+	CommandManager & cmm;
 
 	/**
 	 * @brief The logger used by the power manager.
@@ -213,6 +217,11 @@ private:
 	 * be done (if enabled)
 	 */
 	void Task();
+
+	/**
+	 * @brief Commands handler
+	 */
+	int CommandsCb(int argc, char *argv[]);
 
 };
 

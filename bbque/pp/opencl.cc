@@ -55,10 +55,11 @@ OpenCLProxy & OpenCLProxy::GetInstance() {
 }
 
 OpenCLProxy::OpenCLProxy():
-#ifndef CONFIG_BBQUE_PM
-		cm(ConfigurationManager::GetInstance())
-#else
 		cm(ConfigurationManager::GetInstance()),
+#ifndef CONFIG_BBQUE_PM
+		cmm(CommandManager::GetInstance())
+#else
+		cmm(CommandManager::GetInstance()),
 		pm(PowerManager::GetInstance())
 #endif
  {
@@ -414,6 +415,15 @@ OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(
 	logger->Warn("PLAT OCL: Please map the application");
 
 	return SUCCESS;
+}
+
+int OpenCLProxy::CommandsCb(int argc, char *argv[]) {
+	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE);
+	char * command_id  = argv[0] + cmd_offset;
+	logger->Info("PLAT OCL: Processing command [%s]", command_id);
+
+	logger->Error("PLAT OCL: Unknown command [%S]", command_id);
+	return -1;
 }
 
 } // namespace bbque
