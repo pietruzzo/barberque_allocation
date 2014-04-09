@@ -186,6 +186,19 @@ private:
 		int dev_id, const char * line,
 		std::ios_base::openmode om = std::ios::out);
 
+	/**
+	 * @brief Clear dump files
+	 */
+	void DumpClear();
+
+	/**
+	 * @brief Manage the dump on file behavior
+	 *
+	 * @param arg A string containing the action to perform (start, stop,
+	 * clear).
+	 */
+	int DumpCmdHandler(const char * arg);
+
 #endif // CONFIG_BBQUE_PM
 
 	/**

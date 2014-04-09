@@ -84,6 +84,11 @@ OpenCLProxy::OpenCLProxy():
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 	// Enable HW status dump?
 	hw_monitor.dump_enabled = hw_monitor.dump_dir.compare("") != 0;
+
+	// Register a command dispatcher to handle CGroups reconfiguration
+#define CMD_PM_DUMP "pm_dump"
+	cmm.RegisterCommand(MODULE_NAMESPACE "." CMD_PM_DUMP, static_cast<CommandHandler*>(this),
+			"Start/stop dumping on file of GPU(s) power/thermal status");
 #endif
 }
 
@@ -260,6 +265,44 @@ void OpenCLProxy::DumpToFile(
 	device_data[dev_id]->close();
 }
 
+void OpenCLProxy::DumpClear() {
+	for (auto dev_ofs: device_data) {
+		DumpToFile(dev_ofs.first, HWS_DUMP_HEADER);
+	}
+}
+
+int OpenCLProxy::DumpCmdHandler(const char * arg) {
+	std::string action(arg);
+	logger->Info("PLAT OCL: Action = %s", action.c_str());
+	// Start
+	if ((action.compare("start") == 0)
+			&& (!hw_monitor.dump_enabled)) {
+		logger->Info("PLAT OCL: Starting GPU(s) status dump...");
+		hw_monitor.dump_enabled = true;
+		return 0;
+	}
+	// Stop
+	if ((action.compare("stop") == 0)
+			&& (hw_monitor.dump_enabled)) {
+		logger->Info("PLAT OCL: Stopping GPU(s) status dump...");
+		hw_monitor.dump_enabled = false;
+		return 0;
+	}
+	// Clear
+	if (action.compare("clear") == 0) {
+		bool de = hw_monitor.dump_enabled;
+		hw_monitor.dump_enabled = false;
+		DumpClear();
+		hw_monitor.dump_enabled = de;
+		logger->Info("PLAT OCL: Clearing GPU(s) status dump files...");
+		return 0;
+	}
+
+	logger->Warn("PLAT OCL: Unknown action [%s] or nothing to do",
+		action.c_str());
+	return -1;
+}
+
 #endif // CONFIG_BBQUE_PM
 
 
@@ -418,11 +461,22 @@ OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(
 }
 
 int OpenCLProxy::CommandsCb(int argc, char *argv[]) {
-	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE);
+	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
 	char * command_id  = argv[0] + cmd_offset;
 	logger->Info("PLAT OCL: Processing command [%s]", command_id);
 
-	logger->Error("PLAT OCL: Unknown command [%S]", command_id);
+#ifdef CONFIG_BBQUE_PM
+	// GPU status dump start/stop
+	if (!strncmp(CMD_PM_DUMP, command_id, strlen(CMD_PM_DUMP))) {
+		if (argc != 2) {
+			logger->Error("PLAT OCL: Command [%s]: "
+				"missing action [start/stop/clear]", command_id);
+			return 1;
+		}
+		return DumpCmdHandler(argv[1]);
+	}
+#endif
+	logger->Error("PLAT OCL: Unknown command [%s]", command_id);
 	return -1;
 }
 
