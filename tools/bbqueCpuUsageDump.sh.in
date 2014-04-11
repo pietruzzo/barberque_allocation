@@ -1,0 +1,34 @@
+#!/bin/bash
+
+source @CMAKE_INSTALL_PREFIX@/etc/bbque/bosp_init.env > /dev/null 2>&1
+BBQUE_SYSROOT="${BBQUE_SYSROOT:-$SYSROOT}"
+
+CORES=$(grep processor /proc/cpuinfo | wc -l)
+MAXF=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq)
+
+function readCpuLoad() {
+while true; do
+	cat $BBQUE_SYSROOT/mnt/cgroup/cpuacct.usage_percpu
+	sleep 1;
+done
+}
+
+# Clean data file
+echo "" > $BBQUE_SYSROOT/var/bbque/CpuUsage.dat
+
+readCpuLoad | \
+	stdbuf -oL $BBQUE_SYSROOT/sbin/bbque-cpu-parser \
+		-v CORES=$CORES -v MAXF=$MAXF \
+		>> $BBQUE_SYSROOT/var/bbque/CpuUsage.dat
+
+# Clean-up all background threads on exit
+function cleanup {
+	kill $(jobs -p)
+}
+trap cleanup EXIT
+
+# This is required to properly capture the trap previously defined
+while [ 1 ]; do
+	sleep 60
+	read KEY
+done

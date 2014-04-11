@@ -75,6 +75,25 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueLogPlots.sh"
 	COMPONENT BarbequeUTILS
 	RENAME bbque-logplots)
 
+# ----- CPU Usage dump
+configure_file (
+	"${PROJECT_SOURCE_DIR}/tools/bbqueCpuUsageDumpParser.awk.in"
+	"${PROJECT_BINARY_DIR}/tools/bbqueCpuUsageDumpParser.awk"
+	@ONLY
+)
+configure_file (
+	"${PROJECT_SOURCE_DIR}/tools/bbqueCpuUsageDump.sh.in"
+	"${PROJECT_BINARY_DIR}/tools/bbqueCpuUsageDump.sh"
+	@ONLY
+)
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueCpuUsageDumpParser.awk"
+	DESTINATION ${BBQUE_PATH_BBQ}
+	RENAME bbque-cpu-parser)
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueCpuUsageDump.sh"
+	DESTINATION ${BBQUE_PATH_BBQ}
+	RENAME bbque-cpu-dump)
+
+
 #----- Deploy the BBQ Signal Stability Analysis script
 configure_file (
 	"${PROJECT_SOURCE_DIR}/tools/bbqueStabilityAnalysisPlotter.sh.in"
