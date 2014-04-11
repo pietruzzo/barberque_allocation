@@ -45,10 +45,13 @@ SchedContrib::SchedContrib(
 	cm(ConfigurationManager::GetInstance()),
 	bd_info(_bd_info) {
 	char logname[16];
+	char * logpref;
 
 	// Identifier name of the contribute
-	strncpy(name, _name, SC_NAME_MAX_LEN);
-	name[SC_NAME_MAX_LEN-1] = '\0';
+	strncpy(name, _name, SC_NAME_MAX_LEN- 1);
+	strncpy(logname, MODULE_NAMESPACE ".", sizeof(logname));
+	logpref = logname + strlen(logname);
+	strncat(logpref, name, 4);
 
 	// Array of Maximum Saturation Levels parameters
 	for (int i = 0; i < br::ResourceIdentifier::TYPE_COUNT; ++i)

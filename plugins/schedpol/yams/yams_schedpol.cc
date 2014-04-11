@@ -739,7 +739,7 @@ void YamsSchedPol::GetSchedContribValue(
 
 	scm_ret = scms[bd_type]->GetIndex(sc_type, eval_ent, sc_value, sc_ret);
 	if (scm_ret != SchedContribManager::OK) {
-		logger->Warn("SchedContrib: return code %d", scm_ret);
+		logger->Debug("SchedContrib: return code %d", scm_ret);
 		if (scm_ret != SchedContribManager::SC_ERROR) {
 			YAMS_RESET_TIMING(comp_tmr);
 			return;
@@ -1269,7 +1269,7 @@ void YamsSchedPol::ReconfigSchedContribWeights(
 
 	for (scm_it = scms.begin(); scm_it != scms.end(); ++scm_it) {
 		SchedContribManager * scm = scm_it->second;
-		logger->Debug("ReconfigSchedContribWeights: BD[%s] %d weights...",
+		logger->Notice("ReconfigSchedContribWeights: BD[%s] %d weights...",
 				br::ResourceIdentifier::TypeStr[scm_it->first],
 				scm->GetNumMax());
 
@@ -1285,7 +1285,7 @@ void YamsSchedPol::ReconfigSchedContribWeights(
 				new_weights[i] = old_weights[i];
 			else
 				new_weights[i] = atoi(set_weights[i+1]);
-			logger->Info("ReconfigSchedContribWeights: [%11s]  %2d -> %2d ",
+			logger->Notice("ReconfigSchedContribWeights: [%11s]  %2d -> %2d ",
 					scm->GetString(sc_types[i]),
 					old_weights[i], new_weights[i]);
 		}
