@@ -605,7 +605,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 		sched_ul.lock();
 		entities.push_back(pschd_domain);
 		sched_ul.unlock();
-		logger->Notice("EvalAWM: %s scheduling metrics = %1.4f [%d]",
+		logger->Info("EvalAWM: %s scheduling metrics = %1.4f [%d]",
 				pschd->StrId(), pschd->metrics, entities.size());
 	}
 #else
@@ -707,7 +707,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 			sched_ul.lock();
 			entities.push_back(pschd_bound);
 			sched_ul.unlock();
-			logger->Notice("EvalBindings: %s scheduling metrics = %1.4f [%d]",
+			logger->Info("EvalBindings: %s scheduling metrics = %1.4f [%d]",
 					pschd_bound->StrId(),
 					pschd_bound->metrics, entities.size());
 		}
@@ -1011,7 +1011,7 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 					cows_info.bound_mix[i];
 		}
 
-		logger->Notice("COWS: Bound mix @BD[%d] for %s: %3.2f",
+		logger->Info("COWS: Bound mix @BD[%d] for %s: %3.2f",
 				cpu_bindings->ids[i], pschd->StrId(), cows_info.bound_mix[i]);
 
 		// Set the binding ID
@@ -1094,11 +1094,11 @@ void YamsSchedPol::CowsUnitsBalance() {
 			}
 		}
 
-		logger->Notice("COWS: Total stalls quadratic deviation in BD  %d: %3.2f",
+		logger->Info("COWS: Total stalls quadratic deviation in BD  %d: %3.2f",
 				cpu_bindings->ids[i], cows_info.stalls_metrics[i]);
-		logger->Notice("COWS: Total ret. instructions deviation in BD %d: %3.2f",
+		logger->Info("COWS: Total ret. instructions deviation in BD %d: %3.2f",
 				cpu_bindings->ids[i], cows_info.iret_metrics[i]);
-		logger->Notice("COWS: Total X87 operations deviation in BD %d: %3.2f",
+		logger->Info("COWS: Total X87 operations deviation in BD %d: %3.2f",
 				cpu_bindings->ids[i], cows_info.flops_metrics[i]);
 		logger->Info("COWS: Proceeding with next BD, if any ...");
 
@@ -1166,7 +1166,7 @@ void YamsSchedPol::CowsAggregateResults() {
 		logger->Info("--- BD: %d, Value: %f",
 				cpu_bindings->ids[(*rit).second], (*rit).first);
 
-	logger->Notice("COWS: Performance counters: %3.2f, %3.2f, %3.2f, %3.2f",
+	logger->Info("COWS: Performance counters: %3.2f, %3.2f, %3.2f, %3.2f",
 			cows_info.perf_data[COWS_LLCM],
 			cows_info.perf_data[COWS_STALLS],
 			cows_info.perf_data[COWS_IRET],
