@@ -292,7 +292,7 @@ void ResourceManager::Optimize() {
 	RM_GET_PERIOD(metrics, RM_SCHED_PERIOD, period);
 
 	//--- Scheduling
-	logger->Notice(LNSCHB);
+	logger->Info(LNSCHB);
 	optimization_tmr.start();
 	schedResult = sm.Schedule();
 	optimization_tmr.stop();
@@ -326,8 +326,8 @@ void ResourceManager::Optimize() {
 	if (period)
 		logger->Notice("Schedule Run-time: %9.3f[ms]", period);
 
-	//--- Synchroniztion
-	logger->Notice(LNSYNB);
+	//--- Synchronization
+	logger->Info(LNSYNB);
 	optimization_tmr.start();
 	syncResult = ym.SyncSchedule();
 	optimization_tmr.stop();
@@ -346,7 +346,7 @@ void ResourceManager::Optimize() {
 sched_profile:
 
 	//--- Profiling
-	logger->Notice(LNPROB);
+	logger->Info(LNPROB);
 	optimization_tmr.start();
 	profResult = om.ProfileSchedule();
 	optimization_tmr.stop();
