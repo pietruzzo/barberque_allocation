@@ -204,6 +204,35 @@ public:
 	 */
 	virtual ExitCode_t DisableEXC(AppPid_t pid, uint8_t exc_id,
 			bool release = false) = 0;
+
+	/**
+	 * @brief Check the specified EXC
+	 *
+	 * The specified EXC will be checked for responsiveness.
+	 * If it should not respond to the check, the EXC is considered
+	 * dead and thus all its resources released.
+	 *
+	 * @param papp The pointer to the EXC to check
+	 * @param release set true to release currently assigned resources in
+	 *                case the check should fails
+	 */
+	virtual ExitCode_t CheckEXC(AppPtr_t papp, bool release = true) = 0;
+
+	/**
+	 * @brief Check the specified EXC
+	 *
+	 * The specified EXC will be checked for responsiveness.
+	 * If it should not respond to the check, the EXC is considered
+	 * dead and thus all its resources released.
+	 *
+	 * @param pid the processi ID of the application
+	 * @param exc_id the Execution Context ID to enable
+	 * @param release set true to release currently assigned resources in
+	 *                case the check should fails
+	 */
+	virtual ExitCode_t CheckEXC(AppPid_t pid, uint8_t exec_id,
+			bool release = true) = 0;
+
 };
 
 } // namespace bbque

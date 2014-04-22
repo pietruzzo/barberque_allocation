@@ -1364,6 +1364,54 @@ ApplicationManager::DisableEXC(AppPid_t pid, uint8_t exc_id, bool release) {
 
 
 /*******************************************************************************
+ *  EXC Checking
+ ******************************************************************************/
+
+ApplicationManager::ExitCode_t
+ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
+
+	logger->Debug("Checking EXC [%s]...", papp->StrId());
+
+	// Check if the required PID is still alive
+	int dead = kill(papp->Pid(), 0);
+	logger->Debug("EXC [%s] is %s",
+			papp->StrId(), dead ? "DEAD" : "still ALIVE");
+
+	// If required, return application resources to the system view
+	if (likely(dead && release)) {
+		logger->Debug("Releasing checked EXC [%s]...",
+				papp->StrId());
+
+		papp->Disable();
+		DestroyEXC(papp);
+
+		logger->Info("Checked EXC [%s] has been RELEASED", papp->StrId());
+	}
+
+	if (dead)
+		return AM_EXC_NOT_FOUND;
+
+	return AM_SUCCESS;
+}
+
+ApplicationManager::ExitCode_t
+ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
+	AppPtr_t papp;
+
+	// Find the required EXC
+	papp = GetApplication(Application::Uid(pid, exc_id));
+	if (!papp) {
+		logger->Warn("Checking EXC [%d:*:%d] FAILED "
+				"(Error: EXC not found)");
+		assert(papp);
+		return AM_ABORT;
+	}
+
+	return CheckEXC(papp, release);
+}
+
+
+/*******************************************************************************
  *  EXC Synchronization
  ******************************************************************************/
 
