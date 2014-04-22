@@ -292,6 +292,7 @@ private:
 	ExitCode_t SetupCGroup(CGroupDataPtr_t &pcgd, RLinuxBindingsPtr_t prlb,
 			bool excl = false, bool move = true);
 
+	int Unregister(const char *uid);
 	int CommandsCb(int argc, char *argv[]);
 
 };

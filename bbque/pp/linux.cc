@@ -17,6 +17,7 @@
 
 #include "bbque/pp/linux.h"
 
+#include "bbque/application_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_utils.h"
@@ -110,6 +111,8 @@ LinuxPP::LinuxPP() :
 	CommandManager &cm = CommandManager::GetInstance();
 	cm.RegisterCommand(MODULE_NAMESPACE ".refresh", static_cast<CommandHandler*>(this),
 			"Refresh CGroups resources description");
+	cm.RegisterCommand(MODULE_NAMESPACE ".unregister", static_cast<CommandHandler*>(this),
+			"Unregister the specified EXC");
 
 	// Mark the Platform Integration Layer (PIL) as initialized
 	SetPilInitialized();
@@ -1042,13 +1045,33 @@ LinuxPP::_MapResources(AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt,
 	return OK;
 }
 
+int LinuxPP::Unregister(const char *uid) {
+	ApplicationManager &am = ApplicationManager::GetInstance();
+	uint32_t pid = atoi(uid);
+	uint32_t eid = atoi(uid+13);
+
+	am.CheckEXC(pid, eid);
+	return 0;
+}
+
 
 int LinuxPP::CommandsCb(int argc, char *argv[]) {
+	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
 	(void)argc;
 	(void)argv;
 
 	// Notify the PlatformProxy to refresh the platform description
-	Refresh();
+	switch(argv[0][cmd_offset]) {
+	case 'r': // refresh
+		Refresh();
+		break;
+	case 'u': // unregister
+		logger->Info("Releasing EXC [%s]", argv[1]);
+		Unregister(argv[1]);
+		break;
+	default:
+		logger->Warn("PLAT LNX: Command [%s] not supported");
+	}
 
 	return 0;
 }
