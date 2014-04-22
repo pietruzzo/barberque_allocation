@@ -46,6 +46,7 @@ BBQUE_PILPARSER="${BBQUE_PILPARSER:-$PILPARSER}"
 BBQUE_CGMOUNT="${BBQUE_CGMOUNT:-$CGMOUNT}"
 BBQUE_CGCONFS="${BBQUE_CGCONFS:-$CGCONFS}"
 BBQUE_CGPARSER="${BBQUE_CGPARSER:-$CGPARSER}"
+BBQUE_CGAGENT="${BBQUE_CGAGENT:-$CGAGENT}"
 
 # Check root permission
 check_root() {
@@ -186,6 +187,9 @@ setup() {
 	echo "Setup CGroups shiled..."
 	ShieldBuild
 
+	echo "Setup Release Agent [$BBQUE_CGAGENT]..."
+	echo "$BBQUE_CGAGENT" > $BBQUE_CGMOUNT/release_agent
+	echo "1" > $BBQUE_CGMOUNT/bbque/notify_on_release
 }
 
 start() {

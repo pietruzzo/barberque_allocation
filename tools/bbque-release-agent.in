@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# BarbequeRTRM CGroups Release Agent
+
+# Source the BOSP Shell configuration
+. @CONFIG_BOSP_RUNTIME_PATH@/etc/bbque/bosp_init.env
+
+# CONSOLE CONFIGURATION
+BBQUE_SYSROOT="${BBQUE_SYSROOT:-$SYSROOT}"
+
+# Parse EXC ID form input
+# e.g. /bbque/16286:exc_00:00`
+EXCID=${*#/bbque/}
+
+# EXC exiting from the silos should not be notified
+# Indeed, these are applications just started which
+# are going to be moved into their own CGroup
+[ $EXCID == "silos" ] && exit 0
+
+# Release the notified EXC
+echo "bq.pp.lnx.unregister $EXCID" > $BBQUE_SYSROOT/var/bbque/bbque_cmds
+
+# vim: set tabstop=4:

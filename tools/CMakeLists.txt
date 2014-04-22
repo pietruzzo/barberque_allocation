@@ -15,6 +15,17 @@ install(PROGRAMS bbquePlatformLayoutParser.awk
 # - part of the BarbequeUTILS componet
 # - have a name starting by "bbque-"
 
+#----- Deploy the BBQ CGroups Release Agent
+configure_file (
+	"${PROJECT_SOURCE_DIR}/tools/bbque-release-agent.in"
+	"${PROJECT_BINARY_DIR}/tools/bbque-release-agent"
+	@ONLY
+)
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbque-release-agent"
+	DESTINATION ${BBQUE_PATH_BBQ}
+	COMPONENT BarbequeUTILS
+	RENAME bbque-release-agent)
+
 #----- Deploy the BBQ Control Console script
 configure_file (
 	"${PROJECT_SOURCE_DIR}/tools/bbqueConsole.sh.in"

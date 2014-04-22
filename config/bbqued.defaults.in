@@ -40,6 +40,9 @@ CGPARSER='${CONFIG_BOSP_RUNTIME_PATH}/sbin/cgconfigparser'
 # The mountpoint of the BBQ CGroup hierarchy
 CGMOUNT='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PIL_CGROUP_MOUNT}'
 #
+# The BBQ CGroups Release Agent
+CGAGENT='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_BBQ}/bbque-release-agent'
+#
 # The prefix for the BBQ installation
 SYSROOT='${CONFIG_BOSP_RUNTIME_PATH}'
 #
