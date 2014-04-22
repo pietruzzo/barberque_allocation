@@ -241,15 +241,14 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 			logger->Warn("STEP 1: <---- TIMEOUT -- [%s]",
 					papp->StrId());
 			// Disabling not responding applications
-			papp->Disable();
+			am.DisableEXC(papp, true);
 			goto error_continue;
 		}
 
 		if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
 			logger->Warn("STEP 1: <------ WERROR -- [%s]",
 					papp->StrId());
-			// TODO: disappeared applications could be killed
-			papp->Disable();
+			am.DisableEXC(papp, true);
 			goto error_continue;
 		}
 
@@ -369,7 +368,7 @@ SynchronizationManager::Sync_SyncChange(
 			logger->Warn("STEP 2: <---- TIMEOUT -- [%s]",
 					papp->StrId());
 			// Disabling not responding applications
-			papp->Disable();
+			am.DisableEXC(papp, true);
 			// Accounting for syncpoints missed
 			SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
 			goto error_continue;
@@ -378,8 +377,8 @@ SynchronizationManager::Sync_SyncChange(
 		if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
 			logger->Warn("STEP 1: <------ WERROR -- [%s]",
 					papp->StrId());
-			// TODO: disappeared applications could be killed
-			papp->Disable();
+			// Disabling not responding applications
+			am.DisableEXC(papp, true);
 			// Accounting for syncpoints missed
 			SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
 			goto error_continue;
@@ -508,15 +507,14 @@ SynchronizationManager::Sync_PostChange(ApplicationStatusIF::SyncState_t syncSta
 			logger->Warn("STEP 4: <---- TIMEOUT -- [%s]",
 					papp->StrId());
 			// Disabling not responding applications
-			papp->Disable();
+			am.DisableEXC(papp, true);
 			continue;
 		}
 
 		if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
 			logger->Warn("STEP 1: <------ WERROR -- [%s]",
 					papp->StrId());
-			// TODO: disappeared applications could be killed
-			papp->Disable();
+			am.DisableEXC(papp, true);
 			continue;
 		}
 
