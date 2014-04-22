@@ -1334,6 +1334,10 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 		return AM_ABORT;
 	}
 
+	// Check if the application is dead, in case unregsiter it
+	if (CheckEXC(papp, true) != AM_SUCCESS)
+		return AM_SUCCESS;
+
 	// If required, return application resources to the system view
 	if (likely(release)) {
 		logger->Debug("Releasing EXC [%s] assigned resources...",
