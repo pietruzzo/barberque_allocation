@@ -872,7 +872,7 @@ void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
 	double _max = max(pstats->cycle_samples);
 	double _avg = mean(pstats->cycle_samples);
 	double _var = variance(pstats->cycle_samples);
-	logger->Debug("#%08d: m: %.3f, M: %.3f, a: %.3f, v: %.3f) [ms]",
+	logger->Debug("Cycle #%08d: m: %.3f, M: %.3f, a: %.3f, v: %.3f) [ms]",
 		_count, _min, _max, _avg, _var);
 	)
 
