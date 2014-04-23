@@ -569,6 +569,8 @@ RTLIB_ExitCode_t BbqueRPC::SetupStatistics(pregExCtx_t prec) {
 "#==================================+===================+=================="
 #define STATS_CYCLE_SPLIT \
 "#-------------------------+        +-------------------+------------------"
+#define STATS_CONF_SPLIT \
+"#-------------------------+--------+-------------------+------------------"
 
 void BbqueRPC::DumpStatsHeader() {
 	fprintf(stderr, "\n" STATS_HEADER "\n");
@@ -582,6 +584,7 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 	uint32_t cycles_count;
 	double cycle_min, cycle_max, cycle_avg, cycle_var;
 	double monitor_min, monitor_max, monitor_avg, monitor_var;
+	double config_min, config_max, config_avg, config_var;
 
 	// Print RTLib stats for each AWM
 	it = prec->stats.begin();
@@ -644,6 +647,24 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 				monitor_min, monitor_max, monitor_avg, monitor_var);
 		}
 
+		// Reconfiguration statistics extraction
+		config_min = min(pstats->config_samples);
+		config_max = max(pstats->config_samples);
+		config_avg = mean(pstats->config_samples);
+		config_var = variance(pstats->config_samples);
+
+		if (verbose) {
+			fprintf(stderr, STATS_CONF_SPLIT "\n");
+			fprintf(stderr, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+				prec->name.c_str(), awm_id, "onConfigure", pstats->time_configuring,
+				config_min, config_max, config_avg, config_var);
+		} else {
+			logger->Debug(STATS_CONF_SPLIT);
+			logger->Debug("%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+				prec->name.c_str(), awm_id, "onConfigure", pstats->time_configuring,
+				config_min, config_max, config_avg, config_var);
+		}
+
 	}
 
 	if (!PerfRegisteredEvents(prec) || !verbose)
@@ -683,9 +704,10 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 	pAwmStats_t pstats;
 	uint8_t awm_id;
 
-	uint32_t cycles_count, monitor_count;
+	uint32_t cycles_count, monitor_count, config_count;
 	double cycle_min, cycle_max, cycle_avg, cycle_var;
 	double monitor_min, monitor_max, monitor_avg, monitor_var;
+	double config_min, config_max, config_avg, config_var;
 
 	// Print RTLib stats for each AWM
 	it = prec->stats.begin();
@@ -726,6 +748,19 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 		DUMP_MOST_METRIC("perf", "monitor_max_ms", monitor_max      , "%.3f");
 		DUMP_MOST_METRIC("perf", "monitor_avg_ms", monitor_avg      , "%.3f");
 		DUMP_MOST_METRIC("perf", "monitor_std_ms", sqrt(monitor_var), "%.3f");
+
+		// Reconfiguration statistics extraction
+		config_count = count(pstats->config_samples);
+		config_min = min(pstats->config_samples);
+		config_max = max(pstats->config_samples);
+		config_avg = mean(pstats->config_samples);
+		config_var = variance(pstats->config_samples);
+
+		DUMP_MOST_METRIC("perf", "configure_cnt",    config_count    , "%u");
+		DUMP_MOST_METRIC("perf", "configure_min_ms", config_min      , "%.3f");
+		DUMP_MOST_METRIC("perf", "configure_max_ms", config_max      , "%.3f");
+		DUMP_MOST_METRIC("perf", "configure_avg_ms", config_avg      , "%.3f");
+		DUMP_MOST_METRIC("perf", "configure_std_ms", sqrt(config_var), "%.3f");
 
 		// Dump Performance Counters for this AWM
 		PerfPrintStats(prec, pstats);
