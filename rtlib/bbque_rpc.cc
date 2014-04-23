@@ -905,6 +905,10 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 		outfd = fopen(outfile.c_str(), "w");
 	}
 
+
+	if (!envFileOutput)
+		logger->Notice("Execution statistics:\n\n");
+
 	// MOST statistics are dumped just at the end of the execution
 	// (i.e. verbose mode)
 	if (envMOSTOutput && verbose) {
