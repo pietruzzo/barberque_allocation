@@ -2288,12 +2288,6 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queu
 	}
 }
 
-#ifdef OCL_STATS_FILE
-#define OUTFD outfd
-#else
-#define OUTFD stderr
-#endif
-
 #define OCL_STATS_HEADER \
 "#           Command Queue          ||      Command Type       ||                 queue[ms]                   ||                 submit[ms]                  ||                     exec[ms]                ||\n"\
 "# ---------------------------------++-------------------------++---------------------------------------------++---------------------------------------------++---------------------------------------------||\n"\
@@ -2318,14 +2312,13 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queu
 "#===================================================================================================================================================================##\n"
 
 void BbqueRPC::OclDumpStatsHeader(bool h) {
-	fprintf(OUTFD, "\n");
 	if (h) {
-		fprintf(OUTFD, OCL_STATS_BAR);
-		fprintf(OUTFD, OCL_STATS_HEADER);
+		fprintf(outfd, OCL_STATS_BAR);
+		fprintf(outfd, OCL_STATS_HEADER);
 	}
 	else {
-		fprintf(OUTFD, OCL_STATS_BAR_ADDR);
-		fprintf(OUTFD, OCL_STATS_HEADER_ADDR);
+		fprintf(outfd, OCL_STATS_BAR_ADDR);
+		fprintf(outfd, OCL_STATS_HEADER_ADDR);
 	}
 }
 
@@ -2334,16 +2327,13 @@ void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
 	pAwmStats_t pstats;
 	uint8_t awm_id;
 
-#ifdef OCL_STATS_FILE
-	outfd = fopen(OCL_FILE_PATH, "a");
-#endif
 	// Print RTLib stats for each AWM
 	it = prec->stats.begin();
 	for ( ; it != prec->stats.end(); ++it) {
 		awm_id = (*it).first;
 		pstats = (*it).second;
 		std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
-		fprintf(OUTFD, OCL_EXC_AWM_HEADER, prec->name.c_str(), awm_id);
+		fprintf(outfd, OCL_EXC_AWM_HEADER, prec->name.c_str(), awm_id);
 
 		OclDumpStatsHeader(true);
 		for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
@@ -2354,9 +2344,7 @@ void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
 			OclDumpAddrStatsConsole(stPtr, it_cq->first);
 		}
 	}
-#ifdef OCL_STATS_FILE
-	fclose(outfd);
-#endif
+	fprintf(outfd, "\n\n");
 }
 
 void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
@@ -2370,7 +2358,7 @@ void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd
 
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
 		otot = SUM(QUEUED)+SUM(SUBMIT)+SUM(EXEC);
-		fprintf(OUTFD, "# %-32p || %-23s || "
+		fprintf(outfd, "# %-32p || %-23s || "
 				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
 				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
 				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f ||\n",
@@ -2382,7 +2370,7 @@ void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd
 			SUM(EXEC), (100 * SUM(EXEC))/otot, (100 * SUM(EXEC))/vtot_e,
 			MEAN(EXEC), STDDEV(EXEC));
 	}
-	fprintf(OUTFD, OCL_STATS_BAR);
+	fprintf(outfd, OCL_STATS_BAR);
 }
 void BbqueRPC::OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
 	std::map<void *, AccArray_t>::iterator it_ct;
@@ -2392,7 +2380,7 @@ void BbqueRPC::OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cm
 	for (it_ct = stPtr->addr_prof.begin(); it_ct != stPtr->addr_prof.end(); it_ct++) {
 		cmd_type = rtlib_ocl_get_command_type(it_ct->first);
 
-		fprintf(OUTFD, "# %-16p || %-12p || %-23s || "
+		fprintf(outfd, "# %-16p || %-12p || %-23s || "
 				"%8.3f | %8.3f | %8.3f || "
 				"%8.3f | %8.3f | %8.3f || "
 				"%8.3f | %8.3f | %8.3f ||\n",
@@ -2401,7 +2389,7 @@ void BbqueRPC::OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cm
 			SUM(SUBMIT), MEAN(SUBMIT), STDDEV(SUBMIT),
 			SUM(EXEC), MEAN(EXEC), STDDEV(EXEC));
 	}
-	fprintf(OUTFD, OCL_STATS_BAR_ADDR);
+	fprintf(outfd, OCL_STATS_BAR_ADDR);
 }
 
 
