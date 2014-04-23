@@ -1701,14 +1701,14 @@ void BbqueRPC::PerfCollectStats(pregExCtx_t prec) {
 
 		// Computing stats for this counter
 		ppes->value += delta;
-		ppes->samples(delta);
+		ppes->perf_samples(delta);
 	}
 
 }
 
 void BbqueRPC::PerfPrintNsec(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 	pPerfEventAttr_t ppea = ppes->pattr;
-	double avg = mean(ppes->samples);
+	double avg = mean(ppes->perf_samples);
 	double total, ratio = 0.0;
 	double msecs = avg / 1e6;
 
@@ -1761,7 +1761,7 @@ void BbqueRPC::PerfPrintMissesRatio(double avg_missed, double tot_branches, cons
 
 void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 	pPerfEventAttr_t ppea = ppes->pattr;
-	double avg = mean(ppes->samples);
+	double avg = mean(ppes->perf_samples);
 	double total, total2, ratio = 0.0;
 	pPerfEventStats_t ppes2;
 	const char *fmt;
@@ -1792,7 +1792,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HW(CPU_CYCLES));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 
 		if (total)
 			ratio = avg / total;
@@ -1808,12 +1808,12 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HW(STALLED_CYCLES_FRONTEND));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 
 		ppes2 = PerfGetEventStats(pstats, PERF_HW(STALLED_CYCLES_BACKEND));
 		if (!ppes2)
 			return;
-		total2 = mean(ppes2->samples);
+		total2 = mean(ppes2->perf_samples);
 		if (total < total2)
 			total = total2;
 
@@ -1833,7 +1833,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HW(BRANCH_INSTRUCTIONS));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 		if (total)
 			PerfPrintMissesRatio(avg, total, "of all branches");
 
@@ -1844,7 +1844,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(L1DC_RA));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 		if (total)
 			PerfPrintMissesRatio(avg, total, "of all L1-dcache hits");
 
@@ -1855,7 +1855,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(L1IC_RA));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 		if (total)
 			PerfPrintMissesRatio(avg, total, "of all L1-icache hits");
 
@@ -1866,7 +1866,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(DTLB_RA));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 		if (total)
 			PerfPrintMissesRatio(avg, total, "of all dTLB cache hits");
 
@@ -1877,7 +1877,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(ITLB_RA));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 		if (total)
 			PerfPrintMissesRatio(avg, total, "of all iTLB cache hits");
 
@@ -1888,7 +1888,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(LLC_RA));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 		if (total)
 			PerfPrintMissesRatio(avg, total, "of all LL-cache hits");
 
@@ -1899,7 +1899,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HW(CACHE_REFERENCES));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 		if (total) {
 			ratio = avg * 100 / total;
 		    fprintf(stderr, " # %8.3f %% of all cache refs    ", ratio);
@@ -1916,7 +1916,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		ppes2 = PerfGetEventStats(pstats, PERF_SW(TASK_CLOCK));
 		if (!ppes2)
 			return;
-		total = mean(ppes2->samples);
+		total = mean(ppes2->perf_samples);
 		if (total) {
 			ratio = 1.0 * avg / total;
 			if (envMOSTOutput) {
@@ -1937,7 +1937,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 	ppes2 = PerfGetEventStats(pstats, PERF_SW(TASK_CLOCK));
 	if (!ppes2)
 		return;
-	total = mean(ppes2->samples);
+	total = mean(ppes2->perf_samples);
 	if (total) {
 		ratio = 1000.0 * avg / total;
 		fprintf(stderr, " # %8.3f M/sec                  ", ratio);
@@ -1980,11 +1980,11 @@ void BbqueRPC::PerfPrintStats(pregExCtx_t prec, pAwmStats_t pstats) {
 			PerfPrintAbs(pstats, ppes);
 
 		// Print stddev ratio
-		if (count(ppes->samples) > 1) {
+		if (count(ppes->perf_samples) > 1) {
 
 			// Get AWM average and stddev running time
-			avg_value = mean(ppes->samples);
-			std_value = sqrt(static_cast<double>(variance(ppes->samples)));
+			avg_value = mean(ppes->perf_samples);
+			std_value = sqrt(static_cast<double>(variance(ppes->perf_samples)));
 
 			PrintNoisePct(std_value, avg_value);
 		}

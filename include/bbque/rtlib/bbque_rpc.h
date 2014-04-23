@@ -246,7 +246,7 @@ protected:
 		int id;
 		/** The statistics collected for this PRE */
 		accumulator_set<uint32_t,
-			stats<tag::min, tag::max, tag::variance>> samples;
+			stats<tag::min, tag::max, tag::variance>> perf_samples;
 	} PerfEventStats_t;
 
 	typedef std::shared_ptr<PerfEventStats_t> pPerfEventStats_t;
