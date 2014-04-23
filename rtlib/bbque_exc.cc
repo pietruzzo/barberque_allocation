@@ -34,8 +34,6 @@
 // Setup logging
 #undef  BBQUE_LOG_MODULE
 #define BBQUE_LOG_MODULE "exc"
-#undef  BBQUE_LOG_UID
-#define BBQUE_LOG_UID rtlib->Utils.GetChUid()
 
 namespace bbque { namespace rtlib {
 

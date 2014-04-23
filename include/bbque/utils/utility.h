@@ -52,7 +52,7 @@
 # define BBQUE_LOG_MODULE MODULE_NAMESPACE
 #endif
 
-#if defined(BBQUE_RTLIB) || defined(BBQUE_APP)
+#if defined(BBQUE_APP)
 //*****************************************************************************
 //*  Logging routines for RTLib and Managed Applications
 //*****************************************************************************

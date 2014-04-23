@@ -33,8 +33,6 @@ namespace bu = bbque::utils;
 // Setup logging
 #undef  BBQUE_LOG_MODULE
 #define BBQUE_LOG_MODULE "rpc.fif"
-#undef  BBQUE_LOG_UID
-#define BBQUE_LOG_UID GetChUid()
 
 #define RPC_FIFO_SEND_SIZE(RPC_MSG, SIZE)\
 logger->Debug("Tx [" #RPC_MSG "] Request "\
