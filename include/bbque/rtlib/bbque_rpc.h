@@ -270,7 +270,7 @@ protected:
 
 		/** Statistics on AWM cycles */
 		accumulator_set<double,
-			stats<tag::min, tag::max, tag::variance>> samples;
+			stats<tag::min, tag::max, tag::variance>> cycle_samples;
 
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 		/** Map of registered Perf counters */

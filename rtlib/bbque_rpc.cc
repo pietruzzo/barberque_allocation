@@ -594,15 +594,15 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 		pstats = (*it).second;
 
 		// Ignoring empty statistics
-		_cycles = count(pstats->samples);
+		_cycles = count(pstats->cycle_samples);
 		if (!_cycles)
 			continue;
 
 		// Features extraction
-		_min = min(pstats->samples);
-		_max = max(pstats->samples);
-		_avg = mean(pstats->samples);
-		_var = variance(pstats->samples);
+		_min = min(pstats->cycle_samples);
+		_max = max(pstats->cycle_samples);
+		_avg = mean(pstats->cycle_samples);
+		_var = variance(pstats->cycle_samples);
 
 		if (verbose) {
 			fprintf(stderr, "%8s-%d %5d %6d %7d "
@@ -628,7 +628,7 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 		awm_id = (*it).first;
 		pstats = (*it).second;
 
-		_cycles = count(pstats->samples);
+		_cycles = count(pstats->cycle_samples);
 		fprintf(stderr, "\nPerf counters stats for '%s-%d' (%d cycles):\n\n",
 				prec->name.c_str(), awm_id, _cycles);
 		PerfPrintStats(prec, pstats);
@@ -669,15 +669,15 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 		pstats = (*it).second;
 
 		// Ignoring empty statistics
-		_cycles = count(pstats->samples);
+		_cycles = count(pstats->cycle_samples);
 		if (!_cycles)
 			continue;
 
 		// Features extraction
-		_min = min(pstats->samples);
-		_max = max(pstats->samples);
-		_avg = mean(pstats->samples);
-		_var = variance(pstats->samples);
+		_min = min(pstats->cycle_samples);
+		_max = max(pstats->cycle_samples);
+		_avg = mean(pstats->cycle_samples);
+		_var = variance(pstats->cycle_samples);
 
 		_setMetricPrefix(prec->name.c_str(), awm_id);
 		fprintf(stderr, "\n\n.:: MOST statistics for AWM [%s]:\n",
@@ -859,15 +859,15 @@ void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
 	prec->time_processing += last_cycle_ms;
 
 	// Push sample into accumulator
-	pstats->samples(last_cycle_ms);
+	pstats->cycle_samples(last_cycle_ms);
 
 	// Statistic features extraction for cycle time estimation:
 	DB(
-	uint32_t _count = count(pstats->samples);
-	double _min = min(pstats->samples);
-	double _max = max(pstats->samples);
-	double _avg = mean(pstats->samples);
-	double _var = variance(pstats->samples);
+	uint32_t _count = count(pstats->cycle_samples);
+	double _min = min(pstats->cycle_samples);
+	double _max = max(pstats->cycle_samples);
+	double _avg = mean(pstats->cycle_samples);
+	double _var = variance(pstats->cycle_samples);
 	logger->Debug("#%08d: m: %.3f, M: %.3f, a: %.3f, v: %.3f) [ms]",
 		_count, _min, _max, _avg, _var);
 	)
@@ -1157,8 +1157,8 @@ uint32_t BbqueRPC::GetSyncLatency(pregExCtx_t prec) {
 	// Get the statistics for the current AWM
 	assert(pstats);
 	std::unique_lock<std::mutex> stats_ul(pstats->stats_mtx);
-	_avg = mean(pstats->samples);
-	_var = variance(pstats->samples);
+	_avg = mean(pstats->cycle_samples);
+	_var = variance(pstats->cycle_samples);
 	stats_ul.unlock();
 
 	// Compute a reasonale sync point esimation
@@ -1723,7 +1723,7 @@ void BbqueRPC::PerfPrintNsec(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 
 	if (PerfEventMatch(ppea, PERF_SW(TASK_CLOCK))) {
 		// Get AWM average running time
-		total = mean(pstats->samples) * 1e6;
+		total = mean(pstats->cycle_samples) * 1e6;
 
 		if (total) {
 			ratio = avg / total;
@@ -2022,11 +2022,11 @@ void BbqueRPC::PerfPrintStats(pregExCtx_t prec, pAwmStats_t pstats) {
 		fputc('\n', stderr);
 
 		// Get AWM average and stddev running time
-		avg_value = mean(pstats->samples);
-		std_value = sqrt(static_cast<double>(variance(pstats->samples)));
+		avg_value = mean(pstats->cycle_samples);
+		std_value = sqrt(static_cast<double>(variance(pstats->cycle_samples)));
 
 		fprintf(stderr, " %18.6f cycle time [ms]", avg_value);
-		if (count(pstats->samples) > 1) {
+		if (count(pstats->cycle_samples) > 1) {
 			fprintf(stderr, "                                        ");
 			PrintNoisePct(std_value, avg_value);
 		}
