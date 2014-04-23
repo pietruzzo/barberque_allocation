@@ -567,6 +567,8 @@ RTLIB_ExitCode_t BbqueRPC::SetupStatistics(pregExCtx_t prec) {
 "# EXC    AWM   Uses Cycles   Total |      Min      Max |      Avg      Var"
 #define STATS_AWM_SPLIT \
 "#==================================+===================+=================="
+#define STATS_CYCLE_SPLIT \
+"#-------------------------+        +-------------------+------------------"
 
 void BbqueRPC::DumpStatsHeader() {
 	fprintf(stderr, "\n" STATS_HEADER "\n");
@@ -579,6 +581,7 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 
 	uint32_t cycles_count;
 	double cycle_min, cycle_max, cycle_avg, cycle_var;
+	double monitor_min, monitor_max, monitor_avg, monitor_var;
 
 	// Print RTLib stats for each AWM
 	it = prec->stats.begin();
@@ -607,6 +610,38 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 			logger->Debug("%8s %03d %6d %6d %7u | %8.3f %8.3f | %8.3f %8.3f",
 				prec->name.c_str(), awm_id, pstats->count, cycles_count,
 				pstats->time_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
+		}
+
+		// Monitor statistics extraction
+		monitor_min = min(pstats->monitor_samples);
+		monitor_max = max(pstats->monitor_samples);
+		monitor_avg = mean(pstats->monitor_samples);
+		monitor_var = variance(pstats->monitor_samples);
+
+		if (verbose) {
+			fprintf(stderr, STATS_CYCLE_SPLIT "\n");
+			fprintf(stderr, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+				prec->name.c_str(), awm_id, "onRun",
+				pstats->time_processing - pstats->time_monitoring,
+				cycle_min - monitor_min,
+				cycle_max - monitor_max,
+				cycle_avg - monitor_avg,
+				cycle_var - monitor_var);
+			fprintf(stderr, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+				prec->name.c_str(), awm_id, "onMonitor", pstats->time_monitoring,
+				monitor_min, monitor_max, monitor_avg, monitor_var);
+		} else {
+			logger->Debug(STATS_AWM_SPLIT);
+			logger->Debug("%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+				prec->name.c_str(), awm_id, "onRun",
+				pstats->time_processing - pstats->time_monitoring,
+				cycle_min - monitor_min,
+				cycle_max - monitor_max,
+				cycle_avg - monitor_avg,
+				cycle_var - monitor_var);
+			logger->Debug("%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+				prec->name.c_str(), awm_id, "onMonitor", pstats->time_monitoring,
+				monitor_min, monitor_max, monitor_avg, monitor_var);
 		}
 
 	}
@@ -648,8 +683,9 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 	pAwmStats_t pstats;
 	uint8_t awm_id;
 
-	uint32_t cycles_count;
+	uint32_t cycles_count, monitor_count;
 	double cycle_min, cycle_max, cycle_avg, cycle_var;
+	double monitor_min, monitor_max, monitor_avg, monitor_var;
 
 	// Print RTLib stats for each AWM
 	it = prec->stats.begin();
@@ -677,6 +713,19 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 		DUMP_MOST_METRIC("perf", "cycles_max_ms", cycle_max      , "%.3f");
 		DUMP_MOST_METRIC("perf", "cycles_avg_ms", cycle_avg      , "%.3f");
 		DUMP_MOST_METRIC("perf", "cycles_std_ms", sqrt(cycle_var), "%.3f");
+
+		// Monitor statistics extraction
+		monitor_count = count(pstats->monitor_samples);
+		monitor_min = min(pstats->monitor_samples);
+		monitor_max = max(pstats->monitor_samples);
+		monitor_avg = mean(pstats->monitor_samples);
+		monitor_var = variance(pstats->monitor_samples);
+
+		DUMP_MOST_METRIC("perf", "monitor_cnt",    monitor_count    , "%u");
+		DUMP_MOST_METRIC("perf", "monitor_min_ms", monitor_min      , "%.3f");
+		DUMP_MOST_METRIC("perf", "monitor_max_ms", monitor_max      , "%.3f");
+		DUMP_MOST_METRIC("perf", "monitor_avg_ms", monitor_avg      , "%.3f");
+		DUMP_MOST_METRIC("perf", "monitor_std_ms", sqrt(monitor_var), "%.3f");
 
 		// Dump Performance Counters for this AWM
 		PerfPrintStats(prec, pstats);
