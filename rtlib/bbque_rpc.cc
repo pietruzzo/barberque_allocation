@@ -898,11 +898,30 @@ void BbqueRPC::SyncTimeEstimation(pregExCtx_t prec) {
 }
 
 RTLIB_ExitCode_t BbqueRPC::UpdateStatistics(pregExCtx_t prec) {
+	pAwmStats_t pstats(prec->pAwmStats);
+	double last_config_ms;
 
 	// Check if this is the first re-start on this AWM
 	if (!isSyncDone(prec)) {
 		// TIMER: Get RECONF
-		prec->time_reconf += prec->exc_tmr.getElapsedTimeMs();
+		last_config_ms = prec->exc_tmr.getElapsedTimeMs();
+		prec->time_config += last_config_ms;
+
+		// Reconfiguration time statistics collection
+		pstats->time_configuring += last_config_ms;
+		pstats->config_samples(last_config_ms);
+
+		// Statistic features extraction for cycle time estimation:
+		DB(
+		uint32_t _count = count(pstats->config_samples);
+		double _min = min(pstats->config_samples);
+		double _max = max(pstats->config_samples);
+		double _avg = mean(pstats->config_samples);
+		double _var = variance(pstats->config_samples);
+		logger->Debug("Config #%08d: m: %.3f, M: %.3f, a: %.3f, v: %.3f) [ms]",
+			_count, _min, _max, _avg, _var);
+		)
+
 		// TIMER: Sart RUNNING
 		prec->exc_tmr.start();
 		return RTLIB_OK;

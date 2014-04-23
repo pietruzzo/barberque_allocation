@@ -267,10 +267,16 @@ protected:
 		uint32_t count;
 		/** The time [ms] spent on processing into this AWM */
 		uint32_t time_processing;
+		/** The time [ms] spent on configuring this AWM */
+		uint32_t time_configuring;
 
 		/** Statistics on AWM cycles */
 		accumulator_set<double,
 			stats<tag::min, tag::max, tag::variance>> cycle_samples;
+
+		/** Statistics on ReConfiguration Overheads */
+		accumulator_set<double,
+			stats<tag::min, tag::max, tag::variance>> config_samples;
 
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 		/** Map of registered Perf counters */
@@ -287,7 +293,10 @@ protected:
 		/** The mutex protecting concurrent access to statistical data */
 		std::mutex stats_mtx;
 
-		AwmStats() : count(0), time_processing(0) {};
+		AwmStats() :
+			count(0),
+			time_processing(0),
+			time_configuring(0) {};
 
 	} AwmStats_t;
 
@@ -338,7 +347,7 @@ protected:
 		/** The time [ms] spent on waiting for an AWM being assigned */
 		uint32_t time_blocked = 0;
 		/** The time [ms] spent on reconfigurations */
-		uint32_t time_reconf = 0;
+		uint32_t time_config = 0;
 		/** The time [ms] spent on processing */
 		uint32_t time_processing = 0;
 
