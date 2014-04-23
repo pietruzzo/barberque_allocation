@@ -922,7 +922,7 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 #ifdef CONFIG_BBQUE_OPENCL
 	// Dump OpenCL profiling info for each AWM
 	if (envOCLProf)
-		OclDumpStatsConsole(prec);
+		OclDumpStats(prec);
 #endif //CONFIG_BBQUE_OPENCL
 
 exit_done:
@@ -2322,7 +2322,7 @@ void BbqueRPC::OclDumpStatsHeader(bool h) {
 	}
 }
 
-void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
+void BbqueRPC::OclDumpStats(pregExCtx_t prec) {
 	AwmStatsMap_t::iterator it;
 	pAwmStats_t pstats;
 	uint8_t awm_id;
@@ -2338,16 +2338,16 @@ void BbqueRPC::OclDumpStatsConsole(pregExCtx_t prec) {
 		OclDumpStatsHeader(true);
 		for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
 			QueueProfPtr_t stPtr = it_cq->second;
-			OclDumpCmdStatsConsole(stPtr, it_cq->first);
+			OclDumpCmdStats(stPtr, it_cq->first);
 			if (envOCLProfLevel == 0)
 				continue;
-			OclDumpAddrStatsConsole(stPtr, it_cq->first);
+			OclDumpAddrStats(stPtr, it_cq->first);
 		}
 	}
 	fprintf(outfd, "\n\n");
 }
 
-void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
+void BbqueRPC::OclDumpCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
 	std::map<cl_command_type, AccArray_t>::iterator it_ct;
 	double_t otot = 0, vtot_q = 0, vtot_s = 0, vtot_e = 0;
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end(); it_ct++) {
@@ -2372,7 +2372,8 @@ void BbqueRPC::OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd
 	}
 	fprintf(outfd, OCL_STATS_BAR);
 }
-void BbqueRPC::OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
+
+void BbqueRPC::OclDumpAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue) {
 	std::map<void *, AccArray_t>::iterator it_ct;
 	cl_command_type cmd_type;
 

@@ -522,9 +522,9 @@ protected:
 	void OclPrintCmdStats(QueueProfPtr_t, cl_command_queue);
 	void OclPrintAddrStats(QueueProfPtr_t, cl_command_queue);
 	void OclDumpStatsHeader(bool h);
-	void OclDumpStatsConsole(pregExCtx_t prec);
-	void OclDumpCmdStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
-	void OclDumpAddrStatsConsole(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
+	void OclDumpStats(pregExCtx_t prec);
+	void OclDumpCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
+	void OclDumpAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
 
 #endif // CONFIG_BBQUE_OPENCL
 
