@@ -581,11 +581,8 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 	pAwmStats_t pstats;
 	uint8_t awm_id;
 
-	uint32_t _cycles;
-	double _min;
-	double _max;
-	double _avg;
-	double _var;
+	uint32_t cycles_count;
+	double cycle_min, cycle_max, cycle_avg, cycle_var;
 
 	// Print RTLib stats for each AWM
 	it = prec->stats.begin();
@@ -594,27 +591,25 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 		pstats = (*it).second;
 
 		// Ignoring empty statistics
-		_cycles = count(pstats->cycle_samples);
-		if (!_cycles)
+		cycles_count = count(pstats->cycle_samples);
+		if (!cycles_count)
 			continue;
 
-		// Features extraction
-		_min = min(pstats->cycle_samples);
-		_max = max(pstats->cycle_samples);
-		_avg = mean(pstats->cycle_samples);
-		_var = variance(pstats->cycle_samples);
+		// Cycles statistics extraction
+		cycle_min = min(pstats->cycle_samples);
+		cycle_max = max(pstats->cycle_samples);
+		cycle_avg = mean(pstats->cycle_samples);
+		cycle_var = variance(pstats->cycle_samples);
 
 		if (verbose) {
 			fprintf(stderr, "%8s-%d %5d %6d %7d "
 					"(%7.3f,%7.3f)(%7.3f,%7.3f)\n",
-				prec->name.c_str(), awm_id, pstats->count,
-				_cycles, pstats->time_processing,
-				_min, _max, _avg, _var);
+				prec->name.c_str(), awm_id, pstats->count, cycles_count,
+				pstats->time_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
 		} else {
 			logger->Debug("%8s-%d %5d %6d %7d (%7.3f,%7.3f)(%7.3f,%7.3f)",
-				prec->name.c_str(), awm_id, pstats->count,
-				_cycles, pstats->time_processing,
-				_min, _max, _avg, _var);
+				prec->name.c_str(), awm_id, pstats->count, cycles_count,
+				pstats->time_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
 		}
 
 	}
@@ -628,9 +623,9 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 		awm_id = (*it).first;
 		pstats = (*it).second;
 
-		_cycles = count(pstats->cycle_samples);
+		cycles_count = count(pstats->cycle_samples);
 		fprintf(stderr, "\nPerf counters stats for '%s-%d' (%d cycles):\n\n",
-				prec->name.c_str(), awm_id, _cycles);
+				prec->name.c_str(), awm_id, cycles_count);
 		PerfPrintStats(prec, pstats);
 	}
 
@@ -656,11 +651,8 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 	pAwmStats_t pstats;
 	uint8_t awm_id;
 
-	uint32_t _cycles;
-	double _min;
-	double _max;
-	double _avg;
-	double _var;
+	uint32_t cycles_count;
+	double cycle_min, cycle_max, cycle_avg, cycle_var;
 
 	// Print RTLib stats for each AWM
 	it = prec->stats.begin();
@@ -669,25 +661,25 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 		pstats = (*it).second;
 
 		// Ignoring empty statistics
-		_cycles = count(pstats->cycle_samples);
-		if (!_cycles)
+		cycles_count = count(pstats->cycle_samples);
+		if (!cycles_count)
 			continue;
-
-		// Features extraction
-		_min = min(pstats->cycle_samples);
-		_max = max(pstats->cycle_samples);
-		_avg = mean(pstats->cycle_samples);
-		_var = variance(pstats->cycle_samples);
 
 		_setMetricPrefix(prec->name.c_str(), awm_id);
 		fprintf(stderr, "\n\n.:: MOST statistics for AWM [%s]:\n",
 				_metricPrefix);
 
-		DUMP_MOST_METRIC("perf", "cycles_cnt"   , _cycles   , "%d");
-		DUMP_MOST_METRIC("perf", "cycles_min_ms", _min      , "%.3f");
-		DUMP_MOST_METRIC("perf", "cycles_max_ms", _max      , "%.3f");
-		DUMP_MOST_METRIC("perf", "cycles_avg_ms", _avg      , "%.3f");
-		DUMP_MOST_METRIC("perf", "cycles_std_ms", sqrt(_var), "%.3f");
+		// Cycles statistics extraction
+		cycle_min = min(pstats->cycle_samples);
+		cycle_max = max(pstats->cycle_samples);
+		cycle_avg = mean(pstats->cycle_samples);
+		cycle_var = variance(pstats->cycle_samples);
+
+		DUMP_MOST_METRIC("perf", "cycles_cnt"   , cycles_count   , "%u");
+		DUMP_MOST_METRIC("perf", "cycles_min_ms", cycle_min      , "%.3f");
+		DUMP_MOST_METRIC("perf", "cycles_max_ms", cycle_max      , "%.3f");
+		DUMP_MOST_METRIC("perf", "cycles_avg_ms", cycle_avg      , "%.3f");
+		DUMP_MOST_METRIC("perf", "cycles_std_ms", sqrt(cycle_var), "%.3f");
 
 		// Dump Performance Counters for this AWM
 		PerfPrintStats(prec, pstats);
