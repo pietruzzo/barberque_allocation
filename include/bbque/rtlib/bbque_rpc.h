@@ -687,11 +687,11 @@ protected:
 	 * identified by a UID string which is initialized by a call to
 	 * @see setUid()
 	 */
-	char chTrdUid[20] = "00000:undef ";
+	char chTrdUid[20] = "00000:undef";
 
 	inline void setChId(pid_t id, const char *name) {
 		chTrdPid = id;
-		snprintf(chTrdUid, 20, "%05d:%-13.13s", chTrdPid, name);
+		snprintf(chTrdUid, 20, "%05d:%-.13s", chTrdPid, name);
 	}
 
 private:
