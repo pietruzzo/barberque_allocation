@@ -229,7 +229,8 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			// Enabling OpenCL Profiling Output on file
 			envOCLProf = true;
 			sscanf(opt+1, "%d", &envOCLProfLevel);
-			fprintf(stderr, "Enabling OpenCL profiling [verbosity: %d]\n", envOCLProfLevel);
+			logger->Notice("Enabling OpenCL profiling [verbosity: %d]",
+					envOCLProfLevel);
 			break;
 #endif //CONFIG_BBQUE_OPENCL
 
@@ -2216,7 +2217,7 @@ void BbqueRPC::OclPrintStats(pAwmStats_t pstats) {
 		QueueProfPtr_t stPtr = it_cq->second;
 		OclPrintCmdStats(stPtr, it_cq->first);
 		if (envOCLProfLevel > 0) {
-			fprintf(stderr, FD("OCL: Printing command instance statistics...\n"));
+			logger->Debug("OCL: Printing command instance statistics...");
 			OclPrintAddrStats(stPtr, it_cq->first);
 		}
 	}
@@ -2550,13 +2551,13 @@ void BbqueRPC::NotifyPreConfigure(
 	assert(ech);
 	prec = getRegistered(ech);
 	if (!prec) {
-		fprintf(stderr, FE("NotifyPreConfigure EXC [%p] FAILED "
-				"(EXC not registered)\n"), (void*)ech);
+		logger->Error("NotifyPreConfigure EXC [%p] FAILED (EXC not registered)",
+				(void*)ech);
 		return;
 	}
 	assert(isRegistered(prec) == true);
 #ifdef CONFIG_BBQUE_OPENCL
-	fprintf(stderr, FD("NotifyPreConfigure - OCL Device: %d\n"), prec->dev_id);
+	logger->Debug("NotifyPreConfigure - OCL Device: %d", prec->dev_id);
 	OclSetDevice(prec->dev_id, prec->event);
 #endif
 }
