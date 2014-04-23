@@ -799,7 +799,11 @@ void BbqueRPC::DumpMemoryReport(pregExCtx_t prec) {
 	}
 
 	while (fgets(buff, 256, memfd)) {
-		logger->Debug("Memory Read [%s]", buff);
+		// DB(
+		// 	// remove leading '\n'
+		// 	buff[strlen(buff)-1] = 0;
+		// 	logger->Debug("Memory Read [%s]", buff);
+		// )
 		sscanf(buff, "%32s %" PRIu64, metric, &value);
 		DUMP_MOST_METRIC("memory", metric, value, "%" PRIu64);
 	}
