@@ -75,23 +75,8 @@ channel_done:
 }
 
 BbqueRPC::~BbqueRPC(void) {
-	excMap_t::iterator it;
-	pregExCtx_t prec;
-
 	logger = bu::ConsoleLogger::GetInstance(BBQUE_LOG_MODULE);
 	logger->Debug("BbqueRPC dtor");
-
-	// Dump out execution statistics
-	it = exc_map.begin();
-	if (it != exc_map.end()) {
-
-		if (!envMOSTOutput)
-			DumpStatsHeader();
-		for ( ; it != exc_map.end(); ++it) {
-			prec = (*it).second;
-			DumpStats(prec, true);
-		}
-	}
 
 	// Clean-up all the registered EXCs
 	exc_map.clear();
@@ -429,6 +414,9 @@ void BbqueRPC::Unregister(
 
 	assert(isRegistered(prec) == true);
 
+	// Dump (verbose) execution statistics
+	DumpStats(prec, true);
+
 	// Calling the low-level unregistration
 	result = _Unregister(prec);
 	if (result != RTLIB_OK) {
@@ -436,9 +424,6 @@ void BbqueRPC::Unregister(
 				(void*)ech, prec->name.c_str(), result, RTLIB_ErrorStr(result)));
 		return;
 	}
-
-	// Dump (verbose) execution statistics
-	DumpStats(prec);
 
 	// Mark the EXC as Unregistered
 	clearRegistered(prec);
@@ -541,9 +526,6 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 	clearEnabled(prec);
 	clearAwmValid(prec);
 	clearAwmAssigned(prec);
-
-	// Dump statistics on EXC disabling
-	DB(DumpStats(prec));
 
 	// Unlocking eventually waiting GetWorkingMode
 	prec->cv.notify_one();
@@ -930,6 +912,7 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 		goto exit_done;
 	}
 
+	DumpStatsHeader();
 	DumpStatsConsole(prec, verbose);
 
 #ifdef CONFIG_BBQUE_OPENCL
