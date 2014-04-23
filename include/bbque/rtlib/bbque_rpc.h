@@ -521,7 +521,6 @@ protected:
 	void OclPrintStats(pAwmStats_t pstats);
 	void OclPrintCmdStats(QueueProfPtr_t, cl_command_queue);
 	void OclPrintAddrStats(QueueProfPtr_t, cl_command_queue);
-	void OclDumpStatsHeader(bool h);
 	void OclDumpStats(pregExCtx_t prec);
 	void OclDumpCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
 	void OclDumpAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);

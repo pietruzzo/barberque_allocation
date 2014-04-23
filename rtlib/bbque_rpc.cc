@@ -2311,17 +2311,6 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queu
 #define OCL_STATS_BAR_ADDR \
 "#===================================================================================================================================================================##\n"
 
-void BbqueRPC::OclDumpStatsHeader(bool h) {
-	if (h) {
-		fprintf(outfd, OCL_STATS_BAR);
-		fprintf(outfd, OCL_STATS_HEADER);
-	}
-	else {
-		fprintf(outfd, OCL_STATS_BAR_ADDR);
-		fprintf(outfd, OCL_STATS_HEADER_ADDR);
-	}
-}
-
 void BbqueRPC::OclDumpStats(pregExCtx_t prec) {
 	AwmStatsMap_t::iterator it;
 	pAwmStats_t pstats;
@@ -2335,7 +2324,8 @@ void BbqueRPC::OclDumpStats(pregExCtx_t prec) {
 		std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
 		fprintf(outfd, OCL_EXC_AWM_HEADER, prec->name.c_str(), awm_id);
 
-		OclDumpStatsHeader(true);
+		fprintf(outfd, OCL_STATS_BAR);
+		fprintf(outfd, OCL_STATS_HEADER);
 		for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
 			QueueProfPtr_t stPtr = it_cq->second;
 			OclDumpCmdStats(stPtr, it_cq->first);
@@ -2377,7 +2367,8 @@ void BbqueRPC::OclDumpAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue
 	std::map<void *, AccArray_t>::iterator it_ct;
 	cl_command_type cmd_type;
 
-	OclDumpStatsHeader(false);
+	fprintf(outfd, OCL_STATS_BAR_ADDR);
+	fprintf(outfd, OCL_STATS_HEADER_ADDR);
 	for (it_ct = stPtr->addr_prof.begin(); it_ct != stPtr->addr_prof.end(); it_ct++) {
 		cmd_type = rtlib_ocl_get_command_type(it_ct->first);
 
