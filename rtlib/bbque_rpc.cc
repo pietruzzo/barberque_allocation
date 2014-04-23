@@ -568,7 +568,7 @@ RTLIB_ExitCode_t BbqueRPC::SetupStatistics(pregExCtx_t prec) {
 "#-------------------------+--------+-------------------+------------------"
 
 void BbqueRPC::DumpStatsHeader() {
-	fprintf(stderr, "\n" STATS_HEADER "\n");
+	fprintf(outfd, STATS_HEADER "\n");
 }
 
 void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
@@ -599,8 +599,8 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 		cycle_var = variance(pstats->cycle_samples);
 
 		if (verbose) {
-			fprintf(stderr, STATS_AWM_SPLIT"\n");
-			fprintf(stderr, "%8s %03d %6d %6d %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+			fprintf(outfd, STATS_AWM_SPLIT"\n");
+			fprintf(outfd, "%8s %03d %6d %6d %7u | %8.3f %8.3f | %8.3f %8.3f\n",
 				prec->name.c_str(), awm_id, pstats->count, cycles_count,
 				pstats->time_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
 		} else {
@@ -617,15 +617,15 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 		monitor_var = variance(pstats->monitor_samples);
 
 		if (verbose) {
-			fprintf(stderr, STATS_CYCLE_SPLIT "\n");
-			fprintf(stderr, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+			fprintf(outfd, STATS_CYCLE_SPLIT "\n");
+			fprintf(outfd, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
 				prec->name.c_str(), awm_id, "onRun",
 				pstats->time_processing - pstats->time_monitoring,
 				cycle_min - monitor_min,
 				cycle_max - monitor_max,
 				cycle_avg - monitor_avg,
 				cycle_var - monitor_var);
-			fprintf(stderr, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+			fprintf(outfd, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
 				prec->name.c_str(), awm_id, "onMonitor", pstats->time_monitoring,
 				monitor_min, monitor_max, monitor_avg, monitor_var);
 		} else {
@@ -649,8 +649,8 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 		config_var = variance(pstats->config_samples);
 
 		if (verbose) {
-			fprintf(stderr, STATS_CONF_SPLIT "\n");
-			fprintf(stderr, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
+			fprintf(outfd, STATS_CONF_SPLIT "\n");
+			fprintf(outfd, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
 				prec->name.c_str(), awm_id, "onConfigure", pstats->time_configuring,
 				config_min, config_max, config_avg, config_var);
 		} else {
@@ -672,7 +672,7 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 		pstats = (*it).second;
 
 		cycles_count = count(pstats->cycle_samples);
-		fprintf(stderr, "\nPerf counters stats for '%s-%d' (%d cycles):\n\n",
+		fprintf(outfd, "\nPerf counters stats for '%s-%d' (%d cycles):\n\n",
 				prec->name.c_str(), awm_id, cycles_count);
 		PerfPrintStats(prec, pstats);
 	}
@@ -687,7 +687,7 @@ static inline void _setMetricPrefix(const char *exc_name, uint8_t awm_id) {
 
 
 #define DUMP_MOST_METRIC(CLASS, NAME, VALUE, FMT)	\
-	fprintf(stderr, "@%s%s:%s:%s=" FMT "@\n",	\
+	fprintf(outfd, "@%s%s:%s:%s=" FMT "@\n",	\
 			envMetricsTag,			\
 			_metricPrefix,			\
 			CLASS,				\
@@ -716,7 +716,7 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 			continue;
 
 		_setMetricPrefix(prec->name.c_str(), awm_id);
-		fprintf(stderr, "\n\n.:: MOST statistics for AWM [%s]:\n",
+		fprintf(outfd, ".:: MOST statistics for AWM [%s]:\n",
 				_metricPrefix);
 
 		// Cycles statistics extraction
@@ -1821,7 +1821,7 @@ void BbqueRPC::PerfPrintNsec(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 	if (envMOSTOutput)
 		DUMP_MOST_METRIC("perf", _perfCounterName, msecs, "%.6f");
 	else
-		fprintf(stderr, "%19.6f%s%-25s", msecs, envCsvSep,
+		fprintf(outfd, "%19.6f%s%-25s", msecs, envCsvSep,
 			bu::Perf::EventName(ppea->type, ppea->config));
 
 	if (envCsvOutput)
@@ -1837,7 +1837,7 @@ void BbqueRPC::PerfPrintNsec(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 			if (envMOSTOutput)
 				DUMP_MOST_METRIC("perf", "cpu_utiliz", ratio, "%.3f");
 			else
-				fprintf(stderr, " # %8.3f CPUs utilized          ", ratio);
+				fprintf(outfd, " # %8.3f CPUs utilized          ", ratio);
 			return;
 		}
 	}
@@ -1859,9 +1859,9 @@ void BbqueRPC::PerfPrintMissesRatio(double avg_missed, double tot_branches, cons
 	else if (ratio > 5.0)
 		color = PERF_COLOR_YELLOW;
 
-	fprintf(stderr, " #  ");
-	bu::Perf::FPrintf(stderr, color, "%6.2f%%", ratio);
-	fprintf(stderr, " %-23s", text);
+	fprintf(outfd, " #  ");
+	bu::Perf::FPrintf(outfd, color, "%6.2f%%", ratio);
+	fprintf(outfd, " %-23s", text);
 
 }
 
@@ -1885,7 +1885,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		else
 			fmt = "%19.0f%s%-25s";
 
-		fprintf(stderr, fmt, avg, envCsvSep,
+		fprintf(outfd, fmt, avg, envCsvSep,
 				bu::Perf::EventName(ppea->type, ppea->config));
 	}
 
@@ -1906,7 +1906,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		if (envMOSTOutput) {
 			DUMP_MOST_METRIC("perf", "ipc", ratio, "%.2f");
 		} else {
-			fprintf(stderr, " #   %5.2f  insns per cycle        ", ratio);
+			fprintf(outfd, " #   %5.2f  insns per cycle        ", ratio);
 		}
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0)
@@ -1928,7 +1928,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 			if (envMOSTOutput) {
 				DUMP_MOST_METRIC("perf", "stall_cycles_per_inst", avg, "%.0f");
 			} else {
-				fprintf(stderr, "\n%45s#   %5.2f  stalled cycles per insn", " ", ratio);
+				fprintf(outfd, "\n%45s#   %5.2f  stalled cycles per insn", " ", ratio);
 			}
 		}
 #endif
@@ -2008,7 +2008,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		total = mean(ppes2->perf_samples);
 		if (total) {
 			ratio = avg * 100 / total;
-		    fprintf(stderr, " # %8.3f %% of all cache refs    ", ratio);
+		    fprintf(outfd, " # %8.3f %% of all cache refs    ", ratio);
 		}
 
 		return;
@@ -2028,7 +2028,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 			if (envMOSTOutput) {
 				DUMP_MOST_METRIC("perf", "ghz", ratio, "%.3f");
 			} else {
-				fprintf(stderr, " # %8.3f GHz                    ", ratio);
+				fprintf(outfd, " # %8.3f GHz                    ", ratio);
 			}
 		}
 
@@ -2046,12 +2046,12 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 	total = mean(ppes2->perf_samples);
 	if (total) {
 		ratio = 1000.0 * avg / total;
-		fprintf(stderr, " # %8.3f M/sec                  ", ratio);
+		fprintf(outfd, " # %8.3f M/sec                  ", ratio);
 		return;
 	}
 
 	// Otherwise, simply generate an empty line
-	fprintf(stderr, "%-35s", " ");
+	fprintf(outfd, "%-35s", " ");
 
 }
 
@@ -2109,14 +2109,14 @@ void BbqueRPC::PerfPrintStats(pregExCtx_t prec, pAwmStats_t pstats) {
 			continue;
 		}
 
-		DB(fprintf(stderr, " (Ena: %20lu, Run: %10lu) ", avg_enabled, avg_running));
+		DB(fprintf(outfd, " (Ena: %20lu, Run: %10lu) ", avg_enabled, avg_running));
 
 		// Print percentage of counter usage
 		if (avg_enabled != avg_running) {
-			fprintf(stderr, " [%5.2f%%]", 100.0 * avg_running / avg_enabled);
+			fprintf(outfd, " [%5.2f%%]", 100.0 * avg_running / avg_enabled);
 		}
 
-		fputc('\n', stderr);
+		fputc('\n', outfd);
 	}
 
 	// In MOST output mode, no more metrics are dumped
@@ -2125,18 +2125,18 @@ void BbqueRPC::PerfPrintStats(pregExCtx_t prec, pAwmStats_t pstats) {
 
 	if (!envCsvOutput) {
 
-		fputc('\n', stderr);
+		fputc('\n', outfd);
 
 		// Get AWM average and stddev running time
 		avg_value = mean(pstats->cycle_samples);
 		std_value = sqrt(static_cast<double>(variance(pstats->cycle_samples)));
 
-		fprintf(stderr, " %18.6f cycle time [ms]", avg_value);
+		fprintf(outfd, " %18.6f cycle time [ms]", avg_value);
 		if (count(pstats->cycle_samples) > 1) {
-			fprintf(stderr, "                                        ");
+			fprintf(outfd, "                                        ");
 			PrintNoisePct(std_value, avg_value);
 		}
-		fprintf(stderr, "\n\n");
+		fprintf(outfd, "\n\n");
 	}
 
 }
@@ -2157,7 +2157,7 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
 
 
 	if (envCsvOutput) {
-		fprintf(stderr, "%s%.2f%%", envCsvSep, pct);
+		fprintf(outfd, "%s%.2f%%", envCsvSep, pct);
 		return;
 	}
 
@@ -2169,9 +2169,9 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
 	else if (pct > 40.0)
 		color = PERF_COLOR_YELLOW;
 
-	fprintf(stderr, "  ( ");
-	bu::Perf::FPrintf(stderr, color, "+-%6.2f%%", pct);
-	fprintf(stderr, " )");
+	fprintf(outfd, "  ( ");
+	bu::Perf::FPrintf(outfd, color, "+-%6.2f%%", pct);
+	fprintf(outfd, " )");
 }
 
 #endif // CONFIG_BBQUE_RTLIB_PERF_SUPPORT
