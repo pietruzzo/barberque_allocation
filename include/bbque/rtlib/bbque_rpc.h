@@ -267,6 +267,8 @@ protected:
 		uint32_t count;
 		/** The time [ms] spent on processing into this AWM */
 		uint32_t time_processing;
+		/** The time [ms] spent on monitoring this AWM */
+		uint32_t time_monitoring;
 		/** The time [ms] spent on configuring this AWM */
 		uint32_t time_configuring;
 
@@ -277,6 +279,10 @@ protected:
 		/** Statistics on ReConfiguration Overheads */
 		accumulator_set<double,
 			stats<tag::min, tag::max, tag::variance>> config_samples;
+
+		/** Statistics on Monitoring Overheads */
+		accumulator_set<double,
+			stats<tag::min, tag::max, tag::variance>> monitor_samples;
 
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 		/** Map of registered Perf counters */
@@ -296,6 +302,7 @@ protected:
 		AwmStats() :
 			count(0),
 			time_processing(0),
+			time_monitoring(0),
 			time_configuring(0) {};
 
 	} AwmStats_t;
@@ -362,6 +369,8 @@ protected:
 		AwmStatsMap_t stats;
 		/** Statistics of currently selected AWM */
 		pAwmStats_t pAwmStats;
+
+		double mon_tstart = 0; // [ms] at the last monitoring start time
 
 		double cps_tstart = 0; // [ms] at the last cycle start time
 		float cps_max = 0;     // [Hz] the requried maximum CPS

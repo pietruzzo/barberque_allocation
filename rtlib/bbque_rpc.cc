@@ -2581,8 +2581,21 @@ void BbqueRPC::NotifyPostRun(
 
 void BbqueRPC::NotifyPreMonitor(
 	RTLIB_ExecutionContextHandler_t ech) {
+	pregExCtx_t prec;
+
+	assert(ech);
+	prec = getRegistered(ech);
+	if (!prec) {
+		logger->Error("NotifyPostMonitor EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
+		return;
+	}
+	assert(isRegistered(prec) == true);
+
 	logger->Debug("===> NotifyMonitor");
-	(void)ech;
+
+	// Keep track of monitoring start time
+	prec->mon_tstart = prec->exc_tmr.getElapsedTimeMs();
 }
 
 void BbqueRPC::NotifyPostMonitor(
@@ -2599,6 +2612,25 @@ void BbqueRPC::NotifyPostMonitor(
 	assert(isRegistered(prec) == true);
 
 	logger->Debug("<=== NotifyMonitor");
+
+	// Update monitoring statistics
+	pAwmStats_t pstats = prec->pAwmStats;
+	double last_monitor_ms = prec->exc_tmr.getElapsedTimeMs();
+	last_monitor_ms -= prec->mon_tstart;
+
+	pstats->time_monitoring += last_monitor_ms;
+	pstats->monitor_samples(last_monitor_ms);
+
+	// Statistic features extraction for cycle time estimation:
+	DB(
+	uint32_t _count = count(pstats->monitor_samples);
+	double _min = min(pstats->monitor_samples);
+	double _max = max(pstats->monitor_samples);
+	double _avg = mean(pstats->monitor_samples);
+	double _var = variance(pstats->monitor_samples);
+	logger->Debug("Monitor #%08d: m: %.3f, M: %.3f, a: %.3f, v: %.3f) [ms]",
+		_count, _min, _max, _avg, _var);
+	)
 
 	// CPS Enforcing
 	if (prec->cps_expect != 0)
