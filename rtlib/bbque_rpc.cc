@@ -564,16 +564,12 @@ RTLIB_ExitCode_t BbqueRPC::SetupStatistics(pregExCtx_t prec) {
 }
 
 #define STATS_HEADER \
-"#                _----------------=> Uses#\n"\
-"#               /    _------------=> Cycles#\n"\
-"#              |    /        _----=> Processing [ms]\n"\
-"#              |   |        /     |====== Sync Time [ms] ======|\n"\
-"#   EXC  AWM   |   |       |       _(min,max)_      _(avg,var)_\n"\
-"#     \\   /    |   |       |     /             \\  /             \\\n"\
+"# EXC    AWM   Uses Cycles   Total |      Min      Max |      Avg      Var"
+#define STATS_AWM_SPLIT \
+"#==================================+===================+=================="
 
 void BbqueRPC::DumpStatsHeader() {
-	fprintf(stderr, "\n");
-	fprintf(stderr, STATS_HEADER);
+	fprintf(stderr, "\n" STATS_HEADER "\n");
 }
 
 void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
@@ -602,12 +598,13 @@ void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 		cycle_var = variance(pstats->cycle_samples);
 
 		if (verbose) {
-			fprintf(stderr, "%8s-%d %5d %6d %7d "
-					"(%7.3f,%7.3f)(%7.3f,%7.3f)\n",
+			fprintf(stderr, STATS_AWM_SPLIT"\n");
+			fprintf(stderr, "%8s %03d %6d %6d %7u | %8.3f %8.3f | %8.3f %8.3f\n",
 				prec->name.c_str(), awm_id, pstats->count, cycles_count,
 				pstats->time_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
 		} else {
-			logger->Debug("%8s-%d %5d %6d %7d (%7.3f,%7.3f)(%7.3f,%7.3f)",
+			logger->Debug(STATS_AWM_SPLIT);
+			logger->Debug("%8s %03d %6d %6d %7u | %8.3f %8.3f | %8.3f %8.3f",
 				prec->name.c_str(), awm_id, pstats->count, cycles_count,
 				pstats->time_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
 		}
