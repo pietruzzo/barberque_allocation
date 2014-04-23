@@ -115,6 +115,10 @@ bool BbqueRPC::envUnmanaged = false;
 int  BbqueRPC::envUnmanagedAWM = 0;
 const char *BbqueRPC::envCsvSep = " ";
 
+// Select if statistics should be dumped on a file
+bool BbqueRPC::envFileOutput = false;
+
+
 RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 	const char *env;
 	char buff[100];
@@ -182,6 +186,11 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 		case 'c':
 			// Enabling CSV output
 			envCsvOutput = true;
+			break;
+		case 'f':
+			// Enabling File output
+			envFileOutput = true;
+			logger->Notice("Enabling statistics dump on FILE");
 			break;
 		case 'p':
 			// Enabling perf...

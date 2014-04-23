@@ -546,6 +546,7 @@ protected:
 	static int  envRawPerfCount;
 	static bool envNoKernel;
 	static bool envCsvOutput;
+	static bool envFileOutput;
 	static bool envMOSTOutput;
 #ifdef  CONFIG_BBQUE_OPENCL
 	static bool envOCLProf;
