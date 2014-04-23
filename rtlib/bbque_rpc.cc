@@ -117,6 +117,8 @@ const char *BbqueRPC::envCsvSep = " ";
 
 // Select if statistics should be dumped on a file
 bool BbqueRPC::envFileOutput = false;
+// This is the file handler used for statistics dumping
+static FILE *outfd = stderr;
 
 
 RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
@@ -272,6 +274,8 @@ RTLIB_ExitCode_t BbqueRPC::Init(const char *name) {
 				appTrdPid, name);
 		return RTLIB_OK;
 	}
+
+	appName = name;
 
 	// Getting application PID
 	appTrdPid = gettid();
@@ -903,6 +907,7 @@ void BbqueRPC::DumpMemoryReport(pregExCtx_t prec) {
 
 
 void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
+	std::string outfile(BBQUE_PATH_VAR "/");
 
 	// Statistics should be dumped only if:
 	// - compiled in DEBUG mode, or
@@ -912,11 +917,17 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 	if (DB(false &&) !verbose)
 		return;
 
+	outfd = stderr;
+	if (envFileOutput) {
+		outfile += std::string("stats_") + chTrdUid + ":" + prec->name;
+		outfd = fopen(outfile.c_str(), "w");
+	}
+
 	// MOST statistics are dumped just at the end of the execution
 	// (i.e. verbose mode)
 	if (envMOSTOutput && verbose) {
 		DumpStatsMOST(prec);
-		return;
+		goto exit_done;
 	}
 
 	DumpStatsConsole(prec, verbose);
@@ -926,6 +937,13 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 	if (envOCLProf)
 		OclDumpStatsConsole(prec);
 #endif //CONFIG_BBQUE_OPENCL
+
+exit_done:
+	if (envFileOutput) {
+		fclose(outfd);
+		logger->Warn("Execution statistics dumped on [%s]", outfile.c_str());
+	}
+
 }
 
 void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {

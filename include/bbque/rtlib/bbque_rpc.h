@@ -670,6 +670,11 @@ protected:
 
 protected:
 
+	/**
+	 * @brief The name of this application
+	 */
+	const char *appName;
+
 
 	/**
 	 * @brief The PID of the Channel Thread
