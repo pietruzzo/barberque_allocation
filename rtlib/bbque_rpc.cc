@@ -913,6 +913,24 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 		goto exit_done;
 	}
 
+	if (verbose) {
+		fprintf(outfd, "Comulative execution stats for '%s':\n", prec->name.c_str());
+		fprintf(outfd, "  TotCycles    : %7lu [ms]\n", prec->cycles_count);
+		fprintf(outfd, "  StartLatency : %7u [ms]\n", prec->time_starting);
+		fprintf(outfd, "  AwmWait      : %7u [ms]\n", prec->time_blocked);
+		fprintf(outfd, "  Configure    : %7u [ms]\n", prec->time_config);
+		fprintf(outfd, "  Process      : %7u [ms]\n", prec->time_processing);
+		fprintf(outfd, "\n");
+	} else {
+		logger->Debug("Comulative execution stats for '%s':", prec->name.c_str());
+		logger->Debug("  TotCycles    : %7lu [ms]", prec->cycles_count);
+		logger->Debug("  StartLatency : %7u [ms]", prec->time_starting);
+		logger->Debug("  AwmWait      : %7u [ms]", prec->time_blocked);
+		logger->Debug("  Configure    : %7u [ms]", prec->time_config);
+		logger->Debug("  Process      : %7u [ms]", prec->time_processing);
+		logger->Debug("");
+	}
+
 	DumpStatsHeader();
 	DumpStatsConsole(prec, verbose);
 
