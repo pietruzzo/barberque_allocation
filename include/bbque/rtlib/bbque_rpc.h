@@ -365,6 +365,8 @@ protected:
 		PerfRegisteredEventsMap_t events_map;
 #endif // CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
+		/** Overall cycles for this EXC */
+		uint64_t cycles_count = 0;
 		/** Statistics on AWM's of this EXC */
 		AwmStatsMap_t stats;
 		/** Statistics of currently selected AWM */

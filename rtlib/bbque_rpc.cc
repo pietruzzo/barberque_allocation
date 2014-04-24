@@ -948,6 +948,7 @@ void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
 
 	// Push sample into accumulator
 	pstats->cycle_samples(last_cycle_ms);
+	prec->cycles_count += 1;
 
 	// Statistic features extraction for cycle time estimation:
 	DB(
