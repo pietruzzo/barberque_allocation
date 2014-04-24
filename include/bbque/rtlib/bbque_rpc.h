@@ -351,6 +351,9 @@ protected:
 
 		/** The High-Resolution timer used for profiling */
 		bu::Timer exc_tmr;
+
+		/** The time [ms] latency to start the first execution */
+		uint32_t time_starting = 0;
 		/** The time [ms] spent on waiting for an AWM being assigned */
 		uint32_t time_blocked = 0;
 		/** The time [ms] spent on reconfigurations */

@@ -1086,6 +1086,10 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 	// TIMER: Get BLOCKED
 	prec->time_blocked += prec->exc_tmr.getElapsedTimeMs();
 
+	// Update start latency
+	if (unlikely(prec->time_starting == 0))
+		prec->time_starting = prec->time_blocked;
+
 waiting_done:
 
 	// TIMER: Sart RECONF
