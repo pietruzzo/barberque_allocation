@@ -951,6 +951,29 @@ typedef struct RTLIB_Conf {
 		int  awm_id;
 	} unmanaged;
 
+	// CGroup enforcing
+	struct {
+		bool enabled;
+
+		// CUPSET Contoller
+		struct {
+			char *cpus;
+			char *mems;
+		} cpuset;
+
+		// CPU Controller
+		struct {
+			char *cfs_period_us;
+			char *cfs_quota_us;
+		} cpu;
+
+		// MEMORY Contoller
+		struct {
+			char *limit_in_bytes;
+		} memory;
+
+	} cgroup;
+
 	// Processing duration
 	struct {
 		bool enabled;
@@ -983,6 +1006,13 @@ typedef struct RTLIB_Conf {
 
 		unmanaged.enabled = false;
 		unmanaged.awm_id = 0;
+
+		cgroup.enabled = false;
+		cgroup.cpuset.cpus = nullptr;
+		cgroup.cpuset.mems = nullptr;
+		cgroup.cpu.cfs_period_us = nullptr;
+		cgroup.cpu.cfs_quota_us = nullptr;
+		cgroup.memory.limit_in_bytes = nullptr;
 
 		duration.enabled = false;
 		duration.time_limit = false;

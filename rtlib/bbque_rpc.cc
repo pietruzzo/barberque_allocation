@@ -23,6 +23,7 @@
 #include "bbque/utils/logging/console_logger.h"
 
 #include <cstdio>
+#include <cstring>
 #include <sys/stat.h>
 
 #ifdef CONFIG_BBQUE_OPENCL
@@ -42,6 +43,15 @@ std::unique_ptr<bu::Logger> BbqueRPC::logger;
 
 // The RTLib configuration
 RTLIB_Conf_t BbqueRPC::conf;
+
+#ifdef CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
+// The CGroup forcing configuration (for UNMANAGED applications)
+static std::string cg_cpuset_cpus;
+static std::string cg_cpuset_mems;
+static std::string cg_cpu_cfs_period_us;
+static std::string cg_cpu_cfs_quota_us;
+static std::string cg_memory_limit_in_bytes;
+#endif // CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
 
 // The file handler used for statistics dumping
 static FILE *outfd = stderr;
@@ -91,7 +101,7 @@ BbqueRPC::~BbqueRPC(void) {
 RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 	const char *env;
 	char buff[100];
-	char *opt;
+	char *opt, *pos, *next;
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 	char * raw_buff;
 	int8_t idx  = 0;
@@ -177,6 +187,56 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			// Enabling CSV output
 			conf.profile.output.CSV.enabled = true;
 			break;
+#ifdef CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
+		case 'C':
+			// Enabling CGroup Enforcing
+			if (!conf.unmanaged.enabled) {
+				logger->Warn("CGroup enforcing is supported only in UNMANAGED mode");
+				break;
+			}
+			conf.cgroup.enabled = true;
+
+			// Format:
+			// [:]C <cpus> <cfs_period> <cfs_quota> <mems> <mem_bytes>
+			next = opt+1;
+			logger->Debug("CGroup Forcing Conf [%s]", next+1);
+
+			pos = ++next; next = strchr(pos, ' '); *next = 0;
+			cg_cpuset_cpus = pos;
+			conf.cgroup.cpuset.cpus = (char *)cg_cpuset_cpus.c_str();
+
+			pos = ++next; next = strchr(pos, ' '); *next = 0;
+			cg_cpu_cfs_period_us = pos;
+			conf.cgroup.cpu.cfs_period_us = (char *)cg_cpu_cfs_period_us.c_str();
+
+			pos = ++next; next = strchr(pos, ' '); *next = 0;
+			cg_cpu_cfs_quota_us  = pos;
+			conf.cgroup.cpu.cfs_quota_us = (char *)cg_cpu_cfs_quota_us.c_str();
+
+			pos = ++next; next = strchr(pos, ' '); *next = 0;
+			cg_cpuset_mems = pos;
+			conf.cgroup.cpuset.mems = (char *)cg_cpuset_mems.c_str();
+
+			pos = ++next; //next = strchr(pos, ' '); *next = 0;
+			cg_memory_limit_in_bytes = pos;
+			conf.cgroup.memory.limit_in_bytes = (char *)cg_memory_limit_in_bytes.c_str();
+
+			// Report CGroup configuration
+			logger->Debug("CGroup Forcing Setup:");
+			logger->Debug("   cpuset.cpus............. %s",
+					conf.cgroup.cpuset.cpus);
+			logger->Debug("   cpuset.mems............. %s",
+					conf.cgroup.cpuset.mems);
+			logger->Debug("   cpu.cfs_period_us....... %s",
+					conf.cgroup.cpu.cfs_period_us);
+			logger->Debug("   cpu.cfs_quota_us........ %s",
+					conf.cgroup.cpu.cfs_quota_us);
+			logger->Debug("   memory.limit_in_bytes... %s",
+					conf.cgroup.memory.limit_in_bytes);
+
+			logger->Warn("Enabling CGroup FORCING mode");
+			break;
+#endif // CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
 		case 'f':
 			// Enabling File output
 			conf.profile.output.file = true;
