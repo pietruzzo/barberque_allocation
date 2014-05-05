@@ -339,6 +339,10 @@ protected:
 		uint8_t exc_id;
 		/** The PID of the control thread managing this EXC */
 		pid_t ctrlTrdPid = 0;
+#ifdef CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
+		/** The path of the CGroup for this EXC */
+		std::string cgpath;
+#endif
 #define EXC_FLAGS_AWM_VALID      0x01 ///< The EXC has been assigned a valid AWM
 #define EXC_FLAGS_AWM_WAITING    0x02 ///< The EXC is waiting for a valid AWM
 #define EXC_FLAGS_AWM_ASSIGNED   0x04 ///< The EXC is waiting for a valid AWM
@@ -748,6 +752,21 @@ private:
 	 * @brief Log the header for statistics collection
 	 */
 	void DumpStatsHeader();
+
+	/**
+	 * @brief Initialize CGroup support
+	 */
+	RTLIB_ExitCode_t CGroupInit();
+
+	/**
+	 * @brief Create a CGroup for the specifed EXC
+	 */
+	RTLIB_ExitCode_t CGroupSetup(pregExCtx_t prec);
+
+	/**
+	 * @brief Delete the CGroup of the specified EXC
+	 */
+	RTLIB_ExitCode_t CGroupDelete(pregExCtx_t prec);
 
 	/**
 	 * @brief Setup the path of the application CGroup

@@ -20,7 +20,10 @@
 #include "bbque/rtlib/rpc_fifo_client.h"
 #include "bbque/rtlib/rpc_unmanaged_client.h"
 #include "bbque/app/application.h"
+#include "bbque/utils/cgroups.h"
 #include "bbque/utils/logging/console_logger.h"
+
+#include <libcgroup.h>
 
 #include <cstdio>
 #include <cstring>
@@ -46,6 +49,7 @@ RTLIB_Conf_t BbqueRPC::conf;
 
 #ifdef CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
 // The CGroup forcing configuration (for UNMANAGED applications)
+static bu::CGroups::CGSetup cgsetup;
 static std::string cg_cpuset_cpus;
 static std::string cg_cpuset_mems;
 static std::string cg_cpu_cfs_period_us;
@@ -834,6 +838,120 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 }
 
 #ifdef CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
+
+RTLIB_ExitCode_t BbqueRPC::CGroupInit() {
+	bu::CGroups::CGSetup cgsetup;
+
+	// Initialize CGroup Library
+	bu::CGroups::Init(BBQUE_LOG_MODULE);
+
+	if (likely(!conf.cgroup.enabled))
+		return RTLIB_OK;
+
+	// Check ROOT persmissions
+	if (::getuid() != 0) {
+		logger->Fatal("CGroup create failure (Error: missing root privileges)");
+		return RTLIB_ERROR;
+	}
+
+	// If not present, setup the "master" BBQUE CGroup as a clone
+	// of the root CGroup
+	if (bu::CGroups::Read("/bbque", cgsetup) ==
+			bu::CGroups::CGResult::READ_FAILED) {
+		logger->Info("Setup [/bbque] master CGroup");
+		bu::CGroups::Read("/", cgsetup);
+		bu::CGroups::Create("/bbque", cgsetup);
+	}
+
+	return RTLIB_OK;
+}
+
+RTLIB_ExitCode_t BbqueRPC::CGroupSetup(pregExCtx_t prec) {
+	char cgpath[] = "/bbque/12345:APPLICATION_NAME";
+
+	if (!conf.cgroup.enabled)
+		return RTLIB_OK;
+
+	// Check ROOT persmissions
+	if (::getuid() != 0) {
+		logger->Fatal("CGroup create failure (Error: missing root privileges)");
+		return RTLIB_ERROR;
+	}
+
+	// Setup the application specific CGroup
+	snprintf(cgpath, sizeof(cgpath), "/bbque/%05d:%s", chTrdPid, appName);
+	logger->Notice("Setup CGroup [%s]...", cgpath);
+
+	// For the time being, CGroup forcing for UNMANAGED applications is
+	// supported just for singe EXC applications
+	if (prec->exc_id != 0) {
+		logger->Warn("CGroup forcing with muiltiple EXCs");
+		goto do_attach;
+	}
+
+	// Set CGroup based on RTLib Configuration
+	cgsetup.cpuset.cpus           = conf.cgroup.cpuset.cpus;
+	cgsetup.cpuset.mems           = conf.cgroup.cpuset.mems;
+	cgsetup.cpu.cfs_period_us     = conf.cgroup.cpu.cfs_period_us;
+	cgsetup.cpu.cfs_quota_us      = conf.cgroup.cpu.cfs_quota_us;
+	cgsetup.memory.limit_in_bytes = conf.cgroup.memory.limit_in_bytes;
+
+	// Setup CGroup PATH
+	if (bu::CGroups::Create(cgpath, cgsetup) !=
+		bu::CGroups::CGResult::OK) {
+		logger->Error("CGroup setup [%s] FAILED");
+		return RTLIB_ERROR;
+	}
+
+do_attach:
+
+	// Report CGroup configuration
+	logger->Notice("Forcing EXC [%d] into CGroup [%s]:",
+			prec->exc_id, cgpath);
+	logger->Notice("   cpuset.cpus............. %s",
+			cgsetup.cpuset.cpus);
+	logger->Notice("   cpuset.mems............. %s",
+			cgsetup.cpuset.mems);
+	logger->Notice("   cpu.cfs_period_us....... %s",
+			cgsetup.cpu.cfs_period_us);
+	logger->Notice("   cpu.cfs_quota_us........ %s",
+			cgsetup.cpu.cfs_quota_us);
+	logger->Notice("   memory.limit_in_bytes... %s",
+			cgsetup.memory.limit_in_bytes);
+
+	// Attach the EXC to this CGroup
+	bu::CGroups::AttachMe(cgpath);
+
+	// Keep track of the configured CGroup path
+	prec->cgpath = cgpath;
+
+	return RTLIB_OK;
+}
+
+RTLIB_ExitCode_t BbqueRPC::CGroupDelete(pregExCtx_t prec) {
+	bu::CGroups::CGSetup cgsetup;
+
+	if (!conf.cgroup.enabled)
+		return RTLIB_OK;
+
+	if (prec->cgpath.empty()) {
+		logger->Debug("CGroup delete FAILED (Error: cgpath not valid)");
+		return RTLIB_OK;
+	}
+
+	// Delete EXC specific CGroup
+	if (bu::CGroups::Delete(prec->cgpath.c_str()) !=
+		bu::CGroups::CGResult::OK) {
+		logger->Error("CGroup delete [%s] FAILED", prec->cgpath.c_str());
+		return RTLIB_ERROR;
+	}
+
+	// Mark this CGroup as removed
+	prec->cgpath.clear();
+
+	return RTLIB_OK;
+}
+
 RTLIB_ExitCode_t BbqueRPC::SetCGroupPath(pregExCtx_t prec) {
 	uint8_t count = 0;
 #define BBQUE_RPC_CGOUPS_PATH_MAX 128
@@ -938,6 +1056,18 @@ void BbqueRPC::DumpMemoryReport(pregExCtx_t prec) {
 
 }
 #else
+RTLIB_ExitCode_t BbqueRPC::CGroupInit() {
+	return RTLIB_OK;
+}
+RTLIB_ExitCode_t BbqueRPC::CGroupSetup(pregExCtx_t prec) {
+	(void)prec;
+	return RTLIB_OK;
+}
+RTLIB_ExitCode_t BbqueRPC::CGroupDelete(pregExCtx_t prec) {
+	(void)prec;
+	return RTLIB_OK;
+}
+
 RTLIB_ExitCode_t BbqueRPC::SetCGroupPath(pregExCtx_t prec) {
 	(void)prec;
 	return RTLIB_OK;
