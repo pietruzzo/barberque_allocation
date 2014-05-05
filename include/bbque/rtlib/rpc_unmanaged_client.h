@@ -45,7 +45,7 @@ protected:
 
 	RTLIB_ExitCode_t _Init(const char *name) {
 		// Remove compilation warning
-		(void)name;
+		setChId(gettid(), name);
 		return RTLIB_OK;
 	}
 
