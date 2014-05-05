@@ -876,6 +876,17 @@ private:
 	pregExCtx_t getRegistered(uint8_t exc_id);
 
 
+	/**
+	 * Check if the specified duration has expired.
+	 *
+	 * A run-time duration can be specified both in [s] or number of
+	 * processing cycles. In case a duration has been specified via
+	 * BBQUE_RTLIB_OPTS, once this duration has been passed, this method
+	 * return true and the application is "forcely" terminated by the
+	 * RTLIB.
+	 */
+	bool CheckDurationTimeout(pregExCtx_t prec);
+
 /******************************************************************************
  * Performance Counters
  ******************************************************************************/

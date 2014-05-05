@@ -117,6 +117,26 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 		logger->Debug("OPT: %s", opt);
 
 		switch (opt[0]) {
+		case 'D':
+			// Setup processing duration timeout (cycles or seconds)
+			conf.duration.enabled = true;
+			if (opt[1] == 's' || opt[1] == 'S') {
+				conf.duration.millis = 1000 * atoi(opt+2);
+				conf.duration.time_limit = true;
+				logger->Warn("Enabling DURATION timeout %u [s]",
+						conf.duration.millis / 1000);
+				break;
+			}
+			if (opt[1] == 'c' || opt[1] == 'C') {
+				conf.duration.cycles = atoi(opt+2);
+				conf.duration.time_limit = false;
+				logger->Warn("Enabling DURATION timeout %u [cycles]",
+						conf.duration.cycles);
+				break;
+			}
+			// No proper duration time/cycles configured
+			conf.duration.enabled = false;
+			break;
 		case 'G':
 			// Enabling Global statistics collection
 			conf.profile.perf.global = true;
@@ -931,6 +951,21 @@ exit_done:
 
 }
 
+bool BbqueRPC::CheckDurationTimeout(pregExCtx_t prec) {
+	if (likely(!conf.duration.enabled))
+		return false;
+
+	if (!conf.duration.time_limit)
+		return false;
+
+	if (prec->time_processing >= conf.duration.millis) {
+		conf.duration.millis = 0;
+		return true;
+	}
+
+	return false;
+}
+
 void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
 	pAwmStats_t pstats(prec->pAwmStats);
 	std::unique_lock<std::mutex> stats_ul(pstats->stats_mtx);
@@ -946,6 +981,7 @@ void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
 	// Update running counters
 	pstats->time_processing += last_cycle_ms;
 	prec->time_processing += last_cycle_ms;
+	CheckDurationTimeout(prec);
 
 	// Push sample into accumulator
 	pstats->cycle_samples(last_cycle_ms);

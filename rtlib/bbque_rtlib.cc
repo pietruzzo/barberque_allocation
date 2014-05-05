@@ -304,7 +304,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 	}
 
 	// Setup configuration descriptor
-	rtlib_services.conf = BbqueRPC::Configuration();
+	rtlib_services.conf = bl::BbqueRPC::Configuration();
 
 	// Marking library as intialized
 	rtlib_initialized = 1;

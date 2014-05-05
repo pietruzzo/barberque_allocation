@@ -498,7 +498,21 @@ RTLIB_ExitCode_t BbqueEXC::Monitor() {
 	if (result == RTLIB_EXC_WORKLOAD_NONE)
 		done = true;
 
-	return result;
+	if (likely(!conf.duration.enabled))
+		return result;
+
+	// Duration control checks
+	if (conf.duration.time_limit) {
+		if (conf.duration.millis != 0)
+			return result;
+	} else {
+		if (conf.duration.cycles > cycles_count)
+			return result;
+	}
+
+	done = true;
+	logger->Warn("Application termination due to DURATION ENFORCING");
+	return RTLIB_EXC_WORKLOAD_NONE;
 }
 
 RTLIB_ExitCode_t BbqueEXC::Release() {

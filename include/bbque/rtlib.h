@@ -951,6 +951,14 @@ typedef struct RTLIB_Conf {
 		int  awm_id;
 	} unmanaged;
 
+	// Processing duration
+	struct {
+		bool enabled;
+		bool time_limit;
+		uint32_t cycles;
+		uint32_t millis;
+	} duration;
+
 #ifdef __cplusplus__
 
 	RTLIB_Conf() {
@@ -975,6 +983,11 @@ typedef struct RTLIB_Conf {
 
 		unmanaged.enabled = false;
 		unmanaged.awm_id = 0;
+
+		duration.enabled = false;
+		duration.time_limit = false;
+		duration.cycles = 0;
+		duration.seconds = 0;
 
 	};
 #endif
