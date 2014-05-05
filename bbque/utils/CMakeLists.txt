@@ -9,6 +9,9 @@ set (BBQUE_UTILS_SRC ${BBQUE_UTILS_SRC} attributes_container)
 if (CONFIG_BBQUE_RTLIB_PERF_SUPPORT)
 	set (BBQUE_UTILS_SRC ${BBQUE_UTILS_SRC} perf)
 endif (CONFIG_BBQUE_RTLIB_PERF_SUPPORT)
+if (CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT)
+	set (BBQUE_UTILS_SRC ${BBQUE_UTILS_SRC} cgroups)
+endif (CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT)
 
 #Add as library
 add_library(bbque_utils STATIC ${BBQUE_UTILS_SRC})
@@ -16,6 +19,7 @@ add_library(bbque_utils STATIC ${BBQUE_UTILS_SRC})
 # Linking dependencies
 target_link_libraries(
 	bbque_utils
+	-Wl,-whole-archive ${CGroup_LIBRARIES} -Wl,-no-whole-archive
 	-Wl,-whole-archive bbque_logger -Wl,-no-whole-archive
 )
 
