@@ -536,29 +536,7 @@ protected:
  * RTLib Run-Time Configuration
  ******************************************************************************/
 
-	//---- Performance Counters options
-	static bool envPerfCount;
-	static bool envGlobal;
-	static bool envOverheads;
-	static int  envDetailedRun;
-	static int  envRawPerfCount;
-	static bool envNoKernel;
-	static bool envCsvOutput;
-	static bool envFileOutput;
-	static bool envMOSTOutput;
-#ifdef  CONFIG_BBQUE_OPENCL
-	static bool envOCLProf;
-	static int  envOCLProfLevel;
-#endif //CONFIG_BBQUE_OPENCL
-#define BBQUE_RTLIB_OPTS_TAG_MAX 6
-	// The array +2 is due to:
-	// - the ending namespace separator ":"
-	// - the string NULL terminator
-	static char envMetricsTag[BBQUE_RTLIB_OPTS_TAG_MAX+2];
-	static bool envBigNum;
-	static bool envUnmanaged;
-	static int  envUnmanagedAWM;
-	static const char *envCsvSep;
+	static RTLIB_Conf_t conf;
 
 	/**
 	 * @brief Look-up configuration from environment variable BBQUE_RTLIB_OPTS

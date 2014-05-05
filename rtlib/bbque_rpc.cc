@@ -40,6 +40,12 @@ namespace bbque { namespace rtlib {
 
 std::unique_ptr<bu::Logger> BbqueRPC::logger;
 
+// The RTLib configuration
+RTLIB_Conf_t BbqueRPC::conf;
+
+// The file handler used for statistics dumping
+static FILE *outfd = stderr;
+
 BbqueRPC * BbqueRPC::GetInstance() {
 	static BbqueRPC * instance = NULL;
 
@@ -53,7 +59,7 @@ BbqueRPC * BbqueRPC::GetInstance() {
 	ParseOptions();
 
 #ifdef CONFIG_BBQUE_RTLIB_UNMANAGED_SUPPORT
-	if (envUnmanaged) {
+	if (conf.unmanaged.enabled) {
 		logger->Warn("Running in UNMANAGED MODE");
 		instance = new BbqueRPC_UNMANAGED_Client();
 		goto channel_done;
@@ -81,30 +87,6 @@ BbqueRPC::~BbqueRPC(void) {
 	// Clean-up all the registered EXCs
 	exc_map.clear();
 }
-
-bool BbqueRPC::envPerfCount = false;
-bool BbqueRPC::envGlobal = false;
-bool BbqueRPC::envOverheads = false;
-int  BbqueRPC::envDetailedRun = 0;
-int  BbqueRPC::envRawPerfCount = 0;
-bool BbqueRPC::envNoKernel = false;
-bool BbqueRPC::envCsvOutput = false;
-bool BbqueRPC::envMOSTOutput = false;
-#ifdef CONFIG_BBQUE_OPENCL
-bool BbqueRPC::envOCLProf = false;
-int  BbqueRPC::envOCLProfLevel = 0;
-#endif //CONFIG_BBQUE_OPENCL
-char BbqueRPC::envMetricsTag[BBQUE_RTLIB_OPTS_TAG_MAX+2] = "";
-bool BbqueRPC::envBigNum = false;
-bool BbqueRPC::envUnmanaged = false;
-int  BbqueRPC::envUnmanagedAWM = 0;
-const char *BbqueRPC::envCsvSep = " ";
-
-// Select if statistics should be dumped on a file
-bool BbqueRPC::envFileOutput = false;
-// This is the file handler used for statistics dumping
-static FILE *outfd = stderr;
-
 
 RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 	const char *env;
@@ -137,55 +119,56 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 		switch (opt[0]) {
 		case 'G':
 			// Enabling Global statistics collection
-			envGlobal = true;
+			conf.profile.perf.global = true;
 			break;
 		case 'K':
 			// Disable Kernel and Hipervisor from collected statistics
-			envNoKernel = true;
+			conf.profile.perf.no_kernel = true;
 			break;
 		case 'M':
 			// Enabling MOST output
-			envMOSTOutput = true;
+			conf.profile.output.MOST.enabled = true;
 			// Check if a TAG has been specified
 			if (opt[1]) {
-				snprintf(envMetricsTag,
+				snprintf(conf.profile.output.MOST.tag,
 						BBQUE_RTLIB_OPTS_TAG_MAX,
 						"%s:", opt+1);
 			}
 			logger->Info("Enabling MOST output [tag: %s]",
-					envMetricsTag[0] ? envMetricsTag : "-");
+					conf.profile.output.MOST.tag[0] ?
+					conf.profile.output.MOST.tag : "-");
 			break;
 		case 'O':
 			// Collect statistics on RTLIB overheads
-			envOverheads = true;
+			conf.profile.perf.overheads = true;
 			break;
 		case 'U':
 			// Enable "unmanaged" mode with the specified AWM
-			envUnmanaged = true;
+			conf.unmanaged.enabled = true;
 			if (*(opt+1))
-				sscanf(opt+1, "%d", &envUnmanagedAWM);
+				sscanf(opt+1, "%d", &conf.unmanaged.awm_id);
 			logger->Warn("Enabling UNMANAGED mode");
 			break;
 		case 'b':
 			// Enabling "big numbers" notations
-			envBigNum = true;
+			conf.profile.perf.big_num = true;
 			break;
 		case 'c':
 			// Enabling CSV output
-			envCsvOutput = true;
+			conf.profile.output.CSV.enabled = true;
 			break;
 		case 'f':
 			// Enabling File output
-			envFileOutput = true;
+			conf.profile.output.file = true;
 			logger->Notice("Enabling statistics dump on FILE");
 			break;
 		case 'p':
 			// Enabling perf...
-			envPerfCount = BBQUE_RTLIB_PERF_ENABLE;
+			conf.profile.enabled = BBQUE_RTLIB_PERF_ENABLE;
 			// ... with the specified verbosity level
-			sscanf(opt+1, "%d", &envDetailedRun);
-			if (envPerfCount) {
-				logger->Info("Enabling Perf Counters [verbosity: %d]", envDetailedRun);
+			sscanf(opt+1, "%d", &conf.profile.perf.detailed_run);
+			if (conf.profile.enabled) {
+				logger->Info("Enabling Perf Counters [verbosity: %d]", conf.profile.perf.detailed_run);
 			} else {
 				logger->Error("WARN: Perf Counters NOT available");
 			}
@@ -193,12 +176,12 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 		case 'r':
 			// Enabling perf...
-			envPerfCount = BBQUE_RTLIB_PERF_ENABLE;
+			conf.profile.enabled = BBQUE_RTLIB_PERF_ENABLE;
 
 			// # of RAW perf counters
-			sscanf(opt+1, "%d", &envRawPerfCount);
-			if (envRawPerfCount > 0) {
-				logger->Info("Enabling %d RAW Perf Counters", envRawPerfCount);
+			sscanf(opt+1, "%d", &conf.profile.perf.raw);
+			if (conf.profile.perf.raw > 0) {
+				logger->Info("Enabling %d RAW Perf Counters", conf.profile.perf.raw);
 			} else {
 				logger->Warn("Expected RAW Perf Counters");
 				break;
@@ -212,7 +195,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			// Insert the events into the array
 			while (raw_buff[0] != '\0') {
 				idx = InsertRAWPerfCounter(raw_buff);
-				if (idx == envRawPerfCount)
+				if (idx == conf.profile.perf.raw)
 					break;
 
 				// Get the next raw performance counter
@@ -220,24 +203,24 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 				nchr = strcspn(raw_buff, ",");
 				raw_buff[nchr] = '\0';
 			}
-			envRawPerfCount = idx;
+			conf.profile.perf.raw = idx;
 			break;
 #endif //CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
 #ifdef CONFIG_BBQUE_OPENCL
 		case 'o':
 			// Enabling OpenCL Profiling Output on file
-			envOCLProf = true;
-			sscanf(opt+1, "%d", &envOCLProfLevel);
+			conf.profile.opencl.enabled = true;
+			sscanf(opt+1, "%d", &conf.profile.opencl.level);
 			logger->Notice("Enabling OpenCL profiling [verbosity: %d]",
-					envOCLProfLevel);
+					conf.profile.opencl.level);
 			break;
 #endif //CONFIG_BBQUE_OPENCL
 
 		case 's':
 			// Setting CSV separator
 			if (opt[1])
-				envCsvSep = opt+1;
+				conf.profile.output.CSV.separator = opt+1;
 			break;
 		}
 
@@ -685,7 +668,7 @@ static inline void _setMetricPrefix(const char *exc_name, uint8_t awm_id) {
 
 #define DUMP_MOST_METRIC(CLASS, NAME, VALUE, FMT)	\
 	fprintf(outfd, "@%s%s:%s:%s=" FMT "@\n",	\
-			envMetricsTag,			\
+			conf.profile.output.MOST.tag,	\
 			_metricPrefix,			\
 			CLASS,				\
 			NAME, 				\
@@ -759,7 +742,7 @@ void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 
 #ifdef CONFIG_BBQUE_OPENCL
 		// Dump OpenCL profiling info for each AWM
-		if (envOCLProf)
+		if (conf.profile.opencl.enabled)
 			OclPrintStats(pstats);
 #endif //CONFIG_BBQUE_OPENCL
 
@@ -897,18 +880,18 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 		return;
 
 	outfd = stderr;
-	if (envFileOutput) {
+	if (conf.profile.output.file) {
 		outfile += std::string("stats_") + chTrdUid + ":" + prec->name;
 		outfd = fopen(outfile.c_str(), "w");
 	}
 
 
-	if (!envFileOutput)
+	if (!conf.profile.output.file)
 		logger->Notice("Execution statistics:\n\n");
 
 	// MOST statistics are dumped just at the end of the execution
 	// (i.e. verbose mode)
-	if (envMOSTOutput && verbose) {
+	if (conf.profile.output.MOST.enabled && verbose) {
 		DumpStatsMOST(prec);
 		goto exit_done;
 	}
@@ -936,12 +919,12 @@ void BbqueRPC::DumpStats(pregExCtx_t prec, bool verbose) {
 
 #ifdef CONFIG_BBQUE_OPENCL
 	// Dump OpenCL profiling info for each AWM
-	if (envOCLProf)
+	if (conf.profile.opencl.enabled)
 		OclDumpStats(prec);
 #endif //CONFIG_BBQUE_OPENCL
 
 exit_done:
-	if (envFileOutput) {
+	if (conf.profile.output.file) {
 		fclose(outfd);
 		logger->Warn("Execution statistics dumped on [%s]", outfile.c_str());
 	}
@@ -1167,7 +1150,7 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 #ifdef CONFIG_BBQUE_RTLIB_UNMANAGED_SUPPORT
 
-	if (!envUnmanaged)
+	if (!conf.unmanaged.enabled)
 		goto do_gwm;
 
 	// Configuration already done
@@ -1178,7 +1161,7 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 	// Configure unmanaged EXC in AWM0
 	prec->event = RTLIB_EXC_GWM_START;
-	wm->awm_id = envUnmanagedAWM;
+	wm->awm_id = conf.unmanaged.awm_id;
 	setAwmValid(prec);
 	goto do_reconf;
 
@@ -1666,7 +1649,7 @@ uint8_t BbqueRPC::InsertRAWPerfCounter(const char *perf_str) {
 	char buff[15];
 
 	// Overflow check
-	if (idx == envRawPerfCount)
+	if (idx == conf.profile.perf.raw)
 		return idx;
 
 	// Extract label and event select code + unit mask
@@ -1684,7 +1667,7 @@ uint8_t BbqueRPC::InsertRAWPerfCounter(const char *perf_str) {
 	// Allocate the raw events array
 	if (!raw_events)
 		raw_events = (PerfEventAttr_t *)
-			malloc(sizeof(PerfEventAttr_t) * envRawPerfCount);
+			malloc(sizeof(PerfEventAttr_t) * conf.profile.perf.raw);
 
 	// Set the event attributes
 	raw_events[idx++] = {PERF_TYPE_RAW, event_code_ul};
@@ -1728,54 +1711,54 @@ void BbqueRPC::PerfSetupEvents(pregExCtx_t prec) {
 	// support
 
 	// Adding raw events
-	for (uint8_t e = 0; e < envRawPerfCount; e++) {
+	for (uint8_t e = 0; e < conf.profile.perf.raw; e++) {
 		fd = prec->perf.AddCounter(
-				PERF_TYPE_RAW, raw_events[e].config, envNoKernel);
+				PERF_TYPE_RAW, raw_events[e].config, conf.profile.perf.no_kernel);
 		prec->events_map[fd] = &(raw_events[e]);
     }
 
 	// RAW events mode skip the preset counters
-	if (envRawPerfCount > 0)
+	if (conf.profile.perf.raw > 0)
 		return;
 
 	// Adding default events
 	for (uint8_t e = 0; e < tot_counters; e++) {
 		fd = prec->perf.AddCounter(
 				default_events[e].type, default_events[e].config,
-				envNoKernel);
+				conf.profile.perf.no_kernel);
 		prec->events_map[fd] = &(default_events[e]);
 	}
 
-	if (envDetailedRun <  1)
+	if (conf.profile.perf.detailed_run <  1)
 		return;
 
 	// Append detailed run extra attributes
 	for (uint8_t e = 0; e < ARRAY_SIZE(detailed_events); e++) {
 		fd = prec->perf.AddCounter(
 				detailed_events[e].type, detailed_events[e].config,
-				envNoKernel);
+				conf.profile.perf.no_kernel);
 		prec->events_map[fd] = &(detailed_events[e]);
 	}
 
-	if (envDetailedRun <  2)
+	if (conf.profile.perf.detailed_run <  2)
 		return;
 
 	// Append detailed run extra attributes
 	for (uint8_t e = 0; e < ARRAY_SIZE(very_detailed_events); e++) {
 		fd = prec->perf.AddCounter(
 				very_detailed_events[e].type, very_detailed_events[e].config,
-				envNoKernel);
+				conf.profile.perf.no_kernel);
 		prec->events_map[fd] = &(very_detailed_events[e]);
 	}
 
-	if (envDetailedRun <  3)
+	if (conf.profile.perf.detailed_run <  3)
 		return;
 
 	// Append detailed run extra attributes
 	for (uint8_t e = 0; e < ARRAY_SIZE(very_very_detailed_events); e++) {
 		fd = prec->perf.AddCounter(
 				very_very_detailed_events[e].type, very_very_detailed_events[e].config,
-				envNoKernel);
+				conf.profile.perf.no_kernel);
 		prec->events_map[fd] = &(very_very_detailed_events[e]);
 	}
 }
@@ -1842,13 +1825,13 @@ void BbqueRPC::PerfPrintNsec(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 	double total, ratio = 0.0;
 	double msecs = avg / 1e6;
 
-	if (envMOSTOutput)
+	if (conf.profile.output.MOST.enabled)
 		DUMP_MOST_METRIC("perf", _perfCounterName, msecs, "%.6f");
 	else
-		fprintf(outfd, "%19.6f%s%-25s", msecs, envCsvSep,
+		fprintf(outfd, "%19.6f%s%-25s", msecs, conf.profile.output.CSV.separator,
 			bu::Perf::EventName(ppea->type, ppea->config));
 
-	if (envCsvOutput)
+	if (conf.profile.output.CSV.enabled)
 		return;
 
 	if (PerfEventMatch(ppea, PERF_SW(TASK_CLOCK))) {
@@ -1858,7 +1841,7 @@ void BbqueRPC::PerfPrintNsec(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		if (total) {
 			ratio = avg / total;
 
-			if (envMOSTOutput)
+			if (conf.profile.output.MOST.enabled)
 				DUMP_MOST_METRIC("perf", "cpu_utiliz", ratio, "%.3f");
 			else
 				fprintf(outfd, " # %8.3f CPUs utilized          ", ratio);
@@ -1899,21 +1882,21 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 	// shutdown compiler warnings for kernels < 3.1
 	(void)total2;
 
-	if (envMOSTOutput) {
+	if (conf.profile.output.MOST.enabled) {
 		DUMP_MOST_METRIC("perf", _perfCounterName, avg, "%.0f");
 	} else {
-		if (envCsvOutput)
+		if (conf.profile.output.CSV.enabled)
 			fmt = "%.0f%s%s";
-		else if (envBigNum)
+		else if (conf.profile.perf.big_num)
 			fmt = "%'19.0f%s%-25s";
 		else
 			fmt = "%19.0f%s%-25s";
 
-		fprintf(outfd, fmt, avg, envCsvSep,
+		fprintf(outfd, fmt, avg, conf.profile.output.CSV.separator,
 				bu::Perf::EventName(ppea->type, ppea->config));
 	}
 
-	if (envCsvOutput)
+	if (conf.profile.output.CSV.enabled)
 		return;
 
 	if (PerfEventMatch(ppea, PERF_HW(INSTRUCTIONS))) {
@@ -1927,7 +1910,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		if (total)
 			ratio = avg / total;
 
-		if (envMOSTOutput) {
+		if (conf.profile.output.MOST.enabled) {
 			DUMP_MOST_METRIC("perf", "ipc", ratio, "%.2f");
 		} else {
 			fprintf(outfd, " #   %5.2f  insns per cycle        ", ratio);
@@ -1949,7 +1932,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 
 		if (total && avg) {
 			ratio = total / avg;
-			if (envMOSTOutput) {
+			if (conf.profile.output.MOST.enabled) {
 				DUMP_MOST_METRIC("perf", "stall_cycles_per_inst", avg, "%.0f");
 			} else {
 				fprintf(outfd, "\n%45s#   %5.2f  stalled cycles per insn", " ", ratio);
@@ -1959,7 +1942,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		return;
 	}
 
-	if (!envMOSTOutput && PerfEventMatch(ppea, PERF_HW(BRANCH_MISSES))) {
+	if (!conf.profile.output.MOST.enabled && PerfEventMatch(ppea, PERF_HW(BRANCH_MISSES))) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HW(BRANCH_INSTRUCTIONS));
 		if (!ppes2)
 			return;
@@ -1970,7 +1953,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		return;
 	}
 
-	if (!envMOSTOutput && PerfEventMatch(ppea, PERF_HC(L1DC_RM))) {
+	if (!conf.profile.output.MOST.enabled && PerfEventMatch(ppea, PERF_HC(L1DC_RM))) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(L1DC_RA));
 		if (!ppes2)
 			return;
@@ -1981,7 +1964,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		return;
 	}
 
-	if (!envMOSTOutput && PerfEventMatch(ppea, PERF_HC(L1IC_RM))) {
+	if (!conf.profile.output.MOST.enabled && PerfEventMatch(ppea, PERF_HC(L1IC_RM))) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(L1IC_RA));
 		if (!ppes2)
 			return;
@@ -1992,7 +1975,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		return;
 	}
 
-	if (!envMOSTOutput && PerfEventMatch(ppea, PERF_HC(DTLB_RM))) {
+	if (!conf.profile.output.MOST.enabled && PerfEventMatch(ppea, PERF_HC(DTLB_RM))) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(DTLB_RA));
 		if (!ppes2)
 			return;
@@ -2003,7 +1986,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		return;
 	}
 
-	if (!envMOSTOutput && PerfEventMatch(ppea, PERF_HC(ITLB_RM))) {
+	if (!conf.profile.output.MOST.enabled && PerfEventMatch(ppea, PERF_HC(ITLB_RM))) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(ITLB_RA));
 		if (!ppes2)
 			return;
@@ -2014,7 +1997,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		return;
 	}
 
-	if (!envMOSTOutput && PerfEventMatch(ppea, PERF_HC(LLC_RM))) {
+	if (!conf.profile.output.MOST.enabled && PerfEventMatch(ppea, PERF_HC(LLC_RM))) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HC(LLC_RA));
 		if (!ppes2)
 			return;
@@ -2025,7 +2008,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		return;
 	}
 
-	if (!envMOSTOutput && PerfEventMatch(ppea, PERF_HW(CACHE_MISSES))) {
+	if (!conf.profile.output.MOST.enabled && PerfEventMatch(ppea, PERF_HW(CACHE_MISSES))) {
 		ppes2 = PerfGetEventStats(pstats, PERF_HW(CACHE_REFERENCES));
 		if (!ppes2)
 			return;
@@ -2049,7 +2032,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 		total = mean(ppes2->perf_samples);
 		if (total) {
 			ratio = 1.0 * avg / total;
-			if (envMOSTOutput) {
+			if (conf.profile.output.MOST.enabled) {
 				DUMP_MOST_METRIC("perf", "ghz", ratio, "%.3f");
 			} else {
 				fprintf(outfd, " # %8.3f GHz                    ", ratio);
@@ -2060,7 +2043,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t pstats, pPerfEventStats_t ppes) {
 	}
 
 	// In MOST output mode, here we return
-	if (envMOSTOutput)
+	if (conf.profile.output.MOST.enabled)
 		return;
 
 	// By default print the frequency of the event in [M/sec]
@@ -2124,7 +2107,7 @@ void BbqueRPC::PerfPrintStats(pregExCtx_t prec, pAwmStats_t pstats) {
 		avg_running = prec->perf.Running(ppes->id, false);
 
 		// In MOST output mode, always dump counter usage percentage
-		if (envMOSTOutput) {
+		if (conf.profile.output.MOST.enabled) {
 			char buff[64];
 			snprintf(buff, 64, "%s_pcu", _perfCounterName);
 			DUMP_MOST_METRIC("perf", buff,
@@ -2144,10 +2127,10 @@ void BbqueRPC::PerfPrintStats(pregExCtx_t prec, pAwmStats_t pstats) {
 	}
 
 	// In MOST output mode, no more metrics are dumped
-	if (envMOSTOutput)
+	if (conf.profile.output.MOST.enabled)
 		return;
 
-	if (!envCsvOutput) {
+	if (!conf.profile.output.CSV.enabled) {
 
 		fputc('\n', outfd);
 
@@ -2172,7 +2155,7 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
 	if (avg)
 		pct = 100.0*total/avg;
 
-	if (envMOSTOutput) {
+	if (conf.profile.output.MOST.enabled) {
 		char buff[64];
 		snprintf(buff, 64, "%s_pct", _perfCounterName);
 		DUMP_MOST_METRIC("perf", buff, pct, "%.2f");
@@ -2180,8 +2163,8 @@ void BbqueRPC::PrintNoisePct(double total, double avg) {
 	}
 
 
-	if (envCsvOutput) {
-		fprintf(outfd, "%s%.2f%%", envCsvSep, pct);
+	if (conf.profile.output.CSV.enabled) {
+		fprintf(outfd, "%s%.2f%%", conf.profile.output.CSV.separator, pct);
 		return;
 	}
 
@@ -2227,7 +2210,7 @@ void BbqueRPC::OclClearStats() {
 void BbqueRPC::OclCollectStats(
 		uint8_t awm_id,
 		OclEventsStatsMap_t & ocl_events_map) {
-	rtlib_ocl_prof_run(awm_id, ocl_events_map, envOCLProfLevel);
+	rtlib_ocl_prof_run(awm_id, ocl_events_map, conf.profile.opencl.level);
 }
 
 void BbqueRPC::OclPrintStats(pAwmStats_t pstats) {
@@ -2235,7 +2218,7 @@ void BbqueRPC::OclPrintStats(pAwmStats_t pstats) {
 	for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
 		QueueProfPtr_t stPtr = it_cq->second;
 		OclPrintCmdStats(stPtr, it_cq->first);
-		if (envOCLProfLevel > 0) {
+		if (conf.profile.opencl.level > 0) {
 			logger->Debug("OCL: Printing command instance statistics...");
 			OclPrintAddrStats(stPtr, it_cq->first);
 		}
@@ -2349,7 +2332,7 @@ void BbqueRPC::OclDumpStats(pregExCtx_t prec) {
 		for (it_cq = pstats->ocl_events_map.begin(); it_cq != pstats->ocl_events_map.end(); it_cq++) {
 			QueueProfPtr_t stPtr = it_cq->second;
 			OclDumpCmdStats(stPtr, it_cq->first);
-			if (envOCLProfLevel == 0)
+			if (conf.profile.opencl.level == 0)
 				continue;
 			OclDumpAddrStats(stPtr, it_cq->first);
 		}
@@ -2512,7 +2495,7 @@ void BbqueRPC::NotifySetup(
 	assert(isRegistered(prec) == true);
 
 	// Add all the required performance counters
-	if (envPerfCount) {
+	if (conf.profile.enabled) {
 		PerfSetupEvents(prec);
 	}
 
@@ -2533,7 +2516,7 @@ void BbqueRPC::NotifyInit(
 
 	assert(isRegistered(prec) == true);
 
-	if (envGlobal && PerfRegisteredEvents(prec)) {
+	if (conf.profile.perf.global && PerfRegisteredEvents(prec)) {
 		PerfEnable(prec);
 	}
 
@@ -2554,7 +2537,7 @@ void BbqueRPC::NotifyExit(
 
 	assert(isRegistered(prec) == true);
 
-	if (envGlobal && PerfRegisteredEvents(prec)) {
+	if (conf.profile.perf.global && PerfRegisteredEvents(prec)) {
 		PerfDisable(prec);
 		PerfCollectStats(prec);
 	}
@@ -2624,8 +2607,8 @@ void BbqueRPC::NotifyPreRun(
 	assert(isRegistered(prec) == true);
 
 	logger->Debug("===> NotifyRun");
-	if (!envGlobal && PerfRegisteredEvents(prec)) {
-		if (unlikely(envOverheads)) {
+	if (!conf.profile.perf.global && PerfRegisteredEvents(prec)) {
+		if (unlikely(conf.profile.perf.overheads)) {
 			PerfDisable(prec);
 			PerfCollectStats(prec);
 		} else {
@@ -2651,8 +2634,8 @@ void BbqueRPC::NotifyPostRun(
 
 	logger->Debug("<=== NotifyRun");
 
-	if (!envGlobal && PerfRegisteredEvents(prec)) {
-		if (unlikely(envOverheads)) {
+	if (!conf.profile.perf.global && PerfRegisteredEvents(prec)) {
+		if (unlikely(conf.profile.perf.overheads)) {
 			PerfEnable(prec);
 		} else {
 			PerfDisable(prec);
@@ -2660,7 +2643,7 @@ void BbqueRPC::NotifyPostRun(
 		}
 	}
 #ifdef CONFIG_BBQUE_OPENCL
-	if (envOCLProf)
+	if (conf.profile.opencl.enabled)
 		OclCollectStats(prec->awm_id, prec->pAwmStats->ocl_events_map);
 
 #endif // CONFIG_BBQUE_OPENCL

@@ -887,6 +887,104 @@ typedef void (*RTLIB_Notify_Release)(
 
 /**@}*/
 
+
+
+/*******************************************************************************
+ *    RTLib Configuration
+ ******************************************************************************/
+
+/**
+ * @name Library Configuration
+ *
+ * This is a collection of configuration flags for the Library.
+ * Most of these flags could be configured at library initialization
+ * time via the BBQUE_RTLIB_OPTS environment variable.
+ *
+ * @{
+ */
+
+#define BBQUE_RTLIB_OPTS_TAG_MAX 6
+typedef struct RTLIB_Conf {
+
+	// Profiling configuration
+	struct profile {
+		bool enabled;
+
+		struct {
+			bool global;
+			bool overheads;
+			bool no_kernel;
+			bool big_num;
+			int  detailed_run;
+			int  raw;
+		} perf;
+
+		struct {
+			bool file;
+
+			// MOST format output
+			struct {
+				bool enabled;
+				// NOTE: The array +2 is due to:
+				// - the ending namespace separator ":"
+				// - the string NULL terminator
+				char tag[BBQUE_RTLIB_OPTS_TAG_MAX+2];
+			} MOST;
+
+			// CSV format output
+			struct {
+				bool enabled;
+				const char *separator;
+			} CSV;
+		} output;
+
+		struct {
+			bool enabled;
+			int  level;
+		} opencl;
+
+	} profile;
+
+	// Unmanaged execution
+	struct {
+		bool enabled;
+		int  awm_id;
+	} unmanaged;
+
+#ifdef __cplusplus__
+
+	RTLIB_Conf() {
+
+		profile.enabled = false;
+
+		profile.perf.global = false;
+		profile.perf.overheads = false;
+		profile.perf.no_kernel = false;
+		profile.perf.big_num = false;
+		profile.perf.detailed_run = 0;
+		profile.perf.raw = 0;
+
+		profile.output.file = false;
+		profile.output.MOST.enabled = false;
+		profile.output.MOST.tag = "";
+		profile.output.CSV.enabled = false;
+		profile.output.CSV.separator = " ";
+
+		profile.opencl.enabled = false;
+		profile.opencl.level = 0;
+
+		unmanaged.enabled = false;
+		unmanaged.awm_id = 0;
+
+	};
+#endif
+
+} RTLIB_Conf_t;
+
+
+/**@}*/
+
+
 /*******************************************************************************
  *    RTLib Services Descriptor (RSD)
  ******************************************************************************/
