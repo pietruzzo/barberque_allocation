@@ -413,6 +413,13 @@ RTLIB_ExecutionContextHandler_t BbqueRPC::Register(
 	// Mark the EXC as Registered
 	setRegistered(prec);
 
+	// Setup the control CGroup (only when running in UNMANAGED mode)
+	result = CGroupSetup(prec);
+	if (result != RTLIB_OK) {
+		logger->Error("CGroup setup FAILED");
+		return NULL;
+	}
+
 	return (RTLIB_ExecutionContextHandler_t)&(prec->exc_params);
 }
 
@@ -498,6 +505,9 @@ void BbqueRPC::Unregister(
 
 	// Mark the EXC as Unregistered
 	clearRegistered(prec);
+
+	// Release the controlling CGroup
+	CGroupDelete(prec);
 
 }
 
