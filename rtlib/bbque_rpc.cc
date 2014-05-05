@@ -337,6 +337,13 @@ RTLIB_ExitCode_t BbqueRPC::Init(const char *name) {
 		return exitCode;
 	}
 
+	// Initialize CGroup support
+	exitCode = CGroupInit();
+	if (exitCode != RTLIB_OK) {
+		logger->Error("CGroup initialization FAILED");
+		return exitCode;
+	}
+
 	initialized = true;
 
 	logger->Debug("Initialation DONE");
