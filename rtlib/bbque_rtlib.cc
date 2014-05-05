@@ -303,6 +303,9 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 		return RTLIB_BBQUE_UNREACHABLE;
 	}
 
+	// Setup configuration descriptor
+	rtlib_services.conf = BbqueRPC::Configuration();
+
 	// Marking library as intialized
 	rtlib_initialized = 1;
 	rtlib_app_name = name;

@@ -40,7 +40,8 @@ namespace bbque { namespace rtlib {
 BbqueEXC::BbqueEXC(std::string const & name,
 		std::string const & recipe,
 		RTLIB_Services_t * const rtl) :
-	exc_name(name), rpc_name(recipe), rtlib(rtl), cycles_count(0),
+	exc_name(name), rpc_name(recipe), rtlib(rtl),
+	conf(*(rtlib->conf)), cycles_count(0),
 	registered(false), started(false), enabled(false),
 	suspended(false), done(false), terminated(false) {
 

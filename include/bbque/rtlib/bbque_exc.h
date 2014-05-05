@@ -434,6 +434,19 @@ public:
 		return wmp.awm_id;
 	}
 
+/**
+ * @brief Get a reference to the RTLib configuration
+ *
+ * All the run-time tunable and configurable RTLib options are hosted
+ * by the struct RTLib_Conf. This call returns a read-only reference to
+ * this configuration.
+ *
+ * @return A reference to the (read-only) RTLib configuration options.
+ */
+	const RTLIB_Conf_t &Configuration() {
+		return conf;
+	};
+
 protected:
 
 /**
@@ -614,6 +627,11 @@ private:
  * @brief The RTLib (Plain API) handler
  */
 	RTLIB_Services_t * const rtlib;
+
+/**
+ * @brief The RTLib configuration
+ */
+	RTLIB_Conf_t const &conf;
 
 /**
  * @brief The EXC handler

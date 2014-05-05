@@ -86,6 +86,19 @@ public:
 	static BbqueRPC * GetInstance();
 
 	/**
+	 * @brief Get a reference to the RTLib configuration
+	 *
+	 * All the run-time tunable and configurable RTLib options are hosted
+	 * by the struct RTLib_Conf. This call returns a pointer to this
+	 * configuration, which could not be update at run-time.
+	 *
+	 * @return A reference to the RTLib configuration options.
+	 */
+	static const RTLIB_Conf_t *Configuration() {
+		return &conf;
+	};
+
+	/**
 	 * @brief Release the RPC channel
 	 */
 	virtual ~BbqueRPC(void);

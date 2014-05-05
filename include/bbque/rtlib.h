@@ -1009,6 +1009,8 @@ typedef struct RTLIB_Conf {
 struct RTLIB_Services {
 	/** Current version of the plugins API */
 	RTLIB_APIVersion_t version;
+	/** The RTLib configuration */
+	const RTLIB_Conf_t *conf;
 	/** Execution contexts registration
 	 * Applications use this function at RTLib library initialization
 	 * time to register each "execution context" they want. */
