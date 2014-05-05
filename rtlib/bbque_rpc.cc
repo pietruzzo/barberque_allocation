@@ -1155,6 +1155,8 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 	// Configuration already done
 	if (isAwmValid(prec)) {
+		result = GetAssignedWorkingMode(prec, wm);
+		assert(result == RTLIB_OK);
 		setSyncDone(prec);
 		return RTLIB_OK;
 	}
@@ -1163,6 +1165,9 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 	prec->event = RTLIB_EXC_GWM_START;
 	wm->awm_id = conf.unmanaged.awm_id;
 	setAwmValid(prec);
+	setAwmAssigned(prec);
+	WaitForWorkingMode(prec, wm);
+
 	goto do_reconf;
 
 do_gwm:
