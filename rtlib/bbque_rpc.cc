@@ -873,11 +873,9 @@ RTLIB_ExitCode_t BbqueRPC::CGroupInit() {
 
 	// If not present, setup the "master" BBQUE CGroup as a clone
 	// of the root CGroup
-	if (bu::CGroups::Read("/bbque", cgsetup) ==
-			bu::CGroups::CGResult::READ_FAILED) {
+	if (bu::CGroups::Exists("/bbque") == false) {
 		logger->Info("Setup [/bbque] master CGroup");
-		bu::CGroups::Read("/", cgsetup);
-		bu::CGroups::Create("/bbque", cgsetup);
+		bu::CGroups::CloneFromParent("/bbque");
 	}
 
 	return RTLIB_OK;
