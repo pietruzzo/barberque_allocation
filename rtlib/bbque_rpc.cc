@@ -181,7 +181,8 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			conf.unmanaged.enabled = true;
 			if (*(opt+1))
 				sscanf(opt+1, "%d", &conf.unmanaged.awm_id);
-			logger->Warn("Enabling UNMANAGED mode");
+			logger->Warn("Enabling UNMANAGED mode, selected AWM [%d]",
+					conf.unmanaged.awm_id);
 			break;
 		case 'b':
 			// Enabling "big numbers" notations
@@ -1404,7 +1405,7 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 	// Configure unmanaged EXC in AWM0
 	prec->event = RTLIB_EXC_GWM_START;
-	wm->awm_id = conf.unmanaged.awm_id;
+	prec->awm_id = conf.unmanaged.awm_id;
 	setAwmValid(prec);
 	setAwmAssigned(prec);
 	WaitForWorkingMode(prec, wm);
