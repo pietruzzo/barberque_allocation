@@ -42,6 +42,7 @@ public:
 		NEW_FAILED,
 		CREATE_FAILED,
 		DELETE_FAILED,
+		CLONE_FAILED,
 		ADD_FAILED,
 		GET_FAILED,
 		READ_FAILED,
@@ -99,6 +100,7 @@ public:
 
 	static CGResult Read(const char *cgpath, CGSetup &cgsetup);
 
+	static CGResult CloneFromParent(const char *cgpath);
 	static CGResult Create(const char *cgpath, const CGSetup &cgsetup);
 	static CGResult Delete(const char *cgpath);
 

@@ -200,6 +200,29 @@ done:
 
 }
 
+CGroups::CGResult CGroups::CloneFromParent(const char *cgpath) {
+	struct cgroup *pcg;
+	int result;
+
+	// Get required CGroup path
+	pcg = cgroup_new_cgroup(cgpath);
+	if (!pcg) {
+		logger->Error("CGroup [%s] creation FAILED", cgpath);
+		return CGResult::NEW_FAILED;
+	}
+
+	// Update the CGroup variable with kernel info
+	result = cgroup_create_cgroup_from_parent(pcg, 0);
+	if (result != 0) {
+		logger->Debug("CGroup [%s] clone FAILED (Error: %d, %s)",
+				cgpath, result, cgroup_strerror(result));
+		return CGResult::CLONE_FAILED;
+	}
+
+	cgroup_free(&pcg);
+	return CGResult::OK;
+}
+
 CGroups::CGResult CGroups::Create(const char *cgpath,
 		const CGSetup &cgsetup) {
 	struct cgroup_controller *pc_cpuset;
