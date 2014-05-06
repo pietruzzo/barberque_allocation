@@ -112,7 +112,7 @@ CGroups::CGResult CGroups::Read(const char *cgpath, CGSetup &cgsetup) {
 	pcg = cgroup_new_cgroup(cgpath);
 	if (!pcg) {
 		logger->Error("CGroup [%s] creation FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::NEW_FAILED;
 	}
 
 	// Update the CGroup variable with kernel info
@@ -133,7 +133,7 @@ CGroups::CGResult CGroups::Read(const char *cgpath, CGSetup &cgsetup) {
 	pc_cpuset = cgroup_get_controller(pcg, "cpuset");
 	if (!pc_cpuset) {
 		logger->Error("CGroup [%s]: get CPUSET controller FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::GET_FAILED;
 	}
 
 	result = cgroup_get_value_string(pc_cpuset, "cpuset.cpus",
@@ -158,7 +158,7 @@ get_cpus:
 	pc_cpu = cgroup_get_controller(pcg, "cpu");
 	if (!pc_cpu) {
 		logger->Error("CGroup [%s]: get CPU controller FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::GET_FAILED;
 	}
 
 	result = cgroup_get_value_string(pc_cpu, "cpu.cfs_period_us",
@@ -182,7 +182,7 @@ get_memory:
 	pc_memory = cgroup_get_controller(pcg, "memory");
 	if (!pc_memory) {
 		logger->Error("CGroup [%s]: get MEMORY controller FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::GET_FAILED;
 	}
 
 	result = cgroup_get_value_string(pc_memory, "memory.limit_in_bytes",
@@ -214,7 +214,7 @@ CGroups::CGResult CGroups::Create(const char *cgpath,
 	if (!pcg) {
 		logger->Error("CGroup resource mapping FAILED "
 				"(Error: libcgroup, \"cgroup\" creation)");
-		return CGResult::ERROR;
+		return CGResult::NEW_FAILED;
 	}
 
 	// Set CPUSET configuration (if available)
@@ -226,7 +226,7 @@ CGroups::CGResult CGroups::Create(const char *cgpath,
 	pc_cpuset = cgroup_add_controller(pcg, "cpuset");
 	if (!pc_cpuset) {
 		logger->Error("CGroup [%s]: set CPUSET controller FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::ADD_FAILED;
 	}
 
 	result = cgroup_set_value_string(pc_cpuset, "cpuset.cpus",
@@ -250,7 +250,7 @@ set_cpus:
 	pc_cpu = cgroup_add_controller(pcg, "cpu");
 	if (!pc_cpu) {
 		logger->Error("CGroup [%s]: set CPU controller FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::ADD_FAILED;
 	}
 
 	result = cgroup_set_value_string(pc_cpu, "cpu.cfs_period_us",
@@ -274,7 +274,7 @@ set_memory:
 	pc_memory = cgroup_add_controller(pcg, "memory");
 	if (!pc_memory) {
 		logger->Error("CGroup [%s]: set MEMORY controller FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::ADD_FAILED;
 	}
 
 	result = cgroup_set_value_string(pc_memory, "memory.limit_in_bytes",
@@ -292,7 +292,7 @@ done:
 	if (result && errno) {
 		logger->Error("CGroup [%s] write FAILED (Error: %d, %s)",
 				cgpath, result, cgroup_strerror(result));
-		return CGResult::ERROR;
+		return CGResult::CREATE_FAILED;
 	}
 
 	cgroup_free(&pcg);
@@ -307,7 +307,7 @@ CGroups::CGResult CGroups::Delete(const char *cgpath) {
 	pcg = cgroup_new_cgroup(cgpath);
 	if (!pcg) {
 		logger->Error("CGroup [%s] new FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::NEW_FAILED;
 	}
 
 	// Update the CGroup variable with kernel info
@@ -321,7 +321,7 @@ CGroups::CGResult CGroups::Delete(const char *cgpath) {
 	// Delete the kernel cgroup
 	if (cgroup_delete_cgroup(pcg, 1) != 0) {
 		logger->Error("CGroup [%s] delete FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::DELETE_FAILED;
 	}
 
 	cgroup_free(&pcg);
@@ -336,7 +336,7 @@ CGroups::CGResult CGroups::AttachMe(const char *cgpath) {
 	pcg = cgroup_new_cgroup(cgpath);
 	if (!pcg) {
 		logger->Error("CGroup [%s] new FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::NEW_FAILED;
 	}
 
 	// Update the CGroup variable with kernel info
@@ -351,7 +351,7 @@ CGroups::CGResult CGroups::AttachMe(const char *cgpath) {
 	result = cgroup_attach_task(pcg);
 	if (result != 0) {
 		logger->Error("CGroup [%s] attach FAILED", cgpath);
-		return CGResult::ERROR;
+		return CGResult::ATTACH_FAILED;
 	}
 
 	cgroup_free(&pcg);
