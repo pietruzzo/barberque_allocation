@@ -90,10 +90,10 @@ FIND_LIBRARY (OPENCL_LIBRARY
 )
 SET (OPENCL_LIBRARIES ${OPENCL_LIBRARY})
 
-MESSAGE("** OpenCL root directory .....: " ${OPENCL_ROOT_DIR})
-MESSAGE("** OpenCL include directory...: " ${OPENCL_INCLUDE_DIR})
-MESSAGE("** OpenCL library directory...: " ${OPENCL_LIBRARY_DIR})
-MESSAGE("** OpenCL library.............: " ${OPENCL_LIBRARIES})
+MESSAGE(STATUS "Found OpenCL: " ${OPENCL_LIBRARIES})
+MESSAGE("**  OpenCL root directory .....: " ${OPENCL_ROOT_DIR})
+MESSAGE("**  OpenCL include directory...: " ${OPENCL_INCLUDE_DIR})
+MESSAGE("**  OpenCL library directory...: " ${OPENCL_LIBRARY_DIR})
 
 IF (OPENCL_INCLUDE_DIR AND OPENCL_LIBRARY)
   SET (_OPENCL_VERSION_TEST_SOURCE

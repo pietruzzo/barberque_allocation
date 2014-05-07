@@ -162,6 +162,7 @@ endif (CMAKE_INSTALL_PREFIX STREQUAL "/usr/local")
 
 # Force usage of BOSP provided BOOST installation
 set (Boost_NO_SYSTEM_PATHS ON)
+set (Boost_DETAILED_FAILURE_MSG ON)
 set (BOOST_ROOT ${CMAKE_INSTALL_PREFIX})
 set (BOOST_INCLUDEDIR ${CMAKE_INSTALL_PREFIX})
 
