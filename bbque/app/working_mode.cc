@@ -221,7 +221,7 @@ br::UsagesMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
 }
 
 WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
-	br::ResourceBitset new_mask, temp_mask;
+	br::ResourceBitset new_mask;
 	uint8_t r_type;
 
 	// Set the new binding / resource usages map
@@ -234,17 +234,20 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
 	// Update the resource binding bitmask (for each type)
 	for (r_type = br::ResourceIdentifier::SYSTEM;
 			r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
-		BindingInfo & r_mask(resources.binding_masks[r_type]);
+		BindingInfo & bi(resources.binding_masks[r_type]);
 		new_mask = br::ResourceBinder::GetMask(
 				resources.sched_bindings[b_refn],
 				static_cast<br::ResourceIdentifier::Type_t>(r_type));
-		r_mask.prev = r_mask.curr;
-		r_mask.curr = new_mask;
+
+		if (new_mask.Count() == 0) continue;
+		bi.prev = bi.curr;
+		bi.curr = new_mask;
 
 		// Set the flag if changed and print a log message
-		r_mask.changed = r_mask.prev != new_mask;
+		bi.changed = bi.prev != new_mask;
 		logger->Debug("%s SetBinding: R{%-3s} changed? [%d]",
-				str_id, br::ResourceIdentifier::TypeStr[r_type], r_mask.changed);
+				str_id, br::ResourceIdentifier::TypeStr[r_type],
+				bi.changed);
 	}
 
 	// Trash all the remaining scheduling bindings

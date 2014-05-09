@@ -234,8 +234,11 @@ public:
 	/**
 	 * @see WorkingModeConfIF
 	 */
-	size_t BindResource(br::ResourceIdentifier::Type_t r_type,
-			br::ResID_t src_ID,	br::ResID_t dst_ID, size_t b_refn = 0,
+	size_t BindResource(
+			br::ResourceIdentifier::Type_t r_type,
+			br::ResID_t src_ID,
+			br::ResID_t dst_ID,
+			size_t b_refn = 0,
 			br::ResourceIdentifier::Type_t filter_rtype =
 				br::ResourceIdentifier::UNDEFINED,
 			br::ResourceBitset * filter_mask = nullptr);
