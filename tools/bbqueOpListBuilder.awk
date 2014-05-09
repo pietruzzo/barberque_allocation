@@ -40,32 +40,35 @@
 ################################################################################
 
 BEGIN {
+	if (!length(OUTF))
+		OUTF="/dev/stdout"
+
 	# Setup Filter Variables
 	if (!length(BBQUE_RTLIB_OPLIST))  BBQUE_RTLIB_OPLIST="opList"
 
 	# Dump Source header
-	printf "/* This file has been automatically generated using */\n"
-	printf "/* the bbque-opp Operating Points parser script. */\n"
-	printf "#include <bbque/monitors/operating_point.h>\n"
-	printf "using bbque::rtlib::as::OperatingPointsList;\n"
-	printf "OperatingPointsList %s = {\n", BBQUE_RTLIB_OPLIST;
+	printf "/* This file has been automatically generated using */\n" >OUTF
+	printf "/* the bbque-opp Operating Points parser script. */\n" >OUTF
+	printf "#include <bbque/monitors/operating_point.h>\n" >OUTF
+	printf "using bbque::rtlib::as::OperatingPointsList;\n" >OUTF
+	printf "OperatingPointsList %s = {\n", BBQUE_RTLIB_OPLIST >OUTF
 }
 
 /<parameters>/ {
-	printf "  { //===== OP %03d =====\n", OP_COUNT++
-	printf "    { //=== Parameters\n"
+	printf "  { //===== OP %03d =====\n", OP_COUNT++ >OUTF
+	printf "    { //=== Parameters\n" >OUTF
 }
-match($0, /name="([^"]+).+value="([^"]+)/, o) {
-	printf "      {\"%s\", %s},\n", o[1], o[2]
+match($0, /[paramter|metric] name="([^"]+).+value="([^"]+)/, o) {
+	printf "      {\"%s\", %s},\n", o[1], o[2] >OUTF
 }
 /<system_metrics>/ {
-	printf "    },\n"
-	printf "    { //=== Metrics\n"
+	printf "    },\n" >OUTF
+	printf "    { //=== Metrics\n" >OUTF
 }
 /<\/system_metrics>/ {
-	printf "    },\n"
-	printf "  },\n";
+	printf "    },\n" >OUTF
+	printf "  },\n" >OUTF
 }
 END {
-	printf "};\n\n";
+	printf "};\n\n" >OUTF
 }
