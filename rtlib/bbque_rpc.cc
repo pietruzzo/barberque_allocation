@@ -239,7 +239,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 		case 'C':
 			// Enabling CGroup Enforcing
 			if (!conf.unmanaged.enabled) {
-				logger->Warn("CGroup enforcing is supported only in UNMANAGED mode");
+				logger->Error("CGroup enforcing is supported only in UNMANAGED mode");
 				break;
 			}
 			conf.cgroup.enabled = true;
@@ -296,7 +296,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			// ... with the specified verbosity level
 			sscanf(opt+1, "%d", &conf.profile.perf.detailed_run);
 			if (conf.profile.enabled) {
-				logger->Info("Enabling Perf Counters [verbosity: %d]", conf.profile.perf.detailed_run);
+				logger->Notice("Enabling Perf Counters [verbosity: %d]", conf.profile.perf.detailed_run);
 			} else {
 				logger->Error("WARN: Perf Counters NOT available");
 			}
