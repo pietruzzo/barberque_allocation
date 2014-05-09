@@ -47,6 +47,9 @@ std::unique_ptr<bu::Logger> BbqueRPC::logger;
 // The RTLib configuration
 RTLIB_Conf_t BbqueRPC::conf;
 
+// String containers MOST tag configuration
+static std::string MOST_tag;
+
 #ifdef CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
 // The CGroup forcing configuration (for UNMANAGED applications)
 static bu::CGroups::CGSetup cgsetup;
@@ -112,6 +115,40 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 	size_t nchr = 0;
 #endif
 
+	logger->Debug("Setup default configuration values...");
+	conf.profile.enabled = false;
+
+	conf.profile.perf.global = false;
+	conf.profile.perf.overheads = false;
+	conf.profile.perf.no_kernel = false;
+	conf.profile.perf.big_num = false;
+	conf.profile.perf.detailed_run = 0;
+	conf.profile.perf.raw = 0;
+
+	conf.profile.output.file = false;
+	conf.profile.output.MOST.enabled = false;
+	conf.profile.output.MOST.tag = nullptr;
+	conf.profile.output.CSV.enabled = false;
+	conf.profile.output.CSV.separator = " ";
+
+	conf.profile.opencl.enabled = false;
+	conf.profile.opencl.level = 0;
+
+	conf.unmanaged.enabled = false;
+	conf.unmanaged.awm_id = 0;
+
+	conf.cgroup.enabled = false;
+	conf.cgroup.cpuset.cpus = nullptr;
+	conf.cgroup.cpuset.mems = nullptr;
+	conf.cgroup.cpu.cfs_period_us = nullptr;
+	conf.cgroup.cpu.cfs_quota_us = nullptr;
+	conf.cgroup.memory.limit_in_bytes = nullptr;
+
+	conf.duration.enabled = false;
+	conf.duration.time_limit = false;
+	conf.duration.cycles = 0;
+	conf.duration.millis = 0;
+
 	logger->Debug("Parsing environment options...");
 
 	// Look-for the expected RTLIB configuration variable
@@ -164,13 +201,19 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			conf.profile.output.MOST.enabled = true;
 			// Check if a TAG has been specified
 			if (opt[1]) {
-				snprintf(conf.profile.output.MOST.tag,
-						BBQUE_RTLIB_OPTS_TAG_MAX,
-						"%s:", opt+1);
+				MOST_tag  = opt+1;
+				if (MOST_tag.length() > BBQUE_RTLIB_OPTS_TAG_MAX)
+					MOST_tag.resize(BBQUE_RTLIB_OPTS_TAG_MAX);
+				MOST_tag += ":";
 			}
-			logger->Info("Enabling MOST output [tag: %s]",
-					conf.profile.output.MOST.tag[0] ?
-					conf.profile.output.MOST.tag : "-");
+			conf.profile.output.MOST.tag = (char *)MOST_tag.c_str();
+			logger->Notice("Enabling MOST output [tag: %.*s]",
+					BBQUE_RTLIB_OPTS_TAG_MAX < MOST_tag.length()
+					  ? BBQUE_RTLIB_OPTS_TAG_MAX
+					  : MOST_tag.length() - 1,
+					conf.profile.output.MOST.tag[0]
+					  ? conf.profile.output.MOST.tag
+					  : "-");
 			break;
 		case 'O':
 			// Collect statistics on RTLIB overheads

@@ -928,7 +928,7 @@ typedef struct RTLIB_Conf {
 				// NOTE: The array +2 is due to:
 				// - the ending namespace separator ":"
 				// - the string NULL terminator
-				char tag[BBQUE_RTLIB_OPTS_TAG_MAX+2];
+				const char *tag;
 			} MOST;
 
 			// CSV format output
@@ -981,46 +981,6 @@ typedef struct RTLIB_Conf {
 		uint32_t cycles;
 		uint32_t millis;
 	} duration;
-
-#ifdef __cplusplus__
-
-	RTLIB_Conf() {
-
-		profile.enabled = false;
-
-		profile.perf.global = false;
-		profile.perf.overheads = false;
-		profile.perf.no_kernel = false;
-		profile.perf.big_num = false;
-		profile.perf.detailed_run = 0;
-		profile.perf.raw = 0;
-
-		profile.output.file = false;
-		profile.output.MOST.enabled = false;
-		profile.output.MOST.tag = "";
-		profile.output.CSV.enabled = false;
-		profile.output.CSV.separator = " ";
-
-		profile.opencl.enabled = false;
-		profile.opencl.level = 0;
-
-		unmanaged.enabled = false;
-		unmanaged.awm_id = 0;
-
-		cgroup.enabled = false;
-		cgroup.cpuset.cpus = nullptr;
-		cgroup.cpuset.mems = nullptr;
-		cgroup.cpu.cfs_period_us = nullptr;
-		cgroup.cpu.cfs_quota_us = nullptr;
-		cgroup.memory.limit_in_bytes = nullptr;
-
-		duration.enabled = false;
-		duration.time_limit = false;
-		duration.cycles = 0;
-		duration.seconds = 0;
-
-	};
-#endif
 
 } RTLIB_Conf_t;
 
