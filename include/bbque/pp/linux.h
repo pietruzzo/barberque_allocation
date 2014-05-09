@@ -103,6 +103,16 @@ public:
 
 private:
 
+	/**
+	 * @brief CFS bandwidth enforcement safety margin (default: 0%)
+	 */
+	int cfs_margin_pct    = 0;
+
+	/**
+	 * @brief CFS bandwidth enforcement threshold (default: 100%)
+	 */
+	int cfs_threshold_pct = 100;
+
 #ifdef CONFIG_BBQUE_OPENCL
 	OpenCLProxy & oclProxy;
 #endif

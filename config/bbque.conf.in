@@ -37,6 +37,14 @@
 #OpenCL.hw.monitor_period_ms = 1000
 #OpenCL.hw.monitor_dump_dir  = /tmp
 
+# CGroups CFS bandwidht enforcement parameters
+[PlatformProxy.CGroups.cfs_bandwidth]
+# The safety margin [%] to add for CFS bandwidth enforcement
+# margin_pct    =   0
+# The threshold [%] under which we enable CFS bandwidth enforcement
+# threshold_pct = 100
+
+
 ################################################################################
 # Scheduler Manager Options
 ################################################################################

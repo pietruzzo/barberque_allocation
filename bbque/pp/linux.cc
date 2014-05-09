@@ -18,6 +18,7 @@
 #include "bbque/pp/linux.h"
 
 #include "bbque/application_manager.h"
+#include "bbque/configuration_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_utils.h"
@@ -54,9 +55,11 @@
 #endif
 
 #define MODULE_NAMESPACE PLATFORM_PROXY_NAMESPACE ".lnx"
+#define MODULE_CONFIG "PlatformProxy.CGroups"
 
 namespace bb = bbque;
 namespace br = bbque::res;
+namespace po = boost::program_options;
 
 namespace bbque {
 
@@ -73,6 +76,33 @@ LinuxPP::LinuxPP() :
 	ExitCode_t pp_result = OK;
 	char *mount_path = NULL;
 	int cg_result;
+
+	//---------- Loading configuration
+	po::options_description opts_desc("Resource Manager Options");
+	opts_desc.add_options()
+		(MODULE_CONFIG ".cfs_bandwidth.margin_pct",
+		 po::value<int>
+		 (&cfs_margin_pct)->default_value(0),
+		 "The safety margin [%] to add for CFS bandwidth enforcement");
+	opts_desc.add_options()
+		(MODULE_CONFIG ".cfs_bandwidth.threshold_pct",
+		 po::value<int>
+		 (&cfs_threshold_pct)->default_value(100),
+		 "The threshold [%] under which we enable CFS bandwidth enforcement");
+	po::variables_map opts_vm;
+	ConfigurationManager::GetInstance().
+		ParseConfigurationFile(opts_desc, opts_vm);
+
+	// Range check
+	cfs_margin_pct = std::min(std::max(cfs_margin_pct, 0), 100);
+	cfs_threshold_pct = std::min(std::max(cfs_threshold_pct, 0), 100);
+
+	// Force threshold to be NOT lower than (100 - margin)
+	if (cfs_threshold_pct < cfs_margin_pct)
+		cfs_threshold_pct = 100 - cfs_margin_pct;
+
+	logger->Info("CFS bandwidth control, margin %d%%, threshold: %d%%",
+			cfs_margin_pct, cfs_threshold_pct);
 
 	// Init the Control Group Library
 	cg_result = cgroup_init();
@@ -862,24 +892,36 @@ LinuxPP::SetupCGroup(CGroupDataPtr_t &pcgd, RLinuxBindingsPtr_t prlb,
 	// is not acceptable by the CFS controller, which requires a negative
 	// number to remove any constraint.
 	assert(cpus_quota == -1);
-	if (prlb->amount_cpus) {
-		cpus_quota = (BBQUE_LINUXPP_CPUP_DEFAULT / 100) *
-				prlb->amount_cpus;
-		cgroup_set_value_int64(pcgd->pc_cpu,
-				BBQUE_LINUXPP_CPUQ_PARAM, cpus_quota);
+	if (!prlb->amount_cpus)
+		goto quota_enforcing_disabled;
 
-		logger->Debug("PLAT LNX: Setup CPU for [%s]: "
-				"{period [%s], quota [%lu]",
-				pcgd->papp->StrId(),
-				STR(BBQUE_LINUXPP_CPUP_DEFAULT),
-				cpus_quota);
-	} else {
-
-		logger->Debug("PLAT LNX: Setup CPU for [%s]: "
-				"{period [%s], quota [-]}",
-				pcgd->papp->StrId(),
-				STR(BBQUE_LINUXPP_CPUP_DEFAULT));
+	// CFS quota to enforced is
+	// assigned + (margin * #PEs)
+	cpus_quota = prlb->amount_cpus;
+	cpus_quota += ((cpus_quota / 100) + 1) * cfs_margin_pct;
+	if ((cpus_quota % 100) > cfs_threshold_pct) {
+		logger->Warn("CFS (quota+margin) %d > %d threshold, enforcing disabled",
+				cpus_quota, cfs_threshold_pct);
+		goto quota_enforcing_disabled;
 	}
+
+	cpus_quota = (BBQUE_LINUXPP_CPUP_DEFAULT / 100) *
+			prlb->amount_cpus;
+	cgroup_set_value_int64(pcgd->pc_cpu,
+			BBQUE_LINUXPP_CPUQ_PARAM, cpus_quota);
+
+	logger->Debug("PLAT LNX: Setup CPU for [%s]: "
+			"{period [%s], quota [%lu]",
+			pcgd->papp->StrId(),
+			STR(BBQUE_LINUXPP_CPUP_DEFAULT),
+			cpus_quota);
+
+quota_enforcing_disabled:
+
+	logger->Debug("PLAT LNX: Setup CPU for [%s]: "
+			"{period [%s], quota [-]}",
+			pcgd->papp->StrId(),
+			STR(BBQUE_LINUXPP_CPUP_DEFAULT));
 
 jump_quota_management:
 	// Here we jump, if CFS Quota management is not enabled on the target
