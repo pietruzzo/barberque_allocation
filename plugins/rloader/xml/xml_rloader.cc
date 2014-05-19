@@ -284,6 +284,7 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 	uint8_t result = __RSRC_SUCCESS;
 	unsigned int wm_id;
 	unsigned int wm_value;
+	int wm_config_time = -1;
 	std::string wm_name;
 	ticpp::Node    * awms_elem      = nullptr;
 	ticpp::Element * resources_elem = nullptr;
@@ -299,6 +300,7 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 			awm_elem->GetAttribute("id",    &wm_id,    true);
 			awm_elem->GetAttribute("name",  &wm_name,  false);
 			awm_elem->GetAttribute("value", &wm_value, true);
+			awm_elem->GetAttribute("config-time", &wm_config_time, false);
 
 			// The awm ID must be unique!
 			if (recipe_ptr->GetWorkingMode(wm_id)) {
@@ -316,6 +318,16 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 								wm_name.c_str(), wm_id);
 				return RL_FORMAT_ERROR;
 			}
+
+			// Configuration time
+			if (wm_config_time > 0) {
+				logger->Info("AWM ""%s"" setting configuration time: %d",
+						wm_name.c_str(), wm_config_time);
+				awm->SetRecipeConfigTime(wm_config_time);
+			}
+			else
+				logger->Warn("AWM ""%s"" no configuration time provided",
+						wm_name.c_str());
 
 			// Load resource usages of the working mode
 			resources_elem = awm_elem->FirstChildElement("resources", true);
