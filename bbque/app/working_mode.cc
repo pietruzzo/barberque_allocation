@@ -50,15 +50,14 @@ WorkingMode::WorkingMode(uint8_t _id,
 	id(_id),
 	name(_name),
 	hidden(false) {
+	// Get a logger
+	logger = bu::Logger::GetLogger(AWM_NAMESPACE);
 
 	// Value must be positive
 	_value > 0 ? value.recipe = _value : value.recipe = 0;
 
 	// Init the size of the scheduling bindings vector
 	resources.binding_masks.resize(br::ResourceIdentifier::TYPE_COUNT);
-
-	// Get a logger
-	logger = bu::Logger::GetLogger(AWM_NAMESPACE);
 
 	// Set the log string id
 	snprintf(str_id, 15, "AWM{%d,%s}", id, name.c_str());
