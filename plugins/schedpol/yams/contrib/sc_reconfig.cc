@@ -49,6 +49,12 @@ SCReconfig::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		return SC_SUCCESS;
 	}
 
+	// Configuration time available
+	if (evl_ent.pawm->ConfigTime() >= 0) {
+		ctrib = 1.0 - evl_ent.pawm->ConfigTime();
+		return SC_SUCCESS;
+	}
+
 	// No configuration time profiled: call the 'estimator'
 	ctrib = ComputeResourceProportional(evl_ent);
 	return SC_SUCCESS;
