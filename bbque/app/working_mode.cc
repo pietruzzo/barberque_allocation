@@ -52,7 +52,7 @@ WorkingMode::WorkingMode(uint8_t _id,
 	hidden(false) {
 
 	// Value must be positive
-	_value > 0 ? value.recpv = _value : value.recpv = 0;
+	_value > 0 ? value.recipe = _value : value.recipe = 0;
 
 	// Init the size of the scheduling bindings vector
 	resources.binding_masks.resize(br::ResourceIdentifier::TYPE_COUNT);

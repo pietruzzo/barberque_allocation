@@ -121,8 +121,9 @@ public:
 	/**
 	 * @brief Return the value specified in the recipe
 	 */
-	inline float RecipeValue() const {
-		return value.recpv;
+	inline uint32_t RecipeValue() const {
+		return value.recipe;
+	}
 	}
 
 	/**
@@ -150,10 +151,11 @@ public:
 	inline void SetRecipeValue(float r_value) {
 		// Value must be positive
 		if (r_value < 0) {
-			value.recpv = 0.0;
+			value.recipe = 0.0;
 			return;
 		}
-		value.recpv = r_value;
+		value.recipe = r_value;
+	}
 	}
 
 	/**
@@ -360,14 +362,14 @@ private:
 	bool hidden;
 
 	/**
-	 * @struct WorkingModeValue
+	 * @struct ValueAttribute_t
 	 *
 	 * Store information regarding the value of the AWM
 	 */
-	struct WorkingModeValue {
+	struct ValueAttribute_t {
 		/** The QoS value associated to the working mode as specified in the
 		 * recipe */
-		float recpv;
+		uint32_t recipe;
 		/** The normalized QoS value associated to the working mode */
 		float normal;
 	} value;
