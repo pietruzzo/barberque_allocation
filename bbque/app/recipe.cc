@@ -62,6 +62,10 @@ AwmPtr_t const Recipe::AddWorkingMode(
 
 	// Insert a new working mode descriptor into the vector
 	AwmPtr_t new_awm(new app::WorkingMode(_id, _name, _value));
+	if (new_awm == nullptr) {
+		logger->Error("AddWorkingMode: Error in new AWM	creation");
+		return AwmPtr_t();
+	}
 
 	// Insert the AWM descriptor into the vector
 	working_modes[_id] = new_awm;
