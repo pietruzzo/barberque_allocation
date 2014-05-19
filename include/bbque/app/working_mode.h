@@ -124,6 +124,12 @@ public:
 	inline uint32_t RecipeValue() const {
 		return value.recipe;
 	}
+
+	/**
+	 * @brief Return the configuration time specified in the recipe
+	 */
+	inline uint32_t RecipeConfigTime() const {
+		return config_time.recipe;
 	}
 
 	/**
@@ -131,6 +137,13 @@ public:
 	 */
 	inline float Value() const {
 		return value.normal;
+	}
+
+	/**
+	 * @see WorkingModeStatusIF
+	 */
+	inline float ConfigTime() const {
+		return config_time.normal;
 	}
 
 	/**
@@ -156,6 +169,15 @@ public:
 		}
 		value.recipe = r_value;
 	}
+
+	/**
+	 * @brief Set the configuration time specified in the recipe
+	 *
+	 * @param r_time The configuration time of the working mode
+	 */
+	inline void SetRecipeConfigTime(uint32_t r_time) {
+		if (r_time > 0)
+			config_time.recipe = r_time;
 	}
 
 	/**
@@ -176,6 +198,22 @@ public:
 			return;
 		}
 		value.normal = n_value;
+	}
+
+	/**
+	 * @brief Set the normalized configuration time
+	 *
+	 * @param norm_time The normalized configuration time of the working mode. It must
+	 * belong to range [0, 1].
+	 */
+	inline void SetNormalConfigTime(float norm_time) {
+		// Normalized value must be in [0, 1]
+		if ((norm_time < 0.0) || (norm_time > 1.0)) {
+			logger->Error("SetNormalConfigTime: time not normalized (v = %2.2f)", norm_time);
+			config_time.normal = 0.0;
+			return;
+		}
+		config_time.normal = norm_time;
 	}
 
 	/**
@@ -373,6 +411,25 @@ private:
 		/** The normalized QoS value associated to the working mode */
 		float normal;
 	} value;
+
+	/**
+	 * @struct ConfigTimeAttribute_t
+	 *
+	 * Store information regarding the configuration time of the AWM
+	 */
+	struct ConfigTimeAttribute_t {
+		/** The time (in milliseconds) profiled at design time and specified
+		 * in the recipe */
+		uint32_t recipe;
+		/** The time normalized according to the other AWMs in the same recipe */
+		float normal;
+		/**
+		 * The time (avg) estimated at run-time during the application
+		 * execution.
+		 * NOTE: Currently unused attribute
+		 */
+		uint32_t runtime;
+	} config_time;
 
 	/**
 	 * @struct ResourceUsagesInfo

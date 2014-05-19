@@ -62,6 +62,10 @@ WorkingMode::WorkingMode(uint8_t _id,
 
 	// Set the log string id
 	snprintf(str_id, 15, "AWM{%d,%s}", id, name.c_str());
+
+	// Default value for configuration time (if no profiled)
+	memset(&config_time, 0, sizeof(ConfigTimeAttribute_t));
+	config_time.normal = -1;
 }
 
 WorkingMode::~WorkingMode() {

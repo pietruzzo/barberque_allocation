@@ -109,6 +109,12 @@ public:
 	virtual float Value() const = 0;
 
 	/**
+	 * @brief Get the (normalized) configuration time profiled
+	 * @return A value in the [0..1] range
+	 */
+	virtual float ConfigTime() const = 0;
+
+	/**
 	 * @brief A string identifier for log messaging purpose
 	 */
 	virtual const char * StrId() const = 0;
