@@ -309,8 +309,7 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 				return RL_FORMAT_ERROR;
 			}
 
-			// Add a new working mode passing its name and value
-			// Note: IDs must be numbered from 0 to N
+			// Add a new working mode (IDs MUST be numbered from 0 to N)
 			AwmPtr_t awm(recipe_ptr->AddWorkingMode(wm_id, wm_name,
 						static_cast<uint8_t> (wm_value)));
 			if (!awm) {
