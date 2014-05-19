@@ -40,7 +40,8 @@ SchedContrib::ExitCode_t SCReconfig::Init(void * params) {
 }
 
 SchedContrib::ExitCode_t
-SCReconfig::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
+SCReconfig::_Compute(
+		SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
 
 	// No reconfiguration (No AWM change) => Index := 1
@@ -86,7 +87,6 @@ float SCReconfig::ComputeResourceProportional(
 	// Contribution value
 	return (1.0 - ((float) reconf_cost / sv->ResourceCountTypes()));
 }
-
 
 } // namespace plugins
 

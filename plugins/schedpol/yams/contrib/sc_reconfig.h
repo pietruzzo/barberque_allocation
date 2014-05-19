@@ -47,8 +47,10 @@ private:
 	/**
 	 * @brief Compute the reconfiguration contribute
 	 */
-	ExitCode_t _Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
+	ExitCode_t _Compute(
+			SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 			float & ctrib);
+
 	/**
 	 * @brief Estimator of the reconfiguration overhead
 	 */
