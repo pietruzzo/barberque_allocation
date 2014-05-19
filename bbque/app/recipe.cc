@@ -31,7 +31,7 @@ namespace bbque { namespace app {
 
 
 Recipe::Recipe(std::string const & name):
-	pathname(name) {
+		pathname(name) {
 
 	// Get a logger
 	std::string logger_name(RECIPE_NAMESPACE"." + name);
@@ -49,9 +49,10 @@ Recipe::~Recipe() {
 	constraints.clear();
 }
 
-AwmPtr_t const Recipe::AddWorkingMode(uint8_t _id,
-				std::string const & _name,
-				uint8_t _value) {
+AwmPtr_t const Recipe::AddWorkingMode(
+		uint8_t _id,
+		std::string const & _name,
+		uint8_t _value) {
 	// Check if the AWMs are sequentially numbered
 	if (_id != last_awm_id) {
 		logger->Error("AddWorkingModes: Found ID = %d. Expected %d",
