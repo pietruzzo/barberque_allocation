@@ -211,23 +211,37 @@ private:
 	/** Static constraints included in the recipe */
 	ConstrMap_t constraints;
 
+
+	/** AWM attribute type flag */
+	enum AwmAttrType_t {
+		VALUE,
+		CONFIG_TIME
+	};
+
 	/**
-	 * Store information to support the normalization of the AWM values
+	 * Store information to support the normalization of the AWM attributes
 	 */
 	struct AwmNormalInfo {
+		/** The AWM attribute to normalize */
+		AwmAttrType_t attr;
 		/** Maximum value parsed */
-		uint8_t max_value;
-		/** Minimum value parse */
-		uint8_t min_value;
-		/** Diff max - min.
-		 * If 0 the value will be set to 0. This is done in order to give a
-		 * penalty to recipes wherein all the AWMs have been set to the same
-		 * value
+		uint32_t max;
+		/** Minimum value parsed */
+		uint32_t min;
+		/**
+		 * delta = max - min.
+		 * case VALUE: if delta == 0 the value will be set to 0.
+		 * This is done in order to give a penalty to recipes wherein all the
+		 * AWMs have been set to the same value
 		 */
-		uint8_t delta;
-		/** Set true means that normalization has been performed yet */
-		bool done;
-	} norm;
+		uint32_t delta;
+	};
+
+	/** Normalization support fot the AWM values */
+	AwmNormalInfo values;
+
+	/** Normalization support for the configuration times */
+	AwmNormalInfo config_times;
 
 	/**
 	 * @brief Update the normalization info
@@ -237,7 +251,14 @@ private:
 	 *
 	 * @param last_value The value of the last AWM inserted
 	 */
-	void UpdateNormalInfo(uint8_t last_value);
+	void UpdateNormalInfo(AwmNormalInfo & info, uint32_t last_value);
+
+	/**
+	 * @brief Normalize the AWMs attributes
+	 *
+	 * @note Actually "VALUE" and "CONFIGURATION TIME"
+	 */
+	void Normalize();
 
 	/**
 	 * @brief Perform the AWM values normalization
@@ -247,7 +268,17 @@ private:
 	 *                         max_value
 	 *
 	 */
-	void NormalizeAWMValues();
+	void NormalizeValue(uint8_t awm_id);
+
+	/**
+	 * @brief Perform the AWM values normalization
+	 *
+	 *                  recipe_time - min(recipe_times)
+	 * norm_time =  ---------------------------------------
+	 *               max(recipe_times) - min(recipe_times)
+	 *
+	 */
+	void NormalizeConfigTime(uint8_t awm_id);
 
 };
 

@@ -38,9 +38,16 @@ Recipe::Recipe(std::string const & name):
 	logger = bu::Logger::GetLogger(logger_name.c_str());
 	assert(logger);
 
-	// Clear normalization info
-	memset(&norm, 0, sizeof(Recipe::AwmNormalInfo));
-	norm.min_value = UINT8_MAX;
+	// Init normalization info: VALUE
+	memset(&values, 0, sizeof(Recipe::AwmNormalInfo));
+	values.min  = UINT8_MAX;
+	values.attr = VALUE;
+
+	// Init normalization info: CONFIG_TIME
+	memset(&config_times, 0, sizeof(Recipe::AwmNormalInfo));
+	config_times.min  = UINT8_MAX;
+	config_times.attr = CONFIG_TIME;
+
 	working_modes.resize(MAX_NUM_AWM);
 }
 
@@ -107,73 +114,85 @@ void Recipe::AddConstraint(
 }
 
 void Recipe::Validate() {
-	// Adjust the vector size
 	working_modes.resize(last_awm_id);
 
 	// Validate each AWM according to current resources total availability
 	for (int i = 0; i < last_awm_id; ++i) {
 		working_modes[i]->Validate();
-		if (!working_modes[i]->Hidden())
-			UpdateNormalInfo(working_modes[i]->RecipeValue());
+		if (!working_modes[i]->Hidden()) {
+			UpdateNormalInfo(values, working_modes[i]->RecipeValue());
+			UpdateNormalInfo(config_times, working_modes[i]->RecipeConfigTime());
+		}
 	}
-
-	// Normalize AWMs values
-	NormalizeAWMValues();
+	// Normalize AWMs attributes
+	Normalize();
 }
 
-void Recipe::UpdateNormalInfo(uint8_t last_value) {
-	// This reset the "normalization done" flag
-	norm.done = false;
-
+void Recipe::UpdateNormalInfo(AwmNormalInfo & info, uint32_t last_value) {
 	// Update the max value
-	if (last_value > norm.max_value)
-		norm.max_value = last_value;
+	if (last_value > info.max)
+		info.max = last_value;
 
 	// Update the min value
-	if (last_value < norm.min_value)
-		norm.min_value = last_value;
+	if (last_value < info.min)
+		info.min = last_value;
 
 	// Delta
-	norm.delta = norm.max_value - norm.min_value;
+	info.delta = info.max - info.min;
 
-	logger->Debug("AWM max value = %d", norm.max_value);
-	logger->Debug("AWM min value = %d", norm.min_value);
-	logger->Debug("AWM delta = %d", norm.delta);
+	// Debug logging
+	if (info.attr == VALUE)
+		logger->Debug("AWMs values max: %d, min: %d, delta: %d",
+				info.max, info.min, info.delta);
+	else if (info.attr == CONFIG_TIME)
+		logger->Debug("AWMs configuration times max: %d, min: %d, delta: %d",
+				info.max, info.min, info.delta);
 }
 
-void Recipe::NormalizeAWMValues() {
+void Recipe::Normalize() {
+	// Set of AWMs: normalize attributes
+	for (int i = 0; i < last_awm_id; ++i) {
+		if (working_modes[i]->Hidden()) continue;
+		NormalizeValue(i);
+		NormalizeConfigTime(i);
+	}
+}
+
+void Recipe::NormalizeValue(uint8_t awm_id) {
 	float normal_value = 0.0;
 
-	// Return if performed yet
-	if (norm.done)
-		return;
+	// Normalize the value
+	if (values.delta > 0)
+		normal_value =
+			static_cast<float>(working_modes[awm_id]->RecipeValue()) / values.max;
+	// There is only one AWM in the recipe
+	else if (working_modes.size() == 1)
+		normal_value = 1.0;
+	// Penalize set of working modes having always the same QoS value
+	else
+		normal_value = 0.0;
 
-	// Normalization of the whole set of AWMs
-	for (int i = 0; i < last_awm_id; ++i) {
-		// Skip hidden AWMs
-		if (working_modes[i]->Hidden())
-			continue;
+	// Set the normalized value into the AWM
+	working_modes[awm_id]->SetNormalValue(normal_value);
+	logger->Info("AWM %d normalized value = %.2f ",
+					working_modes[awm_id]->Id(),
+					working_modes[awm_id]->Value());
+}
 
-		// Normalize the value
-		if (norm.delta > 0)
-			// The most common case
-			normal_value = working_modes[i]->RecipeValue() / norm.max_value;
-		else if (working_modes.size() == 1)
-			// There is only one AWM in the recipe
-			normal_value = 1.0;
-		else
-			// This penalizes set of working modes having always the same QoS
-			// value
-			normal_value = 0.0;
+void Recipe::NormalizeConfigTime(uint8_t awm_id) {
+	float normal_time = 0.0;
+	if (config_times.delta > 0)
+		normal_time =
+			static_cast<float>
+					(working_modes[awm_id]->RecipeConfigTime() - config_times.min) /
+				(config_times.delta);
+	else
+		normal_time = 0.0;
 
-		// Set the normalized value into the AWM
-		working_modes[i]->SetNormalValue(normal_value);
-		logger->Info("AWM %d normalized value = %.2f ",
-					working_modes[i]->Id(), working_modes[i]->Value());
-	}
-
-	// Set the "normalization done" flag true
-	norm.done = true;
+	working_modes[awm_id]->SetNormalConfigTime(normal_time);
+	logger->Info("AWM %d normalized config time = %.2f ",
+					working_modes[awm_id]->Id(),
+					working_modes[awm_id]->ConfigTime());
 }
 
 } // namespace app
