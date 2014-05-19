@@ -42,15 +42,24 @@ SchedContrib::ExitCode_t SCReconfig::Init(void * params) {
 SchedContrib::ExitCode_t
 SCReconfig::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
-	br::UsagesMap_t::const_iterator usage_it;
-	float reconf_cost  = 0.0;
-	uint64_t rsrc_tot;
 
 	// No reconfiguration (No AWM change) => Index := 1
 	if (!evl_ent.IsReconfiguring()) {
 		ctrib = 1.0;
 		return SC_SUCCESS;
 	}
+
+	// No configuration time profiled: call the 'estimator'
+	ctrib = ComputeResourceProportional(evl_ent);
+	return SC_SUCCESS;
+}
+
+
+float SCReconfig::ComputeResourceProportional(
+		SchedulerPolicyIF::EvalEntity_t const & evl_ent) {
+	br::UsagesMap_t::const_iterator usage_it;
+	float reconf_cost  = 0.0;
+	uint64_t rsrc_tot;
 
 	// Resource requested by the AWM (from the recipe)
 	for_each_recp_resource_usage(evl_ent, usage_it) {
@@ -69,8 +78,7 @@ SCReconfig::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	}
 
 	// Contribution value
-	ctrib = 1.0 - ((float) reconf_cost / sv->ResourceCountTypes());
-	return SC_SUCCESS;
+	return (1.0 - ((float) reconf_cost / sv->ResourceCountTypes()));
 }
 
 

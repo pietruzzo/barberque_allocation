@@ -49,6 +49,11 @@ private:
 	 */
 	ExitCode_t _Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 			float & ctrib);
+	/**
+	 * @brief Estimator of the reconfiguration overhead
+	 */
+	float ComputeResourceProportional(
+			SchedulerPolicyIF::EvalEntity_t const &	evl_ent);
 };
 
 } // plugins
