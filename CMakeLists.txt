@@ -106,6 +106,7 @@ if (GCC_TAG GREATER "46")
 	set (BOSP_CPP11 "11")
 endif (GCC_TAG GREATER "46")
 set (CMAKE_CXX_FLAGS "-Wall -std=c++${BOSP_CPP11} -std=gnu++${BOSP_CPP11}")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs ")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGCC_VERSION=${GCC_VERSION}")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGCC_TAG=${GCC_TAG}")
 
