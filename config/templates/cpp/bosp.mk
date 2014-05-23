@@ -18,7 +18,7 @@ myapp: external
 		exit 1
 	@cd $(MODULE_CONTRIB_USER_MYAPP)/build/$(BUILD_TYPE) && \
 		CXX=$(CXX) CFLAGS="--sysroot=$(PLATFORM_SYSROOT)" \
-		cmake $(CMAKE_COMMON_OPTIONS) || \
+		cmake $(CMAKE_COMMON_OPTIONS) ../.. || \
 		exit 1
 	@cd $(MODULE_CONTRIB_USER_MYAPP)/build/$(BUILD_TYPE) && \
 		make -j$(CPUS) install || \

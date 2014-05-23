@@ -5,12 +5,13 @@
 # Add BarbequeRTRM documentation as dependency of the main doc target
 doc: bbque_doc
 
+BBQUE_CMAKE_OPTS = $(CMAKE_COMMON_OPTIONS)
 ifdef CONFIG_BBQUE_BUILD_DEBUG
   BUILD_TYPE := Debug
-  BBQUE_CMAKE_OPTS += " -DBUILD_TYPE=Debug "
+  BBQUE_CMAKE_OPTS += " -DBUILD_TYPE=Debug"
 else
   BUILD_TYPE := Release
-  BBQUE_CMAKE_OPTS += " -DBUILD_TYPE=Release "
+  BBQUE_CMAKE_OPTS += " -DBUILD_TYPE=Release"
 endif
 
 bbque: external
@@ -22,7 +23,7 @@ bbque: external
 	@echo $(CMAKE_COMMON_OPTIONS)
 	@cd barbeque/build/$(BUILD_TYPE) && \
 		CXX=$(CXX) CFLAGS="$(CFLAGS_SYSROOT)" \
-		cmake $(BBQUE_CMAKE_OPTS) $(CMAKE_COMMON_OPTIONS) || \
+		cmake $(BBQUE_CMAKE_OPTS) ../.. || \
 		exit 1
 	@cd barbeque/build/$(BUILD_TYPE) && make -j$(CPUS) install || \
 		exit 1
