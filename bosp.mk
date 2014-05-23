@@ -17,12 +17,16 @@ endif
 bbque: external
 	@echo
 	@echo "==== Building Barbeque RTRM ($(BUILD_TYPE)) ===="
+	@echo " Using GCC    : $(CC)"
+	@echo " Target flags : $(TARGET_FLAGS)"
+	@echo " Sysroot      : $(PLATFORM_SYSROOT)"
+	@echo " BOSP Options : $(CMAKE_COMMON_OPTIONS)"
 	@[ -d barbeque/build/$(BUILD_TYPE) ] || \
 		mkdir -p barbeque/build/$(BUILD_TYPE) || \
 		exit 1
-	@echo $(CMAKE_COMMON_OPTIONS)
 	@cd barbeque/build/$(BUILD_TYPE) && \
-		CXX=$(CXX) CFLAGS="$(CFLAGS_SYSROOT)" \
+		CC=$(CC) CFLAGS=$(TARGET_FLAGS) \
+		CXX=$(CXX) CXXFLAGS=$(TARGET_FLAGS) \
 		cmake $(BBQUE_CMAKE_OPTS) ../.. || \
 		exit 1
 	@cd barbeque/build/$(BUILD_TYPE) && make -j$(CPUS) install || \

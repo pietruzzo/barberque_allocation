@@ -13,11 +13,16 @@ MODULE_CONTRIB_USER_MYAPP=contrib/user/MyApp
 myapp: external
 	@echo
 	@echo "==== Building MyApp ($(BUILD_TYPE)) ===="
+	@echo " Using GCC    : $(CC)"
+	@echo " Target flags : $(TARGET_FLAGS)"
+	@echo " Sysroot      : $(PLATFORM_SYSROOT)"
+	@echo " BOSP Options : $(CMAKE_COMMON_OPTIONS)"
 	@[ -d $(MODULE_CONTRIB_USER_MYAPP)/build/$(BUILD_TYPE) ] || \
 		mkdir -p $(MODULE_CONTRIB_USER_MYAPP)/build/$(BUILD_TYPE) || \
 		exit 1
 	@cd $(MODULE_CONTRIB_USER_MYAPP)/build/$(BUILD_TYPE) && \
-		CXX=$(CXX) CFLAGS="--sysroot=$(PLATFORM_SYSROOT)" \
+		CC=$(CC) CFLAGS=$(TARGET_FLAGS) \
+		CXX=$(CXX) CXXFLAGS=$(TARGET_FLAGS) \
 		cmake $(CMAKE_COMMON_OPTIONS) ../.. || \
 		exit 1
 	@cd $(MODULE_CONTRIB_USER_MYAPP)/build/$(BUILD_TYPE) && \
