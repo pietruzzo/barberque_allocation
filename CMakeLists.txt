@@ -105,17 +105,21 @@ set (BOSP_CPP11 "0x")
 if (GCC_TAG GREATER "46")
 	set (BOSP_CPP11 "11")
 endif (GCC_TAG GREATER "46")
-set (CMAKE_CXX_FLAGS "-Wall -std=gnu++${BOSP_CPP11}")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs ")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++${BOSP_CPP11} -Wall")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGCC_VERSION=${GCC_VERSION}")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGCC_TAG=${GCC_TAG}")
-
 
 # Add "Generic-Linux" specific flags
-if (CONFIG_TARGET_LINUX)
-set (BBQUE_TARGET_OS "Generic-Linux")
+if (CONFIG_TARGET_LINUX_NATIVE)
+set (BBQUE_TARGET_OS "Native-Linux")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-endif (CONFIG_TARGET_LINUX)
+endif (CONFIG_TARGET_LINUX_NATIVE)
+
+# Add "ARM-Linux" specific flags
+if (CONFIG_TARGET_LINUX_ARM)
+set (BBQUE_TARGET_OS "ARM-Linux")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif (CONFIG_TARGET_LINUX_ARM)
 
 # Add "Android-Linux" specific flags
 if (CONFIG_TARGET_ANDROID)
@@ -134,7 +138,7 @@ set (BBQUE_BUILD_FLAVOR
 	"${BBQUE_TARGET_OS} (${BBQUE_TARGET_ARCH}bit - ${CMAKE_BUILD_TYPE})")
 
 # Options for build version: DEBUG
-set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wextra -pedantic -DBBQUE_DEBUG")
+set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wextra -pedantic -DBBQUE_DEBUG -DDEBUG")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set (BBQUE_DEBUG ON)
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -256,6 +260,9 @@ message ( STATUS "=====[ Barbeque RTRM - Building System Configuration ]"
                  "==========================" )
 message ( STATUS "Barbeque Version...... ${VERSION}" )
 message ( STATUS "Build Flavor.......... ${BBQUE_BUILD_FLAVOR}" )
+message ( STATUS "   Target............. ${CONFIG_TARGET_NAME} ${CONFIG_TARGET_DESCRIPTION}" )
+message ( STATUS "   CFLAGS............. ${CMAKE_C_FLAGS}")
+message ( STATUS " CXXFLAGS............. ${CMAKE_CXX_FLAGS}")
 message ( STATUS "Installation prefix... ${CMAKE_INSTALL_PREFIX}" )
 message ( STATUS "   Barbeuqe RTRM...... <prefix>/${BBQUE_PATH_BBQ}" )
 message ( STATUS "   Configuration...... <prefix>/${BBQUE_PATH_CONF}/${BBQUE_CONF_FILE}" )

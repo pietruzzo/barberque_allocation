@@ -62,26 +62,35 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 # Add flags common to all builds
-set (BOSP_CPP11 "c++0x")
-if (BOSP_GCC_VERSION GREATER "46")
-	set (BOSP_CPP11 "c++11")
-endif (BOSP_GCC_VERSION GREATER "46")
-set (CMAKE_CXX_FLAGS "-Wall -std=${BOSP_CPP11} -DBBQUE_APP -DGCC_VERSION=${BOSP_GCC_VERSION}")
+set (BOSP_CPP11 "0x")
+if (GCC_TAG GREATER "46")
+	set (BOSP_CPP11 "11")
+endif (GCC_TAG GREATER "46")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++${BOSP_CPP11} -Wall")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGCC_VERSION=${GCC_VERSION}")
 
-# These are used to clean-up unreferenced RTLib symbols
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
+# These are used to clean-up unreferenced libraries symbols
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
 
 # Add "Generic-Linux" specific flags
-if (CONFIG_TARGET_LINUX)
-set (BBQUE_TARGET_OS "Generic-Linux")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lrt -fPIC")
-endif (CONFIG_TARGET_LINUX)
+if (CONFIG_TARGET_LINUX_NATIVE)
+set (BBQUE_TARGET_OS "Native-Linux")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif (CONFIG_TARGET_LINUX_NATIVE)
+
+# Add "ARM-Linux" specific flags
+if (CONFIG_TARGET_LINUX_ARM)
+set (BBQUE_TARGET_OS "ARM-Linux")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif (CONFIG_TARGET_LINUX_ARM)
 
 # Add "Android-Linux" specific flags
 if (CONFIG_TARGET_ANDROID)
 set (BBQUE_TARGET_OS "Android-Linux")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x -I${CMAKE_INSTALL_PREFIX}/include -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -D__STDINT_LIMITS -D__BIONIC__ -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -fexceptions -frtti -mthumb -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -DANDROID  -Wa,--noexecstack")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I../../../out/include -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -D__STDINT_LIMITS -D_GLIBCXX_USE_C99_STDINT_TR1 -D__BIONIC__ -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -fexceptions -frtti -mthumb -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -DANDROID  -Wa,--noexecstack")
+# -ffunction-sections -fdata-sections -Wl,--gc-sections - REMOVED becaus of missing symbols
 endif (CONFIG_TARGET_ANDROID)
 
 # Check target bitness
@@ -94,16 +103,16 @@ set (BBQUE_BUILD_FLAVOR
 	"${BBQUE_TARGET_OS} (${BBQUE_TARGET_ARCH}bit - ${CMAKE_BUILD_TYPE})")
 
 # Options for build version: DEBUG
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -Wextra -pedantic -DDEBUG")
+set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wextra -pedantic -DBBQUE_DEBUG -DDEBUG")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set (BBQUE_DEBUG ON)
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 # Options for build version: DESKTOP RELEASE
-set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
+set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 # Options for build version: EMBEDDED RELEASE
-set (CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -Os")
+set (CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG")
 
 
 ################################################################################
@@ -197,6 +206,9 @@ message ( STATUS "===================[ MyApp - Building System Configuration ]"
                  "====================" )
 message ( STATUS "Version............... ${VERSION}" )
 message ( STATUS "Build Flavor.......... ${BBQUE_BUILD_FLAVOR}" )
+message ( STATUS "   Target............. ${CONFIG_TARGET_NAME} ${CONFIG_TARGET_DESCRIPTION}" )
+message ( STATUS "   CFLAGS............. ${CMAKE_C_FLAGS}")
+message ( STATUS " CXXFLAGS............. ${CMAKE_CXX_FLAGS}")
 message ( STATUS "Installation prefix... ${CMAKE_INSTALL_PREFIX}" )
 message ( STATUS "   Binary............. <prefix>/${MYAPP_PATH_BINS}" )
 message ( STATUS "   Recipes............ <prefix>/${MYAPP_PATH_RECIPES}" )
