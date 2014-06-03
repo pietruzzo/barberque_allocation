@@ -139,7 +139,7 @@ set (BBQUE_BUILD_FLAVOR
 	"${BBQUE_TARGET_OS} (${BBQUE_TARGET_ARCH}bit - ${CMAKE_BUILD_TYPE})")
 
 # Options for build version: DEBUG
-set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wextra -pedantic -DBBQUE_DEBUG -DDEBUG")
+set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wextra -pedantic -DBBQUE_DEBUG")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set (BBQUE_DEBUG ON)
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
