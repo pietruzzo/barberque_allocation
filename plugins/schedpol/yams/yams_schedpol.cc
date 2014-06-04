@@ -936,7 +936,7 @@ void YamsSchedPol::CowsClear() {
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
-	PluginAttrPtr_t plugin_attr;
+	ba::PluginAttrPtr_t plugin_attr;
 
 	// Safety checks
 	if (!pschd) {
@@ -950,7 +950,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::CowsInit(SchedEntityPtr_t pschd) {
 
 	// Get the metrics parsed from the recipe
 	for (uint8_t cm = COWS_STALLS; cm < COWS_MIGRA; ++cm) {
-		plugin_attr = std::static_pointer_cast<PluginAttr_t>(
+		plugin_attr = std::static_pointer_cast<ba::PluginAttr_t>(
 				pschd->pawm->GetAttribute("cows", cows_metrics_str[cm])
 		);
 		if (plugin_attr != nullptr) {
