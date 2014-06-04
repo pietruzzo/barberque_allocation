@@ -225,6 +225,17 @@ public:
 	std::string const & ToString();
 
 	/**
+	/**
+	 * @brief Retrieve a resource identifier
+	 *
+	 * @param r_type The resource type
+	 *
+	 * @return A shared pointer to the resource identifier object
+	 */
+	br::ResourceIdentifierPtr_t GetIdentifier(
+			ResourceIdentifier::Type_t r_type) const;
+
+	/**
 	 * @brief Return the number of levels of the path
 	 */
 	inline size_t NumLevels() const {
@@ -257,15 +268,6 @@ private:
 	/** Keep track of an ID replacement */
 	bool id_changed;
 
-	/**
-	 * @brief Retrieve a resource identifier
-	 *
-	 * @param r_type The resource type
-	 *
-	 * @return A shared pointer to the resource identifier object
-	 */
-	ResourceIdentifierPtr_t GetIdentifier(
-			ResourceIdentifier::Type_t r_type) const;
 
 };
 
