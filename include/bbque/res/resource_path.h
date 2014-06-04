@@ -107,7 +107,7 @@ public:
 	 *
 	 * @param r_path The resource path string
 	 */
-	ResourcePath(std::string const & r_path);
+	ResourcePath(std::string const & str_path);
 
 	/**
 	 * @brief Destructor
@@ -141,13 +141,13 @@ public:
 	 * @return OK for success, ERR_UNKN_TYPE for unknown resource type,
 	 * ERR_USED_TYPE if the type has been already included in the path
 	 */
-	ExitCode_t Append(std::string const & r_type_str, ResID_t r_id);
+	ExitCode_t Append(std::string const & str_type, ResID_t r_id);
 
 	/**
 	 * @brief Append a resource type+id
 	 *
-	 * @param r_type_str The resource type
-	 * @param r_id The integer ID
+	 * @param r_type The resource type
+	 * @param r_id   The integer ID
 	 *
 	 * @return OK for success, ERR_UNKN_TYPE for unknown resource type,
 	 * ERR_USED_TYPE if the type has been already included in the path
@@ -201,11 +201,17 @@ public:
 	/**
 	 * @brief Replace the ID associated to a resource (type) in the path
 	 *
+	 * @param r_type Resource type of the replacement
+	 * @param src_r_id Source resource ID
+	 * @param dst_r_id Destination resource ID
+	 *
 	 * @return WRN_MISS_ID if no valid ID has been specified.
 	 *	ERR_UNKN_TYPE if no valid type has been specified.
 	 */
-	ExitCode_t ReplaceID(ResourceIdentifier::Type_t r_type,
-			ResID_t src_r_id, ResID_t dst_r_id);
+	ExitCode_t ReplaceID(
+			ResourceIdentifier::Type_t r_type,
+			ResID_t src_r_id,
+			ResID_t dst_r_id);
 
 	/**
 	 * @brief Check if the resource path is of "template" class
@@ -268,7 +274,7 @@ private:
 	std::string str;
 
 	/** The type of resource referenced by the path. */
-	ResourceIdentifier::Type_t global_type;
+	br::ResourceIdentifier::Type_t global_type;
 
 	/** Number of levels counter */
 	uint8_t level_count;
