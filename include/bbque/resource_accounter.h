@@ -470,9 +470,6 @@ private:
 	/** The tree of all the resources in the system.*/
 	br::ResourceTree resources;
 
-	/** The set of all the resource paths registered */
-	std::set<std::string> paths;
-
 	/** The resource paths registered (strings and objects) */
 	std::map<std::string, br::ResourcePathPtr_t> r_paths;
 
