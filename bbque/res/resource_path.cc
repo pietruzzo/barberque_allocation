@@ -172,6 +172,13 @@ br::ResourceIdentifier::Type_t ResourcePath::ParentType(
 	return identifiers.at(parent_index)->Type();
 }
 
+inline br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
+		uint8_t depth_level) const {
+	if (depth_level >= identifiers.size())
+		return br::ResourceIdentifierPtr_t();
+	return identifiers.at(depth_level);
+}
+
 br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 		br::ResourceIdentifier::Type_t r_type) const {
 	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;

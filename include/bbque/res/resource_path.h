@@ -225,6 +225,14 @@ public:
 	std::string const & ToString();
 
 	/**
+	 * @brief Retrieve a resource identifier
+	 *
+	 * @param level_num The depth level
+	 *
+	 * @return A shared pointer to the resource identifier object
+	 */
+	br::ResourceIdentifierPtr_t GetIdentifier(uint8_t depth_level) const;
+
 	/**
 	 * @brief Retrieve a resource identifier
 	 *
