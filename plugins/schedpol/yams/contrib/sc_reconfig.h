@@ -41,9 +41,6 @@ public:
 
 private:
 
-	/** Keep track of the first valid binding ID */
-	br::ResID_t first_bd_id;
-
 	/**
 	 * @brief Compute the reconfiguration contribute
 	 */

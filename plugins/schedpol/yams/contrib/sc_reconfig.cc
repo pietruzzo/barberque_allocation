@@ -34,8 +34,7 @@ SCReconfig::~SCReconfig() {
 }
 
 SchedContrib::ExitCode_t SCReconfig::Init(void * params) {
-	first_bd_id = *(static_cast<br::ResID_t *>(params));
-	logger->Debug("First valid binding ID: %d", first_bd_id);
+	(void) params;
 	return SC_SUCCESS;
 }
 
