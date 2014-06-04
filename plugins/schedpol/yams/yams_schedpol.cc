@@ -307,13 +307,6 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 		scm->SetBindingInfo(*(bindings[scm_it->first]));
 		logger->Debug("Init: Scheduling contribution manager for R{%s} ready",
 				br::ResourceIdentifier::TypeStr[scm_it->first]);
-
-		// Init Reconfig contribution
-		sc_recf = scm->GetContrib(SchedContribManager::RECONFIG);
-		if (sc_recf != nullptr) {
-			br::ResID_t first_id = *(bindings[scm_it->first]->ids.begin());
-			sc_recf->Init(&first_id);
-		}
 	}
 
 	return YAMS_SUCCESS;
