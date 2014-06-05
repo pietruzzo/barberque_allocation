@@ -127,10 +127,6 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 		return ERR_UNKN_TYPE;
 	}
 
-	// Append the new resource identifier (sp) to the list
-	prid = br::ResourceIdentifierPtr_t(new br::ResourceIdentifier(r_type, r_id));
-	identifiers.push_back(prid);
-
 	// Set the info about resource type
 	if (types_bits.test(r_type)) {
 		logger->Debug("Append: resource type [%d] already in the path", r_type);
@@ -138,8 +134,11 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 	}
 	types_bits.set(r_type);
 	types_idx.insert(std::pair<uint16_t, uint8_t>(r_type, level_count));
-	global_type = r_type;
 
+	// Append the new resource identifier (sp) to the list
+	prid = br::ResourceIdentifierPtr_t(new br::ResourceIdentifier(r_type, r_id));
+	identifiers.push_back(prid);
+	global_type = r_type;
 	// Build the text string
 	if (level_count > 0)
 		str.append(".");
