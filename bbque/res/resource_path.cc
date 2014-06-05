@@ -157,13 +157,12 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 br::ResourceIdentifier::Type_t ResourcePath::ParentType(
 		br::ResourceIdentifier::Type_t r_type) const {
 	// Find the index of the given resource type
-	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
-	index_it = types_idx.find(r_type);
-	if (index_it == types_idx.end())
+	int8_t level = GetLevel(r_type);
+	if (level < 0)
 		return br::ResourceIdentifier::UNDEFINED;
 
 	// Retrieve the position of the parent
-	int8_t parent_index = index_it->second - 1;
+	int8_t parent_index = level - 1;
 	if (parent_index < 0)
 		return br::ResourceIdentifier::UNDEFINED;
 
@@ -180,15 +179,23 @@ br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 
 br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 		br::ResourceIdentifier::Type_t r_type) const {
-	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
+
 	// Look for the vector position of the resource identifier by type
-	index_it = types_idx.find(static_cast<uint16_t>(r_type));
-	if (index_it == types_idx.end())
+	int8_t level = GetLevel(r_type);
+	if (level < 0)
 		return br::ResourceIdentifierPtr_t();
 	// Get the ID from the resource identifier in the vector
 	logger->Debug("GetIdentifier: type %s @pos:%d",
-			br::ResourceIdentifier::TypeStr[r_type], (*index_it).second);
-	return identifiers.at((*index_it).second);
+			br::ResourceIdentifier::TypeStr[r_type], level);
+	return identifiers.at(level);
+}
+
+int8_t ResourcePath::GetLevel(br::ResourceIdentifier::Type_t r_type) const {
+	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
+	index_it = types_idx.find(static_cast<uint16_t>(r_type));
+	if (index_it == types_idx.end())
+		return -1;
+	return index_it->second;
 }
 
 bool ResourcePath::IsTemplate() const {
