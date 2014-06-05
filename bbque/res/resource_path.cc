@@ -139,10 +139,6 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 	prid = br::ResourceIdentifierPtr_t(new br::ResourceIdentifier(r_type, r_id));
 	identifiers.push_back(prid);
 	global_type = r_type;
-	// Build the text string
-	if (level_count > 0)
-		str.append(".");
-	str.append(prid->Name());
 
 	// Increase the levels counter
 	++level_count;
@@ -150,7 +146,7 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 			prid->Name().c_str(), types_idx[r_type],
 			types_bits.to_string().c_str());
 	logger->Debug("Append: SP:'%s', count: %d",
-			str.c_str(), level_count);
+			this->ToString().c_str(), level_count);
 	return OK;
 }
 
@@ -226,7 +222,6 @@ ResourcePath::ExitCode_t ResourcePath::ReplaceID(
 	prid->SetID(dst_r_id);
 	logger->Debug("ReplaceID: from %d to %d, DONE",
 			src_r_id, prid->ID());
-	id_changed = true;
 
 	return OK;
 }
@@ -238,24 +233,18 @@ br::ResID_t ResourcePath::GetID(br::ResourceIdentifier::Type_t r_type) const {
 	return prid->ID();
 }
 
-std::string const & ResourcePath::ToString() {
+std::string ResourcePath::ToString() const {
 	ResourcePath::ConstIterator it;
-	std::string new_str;
+	std::string str_path;
 
-	// If no ID has changed, return the saved string
-	if (!id_changed)
-		return str;
 	// The resource identifiers
 	for (it = identifiers.begin(); it != identifiers.end(); ++it) {
 		if (it != identifiers.begin())
-			new_str.append(".");
-		new_str.append((*it)->Name());
+			str_path.append(".");
+		str_path.append((*it)->Name());
 	}
 	// Update the string
-	str = new_str;
-	id_changed = false;
-
-	return str;
+	return str_path;
 }
 
 } // namespace res

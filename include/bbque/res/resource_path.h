@@ -228,7 +228,7 @@ public:
 	/**
 	 * @brief Return the resource path in text string format
 	 */
-	std::string const & ToString();
+	std::string ToString() const;
 
 	/**
 	 * @brief Retrieve a resource identifier
@@ -280,19 +280,11 @@ private:
 	/** Keep track of the position of the resource type in the vector */
 	std::unordered_map<uint16_t, uint8_t> types_idx;
 
-	/** The char string format */
-	std::string str;
-
 	/** The type of resource referenced by the path. */
 	br::ResourceIdentifier::Type_t global_type;
 
 	/** Number of levels counter */
 	uint8_t level_count;
-
-	/** Keep track of an ID replacement */
-	bool id_changed;
-
-
 };
 
 } // namespace bbque
