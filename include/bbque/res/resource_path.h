@@ -110,6 +110,11 @@ public:
 	ResourcePath(std::string const & str_path);
 
 	/**
+	 * @brief Copy constructor
+	 */
+	ResourcePath(ResourcePath const & r_path);
+
+	/**
 	 * @brief Destructor
 	 */
 	~ResourcePath();

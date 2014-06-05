@@ -37,7 +37,20 @@ ResourcePath::ResourcePath(std::string const & str_path):
 		logger->Error("RP{%s} Construction failed", str_path.c_str());
 		return;
 	}
+}
 
+ResourcePath::ResourcePath(ResourcePath const & r_path):
+		global_type(br::ResourceIdentifier::UNDEFINED),
+		level_count(0) {
+	// Get a logger module
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	logger->Debug("RP{%s} object construction", r_path.ToString().c_str());
+	// Copy
+	identifiers = r_path.identifiers;
+	types_idx   = r_path.types_idx;
+	types_bits  = r_path.types_bits;
+	global_type = r_path.global_type;
+	level_count = r_path.level_count;
 }
 
 ResourcePath::~ResourcePath() {
