@@ -24,33 +24,20 @@
 
 namespace bbque { namespace res {
 
-ResourcePath::ResourcePath(std::string const & r_path):
+ResourcePath::ResourcePath(std::string const & str_path):
 		global_type(br::ResourceIdentifier::UNDEFINED),
 		level_count(0) {
-	std::string head, tail;
-	std::string r_name;
-	br::ResID_t r_id;
-	ExitCode_t result;
 
 	// Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
-	logger->Debug("RP{%s} object construction", r_path.c_str());
+	logger->Debug("RP{%s} object construction", str_path.c_str());
 
-	// Iterate over all the resources in the path string
-	tail = r_path;
-	do {
-		// Get the resource ID and the name (string format type)
-		head = ResourcePathUtils::SplitAndPop(tail);
-		ResourcePathUtils::GetNameID(head, r_name, r_id);
+	if (AppendString(str_path) != OK) {
+		Clear();
+		logger->Error("RP{%s} Construction failed", str_path.c_str());
+		return;
+	}
 
-		// Append a new resource identifier to the list
-		result = Append(r_name, r_id);
-		if (result != OK) {
-			logger->Debug("RP{%s}: Cannot append type '%d'",
-					r_path.c_str(), result);
-			return;
-		}
-	} while (!tail.empty());
 }
 
 ResourcePath::~ResourcePath() {
@@ -150,6 +137,32 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 	return OK;
 }
 
+ResourcePath::ExitCode_t ResourcePath::AppendString(
+		std::string const & str_path,
+		bool smart_mode) {
+	std::string head, tail;
+	std::string r_name;
+	br::ResID_t r_id;
+	ExitCode_t result;
+
+	// Iterate over all the resources in the path string
+	tail = str_path;
+	do {
+		// Get the resource ID and the name (string format type)
+		head = ResourcePathUtils::SplitAndPop(tail);
+		ResourcePathUtils::GetNameID(head, r_name, r_id);
+
+		// Append a new resource identifier to the list
+		result = Append(r_name, r_id);
+		if (result != OK && !smart_mode) {
+			logger->Debug("RP{%s}: Cannot append type '%d'",
+					str_path.c_str(), result);
+			return result;
+		}
+	} while (!tail.empty());
+
+	return OK;
+}
 br::ResourceIdentifier::Type_t ResourcePath::ParentType(
 		br::ResourceIdentifier::Type_t r_type) const {
 	// Find the index of the given resource type

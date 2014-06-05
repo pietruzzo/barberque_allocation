@@ -155,6 +155,19 @@ public:
 	ExitCode_t Append(ResourceIdentifier::Type_t r_type, ResID_t r_id);
 
 	/**
+	 * @brief Append a set of resource identifiers from a string path
+	 *
+	 * @param str_path The resource string path to append
+	 * @param smart_mode If true, skip resource identifiers of already used
+	 * type
+	 *
+	 * @return OK for success, ERR_UNKN_TYPE for unknown resource type,
+	 * ERR_USED_TYPE if the type has been already included in the path and
+	 * smart_mode is set to 'false'
+	 */
+	ExitCode_t AppendString(
+			std::string const & str_path,
+			bool smart_mode = false);
 	 * @brief Get the type of resource referenced by the path
 	 *
 	 * Example: path "sys.cpu.mem" will have global type equal to MEMORY
