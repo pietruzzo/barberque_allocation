@@ -175,6 +175,15 @@ public:
 			bool smart_mode = false);
 
 	/**
+	 * @brief Clear a resource path and copy a new one into
+	 *
+	 * @param Source resource path object
+	 * @param Number of levels to copy
+	 *
+	 * @return OK for success, otherwise and error code due to @see Append
+	 * fails
+	 */
+	ExitCode_t Copy(ResourcePath const & rp_src, int num_levels = 0);
 
 	/**
 	 * @brief Concatenate a resource path

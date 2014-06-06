@@ -177,6 +177,21 @@ ResourcePath::ExitCode_t ResourcePath::AppendString(
 	return OK;
 }
 
+ResourcePath::ExitCode_t ResourcePath::Copy(
+		ResourcePath const & rp_src,
+		int num_levels) {
+	ExitCode_t result;
+
+	// Copy per resource identifier
+	Clear();
+	result = Concat(rp_src, num_levels);
+	if (result != OK) {
+		Clear();
+		logger->Error("Copy: failed");
+	}
+	return OK;
+}
+
 ResourcePath::ExitCode_t ResourcePath::Concat(
 		ResourcePath const & rp_src,
 		int num_levels,
