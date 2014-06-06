@@ -75,6 +75,9 @@ ResourceAccounter::ResourceAccounter() :
 	// Init sync session info
 	sync_ssn.count = 0;
 
+	// Init prefix path object
+	r_prefix_path = br::ResourcePathPtr_t(new br::ResourcePath(PREFIX_PATH));
+
 	// Register set quota command
 #define CMD_SET_QUOTA "set_quota"
 	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_SET_QUOTA,
@@ -86,6 +89,7 @@ ResourceAccounter::~ResourceAccounter() {
 	resources.clear();
 	usages_per_views.clear();
 	rsrc_per_views.clear();
+	r_prefix_path.reset();
 }
 
 /************************************************************************
@@ -544,6 +548,9 @@ ResourceAccounter::ExitCode_t ResourceAccounter::GetAppUsagesByView(
  *                   RESOURCE MANAGEMENT                                *
  ************************************************************************/
 
+br::ResourcePath const & ResourceAccounter::GetPrefixPath() const {
+	return *(r_prefix_path.get());
+}
 
 ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
 		std::string const & path_str,

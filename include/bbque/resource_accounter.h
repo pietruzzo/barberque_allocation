@@ -37,6 +37,9 @@
 // Max length for the resource view token string
 #define TOKEN_PATH_MAX_LEN 30
 
+// Prefix resource path used for Recipe validation
+#define PREFIX_PATH "sys"
+
 namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
@@ -213,6 +216,11 @@ public:
 	 */
 	void PrintAppDetails(br::ResourcePathPtr_t path, br::RViewToken_t vtok,
 			bool verbose) const;
+
+	/**
+	 * @brief A prefix path for recipe validation
+	 */
+	br::ResourcePath const & GetPrefixPath() const;
 
 	/**
 	 * @brief Register a resource
@@ -478,6 +486,9 @@ private:
 
 	/** List that keeps track of the managed resource types */
 	std::list<br::Resource::Type_t> r_types;
+
+	/** Resource path (pointer) referencing the prefix */
+	br::ResourcePathPtr_t r_prefix_path;
 
 	/** Keep track of the max length between resources path string */
 	uint8_t path_max_len = 0;
