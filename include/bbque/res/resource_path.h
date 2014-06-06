@@ -173,6 +173,15 @@ public:
 	ExitCode_t AppendString(
 			std::string const & str_path,
 			bool smart_mode = false);
+
+	/**
+
+	/**
+	 * @brief Completely reset the object
+	 */
+	void Clear();
+
+	/**
 	 * @brief Get the type of resource referenced by the path
 	 *
 	 * Example: path "sys.cpu.mem" will have global type equal to MEMORY

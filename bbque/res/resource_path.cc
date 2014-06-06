@@ -176,6 +176,15 @@ ResourcePath::ExitCode_t ResourcePath::AppendString(
 
 	return OK;
 }
+
+void ResourcePath::Clear() {
+	identifiers.clear();
+	types_idx.clear();
+	types_bits.reset();
+	global_type = br::ResourceIdentifier::UNDEFINED;
+	level_count = 0;
+}
+
 br::ResourceIdentifier::Type_t ResourcePath::ParentType(
 		br::ResourceIdentifier::Type_t r_type) const {
 	// Find the index of the given resource type
