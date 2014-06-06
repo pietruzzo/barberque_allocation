@@ -32,7 +32,7 @@ public:
 	 */
 	SCReconfig(
 		const char * _name,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint16_t cfg_params[]);
 
 	~SCReconfig();

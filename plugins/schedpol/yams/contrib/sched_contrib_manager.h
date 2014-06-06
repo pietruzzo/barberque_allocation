@@ -81,7 +81,7 @@ public:
 	 */
 	SchedContribManager(
 			Type_t const * sc_types,
-			SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+			BindingInfo_t const & _bd_info,
 			uint8_t sc_num);
 
 	/**
@@ -151,7 +151,7 @@ public:
 	 *
 	 * @param _bd_info A binding information data structure
 	 */
-	void SetBindingInfo(SchedulerPolicyIF::BindingInfo_t & _bd_info);
+	void SetBindingInfo(BindingInfo_t & _bd_info);
 
 	/**
 	 * @brief Return a resource path string reference the binding domain
@@ -185,7 +185,7 @@ private:
 	static bool config_ready;
 
 	/** The base resource path for the binding step */
-	SchedulerPolicyIF::BindingInfo_t bd_info;
+	BindingInfo_t bd_info;
 
 	/** Scheduling contributions required*/
 	std::map<Type_t, SchedContribPtr_t> sc_objs_reqs;

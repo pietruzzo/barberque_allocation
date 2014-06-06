@@ -27,7 +27,7 @@ namespace bbque { namespace plugins {
 
 SCFairness::SCFairness(
 		const char * _name,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint16_t const cfg_params[]):
 	SchedContrib(_name, _bd_info, cfg_params) {
 	char conf_str[50];
@@ -89,7 +89,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 	num_apps = sv->ApplicationsCount(priority);
 	r_types  = sv->ResourceTypesList();
 	logger->Debug("Priority [%d]:  %d applications", priority, num_apps);
-	logger->Debug("Bindings [%s]:  %d", bd_info.domain.c_str(), bd_info.num);
+	logger->Debug("Bindings [%s]:  %d", bd_info.domain.c_str(), bd_info.count);
 	logger->Debug("Resource types: %d", r_types.size());
 
 	// For each resource type get the availability and the fair partitioning
@@ -180,7 +180,7 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 
 		// Binding domain fair partition
 		bd_fair_pt = max_bd_r_avail[r_path->Type()] / bd_fract;
-		if (bd_info.num > 1)
+		if (bd_info.count > 1)
 			bd_fair_pt = std::max(min_bd_r_avail[r_path->Type()], bd_fair_pt);
 		logger->Debug("%s: R{%s} BD{'%s'} fair partition: %" PRIu64 "",
 				evl_ent.StrId(), r_path->ToString().c_str(),

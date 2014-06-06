@@ -26,7 +26,7 @@ namespace bbque { namespace plugins {
 
 SCValue::SCValue(
 		const char * _name,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint16_t const cfg_params[]):
 	SchedContrib(_name, _bd_info, cfg_params) {
 	char conf_str[50];

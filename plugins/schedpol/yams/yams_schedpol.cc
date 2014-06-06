@@ -272,9 +272,9 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitBindingInfo() {
 		// Set information for each binding domain
 		BindingInfo_t & bd(*(bd_it->second));
 		bd.rsrcs = sv->GetResources(bd.domain);
-		bd.num   = bd.rsrcs.size();
-		bd.ids.resize(bd.num);
-		if (bd.num == 0) {
+		bd.count = bd.rsrcs.size();
+		bd.ids.resize(bd.count);
+		if (bd.count == 0) {
 			logger->Warn("Init: No bindings R{%s} available",
 					bd.domain.c_str());
 			continue;
@@ -290,7 +290,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitBindingInfo() {
 					bd.domain.c_str(), bd.ids[j]);
 		}
 		logger->Debug("Init: R{%s}: %d possible bindings",
-				bd.domain.c_str(), bd.num);
+				bd.domain.c_str(), bd.count);
 	}
 
 	return YAMS_SUCCESS;
@@ -573,7 +573,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 		// Skipping empty binding domains
 		r_mask = br::ResourceBinder::GetMask(
 				pschd->pawm->RecipeResourceUsages(), bd_type);
-		if ((bd.num == 0) || (r_mask.Count() == 0))
+		if ((bd.count == 0) || (r_mask.Count() == 0))
 			continue;
 
 		// Cumulate the scheduling contributions in the SchedEntity object
@@ -852,19 +852,19 @@ void YamsSchedPol::CowsSetup() {
 
 	// COWS: Vectors and accumulators resizing depending on the total number
 	// of possible bindings for the CPU resource
-	cows_info.bd_load.resize(cpu_bindings->num);
-	cows_info.bound_mix.resize(cpu_bindings->num);
-	cows_info.stalls_metrics.resize(cpu_bindings->num);
-	cows_info.iret_metrics.resize(cpu_bindings->num);
-	cows_info.flops_metrics.resize(cpu_bindings->num);
-	cows_info.migr_metrics.resize(cpu_bindings->num);
+	cows_info.bd_load.resize(cpu_bindings->count);
+	cows_info.bound_mix.resize(cpu_bindings->count);
+	cows_info.stalls_metrics.resize(cpu_bindings->count);
+	cows_info.iret_metrics.resize(cpu_bindings->count);
+	cows_info.flops_metrics.resize(cpu_bindings->count);
+	cows_info.migr_metrics.resize(cpu_bindings->count);
 	cows_info.perf_data.resize(COWS_RECIPE_METRICS);
 	cows_info.norm_stats.resize(COWS_NORMAL_VALUES);
 
 	// COWS: The real accumulator sets
-	binding_domains.resize(cpu_bindings->num);
-	binding_speculative.resize(cpu_bindings->num);
-	binding_empty.resize(cpu_bindings->num);
+	binding_domains.resize(cpu_bindings->count);
+	binding_speculative.resize(cpu_bindings->count);
+	binding_empty.resize(cpu_bindings->count);
 	syswide_sums.resize(COWS_UNITS_METRICS);
 	syswide_empty.resize(COWS_UNITS_METRICS);
 
@@ -907,7 +907,7 @@ void YamsSchedPol::CowsUpdateMeans(int logic_index) {
 void YamsSchedPol::CowsClear() {
 
 	// Clearing the indexes needed to store evaluation results
-	for (int i = 0; i < cpu_bindings->num ; i++) {
+	for (int i = 0; i < cpu_bindings->count ; i++) {
 		cows_info.bd_load[i] = 0;
 		cows_info.bound_mix[i] = 0;
 		cows_info.stalls_metrics[i] = 0;
@@ -967,10 +967,10 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 	float value;
 
 	logger->Info("COWS: ------------ Bound mix computation -------------");
-	logger->Info("COWS: Binding domain(s): %d", cpu_bindings->num);
+	logger->Info("COWS: Binding domain(s): %d", cpu_bindings->count);
 
 	// BOUND MIX: compute the delta-variance for each binding domain
-	for (int i = 0; i < cpu_bindings->num; i++) {
+	for (int i = 0; i < cpu_bindings->count; i++) {
 
 		// Computing system boundness status 'AS IF' the BD chosen to
 		// contain the application is the current BD.
@@ -1032,7 +1032,7 @@ void YamsSchedPol::CowsUnitsBalance() {
 	logger->Info("COWS: ---------- Functional units balance ------------");
 
 	// Update system-wide allocated resources amount
-	for (int i = 0; i < cpu_bindings->num; i++) {
+	for (int i = 0; i < cpu_bindings->count; i++) {
 		syswide_sums[COWS_STALLS](sum(binding_domains[i].stalls_info));
 		syswide_sums[COWS_IRET  ](sum(binding_domains[i].iret_info));
 		syswide_sums[COWS_FLOPS ](sum(binding_domains[i].flops_info));
@@ -1041,26 +1041,26 @@ void YamsSchedPol::CowsUnitsBalance() {
 	// For each binding domain, calculate the updated means AS IF
 	// I scheduled the new app there, then calculate the corresponding
 	// standard deviation
-	for (int i = 0; i < cpu_bindings->num; i++) {
+	for (int i = 0; i < cpu_bindings->count; i++) {
 		logger->Info("COWS: Computing units balance for BD[%d]...",
 				cpu_bindings->ids[i]);
 
 		// Calculating standard deviations (squared). Again, if I'm on
 		// BD i, the mean has changed
-		for (int j = 0; j < cpu_bindings->num; j++) {
+		for (int j = 0; j < cpu_bindings->count; j++) {
 
 			float dist_from_avg_stalls =
 					sum(binding_domains[j].stalls_info) -
 					(mean(syswide_sums[COWS_STALLS]) +
-					cows_info.perf_data[COWS_STALLS]/cpu_bindings->num);
+					cows_info.perf_data[COWS_STALLS]/cpu_bindings->count);
 				float dist_from_avg_iret =
 					sum(binding_domains[j].iret_info) -
 					(mean(syswide_sums[COWS_IRET]) +
-					cows_info.perf_data[COWS_IRET]/cpu_bindings->num);
+					cows_info.perf_data[COWS_IRET]/cpu_bindings->count);
 				float dist_from_avg_flops =
 					sum(binding_domains[j].flops_info) -
 					(mean(syswide_sums[COWS_FLOPS]) +
-					cows_info.perf_data[COWS_FLOPS]/cpu_bindings->num);
+					cows_info.perf_data[COWS_FLOPS]/cpu_bindings->count);
 
 			if (j == i) {
 				dist_from_avg_stalls +=
@@ -1112,7 +1112,7 @@ void YamsSchedPol::CowsAggregateResults() {
 	// Normalizing
 	logger->Info(" ======================================================"
 			"==================");
-	for (int i = 0; i < cpu_bindings->num; i++) {
+	for (int i = 0; i < cpu_bindings->count; i++) {
 		cows_info.stalls_metrics[i] /= cows_info.norm_stats[COWS_STALLS];
 		cows_info.iret_metrics[i]   /= cows_info.norm_stats[COWS_IRET];
 		cows_info.flops_metrics[i]  /= cows_info.norm_stats[COWS_FLOPS];
@@ -1138,7 +1138,7 @@ void YamsSchedPol::CowsAggregateResults() {
 			"==================");
 
 	// Order the binding domains for the current <Application, AWM>
-	for (int i = 0; i < cpu_bindings->num; i++) {
+	for (int i = 0; i < cpu_bindings->count; i++) {
 		result =
 		// (W1*BOUNDNESS) - [W2*(ST + RET + FLOPS)] + (W3*MIGRATION)
 		    cows_info.m_weights[COWS_BOUND_WEIGHT] * cows_info.bound_mix[i]

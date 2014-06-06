@@ -65,6 +65,30 @@ class ApplicationManager;
 
 
 /**
+ * @brief Binding domain information
+ *
+ * Keep track of the runtime status of the binding domains (e.g., CPU
+ * nodes)
+ */
+typedef struct BindingInfo {
+	/** The base resource path for the binding step */
+	std::string domain;
+	/** The type of resource to bind (e.g. CPU, GROUP,...) */
+	br::Resource::Type_t type;
+	/** Number of managed resource types */
+	std::list<br::Resource::Type_t> r_types;
+	/** Number of binding domains on the platform	 */
+	uint16_t count;
+	/** Resource pointer descriptor list */
+	br::ResourcePtrList_t rsrcs;
+	/** The IDs of all the possible bindings */
+	std::vector<br::ResID_t> ids;
+	/** Keep track the bindings without available processing elements */
+	br::ResourceBitset full;
+} BindingInfo_t;
+
+
+/**
  * @brief Resources Accouter
  * @ingroup sec07_ra
  */
@@ -333,6 +357,7 @@ public:
 	bool IsReshuffling(br::UsagesMapPtr_t const & pum_current,
 			br::UsagesMapPtr_t const & pum_next);
 
+
 	/**
 	 * @see ResourceAccounterConfIF
 	 */
@@ -480,6 +505,11 @@ private:
 
 	/** The resource paths registered (strings and objects) */
 	std::map<std::string, br::ResourcePathPtr_t> r_paths;
+
+	/** Resources that can be allocated in 'slice', i.e. the assigned amount
+	 * is distributed over all the resources referenced by the mixed/template
+	 * path specified */
+	std::map<br::ResourcePathPtr_t, uint64_t> r_sliced;
 
 	/** Counter for the total number of registered resources */
 	std::map<br::Resource::Type_t, uint16_t> r_count;

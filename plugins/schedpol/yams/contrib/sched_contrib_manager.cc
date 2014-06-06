@@ -69,7 +69,7 @@ uint16_t
 
 SchedContribManager::SchedContribManager(
 		Type_t const * sc_types,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint8_t sc_num):
 	cm(ConfigurationManager::GetInstance()),
 	bd_info(_bd_info) {
@@ -193,7 +193,7 @@ std::string const & SchedContribManager::GetBindingDomain() {
 
 
 void SchedContribManager::SetBindingInfo(
-		SchedulerPolicyIF::BindingInfo_t & _bd_info) {
+		BindingInfo_t & _bd_info) {
 	std::map<Type_t, SchedContribPtr_t>::iterator sc_it;
 
 	// Set/update the current binding information
