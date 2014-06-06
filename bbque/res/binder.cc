@@ -196,7 +196,7 @@ ResourceBitset ResourceBinder::GetMask(
 
 		// Is the Application/EXC using the resource?
 		DB(fprintf(stderr, FD("GetMaskL: %s\n"), pres->Name().c_str()));
-		if (pres->ApplicationUsage(papp, vtok) == 0)
+		if (papp && (pres->ApplicationUsage(papp, vtok) == 0))
 			continue;
 
 		if (pres->Type() == r_type)
