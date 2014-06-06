@@ -177,6 +177,32 @@ public:
 	/**
 
 	/**
+	 * @brief Concatenate a resource path
+	 *
+	 * @param Source resource path object
+	 * @param Number of levels to copy
+	 * @param smart_mode If true, skip resource identifiers of already used
+	 * type
+	 *
+	 * @return OK for success, otherwise and error code due to @see Append
+	 * fails
+	 */
+	ExitCode_t Concat(
+			ResourcePath const & rp_src,
+			int num_levels = 0,
+			bool smart_mode = true);
+
+	/**
+	 * @brief Concatenate a resource path from a string
+	 *
+	 * @param Source resource path string
+	 *
+	 * @return OK for success, otherwise and error code due to @see Append
+	 * fails
+	 */
+	ExitCode_t Concat(std::string const & str_path);
+
+	/**
 	 * @brief Completely reset the object
 	 */
 	void Clear();

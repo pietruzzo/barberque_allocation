@@ -177,6 +177,34 @@ ResourcePath::ExitCode_t ResourcePath::AppendString(
 	return OK;
 }
 
+ResourcePath::ExitCode_t ResourcePath::Concat(
+		ResourcePath const & rp_src,
+		int num_levels,
+		bool smart_mode) {
+	ExitCode_t result;
+
+	// Concat or N-concat?
+	if (num_levels == 0)
+		num_levels = rp_src.NumLevels();
+
+	for (int i = 0; i < num_levels; ++i) {
+		result = Append(
+				rp_src.GetIdentifier(i)->Type(),
+				rp_src.GetIdentifier(i)->ID());
+		if (result != OK && !smart_mode) {
+			logger->Error("Concatenate: Impossible to append '%s'",
+					rp_src.GetIdentifier(i)->Name().c_str());
+			return result;
+		}
+	}
+	return OK;
+}
+
+ResourcePath::ExitCode_t ResourcePath::Concat(
+		std::string const & str_path) {
+	return AppendString(str_path, true);
+}
+
 void ResourcePath::Clear() {
 	identifiers.clear();
 	types_idx.clear();
