@@ -517,13 +517,10 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 
 void YamsSchedPol::InsertWorkingModes(ba::AppCPtr_t const & papp) {
 	std::list<std::thread> awm_thds;
-	ba::AwmPtrList_t const * awms = nullptr;
-	ba::AwmPtrList_t::const_iterator awm_it;
 
 	// AWMs evaluation (no binding)
-	awms = papp->WorkingModes();
-	for (awm_it = awms->begin(); awm_it != awms->end(); ++awm_it) {
-		ba::AwmPtr_t const & pawm(*awm_it);
+	ba::AwmPtrList_t const & awms(papp->WorkingModes());
+	for (ba::AwmPtr_t const & pawm: awms) {
 		SchedEntityPtr_t pschd(new SchedEntity_t(papp, pawm, R_ID_NONE, 0.0));
 #ifdef CONFIG_BBQUE_SP_YAMS_PARALLEL
 		awm_thds.push_back(

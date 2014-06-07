@@ -81,7 +81,6 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ba::AwmPtrList_t::const_iterator it;
 	ba::AwmPtrList_t::const_iterator end;
-	ba::AwmPtrList_t const *awms;
 	uint32_t selected_awm;
 	uint32_t selected_bd;
 	uint8_t bd_count;
@@ -97,12 +96,12 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 	}
 
 	// Select a random AWM for this EXC
-	awms = papp->WorkingModes();
-	selected_awm = dist(rng_engine) % awms->size();
+	ba::AwmPtrList_t const & awms(papp->WorkingModes());
+	selected_awm = dist(rng_engine) % awms.size();
 	logger->Debug("Scheduling EXC [%s] on AWM [%d of %d]",
-			papp->StrId(), selected_awm, awms->size());
-	it = awms->begin();
-	end = awms->end();
+			papp->StrId(), selected_awm, awms.size());
+	it = awms.begin();
+	end = awms.end();
 	for ( ; selected_awm && it!=end; --selected_awm, ++it);
 	assert(it!=end);
 
