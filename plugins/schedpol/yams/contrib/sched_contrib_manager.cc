@@ -59,8 +59,8 @@ char const * SchedContribManager::sc_str[SC_COUNT] = {
 float SchedContribManager::sc_weights_norm[SC_COUNT] = {0};
 uint16_t SchedContribManager::sc_weights[SC_COUNT]   = {0};
 uint16_t
-	SchedContribManager::sc_cfg_params[SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT] = {
-	0};
+	SchedContribManager::sc_cfg_params[
+		SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT] = {0};
 
 
 /*****************************************************************************
