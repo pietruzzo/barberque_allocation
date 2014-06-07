@@ -476,7 +476,7 @@ uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 			br::ResourceIdentifier::TypeStr[r_scope_type]);
 
 		if ((r_scope_type != br::Resource::UNDEFINED)
-			&& (ppath->GetID(r_scope_type) == R_ID_NONE))
+			&& (ppath->GetIdentifier(r_scope_type) == nullptr))
 			continue;
 		// Get the amount used
 		if (ppath->Type() != r_type)
