@@ -68,9 +68,9 @@ ResourceAccounter::ResourceAccounter() :
 
 	// Init the system resources state view
 	sys_usages_view = AppUsagesMapPtr_t(new AppUsagesMap_t);
-	sys_view_token = 0;
+	sys_view_token  = 0;
 	usages_per_views[sys_view_token] = sys_usages_view;
-	rsrc_per_views[sys_view_token] = ResourceSetPtr_t(new ResourceSet_t);
+	rsrc_per_views[sys_view_token]   = ResourceSetPtr_t(new ResourceSet_t);
 
 	// Init sync session info
 	sync_ssn.count = 0;
@@ -121,7 +121,7 @@ void ResourceAccounter::PrintStatusReport(br::RViewToken_t vtok, bool verbose) c
 
 	// Print the head of the report table
 	if (verbose) {
-		logger->Info("Report on state view: %d", vtok);
+		logger->Notice("Report on state view: %d", vtok);
 		logger->Notice(RP_DIV1);
 		logger->Notice(RP_HEAD);
 		logger->Notice(RP_DIV2);
@@ -983,12 +983,12 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit() {
 	papp = am.GetFirst(ApplicationStatusIF::RUNNING, apps_it);
 	for ( ; papp; papp = am.GetNext(ApplicationStatusIF::RUNNING, apps_it)) {
 
-		logger->Info("SyncInit: [%s] current AWM: %d", papp->StrId(),
-				papp->CurrentAWM()->Id());
+		logger->Info("SyncInit: [%s] current AWM: %d",
+				papp->StrId(), papp->CurrentAWM()->Id());
 
 		// Re-acquire the resources (these should not have a "Next AWM"!)
-		result = BookResources(papp, papp->CurrentAWM()->GetResourceBinding(),
-				sync_ssn.view);
+		result = BookResources(
+				papp, papp->CurrentAWM()->GetResourceBinding(), sync_ssn.view);
 		if (result != RA_SUCCESS) {
 			logger->Fatal("SyncInit [%d]: Resource booking failed for %s."
 					" Aborting sync session...", sync_ssn.count, papp->StrId());
@@ -1192,6 +1192,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 	// Critical error: The availability of resources mismatches the one
 	// checked in the scheduling phase. This should never happen!
 	if (requested != 0) {
+		logger->Crit("DRBooking: Resource assignment mismatch");
 		assert(requested != 0);
 		return RA_ERR_USAGE_EXC;
 	}

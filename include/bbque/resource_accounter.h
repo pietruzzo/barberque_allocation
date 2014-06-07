@@ -118,14 +118,20 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint64_t Available(std::string const & path,
-			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	uint64_t Available(
+			std::string const & path,
+			br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
-	uint64_t Available(br::ResourcePtrList_t & rsrc_list,
-			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	uint64_t Available(
+			br::ResourcePtrList_t & rsrc_list,
+			br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
-	uint64_t Available(br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
-			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	uint64_t Available(
+			br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
+			br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -218,7 +224,6 @@ public:
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED) const;
 
-
 	/**
 	 * @brief Show the system resources status
 	 *
@@ -262,15 +267,15 @@ public:
 	 * RA_ERR_MISS_PATH if the path string is empty. RA_ERR_MEM if the
 	 * resource descriptor cannot be allocated.
 	 */
-	ExitCode_t RegisterResource(std::string const & path,
-			std::string const & units, uint64_t amount);
+	ExitCode_t RegisterResource(
+			std::string const & path, std::string const & units, uint64_t amount);
 
 	/**
 	 * @brief Update availabilies for the specified resource
 	 *
 	 */
-	ExitCode_t UpdateResource(std::string const & path,
-			std::string const & units, uint64_t amount);
+	ExitCode_t UpdateResource(
+			std::string const & path, std::string const & units,uint64_t amount);
 
 	/**
 	 * @brief Book e a set of resources
@@ -293,8 +298,10 @@ public:
 	 * RA_ERR_USAGE_EXC if the resource set required is not completely
 	 * available.
 	 */
-	ExitCode_t BookResources(ba::AppSPtr_t papp,
-			br::UsagesMapPtr_t const & rsrc_usages, br::RViewToken_t vtok = 0);
+	ExitCode_t BookResources(
+			ba::AppSPtr_t papp,
+			br::UsagesMapPtr_t const & rsrc_usages,
+			br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Release the resources
@@ -354,7 +361,8 @@ public:
 	 *
 	 * @return true when resources are being reshuffled
 	 */
-	bool IsReshuffling(br::UsagesMapPtr_t const & pum_current,
+	bool IsReshuffling(
+			br::UsagesMapPtr_t const & pum_current,
 			br::UsagesMapPtr_t const & pum_next);
 
 
@@ -495,7 +503,7 @@ private:
 	bbque::ApplicationManager & am;
 
 	/** The Command Manager component */
-	CommandManager &cm;
+	CommandManager & cm;
 
 	/** Mutex protecting resource release and acquisition */
 	std::recursive_mutex status_mtx;
