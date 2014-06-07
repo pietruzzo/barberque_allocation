@@ -419,6 +419,33 @@ uint8_t YamsSchedPol::OrderSchedEntities(AppPrio_t prio) {
 	return naps_count;
 }
 
+inline bool YamsSchedPol::CheckSkipConditions(ba::AppCPtr_t const & papp) {
+	// Skip if rescheduled yet or disabled in the meanwhile
+	if (!papp->Active() && !papp->Blocking()) {
+		logger->Debug("Skipping [%s] State = [%s, %s]",
+				papp->StrId(),
+				ApplicationStatusIF::StateStr(papp->State()),
+				ApplicationStatusIF::SyncStateStr(papp->SyncState()));
+		return true;
+	}
+
+	// Avoid double AWM selection for already RUNNING applications
+	if ((papp->State() == Application::RUNNING) && papp->NextAWM()) {
+		logger->Debug("Skipping [%s] AWM %d => No reconfiguration",
+				papp->StrId(), papp->CurrentAWM()->Id());
+		return true;
+	}
+
+	// Avoid double AWM selection for already SYNC applications
+	if ((papp->State() == Application::SYNC) && papp->NextAWM()) {
+		logger->Debug("Skipping [%s] AWM already assigned [%d]",
+				papp->StrId(), papp->NextAWM()->Id());
+		return true;
+	}
+
+	return false;
+}
+
 bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 	Application::ExitCode_t app_result = Application::APP_SUCCESS;
 	SchedEntityList_t::iterator se_it(entities.begin());
