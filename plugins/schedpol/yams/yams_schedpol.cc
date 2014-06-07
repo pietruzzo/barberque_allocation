@@ -567,7 +567,6 @@ void YamsSchedPol::InsertWorkingModes(ba::AppCPtr_t const & papp) {
 
 void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
-	std::map<br::Resource::Type_t, BindingInfo_t *>::iterator bd_it;
 	std::map<br::Resource::Type_t, SchedEntityPtr_t> pschd_map;
 	std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator next_it;
 	std::vector<br::ResID_t>::reverse_iterator ids_it;
@@ -587,17 +586,17 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	YAMS_RESET_TIMING(comp_tmr);
 
 	// Aggregate binding-independent scheduling contributions
-	for (bd_it = bindings.begin(); bd_it != bindings.end(); ++bd_it) {
-		br::Resource::Type_t bd_type = bd_it->first;
-		BindingInfo_t & bd(*(bd_it->second));
-		br::ResourceBitset r_mask;
+	for (auto & bd_entry: bindings) {
+		br::Resource::Type_t  bd_type = bd_entry.first;
+		BindingInfo_t const & bd_info(*(bd_entry.second));
 		logger->Debug("EvalAWM: current domain: %s",
-			br::ResourceIdentifier::TypeStr[bd_type]);
+				br::ResourceIdentifier::TypeStr[bd_type]);
 
 		// Skipping empty binding domains
+		br::ResourceBitset r_mask;
 		r_mask = br::ResourceBinder::GetMask(
 				pschd->pawm->RecipeResourceUsages(), bd_type);
-		if ((bd.count == 0) || (r_mask.Count() == 0))
+		if ((bd_info.count == 0) || (r_mask.Count() == 0))
 			continue;
 
 		// Cumulate the scheduling contributions in the SchedEntity object
@@ -624,7 +623,6 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 		sched_ul.unlock();
 		logger->Info("EvalAWM: %s scheduling metrics = %1.4f [%d]",
 				pschd->StrId(), pschd->metrics, entities.size());
-	}
 #else
 	}
 
@@ -658,13 +656,11 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 		SchedEntityPtr_t pschd_parent) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
 	std::map<br::Resource::Type_t, BindingInfo_t *>::iterator bd_it;
-	std::vector<br::ResID_t>::reverse_iterator ids_it;
 	br::Resource::Type_t bd_type(dom_it->first);
 	SchedEntityPtr_t pschd_domain(dom_it->second);
 	float  sc_value  = 0.0;
 	float  base_metr = 0.0;
 	size_t base_refn = 0;
-	br::ResID_t bd_id;
 	ExitCode_t result;
 
 	// Get the BindingInfo of the given resource binding type
@@ -673,7 +669,6 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 		logger->Fatal("EvalBindings: Unexpected binding type");
 		return YAMS_ERROR;
 	}
-	BindingInfo_t bd = *(bd_it->second);
 	logger->Debug("EvalBindings: [%s] base (AWM) metrics %1.4f",
 			br::ResourceIdentifier::TypeStr[bd_type],
 			pschd_domain->metrics);
@@ -685,14 +680,14 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 	}
 
 	// Binding IDs
-	for (ids_it = bd.ids.rbegin(); ids_it != bd.ids.rend(); ++ids_it) {
+	BindingInfo_t bd_info = *(bd_it->second);
+	for (br::ResID_t & bd_id: bd_info.ids) {
 		next_it = dom_it;
-		bd_id   = *ids_it;
 		logger->Debug("EvalBindings: [%s] ID = %d",
 			br::ResourceIdentifier::TypeStr[bd_type], bd_id);
 
 		// Check resource availability
-		if (bd.full[bd_id]) {
+		if (bd_info.full[bd_id]) {
 			logger->Info("EvalBindings: [%s%d] is full, skipping...",
 				bd.domain.c_str(), bd_id);
 			continue;
@@ -1129,9 +1124,9 @@ void YamsSchedPol::CowsAggregateResults() {
 	float result = 0.0;
 	logger->Info("COWS: ----------- Results aggregation ------------");
 
-	if (cows_info.norm_stats[COWS_STALLS] == 0) cows_info.norm_stats[COWS_STALLS]++;
-	if (cows_info.norm_stats[COWS_IRET] == 0) cows_info.norm_stats[COWS_IRET]++;
-	if (cows_info.norm_stats[COWS_FLOPS] == 0) cows_info.norm_stats[COWS_FLOPS]++;
+	if (cows_info.norm_stats[COWS_STALLS] == 0)cows_info.norm_stats[COWS_STALLS]++;
+	if (cows_info.norm_stats[COWS_IRET]   == 0)cows_info.norm_stats[COWS_IRET]++;
+	if (cows_info.norm_stats[COWS_FLOPS]  == 0)cows_info.norm_stats[COWS_FLOPS]++;
 
 	// Normalizing
 	logger->Info(" ======================================================"

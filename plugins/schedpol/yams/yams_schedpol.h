@@ -293,7 +293,6 @@ private:
 	/** Mutex */
 	std::mutex sched_mtx;
 
-
 	/** The High-Resolution timer used for profiling */
 	bu::Timer yams_tmr;
 
@@ -545,7 +544,8 @@ private:
 	 *
 	 * The function is used to order the list of scheduling entities
 	 */
-	static bool CompareEntities(SchedEntityPtr_t & se1,
+	static bool CompareEntities(
+			SchedEntityPtr_t & se1,
 			SchedEntityPtr_t & se2);
 
 };
