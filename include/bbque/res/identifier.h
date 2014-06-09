@@ -89,6 +89,7 @@ public:
 	enum CResult_t {
 		EQUAL   = 0,
 		EQUAL_TYPE ,
+		DONT_CARE  ,
 		NOT_EQUAL
 	};
 

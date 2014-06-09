@@ -105,6 +105,8 @@ const char * ResourceIdentifier::StringFromType(
 
 ResourceIdentifier::CResult_t ResourceIdentifier::Compare(
 		ResourceIdentifier const & ri) const {
+	if ((ri.type == UNDEFINED) || (type == UNDEFINED))
+		return DONT_CARE;
 	if (ri.type != type)
 		return NOT_EQUAL;
 	if (ri.id != id)
