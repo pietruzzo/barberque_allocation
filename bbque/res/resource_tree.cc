@@ -155,9 +155,11 @@ bool ResourceTree::findNode(
 			}
 		}
 
-		if (rresult == Resource::EQUAL_TYPE || rresult == Resource::EQUAL) {
+		// Go deeper in the resource tree (if the not is not a leaf)
+		if (rresult == Resource::EQUAL_TYPE
+				|| rresult == Resource::EQUAL
+				|| rresult == Resource::DONT_CARE) {
 			if (path_it != path_end)
-				// Go deeper in the resource tree
 				findNode(tree_node, ++path_it, path_end, match_flags, matchings);
 			found = true;
 		}
