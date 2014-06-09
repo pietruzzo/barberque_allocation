@@ -168,6 +168,12 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 				bd_info.d_path->ToString().c_str(),
 				max_bd_r_avail[r_path->Type()],
 				fair_pt[r_path->Type()]);
+		// Safety check
+		if (fair_pt[r_path->Type()] == 0) {
+			logger->Warn("%s:  Fair partition is 0!", evl_ent.StrId());
+			return SC_SUCCESS;
+		}
+
 		bd_fract = ceil(
 				max_bd_r_avail[r_path->Type()] /
 					fair_pt[r_path->Type()]);
