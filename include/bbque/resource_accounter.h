@@ -694,6 +694,31 @@ private:
 			AppUsagesMapPtr_t &	apps_usages);
 
 	/**
+	 * @brief Book e a set of resources (not thread-safe)
+	 *
+	 * The method reserves for each resource in the usages map specified the
+	 * required quantity.
+	 *
+	 * @param papp The application requiring resource usages
+	 * @param rsrc_usages Map of Usage objects
+	 * @param vtok The token referencing the resource state view
+	 * @param do_check If true the controls upon set validity and resources
+	 * availability are enabled
+	 *
+	 * @return RA_SUCCESS if the operation has been successfully performed.
+	 * RA_ERR_MISS_APP if the application descriptor is null.
+	 * RA_ERR_MISS_USAGES if the resource usages map is empty.
+	 * RA_ERR_MISS_VIEW if the resource state view referenced by the given
+	 * token cannot be retrieved.
+	 * RA_ERR_USAGE_EXC if the resource set required is not completely
+	 * available.
+	 */
+	ExitCode_t _BookResources(
+			ba::AppSPtr_t papp,
+			br::UsagesMapPtr_t const & rsrc_usages,
+			br::RViewToken_t vtok = 0);
+
+	/**
 	 * @brief Increment the resource usages counts
 	 *
 	 * Each time an application acquires a set of resources (specified in the

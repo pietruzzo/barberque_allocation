@@ -645,6 +645,14 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	return RA_SUCCESS;
 }
 
+
+inline ResourceAccounter::ExitCode_t ResourceAccounter::_BookResources(
+		ba::AppSPtr_t papp,
+		br::UsagesMapPtr_t const & rsrc_usages,
+		br::RViewToken_t vtok) {
+	return IncBookingCounts(rsrc_usages, papp, vtok);
+}
+
 ResourceAccounter::ExitCode_t ResourceAccounter::BookResources(
 		ba::AppSPtr_t papp,
 		br::UsagesMapPtr_t const & rsrc_usages,
@@ -999,7 +1007,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit() {
 				papp->CurrentAWM()->Id());
 
 		// Re-acquire the resources (these should not have a "Next AWM"!)
-		result = BookResources(
+		result = _BookResources(
 				papp, papp->CurrentAWM()->GetResourceBinding(), sync_ssn.view);
 		if (result != RA_SUCCESS) {
 			logger->Fatal("SyncInit [%d]: Resource booking failed for %s."
@@ -1034,7 +1042,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 	br::UsagesMapPtr_t const &usages(papp->NextAWM()->GetResourceBinding());
 
 	// Acquire resources
-	return BookResources(papp, usages, sync_ssn.view);
+	return _BookResources(papp, usages, sync_ssn.view);
 }
 
 void ResourceAccounter::SyncAbort() {
