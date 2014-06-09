@@ -187,8 +187,8 @@ void SchedContribManager::SetViewInfo(System * sv, br::RViewToken_t vtok) {
 	}
 }
 
-std::string const & SchedContribManager::GetBindingDomain() {
-	return bd_info.domain;
+std::string const SchedContribManager::GetBindingDomain() {
+	return bd_info.d_path->ToString();
 }
 
 

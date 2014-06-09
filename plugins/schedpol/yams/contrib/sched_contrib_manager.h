@@ -156,7 +156,7 @@ public:
 	/**
 	 * @brief Return a resource path string reference the binding domain
 	 */
-	std::string const & GetBindingDomain();
+	std::string const GetBindingDomain();
 
 	/**
 	 * @brief Update the set of scheduling contributions weights with new
