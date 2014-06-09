@@ -28,6 +28,7 @@
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
 #include "bbque/cpp11/thread.h"
+#include "bbque/cpp11/condition_variable.h"
 
 #define RESOURCE_ACCOUNTER_NAMESPACE "bq.ra"
 
@@ -95,9 +96,33 @@ class ResourceAccounter: public ResourceAccounterConfIF, CommandHandler {
 public:
 
 	/**
+	 * @brief The states of the module
+	 */
+	enum class State {
+		/** Information not ready for query and accounting */
+		NOT_READY,
+		/** Information ready for query and accounting */
+		READY,
+		/** A synchronization step is in progress */
+		SYNC
+	};
+
+	/**
 	 * @brief Return the instance of the ResourceAccounter
 	 */
 	static ResourceAccounter & GetInstance();
+
+	/**
+	 * @brief Called when all the hardware resources have been registered and
+	 * the platform is ready
+	 */
+	void SetPlatformReady();
+
+	/**
+	 * @brief Called when there are updates in the hardware resources and thus
+	 * the platform cannot be considered ready
+	 */
+	void SetPlatformNotReady();
 
 	/**
 	 * @brief Destructor
@@ -503,8 +528,16 @@ private:
 	/** The Command Manager component */
 	CommandManager & cm;
 
-	/** Mutex protecting resource release and acquisition */
-	std::recursive_mutex status_mtx;
+
+	/** Mutex protecting Resource Accounter status */
+	std::mutex status_mtx;
+
+	/** Conditional variable for status synchronization */
+	std::condition_variable status_cv;
+
+	/** This contain the status of the Resource Accounter */
+	State status;
+
 
 	/** The tree of all the resources in the system.*/
 	br::ResourceTree resources;
@@ -570,6 +603,11 @@ private:
 	 * Default constructor
 	 */
 	ResourceAccounter();
+
+	/**
+	 * @brief Set the status to READY
+	 */
+	void SetReady();
 
 	/**
 	 * @brief Wrap the class of resource path on resource tree matching flags

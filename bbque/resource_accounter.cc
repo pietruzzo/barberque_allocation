@@ -59,8 +59,9 @@ ResourceAccounter & ResourceAccounter::GetInstance() {
 }
 
 ResourceAccounter::ResourceAccounter() :
-	am(ApplicationManager::GetInstance()),
-	cm(CommandManager::GetInstance()) {
+		am(ApplicationManager::GetInstance()),
+		cm(CommandManager::GetInstance()),
+		status(State::NOT_READY) {
 
 	// Get a logger
 	logger = bu::Logger::GetLogger(RESOURCE_ACCOUNTER_NAMESPACE);
@@ -83,6 +84,29 @@ ResourceAccounter::ResourceAccounter() :
 	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_SET_QUOTA,
 		static_cast<CommandHandler*>(this),
 		"Set a new amount of resource that can be allocated");
+
+void ResourceAccounter::SetPlatformReady() {
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	while (status == State::SYNC) {
+		status_cv.wait(status_ul);
+	}
+	status = State::READY;
+}
+
+void ResourceAccounter::SetPlatformNotReady() {
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	while (status == State::SYNC) {
+		status_cv.wait(status_ul);
+	}
+	status = State::NOT_READY;
+}
+
+inline void ResourceAccounter::SetReady() {
+	status_mtx.lock();
+	status = State::READY;
+	status_mtx.unlock();
+	status_cv.notify_all();
+}
 }
 
 ResourceAccounter::~ResourceAccounter() {
@@ -634,6 +658,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 		logger->Error("Updating resource FAILED "
 				"(Error: availability [%d] exceeding registered amount [%d]",
 				availability, pres->Total());
+		SetReady();
 		return RA_ERR_OVERFLOW;
 	}
 
@@ -641,6 +666,9 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	reserved = pres->Total() - availability;
 	ReserveResources(ppath, reserved);
 	pres->SetOnline();
+
+	// Back to READY
+	SetReady();
 
 	return RA_SUCCESS;
 }
