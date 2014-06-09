@@ -217,7 +217,8 @@ YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
 }
 
 YamsSchedPol::~YamsSchedPol() {
-
+	entities.clear();
+	scms.clear();
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::Init() {
