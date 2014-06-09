@@ -628,6 +628,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	br::ResourcePathPtr_t ppath;
 	uint64_t availability;
 	uint64_t reserved;
+	std::unique_lock<std::mutex> status_ul(status_mtx, std::defer_lock);
 
 	// Lookup for the resource to be updated
 	ppath = GetPath(_path);
@@ -646,6 +647,14 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 			ppath->ToString().c_str());
 		return RA_ERR_NOT_REGISTERED;
 	}
+
+	// Resource accounter is not ready now
+	status_ul.lock();
+	while (status != State::READY)
+		status_cv.wait(status_ul);
+	status = State::NOT_READY;
+	status_ul.unlock();
+	status_cv.notify_all();
 
 	// If the required amount is <= 1, the resource is off-lined
 	if (_amount == 0)
@@ -722,9 +731,8 @@ void ResourceAccounter::ReleaseResources(
 		logger->Fatal("Release: Null pointer to the application descriptor");
 		return;
 	}
-
 	// Decrease resources in the sync view
-	if (vtok == 0 && sync_ssn.started)
+	if (vtok == 0 && Synching())
 		_ReleaseResources(papp, sync_ssn.view);
 
 	// Decrease resources in the required view
@@ -735,13 +743,6 @@ void ResourceAccounter::ReleaseResources(
 void ResourceAccounter::_ReleaseResources(
 		ba::AppSPtr_t papp,
 		br::RViewToken_t vtok) {
-	std::unique_lock<std::recursive_mutex> status_ul(
-			status_mtx, std::defer_lock);
-
-	// Just the system view could be contended
-	if (vtok == 0)
-		status_ul.lock();
-
 	// Get the map of applications resource usages related to the state view
 	// referenced by 'vtok'
 	AppUsagesMapPtr_t apps_usages;
@@ -761,7 +762,6 @@ void ResourceAccounter::_ReleaseResources(
 	DecBookingCounts(usemap_it->second, papp, vtok);
 	apps_usages->erase(papp->Uid());
 	logger->Debug("Release: [%s] resource release terminated", papp->StrId());
-
 }
 
 
@@ -875,7 +875,10 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::OnlineResources(
 ResourceAccounter::ExitCode_t ResourceAccounter::GetView(
 		std::string req_path,
 		br::RViewToken_t & token) {
-	std::unique_lock<std::recursive_mutex> status_ul(status_mtx);
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	while (status != State::READY) {
+		status_cv.wait(status_ul);
+	}
 	return _GetView(req_path, token);
 }
 
@@ -903,8 +906,12 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_GetView(
 	return RA_SUCCESS;
 }
 
+
 void ResourceAccounter::PutView(br::RViewToken_t vtok) {
-	std::unique_lock<std::recursive_mutex> status_ul(status_mtx);
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	while (status != State::READY) {
+		status_cv.wait(status_ul);
+	}
 	return _PutView(vtok);
 }
 
@@ -939,7 +946,10 @@ void ResourceAccounter::_PutView(br::RViewToken_t vtok) {
 }
 
 br::RViewToken_t ResourceAccounter::SetView(br::RViewToken_t vtok) {
-	std::unique_lock<std::recursive_mutex> status_ul(status_mtx);
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	while (status != State::READY) {
+		status_cv.wait(status_ul);
+	}
 	return _SetView(vtok);
 }
 
@@ -992,9 +1002,17 @@ void ResourceAccounter::SetScheduledView(br::RViewToken_t svt) {
  ************************************************************************/
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncStart() {
-	std::unique_lock<std::mutex> sync_ul(sync_ssn.mtx);
+	std::unique_lock<std::mutex> status_ul(status_mtx);
 	ResourceAccounter::ExitCode_t result;
 	char tk_path[TOKEN_PATH_MAX_LEN];
+
+	// Wait for a READY status
+	while (status != State::READY) {
+		status_cv.wait(status_ul);
+	}
+	// Synchronization has started
+	status = State::SYNC;
+	status_cv.notify_all();
 	logger->Info("SyncMode: Start");
 
 	// Build the path for getting the resource view token
@@ -1003,15 +1021,12 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncStart() {
 	logger->Debug("SyncMode [%d]: Requiring resource state view for %s",
 			sync_ssn.count, tk_path);
 
-	// Synchronization has started
-	sync_ssn.started = true;
-
 	// Get a resource state view for the synchronization
 	result = _GetView(tk_path, sync_ssn.view);
 	if (result != RA_SUCCESS) {
 		logger->Fatal("SyncMode [%d]: Cannot get a resource state view",
 				sync_ssn.count);
-		sync_ssn.started = false;
+		_SyncAbort();
 		return RA_ERR_SYNC_VIEW;
 	}
 	logger->Debug("SyncMode [%d]: Resource state view token = %d",
@@ -1051,7 +1066,6 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit() {
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 		ba::AppSPtr_t const & papp) {
-	std::unique_lock<std::mutex> sync_ul(sync_ssn.mtx);
 
 	// Check that we are in a synchronized session
 	if (!Synching()) {
@@ -1063,6 +1077,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 	if (!papp->NextAWM()) {
 		logger->Fatal("SyncMode [%d]: [%s] missing the next AWM",
 				sync_ssn.count, papp->StrId());
+		_SyncAbort();
 		return RA_ERR_MISS_AWM;
 	}
 
@@ -1074,43 +1089,56 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 }
 
 void ResourceAccounter::SyncAbort() {
-	std::unique_lock<std::mutex> sync_ul(sync_ssn.mtx);
+	std::unique_lock<std::mutex> sync_ul(status_mtx);
 	_SyncAbort();
 }
 
 // NOTE this method should be called while holding the sync session mutex
 void ResourceAccounter::_SyncAbort() {
-	PutView(sync_ssn.view);
-	sync_ssn.started = false;
+	_PutView(sync_ssn.view);
+	SyncFinalize();
 	logger->Error("SyncMode [%d]: Session aborted", sync_ssn.count);
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
-	std::unique_lock<std::mutex> sync_ul(sync_ssn.mtx);
 	ResourceAccounter::ExitCode_t result = RA_SUCCESS;
 	br::RViewToken_t view;
 
+	if (!Synching()) {
+		logger->Error("SynCommit: Synchronization not active");
+		return RA_ERR_SYNC_START;
+	}
+
 	// Set the synchronization view as the new system one
-	view = SetView(sync_ssn.view);
+	view = _SetView(sync_ssn.view);
 	if (view != sync_ssn.view) {
 		logger->Fatal("SyncCommit [%d]: "
 				"Unable to set the new system resource state view",
 				sync_ssn.count);
+		_SyncAbort();
+		return RA_ERR_SYNC_VIEW;
 	}
 
 	// Release the last scheduled view, by setting it to the system view
-	if (result == RA_SUCCESS) {
-		SetScheduledView(sys_view_token);
-		logger->Info("SyncMode [%d]: Session committed", sync_ssn.count);
-	}
-
-	// Mark the synchronization as terminated
-	sync_ssn.started = false;
-	sync_ssn.mtx.unlock();
+	SetScheduledView(sys_view_token);
+	SyncFinalize();
+	logger->Info("SyncCommit [%d]: Session closed", sync_ssn.count);
 
 	// Log the status report
 	PrintStatusReport();
 	return result;
+}
+
+ResourceAccounter::ExitCode_t ResourceAccounter::SyncFinalize() {
+	if (!Synching()) {
+		logger->Error("SyncFinalize: Synchronization not active");
+		return RA_ERR_SYNC_START;
+	}
+
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	status = State::READY;
+	status_cv.notify_all();
+	return RA_SUCCESS;
 }
 
 /************************************************************************
@@ -1122,13 +1150,7 @@ ResourceAccounter::IncBookingCounts(
 		br::UsagesMapPtr_t const & rsrc_usages,
 		ba::AppSPtr_t const & papp,
 		br::RViewToken_t vtok) {
-	std::unique_lock<std::recursive_mutex> status_ul(
-			status_mtx, std::defer_lock);
 	ResourceAccounter::ExitCode_t result;
-
-	// Just the system view could be contended
-	if (vtok == 0)
-		status_ul.lock();
 
 	// Get the map of resources used by the application (from the state view
 	// referenced by 'vtok'). A missing view implies that the token is not

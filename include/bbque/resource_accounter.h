@@ -508,15 +508,10 @@ private:
 	 * @brief Store info about a synchronization session
 	 */
 	struct SyncSession_t {
-		/** Mutex for protecting the session */
-		std::mutex mtx;
-		/** If true a synchronization session has started */
-		bool started;
 		/** Token for the temporary resource view */
 		br::RViewToken_t view;
 		/** Count the number of session elapsed */
 		uint32_t count;
-
 	} sync_ssn;
 
 	/** The logger used by the resource accounter */
@@ -874,6 +869,10 @@ private:
 	 */
 	ExitCode_t SyncInit();
 
+	/**
+	 * @brief Clean closure of a synchronization session
+	 */
+	ExitCode_t SyncFinalize();
 
 	/**
 	 * @brief Abort a synchronized mode session
@@ -892,7 +891,7 @@ private:
 	 * progress, false otherwise
 	 */
 	inline bool Synching() {
-		return sync_ssn.started;
+		return (status == State::SYNC);
 	}
 
 	/**
