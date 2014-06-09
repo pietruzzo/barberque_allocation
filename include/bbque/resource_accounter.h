@@ -605,7 +605,8 @@ private:
 	 *
 	 * @return A list of pointers (shared) to resource descriptors
 	 */
-	br::ResourcePtrList_t GetList(br::ResourcePathPtr_t ppath,
+	br::ResourcePtrList_t GetList(
+			br::ResourcePathPtr_t ppath,
 			PathClass_t rpc = EXACT) const;
 
 	/**
@@ -619,9 +620,10 @@ private:
 	 *
 	 * @return The value of the attribute request
 	 */
-	uint64_t QueryStatus(br::ResourcePtrList_t const & rsrc_list,
-				QueryOption_t q_opt, br::RViewToken_t vtok = 0,
-				ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	uint64_t QueryStatus(
+			br::ResourcePtrList_t const & rsrc_list,
+			QueryOption_t q_opt, br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @brief Get the cumulative amount of resource usage, given iterators of
@@ -641,7 +643,8 @@ private:
 			br::UsagesMap_t::const_iterator & begin,
 			br::UsagesMap_t::const_iterator & end,
 			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED) const;
+			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED)
+		const;
 
 	/**
 	 * @brief Check the resource availability for a whole set
@@ -652,8 +655,10 @@ private:
 	 * @return RA_SUCCESS if all the resources are availables,
 	 * RA_ERR_USAGE_EXC otherwise.
 	 */
-	ExitCode_t CheckAvailability(br::UsagesMapPtr_t const & usages,
-			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	ExitCode_t CheckAvailability(
+			br::UsagesMapPtr_t const & usages,
+			br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @brief Get a pointer to the map of applications resource usages
@@ -681,8 +686,10 @@ private:
 	 * @param app The application acquiring the resources
 	 * @param vtok The token referencing the resource state view
 	 */
-	ExitCode_t IncBookingCounts(br::UsagesMapPtr_t const & app_usages,
-			ba::AppSPtr_t const & papp, br::RViewToken_t vtok = 0);
+	ExitCode_t IncBookingCounts(
+			br::UsagesMapPtr_t const & app_usages,
+			ba::AppSPtr_t const & papp,
+			br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Book a single resource
@@ -697,9 +704,10 @@ private:
 	 * @return RA_ERR_USAGE_EXC if the usage required overcome the
 	 * availability. RA_SUCCESS otherwise.
 	 */
-	ExitCode_t DoResourceBooking(ba::AppSPtr_t const & papp,
-			br::UsagePtr_t & pusage, br::RViewToken_t vtok);
-
+	ExitCode_t DoResourceBooking(
+			ba::AppSPtr_t const & papp,
+			br::UsagePtr_t & pusage,
+			br::RViewToken_t vtok);
 
 	/**
 	 * @brief Release the resources
@@ -722,8 +730,11 @@ private:
 	 * @param requested The amount of resource required
 	 * @param vtok The token referencing the resource state view
 	 */
-	void SchedResourceBooking(ba::AppSPtr_t const & papp, br::ResourcePtr_t & rsrc,
-			uint64_t & requested, br::RViewToken_t vtok);
+	void SchedResourceBooking(
+			ba::AppSPtr_t const & papp,
+			br::ResourcePtr_t & rsrc,
+			uint64_t & requested,
+			br::RViewToken_t vtok);
 
 	/**
 	 * @brief Allocate a quota of resource in the synchronization case
@@ -736,7 +747,9 @@ private:
 	 * @param rsrc The resource descriptor of the resource binding
 	 * @param requested The amount of resource required
 	 */
-	void SyncResourceBooking(ba::AppSPtr_t const & papp, br::ResourcePtr_t & rsrc,
+	void SyncResourceBooking(
+			ba::AppSPtr_t const & papp,
+			br::ResourcePtr_t & rsrc,
 			uint64_t & requested);
 
 	/**
@@ -749,8 +762,10 @@ private:
 	 * @param app The application releasing the resources
 	 * @param vtok The token referencing the resource state view
 	 */
-	void DecBookingCounts(br::UsagesMapPtr_t const & app_usages,
-			ba::AppSPtr_t const & app, br::RViewToken_t vtok = 0);
+	void DecBookingCounts(
+			br::UsagesMapPtr_t const & app_usages,
+			ba::AppSPtr_t const & app,
+			br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Unbook a single resource
@@ -762,7 +777,9 @@ private:
 	 * @param pusage Usage object
 	 * @param vtok The token referencing the resource state view
 	 */
-	void UndoResourceBooking(ba::AppSPtr_t const & papp, br::UsagePtr_t & pusage,
+	void UndoResourceBooking(
+			ba::AppSPtr_t const & papp,
+			br::UsagePtr_t & pusage,
 			br::RViewToken_t vtok);
 
 	/**

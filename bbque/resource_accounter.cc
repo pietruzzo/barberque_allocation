@@ -468,7 +468,7 @@ uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 
 	uit = begin;
 	for ( ; uit != end; ++uit) {
-		ResourcePathPtr_t ppath = (*uit).first;
+		br::ResourcePathPtr_t ppath = (*uit).first;
 		br::UsagePtr_t pusage = (*uit).second;
 
 		logger->Debug("GetUsageAmount: type:{%-3s} scope:{%-3s}",
@@ -499,8 +499,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 
 	// Check availability for each Usage object
 	for (; usages_it != usages_end; ++usages_it) {
-		// Current Usage
-		ResourcePathPtr_t const & rsrc_path(usages_it->first);
+		br::ResourcePathPtr_t const & rsrc_path(usages_it->first);
 		br::UsagePtr_t const & pusage(usages_it->second);
 
 		// Query the availability of the resources in the list
@@ -602,7 +601,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 		std::string const & _units,
 		uint64_t _amount) {
 	br::ResourcePtr_t pres;
-	ResourcePathPtr_t ppath;
+	br::ResourcePathPtr_t ppath;
 	uint64_t availability;
 	uint64_t reserved;
 
@@ -615,7 +614,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 		return RA_ERR_INVALID_PATH;
 	}
 
-	pres  = GetResource(ppath);
+	// Get the path of the resource to update
+	pres = GetResource(ppath);
 	if (pres == nullptr) {
 		logger->Fatal("Updating resource FAILED "
 			"(Error: resource [%s] not found",
@@ -676,12 +676,11 @@ ResourceAccounter::ExitCode_t ResourceAccounter::BookResources(
 	// Increment the booking counts and save the reference to the resource set
 	// used by the application
 	return IncBookingCounts(rsrc_usages, papp, vtok);
-
 }
 
-void ResourceAccounter::ReleaseResources(ba::AppSPtr_t papp, br::RViewToken_t vtok) {
-	std::unique_lock<std::mutex> sync_ul(sync_ssn.mtx);
-
+void ResourceAccounter::ReleaseResources(
+		ba::AppSPtr_t papp,
+		br::RViewToken_t vtok) {
 	// Sanity check
 	if (!papp) {
 		logger->Fatal("Release: Null pointer to the application descriptor");
@@ -697,8 +696,9 @@ void ResourceAccounter::ReleaseResources(ba::AppSPtr_t papp, br::RViewToken_t vt
 
 }
 
-// NOTE this method should be called while holding the sync session mutex
-void ResourceAccounter::_ReleaseResources(ba::AppSPtr_t papp, br::RViewToken_t vtok) {
+void ResourceAccounter::_ReleaseResources(
+		ba::AppSPtr_t papp,
+		br::RViewToken_t vtok) {
 	std::unique_lock<std::recursive_mutex> status_ul(
 			status_mtx, std::defer_lock);
 
@@ -982,9 +982,9 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit() {
 	// Running Applications/ExC
 	papp = am.GetFirst(ApplicationStatusIF::RUNNING, apps_it);
 	for ( ; papp; papp = am.GetNext(ApplicationStatusIF::RUNNING, apps_it)) {
-
 		logger->Info("SyncInit: [%s] current AWM: %d",
-				papp->StrId(), papp->CurrentAWM()->Id());
+				papp->StrId(),
+				papp->CurrentAWM()->Id());
 
 		// Re-acquire the resources (these should not have a "Next AWM"!)
 		result = BookResources(
@@ -992,13 +992,12 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit() {
 		if (result != RA_SUCCESS) {
 			logger->Fatal("SyncInit [%d]: Resource booking failed for %s."
 					" Aborting sync session...", sync_ssn.count, papp->StrId());
-
 			_SyncAbort();
 			return RA_ERR_SYNC_INIT;
 		}
 	}
 
-	logger->Info("SyncMode [%d]: Initialization finished", sync_ssn.count);
+	logger->Info("SyncInit [%d]: Initialization finished", sync_ssn.count);
 	return RA_SUCCESS;
 }
 
@@ -1046,9 +1045,9 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
 	// Set the synchronization view as the new system one
 	view = SetView(sync_ssn.view);
 	if (view != sync_ssn.view) {
-		logger->Fatal("SyncMode [%d]: Unable to set the new system resource"
-				"state view", sync_ssn.count);
-		result = RA_ERR_SYNC_VIEW;
+		logger->Fatal("SyncCommit [%d]: "
+				"Unable to set the new system resource state view",
+				sync_ssn.count);
 	}
 
 	// Release the last scheduled view, by setting it to the system view
