@@ -21,6 +21,7 @@
 #include <set>
 
 #include "bbque/resource_accounter_conf.h"
+#include "bbque/configuration_manager.h"
 #include "bbque/command_manager.h"
 
 #include "bbque/res/resource_utils.h"
@@ -86,6 +87,9 @@ typedef struct BindingInfo {
 	uint16_t count;
 } BindingInfo_t;
 
+
+typedef std::pair<br::Resource::Type_t, BindingInfo_t *> BindingPair_t;
+typedef std::map<br::Resource::Type_t, BindingInfo_t *> BindingMap_t;
 
 /**
  * @brief Resources Accouter
@@ -388,6 +392,14 @@ public:
 			br::UsagesMapPtr_t const & pum_current,
 			br::UsagesMapPtr_t const & pum_next);
 
+	/**
+	 * @brief The resource binding information support
+	 *
+	 * @return A reference to a @ref BindingMap_t object
+	 */
+	inline BindingMap_t & GetBindingOptions() {
+		return binding_options;
+	}
 
 	/**
 	 * @see ResourceAccounterConfIF
@@ -470,6 +482,7 @@ public:
 	 */
 	ExitCode_t SyncCommit();
 
+
 	/**
 	 * @see CommandHandler
 	 */
@@ -523,6 +536,9 @@ private:
 	/** The Command Manager component */
 	CommandManager & cm;
 
+	/** The Configuration Manager */
+	ConfigurationManager & fm;
+
 
 	/** Mutex protecting Resource Accounter status */
 	std::mutex status_mtx;
@@ -557,6 +573,11 @@ private:
 	/** Keep track of the max length between resources path string */
 	uint8_t path_max_len = 0;
 
+	/**
+	 * A map object containing all the support information for the resource
+	 * binding performed by the scheduling policy
+	 */
+	BindingMap_t binding_options;
 
 	/**
 	 * Map containing the pointers to the map of resource usages specified in
@@ -598,6 +619,19 @@ private:
 	 * Default constructor
 	 */
 	ResourceAccounter();
+
+
+	/**
+	 * @brief Initialize the resource binding support information
+	 */
+	void InitBindingOptions();
+
+	/**
+	 * @brief Load the resource binding support information
+	 *
+	 * @note This can be done only when the status is READY
+	 */
+	void LoadBindingOptions();
 
 	/**
 	 * @brief Set the status to READY

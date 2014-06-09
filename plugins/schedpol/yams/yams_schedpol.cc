@@ -123,75 +123,12 @@ YamsSchedPol::YamsSchedPol():
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 
-	// Load binding domains configuration
-	LoadBindingConfig();
-
 	// Resource view counter
 	vtok_count = 0;
 
 	// Register all the metrics to collect
 	mc.Register(coll_metrics, YAMS_METRICS_COUNT);
 	mc.Register(coll_mct_metrics, YAMS_SC_COUNT);
-}
-
-YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
-	br::Resource::Type_t bd_type;
-	std::string bd_domains;
-	std::string bd_str;
-	size_t end_pos, beg_pos = 0;
-
-	// Binding domain resource path
-	po::options_description opts_desc("Scheduling policy parameters");
-	opts_desc.add_options()
-		(SCHEDULER_POLICY_CONFIG".binding.domain",
-		 po::value<std::string>
-		 (&bd_domains)->default_value(SCHEDULER_DEFAULT_BINDING_DOMAIN),
-		"Resource binding domain");
-	;
-	po::variables_map opts_vm;
-	cm.ParseConfigurationFile(opts_desc, opts_vm);
-
-	// Parse each binding domain string
-	while (end_pos != std::string::npos) {
-		end_pos = bd_domains.find(',', beg_pos);
-		bd_str  = bd_domains.substr(beg_pos, end_pos);
-
-		// Binding domain resource type
-		br::ResourcePath rp(bd_str);
-		bd_type = rp.Type();
-		if (bd_type == br::Resource::UNDEFINED ||
-				bd_type == br::Resource::TYPE_COUNT) {
-			logger->Error("Invalid binding domain type for: %s",
-					bd_str.c_str());
-			beg_pos  = end_pos + 1;
-			continue;
-		}
-
-		// New binding info structure
-		bindings.insert(BindingPair_t(bd_type, new BindingInfo_t));
-		bindings[bd_type]->domain = bd_str;
-		bindings[bd_type]->type   = bd_type;
-		logger->Info("Binding domain:'%s' Type:%s",
-				bindings[bd_type]->domain.c_str(),
-				br::ResourceIdentifier::TypeStr[bindings[bd_type]->type]);
-
-		// Instantiate a scheduling contributions manager per binding domain
-		if (bd_type == br::Resource::GPU) {
-			scms.insert(SchedContribPair_t(
-					bd_type,
-					new SchedContribManager(
-						sc_gpu, *(bindings[bd_type]), 3)));
-		}
-		else {
-			scms.insert(SchedContribPair_t(
-					bd_type,
-					new SchedContribManager(
-						sc_types, *(bindings[bd_type]), YAMS_SC_COUNT)));
-		}
-
-		// Next binding domain...
-		beg_pos  = end_pos + 1;
-	}
 
 	// Register commands
 #define CMD_SET_WEIGHTS ".set_weights"
@@ -211,9 +148,6 @@ YamsSchedPol::ExitCode_t YamsSchedPol::LoadBindingConfig() {
 		static_cast<CommandHandler*>(this),
 		"Set COWS binding metrics weights");
 #endif
-
-	logger->Debug("Binding domain: %d scheduling contrib manager(s)", scms.size());
-	return YAMS_SUCCESS;
 }
 
 YamsSchedPol::~YamsSchedPol() {
@@ -228,9 +162,6 @@ YamsSchedPol::ExitCode_t YamsSchedPol::Init() {
 	result = InitResourceStateView();
 	if (result != YAMS_SUCCESS)
 		return result;
-
-	// Init resource bindings information
-	InitBindingInfo();
 
 	// Initialize information for scheduling contributions
 	InitSchedContribManagers();
@@ -266,40 +197,16 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitResourceStateView() {
 	return YAMS_SUCCESS;
 }
 
-YamsSchedPol::ExitCode_t YamsSchedPol::InitBindingInfo() {
-	std::map<br::Resource::Type_t, BindingInfo_t *>::iterator bd_it;
-
-	for (bd_it = bindings.begin(); bd_it != bindings.end(); ++bd_it) {
-		// Set information for each binding domain
-		BindingInfo_t & bd(*(bd_it->second));
-		bd.rsrcs = sv->GetResources(bd.domain);
-		bd.count = bd.rsrcs.size();
-		bd.ids.resize(bd.count);
-		if (bd.count == 0) {
-			logger->Warn("Init: No bindings R{%s} available",
-					bd.domain.c_str());
-			continue;
-		}
-
-		// Get all the possible resource binding IDs
-		br::ResourcePtrList_t::iterator br_it(bd.rsrcs.begin());
-		br::ResourcePtrList_t::iterator br_end(bd.rsrcs.end());
-		for (uint8_t j = 0; br_it != br_end; ++br_it, ++j) {
-			br::ResourcePtr_t const & rsrc(*br_it);
-			bd.ids[j] = rsrc->ID();
-			logger->Debug("Init: R{%s} ID: %d",
-					bd.domain.c_str(), bd.ids[j]);
-		}
-		logger->Debug("Init: R{%s}: %d possible bindings",
-				bd.domain.c_str(), bd.count);
-	}
-
-	return YAMS_SUCCESS;
-}
-
 YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	std::map<br::Resource::Type_t, SchedContribManager *>::iterator scm_it;
 	SchedContribPtr_t sc_recf;
+	BindingMap_t & bindings(ra.GetBindingOptions());
+
+	// Scheduling contribution managers already allocated?
+	if (scms.empty()) {
+		logger->Debug("Init: Scheduling contribution managers allocation");
+		AllocSchedContribManagers();
+	}
 
 	// Set the view information into the scheduling contribution managers
 	for (scm_it = scms.begin(); scm_it != scms.end(); ++scm_it) {
@@ -313,6 +220,36 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	return YAMS_SUCCESS;
 }
 
+void YamsSchedPol::AllocSchedContribManagers() {
+	BindingMap_t & bindings(ra.GetBindingOptions());
+	for (auto & bd_entity: bindings) {
+		br::Resource::Type_t  bd_type = bd_entity.first;
+		BindingInfo_t const & bd_info(*(bd_entity.second));
+
+		// Check the binding count
+		if (bd_info.count == 0) {
+			logger->Warn("Init: No resources for binding '%s'. Skipping...",
+					bd_info.d_path->ToString().c_str());
+			continue;
+		}
+
+		// SchedContribManager instantiation
+		if (bd_type == br::Resource::GPU) {
+			scms.insert(SchedContribPair_t(
+					bd_type,
+					new SchedContribManager(sc_gpu, bd_info, 3)));
+		}
+		else {
+			scms.insert(SchedContribPair_t(
+					bd_type,
+					new SchedContribManager(
+						sc_types, bd_info, YAMS_SC_COUNT)));
+		}
+		logger->Debug("Scheduling contrib manager of type: %s",
+				br::ResourceIdentifier::TypeStr[bd_type]);
+	}
+	logger->Info("Scheduling contrib manager(s): %d", scms.size());
+}
 
 SchedulerPolicyIF::ExitCode_t
 YamsSchedPol::Schedule(System & sys_if, br::RViewToken_t & rav) {
@@ -351,6 +288,7 @@ error:
 
 inline void YamsSchedPol::Clear() {
 	entities.clear();
+	BindingMap_t & bindings(ra.GetBindingOptions());
 
 	// Reset bindings
 	std::map<br::Resource::Type_t, BindingInfo_t *>::iterator bd_it;
@@ -446,6 +384,7 @@ inline bool YamsSchedPol::CheckSkipConditions(ba::AppCPtr_t const & papp) {
 
 	return false;
 }
+
 
 bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 	Application::ExitCode_t app_result = Application::APP_SUCCESS;
@@ -587,6 +526,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	YAMS_RESET_TIMING(comp_tmr);
 
 	// Aggregate binding-independent scheduling contributions
+	BindingMap_t & bindings(ra.GetBindingOptions());
 	for (auto & bd_entry: bindings) {
 		br::Resource::Type_t  bd_type = bd_entry.first;
 		BindingInfo_t const & bd_info(*(bd_entry.second));
@@ -665,6 +605,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 	ExitCode_t result;
 
 	// Get the BindingInfo of the given resource binding type
+	BindingMap_t & bindings(ra.GetBindingOptions());
 	bd_it = bindings.find(bd_type);
 	if (bd_it == bindings.end()) {
 		logger->Fatal("EvalBindings: Unexpected binding type");
@@ -741,15 +682,10 @@ void YamsSchedPol::GetSchedContribValue(
 	sc_value = 0.0;
 	Timer comp_tmr;
 
-	if (scms[bd_type] == nullptr) {
-		logger->Error("SchedContrib: Missing resource binding [%s]",
-				br::ResourceIdentifier::TypeStr[bd_type]);
-		return;
-	}
-
 	// Compute the single contribution
 	YAMS_RESET_TIMING(comp_tmr);
 
+	BindingMap_t & bindings(ra.GetBindingOptions());
 	scm_ret = scms[bd_type]->GetIndex(sc_type, eval_ent, sc_value, sc_ret);
 	if (scm_ret != SchedContribManager::OK) {
 		logger->Debug("SchedContrib: return code %d", scm_ret);
@@ -787,6 +723,8 @@ YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
 	float sc_value   = 0.0;
 	uint8_t mlog_len = 0;
 	char mlog[255];
+
+	BindingMap_t & bindings(ra.GetBindingOptions());
 	br::Resource::Type_t bd_type = pschd_bd->bind_type;
 	logger->Info("GetBoundContrib: =========== BINDING:'%s' ID[%2d ] ===========",
 			bindings[bd_type]->d_path->ToString().c_str(),
@@ -822,6 +760,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
 	br::Resource::Type_t & bd_type(pschd->bind_type);
 	size_t r_refn;
 
+	BindingMap_t & bindings(ra.GetBindingOptions());
 	// Binding of the AWM resource into the current binding resource ID.
 	// Since the policy handles more than one binding per AWM the resource
 	// binding is referenced by a number.

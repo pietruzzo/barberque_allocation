@@ -285,11 +285,6 @@ private:
 	typedef std::pair<br::Resource::Type_t, SchedContribManager *> SchedContribPair_t;
 	std::map<br::Resource::Type_t, SchedContribManager *> scms;
 
-	/** Collect information on binding domains */
-	typedef std::pair<br::Resource::Type_t, BindingInfo_t *> BindingPair_t;
-	std::map<br::Resource::Type_t, BindingInfo_t *>  bindings;
-
-
 	/** Mutex */
 	std::mutex sched_mtx;
 
@@ -342,15 +337,16 @@ private:
 	YamsSchedPol::ExitCode_t InitResourceStateView();
 
 	/**
-	 * @brief Initialize the base information needed for the resource binding
-	 */
-	YamsSchedPol::ExitCode_t InitBindingInfo();
-
-	/**
 	 * @brief Initalize scheduling contributions managers (one per binding
 	 * domain)
 	 */
 	YamsSchedPol::ExitCode_t InitSchedContribManagers();
+
+	/**
+	 * @brief Allocate scheduling contributions managers (one per binding
+	 * domain)
+	 */
+	void AllocSchedContribManagers();
 
 	/**
 	 * @brief Schedule applications from a priority queue

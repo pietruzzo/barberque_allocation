@@ -33,6 +33,10 @@
 #include "bbque/res/resource_path.h"
 #include "bbque/application_manager.h"
 
+
+#undef  MODULE_CONFIG
+#define MODULE_CONFIG "ResourceAccounter"
+
 #define RP_DIV1 " ========================================================================="
 #define RP_DIV2 "|-------------------------------+-------------+---------------------------|"
 #define RP_DIV3 "|                               :             |             |             |"
@@ -50,6 +54,7 @@
 namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
+namespace po = boost::program_options;
 
 namespace bbque {
 
@@ -61,6 +66,7 @@ ResourceAccounter & ResourceAccounter::GetInstance() {
 ResourceAccounter::ResourceAccounter() :
 		am(ApplicationManager::GetInstance()),
 		cm(CommandManager::GetInstance()),
+		fm(ConfigurationManager::GetInstance()),
 		status(State::NOT_READY) {
 
 	// Get a logger
@@ -85,11 +91,67 @@ ResourceAccounter::ResourceAccounter() :
 		static_cast<CommandHandler*>(this),
 		"Set a new amount of resource that can be allocated");
 
+	// Init
+	InitBindingOptions();
+}
+
+void ResourceAccounter::InitBindingOptions() {
+	size_t end_pos, beg_pos = 0;
+	std::string domains;
+	std::string binding_str;
+	br::Resource::Type_t binding_type;
+
+	// Binding domain resource path
+	po::options_description opts_desc("Resource Accounter parameters");
+	opts_desc.add_options()
+		(MODULE_CONFIG ".binding.domains",
+		 po::value<std::string>
+		 (&domains)->default_value("cpu"),
+		"Resource binding domain");
+	po::variables_map opts_vm;
+	fm.ParseConfigurationFile(opts_desc, opts_vm);
+	logger->Info("Binding options: %s", domains.c_str());
+
+	// Parse each binding domain string
+	while (end_pos != std::string::npos) {
+		end_pos     = domains.find(',', beg_pos);
+		binding_str = domains.substr(beg_pos, end_pos);
+
+		// Binding domain resource path
+		br::ResourcePathPtr_t binding_rp(
+				new br::ResourcePath(*(r_prefix_path.get())));
+		binding_rp->Concat(binding_str);
+
+		// Binding domain resource type check
+		binding_type = binding_rp->Type();
+		if (binding_type == br::Resource::UNDEFINED ||
+				binding_type == br::Resource::TYPE_COUNT) {
+			logger->Error("Binding: Invalid domain type '%s'",
+					binding_str.c_str());
+			beg_pos = end_pos + 1;
+			continue;
+		}
+
+		// New binding info structure
+		binding_options.insert(
+				//BindingPair_t(binding_type, BindingInfoPtr_t(new BindingInfo_t)));
+				BindingPair_t(binding_type, new BindingInfo_t));
+		binding_options[binding_type]->d_path = binding_rp;
+		logger->Info("Resource binding domain:'%s' Type:%s",
+				binding_options[binding_type]->d_path->ToString().c_str(),
+				br::ResourceIdentifier::TypeStr[binding_type]);
+
+		// Next binding domain...
+		beg_pos  = end_pos + 1;
+	}
+}
+
 void ResourceAccounter::SetPlatformReady() {
 	std::unique_lock<std::mutex> status_ul(status_mtx);
 	while (status == State::SYNC) {
 		status_cv.wait(status_ul);
 	}
+	LoadBindingOptions();
 	status = State::READY;
 }
 
@@ -107,6 +169,30 @@ inline void ResourceAccounter::SetReady() {
 	status_mtx.unlock();
 	status_cv.notify_all();
 }
+
+void ResourceAccounter::LoadBindingOptions() {
+	// Set information for each binding domain
+	for (auto & bd_entry: binding_options) {
+		BindingInfo & binding(*(bd_entry.second));
+		binding.rsrcs = GetResources(binding.d_path);
+		binding.count = binding.rsrcs.size();
+		binding.ids.resize(binding.count);
+
+		// Skip missing resource bindings
+		if (binding.count == 0) {
+			logger->Warn("Init: No bindings R{%s} available",
+					binding.d_path->ToString().c_str());
+		}
+
+		// Get all the possible resource binding IDs
+		for (br::ResourcePtr_t & rsrc: binding.rsrcs) {
+			binding.ids.push_back(rsrc->ID());
+			logger->Info("Init: R{%s} ID: %d",
+					binding.d_path->ToString().c_str(), rsrc->ID());
+		}
+		logger->Info("Init: R{%s}: %d possible bindings",
+				binding.d_path->ToString().c_str(), binding.count);
+	}
 }
 
 ResourceAccounter::~ResourceAccounter() {

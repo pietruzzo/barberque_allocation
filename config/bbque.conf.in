@@ -31,6 +31,12 @@
 #opt_interval = 0
 
 ################################################################################
+# Resource Accounter Options
+################################################################################
+[ResourceAccounter]
+binding.domains = cpu,gpu
+
+################################################################################
 # PlatformProxy Options
 ################################################################################
 [PlatformProxy]
@@ -44,7 +50,6 @@
 # The threshold [%] under which we enable CFS bandwidth enforcement
 # threshold_pct = 100
 
-
 ################################################################################
 # Scheduler Manager Options
 ################################################################################
@@ -55,8 +60,6 @@
 # Scheduling Policy
 ################################################################################
 # Scheduling policy parameters
-[SchedPol]
-binding.domain = sys.cpu,sys.gpu
 
 # Global contribution parameters [0,100]
 [SchedPol.Contrib]
