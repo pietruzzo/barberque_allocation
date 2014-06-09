@@ -42,13 +42,14 @@ SCMigration::_Compute(
 		SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
 	br::ResourceBitset r_mask;
+	br::ResourceIdentifier::Type_t r_type = bd_info.d_path->Type();
 
 	// Migraton => index := 0
-	if (evl_ent.IsMigrating(bd_info.type)) {
-		r_mask = evl_ent.papp->CurrentAWM()->BindingSet(bd_info.type);
+	if (evl_ent.IsMigrating(r_type)) {
+		r_mask = evl_ent.papp->CurrentAWM()->BindingSet(r_type);
 		logger->Debug("%s: is migrating to %s{%s}",
 				evl_ent.StrId(),
-				br::ResourceIdentifier::TypeStr[bd_info.type],
+				br::ResourceIdentifier::TypeStr[r_type],
 				r_mask.ToStringCG().c_str());
 		ctrib = 0.0;
 		return SC_SUCCESS;

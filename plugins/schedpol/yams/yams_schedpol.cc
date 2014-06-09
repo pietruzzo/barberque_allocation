@@ -689,7 +689,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 		// Check resource availability
 		if (bd_info.full[bd_id]) {
 			logger->Info("EvalBindings: [%s%d] is full, skipping...",
-				bd.domain.c_str(), bd_id);
+				bd_info.d_path->ToString().c_str(), bd_id);
 			continue;
 		}
 
@@ -761,12 +761,14 @@ void YamsSchedPol::GetSchedContribValue(
 		switch (sc_ret) {
 		case SchedContrib::SC_RSRC_NO_PE:
 			logger->Debug("SchedContrib: No available PEs in {%s} %d",
-					bindings[bd_type]->domain.c_str(), pschd->bind_id);
+					bindings[bd_type]->d_path->ToString().c_str(),
+					pschd->bind_id);
 			bindings[bd_type]->full.Set(pschd->bind_id);
 			return;
 		default:
 			logger->Warn("SchedContrib: Unable to schedule in {%s} %d [err:%d]",
-					bindings[bd_type]->domain.c_str(), pschd->bind_id, sc_ret);
+					bindings[bd_type]->d_path->ToString().c_str(),
+					pschd->bind_id, sc_ret);
 			YAMS_GET_TIMING(coll_mct_metrics, sc_type, comp_tmr);
 			return;
 		}
@@ -786,7 +788,8 @@ YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
 	char mlog[255];
 	br::Resource::Type_t bd_type = pschd_bd->bind_type;
 	logger->Info("GetBoundContrib: =========== BINDING:'%s' ID[%2d ] ===========",
-			bindings[bd_type]->domain.c_str(), pschd_bd->bind_id);
+			bindings[bd_type]->d_path->ToString().c_str(),
+			pschd_bd->bind_id);
 
 	// Bind the resources of the AWM to the given binding domain
 	result = BindResources(pschd_bd, b_refn);
@@ -833,7 +836,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
 
 	pschd->bind_refn = r_refn;
 	logger->Info("BindResources: AWM{%d} to resource '%s' ID=%d [%ld]",
-			pawm->Id(), bindings[bd_type]->domain.c_str(),
+			pawm->Id(), bindings[bd_type]->d_path->ToString().c_str(),
 			bd_id, pschd->bind_refn);
 
 	return YAMS_SUCCESS;

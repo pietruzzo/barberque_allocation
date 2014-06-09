@@ -71,20 +71,18 @@ class ApplicationManager;
  * nodes)
  */
 typedef struct BindingInfo {
-	/** The base resource path for the binding step */
-	std::string domain;
-	/** The type of resource to bind (e.g. CPU, GROUP,...) */
-	br::Resource::Type_t type;
+	/** Base resource path object */
+	br::ResourcePathPtr_t d_path;
 	/** Number of managed resource types */
 	std::list<br::Resource::Type_t> r_types;
-	/** Number of binding domains on the platform	 */
-	uint16_t count;
 	/** Resource pointer descriptor list */
 	br::ResourcePtrList_t rsrcs;
 	/** The IDs of all the possible bindings */
 	std::vector<br::ResID_t> ids;
 	/** Keep track the bindings without available processing elements */
 	br::ResourceBitset full;
+	/** Number of binding domains on the platform	 */
+	uint16_t count;
 } BindingInfo_t;
 
 
