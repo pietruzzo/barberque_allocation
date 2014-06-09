@@ -24,7 +24,7 @@
 namespace bbque { namespace res {
 
 const char * ResourceIdentifier::TypeStr[TYPE_COUNT] = {
-	""    ,
+	"*"    ,
 	"sys" ,
 	"grp" ,
 	"cpu" ,
