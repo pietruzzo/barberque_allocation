@@ -116,7 +116,6 @@ bool ResourceTree::findNode(
 		ResourcePath::Iterator const & path_end,
 		uint16_t match_flags,
 		ResourcePtrList_t & matchings) const {
-	ResourceNodesList_t::iterator tree_it, tree_end;
 	Resource::CResult_t rresult;
 	bool found;
 
@@ -128,17 +127,18 @@ bool ResourceTree::findNode(
 
 	// Look for the current resource path level
 	logger->Debug("findNode: %s has %d children",
-			curr_node->data->Name().c_str(), curr_node->children.size());
-	tree_end = curr_node->children.end();
-	for (tree_it = curr_node->children.begin(); tree_it != tree_end; ++tree_it) {
-		ResourcePtr_t & pres((*tree_it)->data);
+			curr_node->data->Name().c_str(),
+			curr_node->children.size());
+	for (auto & tree_node: curr_node->children) {
+		br::ResourcePtr_t & pres(tree_node->data);
 		br::ResourceIdentifierPtr_t & prid(*path_it);
 		found = false;
 
 		// Compare the resource identities (type and ID)
 		rresult = pres->Compare(*(prid.get()));
 		logger->Debug("findNode: compare T:%4s to P:%4s = %d [match_flags %d]",
-				pres->Name().c_str(), prid->Name().c_str(),
+				pres->Name().c_str(),
+				prid->Name().c_str(),
 				rresult, match_flags);
 
 		// Traverse the resource tree according to the comparison result
@@ -158,7 +158,7 @@ bool ResourceTree::findNode(
 		if (rresult == Resource::EQUAL_TYPE || rresult == Resource::EQUAL) {
 			if (path_it != path_end)
 				// Go deeper in the resource tree
-				findNode(*tree_it, ++path_it, path_end, match_flags, matchings);
+				findNode(tree_node, ++path_it, path_end, match_flags, matchings);
 			found = true;
 		}
 
