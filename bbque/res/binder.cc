@@ -183,22 +183,17 @@ ResourceBitset ResourceBinder::GetMask(
 		br::ResourceIdentifier::Type_t r_type,
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
-	ResourcePtrList_t::const_iterator rpl_it;
 	ResourceBitset r_mask;
 
 	// Sanity check
 	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
 		return r_mask;
 
-	// Scan the resource usages map
-	for (rpl_it = rpl.begin(); rpl_it != rpl.end(); ++rpl_it) {
-		ResourcePtr_t const & pres(*rpl_it);
-
-		// Is the Application/EXC using the resource?
+	// Scan the resources list
+	for (ResourcePtr_t const & pres: rpl) {
 		DB(fprintf(stderr, FD("GetMaskL: %s\n"), pres->Name().c_str()));
 		if (papp && (pres->ApplicationUsage(papp, vtok) == 0))
 			continue;
-
 		if (pres->Type() == r_type)
 			r_mask.Set(pres->ID());
 	}
