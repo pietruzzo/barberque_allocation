@@ -591,6 +591,23 @@ private:
 		}
 	}
 
+
+	/**
+	 * @brief Thread unsafe version of @ref GetView
+	 */
+	ExitCode_t _GetView(std::string who_req, br::RViewToken_t & tok);
+
+	/**
+	 * @brief Thread unsafe version of @ref SetView
+	 */
+	br::RViewToken_t _SetView(br::RViewToken_t tok);
+
+	/**
+	 * @brief Thread unsafe version of @ref PutView
+	 */
+	void _PutView(br::RViewToken_t tok);
+
+
 	/**
 	 * @brief Get a list of resource descriptor
 	 *

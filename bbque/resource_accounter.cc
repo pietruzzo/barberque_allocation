@@ -840,7 +840,12 @@ ResourceAccounter::ExitCode_t ResourceAccounter::GetView(
 		std::string req_path,
 		br::RViewToken_t & token) {
 	std::unique_lock<std::recursive_mutex> status_ul(status_mtx);
+	return _GetView(req_path, token);
+}
 
+ResourceAccounter::ExitCode_t ResourceAccounter::_GetView(
+		std::string req_path,
+		br::RViewToken_t & token) {
 	// Null-string check
 	if (req_path.empty()) {
 		logger->Error("GetView: Missing a valid string");
@@ -864,7 +869,10 @@ ResourceAccounter::ExitCode_t ResourceAccounter::GetView(
 
 void ResourceAccounter::PutView(br::RViewToken_t vtok) {
 	std::unique_lock<std::recursive_mutex> status_ul(status_mtx);
+	return _PutView(vtok);
+}
 
+void ResourceAccounter::_PutView(br::RViewToken_t vtok) {
 	// Do nothing if the token references the system state view
 	if (vtok == sys_view_token) {
 		logger->Warn("PutView: Cannot release the system resources view");
@@ -896,6 +904,10 @@ void ResourceAccounter::PutView(br::RViewToken_t vtok) {
 
 br::RViewToken_t ResourceAccounter::SetView(br::RViewToken_t vtok) {
 	std::unique_lock<std::recursive_mutex> status_ul(status_mtx);
+	return _SetView(vtok);
+}
+
+br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t vtok) {
 	br::RViewToken_t old_sys_vtok;
 
 	// Do nothing if the token references the system state view
@@ -919,7 +931,7 @@ br::RViewToken_t ResourceAccounter::SetView(br::RViewToken_t vtok) {
 	sys_usages_view = us_view_it->second;
 
 	// Put the old view
-	PutView(old_sys_vtok);
+	_PutView(old_sys_vtok);
 
 	logger->Info("SetView: View %d is the new system state view.",
 			sys_view_token);
@@ -935,7 +947,7 @@ void ResourceAccounter::SetScheduledView(br::RViewToken_t svt) {
 
 	// Release the old scheduled view if it is not the current system view
 	if (old_svt != sys_view_token)
-		PutView(old_svt);
+		_PutView(old_svt);
 }
 
 
@@ -959,7 +971,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncStart() {
 	sync_ssn.started = true;
 
 	// Get a resource state view for the synchronization
-	result = GetView(tk_path, sync_ssn.view);
+	result = _GetView(tk_path, sync_ssn.view);
 	if (result != RA_SUCCESS) {
 		logger->Fatal("SyncMode [%d]: Cannot get a resource state view",
 				sync_ssn.count);
