@@ -21,7 +21,7 @@
 #include <cstring>
 
 #include "bbque/configuration_manager.h"
-#include "bbque/plugins/scheduler_policy.h"
+#include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
 #include "bbque/res/usage.h"
 #include "bbque/res/resource_path.h"
@@ -189,7 +189,7 @@ public:
 	 */
 	SchedContrib(
 		const char * name,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint16_t const cfg_params[]);
 
 	virtual ~SchedContrib();
@@ -217,7 +217,7 @@ public:
 	 *
 	 * @param _bd_info A binding information data structure
 	 */
-	inline void SetBindingInfo(SchedulerPolicyIF::BindingInfo_t & _bd_info) {
+	inline void SetBindingInfo(BindingInfo_t & _bd_info) {
 		bd_info = _bd_info;
 	}
 
@@ -271,7 +271,7 @@ protected:
 	  * From a scheduling contribution perspective, this represents the domain
 	  * in which consider the index computation
 	  */
-	 SchedulerPolicyIF::BindingInfo_t bd_info;
+	 BindingInfo_t bd_info;
 
 
 	 /** Contribute identifier name */

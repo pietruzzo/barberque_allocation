@@ -32,7 +32,7 @@ public:
 	 */
 	SCReconfig(
 		const char * _name,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint16_t cfg_params[]);
 
 	~SCReconfig();
@@ -40,9 +40,6 @@ public:
 	ExitCode_t Init(void * params);
 
 private:
-
-	/** Keep track of the first valid binding ID */
-	br::ResID_t first_bd_id;
 
 	/**
 	 * @brief Compute the reconfiguration contribute

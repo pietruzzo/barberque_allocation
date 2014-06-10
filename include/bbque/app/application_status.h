@@ -347,7 +347,7 @@ public:
 	 * @brief The enabled working modes
 	 * @return All the schedulable working modes of the application
 	 */
-	virtual AwmPtrList_t const * WorkingModes() = 0;
+	virtual AwmPtrList_t const & WorkingModes() = 0;
 
 	/**
 	 * @brief The working mode with the lowest value

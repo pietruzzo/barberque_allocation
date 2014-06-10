@@ -25,7 +25,7 @@ namespace bbque { namespace plugins {
 
 SCReconfig::SCReconfig(
 		const char * _name,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint16_t cfg_params[]):
 	SchedContrib(_name, _bd_info, cfg_params) {
 }
@@ -34,8 +34,7 @@ SCReconfig::~SCReconfig() {
 }
 
 SchedContrib::ExitCode_t SCReconfig::Init(void * params) {
-	first_bd_id = *(static_cast<br::ResID_t *>(params));
-	logger->Debug("First valid binding ID: %d", first_bd_id);
+	(void) params;
 	return SC_SUCCESS;
 }
 

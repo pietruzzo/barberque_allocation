@@ -285,14 +285,8 @@ private:
 	typedef std::pair<br::Resource::Type_t, SchedContribManager *> SchedContribPair_t;
 	std::map<br::Resource::Type_t, SchedContribManager *> scms;
 
-	/** Collect information on binding domains */
-	typedef std::pair<br::Resource::Type_t, BindingInfo_t *> BindingPair_t;
-	std::map<br::Resource::Type_t, BindingInfo_t *>  bindings;
-
-
 	/** Mutex */
 	std::mutex sched_mtx;
-
 
 	/** The High-Resolution timer used for profiling */
 	bu::Timer yams_tmr;
@@ -343,15 +337,16 @@ private:
 	YamsSchedPol::ExitCode_t InitResourceStateView();
 
 	/**
-	 * @brief Initialize the base information needed for the resource binding
-	 */
-	YamsSchedPol::ExitCode_t InitBindingInfo();
-
-	/**
 	 * @brief Initalize scheduling contributions managers (one per binding
 	 * domain)
 	 */
 	YamsSchedPol::ExitCode_t InitSchedContribManagers();
+
+	/**
+	 * @brief Allocate scheduling contributions managers (one per binding
+	 * domain)
+	 */
+	void AllocSchedContribManagers();
 
 	/**
 	 * @brief Schedule applications from a priority queue
@@ -538,42 +533,15 @@ private:
 	 * @param papp Shared pointer to the Application/EXC to schedule
 	 * @return true if the Application/EXC must be skipped, false otherwise
 	 */
-	inline bool CheckSkipConditions(ba::AppCPtr_t const & papp) {
-		// Skip if the application has been rescheduled yet (with success) or
-		// disabled in the meanwhile
-		if (!papp->Active() && !papp->Blocking()) {
-			logger->Debug("Skipping [%s] State = [%s, %s]",
-					papp->StrId(),
-					ApplicationStatusIF::StateStr(papp->State()),
-					ApplicationStatusIF::SyncStateStr(papp->SyncState()));
-			return true;
-		}
-
-		// Avoid double AWM selection for RUNNING applications with already
-		// assigned AWM.
-		if ((papp->State() == Application::RUNNING) && papp->NextAWM()) {
-			logger->Debug("Skipping [%s] AWM %d => No reconfiguration",
-					papp->StrId(), papp->CurrentAWM()->Id());
-			return true;
-		}
-
-		// Avoid double AWM selection for SYNCH applications with an already
-		// assigned AWM.
-		if ((papp->State() == Application::SYNC) && papp->NextAWM()) {
-			logger->Debug("Skipping [%s] AWM already assigned [%d]",
-					papp->StrId(), papp->NextAWM()->Id());
-			return true;
-		}
-
-		return false;
-	}
+	bool CheckSkipConditions(ba::AppCPtr_t const & papp);
 
 	/**
 	 * @brief Compare scheduling entities
 	 *
 	 * The function is used to order the list of scheduling entities
 	 */
-	static bool CompareEntities(SchedEntityPtr_t & se1,
+	static bool CompareEntities(
+			SchedEntityPtr_t & se1,
 			SchedEntityPtr_t & se2);
 
 };

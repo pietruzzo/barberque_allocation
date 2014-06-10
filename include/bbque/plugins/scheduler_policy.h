@@ -67,29 +67,6 @@ public:
 	} ExitCode_t;
 
 	/**
-	 * @brief Binding domain information
-	 *
-	 * Keep track of the runtime status of the binding domains (e.g., CPU
-	 * nodes)
-	 */
-	typedef struct BindingInfo {
-		/** The base resource path for the binding step */
-		std::string domain;
-		/** The type of resource to bind (e.g. CPU, GROUP,...) */
-		br::Resource::Type_t type;
-		/** Number of managed resource types */
-		std::list<br::Resource::Type_t> r_types;
-		/** Number of binding domains on the platform	 */
-		uint16_t num;
-		/** Resource pointer descriptor list */
-		br::ResourcePtrList_t rsrcs;
-		/** The IDs of all the possible bindings */
-		std::vector<br::ResID_t> ids;
-		/** Keep track the bindings without available processing elements */
-		br::ResourceBitset full;
-	} BindingInfo_t;
-
-	/**
 	 * @brief The scheduling entity to evaluate
 	 *
 	 * A scheduling entity is characterized by the Application/EXC to schedule, a

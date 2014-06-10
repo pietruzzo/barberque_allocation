@@ -40,7 +40,7 @@ uint16_t const SchedContrib::ConfigParamsDefault[SC_CONFIG_COUNT] = {
 
 SchedContrib::SchedContrib(
 		const char * _name,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint16_t const params[]):
 	cm(ConfigurationManager::GetInstance()),
 	bd_info(_bd_info) {
@@ -133,12 +133,12 @@ float SchedContrib::CLEIndex(uint64_t c_thresh,
 }
 
 float SchedContrib::FuncLinear(float x, LParams_t const & p) {
-	logger->Debug("LIN: 1 - %.6f * (%.2f - %.2f)\n", p.scale, x, p.xoffset);
+	logger->Debug("LIN: 1 - %.6f * (%.2f - %.2f)", p.scale, x, p.xoffset);
 	return 1 - p.scale * (x - p.xoffset);
 }
 
 float SchedContrib::FuncExponential(float x, EParams_t const & p) {
-	logger->Debug("EXP: %.4f * (%.4f ^ ((%.4f - %.4f) / %.4f) - 1)\n",
+	logger->Debug("EXP: %.4f * (%.4f ^ ((%.4f - %.4f) / %.4f) - 1)",
 			p.yscale, p.base, x, p.xoffset, p.xscale);
 	return p.yscale * (pow(p.base, ((x - p.xoffset) / p.xscale)) - 1);
 }

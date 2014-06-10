@@ -59,8 +59,8 @@ char const * SchedContribManager::sc_str[SC_COUNT] = {
 float SchedContribManager::sc_weights_norm[SC_COUNT] = {0};
 uint16_t SchedContribManager::sc_weights[SC_COUNT]   = {0};
 uint16_t
-	SchedContribManager::sc_cfg_params[SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT] = {
-	0};
+	SchedContribManager::sc_cfg_params[
+		SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT] = {0};
 
 
 /*****************************************************************************
@@ -69,7 +69,7 @@ uint16_t
 
 SchedContribManager::SchedContribManager(
 		Type_t const * sc_types,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint8_t sc_num):
 	cm(ConfigurationManager::GetInstance()),
 	bd_info(_bd_info) {
@@ -187,18 +187,18 @@ void SchedContribManager::SetViewInfo(System * sv, br::RViewToken_t vtok) {
 	}
 }
 
-std::string const & SchedContribManager::GetBindingDomain() {
-	return bd_info.domain;
+std::string const SchedContribManager::GetBindingDomain() {
+	return bd_info.d_path->ToString();
 }
 
 
 void SchedContribManager::SetBindingInfo(
-		SchedulerPolicyIF::BindingInfo_t & _bd_info) {
+		BindingInfo_t & _bd_info) {
 	std::map<Type_t, SchedContribPtr_t>::iterator sc_it;
 
 	// Set/update the current binding information
 	bd_info = _bd_info;
-	logger->Debug("SetBindingInfo: domain = %s", bd_info.domain.c_str());
+	logger->Debug("SetBindingInfo: domain = %s", bd_info.d_path->ToString().c_str());
 
 	// For each SchedContrib set the resource view information
 	for (sc_it = sc_objs_reqs.begin(); sc_it != sc_objs_reqs.end(); ++sc_it) {
