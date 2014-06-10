@@ -564,6 +564,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 		sched_ul.unlock();
 		logger->Info("EvalAWM: %s scheduling metrics = %1.4f [%d]",
 				pschd->StrId(), pschd->metrics, entities.size());
+	}
 #else
 	}
 
