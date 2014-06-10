@@ -310,8 +310,8 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 			}
 
 			// Add a new working mode (IDs MUST be numbered from 0 to N)
-			AwmPtr_t awm(recipe_ptr->AddWorkingMode(wm_id, wm_name,
-						static_cast<uint8_t> (wm_value)));
+			AwmPtr_t awm(recipe_ptr->AddWorkingMode(
+						wm_id, wm_name,	static_cast<uint8_t> (wm_value)));
 			if (!awm) {
 				logger->Error("AWM ""%s"" error: Wrong ID specified %d",
 								wm_name.c_str(), wm_id);
