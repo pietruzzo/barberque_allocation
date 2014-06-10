@@ -330,9 +330,13 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 
 			// Load resource usages of the working mode
 			resources_elem = awm_elem->FirstChildElement("resources", true);
-			if ((result = LoadResources(resources_elem, awm, "")) ==
-					__RSRC_FORMAT_ERR)
+			result = LoadResources(resources_elem, awm, "");
+			if (result == __RSRC_FORMAT_ERR)
 				return RL_FORMAT_ERROR;
+			else if (result |= __RSRC_WEAK_LOAD) {
+				awm_elem = awm_elem->NextSiblingElement("awm", false);
+				continue;
+			}
 
 			// AWM plugin specific data
 			LoadPluginsData<ba::AwmPtr_t>(awm, awm_elem);
@@ -346,9 +350,7 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 		return RL_ABORTED;
 	}
 
-	if (result == __RSRC_WEAK_LOAD)
-		return RL_WEAK_LOAD;
-
+	// TODO: RL_WEAK_LOAD case
 	return RL_SUCCESS;
 }
 
