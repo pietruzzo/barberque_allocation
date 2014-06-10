@@ -128,7 +128,7 @@ ShieldBuild() {
 }
 
 # Release the HOST shiled by moving back tasks to ROOT node
-ShieldRelease() {
+release() {
 	echo "Moving all (user-space) tasks back to ROOT node..."
 	local rotate='|/-\'
 
@@ -238,7 +238,7 @@ stop() {
 	# Cleaning-up CGroup reservations
 	if [ -d $BBQUE_CGMOUNT/bbque ]; then
 		echo "Releasing CGroups shiled..."
-		ShieldRelease
+		release
 		sleep 1
 		echo "Releasing BBQ CGroups..."
 		find  $BBQUE_CGMOUNT/bbque -type d -delete
@@ -269,8 +269,14 @@ case "$1" in
 	status)
 		# not implemented
 		;;
+	setup)
+		setup
+		;;
+	release)
+		release
+		;;
 	*)
-		echo "Usage: $0 {start|stop|restart}"
+		echo "Usage: $0 {start|stop|restart}, or {setup|release} for cgroups management only"
 		exit 1
 		;;
 esac
