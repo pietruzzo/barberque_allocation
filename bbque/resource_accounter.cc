@@ -176,7 +176,7 @@ void ResourceAccounter::LoadBindingOptions() {
 		BindingInfo & binding(*(bd_entry.second));
 		binding.rsrcs = GetResources(binding.d_path);
 		binding.count = binding.rsrcs.size();
-		binding.ids.resize(binding.count);
+		binding.ids.clear();
 
 		// Skip missing resource bindings
 		if (binding.count == 0) {
