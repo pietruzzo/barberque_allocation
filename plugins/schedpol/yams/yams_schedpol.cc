@@ -811,6 +811,7 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 #ifdef CONFIG_BBQUE_SP_COWS_BINDING
 
 void YamsSchedPol::CowsSetup() {
+	BindingMap_t & bindings(ra.GetBindingOptions());
 	cpu_bindings = bindings[br::Resource::CPU];
 
 	// COWS: Vectors and accumulators resizing depending on the total number
