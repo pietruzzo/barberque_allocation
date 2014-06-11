@@ -568,6 +568,13 @@ LinuxPP::_GetPlatformID() {
 	return linuxPlatformID;
 }
 
+const char *
+LinuxPP::_GetHardwareID() {
+	static const char linuxHardwareID[] = BBQUE_TARGET_HARDWARE_ID;
+	return linuxHardwareID;
+}
+
+
 LinuxPP::ExitCode_t
 LinuxPP::_LoadPlatformData() {
 	struct cgroup *bbq_resources = NULL;

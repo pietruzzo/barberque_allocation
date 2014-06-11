@@ -116,6 +116,9 @@
 /** Target platform: ARM Architecture */
 #cmakedefine CONFIG_TARGET_ARM
 
+/** Target platform hardware id */
+#define BBQUE_TARGET_HARDWARE_ID "${CONFIG_TARGET_ID}"
+
 /** Use FIFO based RPC channel */
 #cmakedefine CONFIG_BBQUE_RPC_FIFO
 

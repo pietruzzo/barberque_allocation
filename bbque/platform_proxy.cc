@@ -112,6 +112,7 @@ PlatformProxy::LoadPlatformData() {
 
 	// Setup the Platform Specific ID
 	platformIdentifier = _GetPlatformID();
+	hardwareIdentifier = _GetHardwareID();
 
 	logger->Notice("PLAT PRX: Platform [%s] initialization COMPLETED",
 			GetPlatformID());

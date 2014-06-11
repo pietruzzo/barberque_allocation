@@ -120,6 +120,19 @@ public:
 		assert(platformIdentifier != NULL);
 		return platformIdentifier;
 	};
+
+	/**
+	 * @breif Return the string ID of the target hardware
+	 *
+	 * Each platform can feature an hardware (string) identifier. This
+	 * method return a pointer to that string.
+	 *
+	 * @return A poiinter to the hardware identifier string
+	 */
+	const char* GetHardwareID() const {
+		assert(hardwareIdentifier != NULL);
+		return hardwareIdentifier;
+	};
 /**
  * @}
  * @name Resource state monitoring
@@ -236,6 +249,11 @@ protected:
 	 */
 	const char *platformIdentifier;
 
+	/**
+	 * @brief The platform specific string identifier
+	 */
+	const char *hardwareIdentifier;
+
 
 	/**
 	 * @brief Set the PIL as initialized
@@ -271,6 +289,14 @@ protected:
 	virtual const char* _GetPlatformID() {
 		logger->Debug("PLAT PRX: default _GetPlatformID()");
 		return "it.polimi.bbque.tpd";
+	};
+
+	/**
+	 * @brief Return the Hardware identifier string
+	 */
+	virtual const char* _GetHardwareID() {
+		logger->Debug("PLAT PRX: default _GetHardwareID()");
+		return NULL;
 	};
 
 	/**

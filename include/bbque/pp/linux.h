@@ -263,6 +263,7 @@ private:
 
 
 	const char* _GetPlatformID();
+	const char* _GetHardwareID();
 
 	/**
 	 * @brief Parse the resources assigned to BarbequeRTRM by CGroup
