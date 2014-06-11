@@ -534,11 +534,10 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 				br::ResourceIdentifier::TypeStr[bd_type]);
 
 		// Skipping empty binding domains
-		br::ResourceBitset r_mask;
-		r_mask = br::ResourceBinder::GetMask(
-				pschd->pawm->RecipeResourceUsages(), bd_type);
-		if ((bd_info.count == 0) || (r_mask.Count() == 0))
+		if (bd_info.count == 0) {
+			logger->Debug("EvalAWM: skipping empty binding domain");
 			continue;
+		}
 
 		// Cumulate the scheduling contributions in the SchedEntity object
 		SchedEntityPtr_t pschd_domain(new SchedEntity_t(*pschd.get()));
