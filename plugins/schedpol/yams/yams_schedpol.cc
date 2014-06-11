@@ -608,7 +608,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 	BindingMap_t & bindings(ra.GetBindingOptions());
 	bd_it = bindings.find(bd_type);
 	if (bd_it == bindings.end()) {
-		logger->Fatal("EvalBindings: Unexpected binding type");
+		logger->Fatal("EvalBindings: Unexpected binding type: %d", bd_type);
 		return YAMS_ERROR;
 	}
 	logger->Debug("EvalBindings: [%s] base (AWM) metrics %1.4f",
