@@ -23,6 +23,7 @@ menu "OpenCL Support"
 config BBQUE_OPENCL
   bool "Enable OpenCL run-time management support"
   depends on TARGET_LINUX
+  depends on !BBQUE_TEST_PLATFORM_DATA
   select EXTERNAL_OPENCL
   select BBQUE_OPENCL_DEFAULT_AMD
   default n
