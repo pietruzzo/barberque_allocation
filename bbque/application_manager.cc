@@ -17,6 +17,7 @@
 
 #include "bbque/application_manager.h"
 
+#include "bbque/configuration_manager.h"
 #include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/platform_proxy.h"
@@ -30,6 +31,9 @@
 
 #define APPLICATION_MANAGER_NAMESPACE "bq.am"
 #define MODULE_NAMESPACE APPLICATION_MANAGER_NAMESPACE
+
+// The prefix for configuration file attributes
+#define MODULE_CONFIG "ApplicationManager"
 
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -70,6 +74,21 @@ ApplicationManager::ApplicationManager() :
 	// Get a logger
 	logger = bu::Logger::GetLogger(APPLICATION_MANAGER_NAMESPACE);
 	assert(logger);
+
+	//---------- Loading module configuration
+	po::options_description opts_desc("Application Manager Options");
+	opts_desc.add_options()
+		(MODULE_CONFIG".ggap.threshold_optimize",
+		 po::value<int>
+		 (&ggap_threshold_optimize)->default_value(
+			 BBQUE_DEFAULT_GGAP_THRESHOLD_OPTIMIZE),
+		 "The default minimum GoalGap value which triggers an optimization")
+		;
+	po::variables_map opts_vm;
+	ConfigurationManager::GetInstance()
+		.ParseConfigurationFile(opts_desc, opts_vm);
+	logger->Notice("GoalGap optimization threshold: %d",
+			ggap_threshold_optimize);
 
 	//  Get the recipe loader instance
 	rloader = ModulesFactory::GetRecipeLoaderModule();
@@ -1264,7 +1283,7 @@ ApplicationManager::SetGoalGapEXC(AppPtr_t papp, uint8_t gap) {
 	// FIXME the reschedule should be activated based on some
 	// configuration parameter or policy decision
 	// Check for the need of a new schedule request
-	if (gap > 20) {
+	if (gap > ggap_threshold_optimize) {
 		logger->Warn("Re-schedule required for [%s], GoalGap [%2d]",
 				papp->StrId(), gap);
 		return AM_RESCHED_REQUIRED;
