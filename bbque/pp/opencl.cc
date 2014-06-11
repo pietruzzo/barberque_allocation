@@ -416,6 +416,9 @@ void OpenCLProxy::InsertDeviceID(
 		uint8_t dev_id) {
 	ResourceTypeIDMap_t::iterator d_it;
 	VectorUInt8Ptr_t pdev_ids;
+
+	logger->Debug("PLAT OCL: Insert device %d of type %s",
+			dev_id, br::ResourceIdentifier::TypeStr[r_type]);
 	d_it = GetDeviceIterator(r_type);
 	if (d_it == device_ids.end()) {
 		device_ids.insert(
@@ -434,6 +437,7 @@ void OpenCLProxy::InsertDeviceID(
 	snprintf(gpu_mem_path+5, 12, "gpu%hu.mem0", dev_id);
 	gpu_mem_paths.insert(std::pair<int, ResourcePathPtr_t>(
 		dev_id, ResourcePathPtr_t(new br::ResourcePath(gpu_mem_path))));
+	logger->Debug("PLAT OCL: GPU memory registered: %s", gpu_mem_path);
 }
 
 void OpenCLProxy::InsertDevicePath(
@@ -441,6 +445,9 @@ void OpenCLProxy::InsertDevicePath(
 		std::string const & dev_path_str) {
 	ResourceTypePathMap_t::iterator p_it;
 	ResourcePathListPtr_t pdev_paths;
+
+	logger->Debug("PLAT OCL: Insert device resource path  %s",
+			dev_path_str.c_str());
 	p_it = device_paths.find(r_type);
 	if (p_it == device_paths.end()) {
 		device_paths.insert(
