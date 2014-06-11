@@ -201,6 +201,15 @@
 #define BBQUE_UID_TYPE uint32_t
 
 /**
+ * @brief The GoalGap Forward Threshold
+ *
+ * The RTLib do not forward GoalGap requests which are, by default, lower than
+ * that value. The run-time value could be configured via the 't' flag of the
+ * BBQUE_RTLIB_OPTS environment variable.
+ */
+#define BBQUE_DEFAULT_GGAP_THRESHOLD_FORWARD ${CONFIG_BBQUE_RTLIB_GGAP_THRESHOLD_FORWARD}
+
+/**
  * @brief The number of bits used to represent the EXC_ID into the UID
  *
  * Internally to the BarbequeRTRM, each application is represented by a UID

@@ -208,6 +208,16 @@ config BBQUE_YP_SASB_ASYNC
 
   If unsure, select Y. Select N for Android targets.
 
+config BBQUE_RTLIB_GGAP_THRESHOLD_FORWARD
+  int "GoalGap Forward Threshold"
+  default 20
+  ---help---
+  The minimum GoalGap value which is forwarded to BarbequeRTRM.
+
+  Once an EXC asserts a GoalGap, the RTLib could decide to not forward this request
+  if it is not greater than a predefined and configured value.
+  This configuration defines the default for that threshold value.
+
 endmenu # RTLib Configuration
 
 ################################################################################
