@@ -396,8 +396,11 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 			break;
 		}
 
+		// Keep track of OpenCL device IDs and resource paths
 		InsertDeviceID(r_type, dev_id);
-		InsertDevicePath(r_type, gpu_pe_path);
+		if (r_type == br::ResourceIdentifier::GPU)
+			InsertDevicePath(r_type, gpu_pe_path);
+
 		logger->Info("PLAT OCL: D[%d]: {%s}, type: [%s], path: [%s]",
 			dev_id, dev_name,
 			br::ResourceIdentifier::TypeStr[r_type],
