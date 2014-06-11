@@ -426,6 +426,9 @@ void OpenCLProxy::InsertDeviceID(
 
 	pdev_ids = device_ids[r_type];
 	pdev_ids->push_back(dev_id);
+	if (r_type != br::ResourceIdentifier::GPU)
+		return;
+
 	// Resource path to GPU memory
 	char gpu_mem_path[] = "sys0.gpu256.mem256";
 	snprintf(gpu_mem_path+5, 12, "gpu%hu.mem0", dev_id);
@@ -447,6 +450,12 @@ void OpenCLProxy::InsertDevicePath(
 	}
 
 	ResourcePathPtr_t rp(new br::ResourcePath(dev_path_str));
+	if (rp == nullptr) {
+		logger->Error("PLAT OCL: Invalid resource path %s",
+				dev_path_str.c_str());
+		return;
+	}
+
 	pdev_paths = device_paths[r_type];
 	pdev_paths->push_back(rp);
 }
