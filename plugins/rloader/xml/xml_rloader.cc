@@ -209,7 +209,9 @@ ticpp::Element * XMLRecipeLoader::LoadPlatform(ticpp::Element * _xml_elem) {
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 	ticpp::Element * pp_gen_elem = nullptr;
 	const char * sys_platform_id;
+	std::string sys_platform_hw;
 	std::string platform_id;
+	std::string platform_hw;
 	PlatformProxy & pp(PlatformProxy::GetInstance());
 	bool platform_matched = false;
 #endif
@@ -225,13 +227,26 @@ ticpp::Element * XMLRecipeLoader::LoadPlatform(ticpp::Element * _xml_elem) {
 			assert(sys_platform_id != nullptr);
 			return nullptr;
 		}
+		// Plaform hardware (optional)
+		sys_platform_hw.assign(pp.GetHardwareID());
 
 		// Look for the platform section matching the system platform id
 		while (pp_elem && !platform_matched) {
 			pp_elem->GetAttribute("id", &platform_id, true);
+			pp_elem->GetAttribute("hw", &platform_hw, false);
 			if (platform_id.compare(sys_platform_id) == 0) {
-				logger->Info("Platform required: '%s' matching OK",
-						platform_id.c_str());
+				// Hardware (SoC) check required?
+				if (!sys_platform_hw.empty()
+						&& (platform_hw.compare(sys_platform_hw) != 0)) {
+						logger->Debug("Platform:'%s' skipping HW:[%s]...",
+								platform_id.c_str(), platform_hw.c_str());
+						break;
+				}
+
+				logger->Info("Platform required: '%s:[%s]' matching OK",
+						platform_id.c_str(), platform_hw.c_str());
+				logger->Info("Platform hardware: %s ",
+						sys_platform_hw.c_str());
 				platform_matched = true;
 				break;
 			}
