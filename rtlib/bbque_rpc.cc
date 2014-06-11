@@ -108,7 +108,7 @@ BbqueRPC::~BbqueRPC(void) {
 RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 	const char *env;
 	char buff[100];
-	char *opt, *pos, *next;
+	char *opt;
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 	char * raw_buff;
 	int8_t idx  = 0;
@@ -240,6 +240,9 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			break;
 #ifdef CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
 		case 'C':
+
+			char *pos, *next;
+
 			// Enabling CGroup Enforcing
 			if (!conf.unmanaged.enabled) {
 				logger->Error("CGroup enforcing is supported only in UNMANAGED mode");
