@@ -158,9 +158,9 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	params.exp.base = expbase;
 
 	// Iterate the whole set of resource usage
-	for_each_recp_resource_usage(evl_ent, usage_it) {
-		br::UsagePtr_t const & pusage(usage_it->second);
-		ResourcePathPtr_t const & r_path(usage_it->first);
+	for (auto const & ru_entry: evl_ent.pawm->RecipeResourceUsages()) {
+		ResourcePathPtr_t const & r_path(ru_entry.first);
+		br::UsagePtr_t    const & pusage(ru_entry.second);
 
 		// Binding domain fraction (resource type related)
 		logger->Debug("%s: R{%s} BD{'%s'} maxAV: %" PRIu64 " fair: %d",

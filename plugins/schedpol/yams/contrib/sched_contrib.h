@@ -23,25 +23,10 @@
 #include "bbque/configuration_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
-#include "bbque/res/usage.h"
 #include "bbque/res/resource_path.h"
 
 #define SC_CONF_BASE_STR 	SCHEDULER_POLICY_CONFIG".Contrib."
 #define SC_NAME_MAX_LEN 	11
-
-#define for_each_sched_resource_usage(entity, usage_it) \
-	br::UsagesMapPtr_t const & rsrc_usages( \
-			entity.pawm->GetSchedResourceBinding(entity.bind_refn)); \
-	br::UsagesMap_t::const_iterator end_usage(rsrc_usages->end()); \
-	for (usage_it = rsrc_usages->begin(); \
-			usage_it != end_usage; ++usage_it)
-
-#define for_each_recp_resource_usage(entity, usage_it) \
-	br::UsagesMap_t const & rsrc_usages( \
-			entity.pawm->RecipeResourceUsages()); \
-	br::UsagesMap_t::const_iterator end_usage(rsrc_usages.end()); \
-	for (usage_it = rsrc_usages.begin(); \
-			usage_it != end_usage; ++usage_it)
 
 namespace br = bbque::res;
 namespace bu = bbque::utils;
