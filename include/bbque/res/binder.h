@@ -118,12 +118,12 @@ public:
 	 * @return A ResourceBitset object tracking all the IDs
 	 */
 	static ResourceBitset GetMask(
-		UsagesMapPtr_t pum,
-		ResourceIdentifier::Type_t r_type,
-		ResourceIdentifier::Type_t r_scope_type,
-		ResID_t r_scope_id,
-		AppSPtr_t papp = nullptr,
-		RViewToken_t vtok = 0);
+			UsagesMapPtr_t pum,
+			ResourceIdentifier::Type_t r_type,
+			ResourceIdentifier::Type_t r_scope_type,
+			ResID_t r_scope_id,
+			AppSPtr_t papp = nullptr,
+			RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Retrieve IDs of a type of resource from a ResourcePtrList_t
