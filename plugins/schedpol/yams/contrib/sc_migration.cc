@@ -16,7 +16,6 @@
  */
 
 #include "sc_migration.h"
-#include "bbque/res/binder.h"
 
 namespace bbque { namespace plugins {
 
