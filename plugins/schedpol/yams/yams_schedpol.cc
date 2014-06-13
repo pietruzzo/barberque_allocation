@@ -26,7 +26,6 @@
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/utils/logging/logger.h"
-#include "bbque/res/binder.h"
 #include "contrib/sched_contrib_manager.h"
 #include "bbque/utils/attributes_container.h"
 
