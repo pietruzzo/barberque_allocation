@@ -66,7 +66,7 @@ RTLIB_Services_t *rtlib;
 /**
  * @brief The application configuration file
  */
-std::string conf_file = BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/myapp.conf" ;
+std::string conf_file = BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/MyApp.conf" ;
 
 /**
  * @brief The recipe to use for all the EXCs

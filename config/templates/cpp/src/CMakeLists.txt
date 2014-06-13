@@ -23,3 +23,11 @@ set_property(TARGET myapp PROPERTY
 #----- Install the MyApp files
 install (TARGETS myapp RUNTIME
 	DESTINATION ${MYAPP_PATH_BINS})
+
+#----- Generate and Install MyApp configuration file
+configure_file (
+	"${PROJECT_SOURCE_DIR}/MyApp.conf.in"
+	"${PROJECT_BINARY_DIR}/MyApp.conf"
+)
+install (FILES "${PROJECT_BINARY_DIR}/MyApp.conf"
+	DESTINATION ${MYAPP_PATH_CONFIG})
