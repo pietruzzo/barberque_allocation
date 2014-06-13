@@ -6,7 +6,7 @@
  *
  *     @author  Name Surname (nickname), your@email.com
  *
- *     Company  Politecnico di Milano
+ *     Company  Your Company
  *   Copyright  Copyright (c) 20XX, Name Surname
  *
  * This source code is released for free distribution under the terms of the
