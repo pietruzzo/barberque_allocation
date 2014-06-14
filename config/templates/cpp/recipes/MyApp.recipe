@@ -5,22 +5,18 @@
 			<awms>
 				<awm id="0" name="Low" value="50">
 					<resources>
-						<sys id="0">
-							<cpu id="0">
-								<pe qty="50"/>
-								<mem units="Mb" qty="2"/>
-							</cpu>
-						</sys>
+						<cpu>
+							<pe qty="50"/>
+							<mem units="Mb" qty="2"/>
+						</cpu>
 					</resources>
 				</awm>
 				<awm id="1" name="High" value="75">
 					<resources>
-						<sys id="0">
-							<cpu id="0">
-								<pe qty="75"/>
-								<mem units="Mb" qty="2"/>
-							</cpu>
-						</sys>
+						<cpu>
+							<pe qty="75"/>
+							<mem units="Mb" qty="2"/>
+						</cpu>
 					</resources>
 				</awm>
 			</awms>
