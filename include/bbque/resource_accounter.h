@@ -21,6 +21,7 @@
 #include <set>
 
 #include "bbque/resource_accounter_conf.h"
+#include "bbque/configuration_manager.h"
 #include "bbque/command_manager.h"
 
 #include "bbque/res/resource_utils.h"
@@ -28,6 +29,7 @@
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
 #include "bbque/cpp11/thread.h"
+#include "bbque/cpp11/condition_variable.h"
 
 #define RESOURCE_ACCOUNTER_NAMESPACE "bq.ra"
 
@@ -36,6 +38,9 @@
 
 // Max length for the resource view token string
 #define TOKEN_PATH_MAX_LEN 30
+
+// Prefix resource path used for Recipe validation
+#define PREFIX_PATH "sys"
 
 namespace ba = bbque::app;
 namespace br = bbque::res;
@@ -62,6 +67,31 @@ class ApplicationManager;
 
 
 /**
+ * @brief Binding domain information
+ *
+ * Keep track of the runtime status of the binding domains (e.g., CPU
+ * nodes)
+ */
+typedef struct BindingInfo {
+	/** Base resource path object */
+	br::ResourcePathPtr_t d_path;
+	/** Number of managed resource types */
+	std::list<br::Resource::Type_t> r_types;
+	/** Resource pointer descriptor list */
+	br::ResourcePtrList_t rsrcs;
+	/** The IDs of all the possible bindings */
+	std::vector<br::ResID_t> ids;
+	/** Keep track the bindings without available processing elements */
+	br::ResourceBitset full;
+	/** Number of binding domains on the platform	 */
+	uint16_t count;
+} BindingInfo_t;
+
+
+typedef std::pair<br::Resource::Type_t, BindingInfo_t *> BindingPair_t;
+typedef std::map<br::Resource::Type_t, BindingInfo_t *> BindingMap_t;
+
+/**
  * @brief Resources Accouter
  * @ingroup sec07_ra
  */
@@ -70,9 +100,33 @@ class ResourceAccounter: public ResourceAccounterConfIF, CommandHandler {
 public:
 
 	/**
+	 * @brief The states of the module
+	 */
+	enum class State {
+		/** Information not ready for query and accounting */
+		NOT_READY,
+		/** Information ready for query and accounting */
+		READY,
+		/** A synchronization step is in progress */
+		SYNC
+	};
+
+	/**
 	 * @brief Return the instance of the ResourceAccounter
 	 */
 	static ResourceAccounter & GetInstance();
+
+	/**
+	 * @brief Called when all the hardware resources have been registered and
+	 * the platform is ready
+	 */
+	void SetPlatformReady();
+
+	/**
+	 * @brief Called when there are updates in the hardware resources and thus
+	 * the platform cannot be considered ready
+	 */
+	void SetPlatformNotReady();
 
 	/**
 	 * @brief Destructor
@@ -91,14 +145,20 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint64_t Available(std::string const & path,
-			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	uint64_t Available(
+			std::string const & path,
+			br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
-	uint64_t Available(br::ResourcePtrList_t & rsrc_list,
-			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	uint64_t Available(
+			br::ResourcePtrList_t & rsrc_list,
+			br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
-	uint64_t Available(br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
-			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	uint64_t Available(
+			br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
+			br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -191,7 +251,6 @@ public:
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED) const;
 
-
 	/**
 	 * @brief Show the system resources status
 	 *
@@ -215,6 +274,11 @@ public:
 			bool verbose) const;
 
 	/**
+	 * @brief A prefix path for recipe validation
+	 */
+	br::ResourcePath const & GetPrefixPath() const;
+
+	/**
 	 * @brief Register a resource
 	 *
 	 * Setup informations about a resource installed into the system.
@@ -230,15 +294,15 @@ public:
 	 * RA_ERR_MISS_PATH if the path string is empty. RA_ERR_MEM if the
 	 * resource descriptor cannot be allocated.
 	 */
-	ExitCode_t RegisterResource(std::string const & path,
-			std::string const & units, uint64_t amount);
+	ExitCode_t RegisterResource(
+			std::string const & path, std::string const & units, uint64_t amount);
 
 	/**
 	 * @brief Update availabilies for the specified resource
 	 *
 	 */
-	ExitCode_t UpdateResource(std::string const & path,
-			std::string const & units, uint64_t amount);
+	ExitCode_t UpdateResource(
+			std::string const & path, std::string const & units,uint64_t amount);
 
 	/**
 	 * @brief Book e a set of resources
@@ -261,8 +325,10 @@ public:
 	 * RA_ERR_USAGE_EXC if the resource set required is not completely
 	 * available.
 	 */
-	ExitCode_t BookResources(ba::AppSPtr_t papp,
-			br::UsagesMapPtr_t const & rsrc_usages, br::RViewToken_t vtok = 0);
+	ExitCode_t BookResources(
+			ba::AppSPtr_t papp,
+			br::UsagesMapPtr_t const & rsrc_usages,
+			br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Release the resources
@@ -322,8 +388,18 @@ public:
 	 *
 	 * @return true when resources are being reshuffled
 	 */
-	bool IsReshuffling(br::UsagesMapPtr_t const & pum_current,
+	bool IsReshuffling(
+			br::UsagesMapPtr_t const & pum_current,
 			br::UsagesMapPtr_t const & pum_next);
+
+	/**
+	 * @brief The resource binding information support
+	 *
+	 * @return A reference to a @ref BindingMap_t object
+	 */
+	inline BindingMap_t & GetBindingOptions() {
+		return binding_options;
+	}
 
 	/**
 	 * @see ResourceAccounterConfIF
@@ -406,6 +482,7 @@ public:
 	 */
 	ExitCode_t SyncCommit();
 
+
 	/**
 	 * @see CommandHandler
 	 */
@@ -444,15 +521,10 @@ private:
 	 * @brief Store info about a synchronization session
 	 */
 	struct SyncSession_t {
-		/** Mutex for protecting the session */
-		std::mutex mtx;
-		/** If true a synchronization session has started */
-		bool started;
 		/** Token for the temporary resource view */
 		br::RViewToken_t view;
 		/** Count the number of session elapsed */
 		uint32_t count;
-
 	} sync_ssn;
 
 	/** The logger used by the resource accounter */
@@ -462,19 +534,32 @@ private:
 	bbque::ApplicationManager & am;
 
 	/** The Command Manager component */
-	CommandManager &cm;
+	CommandManager & cm;
 
-	/** Mutex protecting resource release and acquisition */
-	std::recursive_mutex status_mtx;
+	/** The Configuration Manager */
+	ConfigurationManager & fm;
+
+
+	/** Mutex protecting Resource Accounter status */
+	std::mutex status_mtx;
+
+	/** Conditional variable for status synchronization */
+	std::condition_variable status_cv;
+
+	/** This contain the status of the Resource Accounter */
+	State status;
+
 
 	/** The tree of all the resources in the system.*/
 	br::ResourceTree resources;
 
-	/** The set of all the resource paths registered */
-	std::set<std::string> paths;
-
 	/** The resource paths registered (strings and objects) */
 	std::map<std::string, br::ResourcePathPtr_t> r_paths;
+
+	/** Resources that can be allocated in 'slice', i.e. the assigned amount
+	 * is distributed over all the resources referenced by the mixed/template
+	 * path specified */
+	std::map<br::ResourcePathPtr_t, uint64_t> r_sliced;
 
 	/** Counter for the total number of registered resources */
 	std::map<br::Resource::Type_t, uint16_t> r_count;
@@ -482,9 +567,17 @@ private:
 	/** List that keeps track of the managed resource types */
 	std::list<br::Resource::Type_t> r_types;
 
+	/** Resource path (pointer) referencing the prefix */
+	br::ResourcePathPtr_t r_prefix_path;
+
 	/** Keep track of the max length between resources path string */
 	uint8_t path_max_len = 0;
 
+	/**
+	 * A map object containing all the support information for the resource
+	 * binding performed by the scheduling policy
+	 */
+	BindingMap_t binding_options;
 
 	/**
 	 * Map containing the pointers to the map of resource usages specified in
@@ -527,6 +620,24 @@ private:
 	 */
 	ResourceAccounter();
 
+
+	/**
+	 * @brief Initialize the resource binding support information
+	 */
+	void InitBindingOptions();
+
+	/**
+	 * @brief Load the resource binding support information
+	 *
+	 * @note This can be done only when the status is READY
+	 */
+	void LoadBindingOptions();
+
+	/**
+	 * @brief Set the status to READY
+	 */
+	void SetReady();
+
 	/**
 	 * @brief Wrap the class of resource path on resource tree matching flags
 	 *
@@ -547,6 +658,23 @@ private:
 		}
 	}
 
+
+	/**
+	 * @brief Thread unsafe version of @ref GetView
+	 */
+	ExitCode_t _GetView(std::string who_req, br::RViewToken_t & tok);
+
+	/**
+	 * @brief Thread unsafe version of @ref SetView
+	 */
+	br::RViewToken_t _SetView(br::RViewToken_t tok);
+
+	/**
+	 * @brief Thread unsafe version of @ref PutView
+	 */
+	void _PutView(br::RViewToken_t tok);
+
+
 	/**
 	 * @brief Get a list of resource descriptor
 	 *
@@ -561,7 +689,8 @@ private:
 	 *
 	 * @return A list of pointers (shared) to resource descriptors
 	 */
-	br::ResourcePtrList_t GetList(br::ResourcePathPtr_t ppath,
+	br::ResourcePtrList_t GetList(
+			br::ResourcePathPtr_t ppath,
 			PathClass_t rpc = EXACT) const;
 
 	/**
@@ -575,9 +704,10 @@ private:
 	 *
 	 * @return The value of the attribute request
 	 */
-	uint64_t QueryStatus(br::ResourcePtrList_t const & rsrc_list,
-				QueryOption_t q_opt, br::RViewToken_t vtok = 0,
-				ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	uint64_t QueryStatus(
+			br::ResourcePtrList_t const & rsrc_list,
+			QueryOption_t q_opt, br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @brief Get the cumulative amount of resource usage, given iterators of
@@ -597,7 +727,8 @@ private:
 			br::UsagesMap_t::const_iterator & begin,
 			br::UsagesMap_t::const_iterator & end,
 			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED) const;
+			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED)
+		const;
 
 	/**
 	 * @brief Check the resource availability for a whole set
@@ -608,8 +739,10 @@ private:
 	 * @return RA_SUCCESS if all the resources are availables,
 	 * RA_ERR_USAGE_EXC otherwise.
 	 */
-	ExitCode_t CheckAvailability(br::UsagesMapPtr_t const & usages,
-			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	ExitCode_t CheckAvailability(
+			br::UsagesMapPtr_t const & usages,
+			br::RViewToken_t vtok = 0,
+			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @brief Get a pointer to the map of applications resource usages
@@ -628,6 +761,31 @@ private:
 			AppUsagesMapPtr_t &	apps_usages);
 
 	/**
+	 * @brief Book e a set of resources (not thread-safe)
+	 *
+	 * The method reserves for each resource in the usages map specified the
+	 * required quantity.
+	 *
+	 * @param papp The application requiring resource usages
+	 * @param rsrc_usages Map of Usage objects
+	 * @param vtok The token referencing the resource state view
+	 * @param do_check If true the controls upon set validity and resources
+	 * availability are enabled
+	 *
+	 * @return RA_SUCCESS if the operation has been successfully performed.
+	 * RA_ERR_MISS_APP if the application descriptor is null.
+	 * RA_ERR_MISS_USAGES if the resource usages map is empty.
+	 * RA_ERR_MISS_VIEW if the resource state view referenced by the given
+	 * token cannot be retrieved.
+	 * RA_ERR_USAGE_EXC if the resource set required is not completely
+	 * available.
+	 */
+	ExitCode_t _BookResources(
+			ba::AppSPtr_t papp,
+			br::UsagesMapPtr_t const & rsrc_usages,
+			br::RViewToken_t vtok = 0);
+
+	/**
 	 * @brief Increment the resource usages counts
 	 *
 	 * Each time an application acquires a set of resources (specified in the
@@ -637,8 +795,10 @@ private:
 	 * @param app The application acquiring the resources
 	 * @param vtok The token referencing the resource state view
 	 */
-	ExitCode_t IncBookingCounts(br::UsagesMapPtr_t const & app_usages,
-			ba::AppSPtr_t const & papp, br::RViewToken_t vtok = 0);
+	ExitCode_t IncBookingCounts(
+			br::UsagesMapPtr_t const & app_usages,
+			ba::AppSPtr_t const & papp,
+			br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Book a single resource
@@ -653,9 +813,10 @@ private:
 	 * @return RA_ERR_USAGE_EXC if the usage required overcome the
 	 * availability. RA_SUCCESS otherwise.
 	 */
-	ExitCode_t DoResourceBooking(ba::AppSPtr_t const & papp,
-			br::UsagePtr_t & pusage, br::RViewToken_t vtok);
-
+	ExitCode_t DoResourceBooking(
+			ba::AppSPtr_t const & papp,
+			br::UsagePtr_t & pusage,
+			br::RViewToken_t vtok);
 
 	/**
 	 * @brief Release the resources
@@ -678,8 +839,11 @@ private:
 	 * @param requested The amount of resource required
 	 * @param vtok The token referencing the resource state view
 	 */
-	void SchedResourceBooking(ba::AppSPtr_t const & papp, br::ResourcePtr_t & rsrc,
-			uint64_t & requested, br::RViewToken_t vtok);
+	void SchedResourceBooking(
+			ba::AppSPtr_t const & papp,
+			br::ResourcePtr_t & rsrc,
+			uint64_t & requested,
+			br::RViewToken_t vtok);
 
 	/**
 	 * @brief Allocate a quota of resource in the synchronization case
@@ -692,7 +856,9 @@ private:
 	 * @param rsrc The resource descriptor of the resource binding
 	 * @param requested The amount of resource required
 	 */
-	void SyncResourceBooking(ba::AppSPtr_t const & papp, br::ResourcePtr_t & rsrc,
+	void SyncResourceBooking(
+			ba::AppSPtr_t const & papp,
+			br::ResourcePtr_t & rsrc,
 			uint64_t & requested);
 
 	/**
@@ -705,8 +871,10 @@ private:
 	 * @param app The application releasing the resources
 	 * @param vtok The token referencing the resource state view
 	 */
-	void DecBookingCounts(br::UsagesMapPtr_t const & app_usages,
-			ba::AppSPtr_t const & app, br::RViewToken_t vtok = 0);
+	void DecBookingCounts(
+			br::UsagesMapPtr_t const & app_usages,
+			ba::AppSPtr_t const & app,
+			br::RViewToken_t vtok = 0);
 
 	/**
 	 * @brief Unbook a single resource
@@ -718,7 +886,9 @@ private:
 	 * @param pusage Usage object
 	 * @param vtok The token referencing the resource state view
 	 */
-	void UndoResourceBooking(ba::AppSPtr_t const & papp, br::UsagePtr_t & pusage,
+	void UndoResourceBooking(
+			ba::AppSPtr_t const & papp,
+			br::UsagePtr_t & pusage,
 			br::RViewToken_t vtok);
 
 	/**
@@ -733,6 +903,10 @@ private:
 	 */
 	ExitCode_t SyncInit();
 
+	/**
+	 * @brief Clean closure of a synchronization session
+	 */
+	ExitCode_t SyncFinalize();
 
 	/**
 	 * @brief Abort a synchronized mode session
@@ -751,7 +925,7 @@ private:
 	 * progress, false otherwise
 	 */
 	inline bool Synching() {
-		return sync_ssn.started;
+		return (status == State::SYNC);
 	}
 
 	/**

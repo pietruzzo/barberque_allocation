@@ -21,27 +21,12 @@
 #include <cstring>
 
 #include "bbque/configuration_manager.h"
-#include "bbque/plugins/scheduler_policy.h"
+#include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
-#include "bbque/res/usage.h"
 #include "bbque/res/resource_path.h"
 
 #define SC_CONF_BASE_STR 	SCHEDULER_POLICY_CONFIG".Contrib."
 #define SC_NAME_MAX_LEN 	11
-
-#define for_each_sched_resource_usage(entity, usage_it) \
-	br::UsagesMapPtr_t const & rsrc_usages( \
-			entity.pawm->GetSchedResourceBinding(entity.bind_refn)); \
-	br::UsagesMap_t::const_iterator end_usage(rsrc_usages->end()); \
-	for (usage_it = rsrc_usages->begin(); \
-			usage_it != end_usage; ++usage_it)
-
-#define for_each_recp_resource_usage(entity, usage_it) \
-	br::UsagesMap_t const & rsrc_usages( \
-			entity.pawm->RecipeResourceUsages()); \
-	br::UsagesMap_t::const_iterator end_usage(rsrc_usages.end()); \
-	for (usage_it = rsrc_usages.begin(); \
-			usage_it != end_usage; ++usage_it)
 
 namespace br = bbque::res;
 namespace bu = bbque::utils;
@@ -189,7 +174,7 @@ public:
 	 */
 	SchedContrib(
 		const char * name,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint16_t const cfg_params[]);
 
 	virtual ~SchedContrib();
@@ -217,7 +202,7 @@ public:
 	 *
 	 * @param _bd_info A binding information data structure
 	 */
-	inline void SetBindingInfo(SchedulerPolicyIF::BindingInfo_t & _bd_info) {
+	inline void SetBindingInfo(BindingInfo_t & _bd_info) {
 		bd_info = _bd_info;
 	}
 
@@ -271,7 +256,7 @@ protected:
 	  * From a scheduling contribution perspective, this represents the domain
 	  * in which consider the index computation
 	  */
-	 SchedulerPolicyIF::BindingInfo_t bd_info;
+	 BindingInfo_t bd_info;
 
 
 	 /** Contribute identifier name */

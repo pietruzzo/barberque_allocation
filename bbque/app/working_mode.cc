@@ -77,11 +77,20 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 		std::string const & rsrc_path,
 		uint64_t required_amount) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	br::ResourcePath::ExitCode_t rp_result;
 
-	// Build a resource path object
-	ResourcePathPtr_t ppath(new br::ResourcePath(rsrc_path));
+	// Init the resource path starting from the prefix
+	br::ResourcePathPtr_t ppath(new br::ResourcePath(ra.GetPrefixPath()));
 	if (!ppath) {
-		logger->Error("%s AddResourceUsage: {%s} invalid resource path",
+		logger->Error("%s AddResourceUsage: {%s} invalid prefix path",
+				str_id,	ra.GetPrefixPath().ToString().c_str());
+		return WM_RSRC_ERR_TYPE;
+	}
+
+	// Build the resource path object
+	rp_result = ppath->Concat(rsrc_path);
+	if (rp_result != br::ResourcePath::OK) {
+		logger->Error("%s AddResourceUsage: {%s} invalid path",
 				str_id,	rsrc_path.c_str());
 		return WM_RSRC_ERR_TYPE;
 	}
@@ -89,7 +98,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	// Check the existance of the resource required
 	if (!ra.ExistResource(ppath)) {
 		logger->Warn("%s AddResourceUsage: {%s} not found.",
-				str_id, rsrc_path.c_str());
+				str_id, ppath->ToString().c_str());
 		return WM_RSRC_NOT_FOUND;
 	}
 

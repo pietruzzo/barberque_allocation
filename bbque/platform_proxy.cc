@@ -112,9 +112,13 @@ PlatformProxy::LoadPlatformData() {
 
 	// Setup the Platform Specific ID
 	platformIdentifier = _GetPlatformID();
+	hardwareIdentifier = _GetHardwareID();
 
 	logger->Notice("PLAT PRX: Platform [%s] initialization COMPLETED",
 			GetPlatformID());
+
+	// Set that the platform is ready
+	ra.SetPlatformReady();
 
 	// Dump status of registered resource
 	ra.PrintStatusReport(0, true);
@@ -124,12 +128,18 @@ PlatformProxy::LoadPlatformData() {
 
 PlatformProxy::ExitCode_t
 PlatformProxy::RefreshPlatformData() {
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ExitCode_t result = OK;
+
+	// Set that the platform is NOT ready
+	ra.SetPlatformNotReady();
 
 	logger->Debug("PLAT PRX: refreshing platform description...");
 	result = _RefreshPlatformData();
-	if (result != OK)
+	if (result != OK) {
+		ra.SetPlatformReady();
 		return result;
+	}
 
 	CommitRefresh();
 
@@ -138,11 +148,15 @@ PlatformProxy::RefreshPlatformData() {
 
 PlatformProxy::ExitCode_t
 PlatformProxy::CommitRefresh() {
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceManager &rm = ResourceManager::GetInstance();
 
 	// TODO add a better policy which triggers immediate rescheduling only
 	// on resources reduction. Perhaps such a policy could be plugged into
 	// the ResourceManager module.
+
+	// Set that the platform is ready
+	ra.SetPlatformReady();
 
 	// Notify a scheduling event to the ResourceManager
 	rm.NotifyEvent(ResourceManager::BBQ_PLAT);

@@ -36,7 +36,7 @@ public:
 	 * @see SchedContrib
 	 */
 	SCValue(const char * _name,
-		SchedulerPolicyIF::BindingInfo_t const & _bd_info,
+		BindingInfo_t const & _bd_info,
 		uint16_t const cfg_params[]);
 
 	~SCValue();

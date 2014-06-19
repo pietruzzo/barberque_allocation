@@ -945,6 +945,12 @@ typedef struct RTLIB_Conf {
 
 	} profile;
 
+	// Application-Specific RTM
+	struct {
+		int ggap_forward_threshold;
+	} asrtm;
+
+
 	// Unmanaged execution
 	struct {
 		bool enabled;

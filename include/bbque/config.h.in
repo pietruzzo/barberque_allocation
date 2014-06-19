@@ -116,6 +116,9 @@
 /** Target platform: ARM Architecture */
 #cmakedefine CONFIG_TARGET_ARM
 
+/** Target platform hardware id */
+#define BBQUE_TARGET_HARDWARE_ID "${CONFIG_TARGET_ID}"
+
 /** Use FIFO based RPC channel */
 #cmakedefine CONFIG_BBQUE_RPC_FIFO
 
@@ -196,6 +199,26 @@
  * This defines the type used to represent this identifiers.
  */
 #define BBQUE_UID_TYPE uint32_t
+
+/**
+ * @brief The GoalGap Forward Threshold
+ *
+ * The RTLib do not forward GoalGap requests which are, by default, lower than
+ * that value. The run-time value could be configured via the 't' flag of the
+ * BBQUE_RTLIB_OPTS environment variable.
+ */
+#define BBQUE_DEFAULT_GGAP_THRESHOLD_FORWARD ${CONFIG_BBQUE_RTLIB_GGAP_THRESHOLD_FORWARD}
+
+/**
+ * @brief The GoalGap Optimize Threshold
+ *
+ * An optimization event is generated within the BarbequeRTRM only if the
+ * asserted GoalGap value is greater than a predefined and configured value.
+ * The run-time value could be configured via the:
+ *   ApplicationManager.ggap.threshold_optimize
+ * parameter of the BarbqueRTRM configuration file.
+ */
+#define BBQUE_DEFAULT_GGAP_THRESHOLD_OPTIMIZE ${CONFIG_BBQUE_GGAP_THRESHOLD_OPTIMIZE}
 
 /**
  * @brief The number of bits used to represent the EXC_ID into the UID

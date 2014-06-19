@@ -6,7 +6,7 @@
  *
  *     @author  Name Surname (nickname), your@email.com
  *
- *     Company  Politecnico di Milano
+ *     Company  Your Company
  *   Copyright  Copyright (c) 20XX, Name Surname
  *
  * This source code is released for free distribution under the terms of the
@@ -20,25 +20,19 @@
 #include <cstdio>
 #include <bbque/utils/utility.h>
 
-// Setup logging
-#undef  BBQUE_LOG_MODULE
-#define BBQUE_LOG_MODULE "aem.myapp"
-#undef  BBQUE_LOG_UID
-#define BBQUE_LOG_UID GetChUid()
-
 MyApp::MyApp(std::string const & name,
 		std::string const & recipe,
 		RTLIB_Services_t *rtlib) :
 	BbqueEXC(name, recipe, rtlib) {
 
-	fprintf(stderr, FW("New MyApp::MyApp()\n"));
+	logger->Warn("New MyApp::MyApp()");
 
 	// NOTE: since RTLib 1.1 the derived class construct should be used
 	// mainly to specify instantiation parameters. All resource
 	// acquisition, especially threads creation, should be palced into the
 	// new onSetup() method.
 
-	fprintf(stderr, FI("EXC Unique IDentifier (UID): %u\n"), GetUid());
+	logger->Info("EXC Unique IDentifier (UID): %u", GetUid());
 
 }
 
@@ -47,14 +41,14 @@ RTLIB_ExitCode_t MyApp::onSetup() {
 	// testing application. However, this is intended to collect all the
 	// application specific initialization code, especially the code which
 	// acquire system resources (e.g. thread creation)
-	fprintf(stderr, FW("MyApp::onSetup()\n"));
+	logger->Warn("MyApp::onSetup()");
 
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t MyApp::onConfigure(uint8_t awm_id) {
 
-	fprintf(stderr, FW("MyApp::onConfigure(): EXC [%s] => AWM [%02d]\n"),
+	logger->Warn("MyApp::onConfigure(): EXC [%s] => AWM [%02d]",
 		exc_name.c_str(), awm_id);
 
 	return RTLIB_OK;
@@ -68,7 +62,7 @@ RTLIB_ExitCode_t MyApp::onRun() {
 		return RTLIB_EXC_WORKLOAD_NONE;
 
 	// Do one more cycle
-	fprintf(stderr, FW("MyApp::onRun()      : EXC [%s]  @ AWM [%02d]\n"),
+	logger->Warn("MyApp::onRun()      : EXC [%s]  @ AWM [%02d]",
 		exc_name.c_str(), wmp.awm_id);
 
 	return RTLIB_OK;
@@ -77,8 +71,7 @@ RTLIB_ExitCode_t MyApp::onRun() {
 RTLIB_ExitCode_t MyApp::onMonitor() {
 	RTLIB_WorkingModeParams_t const wmp = WorkingModeParams();
 
-	fprintf(stderr, FW("MyApp::onMonitor()  : "
-		"EXC [%s]  @ AWM [%02d], Cycle [%4d]\n"),
+	logger->Warn("MyApp::onMonitor()  : EXC [%s]  @ AWM [%02d], Cycle [%4d]",
 		exc_name.c_str(), wmp.awm_id, Cycles());
 
 	return RTLIB_OK;

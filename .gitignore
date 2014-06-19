@@ -6,5 +6,8 @@ tags
 api-doc
 .vim*
 cscope*
+config/bbque-layapp
 config/templates/*.bz2
 config/templates/*.bsx
+config/templates/cpp/.cproject
+config/templates/cpp/.project

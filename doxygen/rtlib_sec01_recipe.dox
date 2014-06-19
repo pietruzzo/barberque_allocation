@@ -50,36 +50,36 @@ recipe is shown below.
 <?xml version="1.0"?>
 <BarbequeRTRM recipe_version="0.8">
    <application priority="4">
-      <platform id="org.linux.cgroup">
+      <platform id="org.linux.cgroup" hw="exynos_5420">
          <awms>
-            <awm id="0" name="LQ" value="1">
+            <awm id="0" name="LQ" value="1" config-time="5">
                <resources>
-                  <tile id="0">
-                     <cluster id="0">
+                  <sys id="0">
+                     <cpu id="0">
                         <pe  units="%"  qty="50"/>
                         <mem units="Mb" qty="5"/>
-                     </cluster>
-                  </tile>
+                     </cpu>
+                  </sys>
                </resources>
             </awm>
-            <awm id="1" name="MQ" value="2">
+            <awm id="1" name="MQ" value="2" config-time="6">
                <resources>
-                  <tile id="0">
-                     <cluster id="0">
+                  <sys id="0">
+                     <cpu id="0">
                         <pe  units="%"  qty="100"/>
                         <mem units="Mb" qty="10"/>
-                     </cluster>
-                  </tile>
+                     </cpu>
+                  </sys>
                </resources>
             </awm>
             <awm id="2" name="HQ" value="4">
                <resources>
-                  <tile id="0">
-                     <cluster id="0">
+                  <sys id="0">
+                     <cpu id="0">
                         <pe  units="%"  qty="200"/>
                         <mem units="Mb" qty="20"/>
-                     </cluster>
-                  </tile>
+                     </cpu>
+                  </sys>
                </resources>
             </awm>
          </awms>
@@ -134,7 +134,13 @@ one platform section.
        </li><li>
        \c it.polimi.bbque.tpd: Test Platform Data (TPD) enabled
        </li></ul>
-   </li></ul>
+   </li>
+   <li>
+   \c hw: [optional] This specifies the target platform from the point of view
+   of the hardware (e.g., a SoC). The current BarbequeRTRM version supports
+   the following hardware identifiers: "exynos_5410", "exynos_5420", "omap_4470".
+   /li>
+   </ul>
    \n
 </li><li>
 \c \b awms: The section listing the set of AWMs.
@@ -150,7 +156,11 @@ one platform section.
    \c value: A preference value associated to the AWM. Reasonably, the higher
    is the \c value the greater is the requirement of resources. In the
    example, a direct proportionality has been applied between the amount of
-   resources and the \c value
+   resources and the \c value.
+   </li><li>
+   \c config-time: [optional]
+   Specify the time spent to configure the application in the given
+   Application Working Mode.
    </li></ul>
   \n
 </li><li>
@@ -159,11 +169,17 @@ the children tags nested into this section are considered resource names. The
 hierarchy of the nesting and the ID specified are used to build the \b
 resource \b path, i.e. a namespace-style string identifying the specific
 resource. For instance, in the example the recipe would produce the following
-resource paths: <em>tile0.cluster0.pe</em> and <em>tile0.cluster0.mem</em>.
+resource paths: <em>sys0.cpu0.pe</em> and <em>sys0.cpu0.mem</em>.
 </li><li>
-\c \b tile and \c \b cluster: Used to group resources into a two-level hierarchical
-partitioning. Of course, for target architectures like x86 multicores we would
-expect just one occurrence of both tags.
+\c \b sys and \c \b cpu: Used to group resources into a two-level hierarchical
+partitioning.<br>
+Specifically, \b sys references a system, thought as a single working machine
+or board. This is an optional tag if the target platform is not a distributed
+computational system. In other words, on a common desktop or embedded board we
+can avoid to specify it.
+<br>
+The \b cpu tag references a computational node, e.g., a processor, usually
+featuring a set of multiple cores sharing one or more cache memory levels.
 </li><li>
 \c \b mem: The amount of memory required. Please consider the hierarchal position
 to reference the correct level of memory.
@@ -189,8 +205,8 @@ the recipe requires a 200%, meaning that we need a full usage of 2 CPU cores.
 It is worth to keep in mind some constraints about recipes:
 
 <ul><li>
-The Execution Context cannot require resources from more than one cluster.
-Therefore, do not use more than one \c cluster tag inside an AWM definition.
+The Execution Context cannot require resources from more than one cpu.
+Therefore, do not use more than one \c cpu tag inside an AWM definition.
 This is a limitation due to the current scheduling policy.
 </li><li>
 Avoid to specify the same \c value for each AWM, since this would lead the

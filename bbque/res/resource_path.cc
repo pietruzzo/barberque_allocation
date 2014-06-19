@@ -24,33 +24,33 @@
 
 namespace bbque { namespace res {
 
-ResourcePath::ResourcePath(std::string const & r_path):
+ResourcePath::ResourcePath(std::string const & str_path):
 		global_type(br::ResourceIdentifier::UNDEFINED),
 		level_count(0) {
-	std::string head, tail;
-	std::string r_name;
-	br::ResID_t r_id;
-	ExitCode_t result;
 
 	// Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
-	logger->Debug("RP{%s} object construction", r_path.c_str());
+	logger->Debug("RP{%s} object construction", str_path.c_str());
 
-	// Iterate over all the resources in the path string
-	tail = r_path;
-	do {
-		// Get the resource ID and the name (string format type)
-		head = ResourcePathUtils::SplitAndPop(tail);
-		ResourcePathUtils::GetNameID(head, r_name, r_id);
+	if (AppendString(str_path) != OK) {
+		Clear();
+		logger->Error("RP{%s} Construction failed", str_path.c_str());
+		return;
+	}
+}
 
-		// Append a new resource identifier to the list
-		result = Append(r_name, r_id);
-		if (result != OK) {
-			logger->Debug("RP{%s}: Cannot append type '%d'",
-					r_path.c_str(), result);
-			return;
-		}
-	} while (!tail.empty());
+ResourcePath::ResourcePath(ResourcePath const & r_path):
+		global_type(br::ResourceIdentifier::UNDEFINED),
+		level_count(0) {
+	// Get a logger module
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	logger->Debug("RP{%s} object construction", r_path.ToString().c_str());
+	// Copy
+	identifiers = r_path.identifiers;
+	types_idx   = r_path.types_idx;
+	types_bits  = r_path.types_bits;
+	global_type = r_path.global_type;
+	level_count = r_path.level_count;
 }
 
 ResourcePath::~ResourcePath() {
@@ -127,10 +127,6 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 		return ERR_UNKN_TYPE;
 	}
 
-	// Append the new resource identifier (sp) to the list
-	prid = br::ResourceIdentifierPtr_t(new br::ResourceIdentifier(r_type, r_id));
-	identifiers.push_back(prid);
-
 	// Set the info about resource type
 	if (types_bits.test(r_type)) {
 		logger->Debug("Append: resource type [%d] already in the path", r_type);
@@ -138,12 +134,11 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 	}
 	types_bits.set(r_type);
 	types_idx.insert(std::pair<uint16_t, uint8_t>(r_type, level_count));
-	global_type = r_type;
 
-	// Build the text string
-	if (level_count > 0)
-		str.append(".");
-	str.append(prid->Name());
+	// Append the new resource identifier (sp) to the list
+	prid = br::ResourceIdentifierPtr_t(new br::ResourceIdentifier(r_type, r_id));
+	identifiers.push_back(prid);
+	global_type = r_type;
 
 	// Increase the levels counter
 	++level_count;
@@ -151,20 +146,97 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 			prid->Name().c_str(), types_idx[r_type],
 			types_bits.to_string().c_str());
 	logger->Debug("Append: SP:'%s', count: %d",
-			str.c_str(), level_count);
+			this->ToString().c_str(), level_count);
 	return OK;
+}
+
+ResourcePath::ExitCode_t ResourcePath::AppendString(
+		std::string const & str_path,
+		bool smart_mode) {
+	std::string head, tail;
+	std::string r_name;
+	br::ResID_t r_id;
+	ExitCode_t result;
+
+	// Iterate over all the resources in the path string
+	tail = str_path;
+	do {
+		// Get the resource ID and the name (string format type)
+		head = ResourcePathUtils::SplitAndPop(tail);
+		ResourcePathUtils::GetNameID(head, r_name, r_id);
+
+		// Append a new resource identifier to the list
+		result = Append(r_name, r_id);
+		if (result != OK && !smart_mode) {
+			logger->Debug("RP{%s}: Cannot append type '%d'",
+					str_path.c_str(), result);
+			return result;
+		}
+	} while (!tail.empty());
+
+	return OK;
+}
+
+ResourcePath::ExitCode_t ResourcePath::Copy(
+		ResourcePath const & rp_src,
+		int num_levels) {
+	ExitCode_t result;
+
+	// Copy per resource identifier
+	Clear();
+	result = Concat(rp_src, num_levels);
+	if (result != OK) {
+		Clear();
+		logger->Error("Copy: failed");
+	}
+	return OK;
+}
+
+ResourcePath::ExitCode_t ResourcePath::Concat(
+		ResourcePath const & rp_src,
+		int num_levels,
+		bool smart_mode) {
+	ExitCode_t result;
+
+	// Concat or N-concat?
+	if (num_levels == 0)
+		num_levels = rp_src.NumLevels();
+
+	for (int i = 0; i < num_levels; ++i) {
+		result = Append(
+				rp_src.GetIdentifier(i)->Type(),
+				rp_src.GetIdentifier(i)->ID());
+		if (result != OK && !smart_mode) {
+			logger->Error("Concatenate: Impossible to append '%s'",
+					rp_src.GetIdentifier(i)->Name().c_str());
+			return result;
+		}
+	}
+	return OK;
+}
+
+ResourcePath::ExitCode_t ResourcePath::Concat(
+		std::string const & str_path) {
+	return AppendString(str_path, true);
+}
+
+void ResourcePath::Clear() {
+	identifiers.clear();
+	types_idx.clear();
+	types_bits.reset();
+	global_type = br::ResourceIdentifier::UNDEFINED;
+	level_count = 0;
 }
 
 br::ResourceIdentifier::Type_t ResourcePath::ParentType(
 		br::ResourceIdentifier::Type_t r_type) const {
 	// Find the index of the given resource type
-	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
-	index_it = types_idx.find(r_type);
-	if (index_it == types_idx.end())
+	int8_t level = GetLevel(r_type);
+	if (level < 0)
 		return br::ResourceIdentifier::UNDEFINED;
 
 	// Retrieve the position of the parent
-	int8_t parent_index = index_it->second - 1;
+	int8_t parent_index = level - 1;
 	if (parent_index < 0)
 		return br::ResourceIdentifier::UNDEFINED;
 
@@ -173,16 +245,31 @@ br::ResourceIdentifier::Type_t ResourcePath::ParentType(
 }
 
 br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
+		uint8_t depth_level) const {
+	if (depth_level >= identifiers.size())
+		return br::ResourceIdentifierPtr_t();
+	return identifiers.at(depth_level);
+}
+
+br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 		br::ResourceIdentifier::Type_t r_type) const {
-	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
+
 	// Look for the vector position of the resource identifier by type
-	index_it = types_idx.find(static_cast<uint16_t>(r_type));
-	if (index_it == types_idx.end())
+	int8_t level = GetLevel(r_type);
+	if (level < 0)
 		return br::ResourceIdentifierPtr_t();
 	// Get the ID from the resource identifier in the vector
 	logger->Debug("GetIdentifier: type %s @pos:%d",
-			br::ResourceIdentifier::TypeStr[r_type], (*index_it).second);
-	return identifiers.at((*index_it).second);
+			br::ResourceIdentifier::TypeStr[r_type], level);
+	return identifiers.at(level);
+}
+
+int8_t ResourcePath::GetLevel(br::ResourceIdentifier::Type_t r_type) const {
+	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
+	index_it = types_idx.find(static_cast<uint16_t>(r_type));
+	if (index_it == types_idx.end())
+		return -1;
+	return index_it->second;
 }
 
 bool ResourcePath::IsTemplate() const {
@@ -213,7 +300,6 @@ ResourcePath::ExitCode_t ResourcePath::ReplaceID(
 	prid->SetID(dst_r_id);
 	logger->Debug("ReplaceID: from %d to %d, DONE",
 			src_r_id, prid->ID());
-	id_changed = true;
 
 	return OK;
 }
@@ -225,27 +311,19 @@ br::ResID_t ResourcePath::GetID(br::ResourceIdentifier::Type_t r_type) const {
 	return prid->ID();
 }
 
-std::string const & ResourcePath::ToString() {
+std::string ResourcePath::ToString() const {
 	ResourcePath::ConstIterator it;
-	std::string new_str;
+	std::string str_path;
 
-	// If no ID has changed, return the saved string
-	if (!id_changed)
-		return str;
 	// The resource identifiers
 	for (it = identifiers.begin(); it != identifiers.end(); ++it) {
 		if (it != identifiers.begin())
-			new_str.append(".");
-		new_str.append((*it)->Name());
+			str_path.append(".");
+		str_path.append((*it)->Name());
 	}
 	// Update the string
-	str = new_str;
-	id_changed = false;
-
-	return str;
+	return str_path;
 }
-
-
 
 } // namespace res
 

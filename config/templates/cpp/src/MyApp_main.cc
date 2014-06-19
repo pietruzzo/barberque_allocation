@@ -6,7 +6,7 @@
  *
  *     @author  Name Surname (nickname), your@email.com
  *
- *     Company  Politecnico di Milano
+ *     Company  Your Company
  *   Copyright  Copyright (c) 20XX, Name Surname
  *
  * This source code is released for free distribution under the terms of the
@@ -29,12 +29,19 @@
 #include "version.h"
 #include "MyApp_exc.h"
 #include <bbque/utils/utility.h>
+#include <bbque/utils/logging/logger.h>
 
 // Setup logging
 #undef  BBQUE_LOG_MODULE
 #define BBQUE_LOG_MODULE "MyApp"
 
+namespace bu = bbque::utils;
 namespace po = boost::program_options;
+
+/**
+ * @brief A pointer to an EXC
+ */
+std::unique_ptr<bu::Logger> logger;
 
 /**
  * @brief A pointer to an EXC
@@ -55,6 +62,11 @@ po::variables_map opts_vm;
  * The services exported by the RTLib
  */
 RTLIB_Services_t *rtlib;
+
+/**
+ * @brief The application configuration file
+ */
+std::string conf_file = BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/MyApp.conf" ;
 
 /**
  * @brief The recipe to use for all the EXCs
@@ -108,46 +120,51 @@ int main(int argc, char *argv[]) {
 		("help,h", "print this help message")
 		("version,v", "print program version")
 
+		("conf,C", po::value<std::string>(&conf_file)->
+			default_value(conf_file),
+			"MyApp configuration file")
+
 		("recipe,r", po::value<std::string>(&recipe)->
 			default_value("MyApp"),
 			"recipe name (for all EXCs)")
 	;
 
+	// Setup a logger
+	bu::Logger::SetConfigurationFile(conf_file);
+	logger = bu::Logger::GetLogger("myapp");
+
 	ParseCommandLine(argc, argv);
 
 	// Welcome screen
-	fprintf(stdout, FI(".:: MyApp (ver. %s) ::.\n"), g_git_version);
-	fprintf(stdout, FI("Built: " __DATE__  " " __TIME__ "\n"));
-
+	logger->Info(".:: MyApp (ver. %s) ::.", g_git_version);
+	logger->Info("Built: " __DATE__  " " __TIME__);
 
 	// Initializing the RTLib library and setup the communication channel
 	// with the Barbeque RTRM
-	fprintf(stderr, FI("STEP 0. Initializing RTLib, application [%s]...\n"),
+	logger->Info("STEP 0. Initializing RTLib, application [%s]...",
 			::basename(argv[0]));
 	RTLIB_Init(::basename(argv[0]), &rtlib);
 	assert(rtlib);
 
-
-	fprintf(stderr, FI("STEP 1. Registering EXC using [%s] recipe...\n"),
+	logger->Info("STEP 1. Registering EXC using [%s] recipe...",
 			recipe.c_str());
 	pexc = pBbqueEXC_t(new MyApp("MyApp", recipe, rtlib));
 	if (!pexc->isRegistered())
 		return RTLIB_ERROR;
 
 
-	fprintf(stderr, FI("STEP 2. Starting EXC control thread...\n"));
+	logger->Info("STEP 2. Starting EXC control thread...");
 	pexc->Start();
 
 
-	fprintf(stderr, FI("STEP 3. Waiting for EXC completion...\n"));
+	logger->Info("STEP 3. Waiting for EXC completion...");
 	pexc->WaitCompletion();
 
 
-	fprintf(stderr, FI("STEP 4. Disabling EXC...\n"));
+	logger->Info("STEP 4. Disabling EXC...");
 	pexc = NULL;
 
-
-	fprintf(stderr, FI("===== MyApp DONE! =====\n"));
+	logger->Info("===== MyApp DONE! =====");
 	return EXIT_SUCCESS;
 
 }

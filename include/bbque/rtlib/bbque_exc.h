@@ -28,6 +28,10 @@
 #include <memory>
 #include <string>
 
+#ifdef CONFIG_BBQUE_OPENCL
+#include <CL/cl.h>
+#endif
+
 namespace bu = bbque::utils;
 
 namespace bbque { namespace rtlib {

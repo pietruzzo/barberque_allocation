@@ -101,7 +101,7 @@ LinuxPP::LinuxPP() :
 	if (cfs_threshold_pct < cfs_margin_pct)
 		cfs_threshold_pct = 100 - cfs_margin_pct;
 
-	logger->Info("CFS bandwidth control, margin %d%%, threshold: %d%%",
+	logger->Info("CFS bandwidth control, margin %d, threshold: %d",
 			cfs_margin_pct, cfs_threshold_pct);
 
 	// Init the Control Group Library
@@ -567,6 +567,13 @@ LinuxPP::_GetPlatformID() {
 	static const char linuxPlatformID[] = BBQUE_LINUXPP_PLATFORM_ID;
 	return linuxPlatformID;
 }
+
+const char *
+LinuxPP::_GetHardwareID() {
+	static const char linuxHardwareID[] = BBQUE_TARGET_HARDWARE_ID;
+	return linuxHardwareID;
+}
+
 
 LinuxPP::ExitCode_t
 LinuxPP::_LoadPlatformData() {

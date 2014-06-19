@@ -23,6 +23,7 @@ menu "OpenCL Support"
 config BBQUE_OPENCL
   bool "Enable OpenCL run-time management support"
   depends on TARGET_LINUX
+  depends on !BBQUE_TEST_PLATFORM_DATA
   select EXTERNAL_OPENCL
   select BBQUE_OPENCL_DEFAULT_AMD
   default n
@@ -207,6 +208,16 @@ config BBQUE_YP_SASB_ASYNC
 
   If unsure, select Y. Select N for Android targets.
 
+config BBQUE_RTLIB_GGAP_THRESHOLD_FORWARD
+  int "GoalGap Forward Threshold"
+  default 20
+  ---help---
+  The minimum GoalGap value which is forwarded to BarbequeRTRM.
+
+  Once an EXC asserts a GoalGap, the RTLib could decide to not forward this request
+  if it is not greater than a predefined and configured value.
+  This configuration defines the default for that threshold value.
+
 endmenu # RTLib Configuration
 
 ################################################################################
@@ -223,6 +234,17 @@ config BBQUE_BUILD_DEBUG
 
   This will produce a version of both the daemon and the RTLib with much more
   logging messages and debug symbols, which is suitable for debugging purposes.
+
+config BBQUE_GGAP_THRESHOLD_OPTIMIZE
+  int "GoalGap Optimize Threshold"
+  default 40
+  ---help---
+  The minimum GoalGap value which triggers an optimization.
+
+  Once an EXC asserts a GoalGap, an optimization event is generated within
+  the BarbequeRTRM only if the asserted value is greater than a predefined
+  and configured value.
+  This configuration defines the default for that threshold value.
 
 config BBQUE_APP_PRIO_LEVELS
   int "Number of priority levels"

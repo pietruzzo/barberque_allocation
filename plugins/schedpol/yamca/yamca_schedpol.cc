@@ -345,12 +345,11 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::InsertWorkingModes(
 	std::list<std::thread> awm_thds;
 
 	// Working modes
-	ba::AwmPtrList_t const * awms = papp->WorkingModes();
-	ba::AwmPtrList_t::const_iterator awm_it(awms->begin());
-	ba::AwmPtrList_t::const_iterator end_awm(awms->end());
+	ba::AwmPtrList_t const & awms(papp->WorkingModes());
+	ba::AwmPtrList_t::const_iterator awm_it(awms.begin());
+	ba::AwmPtrList_t::const_iterator end_awm(awms.end());
 
 	for (; awm_it != end_awm; ++awm_it) {
-
 		awm_thds.push_back(
 			std::thread(&YamcaSchedPol::EvalWorkingMode, this,
 			&sched_map, papp, (*awm_it), cl_id)

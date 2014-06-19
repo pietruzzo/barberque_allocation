@@ -14,6 +14,7 @@ include (${CONFIGPATH})
 ################################################################################
 
 set (MYAPP_PATH_BINS    "usr/bin")
+set (MYAPP_PATH_CONFIG  "etc/bbque")
 set (MYAPP_PATH_RECIPES "etc/bbque/recipes")
 set (MYAPP_PATH_DOCS    "usr/share/bbque/myapp")
 

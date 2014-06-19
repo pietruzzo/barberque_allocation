@@ -136,6 +136,7 @@ private:
 
 	/**
 	 * @brief Load RecipeLoader configuration
+	 *
 	 * @param params @see PF_ObjectParams
 	 * @return True if the configuration has been properly loaded and object
 	 * could be built, false otherwise
@@ -144,6 +145,7 @@ private:
 
 	/**
 	 * @brief Lookup the platform section
+	 *
 	 * @param _xml_elem The XML element from which start the lookup of the
 	 * section
 	 * @return A pointer to the XML element from which start the platform
@@ -153,6 +155,7 @@ private:
 
 	/**
 	 * @brief Parse the section containing working modes data
+	 *
 	 * @param xml_elem The XML element from which start searching the
 	 * expected section tag
 	 */
@@ -160,39 +163,49 @@ private:
 
 	/**
 	 * @brief Parse the section containing resource usages data.
-	 * The method has structured for recursive calls.
+	 * The method has structured for recursive calls
+	 *
 	 * @param xml_elem The XML element from which start loading
 	 * @param wm The working mode including this resource usages
 	 * @param res_path Resource path (i.e. "arch.clusters.mem0")
 	 * expected section tag
 	 */
-	uint8_t LoadResources(ticpp::Element * xml_elem, AwmPtr_t & wm,
+	uint8_t LoadResources(
+			ticpp::Element * xml_elem,
+			AwmPtr_t & wm,
 			std::string const & res_path);
 
 	/**
 	 * @brief Insert the resource in the working mode after checking if
 	 * resource path have some matches between system resources
+	 *
 	 * @param wm The working mode to which add the resource usage
 	 * @param res_path Resource path
 	 * @param res_usage Resource usage value
 	 * @return An internal error code
 	 */
-	uint8_t AppendToWorkingMode(AwmPtr_t & wm, std::string const & res_path,
+	uint8_t AppendToWorkingMode(
+			AwmPtr_t & wm,
+			std::string const & res_path,
 			uint64_t res_usage);
 
 	/**
 	 * @brief Parse the resource data from the xml element and add the
 	 * resource usage request to the working mode
+	 *
 	 * @param res_elem The XML element
 	 * @param wm The working mode to which add the resource usage
 	 * @param res_path Resource path
 	 */
-	uint8_t GetResourceAttributes(ticpp::Element * res_elem, AwmPtr_t & wm,
+	uint8_t GetResourceAttributes(
+			ticpp::Element * res_elem,
+			AwmPtr_t & wm,
 			std::string & res_path);
 
 	/**
 	 * @brief Parse the section containing plugins specific data for the
 	 * application or for a working mode
+	 *
 	 * @param container The object (usually Application or WorkingMode to
 	 * which add the plugin specific data
 	 * @param xml_elem The XML element from which start searching the
@@ -225,6 +238,7 @@ private:
 
 	/**
 	 * @brief Parse the section containing constraints assertions
+	 *
 	 * @param xml_elem The XML element from which start searching the
 	 * expected section tag
 	 */

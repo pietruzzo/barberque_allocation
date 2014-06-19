@@ -209,7 +209,9 @@ ticpp::Element * XMLRecipeLoader::LoadPlatform(ticpp::Element * _xml_elem) {
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 	ticpp::Element * pp_gen_elem = nullptr;
 	const char * sys_platform_id;
+	std::string sys_platform_hw;
 	std::string platform_id;
+	std::string platform_hw;
 	PlatformProxy & pp(PlatformProxy::GetInstance());
 	bool platform_matched = false;
 #endif
@@ -225,13 +227,26 @@ ticpp::Element * XMLRecipeLoader::LoadPlatform(ticpp::Element * _xml_elem) {
 			assert(sys_platform_id != nullptr);
 			return nullptr;
 		}
+		// Plaform hardware (optional)
+		sys_platform_hw.assign(pp.GetHardwareID());
 
 		// Look for the platform section matching the system platform id
 		while (pp_elem && !platform_matched) {
 			pp_elem->GetAttribute("id", &platform_id, true);
+			pp_elem->GetAttribute("hw", &platform_hw, false);
 			if (platform_id.compare(sys_platform_id) == 0) {
-				logger->Info("Platform required: '%s' matching OK",
-						platform_id.c_str());
+				// Hardware (SoC) check required?
+				if (!sys_platform_hw.empty()
+						&& (platform_hw.compare(sys_platform_hw) != 0)) {
+						logger->Debug("Platform:'%s' skipping HW:[%s]...",
+								platform_id.c_str(), platform_hw.c_str());
+						break;
+				}
+
+				logger->Info("Platform required: '%s:[%s]' matching OK",
+						platform_id.c_str(), platform_hw.c_str());
+				logger->Info("Platform hardware: %s ",
+						sys_platform_hw.c_str());
 				platform_matched = true;
 				break;
 			}
@@ -310,8 +325,8 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 			}
 
 			// Add a new working mode (IDs MUST be numbered from 0 to N)
-			AwmPtr_t awm(recipe_ptr->AddWorkingMode(wm_id, wm_name,
-						static_cast<uint8_t> (wm_value)));
+			AwmPtr_t awm(recipe_ptr->AddWorkingMode(
+						wm_id, wm_name,	static_cast<uint8_t> (wm_value)));
 			if (!awm) {
 				logger->Error("AWM ""%s"" error: Wrong ID specified %d",
 								wm_name.c_str(), wm_id);
@@ -330,9 +345,13 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 
 			// Load resource usages of the working mode
 			resources_elem = awm_elem->FirstChildElement("resources", true);
-			if ((result = LoadResources(resources_elem, awm, "")) ==
-					__RSRC_FORMAT_ERR)
+			result = LoadResources(resources_elem, awm, "");
+			if (result == __RSRC_FORMAT_ERR)
 				return RL_FORMAT_ERROR;
+			else if (result |= __RSRC_WEAK_LOAD) {
+				awm_elem = awm_elem->NextSiblingElement("awm", false);
+				continue;
+			}
 
 			// AWM plugin specific data
 			LoadPluginsData<ba::AwmPtr_t>(awm, awm_elem);
@@ -346,9 +365,7 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 		return RL_ABORTED;
 	}
 
-	if (result == __RSRC_WEAK_LOAD)
-		return RL_WEAK_LOAD;
-
+	// TODO: RL_WEAK_LOAD case
 	return RL_SUCCESS;
 }
 

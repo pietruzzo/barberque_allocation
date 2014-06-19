@@ -108,7 +108,7 @@ BbqueRPC::~BbqueRPC(void) {
 RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 	const char *env;
 	char buff[100];
-	char *opt, *pos, *next;
+	char *opt;
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 	char * raw_buff;
 	int8_t idx  = 0;
@@ -133,6 +133,9 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 
 	conf.profile.opencl.enabled = false;
 	conf.profile.opencl.level = 0;
+
+	conf.asrtm.ggap_forward_threshold =
+		BBQUE_DEFAULT_GGAP_THRESHOLD_FORWARD;
 
 	conf.unmanaged.enabled = false;
 	conf.unmanaged.awm_id = 0;
@@ -237,6 +240,9 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			break;
 #ifdef CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
 		case 'C':
+
+			char *pos, *next;
+
 			// Enabling CGroup Enforcing
 			if (!conf.unmanaged.enabled) {
 				logger->Error("CGroup enforcing is supported only in UNMANAGED mode");
@@ -350,7 +356,18 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 			if (opt[1])
 				conf.profile.output.CSV.separator = opt+1;
 			break;
+
+		case 't':
+			// Setting GGap Forward threshold value
+			if (opt[1])
+				conf.asrtm.ggap_forward_threshold = atoi(opt+1);
+			if (conf.asrtm.ggap_forward_threshold > 100)
+				conf.asrtm.ggap_forward_threshold = 100;
+			logger->Notice("GoalGap forward threshold: %d",
+					conf.asrtm.ggap_forward_threshold);
+			break;
 		}
+
 
 		// Get next option
 		opt = strtok(NULL, ":");
@@ -1847,12 +1864,25 @@ RTLIB_ExitCode_t BbqueRPC::GGap(
 		return RTLIB_ERROR;
 	}
 
+	// Goal-Gap filtering based on pre-configured threshold value
+	if (unlikely(percent < conf.asrtm.ggap_forward_threshold)) {
+		logger->Error("Set Goal-Gap [%2d] FILTERED for EXC [%p] "
+				"(Lower than threshold value [%d])",
+				percent, (void*)ech,
+				conf.asrtm.ggap_forward_threshold);
+		return RTLIB_OK;
+	}
+
 	prec = getRegistered(ech);
 	if (!prec) {
 		logger->Error("Set Goal-Gap for EXC [%p] "
 				"(Error: EXC not registered)", (void*)ech);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
+
+	// Check the application is not in sync
+	if (isSyncMode(prec))
+		return RTLIB_OK;
 
 	// Calling the low-level enable function
 	result = _GGap(prec, percent);
