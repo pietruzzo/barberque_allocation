@@ -1,0 +1,5 @@
+config BBQUE_RLOADER_XML
+  bool "XML"
+  default y
+  ---help---
+  XML Recipe loader based on library TiCPP (TinyXML for C++)

@@ -1,0 +1,11 @@
+
+choice
+  prompt "Default recipe loader"
+  config BBQUE_RLOADER_DEFAULT_XML
+    bool "XML"
+    select BBQUE_RLOADER_XML
+##NP
+
+endchoice
+
+source barbeque/plugins/rloader/xml/Kconfig

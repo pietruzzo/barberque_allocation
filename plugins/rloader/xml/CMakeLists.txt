@@ -1,4 +1,15 @@
 
+if (NOT CONFIG_BBQUE_RLOADER_XML)
+	return(xml)
+endif(NOT CONFIG_BBQUE_RLOADER_XML)
+
+# Set the macro for the scheduling policy loading
+if (CONFIG_BBQUE_RLOADER_DEFAULT_YAMS)
+  set (BBQUE_RLOADER_DEFAULT "xml" CACHE STRING
+	  "Setting scheduling policy name" FORCE)
+endif (CONFIG_BBQUE_RLOADER_DEFAULT_YAMS)
+
+
 #----- Check for required TiCPP library
 find_package(TiCPP REQUIRED)
 

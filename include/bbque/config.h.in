@@ -176,6 +176,8 @@
 
 #define BBQUE_SCHEDPOL_DEFAULT "${BBQUE_SCHEDPOL_DEFAULT}"
 
+#define BBQUE_RLOADER_DEFAULT "${BBQUE_RLOADER_DEFAULT}"
+
 /*******************************************************************************
  * BarbequeRTRM Global Features
  ******************************************************************************/
