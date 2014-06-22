@@ -67,9 +67,9 @@ ApplicationManager & ApplicationManager::GetInstance() {
 
 
 ApplicationManager::ApplicationManager() :
-	cm(CommandManager::GetInstance()),
-	pp(PlatformProxy::GetInstance()),
-	cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
+		cm(CommandManager::GetInstance()),
+		pp(PlatformProxy::GetInstance()),
+		cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
 
 	// Get a logger
 	logger = bu::Logger::GetLogger(APPLICATION_MANAGER_NAMESPACE);
