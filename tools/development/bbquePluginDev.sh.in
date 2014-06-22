@@ -17,7 +17,7 @@ PLUGIN_NAME=$3
 PLUGIN_PATH="/tmp"
 PLUGIN_NAME_LC="custom"
 
-PLUGIN_TYPES=(schedpol)
+PLUGIN_TYPES=(schedpol rloader)
 PLUGIN_ACTIONS=(create delete list help)
 PLUGINS_BUILD_FILE_NAME="CMakeLists.txt"
 PLUGINS_CONFIG_FILE_NAME="Kconfig"
@@ -52,7 +52,7 @@ function parse_args {
 
 	# Plugin type specified?
 	PLUGIN_TYPE_OK=""
-	for pt in $PLUGIN_TYPES; do
+	for pt in ${PLUGIN_TYPES[@]}; do
 		if [ "$PLUGIN_TYPE" == "$pt" ]; then
 			PLUGIN_TYPE_OK=1
 			break

@@ -119,6 +119,7 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/development/bbquePluginDev.sh"
 install(FILES
 	"${PROJECT_SOURCE_DIR}/tools/development/templates/plugin_templates.tar.bz2"
 	"${PROJECT_SOURCE_DIR}/tools/development/templates/schedpol_templates.tar.bz2"
+	"${PROJECT_SOURCE_DIR}/tools/development/templates/rloader_templates.tar.bz2"
 	DESTINATION ${BBQUE_PATH_CMAKE}
 )
 
