@@ -11,12 +11,16 @@ TAG="Custom"
 TAG_UC="CUSTOM"
 TAG_LC="custom"
 
+TAG_TYPE_HEADER="PLUGIN_TYPE"
+TAG_TYPE_CLASS="PluginType"
+
 PLUGIN_ACTION=$1
 PLUGIN_TYPE=$2
 PLUGIN_NAME=$3
 PLUGIN_PATH="/tmp"
 PLUGIN_NAME_LC="custom"
 
+PLUGIN_TYPE_CLASSES=(SchedPol RecipeLoader)
 PLUGIN_TYPES=(schedpol rloader)
 PLUGIN_ACTIONS=(create delete list help)
 PLUGINS_BUILD_FILE_NAME="CMakeLists.txt"
@@ -167,10 +171,19 @@ function plugin_create {
 	tar -xf $BOSP_TEMP_PATH"/plugin_templates.tar.bz2"
 	tar -xf $BOSP_TEMP_PATH/$PLUGIN_TYPE"_templates.tar.bz2"
 
+	PLUGIN_CLASS=""
+	if [ "$PLUGIN_TYPE" == "schedpol" ]; then
+		PLUGIN_CLASS=${PLUGIN_TYPE_CLASSES[0]}
+	elif [ "$PLUGIN_TYPE" == "rloader" ]; then
+		PLUGIN_CLASS=${PLUGIN_TYPE_CLASSES[1]}
+	fi
+
 	# String replacement and renaming
 	find  -type f | while read FILE; do
 		DST_FILE=`echo $FILE | sed "s/$TAG_LC/$PLUGIN_NAME_LC/g"`
 		echo "$(cat $FILE \
+			| sed "s/$TAG_TYPE_HEADER/$PLUGIN_TYPE/g" \
+			| sed "s/$TAG_TYPE_CLASS/$PLUGIN_CLASS/g" \
 			| sed "s/$TAG/$PLUGIN_NAME/g"        \
 			| sed "s/$TAG_UC/$PLUGIN_NAME_UC/g"  \
 			| sed "s/$TAG_LC/$PLUGIN_NAME_LC/g"  \
