@@ -104,7 +104,7 @@ clGetDeviceIDs(
 				"platform: %p, device_type: %u, num_entries: %u, devices: %p, num_devices: %p)...",
 			platform, device_type, num_entries, devices, num_devices));
 
-	if (platform != rtlib_ocl.platforms[0]) {
+	if (platform != rtlib_ocl.platforms[rtlib_ocl.platform_id]) {
 		logger->Error("OCL: Invalid platform specified");
 		return CL_INVALID_PLATFORM;
 	}
@@ -1427,8 +1427,10 @@ void rtlib_init_devices() {
 			rtlib_ocl.platforms[i], CL_PLATFORM_NAME,
 			sizeof(platform_name), platform_name, NULL);
 		if (!strcmp(platform_name, BBQUE_PLATFORM_NAME)) {
+			logger->Info("OCL: Found platform selected [%s] @{%d}",
+					BBQUE_PLATFORM_NAME, i);
+			rtlib_ocl.platform_id = i;
 			platform = rtlib_ocl.platforms[i];
-			break;
 		}
 	}
 
