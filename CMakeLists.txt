@@ -24,7 +24,7 @@ set (BBQUE_DAEMON_LOGFILE  "var/bbque.log")
 set (BBQUE_DAEMON_RUNDIR   "")
 
 # Barbeque RPC configuration
-set (BBQUE_RPC_TIMEOUT     1000)
+set (BBQUE_RPC_TIMEOUT     ${CONFIG_BBQUE_RPC_TIMEOUT})
 
 # Barbeque installation paths
 set (BBQUE_PATH_BBQ        "sbin")
