@@ -55,9 +55,9 @@ clGetPlatformIDs(
 		cl_platform_id *platforms,
 		cl_uint *num_platforms)
 		CL_API_SUFFIX__VERSION_1_0 {
-	DB2(logger->Debug("Calling clGetPlatformIDs(num_entries: %u, *platforms: %p, *num_platforms: %p)...",
-			num_entries, platforms, num_platforms));
 	cl_int result = rtlib_ocl.getPlatformIDs(num_entries, platforms, num_platforms);
+	logger->Debug("Calling clGetPlatformIDs(num_entries: %u, *platforms: %p, *num_platforms: %p)...",
+			num_entries, platforms, num_platforms);
 	DB2(
 	if (num_platforms != nullptr)
 		logger->Debug("Result clGetPlatformIDs(platforms: %p, num_platforms: %d)...",
@@ -74,9 +74,12 @@ clGetPlatformInfo(
 		void *param_value,
 		size_t *param_value_size_ret)
 		CL_API_SUFFIX__VERSION_1_0 {
-	DB2(logger->Debug("Calling clGetPlatformInfo(platform: %p, param_name: %u, param_value_size: %d,*param_value: %p, *param_value_size_ret: %p)...",
+	DB2(logger->Debug("Calling clGetPlatformInfo("
+				"platform: %p, param_name: %u, param_value_size: %d,*param_value: %p, *param_value_size_ret: %p)...",
 			platform, param_name, param_value_size, param_value, param_value_size_ret));
-	cl_int result = rtlib_ocl.getPlatformInfo(platform, param_name, param_value_size, param_value, param_value_size_ret);
+
+	cl_int result = rtlib_ocl.getPlatformInfo(
+			platform, param_name, param_value_size, param_value, param_value_size_ret);
 	DB2(
 	if (param_value != nullptr && param_value_size_ret != nullptr) {
 		logger->Debug("Result clGetPlatformInfo(param_value: %p, param_value_size_ret: %d)...",
@@ -97,11 +100,12 @@ clGetDeviceIDs(
 	(void)device_type;
 	(void)num_entries;
 
-	DB2(logger->Debug("Calling clGetDeviceIDs(platform: %p, device_type: %u, num_entries: %u, devices: %p, num_devices: %p)...",
+	DB2(logger->Debug("Calling clGetDeviceIDs("
+				"platform: %p, device_type: %u, num_entries: %u, devices: %p, num_devices: %p)...",
 			platform, device_type, num_entries, devices, num_devices));
 
 	if (platform != rtlib_ocl.platforms[0]) {
-		logger->Debug("OCL: Invalid platform specified");
+		logger->Error("OCL: Invalid platform specified");
 		return CL_INVALID_PLATFORM;
 	}
 
@@ -133,7 +137,7 @@ clGetDeviceIDs(
 	});
 
 	(*devices) = rtlib_ocl.devices[rtlib_ocl.device_id];
-	DB(logger->Debug("OCL: clGetDeviceIDs [BarbequeRTRM assigned: %d @ %p]",
+	DB(logger->Debug("OCL: clGetDeviceIDs [BarbequeRTRM assigned: %d @{%p}]",
 			rtlib_ocl.device_id, (*devices)));
 
 	return CL_SUCCESS;
@@ -1403,7 +1407,7 @@ void rtlib_init_devices() {
 	cl_platform_id platform = nullptr;
 	cl_device_type dev_type = CL_DEVICE_TYPE_ALL;
 
-	// By default, at the beginning, we have any device assigned
+	// By default, at the beginning, we haven't any device assigned
 	rtlib_ocl_set_device(R_ID_ANY, RTLIB_EXC_GWM_BLOCKED);
 
 	// Get platform
@@ -1430,13 +1434,13 @@ void rtlib_init_devices() {
 
 	// Get devices
 	status = rtlib_ocl.getDeviceIDs(
-		platform, dev_type, 0, NULL, &rtlib_ocl.num_devices);
+			platform, dev_type, 0, NULL, &rtlib_ocl.num_devices);
 	if (status != CL_SUCCESS) {
 		logger->Error("OCL: Error [%d] in getting number of OpenCL devices", status);
 		return;
 	}
 	rtlib_ocl.devices = (cl_device_id *) malloc(
-		sizeof(cl_device_id) * rtlib_ocl.num_devices);
+			sizeof(cl_device_id) * rtlib_ocl.num_devices);
 	status  = rtlib_ocl.getDeviceIDs(
 		platform, dev_type, rtlib_ocl.num_devices, rtlib_ocl.devices, NULL);
 	if (status != CL_SUCCESS) {
@@ -1444,7 +1448,7 @@ void rtlib_init_devices() {
 		return;
 	}
 	logger->Debug("OCL: OpenCL devices found: %u [descriptors size: %lu]",
-		rtlib_ocl.num_devices, sizeof(cl_device_id));
+			rtlib_ocl.num_devices, sizeof(cl_device_id));
 	logger->Debug("OCL: Devices descriptors @%p", rtlib_ocl.devices);
 	for (uint8_t i = 0; i < rtlib_ocl.num_devices; ++i)
 		logger->Debug("     Device #%02d @%p", i, rtlib_ocl.devices[i]);
@@ -1509,8 +1513,7 @@ void rtlib_ocl_prof_run(
 			cl_event & ev(it_ev->second);
 			status = clWaitForEvents(1, &ev);
 			if (status != CL_SUCCESS)
-				logger->Error("OCL: Error [%d] in clWaitForEvents",
-					status);
+				logger->Error("OCL: Error [%d] in clWaitForEvents", status);
 			acc_command_event_info(
 				stPtr, ev, cmd_type, it_ev->first, awm_id, prof_level);
 		}
