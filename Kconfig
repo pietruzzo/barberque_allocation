@@ -113,6 +113,13 @@ choice
 
 endchoice
 
+config BBQUE_RPC_TIMEOUT
+  int "RPC Channel Timeout"
+  default 5000
+  ---help---
+  The amount of time (in seconds) after which a not responding application
+  must be considered disabled.
+
 config BBQUE_RTLIB_PERF_SUPPORT
   bool "Performance Counters Profiling Support"
   depends on TARGET_LINUX
