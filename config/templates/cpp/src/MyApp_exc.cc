@@ -77,3 +77,9 @@ RTLIB_ExitCode_t MyApp::onMonitor() {
 	return RTLIB_OK;
 }
 
+RTLIB_ExitCode_t MyApp::onRelease() {
+
+	logger->Warn("MyApp::onRelease()  : exit");
+
+	return RTLIB_OK;
+}
