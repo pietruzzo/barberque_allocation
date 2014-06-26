@@ -97,7 +97,6 @@ check_controllers() {
 				done
 		fi
 
-
 		# Mount BBQ required hierarchies
 		mount -t cgroup -o cpuset,memory,cpu,cpuacct bbque_cgroups \
 				$BBQUE_CGMOUNT >/dev/null 2>&1
@@ -140,7 +139,6 @@ release() {
 			echo $P > $BBQUE_CGMOUNT/cgroup.procs
 	done
 }
-
 
 # Setup CGroups if required
 setup() {
@@ -187,7 +185,7 @@ setup() {
 	echo "Loading CGroups configuration [$CGSETUP]..."
 	$BBQUE_CGPARSER -l $CGSETUP || exit 1
 
-	echo "Setup CGroups shiled..."
+	echo "Setup CGroups shield..."
 	ShieldBuild
 
 	echo "Setup Release Agent [$BBQUE_CGAGENT]..."
@@ -237,7 +235,7 @@ stop() {
 
 	# Cleaning-up CGroup reservations
 	if [ -d $BBQUE_CGMOUNT/bbque ]; then
-		echo "Releasing CGroups shiled..."
+		echo "Releasing CGroups shield..."
 		release
 		sleep 1
 		echo "Releasing BBQ CGroups..."
