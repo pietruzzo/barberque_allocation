@@ -35,8 +35,8 @@ private:
 	RTLIB_ExitCode_t onConfigure(uint8_t awm_id);
 	RTLIB_ExitCode_t onRun();
 	RTLIB_ExitCode_t onMonitor();
+	RTLIB_ExitCode_t onRelease();
 
 };
 
 #endif // MYAPP_EXC_H_
-
