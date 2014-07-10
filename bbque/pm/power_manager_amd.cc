@@ -62,7 +62,7 @@ AMDPowerManager::AMDPowerManager() {
 
 void AMDPowerManager::LoadAdaptersInfo() {
 	int ADL_Err = ADL_ERR;
-	int status;
+//	int status;
 	int power_caps = 0;
 	ODStatus_t od_status;
 	ADLODParameters od_params;
@@ -83,11 +83,11 @@ void AMDPowerManager::LoadAdaptersInfo() {
 	logger->Info("ADL: Adapters count = %d", adapters_count);
 
 	for (int i = 0; i < adapters_count; ++i) {
-		ADL_Err = ADL2_Adapter_Active_Get(context, i, &status);
-		if (ADL_Err != ADL_OK || status == ADL_FALSE) {
-			logger->Debug("Skipping '%d' [Err:%d] ", i, ADL_Err);
-			continue;
-		}
+//		ADL_Err = ADL2_Adapter_Active_Get(context, i, &status);
+//		if (ADL_Err != ADL_OK || status == ADL_FALSE) {
+//			logger->Warn("Skipping '%d' [Err:%d] ", i, ADL_Err);
+//			continue;
+//		}
 		// Adapters ID mapping and resouce path
 		adapters_map.insert(
 			std::pair<ResID_t, int>(adapters_map.size(), i));
