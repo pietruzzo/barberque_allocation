@@ -6,9 +6,9 @@ endif(NOT CONFIG_BBQUE_RLOADER_RXML)
 
 
 # Set the macro for the scheduling policy loading
-if (CONFIG_RLOADER_DEFAULT_RXML)
+if (CONFIG_BBQUE_RLOADER_DEFAULT_RXML)
   set (BBQUE_RLOADER_DEFAULT "rxml" CACHE STRING "Setting recipe loader name" FORCE)
-endif (CONFIG_RLOADER_DEFAULT_RXML)
+endif (CONFIG_BBQUE_RLOADER_DEFAULT_RXML)
 
 # Sources
 set(PLUGIN_RXML_SRC rxml_rloader rxml_plugin)
