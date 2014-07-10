@@ -13,16 +13,12 @@ endif (CONFIG_BBQUE_RLOADER_DEFAULT_RXML)
 # Sources
 set(PLUGIN_RXML_SRC rxml_rloader rxml_plugin)
 
-add_library(bbque_rloader_rxml MODULE ${PLUGIN_RXML_SRC})
+add_library(bbque_rloader_rxml STATIC ${PLUGIN_RXML_SRC})
 
 target_link_libraries(
 	bbque_rloader_rxml
         ${Boost_LIBRARIES}
 )
-
-install(TARGETS bbque_rloader_rxml LIBRARY
-        DESTINATION ${BBQUE_PATH_PLUGINS}
-        COMPONENT BarbequeRTRM)
 
 
 #

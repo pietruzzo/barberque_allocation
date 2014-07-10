@@ -22,7 +22,7 @@
 
 #include "bbque/plugins/plugin.h"
 
-extern "C" int32_t PF_exitFunc();
-extern "C" PF_ExitFunc PF_initPlugin(const PF_PlatformServices * params);
+extern "C" int32_t StaticPlugin_RXMLRecipeLoader_ExitFunc();
+extern "C" PF_ExitFunc StaticPlugin_RXMLRecipeLoader_InitPlugin(const PF_PlatformServices * params);
 
 #endif // BBQUE_RXML_PLUGIN_H_

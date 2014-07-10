@@ -22,12 +22,13 @@
 namespace bp = bbque::plugins;
 
 extern "C"
-int32_t PF_exitFunc() {
+int32_t StaticPlugin_RXMLRecipeLoader_ExitFunc() {
   return 0;
 }
 
 extern "C"
-PF_ExitFunc PF_initPlugin(const PF_PlatformServices * params) {
+PF_ExitFunc StaticPlugin_RXMLRecipeLoader_InitPlugin(
+		const PF_PlatformServices * params) {
   int res = 0;
 
   PF_RegisterParams rp;
@@ -42,7 +43,8 @@ PF_ExitFunc PF_initPlugin(const PF_PlatformServices * params) {
   if (res < 0)
     return NULL;
 
-  return PF_exitFunc;
-
+  return StaticPlugin_RXMLRecipeLoader_ExitFunc;
 }
-PLUGIN_INIT(PF_initPlugin);
+
+bp::StaticPlugin
+StaticPlugin_RXMLRecipeLoader(StaticPlugin_RXMLRecipeLoader_InitPlugin);
