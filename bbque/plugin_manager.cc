@@ -229,6 +229,12 @@ int32_t PluginManager::LoadByPath(const std::string & pluginPath) {
 
 	// Get the NTA_initPlugin() function
 	pft = (PF_ExportedSymbols_t*)(dl->GetSymbol(PLUGIN_SYMBOL_TABLE));
+	if (!pft) {
+		fprintf(stderr, FE("Missing plugin symbol: %s\n"), PLUGIN_SYMBOL_TABLE);
+		fprintf(stderr, FE("The module is not a valid plugin\n"));
+		return -1;
+	}
+
 	PF_InitFunc initFunc = pft->init;
 	if (!initFunc) {
 		// missing dynamic library entry point
