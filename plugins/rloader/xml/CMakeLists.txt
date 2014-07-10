@@ -10,6 +10,15 @@ if (CONFIG_BBQUE_RLOADER_DEFAULT_YAMS)
 endif (CONFIG_BBQUE_RLOADER_DEFAULT_YAMS)
 
 
+if (NOT CONFIG_BBQUE_RLOADER_XML)
+	return(xml)
+endif(NOT CONFIG_BBQUE_RLOADER_XML)
+
+# Set the macro for the scheduling policy loading
+if (CONFIG_BBQUE_RLOADER_DEFAULT_XML)
+  set (BBQUE_RLOADER_DEFAULT "xml" CACHE STRING "Setting default recipe loader" FORCE)
+endif (CONFIG_BBQUE_RLOADER_DEFAULT_XML)
+
 #----- Check for required TiCPP library
 find_package(TiCPP REQUIRED)
 
