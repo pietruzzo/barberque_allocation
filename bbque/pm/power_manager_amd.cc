@@ -80,7 +80,7 @@ void AMDPowerManager::LoadAdaptersInfo() {
 		logger->Error("ADL: No adapters available on the system");
 		return;
 	}
-	logger->Debug("ADL: Adapters (GPUs) count = %d", adapters_count);
+	logger->Info("ADL: Adapters count = %d", adapters_count);
 
 	for (int i = 0; i < adapters_count; ++i) {
 		ADL_Err = ADL2_Adapter_Active_Get(context, i, &status);
@@ -131,7 +131,8 @@ void AMDPowerManager::LoadAdaptersInfo() {
 	}
 
 	initialized = true;
-	logger->Info("ADL: Adapters information initialized");
+	logger->Notice("ADL: Adapters [#=%d] information initialized",
+		adapters_map.size());
 	ADL2_Main_Control_Destroy(context);
 }
 
@@ -151,11 +152,17 @@ AMDPowerManager::~AMDPowerManager() {
 
 int AMDPowerManager::GetAdapterId(ResourcePathPtr_t const & rp) const {
 	std::map<ResID_t, int>::const_iterator it;
-	if (rp == nullptr)
+	if (rp == nullptr) {
+		logger->Error("ADL: Null resource path");
 		return -1;
+	}
+
 	it = adapters_map.find(rp->GetID(ResourceIdentifier::GPU));
-	if (it == adapters_map.end())
+	if (it == adapters_map.end()) {
+		logger->Error("ADL: Missing GPU id=%d",
+			rp->GetID(ResourceIdentifier::GPU));
 		return -2;
+	}
 	return it->second;
 }
 
