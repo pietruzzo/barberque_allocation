@@ -964,7 +964,7 @@ jump_quota_management:
 			"{cpu [%s: %" PRIu64 " %], mem[%d: %" PRIu64 " B]}",
 			pcgd->papp->StrId(),
 			prlb->cpus, prlb->amount_cpus,
-			prlb->socket_id, prlb->amount_memb);
+			prlb->mems, prlb->amount_memb);
 	cgroup_set_value_uint64(pcgd->pc_cpuset,
 			BBQUE_LINUXPP_PROCS_PARAM,
 			pcgd->papp->Pid());
