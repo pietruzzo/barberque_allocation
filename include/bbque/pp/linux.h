@@ -120,8 +120,9 @@ private:
 	 * @brief Resource assignement bindings on a Linux machine
 	 */
 	typedef struct RLinuxBindings {
-		unsigned short node_id = 0; ///> Maps a "tile" on Host Linux machines
-		unsigned short socket_id = 0; ///> Maps a "cluster" on SMP Linux machine
+		/** Computing node, e.g. processor */
+		unsigned short node_id = 0;
+		/** Processing elements / CPU cores assigned */
 		char *cpus = NULL;
 		char *mems = NULL;
 		char *memb = NULL;

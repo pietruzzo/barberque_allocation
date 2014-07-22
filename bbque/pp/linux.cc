@@ -177,7 +177,7 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 		cpu_quota = (prlb->amount_cpuq * 100) / prlb->amount_cpup;
 		logger->Debug("%s CPUs of node [%d] with CPU quota of [%lu]%",
 				refreshMode ? "Reconfiguring" : "Registering",
-				prlb->socket_id, cpu_quota);
+				prlb->node_id, cpu_quota);
 	}
 
 	// Because of CGroups interface, we cannot assign an empty CPU quota.
@@ -186,7 +186,7 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 	// when a CPU quota <= 1% is required.
 	if (cpu_quota <= 1) {
 		logger->Warn("Quota < 1%, Offlining CPUs of node [%d]...",
-				prlb->socket_id);
+				prlb->node_id);
 		cpu_quota = 0;
 	}
 
@@ -198,7 +198,7 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 		// Get a CPU id, and register the corresponding resource path
 		sscanf(p, "%hu", &first_cpu_id);
 		snprintf(resourcePath+8, 10, "%hu.pe%d",
-				prlb->socket_id, first_cpu_id);
+				prlb->node_id, first_cpu_id);
 		logger->Debug("PLAT LNX: %s [%s]...",
 				refreshMode ? "Refreshing" : "Registering",
 				resourcePath);
@@ -226,7 +226,7 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 		// Register all the other CPUs of this range
 		while (++first_cpu_id <= last_cpu_id) {
 			snprintf(resourcePath+8, 10, "%hu.pe%d",
-					prlb->socket_id, first_cpu_id);
+					prlb->node_id, first_cpu_id);
 			logger->Debug("PLAT LNX: %s [%s]...",
 					refreshMode ? "Refreshing" : "Registering",
 					resourcePath);
@@ -268,7 +268,7 @@ LinuxPP::RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) {
 		// Get a Memory NODE id, and register the corresponding resource path
 		sscanf(p, "%hu", &first_mem_id);
 		snprintf(resourcePath+8, 11, "%hu.mem%d",
-				prlb->socket_id, first_mem_id);
+				prlb->node_id, first_mem_id);
 		logger->Debug("PLAT LNX: %s [%s]...",
 				refreshMode ? "Refreshing" : "Registering",
 				resourcePath);
@@ -296,7 +296,7 @@ LinuxPP::RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) {
 		// Register all the other Memory NODEs of this range
 		while (++first_mem_id <= last_mem_id) {
 			snprintf(resourcePath+8, 11, "%hu.mem%d",
-					prlb->socket_id, first_mem_id);
+					prlb->node_id, first_mem_id);
 			logger->Debug("PLAT LNX: %s [%s]...",
 					refreshMode ? "Refreshing" : "Registering",
 					resourcePath);
@@ -326,7 +326,7 @@ LinuxPP::RegisterCluster(RLinuxBindingsPtr_t prlb) {
 	logger->Debug("PLAT LNX: %s resources for Node [%d], "
 			"CPUs [%s], MEMs [%s]",
 			refreshMode ? "Check" : "Setup",
-			prlb->socket_id, prlb->cpus, prlb->mems);
+			prlb->node_id, prlb->cpus, prlb->mems);
 
 	// The CPUs are generally represented with a syntax like this:
 	// 1-3,4,5-7
@@ -360,12 +360,12 @@ LinuxPP::ParseNodeAttributes(struct cgroup_file_info &entry,
 
 	// Initialize the CGroup variable
 	sscanf(entry.path + STRLEN(BBQUE_LINUXPP_CLUSTER), "%hu",
-			&prlb->socket_id);
+			&prlb->node_id);
 	snprintf(group_name +
 			STRLEN(BBQUE_LINUXPP_RESOURCES) +   // e.g. "bbque/res"
 			STRLEN(BBQUE_LINUXPP_CLUSTER) + 1,  // e.g. "/" + "node"
 			4, "%d",
-			prlb->socket_id);
+			prlb->node_id);
 	bbq_node = cgroup_new_cgroup(group_name);
 	if (bbq_node == NULL) {
 		logger->Error("PLAT LNX: Parsing resources FAILED! "
