@@ -1,0 +1,508 @@
+#!/bin/bash
+
+ERRORLOG="bplerrors.log"
+BPL_FOLDER="@CONFIG_BOSP_RUNTIME_PATH@/etc/bbque/pil"
+TARGET_BPL="$BPL_FOLDER/`hostname`.bpl"
+
+# Cleaning up
+rm -rf $ERRORLOG
+rm -rf $BPL_FOLDER/$HOSTNAME
+rm -rf $BPL_FOLDER/*~
+
+# Checking for `hwloc-ls` installation
+HWLOC=$(which hwloc-ls)
+[ -z "$HWLOC" ] && echo "[BPL Generation] Please install hwloc (sudo apt-get install hwloc)" >> $ERRORLOG
+
+function StoreResults() {
+
+	# Extracting the memory node ID from the MEM_HIT
+	MEMCHECK=$(echo $3 | grep -o "[0-9]\{1,\}")
+
+	# On a single memory node machine, no MEM_HITs are possible. In fact,
+	# in this case, hwloc does not tag memory nodes with IDs.
+	# If this is the case, we will have only memnode 0
+	FORMATTED_MEMS="0"
+
+	# Otherwise, mems list will probably feature duplicates,
+	# conversely from the PEs list. Let's remove the duplicates.
+	# 1) trimming the starting space
+	# 2) ordering in column
+	# 3) removing duplicates
+	# 4) rebuilding the list
+	[ -z "$MEMCHECK" ] || FORMATTED_MEMS=$(echo "$3" | sed -e 's/^\ //g' | tr ' ' '\n' | sort -ug | tr '\n' ' ')
+
+	# Removing whitespaces from the list
+	FORMATTED_PES=$(echo "$2" | sed -e 's/^\ //g' | sed 's/ *$//')
+
+	# Storng information
+	summary[$1]="$FORMATTED_PES"
+	mems[$1]="$FORMATTED_MEMS"
+
+}
+
+# HalfASocket implementation. Each of the sockets is slitted in two nodes.
+# Sockets do not need to have the same size, hence the general (not optimized)
+# implementation.
+function HalfASocket() {
+
+	# Trimming whitespaces where not needed
+	PROCESSING_ELEMENTS=$(Clean "$PROCESSING_ELEMENTS")
+	MEMORIES=$(Clean "$MEMORIES")
+
+	# Storing info in arrays, each to be split in two
+	PES_BUFFER=($PROCESSING_ELEMENTS)
+	MEMS_BUFFER=($MEMORIES)
+
+	# Computing the number of PEs and memories
+	PB_SIZE=$(echo ${#PES_BUFFER[@]}"/2" | bc)
+	MB_SIZE=$(echo ${#MEMS_BUFFER[@]}"/2" | bc)
+
+	# First half info
+	FIRST_PES=""
+	FIRST_MEM=""
+
+	# Second half info
+	SECOND_PES=""
+	SECOND_MEM=""
+
+	# Half of the PEs will form a NODE, the others will form a second one
+	for I in `seq 0 ${#PES_BUFFER[@]}`; do
+
+		POS=$(echo $I"<"$PB_SIZE | bc)
+
+		# First half
+		if [ "$POS" == "1" ]; then
+			FIRST_PES=$FIRST_PES" "${PES_BUFFER[$I]}
+		# Second half
+		else
+			SECOND_PES=$SECOND_PES" "${PES_BUFFER[$I]}
+		fi
+	done
+
+	# Cleaning up
+	FIRST_PES=$(Clean "$FIRST_PES")
+	SECOND_PES=$(Clean "$SECOND_PES")
+
+	# If there is only a single memory node, it will be shared among NODEs
+	if [ "$MB_SIZE" == "0" ]; then
+		FIRST_MEM="${MEMS_BUFFER[0]}"
+		SECOND_MEM="${MEMS_BUFFER[0]}"
+	else
+		# Same as above, but for memory nodes
+		for I in `seq 0 ${#MEMS_BUFFER[@]}`; do
+
+			POS=$(echo $I"<"$MB_SIZE | bc)
+
+			# First half
+			if [ "$POS" == "1" ]; then
+				FIRST_MEM=$FIRST_MEM" "${MEMS_BUFFER[$I]}
+			# Second half
+			else
+				SECOND_MEM=$SECOND_MEM" "${MEMS_BUFFER[$I]}
+			fi
+		done
+
+		# Cleaning results
+		FIRST_MEM=$(Clean "$FIRST_MEM")
+		SECOND_MEM=$(Clean "$SECOND_MEM")
+	fi
+
+	# Storing results for both the nodes
+	StoreResults $MAX_NODE_ID "$FIRST_PES" "$FIRST_MEM"
+	let MAX_NODE_ID++
+	StoreResults $MAX_NODE_ID "$SECOND_PES" "$SECOND_MEM"
+	let MAX_NODE_ID++
+
+}
+
+# Trim away starting and ending whitespaces
+function Clean() {
+
+	echo $1 | sed -e 's/ *$//' | sed -e 's/^\ //'
+
+}
+
+# Compact notation:
+#	"0 1 2" -> "0-2"
+#	"0 2 4" -> "0,2,4"
+#	"0 1 4" -> "0-1,4"
+function CompactNotation() {
+
+	# Numerical sorting, removing duplicates
+	TEMP_STRING=$(echo "$1" | tr ' ' '\n' | sort -ug | tr '\n' ' ')
+	# Better handling it as an array
+	ORDERED_STRING=($TEMP_STRING)
+
+	# The combo counter is needed to record the combos. A combo is a
+	# concatenation of consecutive numbers, requiring the X-Y notation.
+	# If the counters fields are equal, we do not have a combo
+	COMBO_COUNTER=("${ORDERED_STRING[0]}" "${ORDERED_STRING[0]}")
+	# Current and previous items of the numbers array
+	CURRENT_ID=${ORDERED_STRING[0]}
+	PREVIOUS_ID=${ORDERED_STRING[0]}
+
+	# Here the result is stored, and incrementally increased during the loop
+	# below
+	RESULT=""
+
+	# 1 iif the current number and the previous are contiguos
+	# (1 iif combo in progress)
+	CONTIGUITY="0"
+
+	# Score is the element under analysis
+	for SCORE in ${ORDERED_STRING[@]}; do
+
+		# Recording the current position
+		CURRENT_ID=$SCORE
+
+		# Do nothing on the first round
+		[ "$CURRENT_ID" == "$PREVIOUS_ID" ] && continue
+
+		# If the current element equals the previous +1, we have a combo
+		CONTIGUITY=$(echo $CURRENT_ID"-"$PREVIOUS_ID"==1" | bc)
+
+		# Else, a combo had been broken. Thus, we register it
+		# and reset the counter
+		if [ "$CONTIGUITY" == "0" ]; then
+
+			# Prepare to append a combo to the results
+			[ -z "$RESULT" ] || RESULT=$RESULT","
+
+			# If we have a singleton, it's not a combo
+			if [ "${COMBO_COUNTER[1]}" == "${COMBO_COUNTER[0]}" ]; then
+				RESULT=$RESULT${COMBO_COUNTER[0]}
+			# Else, we have a real combo
+			else
+				RESULT=$RESULT${COMBO_COUNTER[0]}"-"${COMBO_COUNTER[1]}
+			fi
+
+			# Resetting the counter using the value of the number
+			# that broke the combo, that is, the number that will
+			# begin the new combos
+			COMBO_COUNTER[0]="$SCORE"
+			COMBO_COUNTER[1]="$SCORE"
+		# If the combo had not been broken, the combo counter is
+		# updated accordingly
+		else
+			COMBO_COUNTER[1]=$SCORE
+		fi
+
+		# Recording the element to be exploited as the
+		# "previous element" in the next iteration
+		PREVIOUS_ID=$SCORE
+
+	done
+
+	# The last combo has not already been noted into the results.
+	# In fact, upon a combo-break, only the broken combo
+	# is written, not the new one.
+	[ -z "$RESULT" ] || RESULT=$RESULT","
+
+	# The combo that has to be added to the results could be a singleton
+	# or a standard combo, as usual. If CONTIGUITY equals 0, the last
+	# element read in the loop broke a combo. Thus, that combo is already
+	# in the result, and the current item is a singleton.
+	if [ "$CONTIGUITY" == "0" ]; then
+			RESULT=$RESULT$SCORE
+	# Else, the last element closes a combo
+	else
+		RESULT=$RESULT${COMBO_COUNTER[0]}"-"$SCORE
+	fi
+
+	echo "$RESULT"
+
+}
+
+#-------------------------------------------------------------------------------
+# Policy Selection Dialog
+#-------------------------------------------------------------------------------
+
+# If a policy had not been passed as a command line arg, the user
+# must select it
+if [ -z "$1" ]; then
+
+	# Checking for `dialog` installation
+	DIALOG=$(which dialog)
+	[ -z "$DIALOG" ] && echo "[BPL Generation] Please install dialog \
+(sudo apt-get install dialog)" >> $ERRORLOG
+
+	# The policy exploited to partition the system resources
+	POLICY=""
+	# HalfASocket feature: creates two nodes for each socket
+	HALF_A_SOCKET=""
+
+	# Setting up the dialog to make the user select the policy
+	options=(
+		--backtitle "Binding Domains selection policy"
+		--title     "[Main Menu]"
+		--menu      "You can use the UP/DOWN arrow keys, Or the number keys 1-9 to choose an option.
+	Choose the option" 18 70 8
+	)
+
+	choices=(
+		L2              "Split at L2 level"
+		L3              "Split at L3 level"
+		Socket          "Split at Socket level"
+		Half-a-Socket   "Split at Half-Socket level"
+	)
+
+	menuitem=$( dialog "${options[@]}" "${choices[@]}" 3>&1 1>&2 2>&3 3>&- )
+
+	# Setting the variables according to user selection
+	case $menuitem in
+		L2) POLICY="L2" ;;
+		L3) POLICY="L3" ;;
+		Socket) POLICY="Socket" ;;
+		Half-a-Socket) POLICY="Socket"; HALF_A_SOCKET="Half a " ;;
+		"") exit ;;
+	esac
+
+	clear
+# If the user passed the policy name by command line, a dialog is not needed.
+else
+	case $1 in
+		L2) POLICY="L2" ;;
+		L3) POLICY="L3" ;;
+		Socket) POLICY="Socket" ;;
+		Half-a-Socket) POLICY="Socket"; HALF_A_SOCKET="Half a " ;;
+		"") echo "[BPL Generation] Policy not existent" >> $ERRORLOG;;
+	esac
+fi
+
+#-------------------------------------------------------------------------------
+# Data collection and computing
+#-------------------------------------------------------------------------------
+
+echo "# [BPL Generation] Policy $HALF_A_SOCKET$POLICY chosen" > $TARGET_BPL
+
+# Temp variables to store PEs and Mems IDs
+PROCESSING_ELEMENTS=""
+MEMORIES=""
+CURRENT_MEMORY_NODE=""
+
+# Equals the total nodes number -1
+MAX_NODE_ID=0
+
+# Explicit declaration of the results arrays
+declare -a summary
+declare -a mems
+
+# Extracting hw info
+# Example:
+#
+#    `MEM_CAPACITY`  `NEW_SOCKET` `SHARED_L3_CACHE`
+#           \            /         /
+#Machine (7894MB) + Socket L#0 + L3 L#0 (6144KB)
+#  L2 L#0 (256KB) + L1d L#0 (32KB) + L1i L#0 (32KB) + Core L#0
+#    PU L#0 (P#0) <-- `PE_DECLARATION`
+#    PU L#1 (P#4)
+#  L2 L#1 (256KB) + L1d L#1 (32KB) + L1i L#1 (32KB) + Core L#1
+#    PU L#2 (P#1)
+#    PU L#3 (P#5)
+#  L2 L#2 (256KB) + L1d L#2 (32KB) + L1i L#2 (32KB) + Core L#2
+#    PU L#4 (P#2)
+#    PU L#5 (P#6)
+#  L2 L#3 (256KB) + L1d L#3 (32KB) + L1i L#3 (32KB) + Core L#3
+#    PU L#6 (P#3)
+#    PU L#7 (P#7)
+hwloc-ls --no-io --no-bridges - > topology
+
+# Each line of the topology file declares sockets, memories, caches, processing
+# elements et cetera
+while read LINE; do
+
+	# Checking if the line declares a new node, namely a Binding Domain.
+	POLICY_HIT=$(echo "$LINE" | grep -o "$POLICY")
+	# Checking if the line declares a new processing element
+	PE_HIT=$(echo "$LINE" | grep -o "(P#[0-9]\{1,\})" | sed -e s/\(//g | sed -e s/\)//g)
+	# Checking if the line declares a new memory node
+	MEM_HIT=$(echo "$LINE" | grep -o "(P#[0-9]\{1,\} ")
+
+	# Storing the current memory node ID, if declared. This value is stored
+	# Because all following lines will refer to this node, until a new one
+	# is declared. This is not true for caches and processing elements.
+	[ -z "$MEM_HIT" ] || CURRENT_MEMORY_NODE=$(echo $MEM_HIT | grep -o "[0-9]\{1,\}")
+
+	# New BD found, and at least one node already found.
+	# In this case, the previous node information is stored, and all the
+	# temp variables are re-set to collect the information about the next
+	# node.
+	if [ ! -z "$POLICY_HIT" ] && [ ! -z "$PROCESSING_ELEMENTS" ]; then
+
+		# Usually, the previous node information is normally stored.
+		if [ -z "$HALF_A_SOCKET" ]; then
+
+			StoreResults $MAX_NODE_ID "$PROCESSING_ELEMENTS" "$MEMORIES"
+			let MAX_NODE_ID++
+		# In the HalfASocket case, conversely, the node will be split
+		# in two, leading to the creation of two separate nodes.
+		else
+
+			HalfASocket
+
+		fi
+
+		# Resetting the lists for new nodes
+		PROCESSING_ELEMENTS=""
+		MEMORIES=""
+
+	fi
+
+	# New PE found
+	if [ ! -z "$PE_HIT" ]; then
+
+		# Extracting information from the hit variable
+		P=$(echo $PE_HIT | grep -o "[0-9]\{1,\}")
+
+		# Adding the PE in the current node PEs list
+		PROCESSING_ELEMENTS=$PROCESSING_ELEMENTS" "$P
+		# Adding the current memory node to Mems list
+		MEMORIES=$MEMORIES" "$CURRENT_MEMORY_NODE
+	fi
+
+done < topology
+
+# At least two nodes are needed, one for the HOST and one for the MDEV. Thus,
+# if only a node has been found the algorithm can not continue. If we are
+# using the HalfASocket policy, however, the node will be split and become
+# two distinct nodes. So, in this case, we have not an error.
+# Note that the last detected node will be analyzed below. Thus, if only a node
+# has been detected, the MAX_NODE_ID counter is still set to 0
+[ "$MAX_NODE_ID" == "0" ] && \
+	[ -z "$HALF_A_SOCKET" ] && \
+	echo -e \
+"[BPL Generation] \tOnly one NODE found. Try selecting a different memory
+\t\t\tlocality level from the barbeque menuconfig" >> $ERRORLOG
+
+# Storing information about the last found node. Remember that each node
+# detection causes the previous node info to be stored. Thus, noone stored
+# the info about the last detected node.
+if [ ! -z "$PROCESSING_ELEMENTS" ]; then
+
+	# Usually, the previous node information is normally stored.
+	if [ -z "$HALF_A_SOCKET" ]; then
+
+		StoreResults $MAX_NODE_ID "$PROCESSING_ELEMENTS" "$MEMORIES"
+	# In the HalfASocket case, conversely, the node will be split
+	# in two, leading to the creation of two separate nodes.
+	else
+		HalfASocket
+		let MAX_NODE_ID--
+	fi
+
+	# Resetting the lists for new nodes
+	PROCESSING_ELEMENTS=""
+	MEMORIES=""
+
+fi
+
+# Checking for errors
+[ -f "$ERRORLOG" ] && \
+	echo "[BPL Generation] Execution aborted due to errors." && \
+	echo "[BPL Generation] Log report [$ERRORLOG] shown below" && \
+	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" && \
+	cat $ERRORLOG && \
+	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" && \
+	rm -rf $TARGET_BPL && \
+	exit
+
+# Checking if the memory is declared in GB
+MEMORY_GB=$( grep -o "Machine ([0-9]\{1,\}GB" topology | grep -o "[0-9]\{1,\}" )
+# Extracting total memory
+TOTAL_MEMORY=$( grep -o "Machine ([0-9]\{1,\}" topology | grep -o "[0-9]\{1,\}" )
+
+# Megabytes are used as a unit measure for the memory
+[ -z "$MEMORY_GB" ] || let TOTAL_MEMORY=$TOTAL_MEMORY*1024
+# Each node receives a fair portion of the total memory
+NODE_MEMORY=$(echo $TOTAL_MEMORY"/("$MAX_NODE_ID"+1)" | bc)
+
+rm topology
+
+#-------------------------------------------------------------------------------
+# BPL generation
+#-------------------------------------------------------------------------------
+
+echo -e "
+#------------------------------------------------------------------------
+# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+#
+#                This file is automatically re-generated
+#                      each time bbque is started.
+#                     Manual changes will be lost.
+#
+# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+#------------------------------------------------------------------------
+# BarbequeRTRM Platform Layout
+#
+#
+# The configuration is defined by a set of TARGETs, which are represented by
+# lines starting with:
+# - HOST: resources assigned to NOT managed tasks
+# - MDEV: resources reserved for MANAGED tasks
+# - NODE: managed resources clusterization
+#
+# Columns define RESOURCEs assigned to the corresponding target, which are:
+# - CPUs IDs: the numerical ID of assigned CPUs
+# - Memory Nodes: the numerical ID of the assigned (NUMA) memory nodes
+# - Description: a textual description of the target
+# - Time Quota: the allotted PERCENTAGE of CPU time
+# - Memory (MB): the alloted Megabytes of MEMORY on the corresponding nodes
+#
+# Main TARGET devices:
+--------+---------------+---------------+---------------------------------------
+	| CPUs IDs	| Memory Nodes	| Description
+--------+---------------+---------------+\
+---------------------------------------" >> $TARGET_BPL
+
+# Here we need to select a NODE for the HOST partition (node 0 by default),
+# all the other NODEs becoming MDEV
+HOST_PES=${summary[0]}
+HOST_MEMS=${mems[0]}
+
+MDEV_PES=""
+MDEV_MEMS=""
+
+for N in `seq 0 $MAX_NODE_ID`; do
+
+	# The first NODE goes in the HOST
+	if [ "$N" == "0" ]; then
+		echo -e \
+"HOST\t| $(CompactNotation "$HOST_PES")\t\t| $(CompactNotation "$HOST_MEMS")\t\t| Automatic entry" \
+>> $TARGET_BPL
+
+	else
+		# The other nodes are merged in the MDEV
+		MDEV_PES=$MDEV_PES" "${summary[$N]}
+		MDEV_MEMS=$MDEV_MEMS" "${mems[$N]}
+
+		# After the last node had been merged, the MDEV is declared
+		if [ "$N" == "$MAX_NODE_ID" ]; then
+			echo -e \
+"MDEV\t| $(CompactNotation "$MDEV_PES")\t| $(CompactNotation "$MDEV_MEMS")\t\t| Automatic entry" \
+>> $TARGET_BPL
+
+		fi
+	fi
+
+done
+
+echo -e \
+"--------+---------------+---------------+---------------------------------------
+#
+# Resources clusterization for MANAGED resources
+--------+---------------+---------------+---------------+-----------------------
+\t| CPUs IDs\t| Time Quota\t| Memory Nodes\t| Memory (MB)
+--------+---------------+---------------+---------------+\
+-----------------------" >> $TARGET_BPL
+
+# Declaring the nodes, one by one
+for N in `seq 1 $MAX_NODE_ID`; do
+
+	# Filling node info
+	MDEV_PES=${summary[$N]}
+	MDEV_MEMS=${mems[$N]}
+	# Declaring the node
+	echo -e "NODE\t| $(CompactNotation "$MDEV_PES")\t\t| 100\t\t| \
+$(CompactNotation "$MDEV_MEMS")\t\t| $NODE_MEMORY" >> $TARGET_BPL
+
+done

@@ -53,6 +53,13 @@ configure_file (
 	@ONLY
 )
 
+# Setup BPL generator
+configure_file (
+	"${PROJECT_SOURCE_DIR}/config/pil/bpl_generator.in"
+	"${PROJECT_BINARY_DIR}/config/pil/bpl_generator"
+	@ONLY
+)
+
 # Setup Template generator
 configure_file (
 	"${PROJECT_SOURCE_DIR}/config/bbque-layapp.sh.in"
@@ -200,7 +207,6 @@ install (FILES "${PROJECT_BINARY_DIR}/config/bosp_init.env"
 		DESTINATION ${BBQUE_PATH_CONF}
 		COMPONENT BarbequeRTRM)
 # Install the PIL configurations
-install (DIRECTORY "${PROJECT_SOURCE_DIR}/config/pil/"
+install (FILES "${PROJECT_BINARY_DIR}/config/pil/bpl_generator"
 		DESTINATION ${BBQUE_PATH_PILS}
-		COMPONENT BarbequeRTRM
-		FILES_MATCHING PATTERN "*.bpl")
+		COMPONENT BarbequeRTRM)
