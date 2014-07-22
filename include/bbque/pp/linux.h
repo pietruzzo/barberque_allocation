@@ -124,7 +124,9 @@ private:
 		unsigned short node_id = 0;
 		/** Processing elements / CPU cores assigned */
 		char *cpus = NULL;
+		/** Memory nodes assigned */
 		char *mems = NULL;
+		/** Memory limits in bytes */
 		char *memb = NULL;
 		/** The percentage of CPUs time assigned */
 		uint16_t amount_cpus = 0;
