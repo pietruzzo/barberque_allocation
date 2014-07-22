@@ -637,10 +637,6 @@ LinuxPP::GetResourceMapping(AppPtr_t papp, UsagesMapPtr_t pum,
 	br::ResourceBitset node_ids;
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
-	// Reset CPUs and MEMORY cgroup attributes value
-	memset(prlb->cpus, 0, 3*MaxCpusCount);
-	memset(prlb->mems, 0, 3*MaxMemsCount);
-
 	// Set the amount of CPUs and MEMORY
 	prlb->amount_cpus = ra.GetUsageAmount(pum, br::Resource::PROC_ELEMENT, br::Resource::CPU);
 	prlb->amount_memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
@@ -653,17 +649,13 @@ LinuxPP::GetResourceMapping(AppPtr_t papp, UsagesMapPtr_t pum,
 	logger->Debug("PLAT LNX: Map resources @ Machine Socket [%d], NUMA Node [%d]",
 			prlb->socket_id, prlb->node_id);
 
-	// CPUs and MEMORY cgroup new attributes value
+	// CPU cores and MEMORY nodes cgroup new attributes value
+	memset(prlb->cpus, 0, 3*MaxCpusCount);
+	memset(prlb->mems, 0, 3*MaxMemsCount);
 	BuildSocketCGAttr(prlb->cpus, pum, node_ids, br::Resource::PROC_ELEMENT, papp, rvt);
 	BuildSocketCGAttr(prlb->mems, pum, node_ids, br::Resource::MEMORY, papp, rvt);
-	logger->Debug("PLAT LNX: [%s] => {HwThreads [%s: %" PRIu64 " %], "
-			"NUMA nodes[%d: %" PRIu64 " Bytes]}",
-			papp->StrId(),
-			prlb->cpus, prlb->amount_cpus,
-			prlb->node_id, prlb->amount_memb);
 
 	return OK;
-
 }
 
 void LinuxPP::BuildSocketCGAttr(
@@ -678,7 +670,7 @@ void LinuxPP::BuildSocketCGAttr(
 
 	for (cpu_id = cpu_mask.FirstSet(); cpu_id <= cpu_mask.LastSet(); ++cpu_id) {
 		r_mask = br::ResourceBinder::GetMask(pum, r_type, br::Resource::CPU, cpu_id, papp, rvt);
-		logger->Debug("PLAT LNX: Socket attributes '%-3s' = {%s}",
+		logger->Debug("PLAT LNX: Node attributes '%-3s' = {%s}",
 				br::ResourceIdentifier::TypeStr[r_type],
 				r_mask.ToStringCG().c_str());
 
@@ -961,7 +953,7 @@ jump_quota_management:
 	// CGroup not yet configure.
 
 	logger->Notice("PLAT LNX: [%s] => "
-			"{cpu [%s: %" PRIu64 " %], mem[%d: %" PRIu64 " B]}",
+			"{cpus [%s: %" PRIu64 " %], mems[%s: %" PRIu64 " B]}",
 			pcgd->papp->StrId(),
 			prlb->cpus, prlb->amount_cpus,
 			prlb->mems, prlb->amount_memb);
