@@ -20,6 +20,8 @@
 
 #include "bbque/plugins/recipe_loader.h"
 
+#include <rapidxml.hpp>
+
 #include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/plugins/plugin.h"
@@ -121,6 +123,116 @@ private:
 	 * could be built, false otherwise
 	 */
 	static bool Configure(PF_ObjectParams * params);
+
+	/**
+	 * @brief Lookup the platform section
+	 *
+	 * @param _xml_elem The XML element from which start the lookup of the
+	 * section
+	 * @return A pointer to the XML element from which start the platform
+	 * section to consider
+	 */
+	rapidxml::xml_node<> * LoadPlatform(rapidxml::xml_node<> * xml_elem);
+
+	/**
+	 * @brief Parse the section containing working modes data
+	 *
+	 * @param xml_elem The XML element from which start searching the
+	 * expected section tag
+	 */
+	ExitCode_t LoadWorkingModes(rapidxml::xml_node<> * xml_elem);
+
+	/**
+	 * @brief Parse the section containing resource usages data.
+	 * The method has structured for recursive calls
+	 *
+	 * @param xml_elem The XML element from which start loading
+	 * @param wm The working mode including this resource usages
+	 * @param res_path Resource path (i.e. "arch.clusters.mem0")
+	 * expected section tag
+	 */
+	uint8_t LoadResources(
+			rapidxml::xml_node<> * xml_elem,
+			AwmPtr_t & wm,
+			std::string const & res_path);
+
+	/**
+	 * @brief Insert the resource in the working mode after checking if
+	 * resource path have some matches between system resources
+	 *
+	 * @param wm The working mode to which add the resource usage
+	 * @param res_path Resource path
+	 * @param res_usage Resource usage value
+	 * @return An internal error code
+	 */
+	uint8_t AppendToWorkingMode(
+			AwmPtr_t & wm,
+			std::string const & res_path,
+			uint64_t res_usage);
+
+	/**
+	 * @brief Parse the resource data from the xml element and add the
+	 * resource usage request to the working mode
+	 *
+	 * @param res_elem The XML element
+	 * @param wm The working mode to which add the resource usage
+	 * @param res_path Resource path
+	 */
+	uint8_t GetResourceAttributes(
+			rapidxml::xml_node<> * res_elem,
+			AwmPtr_t & wm,
+			std::string & res_path);
+
+	/**
+	 * @brief Parse the section containing plugins specific data for the
+	 * application or for a working mode
+	 *
+	 * @param container The object (usually Application or WorkingMode to
+	 * which add the plugin specific data
+	 * @param xml_node The RXML node from which start searching the
+	 * expected section tag
+	 */
+	template<class T>
+	void LoadPluginsData(T _container, rapidxml::xml_node<> * _xml_node);
+
+	/**
+	 * @brief Parse data from <plugin> element
+	 *
+	 * @param container The object (usually Application or WorkingMode to
+	 * @param plugin_elem The XML element to parse for getting data
+	 * which add the plugin specific data)
+	 */
+	template<class T>
+	void ParsePluginTag(T container, rapidxml::xml_node<> * _plug_node);
+
+	/**
+	 * @brief Parse the data nested under <plugin>
+	 *
+	 * @param container The object to which append the plugins data (usually
+	 * an Application or a WorkingMode)
+	 * @param plugdata_node The XML Node to check for data
+	 * @param plugin_name The name of the plugin
+	 */
+	template<class T>
+	void GetPluginData(T _container, rapidxml::xml_node<> * plugdata_node, std::string const & _plug_name);
+
+	/**
+	 * @brief Parse the section containing constraints assertions
+	 *
+	 * @param xml_node The XML element from which start searching the
+	 * expected section tag
+	 */
+	void LoadConstraints(rapidxml::xml_node<> * xml_node);
+
+	/**
+	* @brief Function used to load an attribute value from a node
+	*
+	* @param _nameAttribute The name of the attribute to load
+	* @param node The node from which load the attribute
+	*/
+	std::string loadAttribute(
+                const char * _nameAttribute,
+                rapidxml::xml_node<> * node);
 
 };
 
