@@ -224,6 +224,21 @@ private:
 	 */
 	void LoadConstraints(rapidxml::xml_node<> * xml_node);
 
+    /**
+    * @brief Check if the first passed node exists or is a 0. This check
+    * is done because some node are mandatory in the recipes.
+    *
+    * @param nodeToCheck The XML node to check existence
+    * @param nodeToCheckName The name of the node to check the existence
+    * @param nodeFather The father of the node to check the existence
+    * This is useful to understand the missing node position
+    * @throw parse_error when the node is missing
+    */
+    void CheckMandatoryNode(
+	 rapidxml::xml_node<> * nodeToCheck,
+	 const char * nodeToCheckName,
+	 rapidxml::xml_node<> * nodeFather);
+
 	/**
 	* @brief Function used to load an attribute value from a node
 	*

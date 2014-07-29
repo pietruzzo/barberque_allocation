@@ -229,6 +229,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 		// <platform>
 		// TODO lanciare un eccezione quando la funzione restituisce null
 		pp_elem = _xml_elem->first_node("platform", 0, true);
+		CheckMandatoryNode(pp_elem, "platform", _xml_elem);
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 		// System platform
 		sys_platform_id = pp.GetPlatformID();
@@ -319,8 +320,10 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 		// plugins specific data
 		//TODO lanciare l'eccezione
 		awms_elem = _xml_elem->first_node("awms", 0, true);
+		CheckMandatoryNode(awms_elem, "awms", _xml_elem);
 		//TODO lanciare l'eccezione
 		awm_elem  = awms_elem->first_node("awm", 0, true);
+		CheckMandatoryNode(awm_elem, "awm", awms_elem);
 
 		while (awm_elem) {
 			// Working mode attributes
@@ -364,6 +367,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 			// Load resource usages of the working mode
 			//TODO lanciare l'eccezione
 			resources_elem = awm_elem->first_node("resources", 0, false);
+			CheckMandatoryNode(resources_elem, "resources", awm_elem);
 			result = LoadResources(resources_elem, awm, "");
 			if (result == __RSRC_FORMAT_ERR)
 				return RL_FORMAT_ERROR;
@@ -402,6 +406,7 @@ uint8_t RXMLRecipeLoader::LoadResources(
 		// Get the resource xml element
 		//TODO lanciare l'eccezione
 		res_elem = _xml_elem->first_node(0, 0, true);
+		CheckMandatoryNode(res_elem, "", _xml_elem);
 		while (res_elem) {
 			// Parse the attributes from the resource element
 			res_path = _curr_path;
@@ -634,6 +639,21 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node) {
 
 
 // =======================[ Utils ]=======================================
+
+void RXMLRecipeLoader::CheckMandatoryNode (
+     rapidxml::xml_node<> * _nodeToCheck,
+     const char * _nodeToCheckName,
+     rapidxml::xml_node<> * _nodeFather) {
+
+    std::string father_name(_nodeFather->name());
+    std::string child_name(_nodeToCheckName);
+
+    //Throwing an exception if the mandatory node doesn't exist
+    if (_nodeToCheck == 0) {
+        std::string exception_message("The mandatory node doesn't exist in this recipe. The node name is: " + child_name +" . The father name is: " + father_name);
+        throw rapidxml::parse_error(exception_message.c_str(), _nodeFather);
+    }
+}
 
 std::string RXMLRecipeLoader::loadAttribute(
                 const char * _nameAttribute,
