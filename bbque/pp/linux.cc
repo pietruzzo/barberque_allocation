@@ -631,8 +631,8 @@ LinuxPP::_LoadPlatformData() {
  ******************************************************************************/
 
 LinuxPP::ExitCode_t
-LinuxPP::GetResourceMapping(AppPtr_t papp, UsagesMapPtr_t pum,
-		RViewToken_t rvt, RLinuxBindingsPtr_t prlb) {
+LinuxPP::GetResourceMapping(
+		AppPtr_t papp, UsagesMapPtr_t pum, RLinuxBindingsPtr_t prlb) {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	br::ResourceBitset core_ids;
 	br::ResourceBitset mem_ids;
@@ -1013,8 +1013,9 @@ LinuxPP::_ReclaimResources(AppPtr_t papp) {
 }
 
 LinuxPP::ExitCode_t
-LinuxPP::_MapResources(AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt,
-		bool excl) {
+LinuxPP::_MapResources(
+		AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt, bool excl) {
+	(void) rvt;
 
 #ifdef CONFIG_BBQUE_OPENCL
 	// Map resources for OpenCL applications
@@ -1041,7 +1042,7 @@ LinuxPP::_MapResources(AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt,
 	if (result != OK)
 		return result;
 
-	result = GetResourceMapping(papp, pum, rvt, prlb);
+	result = GetResourceMapping(papp, pum, prlb);
 	if (result != OK) {
 		logger->Error("PLAT LNX: binding parsing FAILED");
 		return MAPPING_FAILED;

@@ -290,9 +290,8 @@ private:
  * @}
  */
 
-	ExitCode_t GetResourceMapping(ba::AppPtr_t papp, br::UsagesMapPtr_t pum,
-		br::RViewToken_t rvt, RLinuxBindingsPtr_t prlb);
-
+	ExitCode_t GetResourceMapping(
+			ba::AppPtr_t papp, br::UsagesMapPtr_t pum, RLinuxBindingsPtr_t prlb);
 
 	ExitCode_t BuildCGroup(CGroupDataPtr_t &pcgd);
 
