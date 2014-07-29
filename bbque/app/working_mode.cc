@@ -247,9 +247,28 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
 	for (r_type = br::ResourceIdentifier::SYSTEM;
 			r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
 		BindingInfo & bi(resources.binding_masks[r_type]);
-		new_mask = br::ResourceBinder::GetMask(
+#ifdef CONFIG_BBQUE_SP_COWS_UBD
+		if (r_type == br::ResourceIdentifier::PROC_ELEMENT ||
+					r_type == br::ResourceIdentifier::MEMORY) {
+			logger->Debug("SetBinding: getting a new mask for this "
+				"resource type. Using CPU::ANY as mask scope");
+			new_mask = br::ResourceBinder::GetMask(
+				resources.sched_bindings[b_refn],
+				static_cast<br::ResourceIdentifier::Type_t>(r_type),
+				br::ResourceIdentifier::CPU, R_ID_ANY);
+		}
+		else {
+			logger->Debug("SetBinding: getting a new mask for this "
+								"resource type");
+			new_mask = br::ResourceBinder::GetMask(
 				resources.sched_bindings[b_refn],
 				static_cast<br::ResourceIdentifier::Type_t>(r_type));
+		}
+#else
+		logger->Debug("SetBinding: getting a new mask for this resource type");
+		new_mask = br::ResourceBinder::GetMask(resources.sched_bindings[b_refn],
+                static_cast<br::ResourceIdentifier::Type_t>(r_type));
+#endif
 
 		if (new_mask.Count() == 0) continue;
 		bi.prev = bi.curr;
