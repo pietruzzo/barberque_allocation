@@ -240,14 +240,16 @@ private:
 	 rapidxml::xml_node<> * nodeFather);
 
 	/**
-	* @brief Function used to load an attribute value from a node
-	*
-	* @param _nameAttribute The name of the attribute to load
-	* @param node The node from which load the attribute
-	*/
+	 * @brief Function used to load an attribute value from a node
+	 *
+	 * @param _nameAttribute The name of the attribute to load
+	 * @param mandatory True if the attribute is mandatory
+	 * @param node The node from which load the attribute
+	 */
 	std::string loadAttribute(
-                const char * _nameAttribute,
-                rapidxml::xml_node<> * node);
+		const char * _nameAttribute,
+		bool mandatory,
+		rapidxml::xml_node<> * node);
 
 };
 

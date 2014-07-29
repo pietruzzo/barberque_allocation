@@ -328,14 +328,14 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 		while (awm_elem) {
 			// Working mode attributes
 			//TODO lanciare l'eccezione
-			read_attribute = loadAttribute("id", awm_elem);
+			read_attribute = loadAttribute("id", true, awm_elem);
 			wm_id = (uint8_t) atoi(read_attribute.c_str());
-			read_attribute = loadAttribute("name", awm_elem);
+			read_attribute = loadAttribute("name", false, awm_elem);
 			wm_name = (uint8_t) atoi(read_attribute.c_str());
 			//TODO lanciare l'eccezione
-			read_attribute = loadAttribute("value", awm_elem);
+			read_attribute = loadAttribute("value", true, awm_elem);
 			wm_value = (uint8_t) atoi(read_attribute.c_str());
-			read_attribute = loadAttribute("config-time", awm_elem);;
+			read_attribute = loadAttribute("config-time", false, awm_elem);
 			wm_config_time = (uint8_t) atoi(read_attribute.c_str());
 
 			// The awm ID must be unique!
@@ -482,7 +482,7 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(
         read_usage = attribute_usage->value();
         res_usage = (uint64_t) atoi(read_usage.c_str());
     }
-	res_units = loadAttribute("units", _res_elem);
+	res_units = loadAttribute("units", false, _res_elem);
 
 	// The usage requested must be > 0
 	//TODO controllare la prima condizione che cosa effettivamente fa e se funziona (!_res_elem->GetAttribute("qty").empty()) (casomai vedere la vecchia implementazione se non si è capito)
@@ -540,12 +540,11 @@ void RXMLRecipeLoader::ParsePluginTag(T _container,
 		rapidxml::xml_node<> * _plug_node) {
 
 	rapidxml::xml_node<> * plugdata_node = nullptr;
-	rapidxml::xml_attribute<> * name_attr = nullptr;
+
 	std::string name;
 	try {
 		// Plugin attributes
-		name_attr = _plug_node->first_attribute("name", 0, true);
-		name = name_attr->value();
+		name = loadAttribute("name", true, _plug_node);
 
 		// Plugin data in <plugin>
 		plugdata_node = _plug_node->first_node(0, 0, false);
@@ -585,15 +584,11 @@ void RXMLRecipeLoader::GetPluginData(T _container,
 // =======================[ Constraints ]=====================================
 
 void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node) {
-
 	rapidxml::xml_node<> * constr_elem = nullptr;
 	rapidxml::xml_node<> * con_elem    = nullptr;
-	rapidxml::xml_attribute<> * resource_attr = nullptr;
-	rapidxml::xml_attribute<> * constraint_type_attr = nullptr;
-	rapidxml::xml_attribute<> * value_attr = nullptr;
-
-	std::string resource;
 	std::string constraint_type;
+	std::string resource;
+	std::string value_st;
 	uint32_t value;
 
 	// <constraints> [Optional]
@@ -606,34 +601,34 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node) {
 	if (!constr_elem)
 		return;
 
-    // Constraint tags
-    con_elem = constr_elem->first_node("constraint", 0, true);
-    while (con_elem) {
-        // Attributes
-        constraint_type_attr = con_elem->first_attribute("type", 0, true);
-        constraint_type = constraint_type_attr->value();
+	try {
+		// Constraint tags
+		con_elem = constr_elem->first_node("constraint", 0, true);
+		while (con_elem) {
+			// Attributes
+			constraint_type = loadAttribute("type", true, con_elem);
+			resource = loadAttribute("resource", true, con_elem);
+			value_st = loadAttribute("bound", true, con_elem);
+			value = (uint32_t) atoi(value_st.c_str());
 
-        resource_attr = con_elem->first_attribute("resource", 0, true);
-        resource = resource_attr->value();
+			// Add the constraint
+			if (constraint_type.compare("L") == 0) {
+				recipe_ptr->AddConstraint(resource, value, 0);
+			}
+			else if (constraint_type.compare("U") == 0) {
+				recipe_ptr->AddConstraint(resource, 0, value);
+			}
+			else {
+				logger->Warn("Constraint: unknown bound type");
+				continue;
+			}
 
-        value_attr = con_elem->first_attribute("bound", 0, true);
-        value = (uint32_t) atoi(value_attr->value());
-
-        // Add the constraint
-        if (constraint_type.compare("L") == 0) {
-            recipe_ptr->AddConstraint(resource, value, 0);
-        }
-        else if (constraint_type.compare("U") == 0) {
-            recipe_ptr->AddConstraint(resource, 0, value);
-        }
-        else {
-            logger->Warn("Constraint: unknown bound type");
-            continue;
-        }
-
-        // Next constraint
-        con_elem = con_elem->next_sibling("constraint",0 , true);
-    }
+			// Next constraint
+			con_elem = con_elem->next_sibling("constraint",0 , true);
+		}
+	} catch (rapidxml::parse_error ex) {
+		logger->Error(ex.what());
+	}
 
 }
 
@@ -657,11 +652,17 @@ void RXMLRecipeLoader::CheckMandatoryNode (
 
 std::string RXMLRecipeLoader::loadAttribute(
                 const char * _nameAttribute,
+                bool mandatory,
                 rapidxml::xml_node<> * _node) {
     rapidxml::xml_attribute<> * attribute;
 
     attribute = _node->first_attribute(_nameAttribute, 0, true);
-    if (attribute == 0) {
+    if ((attribute == 0) && (mandatory)) {
+        std::string node_name(_node->name());
+        std::string attribute_name(_nameAttribute);
+        std::string exception_message("The mandatory attribute doesn't exist in this node. The attribute name is: " + attribute_name +" . The node name is: " + node_name);
+        throw rapidxml::parse_error(exception_message.c_str(), _node);
+    } else if (attribute == 0) {
         return "0";
     }
 
