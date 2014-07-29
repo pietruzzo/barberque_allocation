@@ -1,5 +1,6 @@
 config BBQUE_RLOADER_RXML
   bool "RXML"
   default n
+  select EXTERNAL_RAPIDXML
   ---help---
   Description...
