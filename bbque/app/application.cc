@@ -677,7 +677,7 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	}
 
 	// Bind the resource set to the working mode
-	awm->SetResourceBinding(b_refn);
+	awm->SetResourceBinding(vtok, b_refn);
 
 	// Reschedule accordingly to "awm"
 	logger->Debug("Rescheduling [%s] into AWM [%d:%s]...",

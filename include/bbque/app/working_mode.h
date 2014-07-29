@@ -308,8 +308,7 @@ public:
 	 *
 	 * @return WM_SUCCESS, or WM_RSRC_MISS_BIND if some bindings are missing
 	 */
-	ExitCode_t SetResourceBinding(size_t b_refn = 0);
-
+	ExitCode_t SetResourceBinding(br::RViewToken_t vtok, size_t b_refn = 0);
 
 	/**
 	 * @brief Get the map of scheduled resource usages
@@ -325,6 +324,19 @@ public:
 	inline br::UsagesMapPtr_t GetResourceBinding() const {
 		return resources.sync_bindings;
 	}
+
+	/**
+	 * @brief Update resource binding masks
+	 *
+	 * This method must be called by the ResourceAccouter to notify that the
+	 * synchronization of the assigned resources has been successfully
+	 * performed. Therefore the AWM can update the resource binding masks such
+	 * that they can be correctly retrieved by the PlatformProxy.
+	 *
+	 * @param vtok The resource state view according to which update
+	 * @param update_changed if true update alse the "changed" flags
+	 */
+	void UpdateBindingInfo(br::RViewToken_t vtok, bool update_changed=false);
 
 	/**
 	 * @brief Clear the scheduled resource binding
@@ -453,6 +465,11 @@ private:
 		 * bindings performed, reasonably by the scheduling policy.
 		 */
 		br::UsagesMapPtr_t sync_bindings;
+		/**
+		 * Keep track of the reference number of the scheduling binding map to
+		 * synchronize
+		 */
+		size_t sync_refn;
 		/**
 		 *Info regarding bindings per resource
 		 */

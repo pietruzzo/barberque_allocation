@@ -71,6 +71,12 @@ WorkingMode::~WorkingMode() {
 	resources.requested.clear();
 	if (resources.sync_bindings)
 		resources.sync_bindings->clear();
+	// Trash all the scheduling bindings
+	if (!resources.sched_bindings.empty()) {
+		logger->Fatal("resource sched bindings: %d",
+				resources.sched_bindings.size());
+		resources.sched_bindings.clear();
+	}
 }
 
 WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
@@ -232,44 +238,61 @@ br::UsagesMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
 	return sched_it->second;
 }
 
-WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
-	br::ResourceBitset new_mask;
-	uint8_t r_type;
-
+WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
+		br::RViewToken_t vtok,
+		size_t b_refn) {
 	// Set the new binding / resource usages map
 	resources.sync_bindings = GetSchedResourceBinding(b_refn);
 	if (resources.sync_bindings == nullptr) {
 		logger->Error("SetBinding: invalid scheduling binding [%ld]", b_refn);
 		return WM_BIND_FAILED;
 	}
+	resources.sync_refn = b_refn;
+
+	// Update the resource binding bit-masks
+	UpdateBindingInfo(vtok, true);
+
+	logger->Debug("SetBinding: resource binding [%ld] to allocate", b_refn);
+	return WM_SUCCESS;
+}
+
+
+void WorkingMode::UpdateBindingInfo(
+		br::RViewToken_t vtok,
+		bool update_changed) {
+	br::ResourceBitset new_mask;
+	uint8_t r_type;
 
 	// Update the resource binding bitmask (for each type)
 	for (r_type = br::ResourceIdentifier::SYSTEM;
 			r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
 		BindingInfo & bi(resources.binding_masks[r_type]);
-#ifdef CONFIG_BBQUE_SP_COWS_UBD
+
 		if (r_type == br::ResourceIdentifier::PROC_ELEMENT ||
-					r_type == br::ResourceIdentifier::MEMORY) {
-			logger->Debug("SetBinding: getting a new mask for this "
-				"resource type. Using CPU::ANY as mask scope");
+			r_type == br::ResourceIdentifier::MEMORY) {
+			logger->Debug("SetBinding: [%s] is a terminal resource",
+					br::ResourceIdentifier::TypeStr[r_type]);
+			// 'Deep' get bit-mask in this case
 			new_mask = br::ResourceBinder::GetMask(
-				resources.sched_bindings[b_refn],
+				resources.sched_bindings[resources.sync_refn],
 				static_cast<br::ResourceIdentifier::Type_t>(r_type),
-				br::ResourceIdentifier::CPU, R_ID_ANY);
+				br::ResourceIdentifier::CPU,
+				R_ID_ANY, owner, vtok);
 		}
 		else {
-			logger->Debug("SetBinding: getting a new mask for this "
-								"resource type");
 			new_mask = br::ResourceBinder::GetMask(
-				resources.sched_bindings[b_refn],
+				resources.sched_bindings[resources.sync_refn],
 				static_cast<br::ResourceIdentifier::Type_t>(r_type));
 		}
-#else
-		logger->Debug("SetBinding: getting a new mask for this resource type");
-		new_mask = br::ResourceBinder::GetMask(resources.sched_bindings[b_refn],
-                static_cast<br::ResourceIdentifier::Type_t>(r_type));
-#endif
+		logger->Debug("SetBinding: [%s] bitmask: %s",
+				br::ResourceIdentifier::TypeStr[r_type],
+				new_mask.ToStringCG().c_str());
 
+		// Check if the bit-masks have changed only if required
+		if (!update_changed)
+			continue;
+
+		// Update previous/current bit-masks
 		if (new_mask.Count() == 0) continue;
 		bi.prev = bi.curr;
 		bi.curr = new_mask;
@@ -280,12 +303,6 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(size_t b_refn) {
 				str_id, br::ResourceIdentifier::TypeStr[r_type],
 				bi.changed);
 	}
-
-	// Trash all the remaining scheduling bindings
-	resources.sched_bindings.clear();
-
-	logger->Debug("SetBinding: resource binding [%ld] to allocate", b_refn);
-	return WM_SUCCESS;
 }
 
 void WorkingMode::ClearResourceBinding() {

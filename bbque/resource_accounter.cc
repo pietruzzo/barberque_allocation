@@ -1178,6 +1178,11 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 		return result;
 	}
 
+	// Update AWM binding info (resource bitsets)
+	logger->Debug("SyncMode [%d]: [%s] updating binding information",
+				sync_ssn.count, papp->StrId());
+	papp->NextAWM()->UpdateBindingInfo(sync_ssn.view);
+	return result;
 }
 
 void ResourceAccounter::SyncAbort() {
