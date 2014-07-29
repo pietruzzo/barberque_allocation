@@ -634,46 +634,22 @@ LinuxPP::ExitCode_t
 LinuxPP::GetResourceMapping(AppPtr_t papp, UsagesMapPtr_t pum,
 		RViewToken_t rvt, RLinuxBindingsPtr_t prlb) {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
-	br::ResourceBitset node_ids;
+	br::ResourceBitset core_ids;
+	br::ResourceBitset mem_ids;
 
 	// Set the amount of CPUs and MEMORY
 	prlb->amount_cpus = ra.GetUsageAmount(pum, br::Resource::PROC_ELEMENT, br::Resource::CPU);
 	prlb->amount_memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
 
-	// Computing nodes (CPUs)
-	node_ids = papp->NextAWM()->BindingSet(br::Resource::CPU);
+	// CPU core set and MEMORY node
+	core_ids = papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT);
+	mem_ids  = papp->NextAWM()->BindingSet(br::Resource::MEMORY);
 
 	// CPU cores and MEMORY nodes cgroup new attributes value
-	memset(prlb->cpus, 0, 3*MaxCpusCount);
-	memset(prlb->mems, 0, 3*MaxMemsCount);
-	BuildSocketCGAttr(prlb->cpus, pum, node_ids, br::Resource::PROC_ELEMENT, papp, rvt);
-	BuildSocketCGAttr(prlb->mems, pum, node_ids, br::Resource::MEMORY, papp, rvt);
+	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
+	strncpy(prlb->mems,  mem_ids.ToStringCG().c_str(), 3*MaxMemsCount);
 
 	return OK;
-}
-
-void LinuxPP::BuildSocketCGAttr(
-		char * dest,
-		UsagesMapPtr_t pum,
-		br::ResourceBitset const & cpu_mask,
-		br::Resource::Type_t r_type,
-		AppPtr_t papp,
-		RViewToken_t rvt) {
-	br::ResourceBitset r_mask;
-	br::ResID_t cpu_id;
-
-	for (cpu_id = cpu_mask.FirstSet(); cpu_id <= cpu_mask.LastSet(); ++cpu_id) {
-		r_mask = br::ResourceBinder::GetMask(pum, r_type, br::Resource::CPU, cpu_id, papp, rvt);
-		logger->Debug("PLAT LNX: Node attributes '%-3s' = {%s}",
-				br::ResourceIdentifier::TypeStr[r_type],
-				r_mask.ToStringCG().c_str());
-
-		// Memory or cores IDs string
-		strcat(dest, r_mask.ToStringCG().c_str());
-		strcat(dest, ",");
-	}
-	// Remove last ","
-	dest[strlen(dest)-1] = 0;
 }
 
 LinuxPP::ExitCode_t

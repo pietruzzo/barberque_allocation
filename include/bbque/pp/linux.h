@@ -293,9 +293,6 @@ private:
 	ExitCode_t GetResourceMapping(ba::AppPtr_t papp, br::UsagesMapPtr_t pum,
 		br::RViewToken_t rvt, RLinuxBindingsPtr_t prlb);
 
-	void BuildSocketCGAttr(char * dest, br::UsagesMapPtr_t pum,
-			br::ResourceBitset const & cpu_mask, br::Resource::Type_t r_type,
-			ba::AppPtr_t papp, br::RViewToken_t rvt);
 
 	ExitCode_t BuildCGroup(CGroupDataPtr_t &pcgd);
 
