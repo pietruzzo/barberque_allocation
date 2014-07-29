@@ -242,9 +242,8 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 		sys_platform_hw.assign(pp.GetHardwareID());
 		// Look for the platform section matching the system platform id
 		while (pp_elem && !platform_matched) {
-		    // TODO lanciare un eccezione quando la funzione restituisce null (solo per id, non per hw)
-			platform_id = pp_elem->first_attribute("id", 0, true)->value();
-			platform_hw = pp_elem->first_attribute("hw", 0, true)->value();
+			platform_id = loadAttribute("id", true, pp_elem);
+			platform_hw = loadAttribute("hw", false, pp_elem);
 			if (platform_id.compare(sys_platform_id) == 0) {
 				// Hardware (SoC) check required?
 				if (!sys_platform_hw.empty()
