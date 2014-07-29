@@ -149,8 +149,7 @@ ResourceBitset ResourceBinder::GetMask(
 
 	// Sanity check
 	if ((r_type >= br::ResourceIdentifier::TYPE_COUNT)       ||
-		(r_scope_type >= br::ResourceIdentifier::TYPE_COUNT) ||
-		(r_scope_id < 0))
+		(r_scope_type >= br::ResourceIdentifier::TYPE_COUNT))
 		return r_mask;
 
 	DB(fprintf(stderr, FD("GetMask: scope='%s%d' r='%s' view=%lu\n"),
@@ -169,7 +168,9 @@ ResourceBitset ResourceBinder::GetMask(
 
 		// If the ID has been found and the type of resource is the one
 		// requested, then set the the bit
-		if ((rs_id == r_scope_id) && (rp_type == r_type)) {
+		DB(fprintf(stderr, FD("GetMask: ID search:%d found:%d\n"), r_scope_id, rs_id));
+		if (((r_scope_id == R_ID_ANY) || (rs_id == r_scope_id))
+				&& (rp_type == r_type)) {
 			DB(fprintf(stderr, FD("GetMask: scope found in R{%s}!\n"),
 						ppath->ToString().c_str()));
 			return GetMask(pusage->GetResourcesList(), r_type, papp, vtok);
