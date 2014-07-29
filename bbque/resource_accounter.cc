@@ -1152,6 +1152,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit() {
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 		ba::AppSPtr_t const & papp) {
+	ResourceAccounter::ExitCode_t result = RA_SUCCESS;
 
 	// Check that we are in a synchronized session
 	if (!Synching()) {
@@ -1167,11 +1168,16 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 		return RA_ERR_MISS_AWM;
 	}
 
-	// Resource set to acquire
-	br::UsagesMapPtr_t const &usages(papp->NextAWM()->GetResourceBinding());
-
 	// Acquire resources
-	return _BookResources(papp, usages, sync_ssn.view);
+	br::UsagesMapPtr_t const &usages(papp->NextAWM()->GetResourceBinding());
+	result = _BookResources(papp, usages, sync_ssn.view);
+	if (result != RA_SUCCESS) {
+		logger->Fatal("SyncMode [%d]: [%s] resource booking failed",
+				sync_ssn.count, papp->StrId());
+		_SyncAbort();
+		return result;
+	}
+
 }
 
 void ResourceAccounter::SyncAbort() {
