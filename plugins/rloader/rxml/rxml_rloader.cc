@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Politecnico di Milano
+ * Copyright (C) 2014  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,8 +50,10 @@ po::variables_map xmlrloader_opts_value;
 
 
 RXMLRecipeLoader::RXMLRecipeLoader() {
+	// Get a logger
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
+
 	logger->Debug("Built RXML RecipeLoader object @%p", (void*)this);
 }
 
@@ -121,87 +123,88 @@ int32_t RXMLRecipeLoader::Destroy(void *plugin) {
 RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 		std::string const & _recipe_name,
 		RecipePtr_t _recipe) {
+	RecipeLoaderIF::ExitCode_t result;
+	rapidxml::xml_document<> doc;
+	rapidxml::xml_node<> * root_node = nullptr;
+	rapidxml::xml_node<> * app_node = nullptr;
+	rapidxml::xml_node<> * pp_node = nullptr;
+	rapidxml::xml_attribute<> * bbq_attribute = nullptr;
+	rapidxml::xml_attribute<> * app_attribute = nullptr;
+	uint16_t priority = 0;
+	int maj, min;
+	std::string version_id;
 
-        RecipeLoaderIF::ExitCode_t result;
-        rapidxml::xml_document<> doc;
-        rapidxml::xml_node<> * root_node = nullptr;
-        rapidxml::xml_node<> * app_node = nullptr;
-        rapidxml::xml_node<> * pp_node = nullptr;
-        rapidxml::xml_attribute<> * bbq_attribute = nullptr;
-        rapidxml::xml_attribute<> * app_attribute = nullptr;
-        //rapidxml::xml_attribute<> * pp_attribute = nullptr;
-        uint16_t priority = 0;
-        int maj, min;
-        std::string version_id;
+	// Recipe object
+	recipe_ptr = _recipe;
 
-        // Recipe object
-        recipe_ptr = _recipe;
+	// Plugin needs a logger
+	if (!logger) {
+		fprintf(stderr, FE("Error: Plugin 'XMLRecipeLoader' needs a logger\n"));
+		result = RL_ABORTED;
+		goto error;
+	}
 
-        // Plugin needs a logger
-        if (!logger) {
-            fprintf(stderr, FE("Error: Plugin 'XMLRecipeLoader' needs a logger\n"));
-            result = RL_ABORTED;
-            goto error;
-        }
+	try {
+		// Load the recipe parsing an XML file
+		std::string path(recipe_dir + "/" + _recipe_name + ".recipe");
+		std::ifstream xml_file(path);
+		std::stringstream buffer;
+		buffer << xml_file.rdbuf();
+		xml_file.close();
+		std::string xml_content(buffer.str());
 
-        try {
-            // Load the recipe parsing an XML file
-            std::string path(recipe_dir + "/" + _recipe_name + ".recipe");
-            std::ifstream xml_file(path);
-            std::stringstream buffer;
-            buffer << xml_file.rdbuf();
-            xml_file.close();
-            std::string xml_content(buffer.str());
+		doc.parse<0>(&xml_content[0]);
 
-            doc.parse<0>(&xml_content[0]);
+		// <BarbequeRTRM> - Recipe root tag
+		root_node = doc.first_node();
+		CheckMandatoryNode(root_node, "application", root_node);
 
-            // <BarbequeRTRM> - Recipe root tag
-            root_node = doc.first_node();
+		// Recipe version control
+		bbq_attribute = root_node->first_attribute("recipe_version", 0, true);
+		version_id = bbq_attribute->value();
+		logger->Debug("Recipe version = %s", version_id.c_str());
+		sscanf(version_id.c_str(), "%d.%d", &maj, &min);
+		if (maj < RECIPE_MAJOR_VERSION ||
+				(maj >= RECIPE_MAJOR_VERSION && min < RECIPE_MINOR_VERSION)) {
+			logger->Error("Recipe version mismatch (REQUIRED %d.%d). "
+				"Found %d.%d", RECIPE_MAJOR_VERSION, RECIPE_MINOR_VERSION,
+				maj, min);
+			result = RL_VERSION_MISMATCH;
+			goto error;
+		}
 
-            // Recipe version control
-            bbq_attribute = root_node->first_attribute("recipe_version", 0, true);
-            version_id = bbq_attribute->value();
-            logger->Debug("Recipe version = %s", version_id.c_str());
-            sscanf(version_id.c_str(), "%d.%d", &maj, &min);
-            if (maj < RECIPE_MAJOR_VERSION ||
-                    (maj >= RECIPE_MAJOR_VERSION && min < RECIPE_MINOR_VERSION)) {
-                logger->Error("Recipe version mismatch (REQUIRED %d.%d). "
-                        "Found %d.%d", RECIPE_MAJOR_VERSION, RECIPE_MINOR_VERSION,
-                        maj, min);
-                result = RL_VERSION_MISMATCH;
-                goto error;
-            }
+		// <application>
+		app_node = root_node->first_node("application", 0, true);
+		CheckMandatoryNode(app_node, "application", root_node);
+		app_attribute = app_node->first_attribute("priority", 0, true);
 
-           // <application>
-            app_node = root_node->first_node("application", 0, true);
-            app_attribute = app_node->first_attribute("priority", 0, true);
-            //setting the priority of the app
-            std::string priority_str(app_attribute->value());
-            priority = (uint8_t) atoi(priority_str.c_str());
-            recipe_ptr->SetPriority(priority);
+		//setting the priority of the app
+		std::string priority_str(app_attribute->value());
+		priority = (uint8_t) atoi(priority_str.c_str());
+		recipe_ptr->SetPriority(priority);
 
-            // Load the proper platform section
-            pp_node = LoadPlatform(app_node);
-            if (!pp_node) {
-                result = RL_PLATFORM_MISMATCH;
-                goto error;
-            }
+		// Load the proper platform section
+		pp_node = LoadPlatform(app_node);
+		if (!pp_node) {
+			result = RL_PLATFORM_MISMATCH;
+			goto error;
+		}
 
-            // Application Working Modes
-            result = LoadWorkingModes(pp_node);
-            if (result != RL_SUCCESS){
-                goto error;
-            }
+		// Application Working Modes
+		result = LoadWorkingModes(pp_node);
+		if (result != RL_SUCCESS){
+			goto error;
+		}
 
-            // "Static" constraints and plugins specific data
-            LoadConstraints(pp_node);
-            LoadPluginsData<ba::RecipePtr_t>(recipe_ptr, pp_node);
+		// "Static" constraints and plugins specific data
+		LoadConstraints(pp_node);
+		LoadPluginsData<ba::RecipePtr_t>(recipe_ptr, pp_node);
 
-        } catch(rapidxml::parse_error ex){
-            logger->Error(ex.what());
-            result = RL_ABORTED;
-            goto error;
-        }
+	} catch(rapidxml::parse_error ex){
+		logger->Error(ex.what());
+		result = RL_ABORTED;
+		goto error;
+	}
 
 	// Regular exit
 	return result;
@@ -212,9 +215,10 @@ error:
 	return result;
 }
 
+
 rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xml_elem) {
 
-    rapidxml::xml_node<> * pp_elem = nullptr;
+	rapidxml::xml_node<> * pp_elem = nullptr;
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 	rapidxml::xml_node<> * pp_gen_elem = nullptr;
 	const char * sys_platform_id;
@@ -227,7 +231,6 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 
 	try {
 		// <platform>
-		// TODO lanciare un eccezione quando la funzione restituisce null
 		pp_elem = _xml_elem->first_node("platform", 0, true);
 		CheckMandatoryNode(pp_elem, "platform", _xml_elem);
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
@@ -240,6 +243,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 		}
 		// Plaform hardware (optional)
 		sys_platform_hw.assign(pp.GetHardwareID());
+
 		// Look for the platform section matching the system platform id
 		while (pp_elem && !platform_matched) {
 			platform_id = loadAttribute("id", true, pp_elem);
@@ -270,6 +274,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 			// Next platform section
 			pp_elem = pp_elem->next_sibling("platform", 0, true);
 		}
+
 		// Does the required platform match the system platform?
 		if (!platform_matched) {
 			logger->Error("Platform mismatch: cannot find (system) ID '%s'",
@@ -300,6 +305,7 @@ std::time_t RXMLRecipeLoader::LastModifiedTime(std::string const & _name) {
 	return boost::filesystem::last_write_time(p);
 }
 
+
 //========================[ Working modes ]===================================
 
 RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
@@ -317,21 +323,16 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 	try {
 		// For each working mode we need resource usages data and (optionally)
 		// plugins specific data
-		//TODO lanciare l'eccezione
 		awms_elem = _xml_elem->first_node("awms", 0, true);
 		CheckMandatoryNode(awms_elem, "awms", _xml_elem);
-		//TODO lanciare l'eccezione
 		awm_elem  = awms_elem->first_node("awm", 0, true);
 		CheckMandatoryNode(awm_elem, "awm", awms_elem);
-
 		while (awm_elem) {
 			// Working mode attributes
-			//TODO lanciare l'eccezione
 			read_attribute = loadAttribute("id", true, awm_elem);
 			wm_id = (uint8_t) atoi(read_attribute.c_str());
 			read_attribute = loadAttribute("name", false, awm_elem);
 			wm_name = (uint8_t) atoi(read_attribute.c_str());
-			//TODO lanciare l'eccezione
 			read_attribute = loadAttribute("value", true, awm_elem);
 			wm_value = (uint8_t) atoi(read_attribute.c_str());
 			read_attribute = loadAttribute("config-time", false, awm_elem);
@@ -364,7 +365,6 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 						wm_name.c_str());
 
 			// Load resource usages of the working mode
-			//TODO lanciare l'eccezione
 			resources_elem = awm_elem->first_node("resources", 0, false);
 			CheckMandatoryNode(resources_elem, "resources", awm_elem);
 			result = LoadResources(resources_elem, awm, "");
@@ -391,10 +391,10 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 	return RL_SUCCESS;
 }
 
+
 // =======================[ Resources ]=======================================
 
-uint8_t RXMLRecipeLoader::LoadResources(
-        rapidxml::xml_node<> * _xml_elem,
+uint8_t RXMLRecipeLoader::LoadResources(rapidxml::xml_node<> * _xml_elem,
 		AwmPtr_t & _wm,
 		std::string const & _curr_path = "") {
 	uint8_t result = __RSRC_SUCCESS;
@@ -403,14 +403,13 @@ uint8_t RXMLRecipeLoader::LoadResources(
 
 	try {
 		// Get the resource xml element
-		//TODO lanciare l'eccezione
 		res_elem = _xml_elem->first_node(0, 0, true);
 		CheckMandatoryNode(res_elem, "", _xml_elem);
 		while (res_elem) {
+
 			// Parse the attributes from the resource element
 			res_path = _curr_path;
 			result |= GetResourceAttributes(res_elem, _wm, res_path);
-
 			if (result >= __RSRC_FORMAT_ERR)
 				return result;
 
@@ -433,8 +432,8 @@ uint8_t RXMLRecipeLoader::LoadResources(
 	return result;
 }
 
-uint8_t RXMLRecipeLoader::AppendToWorkingMode(
-        AwmPtr_t & wm,
+
+uint8_t RXMLRecipeLoader::AppendToWorkingMode(AwmPtr_t & wm,
 		std::string const & _res_path,
 		uint64_t _res_usage) {
 	ba::WorkingModeStatusIF::ExitCode_t result;
@@ -452,6 +451,7 @@ uint8_t RXMLRecipeLoader::AppendToWorkingMode(
 	return __RSRC_SUCCESS;
 }
 
+
 uint8_t RXMLRecipeLoader::GetResourceAttributes(
 		rapidxml::xml_node<> * _res_elem,
 		AwmPtr_t & _wm,
@@ -459,32 +459,30 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(
 	uint64_t res_usage = 0;
 	std::string res_units;
 	std::string res_id;
-    std::string read_usage;
-    rapidxml::xml_attribute<> * attribute_usage;
-    rapidxml::xml_attribute<> * attribute_id;
+	std::string read_usage;
+	rapidxml::xml_attribute<> * attribute_usage;
+	rapidxml::xml_attribute<> * attribute_id;
 
 	// Resource ID
 	attribute_id = _res_elem->first_attribute("id", 0, true);
-    if (attribute_id != 0) {
-        res_id = attribute_usage->value();
-    }
+	if (attribute_id != 0) {
+		res_id = attribute_usage->value();
+	}
 
 	// Build the resource path string
 	if (!_res_path.empty())
 		_res_path += ".";
-    //TODO controllare se _res_elem->name() restituisce effettivamente il nome corretto (casomai vedere la vecchia implementazione se non si è capito)
 	_res_path += _res_elem->name() + res_id;
 
 	// Resource quantity request and units
 	attribute_usage = _res_elem->first_attribute("qty", 0, true);
-    if (attribute_usage != 0) {
-        read_usage = attribute_usage->value();
-        res_usage = (uint64_t) atoi(read_usage.c_str());
-    }
+	if (attribute_usage != 0) {
+		read_usage = attribute_usage->value();
+		res_usage = (uint64_t) atoi(read_usage.c_str());
+	}
 	res_units = loadAttribute("units", false, _res_elem);
 
 	// The usage requested must be > 0
-	//TODO controllare la prima condizione che cosa effettivamente fa e se funziona (!_res_elem->GetAttribute("qty").empty()) (casomai vedere la vecchia implementazione se non si è capito)
 	if (!(attribute_usage == 0) && res_usage <= 0) {
 		logger->Error("Resource ""%s"": usage value not valid (%" PRIu64 ")",
 				_res_path.c_str(), res_usage);
@@ -494,7 +492,7 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(
 	// If the quantity is 0 return without adding the resource request to the
 	// current AWM
 	if (res_usage == 0) {
-        return __RSRC_SUCCESS;
+		return __RSRC_SUCCESS;
 	}
 
 
@@ -504,12 +502,12 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(
 	return AppendToWorkingMode(_wm, _res_path, res_usage);
 }
 
+
 // =======================[ Plugins specific data ]===========================
 
 template<class T>
 void RXMLRecipeLoader::LoadPluginsData(T _container,
 		rapidxml::xml_node<> * _xml_node) {
-
 	rapidxml::xml_node<> * plugins_node = nullptr;
 	rapidxml::xml_node<> * plug_node = nullptr;
 
@@ -518,8 +516,8 @@ void RXMLRecipeLoader::LoadPluginsData(T _container,
 	// <application> section and into the <awm> section.
 	plugins_node = _xml_node->first_node("plugins", 0, true);
 	if (plugins_node == 0){
-        return;
-    }
+		return;
+	}
 
 	try {
 		// Parse the <plugin> tags
@@ -534,13 +532,13 @@ void RXMLRecipeLoader::LoadPluginsData(T _container,
 	}
 }
 
+
 template<class T>
 void RXMLRecipeLoader::ParsePluginTag(T _container,
 		rapidxml::xml_node<> * _plug_node) {
-
 	rapidxml::xml_node<> * plugdata_node = nullptr;
-
 	std::string name;
+
 	try {
 		// Plugin attributes
 		name = loadAttribute("name", true, _plug_node);
@@ -558,11 +556,11 @@ void RXMLRecipeLoader::ParsePluginTag(T _container,
 
 }
 
+
 template<class T>
 void RXMLRecipeLoader::GetPluginData(T _container,
 		rapidxml::xml_node<> * plugdata_node,
 		std::string const & _plug_name) {
-
 	std::string key;
 	std::string value;
 	try {
@@ -579,6 +577,7 @@ void RXMLRecipeLoader::GetPluginData(T _container,
 		logger->Error(ex.what());
 	}
 }
+
 
 // =======================[ Constraints ]=====================================
 
@@ -635,38 +634,43 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node) {
 // =======================[ Utils ]=======================================
 
 void RXMLRecipeLoader::CheckMandatoryNode (
-     rapidxml::xml_node<> * _nodeToCheck,
-     const char * _nodeToCheckName,
-     rapidxml::xml_node<> * _nodeFather) {
+	 rapidxml::xml_node<> * _nodeToCheck,
+	 const char * _nodeToCheckName,
+	 rapidxml::xml_node<> * _nodeFather) {
 
-    std::string father_name(_nodeFather->name());
-    std::string child_name(_nodeToCheckName);
+	std::string father_name(_nodeFather->name());
+	std::string child_name(_nodeToCheckName);
 
-    //Throwing an exception if the mandatory node doesn't exist
-    if (_nodeToCheck == 0) {
-        std::string exception_message("The mandatory node doesn't exist in this recipe. The node name is: " + child_name +" . The father name is: " + father_name);
-        throw rapidxml::parse_error(exception_message.c_str(), _nodeFather);
-    }
+	//Throwing an exception if the mandatory node doesn't exist
+	if (_nodeToCheck == 0) {
+	std::string exception_message("The mandatory node doesn't exist in this"
+			"recipe. The node name is: " + child_name +"."
+			"The father name is: " + father_name);
+	throw rapidxml::parse_error(exception_message.c_str(), _nodeFather);
+	}
 }
 
-std::string RXMLRecipeLoader::loadAttribute(
-                const char * _nameAttribute,
-                bool mandatory,
-                rapidxml::xml_node<> * _node) {
-    rapidxml::xml_attribute<> * attribute;
 
-    attribute = _node->first_attribute(_nameAttribute, 0, true);
-    if ((attribute == 0) && (mandatory)) {
-        std::string node_name(_node->name());
-        std::string attribute_name(_nameAttribute);
-        std::string exception_message("The mandatory attribute doesn't exist in this node. The attribute name is: " + attribute_name +" . The node name is: " + node_name);
-        throw rapidxml::parse_error(exception_message.c_str(), _node);
-    } else if (attribute == 0) {
-        return "0";
-    }
+std::string RXMLRecipeLoader::loadAttribute(const char * _nameAttribute,
+		bool mandatory,
+		rapidxml::xml_node<> * _node) {
+	rapidxml::xml_attribute<> * attribute;
 
-    return attribute->value();
+	attribute = _node->first_attribute(_nameAttribute, 0, true);
+	if ((attribute == 0) && (mandatory)) {
+		std::string node_name(_node->name());
+		std::string attribute_name(_nameAttribute);
+		std::string exception_message("The mandatory attribute doesn't"
+				"exist in this node. The attribute name is: "
+				+ attribute_name +" . The node name is: " + node_name);
+	throw rapidxml::parse_error(exception_message.c_str(), _node);
+	} else if (attribute == 0) {
+		return "0";
+	}
+
+	return attribute->value();
 }
+
 } // namespace plugins
 
 } // namespace bque

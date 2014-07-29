@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Politecnico di Milano
+ * Copyright (C) 2014  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -203,7 +203,9 @@ private:
 	 * which add the plugin specific data)
 	 */
 	template<class T>
-	void ParsePluginTag(T container, rapidxml::xml_node<> * _plug_node);
+	void ParsePluginTag(
+			T container,
+			rapidxml::xml_node<> * _plug_node);
 
 	/**
 	 * @brief Parse the data nested under <plugin>
@@ -214,7 +216,10 @@ private:
 	 * @param plugin_name The name of the plugin
 	 */
 	template<class T>
-	void GetPluginData(T _container, rapidxml::xml_node<> * plugdata_node, std::string const & _plug_name);
+	void GetPluginData(
+			T _container,
+			rapidxml::xml_node<> * plugdata_node,
+			std::string const & _plug_name);
 
 	/**
 	 * @brief Parse the section containing constraints assertions
@@ -224,33 +229,32 @@ private:
 	 */
 	void LoadConstraints(rapidxml::xml_node<> * xml_node);
 
-    /**
-    * @brief Check if the first passed node exists or is a 0. This check
-    * is done because some node are mandatory in the recipes.
-    *
-    * @param nodeToCheck The XML node to check existence
-    * @param nodeToCheckName The name of the node to check the existence
-    * @param nodeFather The father of the node to check the existence
-    * This is useful to understand the missing node position
-    * @throw parse_error when the node is missing
-    */
-    void CheckMandatoryNode(
-	 rapidxml::xml_node<> * nodeToCheck,
-	 const char * nodeToCheckName,
-	 rapidxml::xml_node<> * nodeFather);
+	/**
+	* @brief Check if the first passed node exists or is a 0. This check
+	* is done because some node are mandatory in the recipes.
+	*
+	* @param nodeToCheck The XML node to check existence
+	* @param nodeToCheckName The name of the node to check the existence
+	* @param nodeFather The father of the node to check the existence
+	* This is useful to understand the missing node position
+	* @throw parse_error when the node is missing
+	*/
+	void CheckMandatoryNode(
+			rapidxml::xml_node<> * nodeToCheck,
+			const char * nodeToCheckName,
+			rapidxml::xml_node<> * nodeFather);
 
 	/**
-	 * @brief Function used to load an attribute value from a node
-	 *
-	 * @param _nameAttribute The name of the attribute to load
-	 * @param mandatory True if the attribute is mandatory
-	 * @param node The node from which load the attribute
-	 */
+	* @brief Function used to load an attribute value from a node
+	*
+	* @param _nameAttribute The name of the attribute to load
+	* @param mandatory True if the attribute is mandatory
+	* @param node The node from which load the attribute
+	*/
 	std::string loadAttribute(
-		const char * _nameAttribute,
-		bool mandatory,
-		rapidxml::xml_node<> * node);
-
+			const char * _nameAttribute,
+			bool mandatory,
+			rapidxml::xml_node<> * node);
 };
 
 } // namespace plugins
