@@ -34,21 +34,12 @@ AttributesContainer::~AttributesContainer() {
 AttributesContainer::AttrPtr_t
 AttributesContainer::GetAttribute(std::string const & _ns,
 		std::string const & _key) {
-	// Find the plugin set of pairs
-	std::pair<AttributesMap_t::iterator, AttributesMap_t::iterator> range =
-		attributes.equal_range(_ns);
 
-	// Find the attribute
-	AttributesMap_t::iterator it = range.first;
-	while (it != range.second &&
-		it->second->key.compare(_key) != 0) {
-		++it;
-	}
+	for (auto &attribute : attributes)
+		if (attribute.first.c_str() == _ns)
+			if (attribute.second->key.c_str() == _key)
+				return attribute.second;
 
-	// Return the value
-	if (it != range.second) {
-		return it->second;
-	}
 	// Null return
 	return AttrPtr_t();
 }
