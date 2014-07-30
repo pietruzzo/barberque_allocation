@@ -348,7 +348,7 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 			result = LoadResources(resources_elem, awm, "");
 			if (result == __RSRC_FORMAT_ERR)
 				return RL_FORMAT_ERROR;
-			else if (result |= __RSRC_WEAK_LOAD) {
+			else if(result & __RSRC_WEAK_LOAD) {
 				awm_elem = awm_elem->NextSiblingElement("awm", false);
 				continue;
 			}
