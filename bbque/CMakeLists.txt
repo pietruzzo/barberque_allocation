@@ -123,9 +123,10 @@ target_link_libraries(
 )
 
 # Linking static plugins
+set (BBQUE_RLOADER  "bbque_rloader_${BBQUE_RLOADER_DEFAULT}")
 target_link_libraries(
 	barbeque
-	-Wl,-whole-archive bbque_recipe_loader_xml -Wl,-no-whole-archive
+	-Wl,-whole-archive ${BBQUE_RLOADER} -Wl,-no-whole-archive
 )
 
 

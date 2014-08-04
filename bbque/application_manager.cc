@@ -17,6 +17,7 @@
 
 #include "bbque/application_manager.h"
 
+#include "bbque/config.h"
 #include "bbque/configuration_manager.h"
 #include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
@@ -67,9 +68,9 @@ ApplicationManager & ApplicationManager::GetInstance() {
 
 
 ApplicationManager::ApplicationManager() :
-	cm(CommandManager::GetInstance()),
-	pp(PlatformProxy::GetInstance()),
-	cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
+		cm(CommandManager::GetInstance()),
+		pp(PlatformProxy::GetInstance()),
+		cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
 
 	// Get a logger
 	logger = bu::Logger::GetLogger(APPLICATION_MANAGER_NAMESPACE);
@@ -91,7 +92,9 @@ ApplicationManager::ApplicationManager() :
 			ggap_threshold_optimize);
 
 	//  Get the recipe loader instance
-	rloader = ModulesFactory::GetRecipeLoaderModule();
+	std::string rloader_plugin_id(
+			RECIPE_LOADER_NAMESPACE "." BBQUE_RLOADER_DEFAULT);
+	rloader = ModulesFactory::GetRecipeLoaderModule(rloader_plugin_id);
 	if (!rloader) {
 		logger->Fatal("Missing RecipeLoader plugin");
 		assert(rloader);
