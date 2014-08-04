@@ -370,13 +370,13 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 			result = LoadResources(resources_elem, awm, "");
 			if (result == __RSRC_FORMAT_ERR)
 				return RL_FORMAT_ERROR;
-			else if (result |= __RSRC_WEAK_LOAD) {
+			else if (result & __RSRC_WEAK_LOAD) {
 				awm_elem = awm_elem->next_sibling("awm", 0, false);
 				continue;
 			}
 
 			// AWM plugin specific data
-			//LoadPluginsData<ba::AwmPtr_t>(awm, awm_elem);
+			LoadPluginsData<ba::AwmPtr_t>(awm, awm_elem);
 
 			// Next working mode
 			awm_elem = awm_elem->next_sibling("awm", 0, false);
