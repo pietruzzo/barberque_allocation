@@ -466,7 +466,7 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(
 	// Resource ID
 	attribute_id = _res_elem->first_attribute("id", 0, true);
 	if (attribute_id != 0) {
-		res_id = attribute_usage->value();
+		res_id = attribute_id->value();
 	}
 
 	// Build the resource path string
