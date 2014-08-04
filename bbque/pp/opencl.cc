@@ -165,32 +165,39 @@ void OpenCLProxy::HwSetup() {
 	uint32_t min, max, step;
 	int s_min, s_max, s_step;
 	int ps_count;
+	PowerManager::PMResult pm_result;
 	ResourcePathListPtr_t pgpu_paths(
 		GetDevicePaths(br::ResourceIdentifier::GPU));
 	for (auto gpu_rp: *(pgpu_paths.get())) {
-		pm.GetFanSpeedInfo(gpu_rp, min, max, step);
-		logger->Info("PLAT OCL: [%s] Fanspeed range: [%4d, %4d, s:%2d] RPM ",
-			gpu_rp->ToString().c_str(), min, max, step);
+		pm_result = pm.GetFanSpeedInfo(gpu_rp, min, max, step);
+		if (pm_result == PowerManager::PMResult::OK)
+			logger->Info("PLAT OCL: [%s] Fanspeed range: [%4d, %4d, s:%2d] RPM ",
+				gpu_rp->ToString().c_str(), min, max, step);
 
-		pm.GetVoltageInfo(gpu_rp, min, max, step);
-		logger->Info("PLAT OCL: [%s] Voltage range:  [%4d, %4d, s:%2d] mV ",
-			gpu_rp->ToString().c_str(), min, max, step);
+		pm_result = pm.GetVoltageInfo(gpu_rp, min, max, step);
+		if (pm_result == PowerManager::PMResult::OK)
+			logger->Info("PLAT OCL: [%s] Voltage range:  [%4d, %4d, s:%2d] mV ",
+				gpu_rp->ToString().c_str(), min, max, step);
 
-		pm.GetClockFrequencyInfo(gpu_rp, min, max, step);
-		logger->Info("PLAT OCL: [%s] ClkFreq range:  [%4d, %4d, s:%2d] MHz ",
-			gpu_rp->ToString().c_str(),
-			min/1000, max/1000, step/1000);
+		pm_result = pm.GetClockFrequencyInfo(gpu_rp, min, max, step);
+		if (pm_result == PowerManager::PMResult::OK)
+			logger->Info("PLAT OCL: [%s] ClkFreq range:  [%4d, %4d, s:%2d] MHz ",
+				gpu_rp->ToString().c_str(),
+				min/1000, max/1000, step/1000);
 
-		pm.GetPowerStatesInfo(gpu_rp, s_min,s_max, s_step);
-		logger->Info("PLAT OCL: [%s] Power states:   [%4d, %4d, s:%2d] ",
-			gpu_rp->ToString().c_str(), s_min, s_max, s_step);
+		pm_result = pm.GetPowerStatesInfo(gpu_rp, s_min,s_max, s_step);
+		if (pm_result == PowerManager::PMResult::OK)
+			logger->Info("PLAT OCL: [%s] Power states:   [%4d, %4d, s:%2d] ",
+				gpu_rp->ToString().c_str(), s_min, s_max, s_step);
 
-		pm.GetPerformanceStatesCount(gpu_rp, ps_count);
-		logger->Info("PLAT OCL: [%s] Performance states: %2d",
-			gpu_rp->ToString().c_str(), ps_count);
+		pm_result = pm.GetPerformanceStatesCount(gpu_rp, ps_count);
+		if (pm_result == PowerManager::PMResult::OK)
+			logger->Info("PLAT OCL: [%s] Performance states: %2d",
+				gpu_rp->ToString().c_str(), ps_count);
 //		pm.SetFanSpeed(gpu_rp,PowerManager::FanSpeedType::PERCENT, 5);
 //		pm.ResetFanSpeed(gpu_rp);
 	}
+	logger->Info("PLAT OCL: Monitoring %d GPU adapters", pgpu_paths->size());
 }
 
 void OpenCLProxy::HwReadStatus() {

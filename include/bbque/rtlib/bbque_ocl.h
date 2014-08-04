@@ -220,8 +220,12 @@ struct RTLIB_OpenCL {
 	cl_platform_id * platforms;
 	/** Set of OpenCL devices to consider */
 	cl_device_id   * devices;
+
+	/** Selected OpenCL platform ID */
+	int8_t platform_id;
 	/** Assigned OpenCL device ID */
 	int8_t device_id;
+
 	/** Track the execution status */
 	RTLIB_ExitCode_t status;
 };
