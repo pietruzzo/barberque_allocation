@@ -18,6 +18,29 @@ config BBQUE_TEST_PLATFORM_DATA
   application development and integration, without worry about daemon
   setup or requiring to run the daemon as root.
 
+choice
+  prompt "Memory locality"
+
+  config BBQUE_MEMLOC_L3
+    bool "L3 cache"
+    default y
+
+  config BBQUE_MEMLOC_L2
+    bool "L2 cache"
+    default n
+
+  depends on !BBQUE_TEST_PLATFORM_DATA
+  ---help---
+  Select the memory locality that the BarbequeRTRM optimization policy should
+  take into account to properly perform scheduling and resource allocation
+  decisions.
+  According to the option selected the resource manager can consider a CPU as
+  an entity featuring one or more cores (processing elements), sharing a L3
+  cache memory ("socket") or a L2 cache memory ("core").
+
+endchoice # Memory locality
+
+
 menu "OpenCL Support"
 
 config BBQUE_OPENCL

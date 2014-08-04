@@ -120,10 +120,13 @@ private:
 	 * @brief Resource assignement bindings on a Linux machine
 	 */
 	typedef struct RLinuxBindings {
-		unsigned short node_id = 0; ///> Maps a "tile" on Host Linux machines
-		unsigned short socket_id = 0; ///> Maps a "cluster" on SMP Linux machine
+		/** Computing node, e.g. processor */
+		unsigned short node_id = 0;
+		/** Processing elements / CPU cores assigned */
 		char *cpus = NULL;
+		/** Memory nodes assigned */
 		char *mems = NULL;
+		/** Memory limits in bytes */
 		char *memb = NULL;
 		/** The percentage of CPUs time assigned */
 		uint16_t amount_cpus = 0;
@@ -287,12 +290,8 @@ private:
  * @}
  */
 
-	ExitCode_t GetResourceMapping(ba::AppPtr_t papp, br::UsagesMapPtr_t pum,
-		br::RViewToken_t rvt, RLinuxBindingsPtr_t prlb);
-
-	void BuildSocketCGAttr(char * dest, br::UsagesMapPtr_t pum,
-			br::ResourceBitset const & cpu_mask, br::Resource::Type_t r_type,
-			ba::AppPtr_t papp, br::RViewToken_t rvt);
+	ExitCode_t GetResourceMapping(
+			ba::AppPtr_t papp, br::UsagesMapPtr_t pum, RLinuxBindingsPtr_t prlb);
 
 	ExitCode_t BuildCGroup(CGroupDataPtr_t &pcgd);
 

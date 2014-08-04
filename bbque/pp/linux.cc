@@ -177,7 +177,7 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 		cpu_quota = (prlb->amount_cpuq * 100) / prlb->amount_cpup;
 		logger->Debug("%s CPUs of node [%d] with CPU quota of [%lu]%",
 				refreshMode ? "Reconfiguring" : "Registering",
-				prlb->socket_id, cpu_quota);
+				prlb->node_id, cpu_quota);
 	}
 
 	// Because of CGroups interface, we cannot assign an empty CPU quota.
@@ -186,7 +186,7 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 	// when a CPU quota <= 1% is required.
 	if (cpu_quota <= 1) {
 		logger->Warn("Quota < 1%, Offlining CPUs of node [%d]...",
-				prlb->socket_id);
+				prlb->node_id);
 		cpu_quota = 0;
 	}
 
@@ -198,7 +198,7 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 		// Get a CPU id, and register the corresponding resource path
 		sscanf(p, "%hu", &first_cpu_id);
 		snprintf(resourcePath+8, 10, "%hu.pe%d",
-				prlb->socket_id, first_cpu_id);
+				prlb->node_id, first_cpu_id);
 		logger->Debug("PLAT LNX: %s [%s]...",
 				refreshMode ? "Refreshing" : "Registering",
 				resourcePath);
@@ -226,7 +226,7 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 		// Register all the other CPUs of this range
 		while (++first_cpu_id <= last_cpu_id) {
 			snprintf(resourcePath+8, 10, "%hu.pe%d",
-					prlb->socket_id, first_cpu_id);
+					prlb->node_id, first_cpu_id);
 			logger->Debug("PLAT LNX: %s [%s]...",
 					refreshMode ? "Refreshing" : "Registering",
 					resourcePath);
@@ -268,7 +268,7 @@ LinuxPP::RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) {
 		// Get a Memory NODE id, and register the corresponding resource path
 		sscanf(p, "%hu", &first_mem_id);
 		snprintf(resourcePath+8, 11, "%hu.mem%d",
-				prlb->socket_id, first_mem_id);
+				prlb->node_id, first_mem_id);
 		logger->Debug("PLAT LNX: %s [%s]...",
 				refreshMode ? "Refreshing" : "Registering",
 				resourcePath);
@@ -296,7 +296,7 @@ LinuxPP::RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) {
 		// Register all the other Memory NODEs of this range
 		while (++first_mem_id <= last_mem_id) {
 			snprintf(resourcePath+8, 11, "%hu.mem%d",
-					prlb->socket_id, first_mem_id);
+					prlb->node_id, first_mem_id);
 			logger->Debug("PLAT LNX: %s [%s]...",
 					refreshMode ? "Refreshing" : "Registering",
 					resourcePath);
@@ -326,7 +326,7 @@ LinuxPP::RegisterCluster(RLinuxBindingsPtr_t prlb) {
 	logger->Debug("PLAT LNX: %s resources for Node [%d], "
 			"CPUs [%s], MEMs [%s]",
 			refreshMode ? "Check" : "Setup",
-			prlb->socket_id, prlb->cpus, prlb->mems);
+			prlb->node_id, prlb->cpus, prlb->mems);
 
 	// The CPUs are generally represented with a syntax like this:
 	// 1-3,4,5-7
@@ -360,12 +360,12 @@ LinuxPP::ParseNodeAttributes(struct cgroup_file_info &entry,
 
 	// Initialize the CGroup variable
 	sscanf(entry.path + STRLEN(BBQUE_LINUXPP_CLUSTER), "%hu",
-			&prlb->socket_id);
+			&prlb->node_id);
 	snprintf(group_name +
 			STRLEN(BBQUE_LINUXPP_RESOURCES) +   // e.g. "bbque/res"
 			STRLEN(BBQUE_LINUXPP_CLUSTER) + 1,  // e.g. "/" + "node"
 			4, "%d",
-			prlb->socket_id);
+			prlb->node_id);
 	bbq_node = cgroup_new_cgroup(group_name);
 	if (bbq_node == NULL) {
 		logger->Error("PLAT LNX: Parsing resources FAILED! "
@@ -631,63 +631,25 @@ LinuxPP::_LoadPlatformData() {
  ******************************************************************************/
 
 LinuxPP::ExitCode_t
-LinuxPP::GetResourceMapping(AppPtr_t papp, UsagesMapPtr_t pum,
-		RViewToken_t rvt, RLinuxBindingsPtr_t prlb) {
-	br::ResourceBitset socket_ids;
-	br::ResourceBitset node_ids;
+LinuxPP::GetResourceMapping(
+		AppPtr_t papp, UsagesMapPtr_t pum, RLinuxBindingsPtr_t prlb) {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
-
-	// Reset CPUs and MEMORY cgroup attributes value
-	memset(prlb->cpus, 0, 3*MaxCpusCount);
-	memset(prlb->mems, 0, 3*MaxMemsCount);
+	br::ResourceBitset core_ids;
+	br::ResourceBitset mem_ids;
 
 	// Set the amount of CPUs and MEMORY
 	prlb->amount_cpus = ra.GetUsageAmount(pum, br::Resource::PROC_ELEMENT, br::Resource::CPU);
 	prlb->amount_memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
 
-	// Sockets and nodes
-	socket_ids = papp->NextAWM()->BindingSet(br::Resource::SYSTEM);
-	node_ids   = papp->NextAWM()->BindingSet(br::Resource::CPU);
-	prlb->socket_id = log(socket_ids.ToULong()) / log(2);
-	prlb->node_id   = log(node_ids.ToULong())   / log(2);
-	logger->Debug("PLAT LNX: Map resources @ Machine Socket [%d], NUMA Node [%d]",
-			prlb->socket_id, prlb->node_id);
+	// CPU core set and MEMORY node
+	core_ids = papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT);
+	mem_ids  = papp->NextAWM()->BindingSet(br::Resource::MEMORY);
 
-	// CPUs and MEMORY cgroup new attributes value
-	BuildSocketCGAttr(prlb->cpus, pum, node_ids, br::Resource::PROC_ELEMENT, papp, rvt);
-	BuildSocketCGAttr(prlb->mems, pum, node_ids, br::Resource::MEMORY, papp, rvt);
-	logger->Debug("PLAT LNX: [%s] => {HwThreads [%s: %" PRIu64 " %], "
-			"NUMA nodes[%d: %" PRIu64 " Bytes]}",
-			papp->StrId(),
-			prlb->cpus, prlb->amount_cpus,
-			prlb->node_id, prlb->amount_memb);
+	// CPU cores and MEMORY nodes cgroup new attributes value
+	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
+	strncpy(prlb->mems,  mem_ids.ToStringCG().c_str(), 3*MaxMemsCount);
 
 	return OK;
-
-}
-
-void LinuxPP::BuildSocketCGAttr(
-		char * dest,
-		UsagesMapPtr_t pum,
-		br::ResourceBitset const & cpu_mask,
-		br::Resource::Type_t r_type,
-		AppPtr_t papp,
-		RViewToken_t rvt) {
-	br::ResourceBitset r_mask;
-	br::ResID_t cpu_id;
-
-	for (cpu_id = cpu_mask.FirstSet(); cpu_id <= cpu_mask.LastSet(); ++cpu_id) {
-		r_mask = br::ResourceBinder::GetMask(pum, r_type, br::Resource::CPU, cpu_id, papp, rvt);
-		logger->Debug("PLAT LNX: Socket attributes '%-3s' = {%s}",
-				br::ResourceIdentifier::TypeStr[r_type],
-				r_mask.ToStringCG().c_str());
-
-		// Memory or cores IDs string
-		strcat(dest, r_mask.ToStringCG().c_str());
-		strcat(dest, ",");
-	}
-	// Remove last ","
-	dest[strlen(dest)-1] = 0;
 }
 
 LinuxPP::ExitCode_t
@@ -961,10 +923,10 @@ jump_quota_management:
 	// CGroup not yet configure.
 
 	logger->Notice("PLAT LNX: [%s] => "
-			"{cpu [%s: %" PRIu64 " %], mem[%d: %" PRIu64 " B]}",
+			"{cpus [%s: %" PRIu64 " %], mems[%s: %" PRIu64 " B]}",
 			pcgd->papp->StrId(),
 			prlb->cpus, prlb->amount_cpus,
-			prlb->socket_id, prlb->amount_memb);
+			prlb->mems, prlb->amount_memb);
 	cgroup_set_value_uint64(pcgd->pc_cpuset,
 			BBQUE_LINUXPP_PROCS_PARAM,
 			pcgd->papp->Pid());
@@ -1051,8 +1013,9 @@ LinuxPP::_ReclaimResources(AppPtr_t papp) {
 }
 
 LinuxPP::ExitCode_t
-LinuxPP::_MapResources(AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt,
-		bool excl) {
+LinuxPP::_MapResources(
+		AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt, bool excl) {
+	(void) rvt;
 
 #ifdef CONFIG_BBQUE_OPENCL
 	// Map resources for OpenCL applications
@@ -1079,7 +1042,7 @@ LinuxPP::_MapResources(AppPtr_t papp, UsagesMapPtr_t pum, RViewToken_t rvt,
 	if (result != OK)
 		return result;
 
-	result = GetResourceMapping(papp, pum, rvt, prlb);
+	result = GetResourceMapping(papp, pum, prlb);
 	if (result != OK) {
 		logger->Error("PLAT LNX: binding parsing FAILED");
 		return MAPPING_FAILED;
