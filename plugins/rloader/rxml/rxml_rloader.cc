@@ -340,8 +340,8 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 
 			// The awm ID must be unique!
 			if (recipe_ptr->GetWorkingMode(wm_id)) {
-				logger->Error("AWM ""%s"" error: Double ID found %d",
-								wm_name.c_str(), wm_id);
+				logger->Error("AWM {%d:%s} error: Double ID found %d",
+						wm_id, wm_name.c_str(), wm_id);
 				return RL_FORMAT_ERROR;
 			}
 
@@ -349,20 +349,20 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 			AwmPtr_t awm(recipe_ptr->AddWorkingMode(
 						wm_id, wm_name,	static_cast<uint8_t> (wm_value)));
 			if (!awm) {
-				logger->Error("AWM ""%s"" error: Wrong ID specified %d",
-								wm_name.c_str(), wm_id);
+				logger->Error("AWM {%d:%s} error: Wrong ID specified %d",
+						wm_id, wm_name.c_str(), wm_id);
 				return RL_FORMAT_ERROR;
 			}
 
 			// Configuration time
 			if (wm_config_time > 0) {
-				logger->Info("AWM ""%s"" setting configuration time: %d",
-						wm_name.c_str(), wm_config_time);
+				logger->Info("AWM {%d:%s} setting configuration time: %d",
+						wm_id, wm_name.c_str(), wm_config_time);
 				awm->SetRecipeConfigTime(wm_config_time);
 			}
 			else
-				logger->Warn("AWM ""%s"" no configuration time provided",
-						wm_name.c_str());
+				logger->Warn("AWM {%d:%s} no configuration time provided",
+						wm_id, wm_name.c_str());
 
 			// Load resource usages of the working mode
 			resources_elem = awm_elem->first_node("resources", 0, false);
@@ -371,6 +371,8 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 			if (result == __RSRC_FORMAT_ERR)
 				return RL_FORMAT_ERROR;
 			else if (result & __RSRC_WEAK_LOAD) {
+				logger->Warn("AWM {%d:%s} weak load detected: skipping",
+						wm_id, wm_name.c_str());
 				awm_elem = awm_elem->next_sibling("awm", 0, false);
 				continue;
 			}
@@ -437,17 +439,14 @@ uint8_t RXMLRecipeLoader::AppendToWorkingMode(AwmPtr_t & wm,
 		std::string const & _res_path,
 		uint64_t _res_usage) {
 	ba::WorkingModeStatusIF::ExitCode_t result;
-
-	// Add the resource usage to the working mode
+	// Add the resource usage to the working mode,
+	// return a "weak load" code if some resources are missing
 	result = wm->AddResourceUsage(_res_path, _res_usage);
-
-	// Resource not found: Signal a weak load (some resources are missing)
 	if (result == ba::WorkingModeStatusIF::WM_RSRC_NOT_FOUND) {
-		logger->Warn("'%s' recipe:\n\tResource '%s' not available.\n",
+		logger->Warn("'%s' recipe: resource '%s' not available",
 				recipe_ptr->Path().c_str(), _res_path.c_str());
 		return __RSRC_WEAK_LOAD;
 	}
-
 	return __RSRC_SUCCESS;
 }
 
@@ -494,7 +493,6 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(
 	if (res_usage == 0) {
 		return __RSRC_SUCCESS;
 	}
-
 
 	// Convert the usage value accordingly to the units, and then append the
 	// request to the working mode.
