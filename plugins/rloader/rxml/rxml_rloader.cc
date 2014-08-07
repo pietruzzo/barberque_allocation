@@ -412,15 +412,19 @@ uint8_t RXMLRecipeLoader::LoadResources(rapidxml::xml_node<> * _xml_elem,
 			// Parse the attributes from the resource element
 			res_path = _curr_path;
 			result |= GetResourceAttributes(res_elem, _wm, res_path);
-			if (result >= __RSRC_FORMAT_ERR)
+			if (result >= __RSRC_WEAK_LOAD) {
+				logger->Warn("Weak load case (R): %s", res_path.c_str());
 				return result;
+			}
 
 			// The current resource is a container of other resources,
 			// thus load the children resources recursively
 			if (res_elem->first_node(0, 0, true)) {
 				result |= LoadResources(res_elem, _wm, res_path);
-				if (result >= __RSRC_FORMAT_ERR)
+				if (result >= __RSRC_WEAK_LOAD) {
+					logger->Warn("Weak load case (N): %s", res_path.c_str());
 					return result;
+				}
 			}
 
 			// Next resource
