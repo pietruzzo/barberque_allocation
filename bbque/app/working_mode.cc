@@ -84,6 +84,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 		uint64_t required_amount) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	br::ResourcePath::ExitCode_t rp_result;
+	ExitCode_t result = WM_SUCCESS;
 
 	// Init the resource path starting from the prefix
 	br::ResourcePathPtr_t ppath(new br::ResourcePath(ra.GetPrefixPath()));
@@ -105,7 +106,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	if (!ra.ExistResource(ppath)) {
 		logger->Warn("%s AddResourceUsage: {%s} not found.",
 				str_id, ppath->ToString().c_str());
-		return WM_RSRC_NOT_FOUND;
+		result = WM_RSRC_NOT_FOUND;
 	}
 
 	// Insert a new resource usage object in the map
@@ -115,7 +116,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	logger->Debug("%s AddResourceUsage: added {%s}\t[usage: %" PRIu64 "]",
 			str_id, ppath->ToString().c_str(), required_amount);
 
-	return WM_SUCCESS;
+	return result;
 }
 
 WorkingMode::ExitCode_t WorkingMode::Validate() {
