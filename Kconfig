@@ -105,7 +105,7 @@ config BBQUE_SP_YAMS_PARALLEL
 
 config BBQUE_SP_COWS_BINDING
   bool "Co-scheduling workloads (COWS) binding"
-  depends on !BBQUE_PIL_OPENCL_SUPPORT
+  depends on !BBQUE_OPENCL
   default n
   ---help---
   Enable this option only if the recipes feature information about some
