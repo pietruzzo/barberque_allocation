@@ -124,8 +124,8 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 			platform_name, NULL);
 		logger->Info("PLAT OCL: P[%d]: %s", i, platform_name);
 
-		if (!strcmp(platform_name, BBQUE_PLATFORM_NAME)) {
-			logger->Info("PLAT OCL: Platform selected: %s", platform_name);
+		if (!strcmp(platform_name, BBQUE_OPENCL_PLATFORM)) {
+			logger->Notice("PLAT OCL: Platform selected: %s", platform_name);
 			platform = platforms[i];
 			break;
 		}

@@ -37,10 +37,6 @@
 #include "bbque/res/identifier.h"
 #include "bbque/utils/worker.h"
 
-#define AMD_PLATFORM_NAME   "AMD Accelerated Parallel Processing"
-#define INTEL_PLATFORM_NAME "Intel(R) OpenCL"
-#define BBQUE_PLATFORM_NAME AMD_PLATFORM_NAME
-
 namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;

@@ -1439,9 +1439,9 @@ void rtlib_init_devices() {
 		status = rtlib_ocl.getPlatformInfo(
 			rtlib_ocl.platforms[i], CL_PLATFORM_NAME,
 			sizeof(platform_name), platform_name, NULL);
-		if (!strcmp(platform_name, BBQUE_PLATFORM_NAME)) {
-			logger->Info("OCL: Found platform selected [%s] @{%d}",
-					BBQUE_PLATFORM_NAME, i);
+		if (!strcmp(platform_name, BBQUE_OPENCL_PLATFORM)) {
+			logger->Notice("OCL: Found platform selected [%s] @{%d}",
+					BBQUE_OPENCL_PLATFORM, i);
 			rtlib_ocl.platform_id = i;
 			platform = rtlib_ocl.platforms[i];
 		}
