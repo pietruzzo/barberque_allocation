@@ -1302,10 +1302,10 @@ void rtlib_ocl_init() {
 	logger = bu::Logger::GetLogger(BBQUE_LOG_MODULE);
 	assert(logger);
 
-	logger->Info("Using OpenCL library: %s", BBQUE_PATH_OPENCL_LIB);
+	logger->Info("Using OpenCL library: %s", BBQUE_OPENCL_PATH_LIB);
 
 	// Native OpenCL calls
-	void *handle = dlopen(BBQUE_PATH_OPENCL_LIB, RTLD_LOCAL | RTLD_LAZY);
+	void *handle = dlopen(BBQUE_OPENCL_PATH_LIB, RTLD_LOCAL | RTLD_LAZY);
 
 	*(void **) (&rtlib_ocl.getPlatformIDs)			= dlsym(handle, "clGetPlatformIDs");
 	*(void **) (&rtlib_ocl.getPlatformInfo) 		= dlsym(handle, "clGetPlatformInfo");
