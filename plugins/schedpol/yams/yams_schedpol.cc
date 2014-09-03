@@ -614,6 +614,18 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 			br::ResourceIdentifier::TypeStr[bd_type],
 			pschd_domain->metrics);
 
+	// Check the current AWM has processing resources under the binding
+	// domain type under evaluation
+	uint64_t amount = ra.GetUsageAmount(
+		pschd_domain->pawm->RecipeResourceUsages(),
+		br::ResourceIdentifier::PROC_ELEMENT,
+		bd_type);
+	if (amount == 0) {
+		logger->Warn("EvalBindings: nothing to bind [%s], usage null",
+			br::ResourceIdentifier::TypeStr[bd_type]);
+		return YAMS_IGNORE;
+	}
+
 	// Multiple bindings: cumulate metrics and keep track of the binding reference
 	if (pschd_parent != nullptr) {
 		base_refn = pschd_parent->bind_refn;
@@ -655,18 +667,21 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 				br::ResourceIdentifier::TypeStr[next_it->first]);
 			EvalBindings(next_it, dom_end, next_it, pschd_bound);
 		}
-		else {
-			// Insert the SchedEntity in the scheduling list
-			sched_ul.lock();
-			entities.push_back(pschd_bound);
-			sched_ul.unlock();
-			logger->Info("EvalBindings: %s scheduling metrics = %1.4f [%d]",
-					pschd_bound->StrId(),
-					pschd_bound->metrics, entities.size());
-		}
+
+		// Update scheduling entity information
+		pschd_parent = pschd_bound;
 	}
 	logger->Debug("EvalBindings: [%s] - DONE -",
 			br::ResourceIdentifier::TypeStr[dom_it->first]);
+
+	// Enqueue the scheduling entity in the candidate list
+	sched_ul.lock();
+	entities.push_back(pschd_parent);
+	sched_ul.unlock();
+	logger->Info("EvalBindings: %s scheduling metrics = %1.4f [%d]",
+			pschd_parent->StrId(),
+			pschd_parent->metrics, entities.size());
+
 	return YAMS_SUCCESS;
 }
 
