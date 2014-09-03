@@ -55,22 +55,9 @@ clGetPlatformIDs(
 		cl_platform_id *platforms,
 		cl_uint *num_platforms)
 		CL_API_SUFFIX__VERSION_1_0 {
-	cl_int result = CL_SUCCESS;
+	cl_int result = rtlib_ocl.getPlatformIDs(num_entries, platforms, num_platforms);
 	logger->Debug("Calling clGetPlatformIDs(num_entries: %u, *platforms: %p, *num_platforms: %p)...",
 			num_entries, platforms, num_platforms);
-
-	if (num_platforms != nullptr) {
-		*num_platforms = 1;
-		return result;
-	}
-
-	result = rtlib_ocl.getPlatformIDs(num_entries, platforms, num_platforms);
-	if (platforms) {
-		platforms[0] = rtlib_ocl.platforms[rtlib_ocl.platform_id];
-		logger->Debug("OCL: clGetPlatformIDs [BarbequeRTRM assigned: %d @{%p}]",
-				rtlib_ocl.platform_id, platforms[0]);
-	}
-
 	DB2(
 	if (num_platforms != nullptr)
 		logger->Debug("Result clGetPlatformIDs(platforms: %p, num_platforms: %d)...",
