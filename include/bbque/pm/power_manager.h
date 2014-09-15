@@ -52,7 +52,9 @@ public:
 		/** Information not provided for the resource specified */
 		ERR_INFO_NOT_SUPPORTED,
 		/** */
-		ERR_RSRC_INVALID_PATH
+		ERR_RSRC_INVALID_PATH,
+		/** Sensors error. e.g. cannot read a sensor*/
+		ERR_SENSORS_ERROR
 	};
 
 	enum class FanSpeedType {
