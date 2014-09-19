@@ -22,6 +22,10 @@
 # include "bbque/pm/power_manager_amd.h"
 #endif
 
+#ifdef CONFIG_BBQUE_PM_CPU
+# include "bbque/pm/power_manager_cpu.h"
+#endif
+
 #define MODULE_NAMESPACE POWER_MANAGER_NAMESPACE
 
 namespace bbque {
@@ -59,6 +63,11 @@ PowerManager::PowerManager() {
 	gpu = std::unique_ptr<PowerManager>(new AMDPowerManager());
 #endif // CONFIG_BBQUE_PM_AMD
 
+#ifdef CONFIG_BBQUE_PM_CPU
+	// Initialize the CPU power manager
+	logger->Notice("Using CPU power management module");
+	cpu = std::unique_ptr<PowerManager>(new CPUPowerManager());
+#endif // CONFIG_BBQUE_PM_CPU
 }
 
 

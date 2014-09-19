@@ -84,6 +84,13 @@ config BBQUE_PM
 
   If unsure say no, this will disable all the PM related features.
 
+config  BBQUE_PM_CPU
+  bool "Enable CPU(s) Power and Thermal monitoring"
+  depends on BBQUE_PM
+  default n
+  ---help---
+  Enable the support for run-time monitoring of the CPU(s) power and thermal status.
+
 config  BBQUE_PM_AMD
   bool "Enable AMD GPU(s) Power and Thermal monitoring"
   depends on BBQUE_PM

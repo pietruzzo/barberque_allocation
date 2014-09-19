@@ -178,6 +178,13 @@ protected:
 	 */
 	std::unique_ptr<PowerManager> gpu;
 
+
+	/*
+	 * @brief A CPU specific PM provider
+	 *
+	 */
+	std::unique_ptr<PowerManager> cpu;
+
 	/*
 	 * @brief Command handler for setting a device fan speed
 	 *

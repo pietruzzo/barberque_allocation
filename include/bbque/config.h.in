@@ -149,6 +149,9 @@
 /** Enable AMD Power Management support */
 #cmakedefine CONFIG_BBQUE_PM_AMD
 
+/** Enable CPU Power Management support */
+#cmakedefine CONFIG_BBQUE_PM_CPU
+
 /** Performance Counters Support */
 #cmakedefine CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
