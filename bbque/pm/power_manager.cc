@@ -82,6 +82,9 @@ PowerManager::PMResult PowerManager::GetLoad(
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
 		return gpu->GetLoad(rp, perc);
+	case br::ResourceIdentifier::CPU:
+		if (!cpu) break;
+		return cpu->GetLoad(rp, perc);
 	default:
 		break;
 	}

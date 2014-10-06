@@ -48,6 +48,36 @@ public:
 
 	~CPUPowerManager();
 
+	/**
+	 * @see class PowerManager
+	 */
+	PMResult GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc);
+
+private:
+	/**
+	 * Save the information of a single /proc/stat sampling
+	 */
+	struct LoadInfo {
+		/// Total activity time
+		int32_t total = 0;
+		/// Idle time
+		int32_t idle = 0;
+	};
+
+	/**
+	 *  Sample CPU activity samples from /proc/stat
+	 */
+	ExitStatus GetLoadInfo(LoadInfo *info, std::string cpu_core_id);
+
+	/**
+	 * @brief Extract the CPU core id
+	 *
+	 * @param rp Constant reference to ResourcePath pointer
+	 *
+	 * @return the ID number
+	 */
+	int GetCPU(ResourcePathPtr_t const & rp);
+
 };
 
 }
