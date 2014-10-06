@@ -59,6 +59,11 @@ public:
 	 */
 	PMResult GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz);
 
+	/**
+	 * @see class PowerManager
+	 */
+	PMResult GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius);
+
 private:
 
 	/*** Mapping processing elements / CPU cores */

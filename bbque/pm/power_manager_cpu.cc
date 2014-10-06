@@ -33,6 +33,9 @@
 #define PROCSTAT_IDLE 4
 #define PROCSTAT_IOWAIT 5
 
+#define TEMP_SENSOR_FIRST_ID 1
+#define TEMP_SENSOR_STEP_ID  1
+
 namespace bbque {
 
 CPUPowerManager::CPUPowerManager() {
@@ -174,7 +177,62 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequency(
 	khz = (uint32_t)cpufreq_get_freq_hardware((unsigned int)cpu_logic_id);
 
 	return PowerManager::PMResult::OK;
+}
 
+PowerManager::PMResult CPUPowerManager::GetTemperature(
+		ResourcePathPtr_t const & rp,
+		uint32_t &celsius){
+	PMResult result = PMResult::ERR_INFO_NOT_SUPPORTED;
+	celsius = 0;
+
+	// Extracting the PE ID, and searching for its Core in the map
+	int cpu_logic_id = GetCPU(rp);
+	std::map<int,int>::iterator core_id_iter = core_ids.find(cpu_logic_id);
+	if(core_id_iter == core_ids.end())
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	int core_id = core_id_iter->second;
+
+	// The sensor we are searching for contains this label (e.g. `Core 2`)
+	std::string sensor_name = "Core " + std::to_string(core_id);
+	std::string sensor_label;
+	std::string sensor_value;
+	int sensor_id = TEMP_SENSOR_FIRST_ID;
+
+	// Cycling through the available sensors
+	while (1) {
+		// Look for the sensors
+		std::ifstream sensor_info(
+				"/sys/devices/platform/coretemp.0/temp" +
+				std::to_string(sensor_id) +
+				"_label");
+		if (!sensor_info) break;
+
+		// Look for the label containing the core ID required
+		std::getline(sensor_info, sensor_label);
+		if (sensor_label.compare(sensor_name) != 0) {
+			sensor_id += TEMP_SENSOR_STEP_ID;
+			continue;
+		}
+
+		// Get the value
+		std::ifstream sensor_data(
+			"/sys/devices/platform/coretemp.0/temp" +
+			std::to_string(sensor_id) +
+			"_input");
+		if (!sensor_data) {
+			logger->Error("Unable to read data from "
+				"temperature sensor %d", sensor_id);
+			return PMResult::ERR_SENSORS_ERROR;
+		}
+		std::getline(sensor_data, sensor_value);
+		celsius = (uint32_t) atoi(sensor_value.c_str()) / 1000;
+		logger->Debug("Temperature @sensor %d: %s °C",
+			sensor_id, sensor_value.c_str());
+		result = PMResult::OK;
+		break;
+	}
+
+	return result;
 }
 
 } // namespace bbque

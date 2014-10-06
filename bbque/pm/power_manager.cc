@@ -100,6 +100,9 @@ PowerManager::PMResult PowerManager::GetTemperature(
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
 		return gpu->GetTemperature(rp, celsius);
+	case br::ResourceIdentifier::CPU:
+		if (!cpu) break;
+		return cpu->GetTemperature(rp, celsius);
 	default:
 		break;
 	}
