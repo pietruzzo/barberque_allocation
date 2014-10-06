@@ -89,6 +89,11 @@ public:
 		uint32_t &khz_max,
 		uint32_t &khz_step);
 
+	virtual PMResult GetAvailableFrequencies(
+		ResourcePathPtr_t const & rp,
+		std::vector<unsigned long> & freqs);
+
+
 	virtual PMResult SetClockFrequency(
 		ResourcePathPtr_t const & rp, uint32_t khz);
 

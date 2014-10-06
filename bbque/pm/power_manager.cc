@@ -148,6 +148,15 @@ PowerManager::GetClockFrequencyInfo(
 }
 
 PowerManager::PMResult
+PowerManager::GetAvailableFrequencies(
+		ResourcePathPtr_t const & rp,
+		std::vector<unsigned long> & freqs) {
+	logger->Warn("(PM) GetAvailableFrequencies not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+	return PMResult::ERR_API_NOT_SUPPORTED;
+}
+
+PowerManager::PMResult
 PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceIdentifier::GPU:
