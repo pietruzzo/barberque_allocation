@@ -60,13 +60,17 @@ public:
 	PMResult GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz);
 
 private:
+
+	/*** Mapping processing elements / CPU cores */
+	std::map<int,int> core_ids;
+
 	/**
 	 * Save the information of a single /proc/stat sampling
 	 */
 	struct LoadInfo {
-		/// Total activity time
+		/// Total activity time (jitters)
 		int32_t total = 0;
-		/// Idle time
+		/// Idle time (jitters)
 		int32_t idle = 0;
 	};
 

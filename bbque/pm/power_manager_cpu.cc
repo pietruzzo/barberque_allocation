@@ -36,7 +36,21 @@
 namespace bbque {
 
 CPUPowerManager::CPUPowerManager() {
+	int cpu_id  = -1;
+	int core_id = 0;
+	std::string core_string;
 
+	while (++cpu_id >= 0) {
+		std::ifstream cpu_info(
+			"/sys/devices/system/cpu/cpu" + std::to_string(cpu_id) +
+			"/topology/core_id");
+		if (!cpu_info) break;
+
+		// If the CPU exists, extract the core_id and save the pair
+		std::getline(cpu_info, core_string);
+		core_id = atoi(core_string.c_str());
+		core_ids[cpu_id] = core_id;
+	}
 }
 
 CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
@@ -79,7 +93,7 @@ CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 }
 
 CPUPowerManager::~CPUPowerManager() {
-
+	core_ids.clear();
 }
 
 PowerManager::PMResult CPUPowerManager::GetLoad(
