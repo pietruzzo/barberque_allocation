@@ -115,6 +115,9 @@ PowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
 		return gpu->GetClockFrequency(rp, khz);
+	case br::ResourceIdentifier::CPU:
+		if (!cpu) break;
+		return cpu->GetClockFrequency(rp, khz);
 	default:
 		break;
 	}

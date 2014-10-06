@@ -19,6 +19,7 @@
 #define BBQUE_POWER_MANAGER_CPU_H_
 
 #include "bbque/pm/power_manager.h"
+#include <cpufreq.h>
 
 using namespace bbque::res;
 
@@ -52,6 +53,11 @@ public:
 	 * @see class PowerManager
 	 */
 	PMResult GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc);
+
+	/**
+	 * @see class PowerManager
+	 */
+	PMResult GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz);
 
 private:
 	/**

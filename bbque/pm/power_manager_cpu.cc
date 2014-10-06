@@ -145,4 +145,22 @@ int CPUPowerManager::GetCPU(ResourcePathPtr_t const & rp){
 	return logic_id;
 }
 
+PowerManager::PMResult CPUPowerManager::GetClockFrequency(
+	ResourcePathPtr_t const & rp, uint32_t &khz){
+
+	// Extracting the PE id from the resource path
+	int cpu_logic_id = GetCPU(rp);
+	if (cpu_logic_id < 0) {
+		logger->Warn("Frequency value not available for %s",
+			rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
+	// Getting the frequency value
+	khz = (uint32_t)cpufreq_get_freq_hardware((unsigned int)cpu_logic_id);
+
+	return PowerManager::PMResult::OK;
+
+}
+
 } // namespace bbque
