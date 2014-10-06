@@ -64,6 +64,12 @@ public:
 	 */
 	PMResult GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius);
 
+	/**
+	 * @see class PowerManager
+	 */
+	PMResult GetAvailableFrequencies(
+			ResourcePathPtr_t const & rp, std::vector<unsigned long> &freqs);
+
 private:
 
 	/*** Mapping processing elements / CPU cores */

@@ -235,4 +235,34 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 	return result;
 }
 
+PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
+		ResourcePathPtr_t const & rp,
+		std::vector<unsigned long> & freqs) {
+	// Clear input vector
+	freqs.clear();
+
+	// Extracting the selected CPU from the resource path. -1 if error
+	int cpu_logic_id = GetCPU(rp);
+	if (cpu_logic_id == -1)
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+
+	// Extracting available frequencies
+	cpufreq_available_frequencies * avf =
+		cpufreq_get_available_frequencies((unsigned int)cpu_logic_id);
+	if (avf == nullptr) {
+		logger->Warn("List of frequencies not available for %s",
+			rp->ToString().c_str());
+		return PMResult::ERR_INFO_NOT_SUPPORTED;
+	}
+
+	// Storing the frequencies values in the vector
+	cpufreq_available_frequencies * freq = avf->next;
+	while (freq != nullptr) {
+		freqs.push_back(freq->frequency);
+		freq = freq->next;
+	}
+
+	return PowerManager::PMResult::OK;
+}
+
 } // namespace bbque
