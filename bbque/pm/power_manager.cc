@@ -139,17 +139,32 @@ PowerManager::GetClockFrequencyInfo(
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
 		return gpu->GetClockFrequencyInfo(rp, khz_min, khz_max, khz_step);
-	case br::ResourceIdentifier::CPU:
-		logger->Warn("(PM) GetClockFrequencyInfo not supported for "
-		"[%s]. Try GetAvailableFrequencies method.",
+	case br::ResourceIdentifier::CPU: {
+		logger->Warn("(PM) GetClockFrequencyInfo only partially "
+		"supported for [%s]. Try GetAvailableFrequencies method.",
+			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+		if (!cpu) break;
+
+		// Getting frequencies list
+		std::vector<unsigned long> freqs;
+		cpu->GetAvailableFrequencies(rp, freqs);
+
+		// Max and min frequency values
+		auto edges = std::minmax_element(freqs.begin(), freqs.end());
+		khz_min  = edges.first  - freqs.begin();
+		khz_max  = edges.second - freqs.begin();
+
+		// '0' to represent not fixed step value
+		khz_step = 0;
+		return PMResult::OK;
+	}
+	default:
+		logger->Warn("(PM) GetClockFrequencyInfo not supported for [%s]",
 			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	default:
-		break;
 	}
-	logger->Warn("(PM) GetClockFrequencyInfo not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
-	return PMResult::ERR_API_NOT_SUPPORTED;
+
+	return PMResult::OK;
 }
 
 PowerManager::PMResult
