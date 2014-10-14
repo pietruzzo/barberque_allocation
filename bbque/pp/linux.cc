@@ -711,7 +711,7 @@ LinuxPP::BuildCGroup(CGroupDataPtr_t &pcgd) {
 	if (!pcgd->pcg) {
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
 				"(Error: libcgroup, \"cgroup\" creation)");
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 	// Add "cpuset" controller
@@ -720,7 +720,7 @@ LinuxPP::BuildCGroup(CGroupDataPtr_t &pcgd) {
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
 				"(Error: libcgroup, [cpuset] \"controller\" "
 				"creation failed)");
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
@@ -730,7 +730,7 @@ LinuxPP::BuildCGroup(CGroupDataPtr_t &pcgd) {
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
 				"(Error: libcgroup, [memory] \"controller\" "
 				"creation failed)");
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 #endif
 
@@ -742,7 +742,7 @@ LinuxPP::BuildCGroup(CGroupDataPtr_t &pcgd) {
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
 				"(Error: libcgroup, [cpu] \"controller\" "
 				"creation failed)");
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 #endif
@@ -756,7 +756,7 @@ LinuxPP::BuildCGroup(CGroupDataPtr_t &pcgd) {
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
 				"(Error: libcgroup, kernel cgroup creation "
 				"[%d: %s]", errno, strerror(errno));
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 	return OK;
@@ -794,7 +794,7 @@ LinuxPP::BuildSilosCG(CGroupDataPtr_t &pcgd) {
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
 				"(Error: libcgroup, kernel cgroup update "
 				"[%d: %s]", errno, strerror(errno));
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 	return OK;
@@ -959,7 +959,7 @@ jump_quota_management:
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
 				"(Error: libcgroup, kernel cgroup update "
 				"[%d: %s])", errno, strerror(errno));
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 	/* If a task has not beed assigned, we are done */
@@ -989,7 +989,7 @@ jump_quota_management:
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
 				"(Error: libcgroup, kernel cgroup update "
 				"[%d: %s])", errno, strerror(errno));
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 	return OK;
@@ -1056,7 +1056,7 @@ LinuxPP::_ReclaimResources(AppPtr_t papp) {
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
 				"(Error: libcgroup, kernel cgroup update "
 				"[%d: %s]", errno, strerror(errno));
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 	logger->Debug("PLAT LNX: CGroup resource claiming DONE!");
@@ -1077,7 +1077,7 @@ LinuxPP::_MapResources(
 		ocl_return = oclProxy.MapResources(papp, pum, rvt);
 		if (ocl_return != OpenCLProxy::SUCCESS) {
 			logger->Error("PLAT LNX: OpenCL mapping failed");
-			return MAPPING_FAILED;
+			return PLATFORM_MAPPING_FAILED;
 		}
 	}
 #endif
@@ -1097,7 +1097,7 @@ LinuxPP::_MapResources(
 	result = GetResourceMapping(papp, pum, prlb);
 	if (result != OK) {
 		logger->Error("PLAT LNX: binding parsing FAILED");
-		return MAPPING_FAILED;
+		return PLATFORM_MAPPING_FAILED;
 	}
 	//prlb->cpus << "7";
 	//prlb->mems << "0";
