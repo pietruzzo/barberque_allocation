@@ -16,10 +16,9 @@
  */
 
 #include "bbque/platform_proxy.h"
-
+#include "bbque/modules_factory.h"
 #include "bbque/resource_manager.h"
 #include "bbque/utils/utility.h"
-#include "bbque/modules_factory.h"
 
 #ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
 # warning Using Test Platform Data (TPD)

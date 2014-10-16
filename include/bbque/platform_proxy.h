@@ -19,6 +19,7 @@
 #define BBQUE_PLATFORM_PROXY_H_
 
 #include <bitset>
+#include <memory>
 
 #include "bbque/config.h"
 #include "bbque/utils/logging/logger.h"
@@ -31,7 +32,6 @@
 # include "bbque/test_platform_data.h"
 #endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
 
-#include <memory>
 
 #define PLATFORM_PROXY_NAMESPACE "bq.pp"
 
@@ -245,7 +245,6 @@ private:
 	 * @return OK on success.
 	 */
 	ExitCode_t RefreshPlatformData();
-
 
 protected:
 
