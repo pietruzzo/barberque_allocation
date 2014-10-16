@@ -157,6 +157,19 @@ public:
 	 */
 	~Resource() {
 		state_views.clear();
+	/**
+	 * @brief Set the resource path string
+	 */
+	inline void SetPath(std::string const & r_path) {
+		path.assign(r_path);
+	}
+
+	/**
+	 * @brief The registered resource path string
+	 * @return A string containing the resource path
+	 */
+	inline std::string const & Path() {
+		return path;
 	}
 
 	/**
@@ -271,6 +284,9 @@ private:
 
 	/** The amount of resource being reserved */
 	uint64_t reserved;
+
+	/** Former resource path string  */
+	std::string path;
 
 	/** True if this resource is currently offline */
 	bool offline;

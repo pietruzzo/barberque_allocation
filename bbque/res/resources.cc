@@ -31,7 +31,7 @@ Resource::Resource(std::string const & res_path, uint64_t tot):
 	total(tot),
 	reserved(0),
 	offline(false) {
-	name.assign(res_path);
+	path.assign(res_path);
 
 	// Extract the name from the path
 	size_t pos = res_path.find_last_of(".");
