@@ -31,6 +31,18 @@
 
 namespace bbque {
 
+std::array<
+	PowerManager::InfoType,
+	int(PowerManager::InfoType::COUNT)> PowerManager::InfoTypeIndex = {{
+		InfoType::LOAD        ,
+		InfoType::TEMPERATURE ,
+		InfoType::FREQUENCY   ,
+		InfoType::VOLTAGE     ,
+		InfoType::POWER       ,
+		InfoType::ENERGY      ,
+		InfoType::PERF_STATE  ,
+		InfoType::POWER_STATE
+	}};
 
 PowerManager & PowerManager::GetInstance() {
 	static PowerManager instance;

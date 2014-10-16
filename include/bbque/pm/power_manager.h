@@ -19,6 +19,7 @@
 #ifndef BBQUE_POWER_MANAGER_H_
 #define BBQUE_POWER_MANAGER_H_
 
+#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -62,6 +63,32 @@ public:
 		/** Sensors error. e.g. cannot read a sensor*/
 		ERR_SENSORS_ERROR
 	};
+
+	/**
+	 * @enum Information classes that the module provides
+	 */
+	enum class InfoType: uint8_t {
+		LOAD        = 0,
+		TEMPERATURE = 1,
+		FREQUENCY   = 2,
+		VOLTAGE     = 3,
+		POWER       = 4,
+		ENERGY      = 5,
+		PERF_STATE  = 6,
+		POWER_STATE = 7,
+		COUNT       = 8
+	};
+
+	/**
+	 * @brief Data structure to store the amount of samples specified for the
+	 * computation of mean value of the required (enabled) information
+	 */
+	typedef std::array<uint, int(InfoType::COUNT)> SamplesArray_t;
+	/**
+	 * @brief Keep track of the integer indices associated to the information
+	 * types provided
+	 */
+	static std::array<InfoType, int(InfoType::COUNT)> InfoTypeIndex;
 
 	enum class FanSpeedType {
 		PERCENT = 0,
