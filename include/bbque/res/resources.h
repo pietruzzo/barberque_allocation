@@ -303,6 +303,11 @@ private:
 	RSHashMap_t state_views;
 
 	/**
+	 * @brief Availability information initialization
+	 */
+	void InitAvailabilityInfo();
+
+	/**
 	 * @brief Set the total amount of resource
 	 *
 	 * @note This method acts only upon the default state view only

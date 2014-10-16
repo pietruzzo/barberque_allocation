@@ -41,9 +41,8 @@ Resource::Resource(std::string const & res_path, uint64_t tot):
 		name = res_path;
 
 	// Initialize availability profile monitors;
-	av_profile.online_tmr.start();
-	av_profile.lastOfflineTime = 0;
-	av_profile.lastOnlineTime = 0;
+	InitAvailabilityInfo();
+
 }
 
 Resource::Resource(br::ResourceIdentifier::Type_t type, br::ResID_t id, uint64_t tot):
@@ -53,9 +52,15 @@ Resource::Resource(br::ResourceIdentifier::Type_t type, br::ResID_t id, uint64_t
 	offline(false) {
 
 	// Initialize availability profile monitors;
+	InitAvailabilityInfo();
+
+
+}
+
+inline void Resource::InitAvailabilityInfo() {
 	av_profile.online_tmr.start();
 	av_profile.lastOfflineTime = 0;
-	av_profile.lastOnlineTime = 0;
+	av_profile.lastOnlineTime  = 0;
 }
 
 Resource::ExitCode_t Resource::Reserve(uint64_t amount) {
