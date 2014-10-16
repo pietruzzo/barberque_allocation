@@ -18,6 +18,8 @@
 #ifndef BBQUE_PLATFORM_PROXY_H_
 #define BBQUE_PLATFORM_PROXY_H_
 
+#include <bitset>
+
 #include "bbque/config.h"
 #include "bbque/utils/logging/logger.h"
 #include "bbque/app/application.h"
@@ -140,6 +142,9 @@ public:
  * @{
  */
 
+#define PLATFORM_EVT_REFRESH  0
+#define PLATFORM_EVT_MONITOR  1
+#define PLATFORM_EVT_COUNT    2
 	/**
 	 * @brief Notify a platform event related to resources status
 	 *
@@ -199,6 +204,11 @@ private:
 	 * resources.
 	 */
 	bool pilInitialized;
+
+	/**
+	 * @brief The set of flags related to pending platform events to handle
+	 */
+	std::bitset<PLATFORM_EVT_COUNT> platformEvents;
 
 	/**
 	 * @brief The platform monitoring thread.
