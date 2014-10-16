@@ -684,6 +684,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
 		return RA_ERR_MEM;
 	}
 	pres->SetTotal(br::ConvertValue(amount, units));
+	pres->SetPath(path_str);
 	logger->Debug("Register R{%s}: Total = %llu %s",
 			path_str.c_str(), pres->Total(), units.c_str());
 
