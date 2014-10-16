@@ -40,6 +40,7 @@ class EMA {
 private:
 	double alpha;
 	double value;
+	double  last;
 	uint8_t load;
 public:
 	EMA(int samples = 6, double firstValue = 0) :
@@ -48,7 +49,8 @@ public:
 		load(samples) {
 	}
 	double update(double newValue) {
-		value = ((alpha * newValue) + ((1 - alpha) * value));
+		last  = newValue;
+		value = ((alpha * last) + ((1 - alpha) * value));
 		if (unlikely(load > 0))
 			--load;
 		return value;
@@ -62,6 +64,9 @@ public:
 		if (unlikely(load > 0))
 			return 0;
 		return value;
+	}
+	double last_value() const {
+		return last;
 	}
 };
 
