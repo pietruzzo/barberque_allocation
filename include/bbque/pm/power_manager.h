@@ -20,17 +20,23 @@
 #define BBQUE_POWER_MANAGER_H_
 
 #include <cstdint>
+#include <vector>
 
 #include "bbque/command_manager.h"
-#include "bbque/res/resource_path.h"
 #include "bbque/utils/logging/logger.h"
 
 #define POWER_MANAGER_NAMESPACE "bq.pm"
 
-namespace br = bbque::res;
+
 namespace bu = bbque::utils;
 
 namespace bbque {
+
+namespace res {
+	class ResourcePath;
+	typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
+}
+namespace br = bbque::res;
 
 
 class PowerManager: public CommandHandler {
@@ -69,42 +75,42 @@ public:
 	/** Runtime activity load */
 
 	virtual PMResult GetLoad(
-		ResourcePathPtr_t const & rp, uint32_t &perc);
+		br::ResourcePathPtr_t const & rp, uint32_t &perc);
 
 
 	/** Temperature */
 
 	virtual PMResult GetTemperature(
-		ResourcePathPtr_t const & rp, uint32_t &celsius);
+		br::ResourcePathPtr_t const & rp, uint32_t &celsius);
 
 
 	/** Clock frequency */
 
 	virtual PMResult GetClockFrequency(
-		ResourcePathPtr_t const & rp, uint32_t &khz);
+		br::ResourcePathPtr_t const & rp, uint32_t &khz);
 
 	virtual PMResult GetClockFrequencyInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &khz_min,
 		uint32_t &khz_max,
 		uint32_t &khz_step);
 
 	virtual PMResult GetAvailableFrequencies(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		std::vector<unsigned long> & freqs);
 
 
 	virtual PMResult SetClockFrequency(
-		ResourcePathPtr_t const & rp, uint32_t khz);
+		br::ResourcePathPtr_t const & rp, uint32_t khz);
 
 
 	/** Voltage information */
 
 	virtual PMResult GetVoltage(
-		ResourcePathPtr_t const & rp, uint32_t &mvolt);
+		br::ResourcePathPtr_t const & rp, uint32_t &mvolt);
 
 	virtual PMResult GetVoltageInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &mvolt_min,
 		uint32_t &mvolt_max,
 		uint32_t &mvolt_step);
@@ -113,53 +119,53 @@ public:
 	/**  Fan speed information */
 
 	virtual PMResult GetFanSpeed(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t &value);
 
 	virtual PMResult GetFanSpeedInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &rpm_min,
 		uint32_t &rpm_max,
 		uint32_t &rpm_step);
 
 	virtual PMResult SetFanSpeed(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t value);
 
-	virtual PMResult ResetFanSpeed(ResourcePathPtr_t const & rp);
+	virtual PMResult ResetFanSpeed(br::ResourcePathPtr_t const & rp);
 
 
 	/** Power consumption information */
 
 	virtual PMResult GetPowerUsage(
-		ResourcePathPtr_t const & rp, uint32_t &mwatt);
+		br::ResourcePathPtr_t const & rp, uint32_t &mwatt);
 
 	virtual PMResult GetPowerInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &mwatt_min,
 		uint32_t &mwatt_max) ;
 
 
 	/** Performance/power states */
 
-	virtual PMResult GetPowerState(ResourcePathPtr_t const & rp, int & state);
+	virtual PMResult GetPowerState(br::ResourcePathPtr_t const & rp, int & state);
 
 	virtual PMResult GetPowerStatesInfo(
-		ResourcePathPtr_t const & rp, int & min, int & max, int & step);
+		br::ResourcePathPtr_t const & rp, int & min, int & max, int & step);
 
-	virtual PMResult SetPowerState(ResourcePathPtr_t const & rp, int state);
+	virtual PMResult SetPowerState(br::ResourcePathPtr_t const & rp, int state);
 
 
 	virtual PMResult GetPerformanceState(
-		ResourcePathPtr_t const & rp, int &value);
+		br::ResourcePathPtr_t const & rp, int &value);
 
 	virtual PMResult GetPerformanceStatesCount(
-		ResourcePathPtr_t const & rp, int &count);
+		br::ResourcePathPtr_t const & rp, int &count);
 
 	virtual PMResult SetPerformanceState(
-		ResourcePathPtr_t const & rp, int value);
+		br::ResourcePathPtr_t const & rp, int value);
 
 	int CommandsCb(int argc, char *argv[]);
 

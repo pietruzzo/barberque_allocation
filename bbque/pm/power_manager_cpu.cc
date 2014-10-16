@@ -16,6 +16,7 @@
  */
 
 #include "bbque/pm/power_manager_cpu.h"
+#include "bbque/res/resource_path.h"
 
 #include <fstream>
 #include <iostream>

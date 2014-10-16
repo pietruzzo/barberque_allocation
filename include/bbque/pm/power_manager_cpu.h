@@ -18,6 +18,9 @@
 #ifndef BBQUE_POWER_MANAGER_CPU_H_
 #define BBQUE_POWER_MANAGER_CPU_H_
 
+#include <map>
+#include <vector>
+
 #include "bbque/pm/power_manager.h"
 #include <cpufreq.h>
 

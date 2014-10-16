@@ -16,6 +16,7 @@
  */
 
 #include "bbque/pm/power_manager.h"
+#include "bbque/res/resource_path.h"
 #include "bbque/config.h"
 
 #ifdef CONFIG_BBQUE_PM_AMD
