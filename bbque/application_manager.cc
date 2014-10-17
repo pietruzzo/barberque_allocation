@@ -1441,7 +1441,6 @@ ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
 	if (!papp) {
 		logger->Warn("Checking EXC [%d:*:%d] FAILED "
 				"(Error: EXC not found)");
-		assert(papp);
 		return AM_ABORT;
 	}
 
