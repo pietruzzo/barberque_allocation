@@ -145,8 +145,8 @@ private:
 		uint32_t freq_m  = 0;
 		uint32_t fan     = 0;
 		uint32_t mvolt   = 0;
-		int      pstate  = 0;
-		int      wstate  = 0;
+		uint32_t pstate  = 0;
+		uint32_t wstate  = 0;
 	};
 
 	/*** HW monitoring parameters */

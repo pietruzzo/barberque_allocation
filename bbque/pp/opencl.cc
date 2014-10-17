@@ -162,9 +162,8 @@ void OpenCLProxy::Task() {
 
 #ifdef CONFIG_BBQUE_PM
 void OpenCLProxy::HwSetup() {
-	uint32_t min, max, step;
-	int s_min, s_max, s_step;
-	int ps_count;
+	uint32_t min, max, step, s_min, s_max, ps_count;
+	int  s_step;
 	PowerManager::PMResult pm_result;
 	ResourcePathListPtr_t pgpu_paths(
 		GetDevicePaths(br::ResourceIdentifier::GPU));

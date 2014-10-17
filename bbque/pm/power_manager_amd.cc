@@ -582,13 +582,16 @@ AMDPowerManager::GetPowerState(
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
-	ADL_Err = ADL2_Overdrive5_PowerControl_Get(context, adapter_id, &state, &dflt);
+	int amd_state;
+	ADL_Err = ADL2_Overdrive5_PowerControl_Get(
+		context, adapter_id, &amd_state, &dflt);
 	if (ADL_Err != ADL_OK) {
 		logger->Error(
 			"ADL: [A%d] Power control not available [%d]",
 			adapter_id, ADL_Err);
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
+	state = static_cast<uint32_t>(amd_state);
 
 	ADL2_Main_Control_Destroy(context);
 	return PMResult::OK;
