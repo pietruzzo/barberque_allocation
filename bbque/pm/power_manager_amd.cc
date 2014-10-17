@@ -90,7 +90,7 @@ void AMDPowerManager::LoadAdaptersInfo() {
 //		}
 		// Adapters ID mapping and resouce path
 		adapters_map.insert(
-			std::pair<ResID_t, int>(adapters_map.size(), i));
+			std::pair<br::ResID_t, int>(adapters_map.size(), i));
 		activity_map.insert(
 			std::pair<int, ActivityPtr_t>(
 				i, ActivityPtr_t(new ADLPMActivity)));
@@ -150,17 +150,17 @@ AMDPowerManager::~AMDPowerManager() {
 	od_status_map.clear();
 }
 
-int AMDPowerManager::GetAdapterId(ResourcePathPtr_t const & rp) const {
-	std::map<ResID_t, int>::const_iterator it;
+int AMDPowerManager::GetAdapterId(br::ResourcePathPtr_t const & rp) const {
+	std::map<br::ResID_t, int>::const_iterator it;
 	if (rp == nullptr) {
 		logger->Error("ADL: Null resource path");
 		return -1;
 	}
 
-	it = adapters_map.find(rp->GetID(ResourceIdentifier::GPU));
+	it = adapters_map.find(rp->GetID(br::ResourceIdentifier::GPU));
 	if (it == adapters_map.end()) {
 		logger->Error("ADL: Missing GPU id=%d",
-			rp->GetID(ResourceIdentifier::GPU));
+			rp->GetID(br::ResourceIdentifier::GPU));
 		return -2;
 	}
 	return it->second;
@@ -205,7 +205,7 @@ AMDPowerManager::GetActivity(int adapter_id) {
 }
 
 PowerManager::PMResult
-AMDPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
+AMDPowerManager::GetLoad(br::ResourcePathPtr_t const & rp, uint32_t & perc) {
 	PMResult pm_result;
 	perc = 0;
 
@@ -220,7 +220,7 @@ AMDPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
 }
 
 PowerManager::PMResult
-AMDPowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius) {
+AMDPowerManager::GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t &celsius) {
 	int ADL_Err = ADL_ERR;
 	celsius = 0;
 	ADLTemperature temp;
@@ -259,9 +259,9 @@ AMDPowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius)
 /* Clock frequency */
 
 PowerManager::PMResult
-AMDPowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) {
+AMDPowerManager::GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t &khz) {
 	PMResult pm_result;
-	ResourceIdentifier::Type_t r_type = rp->Type();
+	br::ResourceIdentifier::Type_t r_type = rp->Type();
 	khz = 0;
 
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
@@ -272,9 +272,9 @@ AMDPowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) 
 		return pm_result;
 	}
 
-	if (r_type == ResourceIdentifier::PROC_ELEMENT)
+	if (r_type == br::ResourceIdentifier::PROC_ELEMENT)
 		khz = activity_map[adapter_id]->iEngineClock * 10;
-	else if (r_type == ResourceIdentifier::MEMORY)
+	else if (r_type == br::ResourceIdentifier::MEMORY)
 		khz = activity_map[adapter_id]->iMemoryClock * 10;
 	else {
 		logger->Warn("ADL: Invalid resource path [%s]", rp->ToString().c_str());
@@ -287,12 +287,12 @@ AMDPowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) 
 
 PowerManager::PMResult
 AMDPowerManager::GetClockFrequencyInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &khz_min,
 		uint32_t &khz_max,
 		uint32_t &khz_step) {
 	khz_min = khz_max = khz_step = 0;
-	ResourceIdentifier::Type_t r_type = rp->Type();
+	br::ResourceIdentifier::Type_t r_type = rp->Type();
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 
 	if (!od_ready) {
@@ -300,12 +300,12 @@ AMDPowerManager::GetClockFrequencyInfo(
 		return PMResult::ERR_NOT_INITIALIZED;
 	}
 
-	if (r_type == ResourceIdentifier::PROC_ELEMENT) {
+	if (r_type == br::ResourceIdentifier::PROC_ELEMENT) {
 		khz_min  = od_params_map[adapter_id].sEngineClock.iMin * 10;
 		khz_max  = od_params_map[adapter_id].sEngineClock.iMax * 10;
 		khz_step = od_params_map[adapter_id].sEngineClock.iStep * 10;
 	}
-	else if (r_type == ResourceIdentifier::MEMORY) {
+	else if (r_type == br::ResourceIdentifier::MEMORY) {
 		khz_min  = od_params_map[adapter_id].sMemoryClock.iMin * 10;
 		khz_max  = od_params_map[adapter_id].sMemoryClock.iMax * 10;
 		khz_step = od_params_map[adapter_id].sMemoryClock.iStep * 10;
@@ -320,7 +320,7 @@ AMDPowerManager::GetClockFrequencyInfo(
 /* Voltage */
 
 PowerManager::PMResult
-AMDPowerManager::GetVoltage(ResourcePathPtr_t const & rp, uint32_t &mvolt) {
+AMDPowerManager::GetVoltage(br::ResourcePathPtr_t const & rp, uint32_t &mvolt) {
 	mvolt = 0;
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 
@@ -337,11 +337,11 @@ AMDPowerManager::GetVoltage(ResourcePathPtr_t const & rp, uint32_t &mvolt) {
 
 PowerManager::PMResult
 AMDPowerManager::GetVoltageInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &mvolt_min,
 		uint32_t &mvolt_max,
 		uint32_t &mvolt_step) {
-	ResourceIdentifier::Type_t r_type = rp->Type();
+	br::ResourceIdentifier::Type_t r_type = rp->Type();
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 
 	if (!od_ready) {
@@ -349,7 +349,7 @@ AMDPowerManager::GetVoltageInfo(
 		return PMResult::ERR_NOT_INITIALIZED;
 	}
 
-	if (r_type != ResourceIdentifier::PROC_ELEMENT) {
+	if (r_type != br::ResourceIdentifier::PROC_ELEMENT) {
 		logger->Error("ADL: Not a processing resource!");
 		return PMResult::ERR_RSRC_INVALID_PATH;
 	}
@@ -365,7 +365,7 @@ AMDPowerManager::GetVoltageInfo(
 
 PowerManager::PMResult
 AMDPowerManager::GetFanSpeed(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t &value) {
 	int ADL_Err = ADL_ERR;
@@ -408,7 +408,7 @@ AMDPowerManager::GetFanSpeed(
 
 PowerManager::PMResult
 AMDPowerManager::GetFanSpeedInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &rpm_min,
 		uint32_t &rpm_max,
 		uint32_t &rpm_step) {
@@ -444,7 +444,7 @@ AMDPowerManager::GetFanSpeedInfo(
 
 PowerManager::PMResult
 AMDPowerManager::SetFanSpeed(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t value)  {
 	int ADL_Err = ADL_ERR;
@@ -484,7 +484,7 @@ AMDPowerManager::SetFanSpeed(
 }
 
 PowerManager::PMResult
-AMDPowerManager::ResetFanSpeed(ResourcePathPtr_t const & rp) {
+AMDPowerManager::ResetFanSpeed(br::ResourcePathPtr_t const & rp) {
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 
 	return _ResetFanSpeed(adapter_id);
@@ -524,7 +524,7 @@ AMDPowerManager::_ResetFanSpeed(int adapter_id) {
 
 PowerManager::PMResult
 AMDPowerManager::GetPowerStatesInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &min,
 		uint32_t &max,
 		int &step) {
@@ -562,7 +562,7 @@ AMDPowerManager::GetPowerStatesInfo(
 
 PowerManager::PMResult
 AMDPowerManager::GetPowerState(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t & state) {
 	int ADL_Err = ADL_ERR;
 	int dflt;
@@ -596,7 +596,7 @@ AMDPowerManager::GetPowerState(
 
 PowerManager::PMResult
 AMDPowerManager::SetPowerState(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t state) {
 	int ADL_Err = ADL_ERR;
 
@@ -629,7 +629,7 @@ AMDPowerManager::SetPowerState(
 
 PowerManager::PMResult
 AMDPowerManager::GetPerformanceState(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &state) {
 	state = 0;
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
@@ -646,7 +646,7 @@ AMDPowerManager::GetPerformanceState(
 
 PowerManager::PMResult
 AMDPowerManager::GetPerformanceStatesCount(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &count) {
 	count = 0;
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);

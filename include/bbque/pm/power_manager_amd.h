@@ -18,7 +18,10 @@
 #ifndef BBQUE_POWER_MANAGER_AMD_H_
 #define BBQUE_POWER_MANAGER_AMD_H_
 
+#include <map>
+
 #include "bbque/pm/power_manager.h"
+#include "bbque/res/resource_path.h"
 #include "bbque/pm/adl/adl_sdk.h"
 
 #define AMD_VENDOR     "AMD"
@@ -61,7 +64,7 @@ int ADL2_Overdrive5_Temperature_Get (ADL_CONTEXT_HANDLE, int, int, ADLTemperatur
 
 }
 
-using namespace bbque::res;
+namespace br = bbque::res;
 
 namespace bbque {
 
@@ -85,24 +88,24 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc);
+	PMResult GetLoad(br::ResourcePathPtr_t const & rp, uint32_t & perc);
 
 	/**
 	 * @see class PowerManager
 	 */
 	PMResult GetTemperature(
-		ResourcePathPtr_t const & rp, uint32_t &celsius);
+		br::ResourcePathPtr_t const & rp, uint32_t &celsius);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz);
+	PMResult GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t &khz);
 
 	/**
 	 * @see class PowerManager
 	 */
 	PMResult GetClockFrequencyInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &khz_min,
 		uint32_t &khz_max,
 		uint32_t &khz_step);
@@ -110,13 +113,13 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetVoltage(ResourcePathPtr_t const & rp, uint32_t &mvolt);
+	PMResult GetVoltage(br::ResourcePathPtr_t const & rp, uint32_t &mvolt);
 
 	/**
 	 * @see class PowerManager
 	 */
 	virtual PMResult GetVoltageInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &mvolt_min,
 		uint32_t &mvolt_max,
 		uint32_t &mvolt_step);
@@ -125,7 +128,7 @@ public:
 	 * @see class PowerManager
 	 */
 	PMResult GetFanSpeed(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t &value);
 
@@ -133,7 +136,7 @@ public:
 	 * @see class PowerManager
 	 */
 	PMResult GetFanSpeedInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &rpm_min,
 		uint32_t &rpm_max,
 		uint32_t &rpm_step);
@@ -142,42 +145,42 @@ public:
 	 * @see class PowerManager
 	 */
 	PMResult SetFanSpeed(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t value);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult ResetFanSpeed(ResourcePathPtr_t const & rp);
+	PMResult ResetFanSpeed(br::ResourcePathPtr_t const & rp);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerState(ResourcePathPtr_t const & rp, uint32_t & state);
+	PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t & state);
 
 	/**
 	 * @see class PowerManager
 	 */
 	PMResult GetPowerStatesInfo(
-		ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
+		br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult SetPowerState(ResourcePathPtr_t const & rp, uint32_t state);
+	PMResult SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state);
 
 	/**
 	 * @see class PowerManager
 	 */
 	PMResult GetPerformanceState(
-			ResourcePathPtr_t const & rp, uint32_t &state);
+			br::ResourcePathPtr_t const & rp, uint32_t &state);
 
 	/**
 	 * @see class PowerManager
 	 */
 	PMResult GetPerformanceStatesCount(
-			ResourcePathPtr_t const & rp, uint32_t &count);
+			br::ResourcePathPtr_t const & rp, uint32_t &count);
 
 private:
 
@@ -209,7 +212,7 @@ private:
 	int adapters_count;
 
 	/*** Mapping BBQ resource id -> ADL adapter id */
-	std::map<ResID_t, int> adapters_map;
+	std::map<br::ResID_t, int> adapters_map;
 
 	/*** Activity resume for each adapter */
 	std::map<int, ActivityPtr_t> activity_map;
@@ -234,7 +237,7 @@ private:
 	 * @param rp Resource path of the GPU (including '.pe')
 	 * @return The integer adapter id
 	 */
-	int GetAdapterId(ResourcePathPtr_t const & rp) const;
+	int GetAdapterId(br::ResourcePathPtr_t const & rp) const;
 
 	/**
 	 * @brief Get the platform adapter id (returned from ADL)
