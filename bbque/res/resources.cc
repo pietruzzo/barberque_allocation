@@ -20,6 +20,8 @@
 
 #define MODULE_NAMESPACE "bq.re"
 
+namespace bu = bbque::utils;
+
 namespace bbque { namespace res {
 
 /*****************************************************************************
@@ -43,6 +45,9 @@ Resource::Resource(std::string const & res_path, uint64_t tot):
 	// Initialize availability profile monitors;
 	InitAvailabilityInfo();
 
+#ifdef CONFIG_BBQUE_PM
+	pw_profile.values.resize(8);
+#endif
 }
 
 Resource::Resource(br::ResourceIdentifier::Type_t type, br::ResID_t id, uint64_t tot):
@@ -54,6 +59,9 @@ Resource::Resource(br::ResourceIdentifier::Type_t type, br::ResID_t id, uint64_t
 	// Initialize availability profile monitors;
 	InitAvailabilityInfo();
 
+#ifdef CONFIG_BBQUE_PM
+	pw_profile.values.resize(8);
+#endif
 
 }
 
@@ -289,5 +297,49 @@ ResourceStatePtr_t Resource::GetStateView(RViewToken_t vtok) {
 	// State view not found
 	return ResourceStatePtr_t();
 }
+
+#ifdef CONFIG_BBQUE_PM
+
+void Resource::EnablePowerProfile(
+		PowerManager::SamplesArray_t const & samples_window) {
+	pw_profile.enabled_count = 0;
+
+	// Check each power profiling information
+	for (uint i = 0; i < samples_window.size(); ++i) {
+		if (samples_window[i] <= 0)
+			continue;
+		++pw_profile.enabled_count;
+
+		// Is the sample window size changed?
+		if (pw_profile.values[i] &&
+				pw_profile.samples_window[i] == samples_window[i])
+			continue;
+
+		// New sample window size
+		pw_profile.values[i] =
+				bu::pEma_t(new bu::EMA(samples_window[i]));
+	}
+	pw_profile.samples_window = samples_window;
+}
+
+
+void Resource::EnablePowerProfile() {
+	EnablePowerProfile(default_samples_window);
+}
+
+double Resource::GetPowerInfo(PowerManager::InfoType i_type, ValueType v_type) {
+	if (!pw_profile.values[int(i_type)])
+		return 0.0;
+	// Instant or mean value?
+	switch (v_type) {
+	case INSTANT:
+		return pw_profile.values[int(i_type)]->last_value();
+	case MEAN:
+		return pw_profile.values[int(i_type)]->get();
+	}
+	return 0.0;
+}
+
+#endif // CONFIG_BBQUE_PM
 
 }}

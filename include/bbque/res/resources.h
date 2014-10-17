@@ -25,16 +25,25 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
+#include "bbque/config.h"
 #include "bbque/app/application_status.h"
+#include "bbque/pm/power_manager.h"
 #include "bbque/res/identifier.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/timer.h"
+#include "bbque/utils/stats.h"
+
+// Default number of samples for power profiling:
+// {LOAD,TEMPERATURE,FREQUENCY,...}
+#define BBQUE_PM_DEFAULT_SAMPLES_WINSIZE 	{3,1,3}
 
 using bbque::app::AppSPtr_t;
 using bbque::app::AppUid_t;
 using bbque::utils::AttributesContainer;
 using bbque::utils::Timer;
+using bbque::utils::pEma_t;
 
 namespace bbque {
 
@@ -132,8 +141,28 @@ public:
 		/** Generic failure code */
 		RS_FAILED,
 		/** The resource is not used by any application */
-		RS_NO_APPS
+		RS_NO_APPS,
+		/** Required a power information not enabled */
+		RS_PWR_INFO_DISABLED
 	};
+
+	enum ValueType {
+		INSTANT,
+		MEAN
+	};
+
+	/**
+	 * Information related to the power/thermal status of the hardware
+	 * resource
+	 */
+	typedef struct PowerProfile {
+		/** Flags of the available run-time information */
+		PowerManager::SamplesArray_t samples_window;
+		/** Sampled values */
+		std::vector<pEma_t> values;
+		/** Count of power profiling info enabled */
+		uint enabled_count;
+	} PowerProfile_t;
 
 	/**
 	 * @brief Constructor
@@ -157,6 +186,11 @@ public:
 	 */
 	~Resource() {
 		state_views.clear();
+#ifdef CONFIG_BBQUE_PM
+		pw_profile.values.clear();
+#endif
+	}
+
 	/**
 	 * @brief Set the resource path string
 	 */
@@ -277,6 +311,67 @@ public:
 		return state_views.size();
 	}
 
+#ifdef CONFIG_BBQUE_PM
+
+	/**
+	 * @brief Enable the collection of power-thermal status information
+	 *
+	 * @param samples_window For each (required) power profile information
+	 * compute a mean (exponential) value over a number of samples specified in
+	 * the specific position (@see PowerManager::InfoType)
+	 */
+	void EnablePowerProfile(PowerManager::SamplesArray_t const & samples_window);
+
+	/**
+	 * @brief Enable the collection of power-thermal status information with
+	 * the default setting specified in BBQUE_PM_DEFAULT_SAMPLES_WINSIZE
+	 */
+	void EnablePowerProfile();
+
+	/**
+	 * @brief The number of samples for the computation of the mean value of
+	 * the power profile information required
+	 *
+	 * @param i_type The power profile information required
+	 *
+	 * @return The number of samples
+	 */
+	inline uint GetPowerInfoSamplesWindowSize(
+			PowerManager::InfoType i_type) {
+		return pw_profile.samples_window[int(i_type)];
+	}
+
+	/**
+	 * @brief The number of power profile information required
+	 */
+	inline uint GetPowerInfoEnabledCount() {
+		return pw_profile.enabled_count;
+	}
+
+	/**
+	 * @brief Update the power profile information
+	 *
+	 * @param i_type The power profile information to update
+	 * @param sample The sample value
+	 */
+	inline void UpdatePowerInfo(
+			PowerManager::InfoType i_type, uint32_t sample) {
+		pw_profile.values[int(i_type)]->update(sample);
+	}
+
+	/**
+	 * @brief Power profile information
+	 *
+	 * @param i_type Information type (e.g., LOAD, TEMPERATURE, FREQUENCY,...)
+	 * @param v_type Specify if the value required is the instantaneous or the
+	 * mean (exponential) computed on a set of samples (@see ValueType)
+	 *
+	 * @return The value of power profile information required
+	 */
+	double GetPowerInfo(PowerManager::InfoType i_type, ValueType v_type);
+
+#endif // CONFIG_BBQUE_PM
+
 private:
 
 	/** The total amount of resource  */
@@ -301,6 +396,14 @@ private:
 
 	/** The run-time availability profile of this resource */
 	AvailabilityProfile_t av_profile;
+
+#ifdef CONFIG_BBQUE_PM
+	/** Power/thermal status (if the platform support is available) */
+	PowerProfile_t pw_profile;
+
+	PowerManager::SamplesArray_t default_samples_window =
+		{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE};
+#endif
 
 	/**
 	 * Hash map with all the views of the resource.
