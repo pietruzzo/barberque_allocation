@@ -154,28 +154,30 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerState(ResourcePathPtr_t const & rp, int & state);
+	PMResult GetPowerState(ResourcePathPtr_t const & rp, uint32_t & state);
 
 	/**
 	 * @see class PowerManager
 	 */
 	PMResult GetPowerStatesInfo(
-		ResourcePathPtr_t const & rp, int & min, int & max, int & step);
+		ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult SetPowerState(ResourcePathPtr_t const & rp, int state);
+	PMResult SetPowerState(ResourcePathPtr_t const & rp, uint32_t state);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceState(ResourcePathPtr_t const & rp, int &state);
+	PMResult GetPerformanceState(
+			ResourcePathPtr_t const & rp, uint32_t &state);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceStatesCount(ResourcePathPtr_t const & rp, int &count);
+	PMResult GetPerformanceStatesCount(
+			ResourcePathPtr_t const & rp, uint32_t &count);
 
 private:
 

@@ -525,8 +525,8 @@ AMDPowerManager::_ResetFanSpeed(int adapter_id) {
 PowerManager::PMResult
 AMDPowerManager::GetPowerStatesInfo(
 		ResourcePathPtr_t const & rp,
-		int &min,
-		int &max,
+		uint32_t &min,
+		uint32_t &max,
 		int &step) {
 	int ADL_Err = ADL_ERR;
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
@@ -561,7 +561,9 @@ AMDPowerManager::GetPowerStatesInfo(
 /* States */
 
 PowerManager::PMResult
-AMDPowerManager::GetPowerState(ResourcePathPtr_t const & rp, int & state) {
+AMDPowerManager::GetPowerState(
+		ResourcePathPtr_t const & rp,
+		uint32_t & state) {
 	int ADL_Err = ADL_ERR;
 	int dflt;
 
@@ -593,7 +595,9 @@ AMDPowerManager::GetPowerState(ResourcePathPtr_t const & rp, int & state) {
 }
 
 PowerManager::PMResult
-AMDPowerManager::SetPowerState(ResourcePathPtr_t const & rp, int state) {
+AMDPowerManager::SetPowerState(
+		ResourcePathPtr_t const & rp,
+		uint32_t state) {
 	int ADL_Err = ADL_ERR;
 
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
@@ -624,7 +628,9 @@ AMDPowerManager::SetPowerState(ResourcePathPtr_t const & rp, int state) {
 }
 
 PowerManager::PMResult
-AMDPowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, int &state) {
+AMDPowerManager::GetPerformanceState(
+		ResourcePathPtr_t const & rp,
+		uint32_t &state) {
 	state = 0;
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 
@@ -639,7 +645,9 @@ AMDPowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, int &state) {
 }
 
 PowerManager::PMResult
-AMDPowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, int &count) {
+AMDPowerManager::GetPerformanceStatesCount(
+		ResourcePathPtr_t const & rp,
+		uint32_t &count) {
 	count = 0;
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 

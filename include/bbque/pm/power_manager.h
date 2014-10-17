@@ -177,22 +177,22 @@ public:
 
 	/** Performance/power states */
 
-	virtual PMResult GetPowerState(br::ResourcePathPtr_t const & rp, int & state);
+	virtual PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t & state);
 
 	virtual PMResult GetPowerStatesInfo(
-		br::ResourcePathPtr_t const & rp, int & min, int & max, int & step);
+		br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
 
-	virtual PMResult SetPowerState(br::ResourcePathPtr_t const & rp, int state);
+	virtual PMResult SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state);
 
 
 	virtual PMResult GetPerformanceState(
-		br::ResourcePathPtr_t const & rp, int &value);
+		br::ResourcePathPtr_t const & rp, uint32_t &value);
 
 	virtual PMResult GetPerformanceStatesCount(
-		br::ResourcePathPtr_t const & rp, int &count);
+		br::ResourcePathPtr_t const & rp, uint32_t &count);
 
 	virtual PMResult SetPerformanceState(
-		br::ResourcePathPtr_t const & rp, int value);
+		br::ResourcePathPtr_t const & rp, uint32_t value);
 
 	int CommandsCb(int argc, char *argv[]);
 

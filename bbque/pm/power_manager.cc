@@ -343,7 +343,7 @@ PowerManager::GetPowerInfo(
 }
 
 PowerManager::PMResult
-PowerManager::GetPowerState(ResourcePathPtr_t const & rp, int &state) {
+PowerManager::GetPowerState(ResourcePathPtr_t const & rp, uint32_t &state) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
@@ -359,7 +359,7 @@ PowerManager::GetPowerState(ResourcePathPtr_t const & rp, int &state) {
 PowerManager::PMResult
 PowerManager::GetPowerStatesInfo(
 	ResourcePathPtr_t const & rp,
-	int & min, int & max, int & step) {
+	uint32_t & min, uint32_t & max, int & step) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
@@ -373,7 +373,7 @@ PowerManager::GetPowerStatesInfo(
 }
 
 PowerManager::PMResult
-PowerManager::SetPowerState(ResourcePathPtr_t const & rp, int state) {
+PowerManager::SetPowerState(ResourcePathPtr_t const & rp, uint32_t state) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
@@ -388,7 +388,7 @@ PowerManager::SetPowerState(ResourcePathPtr_t const & rp, int state) {
 
 
 PowerManager::PMResult
-PowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, int &state) {
+PowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, uint32_t &state) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
@@ -402,7 +402,7 @@ PowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, int &state) {
 }
 
 PowerManager::PMResult
-PowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, int &count) {
+PowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, uint32_t &count) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
@@ -416,7 +416,7 @@ PowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, int &count
 }
 
 PowerManager::PMResult
-PowerManager::SetPerformanceState(ResourcePathPtr_t const & rp, int state) {
+PowerManager::SetPerformanceState(ResourcePathPtr_t const & rp, uint32_t state) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
