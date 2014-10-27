@@ -665,16 +665,20 @@ LinuxPP::GetResourceMapping(
 	br::ResourceBitset core_ids;
 	br::ResourceBitset mem_ids;
 
-	// Set the amount of CPUs and MEMORY
+	// Set the amount of CPU quota, the CPU core set into the cgroup
+	// attributes values
 	prlb->amount_cpus = ra.GetUsageAmount(pum, br::Resource::PROC_ELEMENT, br::Resource::CPU);
-	prlb->amount_memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
-
-	// CPU core set and MEMORY node
 	core_ids = papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT);
-	mem_ids  = papp->NextAWM()->BindingSet(br::Resource::MEMORY);
-
-	// CPU cores and MEMORY nodes cgroup new attributes value
 	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
+
+	// Set the amount of MEMORY and the memory node into the cgroup attributes
+	// values
+	prlb->amount_memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
+	if (prlb->amount_memb <= 0) {
+		strncpy(prlb->mems, "-1", 2);
+		return OK;
+	}
+	mem_ids  = papp->NextAWM()->BindingSet(br::Resource::MEMORY);
 	strncpy(prlb->mems,  mem_ids.ToStringCG().c_str(), 3*MaxMemsCount);
 
 	return OK;
