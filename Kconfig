@@ -18,6 +18,22 @@ config BBQUE_TEST_PLATFORM_DATA
   application development and integration, without worry about daemon
   setup or requiring to run the daemon as root.
 
+
+menu "Linux Control Groups"
+
+config BBQUE_LINUX_CG_MEMORY
+  bool "Memory controller"
+  default y
+  depends on TARGET_LINUX
+  depends on !BBQUE_TEST_PLATFORM_DATA
+#  depends on !TARGET_ODROID_XU
+  ---help---
+  Enable the Control Groups memory controller for enforcing the memory
+  assignment control.
+
+endmenu # Linux Control Groups
+
+
 choice
   prompt "Memory locality"
 
