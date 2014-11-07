@@ -162,12 +162,16 @@ void Application::InitResourceConstraints() {
 
 		// Lower bound
 		if (rsrc_constr->lower > 0)
-				SetResourceConstraint(rsrc_path,
-						br::ResourceConstraint::LOWER_BOUND, rsrc_constr->lower);
+				SetResourceConstraint(
+						rsrc_path,
+						br::ResourceConstraint::LOWER_BOUND,
+						rsrc_constr->lower);
 		// Upper bound
 		if (rsrc_constr->upper > 0)
-				SetResourceConstraint(rsrc_path,
-						br::ResourceConstraint::UPPER_BOUND, rsrc_constr->upper);
+				SetResourceConstraint(
+						rsrc_path,
+						br::ResourceConstraint::UPPER_BOUND,
+						rsrc_constr->upper);
 	}
 
 	logger->Debug("%d resource constraints from the recipe",
