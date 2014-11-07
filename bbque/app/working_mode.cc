@@ -210,7 +210,7 @@ size_t WorkingMode::BindResource(
 	// Store the resource binding
 	n_refn = std::hash<std::string>()(BindingStr(r_type, src_ID, dst_ID, b_refn));
 	resources.sched_bindings[n_refn] = bind_pum;
-	logger->Info("[%s] BindResource: R{%s} refn[%ld] size:%d count:%d",
+	logger->Debug("[%s] BindResource: R{%s} refn[%ld] size:%d count:%d",
 			str_id, br::ResourceIdentifier::StringFromType(r_type),
 			n_refn, bind_pum->size(), b_count);
 	return n_refn;
