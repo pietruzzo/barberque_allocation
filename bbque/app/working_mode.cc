@@ -64,6 +64,7 @@ WorkingMode::WorkingMode(uint8_t _id,
 
 	// Default value for configuration time (if no profiled)
 	memset(&config_time, 0, sizeof(ConfigTimeAttribute_t));
+	memset(&rt_prof, 0, sizeof(RuntimeProfilingInfo_t));
 	config_time.normal = -1;
 }
 

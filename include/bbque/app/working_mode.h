@@ -367,6 +367,35 @@ public:
 	 */
 	bool BindingChanged(br::ResourceIdentifier::Type_t r_type) const;
 
+/******************************************************************************
+ * Runtime profiling data
+ *******************************************************************************/
+
+	inline void SetRuntimeProfExecTime(uint32_t exec_time) {
+		rt_prof.exec_time = exec_time;
+	}
+
+	inline void SetRuntimeProfMemTime(uint32_t mem_time) {
+		rt_prof.mem_time = mem_time;
+	}
+
+	inline void SetRuntimeProfSyncTime(uint32_t sync_time) {
+		rt_prof.sync_time = sync_time;
+	}
+
+
+	inline uint32_t GetRuntimeProfExecTime() {
+		return rt_prof.exec_time;
+	}
+
+	inline uint32_t GetRuntimeProfMemTime() {
+		return rt_prof.mem_time;
+	}
+
+	inline uint32_t GetRuntimeProfSyncTime() {
+		return rt_prof.sync_time;
+	}
+
 private:
 
 	/**
@@ -442,6 +471,15 @@ private:
 		 */
 		uint32_t runtime;
 	} config_time;
+
+	/**
+	 * @brief Store profiling information collected at runtime
+	 */
+	struct RuntimeProfilingInfo_t {
+		uint32_t exec_time;
+		uint32_t mem_time;
+		uint32_t sync_time;
+	} rt_prof;
 
 	/**
 	 * @struct ResourceUsagesInfo
