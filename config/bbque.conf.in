@@ -122,7 +122,7 @@ rootCategory = ERROR, raFile
 # to redefine the category priority to a value diffent from that of
 # the rootCategory
 ###
-category.bq = 		INFO
+#category.bq =  	INFO
 category.bq.am =	NOTICE
 category.bq.mc =	NOTICE
 category.bq.om =	NOTICE
@@ -130,23 +130,25 @@ category.bq.cm =	INFO
 #category.bq.tpd = 	INFO
 #category.bq.Test =	INFO
 category.bq.ra =	NOTICE
-#category.bq.ri = 	INFO
-#category.bq.rb = 	INFO
+category.bq.ri = 	NOTICE
+category.bq.rb = 	NOTICE
+category.bq.re = 	NOTICE
 #category.bq.rl = 	INFO
 category.bq.rm = 	NOTICE
-#category.bq.rp = 	INFO
-#category.bq.rt = 	INFO
+category.bq.rp = 	NOTICE
+category.bq.rt = 	NOTICE
 #category.bq.ap = 	INFO
 #category.bq.app = 	INFO
 #category.bq.awm =	INFO
-#category.bq.df = 	INFO
+category.bq.df = 	NOTICE
 #category.bq.pp = 	INFO
 #category.bq.pm =	INFO
 #category.bq.rpc.fif = 	INFO
 #category.bq.rpc.prx = 	INFO
 #category.bq.sm = 	INFO
-#category.bq.sp = 	INFO
-#category.bq.sp.sc = 	INFO
+category.bq.sp = 	NOTICE
+category.bq.sp.sc = 	ERROR
+category.bq.sp.scm = 	ERROR
 #category.bq.ym = 	INFO
 
 ###
