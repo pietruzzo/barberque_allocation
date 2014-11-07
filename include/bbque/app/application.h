@@ -73,6 +73,8 @@ class Application: public ApplicationConfIF {
 
 public:
 
+
+
 	/**
 	 * @brief Constructor with parameters name and priority class
 	 * @param name Application name
@@ -154,14 +156,14 @@ public:
 	 * @see ApplicationStatusIF
 	 */
 	inline float Value() const {
-		return value;
+		return schedule.value;
 	}
 
 	/**
 	 * @see ApplicationConfIF
 	 */
 	inline void SetValue(float sched_metrics) {
-		value = sched_metrics;
+		schedule.value = sched_metrics;
 	}
 
 	/**
@@ -500,13 +502,6 @@ private:
 
 	/** The current Goal-Gap value, must be in [0,100] */
 	uint8_t ggap_percent = 0;
-
-	/**
-	 * The metrics value set by the scheduling policy. The purpose of this
-	 * attribute is to provide a support for the evaluation of the schedule
-	 * results.
-	 */
-	float value = 0.0;
 
 	/**
 	 * Platform Specifica Data properly initialized

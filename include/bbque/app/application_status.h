@@ -141,6 +141,7 @@ public:
 		SYNC_STATE_COUNT
 	} SyncState_t;
 
+
 #define SYNC_NONE SYNC_STATE_COUNT
 
 
@@ -165,6 +166,12 @@ public:
 		AwmPtr_t awm;
 		/** The next scheduled application working mode */
 		AwmPtr_t next_awm;
+		/**
+		 * The metrics value set by the scheduling policy. The purpose of this
+		 * attribute is to provide a support for the evaluation of the schedule
+		 * results.
+		 */
+		float value;
 		/** Overloading of operator != for structure comparisons */
 		inline bool operator!=(SchedulingInfo_t const &other) const {
 			return ((this->state != other.state) ||
@@ -173,6 +180,7 @@ public:
 					(this->awm != other.awm));
 		};
 	};
+
 
 	/**
 	 * @brief Type of resource usage statistics
