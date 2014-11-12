@@ -31,7 +31,7 @@ namespace bbque { namespace res {
 uint32_t ResourceBinder::Bind(
 		UsagesMap_t const & src_um,
 		br::ResourceIdentifier::Type_t r_type,
-		br::ResID_t	src_r_id,
+		br::ResID_t src_r_id,
 		br::ResID_t dst_r_id,
 		UsagesMapPtr_t dst_pum,
 		br::ResourceIdentifier::Type_t filter_rtype,
