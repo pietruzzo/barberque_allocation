@@ -107,6 +107,15 @@ public:
 	RTLIB_ExitCode StopExecutionSync(ba::AppPtr_t papp);
 
 /*******************************************************************************
+ * Runtime profiling
+ ******************************************************************************/
+
+	/**
+	 * @brief Get the runtime profiling of an OpenCL application
+	 */
+	RTLIB_ExitCode_t Prof_GetRuntimeData(ba::AppPtr_t papp);
+
+/*******************************************************************************
  * Synchronization Protocol
  ******************************************************************************/
 
@@ -260,6 +269,23 @@ private:
 	void ReleaseCommandSession(pcmdSn_t pcs);
 
 	void CompleteTransaction(pchMsg_t & pmsg);
+
+/*******************************************************************************
+ * Runtime profiling
+ ******************************************************************************/
+
+#ifdef CONFIG_BBQUE_OPENCL
+
+	/**
+	 * @brief Thread function for the runtime data collection
+	 */
+	RTLIB_ExitCode_t Prof_GetRuntimeDataTrd(pcmdSn_t pcs);
+
+	RTLIB_ExitCode_t Prof_GetRuntimeDataSend(ba::AppPtr_t papp);
+
+	RTLIB_ExitCode_t Prof_GetRuntimeDataRecv(pcmdSn_t pcs);
+
+#endif
 
 /*******************************************************************************
  * Synchronization Protocol

@@ -212,6 +212,140 @@ ApplicationProxy::StopExecution(AppPtr_t papp) {
 	return RTLIB_OK;
 }
 
+
+/*******************************************************************************
+ * Runtime profiling - OpenCL
+ ******************************************************************************/
+
+RTLIB_ExitCode_t
+ApplicationProxy::Prof_GetRuntimeData(ba::AppPtr_t papp) {
+	// Command session setup
+	pcmdSn_t pcs(SetupCmdSession(papp));
+	assert(pcs);
+
+	// Command executor (passing the future)
+	pcs->exe = std::thread(
+			&ApplicationProxy::Prof_GetRuntimeDataTrd, this, pcs);
+	pcs->exe.detach();
+
+	// Setup the promise (thus unlocking the executor)
+	pcs->resp_ftr = (pcs->resp_prm).get_future();
+
+	return RTLIB_OK;
+}
+
+RTLIB_ExitCode_t
+ApplicationProxy::Prof_GetRuntimeDataTrd(pcmdSn_t pcs) {
+	RTLIB_ExitCode_t result;
+
+	// Command session handler
+	EnqueueHandler(pcs);
+
+	// Send get runtime profile request
+	result = Prof_GetRuntimeDataSend(pcs->papp);
+	if (result != RTLIB_OK) {
+		logger->Error("APPs PRX: Runtime profile data request failed");
+		return RTLIB_ERROR;
+	}
+
+	// Receive runtime profiling data
+	result = Prof_GetRuntimeDataRecv(pcs);
+	if (result != RTLIB_OK) {
+		logger->Error("APPs PRX: Runtime profile data receiving failed");
+		return RTLIB_ERROR;
+	}
+
+	return RTLIB_OK;
+
+}
+
+RTLIB_ExitCode_t
+ApplicationProxy::Prof_GetRuntimeDataSend(ba::AppPtr_t papp) {
+	std::unique_lock<std::mutex> conCtxMap_ul(conCtxMap_mtx,
+			std::defer_lock);
+	conCtxMap_t::iterator it;
+	pconCtx_t pcon;
+
+	// Get runtime profile data request message
+	bl::rpc_msg_BBQ_GET_PROFILE_t stop_msg = {
+		{
+			bl::RPC_BBQ_GET_PROFILE,
+			static_cast<unsigned int>(gettid()),
+			static_cast<int>(papp->Pid()),
+			papp->ExcId()
+		},
+		true
+	};
+
+
+	// Recover the communication context for this application
+	conCtxMap_ul.lock();
+	it = conCtxMap.find(papp->Pid());
+	conCtxMap_ul.unlock();
+	if (it == conCtxMap.end()) {
+		logger->Error("APPs PRX: Connection context not found "
+				"for application "
+				"[app: %s, pid: %d]",
+				papp->Name().c_str(), papp->Pid());
+		return RTLIB_BBQUE_CHANNEL_UNAVAILABLE;
+	}
+	pcon = (*it).second;
+
+	// Send the command
+	logger->Debug("APPs PRX: Send Command [RPC_BBQ_GET_PROFILE] to "
+			"[app: %s, pid: %d, exc: %d]",
+			papp->Name().c_str(), papp->Pid(), papp->ExcId());
+	assert(rpc);
+	rpc->SendMessage(pcon->pd, &stop_msg.hdr,
+			(size_t)RPC_PKT_SIZE(BBQ_GET_PROFILE));
+
+	return RTLIB_OK;
+}
+
+RTLIB_ExitCode_t
+ApplicationProxy::Prof_GetRuntimeDataRecv(pcmdSn_t pcs) {
+	std::unique_lock<std::mutex> resp_ul(pcs->resp_mtx);
+	bl::rpc_msg_BBQ_GET_PROFILE_RESP_t *pmsg_pyl;
+	rpc_msg_header_t *pmsg_hdr;
+	std::cv_status ready;
+	pchMsg_t pchMsg;
+
+	// Wait for a response (if not yet available)
+	if (!pcs->pmsg) {
+		logger->Debug("APPs PRX: waiting for runtime profile data, "
+				"Timeout: %d[ms]", BBQUE_SYNCP_TIMEOUT);
+		ready = (pcs->resp_cv).wait_for(resp_ul,
+				std::chrono::milliseconds(
+					BBQUE_SYNCP_TIMEOUT));
+		if (ready == std::cv_status::timeout) {
+			logger->Warn("APPs PRX: Runtime profile TIMEOUT");
+			pcs->pmsg = NULL;
+			return RTLIB_BBQUE_CHANNEL_TIMEOUT;
+		}
+	}
+
+	// Getting command response
+	pchMsg   = pcs->pmsg;
+	pmsg_hdr = pchMsg;
+	pmsg_pyl = (bl::rpc_msg_BBQ_GET_PROFILE_RESP_t*)pmsg_hdr;
+	logger->Debug("APPs PRX: command response [typ: %d, pid: %d]",
+			pmsg_hdr->typ,
+			pmsg_hdr->app_pid);
+	assert(pmsg_hdr->typ == bl::RPC_BBQ_RESP);
+
+	// Update application/EXC profile data
+	logger->Debug("APPs PRX: Runtime profile data: {%d, %d}",
+			pmsg_pyl->exec_time, pmsg_pyl->mem_time);
+
+	assert(pcs->papp->CurrentAWM());
+	pcs->papp->CurrentAWM()->SetRuntimeProfExecTime(pmsg_pyl->exec_time);
+	pcs->papp->CurrentAWM()->SetRuntimeProfMemTime(pmsg_pyl->mem_time);
+	logger->Info("APPs PRX: [%s %s] runtime profile set",
+		pcs->papp->StrId(), pcs->papp->CurrentAWM()->StrId());
+
+	return RTLIB_OK;
+}
+
 /*******************************************************************************
  * Synchronization Protocol - PreChange
  ******************************************************************************/
