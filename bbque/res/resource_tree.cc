@@ -191,6 +191,12 @@ bool ResourceTree::findNode(
 
 ResourceTree::ResourceNode_t *
 ResourceTree::addChild(ResourceNode_t * curr_node, ResourcePtr_t pres) {
+	// Set the path string of the new resource
+	std::string path_prefix("");
+	if (curr_node->data)
+		path_prefix = curr_node->data->Name();
+	pres->SetPath(path_prefix + "." + pres->Name());
+
 	// Create the new resource node
 	ResourceNode_t * new_node = new ResourceNode_t;
 	new_node->data   = pres;
