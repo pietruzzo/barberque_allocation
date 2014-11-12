@@ -621,7 +621,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 		br::ResourceIdentifier::PROC_ELEMENT,
 		bd_type);
 	if (amount == 0) {
-		logger->Warn("EvalBindings: nothing to bind [%s], usage null",
+		logger->Debug("EvalBindings: nothing to bind [%s], usage null",
 			br::ResourceIdentifier::TypeStr[bd_type]);
 		return YAMS_IGNORE;
 	}
@@ -783,7 +783,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
 
 	// The resource binding should never fail
 	if (r_refn == 0) {
-		logger->Warn("BindResources: AWM{%d} on '%s%d' failed",
+		logger->Error("BindResources: AWM{%d} on '%s%d' failed",
 			pawm->Id(), br::ResourceIdentifier::TypeStr[bd_type], bd_id);
 		return YAMS_ERROR;
 	}
