@@ -124,6 +124,12 @@ public:
 						papp->StrId(), awm_id);
 		}
 
+		/** Set the working mode */
+		inline void SetAWM(ba::AwmPtr_t _pawm) {
+			pawm = _pawm;
+			_BuildStr();
+		}
+
 		/** Set the binding ID to track */
 		inline void SetBindingID(br::ResID_t bid, br::Resource::Type_t btype) {
 			bind_id = bid;
