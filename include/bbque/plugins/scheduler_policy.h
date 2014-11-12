@@ -110,14 +110,18 @@ public:
 
 		/** Build the identifier string */
 		inline void _BuildStr() {
+			int32_t awm_id = -1;
+			if (pawm != nullptr)
+				awm_id = pawm->Id();
+
 			if ((bind_id != R_ID_NONE) && (bind_id != R_ID_ANY))
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B:%s%d}",
-						papp->StrId(), pawm->Id(),
+						papp->StrId(), awm_id,
 						br::ResourceIdentifier::TypeStr[bind_type],
 						bind_id);
 			else
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B: -}",
-						papp->StrId(), pawm->Id());
+						papp->StrId(), awm_id);
 		}
 
 		/** Set the binding ID to track */
