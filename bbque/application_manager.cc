@@ -900,6 +900,23 @@ ApplicationManager::NotifyNewState(AppPtr_t papp, Application::State_t next) {
 
 }
 
+int ApplicationManager::UpdateRuntimeProfiles() {
+	ApplicationProxy & ap(ApplicationProxy::GetInstance());
+	AppsUidMapIt app_it;
+	ba::AppPtr_t papp;
+	int count = 0;
+
+	// For each running application, update the (OpenCL) runtime profile
+	// information
+	papp = GetFirst(ba::Application::RUNNING, app_it);
+	for (; papp; papp = GetNext(ba::Application::RUNNING, app_it)) {
+		logger->Debug("Updating OpenCL profile for EXC[%d]...",
+				papp->Uid());
+		ap.Prof_GetRuntimeData(papp);
+	}
+
+	return count;
+}
 
 /*******************************************************************************
  *  EXC Creation

@@ -337,6 +337,15 @@ public:
 	ExitCode_t RunningCommit(AppPtr_t papp);
 
 	/**
+	 * @brief Update runtime profiling information of each active
+	 * application/EXC
+	 *
+	 * This is set set of information that can be used by the optimization
+	 * policy
+	 */
+	int UpdateRuntimeProfiles();
+
+	/**
 	 * @brief Dump a logline to report on current Status queue counts
 	 */
 	void ReportStatusQ(bool verbose = false) const;
