@@ -371,29 +371,53 @@ public:
  * Runtime profiling data
  *******************************************************************************/
 
+	/**
+	 * @brief Collect the runtime profiling data from the RTLib
+	 */
+	struct RuntimeProfiling_t {
+		uint32_t exec_time;
+		uint32_t exec_time_tot;
+		uint32_t mem_time;
+		uint32_t mem_time_tot;
+		uint32_t sync_time;
+	};
+
+	/**
+	 * @brief Set the time spent executing on a computing device
+	 * @param exec_time Value coming from RTLib
+	 */
 	inline void SetRuntimeProfExecTime(uint32_t exec_time) {
 		rt_prof.exec_time = exec_time;
+		rt_prof.exec_time_tot += exec_time;
+		logger->Debug("Execution time: {sample = %d, tot = %d} ns",
+			rt_prof.exec_time, rt_prof.exec_time_tot);
 	}
 
+	/**
+	 * @brief Set the time spent in performing memory operations
+	 * @param exec_time Value coming from RTLib
+	 */
 	inline void SetRuntimeProfMemTime(uint32_t mem_time) {
 		rt_prof.mem_time = mem_time;
+		rt_prof.mem_time_tot += mem_time;
+		logger->Debug("Memory time: {sample = %d, tot = %d} ns",
+			rt_prof.mem_time, rt_prof.mem_time_tot);
 	}
 
+	/**
+	 * @brief Set the latest synchronization latency
+	 * @param exec_time Value coming from RTLib
+	 */
 	inline void SetRuntimeProfSyncTime(uint32_t sync_time) {
 		rt_prof.sync_time = sync_time;
+		logger->Debug("Synchronization time: %d", rt_prof.sync_time);
 	}
 
-
-	inline uint32_t GetRuntimeProfExecTime() {
-		return rt_prof.exec_time;
-	}
-
-	inline uint32_t GetRuntimeProfMemTime() {
-		return rt_prof.mem_time;
-	}
-
-	inline uint32_t GetRuntimeProfSyncTime() {
-		return rt_prof.sync_time;
+	/**
+	 * @brief Get the collection runtime profiling data
+	 */
+	inline RuntimeProfiling_t const & GetProfilingData() {
+		return rt_prof;
 	}
 
 private:
@@ -475,11 +499,7 @@ private:
 	/**
 	 * @brief Store profiling information collected at runtime
 	 */
-	struct RuntimeProfilingInfo_t {
-		uint32_t exec_time;
-		uint32_t mem_time;
-		uint32_t sync_time;
-	} rt_prof;
+	RuntimeProfiling_t rt_prof;
 
 	/**
 	 * @struct ResourceUsagesInfo
