@@ -163,6 +163,8 @@ int AMDPowerManager::GetAdapterId(br::ResourcePathPtr_t const & rp) const {
 			rp->GetID(br::ResourceIdentifier::GPU));
 		return -2;
 	}
+	logger->Debug("ADL: GPU %d = Adapter %d",
+		rp->GetID(br::ResourceIdentifier::GPU), it->second);
 	return it->second;
 }
 
@@ -212,10 +214,12 @@ AMDPowerManager::GetLoad(br::ResourcePathPtr_t const & rp, uint32_t & perc) {
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 	pm_result = GetActivity(adapter_id);
 	if (pm_result != PMResult::OK) {
+		logger->Error("ADL: Cannot get GPU (Adapter %d) load", adapter_id);
 		return pm_result;
 	}
 
 	perc = activity_map[adapter_id]->iActivityPercent;
+	logger->Debug("ADL: [A%d] load = %3d", adapter_id, perc);
 	return PMResult::OK;
 }
 
