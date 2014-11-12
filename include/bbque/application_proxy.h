@@ -183,8 +183,6 @@ public:
 
 private:
 
-
-
 	typedef std::shared_ptr<snCtx_t> psnCtx_t;
 
 	typedef std::map<uint8_t, psnCtx_t> snCtxMap_t;

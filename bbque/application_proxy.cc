@@ -1056,10 +1056,10 @@ void ApplicationProxy::CompleteTransaction(pchMsg_t & pmsg) {
  ******************************************************************************/
 
 #define APP_STRID "[%05d:%6s]"
-#define AppStrId(pcon) pcon->app_pid, pcon->app_name 
+#define AppStrId(pcon) pcon->app_pid, pcon->app_name
 
 #define EXC_STRID "[%05d:%6s:%02d]"
-#define ExcStrId(pcon, exc_id) pcon->app_pid, pcon->app_name, exc_id  
+#define ExcStrId(pcon, exc_id) pcon->app_pid, pcon->app_name, exc_id
 
 ApplicationProxy::pconCtx_t ApplicationProxy::GetConnectionContext(
 		rpc_msg_header_t *pmsg_hdr)  {
