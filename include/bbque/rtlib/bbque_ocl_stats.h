@@ -55,6 +55,43 @@ typedef std::pair<void *, AccArray_t> AddrProfPair_t;
 extern std::map<cl_command_type, std::string> ocl_cmd_str;
 
 /**
+ * The set of commands related to memory transfer/copy operations, to include
+ * in the runtime profile. This information will be make available to the
+ * resource manager and thus to the optimization policy
+ */
+static const cl_command_type kernel_exec_cmds[] = {
+	CL_COMMAND_NDRANGE_KERNEL ,
+	CL_COMMAND_TASK           ,
+	CL_COMMAND_NATIVE_KERNEL
+};
+
+/**
+ * The set of commands related to performing real computations, to include in
+ * the runtime profile. This information will be make available to the resource
+ * manager and thus to the optimization policy
+ */
+static const cl_command_type memory_trans_cmds[] = {
+	CL_COMMAND_READ_BUFFER           ,
+	CL_COMMAND_WRITE_BUFFER          ,
+	CL_COMMAND_COPY_BUFFER           ,
+	CL_COMMAND_READ_IMAGE            ,
+	CL_COMMAND_WRITE_IMAGE           ,
+	CL_COMMAND_COPY_IMAGE            ,
+	CL_COMMAND_COPY_IMAGE_TO_BUFFER  ,
+	CL_COMMAND_COPY_BUFFER_TO_IMAGE  ,
+	CL_COMMAND_MAP_BUFFER            ,
+	CL_COMMAND_MAP_IMAGE             ,
+	CL_COMMAND_UNMAP_MEM_OBJECT      ,
+	CL_COMMAND_READ_BUFFER_RECT      ,
+	CL_COMMAND_WRITE_BUFFER_RECT     ,
+	CL_COMMAND_COPY_BUFFER_RECT      ,
+	CL_COMMAND_MIGRATE_MEM_OBJECTS   ,
+	CL_COMMAND_FILL_BUFFER           ,
+	CL_COMMAND_FILL_IMAGE
+};
+
+
+/**
  * @class Collect events profiling info for an OpenCL command queue
  */
 class RTLIB_OCL_QueueProf {
