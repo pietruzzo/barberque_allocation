@@ -185,13 +185,13 @@ size_t WorkingMode::BindResource(
 	br::UsagesMapPtr_t bind_pum(br::UsagesMapPtr_t(new br::UsagesMap_t()));
 
 	if (b_refn == 0) {
-		logger->Debug("[%s] BindResource: binding resources from recipe", str_id);
+		logger->Debug("BindResource: [%s] binding resources from recipe", str_id);
 		src_pum = &resources.requested;
 	}
 	else {
 		pum_it = resources.sched_bindings.find(b_refn);
 		if (pum_it == resources.sched_bindings.end()) {
-			logger->Error("[%s] BindResource: invalid binding reference [%ld]",
+			logger->Error("BindResource: [%s] invalid binding reference [%ld]",
 				str_id, b_refn);
 			return 0;
 		}
@@ -203,14 +203,14 @@ size_t WorkingMode::BindResource(
 			*src_pum, r_type, src_ID, dst_ID, bind_pum,
 			filter_rtype, filter_mask);
 	if (b_count == 0) {
-		logger->Warn("[%s] BindResource: nothing to bind", str_id);
+		logger->Warn("BindResource: [%s] nothing to bind", str_id);
 		return 0;
 	}
 
 	// Store the resource binding
 	n_refn = std::hash<std::string>()(BindingStr(r_type, src_ID, dst_ID, b_refn));
 	resources.sched_bindings[n_refn] = bind_pum;
-	logger->Debug("[%s] BindResource: R{%s} refn[%ld] size:%d count:%d",
+	logger->Debug("BindResource: [%s] R{%s} refn[%ld] size:%d count:%d",
 			str_id, br::ResourceIdentifier::StringFromType(r_type),
 			n_refn, bind_pum->size(), b_count);
 	return n_refn;
