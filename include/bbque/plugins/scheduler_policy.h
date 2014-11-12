@@ -99,7 +99,7 @@ public:
 		/**
 		 * A number through which reference the current scheduling binding
 		 * in the set stored in the AWM descriptor */
-		size_t bind_refn;
+		size_t bind_refn = 0;
 		/** Identifier string */
 		char str_id[40];
 
