@@ -368,7 +368,7 @@ public:
 	 *
 	 * @return The value of power profile information required
 	 */
-	double GetPowerInfo(PowerManager::InfoType i_type, ValueType v_type);
+	double GetPowerInfo(PowerManager::InfoType i_type, ValueType v_type = MEAN);
 
 #endif // CONFIG_BBQUE_PM
 
