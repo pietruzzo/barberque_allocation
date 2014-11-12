@@ -709,6 +709,8 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 Application::ExitCode_t Application::SetRunning() {
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	SetState(RUNNING);
+	++schedule.count;
+	logger->Debug("Scheduling count: %" PRIu64 "", schedule.count);
 	return APP_SUCCESS;
 }
 

@@ -167,6 +167,13 @@ public:
 	}
 
 	/**
+	 * @see ApplicationStatusIF
+	 */
+	inline uint64_t ScheduleCount() {
+		return schedule.count;
+	}
+
+	/**
 	 * @brief Enable the application for resources assignment
 	 *
 	 * A newly created application is disabled by default, thus it will not be

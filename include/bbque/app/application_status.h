@@ -172,6 +172,9 @@ public:
 		 * results.
 		 */
 		float value;
+		/** How many times the application has been scheduled */
+		uint64_t count = 0;
+
 		/** Overloading of operator != for structure comparisons */
 		inline bool operator!=(SchedulingInfo_t const &other) const {
 			return ((this->state != other.state) ||
@@ -323,6 +326,11 @@ public:
 	inline char const *SyncStateStr() {
 		return syncStateStr[SyncState()];
 	}
+
+	/**
+	 * @brief Number of schedulations
+	 */
+	virtual uint64_t ScheduleCount() = 0;
 
 	/**
 	 * @brief Check if this is an Application Container
