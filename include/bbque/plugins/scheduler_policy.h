@@ -178,6 +178,21 @@ public:
 
 		/** Metrics computed */
 		float metrics;
+
+		inline bool operator()(SchedEntity_t & se) {
+			// Metrics (primary sorting key)
+			if (metrics < se.metrics)
+				return false;
+			if (metrics > se.metrics)
+				return true;
+
+			// Higher value AWM first
+			if (pawm->Value() > se.pawm->Value())
+				return true;
+
+			return false;
+		}
+
 	};
 
 	/**
