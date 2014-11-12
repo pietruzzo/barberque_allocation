@@ -69,6 +69,9 @@ const char *RPC_messageStr[] = {
 	//RPC_BBQ_STOP_EXECUTION
 	"BStop",
 
+	//RPC_BBQ_GET_PROFILE
+	"BGetProfile",
+
 	//RPC_BBQ_RESP
 	"BResp",
 	//RPC_BBQ_MSGS_COUNT

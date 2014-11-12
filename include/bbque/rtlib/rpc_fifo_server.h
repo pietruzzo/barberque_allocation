@@ -132,6 +132,8 @@ RPC_FIFO_DEFINE_MESSAGE(BBQ_SYNCP_POSTCHANGE_RESP);
 
 RPC_FIFO_DEFINE_MESSAGE(BBQ_STOP);
 
+RPC_FIFO_DEFINE_MESSAGE(BBQ_GET_PROFILE);
+RPC_FIFO_DEFINE_MESSAGE(BBQ_GET_PROFILE_RESP);
 
 /******************************************************************************
  * Utility Commands

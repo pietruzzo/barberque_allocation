@@ -52,6 +52,7 @@ typedef enum rpc_msg_type {
 	RPC_EXC_RESP, ///< Response to an EXC request
 	RPC_EXC_MSGS_COUNT, ///< The number of EXC originated messages
 
+
 //--- Barbeque Originated Messages
 	RPC_BBQ_SYNCP_POSTCHANGE,
 	RPC_BBQ_SYNCP_DOCHANGE,
@@ -59,6 +60,7 @@ typedef enum rpc_msg_type {
 	RPC_BBQ_SYNCP_PRECHANGE,
 
 	RPC_BBQ_STOP_EXECUTION,
+	RPC_BBQ_GET_PROFILE,
 
 	RPC_BBQ_RESP, ///< Response to a BBQ command
 	RPC_BBQ_MSGS_COUNT ///< The number of EXC originated messages
@@ -315,6 +317,16 @@ typedef struct rpc_msg_BBQ_STOP {
 	struct timespec timeout;
 } rpc_msg_BBQ_STOP_t;
 
+/**
+ * @brief Command to STOP an application execution context.
+ */
+typedef struct rpc_msg_BBQ_GET_PROFILE {
+	/** The RPC fifo command header */
+	rpc_msg_header_t hdr;
+	/** OpenCL EXC flag */
+	bool is_ocl;
+} rpc_msg_BBQ_GET_PROFILE_t;
+
 
 /*******************************************************************************
  *    RPC Utils
@@ -334,6 +346,23 @@ inline char const *RPC_MessageStr(uint8_t typ) {
 	assert(typ < RPC_BBQ_MSGS_COUNT);
 	return RPC_messageStr[typ];
 }
+
+/*******************************************************************************
+ *    RPC runtime profiling
+ ******************************************************************************/
+
+/**
+ * @brief Response message to the runtime profiling request
+ */
+typedef struct rpc_msg_BBQ_GET_PROFILE_RESP {
+	/** The RPC fifo command header */
+	rpc_msg_header_t hdr;
+	/** Time spent for useful execution */
+	uint32_t exec_time;
+	/** Data transfer overhead */
+	uint32_t mem_time;
+} rpc_msg_BBQ_GET_PROFILE_RESP_t;
+
 
 } // namespace rtlib
 
