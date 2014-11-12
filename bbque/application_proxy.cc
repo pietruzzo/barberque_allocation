@@ -469,6 +469,9 @@ ApplicationProxy::SyncP_PreChangeRecv(pcmdSn_t pcs,
 
 	// Processing response
 	presp->syncLatency = pmsg_pyl->syncLatency;
+	if (pcs->papp->CurrentAWM())
+		pcs->papp->CurrentAWM()->SetRuntimeProfSyncTime(
+				presp->syncLatency);
 
 	return RTLIB_OK;
 }
