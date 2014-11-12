@@ -78,9 +78,19 @@ protected:
 	}
 
 /******************************************************************************
+ * Runtime profile timing
+ ******************************************************************************/
+
+	RTLIB_ExitCode_t _GetRuntimeProfileResp(
+		rpc_msg_token_t token,
+		pregExCtx_t prec,
+		uint32_t exc_time,
+		uint32_t mem_time);
+
+/******************************************************************************
  * Synchronization Protocol Messages
  ******************************************************************************/
-	
+
 	RTLIB_ExitCode_t _SyncpPreChangeResp(
 			rpc_msg_token_t token,
 			pregExCtx_t prec,
@@ -178,6 +188,11 @@ private:
 	 * @brief Get from FIFO a PostChange RPC message
 	 */
 	void RpcBbqSyncpPostChange();
+
+	/**
+	 * @brief Get from FIFO a runtime profile request RPC message
+	 */
+	void RpcBbqGetRuntimeProfile();
 
 };
 

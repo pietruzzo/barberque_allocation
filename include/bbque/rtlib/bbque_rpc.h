@@ -142,6 +142,8 @@ public:
 			RTLIB_WorkingModeParams_t *wm,
 			RTLIB_SyncType_t st);
 
+	RTLIB_ExitCode_t GetRuntimeProfile(rpc_msg_BBQ_GET_PROFILE_t & msg);
+
 /*******************************************************************************
  *    Utility Functions
  ******************************************************************************/
@@ -558,6 +560,8 @@ protected:
 	void OclDumpStats(pregExCtx_t prec);
 	void OclDumpCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
 	void OclDumpAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
+	void OclGetRuntimeProfile(
+		pregExCtx_t prec, uint32_t & exec_time, uint32_t & mem_time);
 
 #endif // CONFIG_BBQUE_OPENCL
 
@@ -607,6 +611,16 @@ protected:
 	virtual RTLIB_ExitCode_t _ScheduleRequest(pregExCtx_t prec) = 0;
 
 	virtual void _Exit() = 0;
+
+/******************************************************************************
+ * Runtime profiling
+ ******************************************************************************/
+
+	virtual RTLIB_ExitCode_t _GetRuntimeProfileResp(
+			rpc_msg_token_t token,
+			pregExCtx_t prec,
+			uint32_t exc_time,
+			uint32_t mem_time) = 0;
 
 
 /******************************************************************************

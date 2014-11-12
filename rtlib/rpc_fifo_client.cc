@@ -171,6 +171,11 @@ void BbqueRPC_FIFO_Client::ChannelFetch() {
 	case RPC_BBQ_STOP_EXECUTION:
 		DB(logger->Info("BBQ_STOP_EXECUTION"));
 		break;
+	case RPC_BBQ_GET_PROFILE:
+		DB(logger->Info("BBQ_STOP_EXECUTION"));
+		RpcBbqGetRuntimeProfile();
+		break;
+
 	case RPC_BBQ_SYNCP_PRECHANGE:
 		DB(logger->Info("BBQ_SYNCP_PRECHANGE"));
 		RpcBbqSyncpPreChange();
@@ -843,6 +848,62 @@ void BbqueRPC_FIFO_Client::RpcBbqSyncpPostChange() {
 	// Notify the Sync-Change
 	SyncP_PostChangeNotify(msg);
 
+}
+
+
+/*******************************************************************************
+ * Runtime profiling
+ ******************************************************************************/
+
+void BbqueRPC_FIFO_Client::RpcBbqGetRuntimeProfile() {
+	rpc_msg_BBQ_GET_PROFILE_t msg;
+	size_t bytes;
+
+	// Read RPC request
+	bytes = ::read(client_fifo_fd, (void*)&msg,
+			RPC_PKT_SIZE(BBQ_GET_PROFILE));
+	if (bytes <= 0) {
+		logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+				app_fifo_path.c_str(), errno, strerror(errno));
+		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+	}
+
+	// Get runtime profile
+	GetRuntimeProfile(msg);
+}
+
+RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_GetRuntimeProfileResp(
+		rpc_msg_token_t token,
+		pregExCtx_t prec,
+		uint32_t exc_time,
+		uint32_t mem_time) {
+	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+
+	rpc_fifo_BBQ_GET_PROFILE_RESP_t rf_BBQ_GET_PROFILE_RESP = {
+		{
+			FIFO_PKT_SIZE(BBQ_GET_PROFILE_RESP),
+			FIFO_PYL_OFFSET(BBQ_GET_PROFILE_RESP),
+			RPC_BBQ_RESP
+		},
+		{
+			{
+				RPC_BBQ_RESP,
+				token,
+				chTrdPid,
+				prec->exc_id
+			},
+			exc_time,
+			mem_time
+		}
+	};
+
+	// Sending RPC response
+	logger->Debug("Setting runtime profile info for EXC [%d:%d]...",
+				rf_BBQ_GET_PROFILE_RESP.pyl.hdr.app_pid,
+				rf_BBQ_GET_PROFILE_RESP.pyl.hdr.exc_id);
+	RPC_FIFO_SEND(BBQ_GET_PROFILE_RESP);
+
+	return (RTLIB_ExitCode_t) chResp.result;
 }
 
 } // namespace rtlib

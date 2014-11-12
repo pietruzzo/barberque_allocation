@@ -104,6 +104,23 @@ protected:
 	void _Exit() {}
 
 /******************************************************************************
+ * Runtime profiling
+ ******************************************************************************/
+
+	RTLIB_ExitCode_t _GetRuntimeProfileResp(
+			rpc_msg_token_t token,
+			pregExCtx_t prec,
+			uint32_t exc_time,
+			uint32_t mem_time) {
+		// Remove compilation warning
+		(void)token;
+		(void)prec;
+		(void)exc_time;
+		(void)mem_time;
+		return RTLIB_OK;
+	}
+
+/******************************************************************************
  * Synchronization Protocol Messages
  ******************************************************************************/
 

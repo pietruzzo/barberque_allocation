@@ -1930,6 +1930,35 @@ RTLIB_ExitCode_t BbqueRPC::StopExecution(
 	return RTLIB_OK;
 }
 
+RTLIB_ExitCode_t BbqueRPC::GetRuntimeProfile(
+		rpc_msg_BBQ_GET_PROFILE_t & msg) {
+	uint32_t exec_time, mem_time;
+
+	pregExCtx_t prec = getRegistered(msg.hdr.exc_id);
+	if (!prec) {
+		logger->Error("Set runtime profile for EXC [%d] "
+				"(Error: EXC not registered)", msg.hdr.exc_id);
+		return RTLIB_EXC_NOT_REGISTERED;
+	}
+
+	// Check the application is not in sync
+	if (isSyncMode(prec))
+		return RTLIB_OK;
+
+	// Only OpenCL profiling actually supported
+	if (!msg.is_ocl)
+		return RTLIB_OK;
+
+#ifdef CONFIG_BBQUE_OPENCL
+	OclGetRuntimeProfile(prec, exec_time, mem_time);
+
+	// Send the profile to the resource manager
+	_GetRuntimeProfileResp(msg.hdr.token, prec, exec_time, mem_time);
+#endif
+
+	return RTLIB_OK;
+}
+
 /*******************************************************************************
  *    Performance Monitoring Support
  ******************************************************************************/
@@ -3067,7 +3096,44 @@ void BbqueRPC::NotifyPostMonitor(
 	if (prec->cps_expect != 0)
 		ForceCPS(prec);
 
+}
 
+void BbqueRPC::OclGetRuntimeProfile(
+		pregExCtx_t prec, uint32_t & exec_time, uint32_t & mem_time) {
+	pAwmStats_t pstats = prec->pAwmStats;
+	CmdProf_t::const_iterator cmd_it;
+	static uint32_t cum_exec_time_prev;
+	static uint32_t cum_mem_time_prev;
+	uint32_t cum_exec_time = 0;
+	uint32_t cum_mem_time  = 0;
+
+	// Iterate over all the command queues
+	for (auto entry: pstats->ocl_events_map) {
+		QueueProfPtr_t const & cmd_queue(entry.second);
+
+		// Execution time
+		for (int i =0; i < 3; ++i) {
+			cmd_it = cmd_queue->cmd_prof.find(kernel_exec_cmds[i]);
+			if (cmd_it == cmd_queue->cmd_prof.end())
+				continue;
+			cum_exec_time += bac::sum(cmd_it->second[CL_CMD_EXEC_TIME]) /1000;
+		}
+
+		// Memory transfers time
+		for (int i = 0; i < 14; ++i) {
+			cmd_it = cmd_queue->cmd_prof.find(memory_trans_cmds[i]);
+			if (cmd_it == cmd_queue->cmd_prof.end())
+				continue;
+			cum_mem_time += bac::sum(cmd_it->second[CL_CMD_EXEC_TIME]) /1000;
+		}
+	}
+
+	// Update
+	exec_time = cum_exec_time - cum_exec_time_prev;
+	mem_time  = cum_mem_time  - cum_mem_time_prev;
+	logger->Fatal("OCL: Runtime profile: {%d,%d}", exec_time/1000, mem_time/1000);
+	cum_exec_time_prev = cum_exec_time;
+	cum_mem_time_prev  = cum_mem_time;
 }
 
 void BbqueRPC::NotifyPreSuspend(
