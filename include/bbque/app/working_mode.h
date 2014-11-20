@@ -367,6 +367,21 @@ public:
 	 */
 	bool BindingChanged(br::ResourceIdentifier::Type_t r_type) const;
 
+	/**
+	 * @brief Increment the scheduling counter
+	 */
+	inline void IncSchedulingCount() {
+		sched_count++;
+		logger->Debug("Scheduling count = %d", sched_count);
+	}
+
+	/**
+	 * @brief Increment the scheduling counter
+	 */
+	inline uint32_t GetSchedulingCount() {
+		return sched_count;
+	}
+
 /******************************************************************************
  * Runtime profiling data
  *******************************************************************************/
@@ -500,6 +515,12 @@ private:
 	 * @brief Store profiling information collected at runtime
 	 */
 	RuntimeProfiling_t rt_prof;
+
+	/**
+	 * @brief Keep track of how many times the application has been
+	 * scheduled according to the current working mode
+	 */
+	uint32_t sched_count = 0;
 
 	/**
 	 * @struct ResourceUsagesInfo
