@@ -711,6 +711,7 @@ Application::ExitCode_t Application::SetRunning() {
 	SetState(RUNNING);
 	++schedule.count;
 	logger->Debug("Scheduling count: %" PRIu64 "", schedule.count);
+	schedule.awm->IncSchedulingCount();
 	return APP_SUCCESS;
 }
 
@@ -826,6 +827,7 @@ Application::ExitCode_t Application::ScheduleContinue() {
 	// Reset next AWM (only current must be set)
 	schedule.next_awm.reset();
 
+	schedule.awm->IncSchedulingCount();
 	return APP_SUCCESS;
 }
 
