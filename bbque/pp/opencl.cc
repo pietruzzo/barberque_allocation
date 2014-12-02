@@ -168,6 +168,8 @@ void OpenCLProxy::HwSetup() {
 	PowerManager::PMResult pm_result;
 	ResourcePathListPtr_t pgpu_paths(
 		GetDevicePaths(br::ResourceIdentifier::GPU));
+	if (pgpu_paths == nullptr) return;
+
 	for (auto gpu_rp: *(pgpu_paths.get())) {
 		pm_result = pm.GetFanSpeedInfo(gpu_rp, min, max, step);
 		if (pm_result == PowerManager::PMResult::OK)
