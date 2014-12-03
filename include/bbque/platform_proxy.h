@@ -38,8 +38,6 @@
 
 #define PLATFORM_PROXY_NAMESPACE "bq.pp"
 
-#define BBQUE_PP_MONITOR_STRW  { 4,4,10,5,6,6,3,3}
-#define BBQUE_PP_MONITOR_STRP  { 1,1, 0,1,1,1,1,1}
 
 using bbque::app::AppPtr_t;
 using bbque::res::RViewToken_t;
@@ -149,7 +147,6 @@ public:
  */
 
 #define PLATFORM_EVT_REFRESH  0
-#define PLATFORM_EVT_MONITOR  1
 #define PLATFORM_EVT_COUNT    2
 	/**
 	 * @brief Notify a platform event related to resources status
@@ -160,42 +157,6 @@ public:
 	 * description.
 	 */
 	virtual void Refresh();
-
-#ifdef CONFIG_BBQUE_PM
-
-	/******************************************************************
-	 * Power monitoring                                               *
-	 ******************************************************************/
-
-	/**
-	 * @brief Register the resources to monitor for collecting run-time
-	 * power-thermal information
-	 *
-	 * @param rp Resource path of the resource(s)
-	 * @param info_mask A bitset with the flags of the information to sample
-	 *
-	 * @return PLATFORM_PWR_MONITOR_ERROR if the resource path does not
-	 * reference any resource, OK otherwise
-	 */
-	ExitCode_t PowerMonitorRegister(
-			br::ResourcePathPtr_t rp,
-			PowerManager::SamplesArray_t const & samples_window =
-				{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
-	);
-
-	/**
-	 * @brief Start the monitoring of the power-thermal status
-	 *
-	 * @param period_ms Period of information sampling in milliseconds
-	 */
-	void PowerMonitorStart(uint32_t period_ms = 0);
-
-	/**
-	 * @brief Stop the monitoring of the power-thermal status
-	 */
-	void PowerMonitorStop();
-
-#endif // CONFIG_BBQUE_PM
 
 /**
  * @}
@@ -415,52 +376,6 @@ protected:
 		logger->Debug("PLAT PRX: default _MapResources()");
 		return OK;
 	};
-
-private:
-
-#ifdef CONFIG_BBQUE_PM
-
-	/**
-	 * @brief Power manager module instance
-	 */
-	PowerManager & pm;
-
-	/**
-	 * @brief Structure to collect support information for the power
-	 * monitoring activity
-	 */
-	struct PowerMonitorInfo_t {
-		/** Resource to monitor */
-		std::map<br::ResourcePathPtr_t, br::ResourcePtr_t> resources;
-		/** Monitoring period (milliseconds) */
-		uint32_t period_ms = 1000;
-	} powerMonitorInfo;
-
-	typedef PowerManager::PMResult (PowerManager::*PMfunc)
-		(br::ResourcePathPtr_t const &, uint32_t &);
-
-	/**
-	 * @brief Array of Power Manager member functions
-	 */
-	std::array<PMfunc, size_t(PowerManager::InfoType::COUNT) > PowerMonitorGet;
-
-	/*** Log messages format settings */
-	std::array<int,  size_t(PowerManager::InfoType::COUNT) > str_w =
-		{ BBQUE_PP_MONITOR_STRW };
-	std::array<int,  size_t(PowerManager::InfoType::COUNT) > str_p =
-		{ BBQUE_PP_MONITOR_STRP };
-
-	/**
-	 * @brief Power Manager member functions initialization
-	 */
-	void InitPowerMonitor();
-
-	/**
-	 * @brief Sample the power-thermal status information
-	 */
-	ExitCode_t PowerMonitorSample();
-
-#endif // CONFIG_BBQUE_PM
 
 };
 

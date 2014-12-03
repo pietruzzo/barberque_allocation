@@ -22,8 +22,8 @@
 #include <cstdint>
 #include <map>
 
-#include "bbque/config.h"
 #include "bbque/command_manager.h"
+#include "bbque/config.h"
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/resources.h"
 #include "bbque/utils/worker.h"
@@ -31,11 +31,17 @@
 
 #define POWER_MONITOR_NAMESPACE "bq.wm"
 
+#define WM_EVENT_UPDATE      0
+#define WM_EVENT_COUNT       1
+
+#define WM_STRW  { 4,4,10,5,6,6,3,3}
+#define WM_STRP  { 1,1, 0,1,1,1,1,1}
 
 namespace bu = bbque::utils;
 namespace br = bbque::res;
 
 namespace bbque {
+
 
 class PowerMonitor: public CommandHandler, bu::Worker {
 
@@ -68,6 +74,34 @@ public:
 	 */
 	int CommandsCb(int argc, char *argv[]);
 
+	/**
+	 * @brief Register the resources to monitor for collecting run-time
+	 * power-thermal information
+	 *
+	 * @param rp Resource path of the resource(s)
+	 * @param info_mask A bitset with the flags of the information to sample
+	 *
+	 * @return ERR_RSRC_MISSING if the resource path does not
+	 * reference any resource, OK otherwise
+	 */
+	ExitCode_t Register(
+			br::ResourcePathPtr_t rp,
+			PowerManager::SamplesArray_t const & samples_window =
+				{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
+	);
+
+	/**
+	 * @brief Start the monitoring of the power-thermal status
+	 *
+	 * @param period_ms Period of information sampling in milliseconds
+	 */
+	void Start(uint32_t period_ms = 0);
+
+	/**
+	 * @brief Stop the monitoring of the power-thermal status
+	 */
+	void Stop();
+
 private:
 
 	/*
@@ -85,11 +119,52 @@ private:
 	 */
 	std::unique_ptr<bu::Logger> logger;
 
+	/**
+	 * @brief The set of flags related to pending monitoring events to handle
+	 */
+	std::bitset<WM_EVENT_COUNT> events;
+
+
+	/**
+	 * @brief Structure to collect support information for the power
+	 * monitoring activity
+	 */
+	struct PowerMonitorInfo_t {
+		/** Resources to monitor */
+		std::map<br::ResourcePathPtr_t, br::ResourcePtr_t> resources;
+
+		bool started = false;
+		/** Monitoring period (milliseconds) */
+		uint32_t period_ms = 1000;
+	} wm_info;
+
+	/** Function pointer to PowerManager member functions */
+	typedef PowerManager::PMResult (PowerManager::*PMfunc)
+		(br::ResourcePathPtr_t const &, uint32_t &);
+
+	/**
+	 * @brief Array of Power Manager member functions
+	 */
+	std::array<PMfunc, size_t(PowerManager::InfoType::COUNT) > PowerMonitorGet;
+
+	/*** Log messages format settings */
+	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_w = { WM_STRW };
+	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_p = { WM_STRP };
 
 	/**
 	 * @brief Constructor
 	 */
 	PowerMonitor();
+
+	/**
+	 * @brief Power Manager member functions initialization
+	 */
+	void Init();
+
+	/**
+	 * @brief Sample the power-thermal status information
+	 */
+	ExitCode_t Sample();
 
 	/**
 	 * @brief Periodic task
