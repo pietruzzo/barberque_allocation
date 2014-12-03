@@ -146,8 +146,9 @@ public:
  * @{
  */
 
-#define PLATFORM_EVT_REFRESH  0
-#define PLATFORM_EVT_COUNT    2
+#define PP_EVENT_REFRESH  0
+#define PP_EVENT_COUNT    1
+
 	/**
 	 * @brief Notify a platform event related to resources status
 	 *
@@ -210,7 +211,7 @@ private:
 	/**
 	 * @brief The set of flags related to pending platform events to handle
 	 */
-	std::bitset<PLATFORM_EVT_COUNT> platformEvents;
+	std::bitset<PP_EVENT_COUNT> platformEvents;
 
 	/**
 	 * @brief The platform monitoring thread.

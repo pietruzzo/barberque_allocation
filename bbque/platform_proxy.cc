@@ -70,7 +70,7 @@ void PlatformProxy::Refresh() {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	// Notify the platform monitoring thread about a new event ot be
 	// processed
-	platformEvents.set(PLATFORM_EVT_REFRESH);
+	platformEvents.set(PP_EVENT_REFRESH);
 	worker_status_cv.notify_one();
 }
 
@@ -86,7 +86,7 @@ void PlatformProxy::Task() {
 		}
 
 		// Refresh available resources
-		if (platformEvents.test(PLATFORM_EVT_REFRESH))
+		if (platformEvents.test(PP_EVENT_REFRESH))
 			RefreshPlatformData();
 	}
 
@@ -165,7 +165,7 @@ PlatformProxy::CommitRefresh() {
 	// the ResourceManager module.
 
 	// Set that the platform is ready
-	platformEvents.reset(PLATFORM_EVT_REFRESH);
+	platformEvents.reset(PP_EVENT_REFRESH);
 	ra.SetPlatformReady();
 
 	// Notify a scheduling event to the ResourceManager
