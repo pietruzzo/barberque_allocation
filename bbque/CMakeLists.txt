@@ -117,6 +117,11 @@ if (CONFIG_BBQUE_OPENCL)
 	set (BARBEQUE_SRC pp/opencl ${BARBEQUE_SRC})
 endif (CONFIG_BBQUE_OPENCL)
 
+if (CONFIG_BBQUE_PM)
+	set (BARBEQUE_SRC power_monitor ${BARBEQUE_SRC})
+endif (CONFIG_BBQUE_PM)
+
+
 
 add_executable (barbeque ${BARBEQUE_SRC})
 

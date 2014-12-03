@@ -143,6 +143,7 @@ category.bq.rt = 	NOTICE
 category.bq.df = 	NOTICE
 #category.bq.pp = 	INFO
 #category.bq.pm =	INFO
+#category.bq.wm =	INFO
 #category.bq.rpc.fif = 	INFO
 #category.bq.rpc.prx = 	INFO
 #category.bq.sm = 	INFO
