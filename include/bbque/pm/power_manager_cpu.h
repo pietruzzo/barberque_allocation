@@ -91,7 +91,12 @@ private:
 	/**
 	 *  Sample CPU activity samples from /proc/stat
 	 */
-	ExitStatus GetLoadInfo(LoadInfo *info, std::string cpu_core_id);
+	PMResult GetLoadCPU(br::ResID_t cpu_core_id, uint32_t & load);
+
+	/**
+	 *  Sample CPU activity samples from /proc/stat
+	 */
+	ExitStatus GetLoadInfo(LoadInfo *info, br::ResID_t cpu_core_id);
 
 	/**
 	 * @brief Extract the CPU core id

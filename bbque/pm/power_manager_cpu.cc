@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "bbque/resource_accounter.h"
 #include "bbque/pm/power_manager_cpu.h"
 #include "bbque/res/resource_path.h"
 
@@ -59,7 +60,7 @@ CPUPowerManager::CPUPowerManager() {
 
 CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 		CPUPowerManager::LoadInfo * info,
-		std::string cpu_core_id) {
+		br::ResID_t cpu_core_id) {
 	// Information about kernel activity is available in the /proc/stat
 	// file. All the values are aggregated since the system first booted.
 	// Thus, to compute the load, the variation of these values in a little
@@ -71,7 +72,7 @@ CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 	// follows the pattern:
 	// 	cpun x y z w ...
 	// Check the Linux documentation to find information about those values
-	boost::regex cpu_info_stats("cpu" + cpu_core_id +
+	boost::regex cpu_info_stats("cpu" + std::to_string(cpu_core_id) +
 				" (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+)" +
 				" (\\d+) (\\d+) (\\d+) (\\d+)");
 
@@ -103,32 +104,41 @@ CPUPowerManager::~CPUPowerManager() {
 PowerManager::PMResult CPUPowerManager::GetLoad(
 		ResourcePathPtr_t const & rp,
 		uint32_t & perc){
+	PMResult result;
+	br::ResID_t cpu_core_id;
+
+	// Extract the CPU core from the resource path
+	cpu_core_id = rp->GetID(br::ResourceIdentifier::PROC_ELEMENT);
+	if (cpu_core_id >= 0) {
+		result = GetLoadCPU(cpu_core_id, perc);
+		if (result != PMResult::OK) return result;
+	}
+	return PowerManager::PMResult::OK;
+}
+
+PowerManager::PMResult CPUPowerManager::GetLoadCPU(
+		ResID_t cpu_core_id,
+		uint32_t & load) {
 	CPUPowerManager::ExitStatus result;
+	CPUPowerManager::LoadInfo start_info, end_info;
+
 	// Getting the load of a specified CPU. This is possible by reading the
 	// /proc/stat file exposed by Linux. To compute the load, a minimum of two
 	// samples are needed. In fact, the measure is obtained computing the
 	// variation of the file content between two consecutive accesses.
-	CPUPowerManager::LoadInfo start_info, end_info;
-
-	// Extracting the selected CPU from the resource path. -1 if error
-	int cpu_logic_id = GetCPU(rp);
-	if (cpu_logic_id < 0)
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
-	std::string cpu_id = std::to_string(cpu_logic_id);
-
 	for (int i = 0; i < LOAD_SAMPLING_NUMBER; ++i) {
 		// Performing the actual accesses, with an interval of
 		// LOAD_SAMPLING_INTERVAL_SECONDS (circa)
-		result = GetLoadInfo(&start_info, cpu_id);
+		result = GetLoadInfo(&start_info, cpu_core_id);
 		if (result != ExitStatus::OK) {
-			logger->Error("No activity info on CPU core %d", cpu_id.c_str());
+			logger->Error("No activity info on CPU core %d", cpu_core_id);
 			return PMResult::ERR_INFO_NOT_SUPPORTED;
 		}
 
 		sleep(LOAD_SAMPLING_INTERVAL_SECONDS);
-		result = GetLoadInfo(&end_info, cpu_id);
+		result = GetLoadInfo(&end_info, cpu_core_id);
 		if (result != ExitStatus::OK) {
-			logger->Error("No activity info on CPU core %d", cpu_id.c_str());
+			logger->Error("No activity info on CPU core %d", cpu_core_id);
 			return PMResult::ERR_INFO_NOT_SUPPORTED;
 		}
 
@@ -141,11 +151,12 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 		// both the computing and the contents of /proc/stat are not
 		// so accurate
 		if (usage < 0) usage = 0;
-		perc = static_cast<uint32_t>(usage);
+		load = static_cast<uint32_t>(usage);
 	}
 
 	return PowerManager::PMResult::OK;
 }
+
 
 int CPUPowerManager::GetCPU(ResourcePathPtr_t const & rp){
 	// If the CPUPowerManager has been called, the path refers to a CPU.
