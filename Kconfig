@@ -84,6 +84,13 @@ config BBQUE_PM
 
   If unsure say no, this will disable all the PM related features.
 
+config BBQUE_WM
+  bool "Enable periodic Power Monitoring"
+  depends on BBQUE_PM
+  default y
+  ---help---
+  Specify the default value in milliseconds of a period of power monitoring.
+
 config  BBQUE_PM_CPU
   bool "CPU(s) Power and Thermal monitoring"
   depends on BBQUE_PM
