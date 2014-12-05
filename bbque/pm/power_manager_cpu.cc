@@ -106,12 +106,30 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 		uint32_t & perc){
 	PMResult result;
 	br::ResID_t cpu_core_id;
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
 	// Extract the CPU core from the resource path
 	cpu_core_id = rp->GetID(br::ResourceIdentifier::PROC_ELEMENT);
 	if (cpu_core_id >= 0) {
+		// Single CPU core (e.g., "cpu2.pe3")
 		result = GetLoadCPU(cpu_core_id, perc);
 		if (result != PMResult::OK) return result;
+	}
+	else {
+		// Multiple CPU cores (e.g., "cpu2.pe")
+		uint32_t cpu_core_load = 0;
+		perc = 0;
+
+		// Cumulate the load of each core
+		br::ResourcePtrList_t const & r_list(ra.GetResources(rp));
+		for (ResourcePtr_t rsrc: r_list) {
+			result = GetLoadCPU(rsrc->ID(), cpu_core_load);
+			if (result != PMResult::OK) return result;
+			perc += cpu_core_load;
+		}
+
+		// Return the average
+		perc /= r_list.size();
 	}
 	return PowerManager::PMResult::OK;
 }
