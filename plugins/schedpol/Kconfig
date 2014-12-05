@@ -15,6 +15,7 @@ choice
     depends on BBQUE_OPENCL
     depends on BBQUE_PM_AMD
     depends on BBQUE_PM_CPU
+    depends on BBQUE_WM
     select BBQUE_SCHEDPOL_CLOVES
 ##NP
 
