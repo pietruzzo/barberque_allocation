@@ -20,16 +20,20 @@
 #define BBQUE_POWER_MONITOR_H_
 
 #include <cstdint>
+#include <fstream>
 #include <map>
 
 #include "bbque/command_manager.h"
 #include "bbque/config.h"
+#include "bbque/configuration_manager.h"
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/resources.h"
 #include "bbque/utils/worker.h"
 #include "bbque/utils/logging/logger.h"
 
 #define POWER_MONITOR_NAMESPACE "bq.wm"
+
+#define WM_DEFAULT_PERIOD_MS 1000
 
 #define WM_EVENT_UPDATE      0
 #define WM_EVENT_COUNT       1
@@ -114,6 +118,9 @@ private:
 	 */
 	CommandManager & cm;
 
+	/*** Configuration manager instance */
+	ConfigurationManager & cfm;
+
 	/**
 	 * @brief The logger used by the power manager.
 	 */
@@ -133,9 +140,17 @@ private:
 		/** Resources to monitor */
 		std::map<br::ResourcePathPtr_t, br::ResourcePtr_t> resources;
 
+		/** Output file descriptors for data logging */
+		std::map<br::ResourcePathPtr_t, std::ofstream *> log_fp;
+		/** Data log output directory */
+		std::string log_dir;
+		/** Data log enabled */
+		bool log_enabled = false;
+		/** Monitoring status */
+
 		bool started = false;
 		/** Monitoring period (milliseconds) */
-		uint32_t period_ms = 1000;
+		uint32_t period_ms;
 	} wm_info;
 
 	/** Function pointer to PowerManager member functions */
@@ -170,6 +185,32 @@ private:
 	 * @brief Periodic task
 	 */
 	virtual void Task();
+
+
+	/**
+	 * @brief Log a data text line to file
+	 *
+	 * @param Resource path
+	 * @param line Line to dump
+	 * @param om C++ stream open mode
+	 */
+	void DataLogWrite(
+			br::ResourcePathPtr_t rp,
+			std::string const & data_line,
+			std::ios_base::openmode om = std::ios::out | std::ios_base::app);
+
+	/**
+	 * @brief Clear data log files
+	 */
+	void DataLogClear();
+
+	/**
+	 * @brief Manage the data log on file behavior
+	 *
+	 * @param arg A string containing the action to perform (start, stop,
+	 * clear).
+	 */
+	int DataLogCmdHandler(const char * arg);
 
 };
 

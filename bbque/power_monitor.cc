@@ -26,6 +26,22 @@
 #define MODULE_CONFIG "PowerMonitor"
 #define MODULE_NAMESPACE POWER_MONITOR_NAMESPACE
 
+#define WM_LOGFILE_FMT "%s/BBQ_PowerMonitor_%.dat"
+#define WM_LOGFILE_HEADER \
+	"# Columns legend:\n"\
+	"#\n"\
+	"# 1: Load (%)\n"\
+	"# 2: Temperature (°C)\n"\
+	"# 3: Core frequency (MHz)\n"\
+	"# 4: Fanspeed (%)\n"\
+	"# 5: Voltage (mV)\n"\
+	"# 6: Performance level\n"\
+	"# 7: Power state\n"\
+	"#\n"
+
+
+namespace po = boost::program_options;
+
 namespace bbque {
 
 
@@ -37,12 +53,32 @@ PowerMonitor & PowerMonitor::GetInstance() {
 PowerMonitor::PowerMonitor():
 		Worker(),
 		pm(PowerManager::GetInstance()),
-		cm(CommandManager::GetInstance()) {
+		cm(CommandManager::GetInstance()),
+		cfm(ConfigurationManager::GetInstance()) {
 	// Get a logger module
 	logger = bu::Logger::GetLogger(POWER_MONITOR_NAMESPACE);
 	assert(logger);
 	logger->Info("PowerMonitor initialization...");
 	Init();
+
+	//---------- Loading configuration
+	po::options_description opts_desc("Power Monitor options");
+	opts_desc.add_options()
+		(MODULE_CONFIG ".period_ms",
+		 po::value<uint32_t>(&wm_info.period_ms)->default_value(WM_DEFAULT_PERIOD_MS),
+		 "The period [ms] power monitor sampling");
+
+	opts_desc.add_options()
+		(MODULE_CONFIG ".log.dir",
+		 po::value<std::string>(&wm_info.log_dir)->default_value("/tmp/"),
+		 "The output directory for the status data dump files");
+	po::variables_map opts_vm;
+	cfm.ParseConfigurationFile(opts_desc, opts_vm);
+
+#define CMD_WM_DATALOG "datalog"
+	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_DATALOG,
+			static_cast<CommandHandler*>(this),
+			"Start/stop power monitor data logging");
 
 	//---------- Setup Worker
 	Worker::Setup(BBQUE_MODULE_NAME("wm"), POWER_MONITOR_NAMESPACE);
@@ -85,9 +121,24 @@ void PowerMonitor::Task() {
 }
 
 int PowerMonitor::CommandsCb(int argc, char *argv[]) {
+	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
+	char * command_id  = argv[0] + cmd_offset;
+	logger->Info("Commands: Processing [%s]", command_id);
 
-	return 0;
+	// Data logging control
+	if (!strncmp(CMD_WM_DATALOG, command_id, strlen(CMD_WM_DATALOG))) {
+		if (argc != 2) {
+			logger->Error("Commands: [%s] missing action [start/stop/clear]",
+					command_id);
+			return 1;
+		}
+		return DataLogCmdHandler(argv[1]);
+	}
+
+	logger->Error("Commands: Unknown [%s]", command_id);
+	return -1;
 }
+
 
 PowerMonitor::ExitCode_t PowerMonitor::Register(
 		br::ResourcePathPtr_t rp,
@@ -108,10 +159,15 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 			wm_info.resources.insert(
 					std::pair<br::ResourcePathPtr_t, br::ResourcePtr_t>(
 						ra.GetPath(rsrc->Path()), rsrc));
+			// Resource data log file descriptor
+			wm_info.log_fp.insert(
+					std::pair<br::ResourcePathPtr_t, std::ofstream *>(
+						ra.GetPath(rsrc->Path()), new std::ofstream()));
 	}
 
 	return ExitCode_t::OK;
 }
+
 
 void PowerMonitor::Start(uint32_t period_ms) {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
@@ -153,6 +209,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Sample() {
 
 		std::string log_inst_values("[");
 		std::string log_mean_values("[");
+		std::string log_file_values;
 		log_inst_values += rsrc->Path() + "] (I): ";
 		log_mean_values += rsrc->Path() + "] (M): ";
 		uint info_idx   = 0;
@@ -178,6 +235,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Sample() {
 				<< std::setw(str_w[info_idx]) << std::left
 				<< rsrc->GetPowerInfo(info_type, br::Resource::INSTANT);
 			log_inst_values += ss_i.str() + " ";
+			log_file_values += ss_i.str() + " ";
 
 			std::stringstream ss_m;
 			ss_m
@@ -189,9 +247,87 @@ PowerMonitor::ExitCode_t PowerMonitor::Sample() {
 
 		logger->Debug("Sampling: %s ", log_inst_values.c_str());
 		logger->Debug("Sampling: %s ", log_mean_values.c_str());
+		if (wm_info.log_enabled) {
+			DataLogWrite(r_path, log_file_values);
+		}
 	}
 
 	return ExitCode_t::OK;
+}
+
+/*******************************************************************
+ *                        DATA LOGGING                             *
+ *******************************************************************/
+
+void PowerMonitor::DataLogWrite(
+		br::ResourcePathPtr_t rp,
+		std::string const & data_line,
+		std::ios_base::openmode om) {
+
+	//std::string file_path(BBQUE_WM_DATALOG_PATH "/");
+	std::string file_path(wm_info.log_dir + "/");
+	file_path.append(rp->ToString());
+	file_path.append(".dat");
+	logger->Debug("Log file [%s]: %s", file_path.c_str(), data_line.c_str());
+
+	// Open file
+	wm_info.log_fp[rp]->open(file_path, om);
+	if (!wm_info.log_fp[rp]->is_open()) {
+		logger->Warn("Log file not open");
+		return;
+	}
+
+	// Write data line
+	*wm_info.log_fp[rp] << data_line << std::endl;
+	if (wm_info.log_fp[rp]->fail()) {
+		logger->Error("Lof file write failed [F:%d, B:%d]",
+			wm_info.log_fp[rp]->fail(),
+			wm_info.log_fp[rp]->bad());
+		*wm_info.log_fp[rp] << "Error";
+		*wm_info.log_fp[rp] << std::endl;
+		return;
+	}
+	// Close file
+	wm_info.log_fp[rp]->close();
+}
+
+
+void PowerMonitor::DataLogClear() {
+	for (auto log_ofs: wm_info.log_fp) {
+		DataLogWrite(log_ofs.first, WM_LOGFILE_HEADER, std::ios_base::out);
+	}
+}
+
+
+int PowerMonitor::DataLogCmdHandler(const char * arg) {
+	std::string action(arg);
+	logger->Info("Action = %s", action.c_str());
+	// Start
+	if ((action.compare("start") == 0)
+			&& (!wm_info.log_enabled)) {
+		logger->Info("Starting data logging...");
+		wm_info.log_enabled = true;
+		return 0;
+	}
+	// Stop
+	if ((action.compare("stop") == 0)
+			&& (wm_info.log_enabled)) {
+		logger->Info("Stopping data logging...");
+		wm_info.log_enabled = false;
+		return 0;
+	}
+	// Clear
+	if (action.compare("clear") == 0) {
+		bool de = wm_info.log_enabled;
+		wm_info.log_enabled = false;
+		DataLogClear();
+		wm_info.log_enabled = de;
+		logger->Info("Clearing data logs...");
+		return 0;
+	}
+
+	logger->Warn("Unknown action [%s] or nothing to do", action.c_str());
+	return -1;
 }
 
 } // namespace bbque

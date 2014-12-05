@@ -39,9 +39,9 @@ binding.domains = cpu,gpu
 ################################################################################
 # PlatformProxy Options
 ################################################################################
-[PlatformProxy]
-#OpenCL.hw.monitor_period_ms = 1000
-#OpenCL.hw.monitor_dump_dir  = /tmp
+[PowerMonitor]
+log.dir   = /tmp
+period_ms = 1000
 
 # CGroups CFS bandwidht enforcement parameters
 [PlatformProxy.CGroups.cfs_bandwidth]
