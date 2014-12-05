@@ -20,6 +20,7 @@
 #include "bbque/pp/opencl.h"
 
 #include "bbque/config.h"
+#include "bbque/power_monitor.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_path.h"
@@ -66,30 +67,6 @@ OpenCLProxy::OpenCLProxy():
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
-#ifdef CONFIG_BBQUE_PM
-	//---------- Loading configuration
-	po::options_description opts_desc("Resource Manager Options");
-	opts_desc.add_options()
-		(MODULE_CONFIG ".hw.monitor_period_ms",
-		 po::value<int32_t>
-		 (&hw_monitor.period_ms)->default_value(-1),
-		 "The period [ms] of activation of the periodic platform"
-			" status reading");
-	opts_desc.add_options()
-		(MODULE_CONFIG ".hw.monitor_dump_dir",
-		 po::value<std::string>
-		 (&hw_monitor.dump_dir)->default_value(""),
-		 "The output directory for the status data dump files");
-	po::variables_map opts_vm;
-	cm.ParseConfigurationFile(opts_desc, opts_vm);
-	// Enable HW status dump?
-	hw_monitor.dump_enabled = hw_monitor.dump_dir.compare("") != 0;
-
-	// Register a command dispatcher to handle CGroups reconfiguration
-#define CMD_PM_DUMP "pm_dump"
-	cmm.RegisterCommand(MODULE_NAMESPACE "." CMD_PM_DUMP, static_cast<CommandHandler*>(this),
-			"Start/stop dumping on file of GPU(s) power/thermal status");
-#endif
 }
 
 OpenCLProxy::~OpenCLProxy() {
@@ -97,9 +74,6 @@ OpenCLProxy::~OpenCLProxy() {
 	delete devices;
 	device_ids.clear();
 	device_paths.clear();
-#ifdef CONFIG_BBQUE_PM
-	device_data.clear();
-#endif
 }
 
 OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
@@ -152,11 +126,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 }
 
 void OpenCLProxy::Task() {
-#ifdef CONFIG_BBQUE_PM
-	if (hw_monitor.period_ms < 0)
-		return;
-	HwReadStatus();
-#endif
+
 }
 
 #ifdef CONFIG_BBQUE_PM
@@ -199,117 +169,6 @@ void OpenCLProxy::PrintGPUPowerInfo() {
 	}
 	logger->Info("PLAT OCL: Monitoring %d GPU adapters", pgpu_paths->size());
 }
-
-void OpenCLProxy::HwReadStatus() {
-	HWStatus_t hs;
-	char status_line[100];
-
-	if (device_paths.empty()) {
-		logger->Warn("PLAT OCL: No resource path of devices found");
-		return;
-	}
-	ResourcePathListPtr_t const & pgpu_paths(
-		device_paths[br::ResourceIdentifier::GPU]);
-
-	logger->Debug("PLAT OCL: Start monitoring [t=%d ms]...",
-		hw_monitor.period_ms);
-	while(1) {
-		for (auto grp: *(pgpu_paths.get())) {
-			// Adapter ID
-			hs.id = grp->GetID(br::ResourceIdentifier::GPU);
-			// GPU status
-			pm.GetLoad(grp, hs.load);
-			pm.GetTemperature(grp, hs.temp);
-			pm.GetClockFrequency(grp, hs.freq_c);
-			pm.GetClockFrequency(gpu_mem_paths[hs.id], hs.freq_m);
-			pm.GetFanSpeed(
-				grp, PowerManager::FanSpeedType::PERCENT,
-				hs.fan);
-			pm.GetVoltage(grp, hs.mvolt);
-			pm.GetPerformanceState(grp, hs.pstate);
-			pm.GetPowerState(grp, hs.wstate);
-			logger->Debug("PLAT PRX: GPU [%s] "
-				"Load: %3d%, Temp: %3d°C, CoreFreq: %4dMHz, MemFreq: %4dMHz "
-				"Fan: %3d%, Volt: %4dmV, PState: %2d, WState: %d",
-				grp->ToString().c_str(),
-				hs.load, hs.temp, hs.freq_c/1000, hs.freq_m/1000,
-				hs.fan, hs.mvolt, hs.pstate, hs.wstate);
-			// Dump status?
-			if (!hw_monitor.dump_enabled)
-				break;
-			snprintf(status_line, 100,
-				"%d %d %d %d %d %d %d %d %d\n",
-				hs.id, hs.load, hs.temp,
-				hs.freq_c/1000, hs.freq_m/1000,	hs.fan, hs.mvolt,
-				hs.pstate, hs.wstate);
-			DumpToFile(hs.id, status_line, std::ios::app);
-		}
-		std::this_thread::sleep_for(
-			std::chrono::milliseconds(hw_monitor.period_ms));
-	}
-}
-
-void OpenCLProxy::DumpToFile(
-		int dev_id, const char * line, std::ios_base::openmode om) {
-	char fp[128];
-	snprintf(fp, 128, HWS_DUMP_FILE_FMT, hw_monitor.dump_dir.c_str(), dev_id);
-	logger->Debug("Dump > [%s]: %s", fp, line);
-
-	device_data[dev_id]->open(fp, om);
-	if (!device_data[dev_id]->is_open()) {
-		logger->Warn("PLAT OCL: Dump file not open");
-		return;
-	}
-	*device_data[dev_id] << line;
-	if (device_data[dev_id]->fail()) {
-		logger->Error("PLAT OCL: Dump failed [F:%d, B:%d]",
-			device_data[dev_id]->fail(),
-			device_data[dev_id]->bad());
-		*device_data[dev_id] << "Error";
-		*device_data[dev_id] << std::endl;
-		return;
-	}
-	device_data[dev_id]->close();
-}
-
-void OpenCLProxy::DumpClear() {
-	for (auto dev_ofs: device_data) {
-		DumpToFile(dev_ofs.first, HWS_DUMP_HEADER);
-	}
-}
-
-int OpenCLProxy::DumpCmdHandler(const char * arg) {
-	std::string action(arg);
-	logger->Info("PLAT OCL: Action = %s", action.c_str());
-	// Start
-	if ((action.compare("start") == 0)
-			&& (!hw_monitor.dump_enabled)) {
-		logger->Info("PLAT OCL: Starting GPU(s) status dump...");
-		hw_monitor.dump_enabled = true;
-		return 0;
-	}
-	// Stop
-	if ((action.compare("stop") == 0)
-			&& (hw_monitor.dump_enabled)) {
-		logger->Info("PLAT OCL: Stopping GPU(s) status dump...");
-		hw_monitor.dump_enabled = false;
-		return 0;
-	}
-	// Clear
-	if (action.compare("clear") == 0) {
-		bool de = hw_monitor.dump_enabled;
-		hw_monitor.dump_enabled = false;
-		DumpClear();
-		hw_monitor.dump_enabled = de;
-		logger->Info("PLAT OCL: Clearing GPU(s) status dump files...");
-		return 0;
-	}
-
-	logger->Warn("PLAT OCL: Unknown action [%s] or nothing to do",
-		action.c_str());
-	return -1;
-}
-
 #endif // CONFIG_BBQUE_PM
 
 
@@ -389,12 +248,9 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 			snprintf(gpu_pe_path+5, 12, "gpu%hu.pe0", dev_id);
 			ra.RegisterResource(gpu_pe_path, "", 100);
 			r_type = br::ResourceIdentifier::GPU;
-#ifdef CONFIG_BBQUE_PM
-			device_data.insert(
-				std::pair<int, std::ofstream *>(
-					dev_id,
-					new std::ofstream()));
-			DumpToFile(dev_id, HWS_DUMP_HEADER );
+#ifdef BBQUE_WM
+			PowerMonitor & wm(PowerMonitor::GetInstance());
+			wm.Register(ra.GetPath(gpu_pe_path));
 #endif
 			break;
 		case CL_DEVICE_TYPE_CPU:
@@ -489,19 +345,6 @@ OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(
 int OpenCLProxy::CommandsCb(int argc, char *argv[]) {
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
 	char * command_id  = argv[0] + cmd_offset;
-	logger->Info("PLAT OCL: Processing command [%s]", command_id);
-
-#ifdef CONFIG_BBQUE_PM
-	// GPU status dump start/stop
-	if (!strncmp(CMD_PM_DUMP, command_id, strlen(CMD_PM_DUMP))) {
-		if (argc != 2) {
-			logger->Error("PLAT OCL: Command [%s]: "
-				"missing action [start/stop/clear]", command_id);
-			return 1;
-		}
-		return DumpCmdHandler(argv[1]);
-	}
-#endif
 	logger->Error("PLAT OCL: Unknown command [%s]", command_id);
 	return -1;
 }

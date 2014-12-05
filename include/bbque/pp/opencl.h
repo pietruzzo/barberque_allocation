@@ -137,63 +137,11 @@ private:
 
 #ifdef CONFIG_BBQUE_PM
 
-	struct HWStatus_t {
-		int      id      =-1;
-		uint32_t load    = 0;
-		uint32_t temp    = 0;
-		uint32_t freq_c  = 0;
-		uint32_t freq_m  = 0;
-		uint32_t fan     = 0;
-		uint32_t mvolt   = 0;
-		uint32_t pstate  = 0;
-		uint32_t wstate  = 0;
-	};
-
-	/*** HW monitoring parameters */
-	struct HWMonitor_t {
-		/** Monitoring period in milliseconds (configurable) */
-		int32_t     period_ms = -1;
-		/** Dump monitoring data on file   */
-		bool        dump_enabled = false;
-		/** Dump monitoring data directory */
-		std::string dump_dir;
-	} hw_monitor;
-
-	/*** Dump file stream pointers per adapter */
-	DevFileMap_t device_data;
-
 	/*** Power Manager instance */
 	PowerManager & pm;
 
 	/*** Print the GPU power information */
 	void PrintGPUPowerInfo();
-
-	/*** Read status of the hardware platform in terms of */
-	void HwReadStatus();
-
-	/**
-	 * @brief Dump a text line to file
-	 *
-	 * @param dev_id Adapter (GPU) id
-	 * @param line Line to dump
-	 * @param om C++ stream open mode
-	 */
-	void DumpToFile(
-		int dev_id, const char * line,
-		std::ios_base::openmode om = std::ios::out);
-
-	/**
-	 * @brief Clear dump files
-	 */
-	void DumpClear();
-
-	/**
-	 * @brief Manage the dump on file behavior
-	 *
-	 * @param arg A string containing the action to perform (start, stop,
-	 * clear).
-	 */
-	int DumpCmdHandler(const char * arg);
 
 #endif // CONFIG_BBQUE_PM
 
