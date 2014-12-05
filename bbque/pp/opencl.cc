@@ -146,8 +146,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 
 	// Power management support
 #ifdef CONFIG_BBQUE_PM
-	HwSetup();
-	Start();
+	PrintGPUPowerInfo();
 #endif
 	return SUCCESS;
 }
@@ -161,7 +160,7 @@ void OpenCLProxy::Task() {
 }
 
 #ifdef CONFIG_BBQUE_PM
-void OpenCLProxy::HwSetup() {
+void OpenCLProxy::PrintGPUPowerInfo() {
 	uint32_t min, max, step, s_min, s_max, ps_count;
 	int  s_step;
 	PowerManager::PMResult pm_result;

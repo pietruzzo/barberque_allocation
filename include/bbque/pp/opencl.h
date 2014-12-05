@@ -165,8 +165,8 @@ private:
 	/*** Power Manager instance */
 	PowerManager & pm;
 
-	/*** Initial setup of hardware parameters */
-	void HwSetup();
+	/*** Print the GPU power information */
+	void PrintGPUPowerInfo();
 
 	/*** Read status of the hardware platform in terms of */
 	void HwReadStatus();
