@@ -110,8 +110,7 @@ ClovesSchedPol::ExitCode_t ClovesSchedPol::InitResourceStateView() {
 	ExitCode_t result = OK;
 
 	// Build a string path for the resource state view
-	++count;
-	snprintf(token_path, 30, "%s%d", MODULE_NAMESPACE, count);
+	snprintf(token_path, 30, "%s%d", MODULE_NAMESPACE, ++sched_count);;
 
 	// Get a fresh resource status view
 	logger->Debug("Init: Require a new resource state view [%s]", token_path);
@@ -415,7 +414,7 @@ ClovesSchedPol::BindResources(SchedEntityPtr_t psched) {
 
 ClovesSchedPol::ExitCode_t
 ClovesSchedPol::Flush() {
-	uint32_t sched_count = 0;
+	uint32_t app_count = 0;
 
 	// Device types
 	for (auto & dtqm_entry: queues) {
@@ -423,17 +422,17 @@ ClovesSchedPol::Flush() {
 		// Devices
 		for (auto & dqm_entry: dqm) {
 			DeviceQueue_t & dev_queue(*dqm_entry.second.get());
-			sched_count += SendScheduleRequests(dev_queue);
+			app_count += SendScheduleRequests(dev_queue);
 		}
 	}
 
-	if (sched_count == 0) return ERROR;
+	if (app_count == 0) return ERROR;
 	return OK;
 }
 
 uint32_t ClovesSchedPol::SendScheduleRequests(DeviceQueue_t & dev_queue) {
 	ba::Application::ExitCode_t app_result = ba::Application::APP_SUCCESS;
-	uint32_t sched_count = 0;
+	uint32_t app_count = 0;
 
 	// Flush the entire device queue
 	while (!dev_queue.empty()) {
@@ -457,10 +456,10 @@ uint32_t ClovesSchedPol::SendScheduleRequests(DeviceQueue_t & dev_queue) {
 				psched->StrId());
 		}
 		dev_queue.pop();
-		++sched_count;
+		++app_count;
 	}
 
-	return sched_count;
+	return app_count;
 }
 
 } // namespace plugins

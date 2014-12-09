@@ -145,8 +145,7 @@ private:
 	/** String for requiring new resource status views */
 	char token_path[30];
 
-	/** A counter used for getting always a new clean resources view */
-	uint32_t count = 0;
+	uint32_t sched_count = 0;
 
 
 	/** Map of queues, one for device type */
