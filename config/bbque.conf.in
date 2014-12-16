@@ -40,6 +40,7 @@ binding.domains = cpu,gpu
 # PlatformProxy Options
 ################################################################################
 [PowerMonitor]
+log.enabled = 0
 log.dir   = /tmp
 period_ms = 1000
 

@@ -72,6 +72,10 @@ PowerMonitor::PowerMonitor():
 		(MODULE_CONFIG ".log.dir",
 		 po::value<std::string>(&wm_info.log_dir)->default_value("/tmp/"),
 		 "The output directory for the status data dump files");
+	opts_desc.add_options()
+		(MODULE_CONFIG ".log.enabled",
+		 po::value<bool>(&wm_info.log_enabled)->default_value(false),
+		 "Default status of the data logging");
 	po::variables_map opts_vm;
 	cfm.ParseConfigurationFile(opts_desc, opts_vm);
 
