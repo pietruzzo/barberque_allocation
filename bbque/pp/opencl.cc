@@ -223,7 +223,9 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 	char gpu_pe_path[]  = "sys0.gpu256.pe256";
 	br::ResourceIdentifier::Type_t r_type = br::ResourceIdentifier::UNDEFINED;
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-
+#ifdef CONFIG_BBQUE_WM
+	PowerMonitor & wm(PowerMonitor::GetInstance());
+#endif
 	for (uint16_t dev_id = 0; dev_id < num_devices; ++dev_id) {
 		status = clGetDeviceInfo(
 				devices[dev_id], CL_DEVICE_NAME,
@@ -248,8 +250,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 			snprintf(gpu_pe_path+5, 12, "gpu%hu.pe0", dev_id);
 			ra.RegisterResource(gpu_pe_path, "", 100);
 			r_type = br::ResourceIdentifier::GPU;
-#ifdef BBQUE_WM
-			PowerMonitor & wm(PowerMonitor::GetInstance());
+#ifdef CONFIG_BBQUE_WM
 			wm.Register(ra.GetPath(gpu_pe_path));
 #endif
 			break;
