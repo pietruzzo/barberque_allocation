@@ -25,7 +25,7 @@
 #include <queue>
 
 #include "bbque/configuration_manager.h"
-#include "bbque/platform_proxy.h"
+#include "bbque/power_monitor.h"
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/scheduler_manager.h"
@@ -127,7 +127,7 @@ private:
 	ResourceAccounter & ra;
 
 	/** Platform Proxy instance */
-	PlatformProxy & pp;
+	PowerMonitor & wm;
 
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;

@@ -58,7 +58,7 @@ char const * ClovesSchedPol::Name() {
 ClovesSchedPol::ClovesSchedPol():
 		cm(ConfigurationManager::GetInstance()),
 		ra(ResourceAccounter::GetInstance()),
-		pp(PlatformProxy::GetInstance()) {
+		wm(PowerMonitor::GetInstance()) {
 	// Logger instance
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
@@ -94,8 +94,8 @@ ClovesSchedPol::ExitCode_t ClovesSchedPol::Init() {
 			logger->Fatal("Init: Scheduling queues not available");
 			return result;
 		}
-		// Start sampling the devices status
-		pp.PowerMonitorStart(BBQUE_SP_CLOVES_SAMPLING_TIME);
+		// Start sampling power info from devices
+		wm.Start();
 	}
 
 	// Update applications runtime profiling data
