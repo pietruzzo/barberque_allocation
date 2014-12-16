@@ -27,23 +27,23 @@
 #include "bbque/app/working_mode.h"
 
 #define MODULE_NAMESPACE "bq.pp.ocl"
-#define MODULE_CONFIG    "PlatformProxy.OpenCL"
-
-#define HWS_DUMP_FILE_FMT "%s/BBQ-PlatformStatus-GPU%d.dat"
-
-#define HWS_DUMP_HEADER \
-	"# Columns legend:\n"\
-	"#\n"\
-	"# 1: Adapter (GPU) ID \n"\
-	"# 2: Load (%)\n"\
-	"# 3: Temperature (°C)\n"\
-	"# 4: Core frequency (MHz)\n"\
-	"# 5: Mem frequency (MHz)\n"\
-	"# 6: Fanspeed (%)\n"\
-	"# 7: Voltage (mV)\n"\
-	"# 8: Performance level\n"\
-	"# 9: Power state\n"\
-	"#\n"
+//#define MODULE_CONFIG    "PlatformProxy.OpenCL"
+//
+//#define HWS_DUMP_FILE_FMT "%s/BBQ-PlatformStatus-GPU%d.dat"
+//
+//#define HWS_DUMP_HEADER \
+//	"# Columns legend:\n"\
+//	"#\n"\
+//	"# 1: Adapter (GPU) ID \n"\
+//	"# 2: Load (%)\n"\
+//	"# 3: Temperature (°C)\n"\
+//	"# 4: Core frequency (MHz)\n"\
+//	"# 5: Mem frequency (MHz)\n"\
+//	"# 6: Fanspeed (%)\n"\
+//	"# 7: Voltage (mV)\n"\
+//	"# 8: Performance level\n"\
+//	"# 9: Power state\n"\
+//	"#\n"
 
 namespace br = bbque::res;
 namespace po = boost::program_options;
