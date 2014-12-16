@@ -168,6 +168,13 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	return ExitCode_t::OK;
 }
 
+PowerMonitor::ExitCode_t PowerMonitor::Register(
+		const char * rp_str,
+		PowerManager::SamplesArray_t const & samples_window) {
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	return Register(ra.GetPath(rp_str), samples_window);
+}
+
 
 void PowerMonitor::Start(uint32_t period_ms) {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);

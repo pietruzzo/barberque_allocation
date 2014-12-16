@@ -94,6 +94,12 @@ public:
 				{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
 	);
 
+	ExitCode_t Register(
+			const char * rp_str,
+			PowerManager::SamplesArray_t const & samples_window =
+				{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
+	);
+
 	/**
 	 * @brief Start the monitoring of the power-thermal status
 	 *
