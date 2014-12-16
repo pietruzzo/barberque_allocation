@@ -20,6 +20,7 @@
 
 #include "bbque/application_manager.h"
 #include "bbque/configuration_manager.h"
+#include "bbque/power_monitor.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_utils.h"
@@ -208,8 +209,13 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 				resourcePath);
 		if (refreshMode)
 			ra.UpdateResource(resourcePath, "", cpu_quota);
-		else
+		else {
 			ra.RegisterResource(resourcePath, "", cpu_quota);
+#ifdef CONFIG_BBQUE_WM
+			PowerMonitor & wm(PowerMonitor::GetInstance());
+			wm.Register(resourcePath);
+#endif
+		}
 
 		// Look-up for next CPU id
 		while (*p && (*p != ',') && (*p != '-')) {
@@ -237,8 +243,13 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 
 			if (refreshMode)
 				ra.UpdateResource(resourcePath, "", cpu_quota);
-			else
+			else {
 				ra.RegisterResource(resourcePath, "", cpu_quota);
+#ifdef CONFIG_BBQUE_WM
+				PowerMonitor & wm(PowerMonitor::GetInstance());
+				wm.Register(resourcePath);
+#endif
+			}
 		}
 
 		// Look-up for next CPU id
