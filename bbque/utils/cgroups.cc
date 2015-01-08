@@ -19,6 +19,7 @@
 
 #include <cstring>
 #include <linux/version.h>
+#include <vector>
 
 namespace bbque { namespace utils {
 
@@ -36,6 +37,20 @@ const char *CGroups::controller[] = {
 	"blkio",
 	"perf_event",
 	"hugetlb",
+};
+
+// Needed controllers
+std::vector<int> cid = {
+	CGroups::CGC::CPUSET,
+	CGroups::CGC::CPU,
+	CGroups::CGC::CPUACCT,
+	CGroups::CGC::MEMORY,
+	// CGroups::CGC::DEVICES,
+	// CGroups::CGC::FREEZER,
+	// CGroups::CGC::NET_CLS,
+	// CGroups::CGC::BLKIO,
+	// CGroups::CGC::PERF_EVENT,
+	// CGroups::CGC::HUGETLB
 };
 
 char *CGroups::mounts[CGC::COUNT] = { nullptr, };
@@ -59,8 +74,8 @@ CGroups::CGResult CGroups::Init(const char *logname) {
 		return CGResult::INIT_FAILED;
 	}
 
-	// Mounting all available controllers
-	for (int id = CGC::CPUSET; id < CGC::COUNT; ++id) {
+	// Mounting all needed controllers
+	for (int id : cid) {
 		result = cgroup_get_subsys_mount_point(controller[id], &mounts[id]);
 		if (result) {
 			logger->Error("CGroup controller [%s] mountpoint lookup FAILED! (Error: %d - %s)",
