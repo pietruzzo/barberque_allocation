@@ -48,8 +48,8 @@ BBQUE_CGCONFS="${BBQUE_CGCONFS:-$CGCONFS}"
 BBQUE_CGPARSER="${BBQUE_CGPARSER:-$CGPARSER}"
 BBQUE_CGAGENT="${BBQUE_CGAGENT:-$CGAGENT}"
 
-BPL_FOLDER="@CONFIG_BOSP_RUNTIME_PATH@/etc/bbque/pil"
-BPL_GENERATE=$BPL_FOLDER"/bpl_generator"
+# PIL generator (in case not specified)
+BPL_GENERATE=$SYSROOT"/sbin/bbque-pil-generator"
 
 # Check root permission
 check_root() {
