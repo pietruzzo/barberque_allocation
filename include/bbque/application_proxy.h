@@ -272,8 +272,6 @@ private:
  * Runtime profiling
  ******************************************************************************/
 
-#ifdef CONFIG_BBQUE_OPENCL
-
 	/**
 	 * @brief Thread function for the runtime data collection
 	 */
@@ -283,7 +281,6 @@ private:
 
 	RTLIB_ExitCode_t Prof_GetRuntimeDataRecv(pcmdSn_t pcs);
 
-#endif
 
 /*******************************************************************************
  * Synchronization Protocol
