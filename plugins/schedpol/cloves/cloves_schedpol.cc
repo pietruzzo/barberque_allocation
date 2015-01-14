@@ -357,8 +357,8 @@ ClovesSchedPol::SelectDeviceQueue(
 		SchedEntityPtr_t psched,
 		br::ResourceIdentifier::Type_t dev_type) {
 	br::ResourcePathPtr_t curr_path;
-	double min_load = 101.0;
-	double curr_load;
+	size_t min_qlen = INT_MAX;
+	size_t curr_qlen;
 
 	// Device type queue
 	DeviceQueueMapPtr_t & pdev_queue_map(queues[dev_type]);
@@ -375,10 +375,11 @@ ClovesSchedPol::SelectDeviceQueue(
 			return DeviceQueuePtr_t();
 		}
 
-		// Look for the device with the lowest load
-		curr_load = rsrc->GetPowerInfo(PowerManager::InfoType::LOAD);
-		if (curr_load < min_load) {
-			min_load  = curr_load;
+		// Look for the shortest device queue
+//		curr_load = rsrc->GetPowerInfo(PowerManager::InfoType::LOAD);
+		curr_qlen = dq_entry.second->size();
+		if (curr_qlen < min_qlen) {
+			min_qlen  = curr_qlen;
 			curr_path = dq_entry.first;
 			if (dev_type == br::Resource::GPU)
 				psched->SetBindingID(
@@ -386,8 +387,8 @@ ClovesSchedPol::SelectDeviceQueue(
 			else
 				psched->SetBindingID(R_ID_NONE, dev_type);
 		}
-		logger->Debug("SelectDeviceQueue: %s load = %2.1f",
-			rsrc->Path().c_str(), curr_load);
+		logger->Debug("SelectDeviceQueue: %s queue length = %d",
+			rsrc->Path().c_str(), curr_qlen);
 	}
 
 	logger->Debug("SelectDeviceQueue: selected (%s)", curr_path->ToString().c_str());
