@@ -3098,6 +3098,8 @@ void BbqueRPC::NotifyPostMonitor(
 
 }
 
+#ifdef CONFIG_BBQUE_OPENCL
+
 void BbqueRPC::OclGetRuntimeProfile(
 		pregExCtx_t prec, uint32_t & exec_time, uint32_t & mem_time) {
 	pAwmStats_t pstats = prec->pAwmStats;
@@ -3136,6 +3138,7 @@ void BbqueRPC::OclGetRuntimeProfile(
 	cum_mem_time_prev  = cum_mem_time;
 }
 
+#endif
 void BbqueRPC::NotifyPreSuspend(
 	RTLIB_ExecutionContextHandler_t ech) {
 	logger->Debug("===> NotifySuspend");
