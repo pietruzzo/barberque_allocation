@@ -169,6 +169,12 @@ setup() {
 		CGROUP_FEATURES_CPUQ="N"
 	fi
 
+	# Check for CFS quota support
+	if [ ! -f $BBQUE_CGMOUNT/memory.limit_in_bytes ]; then
+		echo "Disabling Memory controller (Error: not available)"
+		CGROUP_FEATURES_MEMC="N"
+	fi
+
 	# Getting the total platform available CPUs and MEMs
 	PLAT_CPUS=`cat $BBQUE_CGMOUNT/cpuset.cpus`
 	PLAT_MEMS=`cat $BBQUE_CGMOUNT/cpuset.mems`
@@ -179,6 +185,7 @@ setup() {
 				-v BBQUE_PLAT_CPUS="$PLAT_CPUS" \
 				-v BBQUE_PLAT_MEMS="$PLAT_MEMS" \
 				-v BBQUE_FEAT_CPUQ="$CGROUP_FEATURES_CPUQ" \
+				-v BBQUE_FEAT_MEMC="$CGROUP_FEATURES_MEMC" \
 				$PILSETUP > $CGSETUP
 	fi
 

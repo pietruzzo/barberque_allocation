@@ -145,9 +145,11 @@ BEGIN {
 		printf "		cpu.cfs_quota_us =  \"%s\";\n", BBQUE_NODE_CPUQ
 		printf "	}\n"
 	}
-	printf "	memory {\n"
-	printf "		memory.limit_in_bytes = \"%s\";\n", BBQUE_NODE_MEMB
-	printf "	}\n"
+	if (BBQUE_FEAT_MEMC != "N") {
+			printf "	memory {\n"
+			printf "		memory.limit_in_bytes = \"%s\";\n", BBQUE_NODE_MEMB
+			printf "	}\n"
+	}
 	printf "}\n"
 
 	NODE_COUNT++;
