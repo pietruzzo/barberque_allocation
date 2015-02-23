@@ -165,7 +165,7 @@ setup() {
 
 	# Check for CFS quota support
 	if [ ! -f $BBQUE_CGMOUNT/cpu.cfs_quota_us ]; then
-		echo "Disabling CFS Quota suppport (Error: not available)"
+		echo "Disabling CFS Quota support (Error: not available)"
 		CGROUP_FEATURES_CPUQ="N"
 	fi
 
