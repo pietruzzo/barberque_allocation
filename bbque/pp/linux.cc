@@ -284,7 +284,14 @@ LinuxPP::RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) {
 	unsigned short first_mem_id;
 	unsigned short last_mem_id;
 	const char *p = prlb->mems;
-	uint64_t limit_in_bytes = atol(prlb->memb);
+	uint64_t limit_in_bytes;
+
+#ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
+	limit_in_bytes = atol(prlb->memb);
+#else
+	GetSysMemoryTotal(limit_in_bytes);
+	limit_in_bytes *= 1024;
+#endif
 
 	// NOTE: The Memory limit in bytes is used to assign the SAME quota to
 	// each memory node within the same cluster. This is not the intended
@@ -449,6 +456,7 @@ LinuxPP::ParseNodeAttributes(struct cgroup_file_info &entry,
 	 *    MEMORY Controller
 	 **********************************************************************/
 
+#ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	// Get "memory" controller info
 	cg_controller = cgroup_get_controller(bbq_node, "memory");
 	if (cg_controller == NULL) {
@@ -469,6 +477,7 @@ LinuxPP::ParseNodeAttributes(struct cgroup_file_info &entry,
 		pp_result = PLATFORM_NODE_PARSING_FAILED;
 		goto parsing_failed;
 	}
+#endif
 
 	/**********************************************************************
 	 *    CPU Quota Controller
@@ -671,6 +680,7 @@ LinuxPP::GetResourceMapping(
 	core_ids = papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT);
 	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
 
+#ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	// Set the amount of MEMORY and the memory node into the cgroup attributes
 	// values
 	prlb->amount_memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
@@ -680,6 +690,7 @@ LinuxPP::GetResourceMapping(
 	}
 	mem_ids  = papp->NextAWM()->BindingSet(br::Resource::MEMORY);
 	strncpy(prlb->mems,  mem_ids.ToStringCG().c_str(), 3*MaxMemsCount);
+#endif
 
 	return OK;
 }
@@ -707,6 +718,7 @@ LinuxPP::BuildCGroup(CGroupDataPtr_t &pcgd) {
 		return MAPPING_FAILED;
 	}
 
+#ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	// Add "memory" controller
 	pcgd->pc_memory = cgroup_add_controller(pcgd->pcg, "memory");
 	if (!pcgd->pc_memory) {
@@ -715,6 +727,7 @@ LinuxPP::BuildCGroup(CGroupDataPtr_t &pcgd) {
 				"creation failed)");
 		return MAPPING_FAILED;
 	}
+#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 
@@ -841,6 +854,7 @@ LinuxPP::SetupCGroup(CGroupDataPtr_t &pcgd, RLinuxBindingsPtr_t prlb,
 	cgroup_set_value_string(pcgd->pc_cpuset,
 			BBQUE_LINUXPP_CPUS_PARAM,
 			prlb->cpus ? prlb->cpus : "");
+
 	// Set the assigned memory NODE (only if we have at least one CPUS)
 	if (prlb->cpus[0]) {
 		cgroup_set_value_string(pcgd->pc_cpuset,
@@ -864,6 +878,7 @@ LinuxPP::SetupCGroup(CGroupDataPtr_t &pcgd, RLinuxBindingsPtr_t prlb,
 	 *    MEMORY Controller
 	 **********************************************************************/
 
+#ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	// Set the assigned MEMORY amount
 	sprintf(quota, "%lu", prlb->amount_memb);
 	cgroup_set_value_string(pcgd->pc_memory,
@@ -872,7 +887,7 @@ LinuxPP::SetupCGroup(CGroupDataPtr_t &pcgd, RLinuxBindingsPtr_t prlb,
 	logger->Debug("PLAT LNX: Setup MEMORY for [%s]: "
 			"{bytes_limit [%lu]}",
 			pcgd->papp->StrId(), prlb->amount_memb);
-
+#endif
 
 	/**********************************************************************
 	 *    CPU Quota Controller
