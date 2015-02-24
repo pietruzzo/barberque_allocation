@@ -674,9 +674,12 @@ LinuxPP::GetResourceMapping(
 	br::ResourceBitset core_ids;
 	br::ResourceBitset mem_ids;
 
-	// Set the amount of CPU quota, the CPU core set into the cgroup
-	// attributes values
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
+	// CPU quota
 	prlb->amount_cpus = ra.GetUsageAmount(pum, br::Resource::PROC_ELEMENT, br::Resource::CPU);
+#else
+	prlb->amount_cpus = -1;
+#endif
 	core_ids = papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT);
 	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
 
