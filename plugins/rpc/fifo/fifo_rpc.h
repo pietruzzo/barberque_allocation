@@ -43,7 +43,7 @@ namespace bbque { namespace plugins {
  */
 class FifoRPC : public RPCChannelIF {
 
-typedef struct fifo_data {
+typedef struct fifo_data : ChannelData {
 	/** The handler to the application FIFO */
 	int app_fifo_fd;
 	/** The application FIFO filename */

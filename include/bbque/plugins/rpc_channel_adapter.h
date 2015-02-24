@@ -56,7 +56,7 @@ public:
 	}
 
 	plugin_data_t GetPluginData(rpc_msg_ptr_t & msg) {
-		return plugin_data_t(rc->GetPluginData((void*)msg));
+		return plugin_data_t((ChannelData*) rc->GetPluginData((void*)msg));
 	}
 
 	void ReleasePluginData(plugin_data_t & pd) {

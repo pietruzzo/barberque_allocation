@@ -29,6 +29,11 @@ using bbque::rtlib::rpc_msg_header_t;
 namespace bbque { namespace plugins {
 
 /**
+ * Base class for plugin data
+ */
+class ChannelData {};
+
+/**
  * @brief Low-level RPC channel
  *
  * This defines the common interface for each communication channel module
@@ -46,7 +51,7 @@ public:
 	/**
 	 * 
 	 */
-	typedef std::shared_ptr<void> plugin_data_t;
+	typedef std::shared_ptr<ChannelData> plugin_data_t;
 
 	/**
 	 * @brief Default destructor
