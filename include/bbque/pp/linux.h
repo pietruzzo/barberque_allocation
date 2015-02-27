@@ -264,6 +264,10 @@ private:
 	ExitCode_t ParseNodeAttributes(struct cgroup_file_info &entry,
 			RLinuxBindingsPtr_t prlb);
 
+	/**
+	 * @brief Get total amount of memory (in KB) reading procfs attribute
+	 */
+	ExitCode_t GetSysMemoryTotal(uint64_t & mem_kb_tot);
 
 	const char* _GetPlatformID();
 	const char* _GetHardwareID();

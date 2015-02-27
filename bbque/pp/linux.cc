@@ -17,6 +17,7 @@
 
 #include "bbque/pp/linux.h"
 
+
 #include "bbque/application_manager.h"
 #include "bbque/configuration_manager.h"
 #include "bbque/resource_accounter.h"
@@ -25,6 +26,7 @@
 #include "bbque/app/working_mode.h"
 
 #include <cmath>
+#include <fstream>
 #include <string.h>
 #include <linux/version.h>
 
@@ -41,6 +43,8 @@
 #define BBQUE_LINUXPP_CPU_EXCLUSIVE_PARAM 	"cpuset.cpu_exclusive"
 #define BBQUE_LINUXPP_MEM_EXCLUSIVE_PARAM 	"cpuset.mem_exclusive"
 #define BBQUE_LINUXPP_PROCS_PARAM		"cgroup.procs"
+
+#define BBQUE_LINUXPP_SYS_MEMINFO		"/proc/meminfo"
 
 // The default CFS bandwidth period [us]
 #define BBQUE_LINUXPP_CPUP_DEFAULT		100000
@@ -245,6 +249,30 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 		if (*p == ',')
 			++p;
 	}
+
+	return OK;
+}
+
+LinuxPP::ExitCode_t
+LinuxPP::GetSysMemoryTotal(uint64_t & mem_kb_tot) {
+	std::ifstream meminfo_fd;
+	std::string line;
+	char s[10], k[2];
+
+	meminfo_fd.open(BBQUE_LINUXPP_SYS_MEMINFO);
+	if (!meminfo_fd.is_open()) {
+		logger->Error("PLAT LNX: Cannot read total amount of system memory");
+		return PLATFORM_DATA_NOT_FOUND;
+	}
+
+	while (!meminfo_fd.eof()) {
+		getline(meminfo_fd, line);
+		if (line.compare("MemTotal")) {
+			sscanf(line.data(), "%s %" PRIu64 " %s", s, &mem_kb_tot, k);
+			break;
+		}
+	}
+	meminfo_fd.close();
 
 	return OK;
 }
