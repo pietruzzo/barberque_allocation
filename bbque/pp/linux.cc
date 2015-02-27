@@ -674,25 +674,27 @@ LinuxPP::GetResourceMapping(
 	br::ResourceBitset core_ids;
 	br::ResourceBitset mem_ids;
 
+	// CPU core set
+	core_ids = papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT);
+	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
+	// Memory nodes
+	mem_ids  = papp->NextAWM()->BindingSet(br::Resource::MEMORY);
+	strncpy(prlb->mems, mem_ids.ToStringCG().c_str(), 3*MaxMemsCount);
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 	// CPU quota
 	prlb->amount_cpus = ra.GetUsageAmount(pum, br::Resource::PROC_ELEMENT, br::Resource::CPU);
 #else
 	prlb->amount_cpus = -1;
 #endif
-	core_ids = papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT);
-	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
 
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
-	// Set the amount of MEMORY and the memory node into the cgroup attributes
-	// values
+	// Amount of memory
 	prlb->amount_memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
 	if (prlb->amount_memb <= 0) {
 		strncpy(prlb->mems, "-1", 2);
 		return OK;
 	}
-	mem_ids  = papp->NextAWM()->BindingSet(br::Resource::MEMORY);
-	strncpy(prlb->mems,  mem_ids.ToStringCG().c_str(), 3*MaxMemsCount);
 #endif
 
 	return OK;
