@@ -3106,8 +3106,17 @@ void BbqueRPC::OclGetRuntimeProfile(
 	CmdProf_t::const_iterator cmd_it;
 	static uint32_t cum_exec_time_prev;
 	static uint32_t cum_mem_time_prev;
+	static uint32_t last_cycles_count = 0;
 	uint32_t cum_exec_time = 0;
 	uint32_t cum_mem_time  = 0;
+	uint32_t delta_cycles_count;
+
+	delta_cycles_count = prec->cycles_count - last_cycles_count;
+	if (delta_cycles_count < 1) {
+		exec_time = mem_time = 0;
+		logger->Fatal("OCL: Runtime profile not updated");
+		return;
+	}
 
 	// Iterate over all the command queues
 	for (auto entry: pstats->ocl_events_map) {
@@ -3131,11 +3140,13 @@ void BbqueRPC::OclGetRuntimeProfile(
 	}
 
 	// Update
-	exec_time = cum_exec_time - cum_exec_time_prev;
-	mem_time  = cum_mem_time  - cum_mem_time_prev;
-	logger->Fatal("OCL: Runtime profile: {%d,%d}", exec_time/1000, mem_time/1000);
+	exec_time = (cum_exec_time - cum_exec_time_prev) / delta_cycles_count;
+	mem_time  = (cum_mem_time  - cum_mem_time_prev)  / delta_cycles_count;
+	logger->Fatal("OCL: Runtime profile %d cycles {exec_time=%d [us], mem_time=%d [us]}",
+			delta_cycles_count, exec_time, mem_time);
 	cum_exec_time_prev = cum_exec_time;
 	cum_mem_time_prev  = cum_mem_time;
+	last_cycles_count  = prec->cycles_count;
 }
 
 #endif
