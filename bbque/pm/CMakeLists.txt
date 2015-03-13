@@ -14,6 +14,12 @@ if (CONFIG_BBQUE_PM_CPU)
  set (POWER_MANAGER_LIBS cpufreq boost_regex ${POWER_MANAGER_LIBS})
 endif (CONFIG_BBQUE_PM_CPU)
 
+if (CONFIG_BBQUE_PM_BATTERY)
+ set (POWER_MANAGER_LIBS boost_filesystem ${POWER_MANAGER_LIBS})
+ set (POWER_MANAGER_SRC battery ${POWER_MANAGER_SRC})
+endif (CONFIG_BBQUE_PM_BATTERY)
+
+
 # Add as library
 add_library(bbque_pm STATIC ${POWER_MANAGER_SRC})
 

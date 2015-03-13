@@ -150,6 +150,9 @@
 /** Enable periodic Power monitoring */
 #cmakedefine CONFIG_BBQUE_WM
 
+/** Enable Power Management support */
+#cmakedefine CONFIG_BBQUE_PM_BATTERY
+
 /** Enable AMD Power Management support */
 #cmakedefine CONFIG_BBQUE_PM_AMD
 
