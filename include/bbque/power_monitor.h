@@ -26,6 +26,7 @@
 #include "bbque/command_manager.h"
 #include "bbque/config.h"
 #include "bbque/configuration_manager.h"
+#include "bbque/pm/battery_manager.h"
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/resources.h"
 #include "bbque/utils/worker.h"
@@ -118,6 +119,13 @@ private:
 	 * @brief Power manager instance
 	 */
 	PowerManager & pm;
+
+#ifdef CONFIG_BBQUE_PM_BATTERY
+	/*
+	 * @brief Battery manager instance
+	 */
+	BatteryManager & bm;
+#endif
 
 	/**
 	 * @brief Command manager instance

@@ -53,6 +53,9 @@ PowerMonitor & PowerMonitor::GetInstance() {
 PowerMonitor::PowerMonitor():
 		Worker(),
 		pm(PowerManager::GetInstance()),
+#ifdef CONFIG_BBQUE_PM_BATTERY
+		bm(BatteryManager::GetInstance()),
+#endif
 		cm(CommandManager::GetInstance()),
 		cfm(ConfigurationManager::GetInstance()) {
 	// Get a logger module
