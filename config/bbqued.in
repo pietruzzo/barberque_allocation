@@ -149,9 +149,15 @@ setup() {
 	# Check for required ROOT permissions
 	check_root
 
-	if [ ! -f "$BBQUE_PILSETUPS/`hostname`.bpl" ]; then
+	# Set the pil file name (hardware ID if selected, hostame otherwise)
+	if [ -z "$PILNAME" ]; then
+		PILNAME=`hostname`
+	fi
+	echo "Checking platform description file: "$PILNAME".bpl"
+
+	if [ ! -f $BBQUE_PILSETUPS/$PILNAME".bpl" ]; then
 		# Generating the bpl file on the fly, exploiting menuconfig info
-		echo "Generating platform description setup... ["$BBQUE_PILSETUPS/`hostname`.bpl"]"
+		echo "Generating platform description setup... ["$BBQUE_PILSETUPS/$PILNAME".bpl]"
 		HIERARCHY_DEPTH=""
 
 		[ -z "@CONFIG_BBQUE_MEMLOC_L3@" ] || HIERARCHY_DEPTH="L3"
@@ -165,13 +171,13 @@ setup() {
 		# If the generator experiences errors, the bpl file is not created.
 		# The error log is shown by the generator itself, so we can exit
 		# without warnings
-		[ ! -f "$BBQUE_PILSETUPS/`hostname`.bpl" ] && exit
+		[ ! -f $BBQUE_PILSETUPS/$PILNAME".bpl" ] && exit
 	fi
 
 	# Lookup for host specific PIL Layout and
 	# setup the corresponing CGgroup configuration
-	PILSETUP="$BBQUE_PILSETUPS/`hostname`.bpl"
-	CGSETUP="$BBQUE_CGCONFS/`hostname`.cgroup"
+	PILSETUP=$BBQUE_PILSETUPS/$PILNAME".bpl"
+	CGSETUP=$BBQUE_CGCONFS/$PILNAME".cgroup"
 
 	# Check if the CGroup hierarcy is already mounted
 	if [ ! -f $BBQUE_CGMOUNT/tasks ]; then

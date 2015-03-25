@@ -28,6 +28,9 @@ PILSETUPS='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_PILS}'
 # The PIL Layout to use (if an host specific one is not available)
 PILLAYOUT='default'
 #
+# The PIL file containing the processor partitioning
+PILNAME='${CONFIG_TARGET_ID}'
+#
 # The PIL Layout parser (distributed with BarbequeRTRM)
 PILPARSER='${CONFIG_BOSP_RUNTIME_PATH}/sbin/bbque-plp'
 #
