@@ -36,14 +36,13 @@ endmenu # Linux Control Groups
 
 choice
   prompt "Memory locality"
+  default BBQUE_MEMLOC_L3
 
   config BBQUE_MEMLOC_L3
     bool "L3 cache"
-    default y
 
   config BBQUE_MEMLOC_L2
     bool "L2 cache"
-    default n
 
   depends on !BBQUE_TEST_PLATFORM_DATA
   ---help---
