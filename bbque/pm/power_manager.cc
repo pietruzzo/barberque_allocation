@@ -21,6 +21,8 @@
 
 #ifdef CONFIG_BBQUE_PM_AMD
 # include "bbque/pm/power_manager_amd.h"
+#elif CONFIG_BBQUE_PM_GPU_ARM_MALI
+# include "bbque/pm/power_manager_gpu_arm_mali.h"
 #endif
 
 #ifdef CONFIG_BBQUE_PM_CPU
@@ -70,11 +72,14 @@ PowerManager::PowerManager() {
 		static_cast<CommandHandler*>(this),
 		"Set the speed of the fan (percentage value)");
 
+	// GPU
 #ifdef CONFIG_BBQUE_PM_AMD
-	// Initialize the AMD GPU power manager
 	logger->Notice("Using AMD provider for GPUs power management");
 	gpu = std::unique_ptr<PowerManager>(new AMDPowerManager());
-#endif // CONFIG_BBQUE_PM_AMD
+#elif CONFIG_BBQUE_PM_GPU_ARM_MALI
+	logger->Notice("Using ARM Mali provider for GPUs power management");
+	gpu = std::unique_ptr<PowerManager>(new ARM_Mali_GPUPowerManager());
+#endif
 
 #ifdef CONFIG_BBQUE_PM_CPU
 	// Initialize the CPU power manager

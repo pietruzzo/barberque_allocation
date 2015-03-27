@@ -21,6 +21,10 @@ if (CONFIG_BBQUE_PM_AMD)
  set (POWER_MANAGER_LIBS ${ADL_LIBRARY} ${POWER_MANAGER_LIBS})
 endif (CONFIG_BBQUE_PM_AMD)
 
+# Add ARM Mali GPU power manager
+if (CONFIG_BBQUE_PM_GPU_ARM_MALI)
+ set (POWER_MANAGER_SRC power_manager_gpu_arm_mali ${POWER_MANAGER_SRC})
+endif (CONFIG_BBQUE_PM_GPU_ARM_MALI)
 
 # Add as library
 add_library(bbque_pm STATIC ${POWER_MANAGER_SRC})
