@@ -1,12 +1,13 @@
 
-# Add PowerManager main class
+# Add the power manager
 set (POWER_MANAGER_SRC power_manager)
 
-# Add AMD GPUs power manager
-if (CONFIG_BBQUE_PM_AMD)
- set (POWER_MANAGER_SRC power_manager_amd ${POWER_MANAGER_SRC})
- set (POWER_MANAGER_LIBS ${ADL_LIBRARY} ${POWER_MANAGER_LIBS})
-endif (CONFIG_BBQUE_PM_AMD)
+# Add the battery manager
+if (CONFIG_BBQUE_PM_BATTERY)
+ set (POWER_MANAGER_LIBS boost_filesystem ${POWER_MANAGER_LIBS})
+ set (POWER_MANAGER_SRC battery_manager ${POWER_MANAGER_SRC})
+ set (POWER_MANAGER_SRC battery ${POWER_MANAGER_SRC})
+endif (CONFIG_BBQUE_PM_BATTERY)
 
 # Add CPUs power manager
 if (CONFIG_BBQUE_PM_CPU)
@@ -14,11 +15,11 @@ if (CONFIG_BBQUE_PM_CPU)
  set (POWER_MANAGER_LIBS cpufreq boost_regex ${POWER_MANAGER_LIBS})
 endif (CONFIG_BBQUE_PM_CPU)
 
-if (CONFIG_BBQUE_PM_BATTERY)
- set (POWER_MANAGER_LIBS boost_filesystem ${POWER_MANAGER_LIBS})
- set (POWER_MANAGER_SRC battery_manager ${POWER_MANAGER_SRC})
- set (POWER_MANAGER_SRC battery ${POWER_MANAGER_SRC})
-endif (CONFIG_BBQUE_PM_BATTERY)
+# Add AMD GPUs power manager
+if (CONFIG_BBQUE_PM_AMD)
+ set (POWER_MANAGER_SRC power_manager_amd ${POWER_MANAGER_SRC})
+ set (POWER_MANAGER_LIBS ${ADL_LIBRARY} ${POWER_MANAGER_LIBS})
+endif (CONFIG_BBQUE_PM_AMD)
 
 
 # Add as library
