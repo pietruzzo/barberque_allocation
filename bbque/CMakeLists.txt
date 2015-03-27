@@ -215,3 +215,11 @@ install (FILES "${PROJECT_BINARY_DIR}/config/bosp_init.env"
 install (PROGRAMS "${PROJECT_BINARY_DIR}/config/pil/bbque-pil-generator"
 		DESTINATION ${BBQUE_PATH_BBQ}
 		COMPONENT BarbequeRTRM)
+
+if (CONFIG_TARGET_ID)
+	install (PROGRAMS
+		"${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}.bpl"
+		DESTINATION ${BBQUE_PATH_PILS}
+		COMPONENT BarbequeRTRM)
+endif(CONFIG_TARGET_ID)
+
