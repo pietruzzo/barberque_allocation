@@ -18,6 +18,7 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/pm/power_manager_cpu.h"
 #include "bbque/res/resource_path.h"
+#include "bbque/utils/iofs.h"
 
 #include <fstream>
 #include <iostream>
@@ -37,6 +38,8 @@
 
 #define TEMP_SENSOR_FIRST_ID 1
 #define TEMP_SENSOR_STEP_ID  1
+
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -105,14 +108,13 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 		ResourcePathPtr_t const & rp,
 		uint32_t & perc){
 	PMResult result;
-	br::ResID_t cpu_core_id;
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
-	// Extract the CPU core from the resource path
-	cpu_core_id = rp->GetID(br::ResourceIdentifier::PROC_ELEMENT);
-	if (cpu_core_id >= 0) {
-		// Single CPU core (e.g., "cpu2.pe3")
-		result = GetLoadCPU(cpu_core_id, perc);
+	// Extract the single CPU core (PE) id from the resource path
+	// (e.g., "cpu2.pe3", pe_id = 3)
+	br::ResID_t pe_id = rp->GetID(br::ResourceIdentifier::PROC_ELEMENT);
+	if (pe_id >= 0) {
+		result = GetLoadCPU(pe_id, perc);
 		if (result != PMResult::OK) return result;
 	}
 	else {
@@ -176,28 +178,12 @@ PowerManager::PMResult CPUPowerManager::GetLoadCPU(
 }
 
 
-int CPUPowerManager::GetCPU(ResourcePathPtr_t const & rp){
-	// If the CPUPowerManager has been called, the path refers to a CPU.
-	// Thus, further security checks on the string are not needed.
-	boost::regex path_structure(".{1,}\\.pe(\\d+)");
-	boost::smatch match;
-	std::string str_path(rp->ToString());
-
-	if (! boost::regex_match(str_path, match, path_structure)) {
-		logger->Warn("Resource path parsing error.");
-		return -1;
-	}
-
-	int logic_id = boost::lexical_cast<int>(match[1]);
-	return logic_id;
-}
-
 PowerManager::PMResult CPUPowerManager::GetClockFrequency(
 	ResourcePathPtr_t const & rp, uint32_t &khz){
 
 	// Extracting the PE id from the resource path
-	int cpu_logic_id = GetCPU(rp);
-	if (cpu_logic_id < 0) {
+	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	if (pe_id < 0) {
 		logger->Warn("Frequency value not available for %s",
 			rp->ToString().c_str());
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
@@ -216,8 +202,8 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 	celsius = 0;
 
 	// Extracting the PE ID, and searching for its Core in the map
-	int cpu_logic_id = GetCPU(rp);
-	std::map<int,int>::iterator core_id_iter = core_ids.find(cpu_logic_id);
+	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	std::map<int,int>::iterator core_id_iter = core_ids.find(pe_id);
 	if(core_id_iter == core_ids.end())
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	int core_id = core_id_iter->second;
@@ -272,8 +258,8 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 	freqs.clear();
 
 	// Extracting the selected CPU from the resource path. -1 if error
-	int cpu_logic_id = GetCPU(rp);
-	if (cpu_logic_id == -1)
+	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	if (pe_id < 0)
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 
 	// Extracting available frequencies

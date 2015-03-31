@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "bbque/pm/power_manager.h"
+#include "bbque/res/resources.h"
 #include <cpufreq.h>
 
 using namespace bbque::res;
@@ -97,15 +98,6 @@ private:
 	 *  Sample CPU activity samples from /proc/stat
 	 */
 	ExitStatus GetLoadInfo(LoadInfo *info, br::ResID_t cpu_core_id);
-
-	/**
-	 * @brief Extract the CPU core id
-	 *
-	 * @param rp Constant reference to ResourcePath pointer
-	 *
-	 * @return the ID number
-	 */
-	int GetCPU(ResourcePathPtr_t const & rp);
 
 };
 
