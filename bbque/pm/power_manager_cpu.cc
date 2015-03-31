@@ -58,6 +58,8 @@ CPUPowerManager::CPUPowerManager() {
 		std::getline(cpu_info, core_string);
 		core_id = atoi(core_string.c_str());
 		core_ids[cpu_id] = core_id;
+		// Available frequencies per core
+		core_freqs[cpu_id] = _GetAvailableFrequencies(cpu_id);
 	}
 }
 
@@ -102,6 +104,7 @@ CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 
 CPUPowerManager::~CPUPowerManager() {
 	core_ids.clear();
+	core_freqs.clear();
 }
 
 PowerManager::PMResult CPUPowerManager::GetLoad(
@@ -134,6 +137,32 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 		perc /= r_list.size();
 	}
 	return PowerManager::PMResult::OK;
+}
+
+
+std::vector<unsigned long> * CPUPowerManager::_GetAvailableFrequencies(int cpu_id) {
+	bu::IoFs::ExitCode_t result;
+
+	// Extracting available frequencies
+	char cpu_available_freqs[100];
+	result = bu::IoFs::ReadValueFrom(
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(cpu_id) +
+				"/cpufreq/scaling_available_frequencies",
+				cpu_available_freqs, 100);
+	if (result != bu::IoFs::OK) {
+		logger->Warn("List of frequencies not available for cpu %d", cpu_id);
+		return nullptr;
+	}
+
+	// Storing the frequencies values in the vector
+	std::vector<unsigned long>  * cpu_freqs =
+		new  std::vector<unsigned long>();
+	char * freq = strtok(cpu_available_freqs, " ");
+	while (freq != nullptr) {
+		cpu_freqs->push_back(std::stoi(freq));
+		strtok(cpu_available_freqs, " ");
+	}
+	return cpu_freqs;
 }
 
 PowerManager::PMResult CPUPowerManager::GetLoadCPU(
@@ -254,8 +283,6 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 		ResourcePathPtr_t const & rp,
 		std::vector<unsigned long> & freqs) {
-	// Clear input vector
-	freqs.clear();
 
 	// Extracting the selected CPU from the resource path. -1 if error
 	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
@@ -263,20 +290,11 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 
 	// Extracting available frequencies
-	cpufreq_available_frequencies * avf =
-		cpufreq_get_available_frequencies((unsigned int)cpu_logic_id);
-	if (avf == nullptr) {
+	if (core_freqs[pe_id] == nullptr) {
 		logger->Warn("List of frequencies not available for %s",
-			rp->ToString().c_str());
-		return PMResult::ERR_INFO_NOT_SUPPORTED;
+				rp->ToString().c_str());
 	}
-
-	// Storing the frequencies values in the vector
-	cpufreq_available_frequencies * freq = avf->next;
-	while (freq != nullptr) {
-		freqs.push_back(freq->frequency);
-		freq = freq->next;
-	}
+	freqs = *(core_freqs[pe_id]);
 
 	return PowerManager::PMResult::OK;
 }

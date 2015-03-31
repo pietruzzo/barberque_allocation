@@ -81,6 +81,9 @@ private:
 	/*** Mapping processing elements / CPU cores */
 	std::map<int,int> core_ids;
 
+	/*** Available clock frequencies for each processing element (core) */
+	std::map<int, std::vector<unsigned long> * > core_freqs;
+
 	/**
 	 * Save the information of a single /proc/stat sampling
 	 */
@@ -91,6 +94,7 @@ private:
 		int32_t idle = 0;
 	};
 
+	std::vector<unsigned long> * _GetAvailableFrequencies(int cpu_id);
 	/**
 	 *  Sample CPU activity samples from /proc/stat
 	 */
