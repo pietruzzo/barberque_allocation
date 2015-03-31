@@ -24,6 +24,8 @@
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/resources.h"
 #include <cpufreq.h>
+#define BBQUE_LINUX_SYS_CPU_PREFIX   "/sys/devices/system/cpu/cpu"
+#define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/devices/platform/coretemp.0/temp"
 
 using namespace bbque::res;
 
