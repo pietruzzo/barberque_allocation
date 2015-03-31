@@ -76,7 +76,7 @@ public:
 	PMResult GetAvailableFrequencies(
 			ResourcePathPtr_t const & rp, std::vector<unsigned long> &freqs);
 
-private:
+protected:
 
 	/*** Mapping processing elements / CPU cores */
 	std::map<int,int> core_ids;
