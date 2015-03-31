@@ -95,6 +95,7 @@ private:
 	};
 
 	std::vector<unsigned long> * _GetAvailableFrequencies(int cpu_id);
+
 	/**
 	 *  Sample CPU activity samples from /proc/stat
 	 */

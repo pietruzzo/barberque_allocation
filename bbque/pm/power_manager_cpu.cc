@@ -122,15 +122,15 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 	}
 	else {
 		// Multiple CPU cores (e.g., "cpu2.pe")
-		uint32_t cpu_core_load = 0;
+		uint32_t pe_load = 0;
 		perc = 0;
 
 		// Cumulate the load of each core
 		br::ResourcePtrList_t const & r_list(ra.GetResources(rp));
 		for (ResourcePtr_t rsrc: r_list) {
-			result = GetLoadCPU(rsrc->ID(), cpu_core_load);
+			result = GetLoadCPU(rsrc->ID(), pe_load);
 			if (result != PMResult::OK) return result;
-			perc += cpu_core_load;
+			perc += pe_load;
 		}
 
 		// Return the average
@@ -208,13 +208,14 @@ PowerManager::PMResult CPUPowerManager::GetLoadCPU(
 
 
 PowerManager::PMResult CPUPowerManager::GetClockFrequency(
-	ResourcePathPtr_t const & rp, uint32_t &khz){
+		ResourcePathPtr_t const & rp,
+		uint32_t & khz){
 
 	// Extracting the PE id from the resource path
 	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
 	if (pe_id < 0) {
 		logger->Warn("Frequency value not available for %s",
-			rp->ToString().c_str());
+				rp->ToString().c_str());
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
@@ -226,7 +227,7 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequency(
 
 PowerManager::PMResult CPUPowerManager::GetTemperature(
 		ResourcePathPtr_t const & rp,
-		uint32_t &celsius){
+		uint32_t & celsius){
 	PMResult result = PMResult::ERR_INFO_NOT_SUPPORTED;
 	celsius = 0;
 
@@ -247,8 +248,7 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 	while (1) {
 		// Look for the sensors
 		std::ifstream sensor_info(
-				"/sys/devices/platform/coretemp.0/temp" +
-				std::to_string(sensor_id) +
+				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
 				"_label");
 		if (!sensor_info) break;
 
@@ -261,9 +261,8 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 
 		// Get the value
 		std::ifstream sensor_data(
-			"/sys/devices/platform/coretemp.0/temp" +
-			std::to_string(sensor_id) +
-			"_input");
+				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
+				"_input");
 		if (!sensor_data) {
 			logger->Error("Unable to read data from "
 				"temperature sensor %d", sensor_id);
