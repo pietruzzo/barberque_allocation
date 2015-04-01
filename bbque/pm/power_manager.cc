@@ -21,7 +21,8 @@
 
 #ifdef CONFIG_BBQUE_PM_AMD
 # include "bbque/pm/power_manager_amd.h"
-#elif CONFIG_BBQUE_PM_GPU_ARM_MALI
+#endif
+#ifdef CONFIG_BBQUE_PM_GPU_ARM_MALI
 # include "bbque/pm/power_manager_gpu_arm_mali.h"
 #endif
 
@@ -76,7 +77,8 @@ PowerManager::PowerManager() {
 #ifdef CONFIG_BBQUE_PM_AMD
 	logger->Notice("Using AMD provider for GPUs power management");
 	gpu = std::unique_ptr<PowerManager>(new AMDPowerManager());
-#elif CONFIG_BBQUE_PM_GPU_ARM_MALI
+#endif
+#ifdef CONFIG_BBQUE_PM_GPU_ARM_MALI
 	logger->Notice("Using ARM Mali provider for GPUs power management");
 	gpu = std::unique_ptr<PowerManager>(new ARM_Mali_GPUPowerManager());
 #endif
