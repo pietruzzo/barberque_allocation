@@ -322,6 +322,9 @@ PowerManager::GetPowerUsage(ResourcePathPtr_t const & rp, uint32_t &mwatt) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
 		return gpu->GetPowerUsage(rp, mwatt);
+	case br::ResourceIdentifier::CPU:
+		if (!cpu) break;
+		return cpu->GetPowerUsage(rp, mwatt);
 	default:
 		break;
 	}
