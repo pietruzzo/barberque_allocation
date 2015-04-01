@@ -84,6 +84,8 @@ public:
 	PMResult GetPowerUsage(
 		br::ResourcePathPtr_t const & rp, uint32_t &mwatt);
 
+	PMResult GetVoltage(
+		br::ResourcePathPtr_t const & rp, uint32_t &mvolt);
 
 	/** Performance/power states */
 
