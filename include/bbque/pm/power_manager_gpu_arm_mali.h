@@ -19,10 +19,22 @@
 
 #include "bbque/pm/power_manager.h"
 
-#define BBQUE_ARM_MALI_SYS_DIR     "/sys/bus/platform/drivers/mali/"
-#define BBQUE_ARM_MALI_SYS_DEVDIR  "11800000.mali"
-#define BBQUE_ARM_MALI_SYS_PATH \
-	BBQUE_ARM_MALI_SYS_DIR##BBQUE_ARM_MALI_SYS_DEVDIR
+/***********************************************
+ * Odroid XU-3 board
+ ***********************************************/
+#ifdef CONFIG_TARGET_ODROID_XU
+#include "bbque/pm/power_manager_odroidxu.h"
+// State attributes
+#define BBQUE_ARM_MALI_SYS_FREQ     BBQUE_ODROID_SYS_DIR_GPU"/clock"
+#define BBQUE_ARM_MALI_SYS_FREQS    BBQUE_ODROID_SYS_DIR_GPU"/dvfs_table"
+#define BBQUE_ARM_MALI_SYS_DVFS     BBQUE_ODROID_SYS_DIR_GPU"/dvfs"
+#define BBQUE_ARM_MALI_SYS_LOAD     BBQUE_ODROID_SYS_DIR_GPU"/utilization"
+#define BBQUE_ARM_MALI_SYS_WSTATE   BBQUE_ODROID_SYS_DIR_GPU"/power_state"
+// Sensors
+#define BBQUE_ARM_MALI_SYS_VOLTAGE  BBQUE_ODROID_SENSORS_DIR_GPU"/sensor_V"
+#define BBQUE_ARM_MALI_SYS_CURRENT  BBQUE_ODROID_SENSORS_DIR_GPU"/sensor_I"
+#define BBQUE_ARM_MALI_SYS_POWER    BBQUE_ODROID_SENSORS_DIR_GPU"/sensor_W"
+#endif // CONFIG_TARGET_ODROID_XU
 
 namespace bu = bbque::utils;
 
