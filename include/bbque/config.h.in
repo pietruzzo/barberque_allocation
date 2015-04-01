@@ -159,6 +159,9 @@
 /** Enable CPU Power Management support */
 #cmakedefine CONFIG_BBQUE_PM_CPU
 
+/** Enable GPU Power Management support for ARM Mali */
+#cmakedefine CONFIG_BBQUE_PM_GPU_ARM_MALI
+
 /** Performance Counters Support */
 #cmakedefine CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
