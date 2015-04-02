@@ -40,11 +40,24 @@ std::array<
 		InfoType::LOAD        ,
 		InfoType::TEMPERATURE ,
 		InfoType::FREQUENCY   ,
-		InfoType::VOLTAGE     ,
 		InfoType::POWER       ,
-		InfoType::ENERGY      ,
+		InfoType::CURRENT     ,
+		InfoType::VOLTAGE     ,
 		InfoType::PERF_STATE  ,
 		InfoType::POWER_STATE
+	}};
+
+std::array<
+	const char *,
+	int(PowerManager::InfoType::COUNT)> PowerManager::InfoTypeStr = {{
+		"load"        ,
+		"temperature" ,
+		"frequency"   ,
+		"power"       ,
+		"current"     ,
+		"voltage"     ,
+		"performance state",
+		"power state"
 	}};
 
 PowerManager & PowerManager::GetInstance() {

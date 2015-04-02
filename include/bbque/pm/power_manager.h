@@ -71,9 +71,9 @@ public:
 		LOAD        = 0,
 		TEMPERATURE = 1,
 		FREQUENCY   = 2,
-		VOLTAGE     = 3,
-		POWER       = 4,
-		ENERGY      = 5,
+		POWER       = 3,
+		CURRENT     = 4,
+		VOLTAGE     = 5,
 		PERF_STATE  = 6,
 		POWER_STATE = 7,
 		COUNT       = 8
@@ -88,7 +88,8 @@ public:
 	 * @brief Keep track of the integer indices associated to the information
 	 * types provided
 	 */
-	static std::array<InfoType, int(InfoType::COUNT)> InfoTypeIndex;
+	static std::array<InfoType, int(InfoType::COUNT)>   InfoTypeIndex;
+	static std::array<const char *, int(InfoType::COUNT)> InfoTypeStr;
 
 	enum class FanSpeedType {
 		PERCENT = 0,
