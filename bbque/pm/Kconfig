@@ -36,7 +36,7 @@ config  BBQUE_PM_AMD
   bool "AMD GPU(s) Power and Thermal monitoring"
   depends on BBQUE_PM
   depends on BBQUE_OPENCL
-  depends on BBQUE_OPENCL_DEFAULT_AMD
+  depends on !TARGET_LINUX_ARM
   default n
   ---help---
   Enable the support for run-time monitoring of the AMD GPU(s) power and thermal status.
@@ -45,7 +45,7 @@ config  BBQUE_PM_GPU_ARM_MALI
   bool "ARM Mali GPU Power and Thermal monitoring"
   depends on BBQUE_PM
   depends on BBQUE_OPENCL
-  depends on BBQUE_OPENCL_DEFAULT_ARM
+  depends on TARGET_LINUX_ARM
   default n
   ---help---
   Enable the support for run-time monitoring of the GPU ARM Mali series.
