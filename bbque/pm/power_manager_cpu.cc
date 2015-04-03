@@ -287,6 +287,30 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 	return result;
 }
 
+PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
+		br::ResourcePathPtr_t const & rp,
+		uint32_t &khz_min,
+		uint32_t &khz_max,
+		uint32_t &khz_step) {
+	// Extracting the PE id from the resource path
+	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	if (pe_id < 0) {
+		logger->Warn("Frequency info not available for %s",
+				rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
+	// Max and min frequency values
+	auto edges = std::minmax_element(
+			core_freqs[pe_id]->begin(), core_freqs[pe_id]->end());
+	khz_min  = edges.first  - core_freqs[pe_id]->begin();
+	khz_max  = edges.second - core_freqs[pe_id]->begin();
+	// '0' to represent not fixed step value
+	khz_step = 0;
+
+	return PMResult::OK;
+}
+
 PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 		ResourcePathPtr_t const & rp,
 		std::vector<unsigned long> & freqs) {

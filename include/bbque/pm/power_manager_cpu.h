@@ -73,8 +73,18 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
+	PMResult GetClockFrequencyInfo(
+			br::ResourcePathPtr_t const & rp,
+			uint32_t &khz_min,
+			uint32_t &khz_max,
+			uint32_t &khz_step);
+
+	/**
+	 * @see class PowerManager
+	 */
 	PMResult GetAvailableFrequencies(
 			ResourcePathPtr_t const & rp, std::vector<unsigned long> &freqs);
+
 
 protected:
 
