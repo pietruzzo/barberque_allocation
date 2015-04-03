@@ -12,6 +12,9 @@ endif (CONFIG_BBQUE_PM_BATTERY)
 # Add CPUs power manager
 if (CONFIG_BBQUE_PM_CPU)
  set (POWER_MANAGER_SRC power_manager_cpu ${POWER_MANAGER_SRC})
+ if (CONFIG_TARGET_ODROID_XU)
+   set (POWER_MANAGER_SRC power_manager_cpu_odroidxu ${POWER_MANAGER_SRC})
+ endif (CONFIG_TARGET_ODROID_XU)
  set (POWER_MANAGER_LIBS boost_regex ${POWER_MANAGER_LIBS})
 endif (CONFIG_BBQUE_PM_CPU)
 

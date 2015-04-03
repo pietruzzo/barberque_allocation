@@ -99,9 +99,9 @@ ARM_Mali_GPUPowerManager::GetPowerUsage(
 	float value;
 	result = bu::IoFs::ReadFloatValueFrom(
 			BBQUE_ARM_MALI_SYS_POWER, value, 1000);
-	mwatt = static_cast<uint32_t>(value);
 	if (result != bu::IoFs::ExitCode_t::OK)
 		return PMResult::ERR_SENSORS_ERROR;
+	mwatt = static_cast<uint32_t>(value);
 	return PMResult::OK;
 }
 

@@ -28,7 +28,11 @@
 
 #ifdef CONFIG_BBQUE_PM_CPU
 # include "bbque/pm/power_manager_cpu.h"
+#ifdef CONFIG_TARGET_ODROID_XU // Odroid XU-3
+# include "bbque/pm/power_manager_cpu_odroidxu.h"
+#endif // CONFIG_TARGET_ODROID_XU
 #endif
+
 
 #define MODULE_NAMESPACE POWER_MANAGER_NAMESPACE
 
@@ -96,11 +100,16 @@ PowerManager::PowerManager() {
 	gpu = std::unique_ptr<PowerManager>(new ARM_Mali_GPUPowerManager());
 #endif
 
+	// CPU
 #ifdef CONFIG_BBQUE_PM_CPU
-	// Initialize the CPU power manager
+#ifdef CONFIG_TARGET_ODROID_XU
+	logger->Notice("Using ODROID-XU CPU power management module");
+	cpu = std::unique_ptr<PowerManager>(new ODROID_XU_CPUPowerManager());
+#else
 	logger->Notice("Using CPU power management module");
 	cpu = std::unique_ptr<PowerManager>(new CPUPowerManager());
-#endif // CONFIG_BBQUE_PM_CPU
+#endif // CONFIG_TARGET_ODROID_XU
+#endif
 }
 
 
