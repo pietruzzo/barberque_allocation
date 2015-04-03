@@ -121,6 +121,10 @@
 #cmakedefine CONFIG_TARGET_ARNDALE_OCTA
 #cmakedefine CONFIG_TARGET_PANDABOARD_ES
 #cmakedefine CONFIG_TARGET_ANDROID_EMULATOR
+
+/** Big.LITTLE: high-performance cores */
+#define BBQUE_BIG_LITTLE_HIGH "${CONFIG_TARGET_BIGLITTLE_HIGH}"
+
 /** Target platform hardware id */
 #define BBQUE_TARGET_HARDWARE_ID "${CONFIG_TARGET_ID}"
 
