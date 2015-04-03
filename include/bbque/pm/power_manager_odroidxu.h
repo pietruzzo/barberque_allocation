@@ -36,6 +36,15 @@ namespace bbque {
 #define BBQUE_ODROID_SENSORS_DIR_A15   "/sys/bus/i2c/drivers/INA231/3-0040/"
 #define BBQUE_ODROID_SENSORS_DIR_GPU   "/sys/bus/i2c/drivers/INA231/3-0044/"
 #define BBQUE_ODROID_SENSORS_DIR_MEM   "/sys/bus/i2c/drivers/INA231/3-0045/"
+
+#define BBQUE_ODROID_SENSORS_TEMP          "/sys/devices/10060000.tmu/temp"
+#define BBQUE_ODROID_SENSORS_OFFSET_A15_0  10
+#define BBQUE_ODROID_SENSORS_OFFSET_A15_1  16
+#define BBQUE_ODROID_SENSORS_OFFSET_A15_2  22
+#define BBQUE_ODROID_SENSORS_OFFSET_A15_3  28
+#define BBQUE_ODROID_SENSORS_OFFSET_GPU    34
+
+
 // Attributes
 #define BBQUE_ODROID_SENSORS_ATT_V     "sensor_V"
 #define BBQUE_ODROID_SENSORS_ATT_W     "sensor_W"
