@@ -129,6 +129,9 @@
 /** Target platform hardware id */
 #define BBQUE_TARGET_HARDWARE_ID "${CONFIG_TARGET_ID}"
 
+/** Number of CPU cores */
+#define BBQUE_TARGET_CPU_CORES_NUM ${CONFIG_TARGET_CPU_CORES_NUM}
+
 /** Use FIFO based RPC channel */
 #cmakedefine CONFIG_BBQUE_RPC_FIFO
 
