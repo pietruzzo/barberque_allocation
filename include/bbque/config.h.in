@@ -124,7 +124,7 @@
 #cmakedefine CONFIG_TARGET_ANDROID_EMULATOR
 
 /** Big.LITTLE: high-performance cores */
-#define BBQUE_BIG_LITTLE_HIGH "${CONFIG_TARGET_BIGLITTLE_HIGH}"
+#define BBQUE_BIG_LITTLE_HP "${CONFIG_TARGET_ARM_BIG_LITTLE_HP}"
 
 /** Target platform hardware id */
 #define BBQUE_TARGET_HARDWARE_ID "${CONFIG_TARGET_ID}"
