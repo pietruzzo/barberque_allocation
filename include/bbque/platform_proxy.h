@@ -140,6 +140,19 @@ public:
 		assert(hardwareIdentifier != NULL);
 		return hardwareIdentifier;
 	};
+
+	/**
+	 * @brief Has the resource been tagged as "high performance"?
+	 *
+	 * Useful for heterogeneous architectures, e.g., ARM big.LITTLE CPUs
+	 *
+	 * @param res_id The integer id of the resource
+	 * @return true for high performance resources (e.g., "big CPU cores")
+	 */
+	bool isHighPerformance(uint16_t res_id) {
+		return _isHighPerformance(res_id);
+	}
+
 /**
  * @}
  * @name Resource state monitoring
@@ -311,6 +324,15 @@ protected:
 		logger->Debug("PLAT PRX: default _GetHardwareID()");
 		return NULL;
 	};
+
+	/**
+	 * @brief Platform specific check for resources tagged as "high
+	 * performance"
+	 */
+	virtual bool _isHighPerformance(uint16_t res_id) {
+		(void) res_id;
+		return false;
+	}
 
 	/**
 	 * @brief Platform specific resource setup interface.
