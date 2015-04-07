@@ -23,12 +23,14 @@ namespace bu = bbque::utils;
 namespace bbque {
 
 ARM_Mali_GPUPowerManager::ARM_Mali_GPUPowerManager() {
-
-
+	// Enable sensors
+	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_GPU"enable", 1);
 }
 
 ARM_Mali_GPUPowerManager::~ARM_Mali_GPUPowerManager() {
 	freqs.clear();
+	// Disable sensors
+	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_GPU"enable", 0);
 }
 
 /* Load and temperature */
