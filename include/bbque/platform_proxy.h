@@ -129,7 +129,7 @@ public:
 	};
 
 	/**
-	 * @breif Return the string ID of the target hardware
+	 * @brief Return the string ID of the target hardware
 	 *
 	 * Each platform can feature an hardware (string) identifier. This
 	 * method return a pointer to that string.
