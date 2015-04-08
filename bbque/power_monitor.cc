@@ -240,6 +240,11 @@ PowerMonitor::ExitCode_t PowerMonitor::Sample() {
 
 			// Call power manager get function and update the resource
 			// descriptor power profile information
+			if (PowerMonitorGet[info_idx] == nullptr) {
+				logger->Warn("Power monitoring for %s not available",
+						PowerManager::InfoTypeStr[info_idx]);
+				continue;
+			}
 			(pm.*(PMfunc) PowerMonitorGet[info_idx])(r_path, samples[info_idx]);
 			rsrc->UpdatePowerInfo(info_type, samples[info_idx]);
 
