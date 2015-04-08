@@ -52,6 +52,24 @@ public:
 		return ExitCode_t::OK;
 	}
 
+	static ExitCode_t ReadValueFromWithOffset(
+			std::string const & filepath,
+			std::string & value,
+			int len,
+			int offset) {
+		ExitCode_t result;
+		char buffer[100];
+
+		result = ReadValueFrom(filepath, buffer, 100);
+		if (result != ExitCode_t::OK)
+			return ExitCode_t::ERR_FILE_NOT_FOUND;
+		fprintf(stderr, "Buffer: %s\n", buffer);
+
+		value.assign(buffer, offset, len);
+		fprintf(stderr, "\nvalue: %s\n", value.c_str());
+		return ExitCode_t::OK;
+	}
+
 	template<class T>
 	static ExitCode_t ReadIntValueFrom(
 			std::string const & filepath, T & value, int scale = 1) {
