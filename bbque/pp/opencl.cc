@@ -117,6 +117,7 @@ void OpenCLProxy::PrintGPUPowerInfo() {
 	uint32_t min, max, step, s_min, s_max, ps_count;
 	int  s_step;
 	PowerManager::PMResult pm_result;
+
 	ResourcePathListPtr_t pgpu_paths(
 		GetDevicePaths(br::ResourceIdentifier::GPU));
 	if (pgpu_paths == nullptr) return;
@@ -137,6 +138,16 @@ void OpenCLProxy::PrintGPUPowerInfo() {
 			logger->Info("PLAT OCL: [%s] ClkFreq range:  [%4d, %4d, s:%2d] MHz ",
 				gpu_rp->ToString().c_str(),
 				min/1000, max/1000, step/1000);
+
+		std::vector<unsigned long> freqs;
+		std::string freqs_str(" ");
+		pm_result = pm.GetAvailableFrequencies(gpu_rp, freqs);
+		if (pm_result == PowerManager::PMResult::OK) {
+			for (auto & f: freqs)
+				freqs_str += (std::to_string(f) + " ");
+			logger->Info("PLAT OCL: [%s] ClkFrequencies:  [%s] MHz ",
+					gpu_rp->ToString().c_str(), freqs_str.c_str());
+		}
 
 		pm_result = pm.GetPowerStatesInfo(gpu_rp, s_min,s_max, s_step);
 		if (pm_result == PowerManager::PMResult::OK)
