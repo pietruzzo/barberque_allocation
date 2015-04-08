@@ -31,6 +31,10 @@ std::array<std::string, 2>
 	}};
 
 ODROID_XU_CPUPowerManager::ODROID_XU_CPUPowerManager() {
+	// Enable sensors
+	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_A7"/enable",  1);
+	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_A15"/enable", 1);
+	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_MEM"/enable", 1);
 	char big_cores_str[] = BBQUE_BIG_LITTLE_HIGH;
 	uint16_t first_big = std::stoi(std::strtok(big_cores_str, "-"));
 	uint16_t last_big  = std::stoi(std::strtok(NULL, "-"));
@@ -48,8 +52,10 @@ ODROID_XU_CPUPowerManager::ODROID_XU_CPUPowerManager() {
 }
 
 ODROID_XU_CPUPowerManager::~ODROID_XU_CPUPowerManager() {
-
-
+	// Disable sensors
+	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_A7"/enable",  0);
+	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_A15"/enable", 0);
+	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_MEM"/enable", 0);
 }
 
 std::string
