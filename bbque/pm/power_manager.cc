@@ -199,6 +199,9 @@ PowerManager::GetAvailableFrequencies(
 		ResourcePathPtr_t const & rp,
 		std::vector<unsigned long> & freqs) {
 	switch (rp->ParentType(rp->Type())) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetAvailableFrequencies(rp, freqs);
 	case br::ResourceIdentifier::CPU:
 		if (!cpu) break;
 		return cpu->GetAvailableFrequencies(rp, freqs);
