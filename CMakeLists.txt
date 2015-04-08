@@ -300,7 +300,7 @@ message ( STATUS "   Target............. ${CONFIG_TARGET_NAME} ${CONFIG_TARGET_D
 message ( STATUS "   CFLAGS............. ${CMAKE_C_FLAGS}")
 message ( STATUS " CXXFLAGS............. ${CMAKE_CXX_FLAGS}")
 message ( STATUS "Installation prefix... ${CMAKE_INSTALL_PREFIX}" )
-message ( STATUS "   Barbeuqe RTRM...... <prefix>/${BBQUE_PATH_BBQ}" )
+message ( STATUS "   BarbequeRTRM....... <prefix>/${BBQUE_PATH_BBQ}" )
 message ( STATUS "   Configuration...... <prefix>/${BBQUE_PATH_CONF}/${BBQUE_CONF_FILE}" )
 message ( STATUS "   Recipes............ <prefix>/${BBQUE_PATH_RECIPES}" )
 message ( STATUS "   Plugins............ <prefix>/${BBQUE_PATH_PLUGINS}" )
