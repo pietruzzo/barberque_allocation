@@ -51,7 +51,18 @@ PowerManager::PMResult
 ARM_Mali_GPUPowerManager::GetTemperature(
 		br::ResourcePathPtr_t const & rp,
 		uint32_t &celsius) {
+	(void) rp;
+	bu::IoFs::ExitCode_t result;
+	std::string value;
 
+	result = bu::IoFs::ReadValueFromWithOffset(
+			BBQUE_ODROID_SENSORS_TEMP,
+			value, 6,
+			BBQUE_ODROID_SENSORS_OFFSET_GPU);
+	if (result == bu::IoFs::ERR_FILE_NOT_FOUND) {
+		return PMResult::ERR_SENSORS_ERROR;
+	}
+	celsius = std::stoi(value) / 1000;
 
 	return PMResult::OK;
 }
