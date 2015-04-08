@@ -27,6 +27,7 @@
 #include "bbque/app/working_mode.h"
 
 #include <cmath>
+#include <cctype>
 #include <fstream>
 #include <string.h>
 #include <linux/version.h>
@@ -149,6 +150,11 @@ LinuxPP::LinuxPP() :
 	cm.RegisterCommand(MODULE_NAMESPACE ".unregister", static_cast<CommandHandler*>(this),
 			"Unregister the specified EXC");
 
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+	// Initialize the set of ARM "big" cores
+	InitCoresType();
+#endif
+
 	// Mark the Platform Integration Layer (PIL) as initialized
 	SetPilInitialized();
 }
@@ -156,6 +162,39 @@ LinuxPP::LinuxPP() :
 LinuxPP::~LinuxPP() {
 
 }
+
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+
+void LinuxPP::InitCoresType() {
+	char high_perf_cores[] = BBQUE_BIG_LITTLE_HP;
+	char * p = high_perf_cores;
+	int up_core, last_core = 0;
+
+	while (p && (*p != '\0')) {
+		// Single integer
+		if (isdigit(*p)) {
+			last_core = *p - '0';
+			highPerfCores[last_core] = true;
+			logger->Info("ARM big.LITTLE: CPU core %d is high-performance",
+						last_core);
+		}
+		// Range string, e.g., "4-7"
+		else if (*p == '-') {
+			while (!isdigit(*(++p)));
+			up_core = *p - '0';
+
+			while(up_core > last_core) {
+				highPerfCores[up_core] = true;
+				logger->Info("ARM big.LITTLE: CPU core %d is high-performance",
+						up_core);
+				--up_core;
+			}
+		}
+		++p;
+	}
+}
+
+#endif
 
 /*******************************************************************************
  *    Platform Resources Parsing and Loading

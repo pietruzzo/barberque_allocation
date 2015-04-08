@@ -18,6 +18,8 @@
 #ifndef BBQUE_LINUX_PP_H_
 #define BBQUE_LINUX_PP_H_
 
+#include <array>
+
 #include "bbque/config.h"
 #include "bbque/platform_proxy.h"
 #include "bbque/command_manager.h"
@@ -240,6 +242,17 @@ private:
 	 */
 	bool refreshMode;
 
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+	/**
+	 * @brief ARM big.LITTLE support: type of each CPU core
+	 *
+	 * If true, indicates that the related CPU cores is an
+	 * high-performance one.
+	 */
+	std::array<bool, BBQUE_TARGET_CPU_CORES_NUM> highPerfCores = { {false} };
+
+	void InitCoresType();
+#endif
 
 /**
  * @defgroup group_plt_prx Platform Proxy
@@ -271,6 +284,18 @@ private:
 
 	const char* _GetPlatformID();
 	const char* _GetHardwareID();
+
+	/**
+	 * @brief Return true if the id is related to a "big" CPU core
+	 */
+	bool _isHighPerformance(uint16_t core_id) {
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+		return highPerfCores[core_id];
+#else
+		(void) core_id;
+		return true;
+#endif
+	}
 
 	/**
 	 * @brief Parse the resources assigned to BarbequeRTRM by CGroup
