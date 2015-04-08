@@ -99,6 +99,8 @@ protected:
 	 * @brief The vector including all the supported clock frequency values
 	 */
 	std::vector<unsigned long> freqs;
+
+	void InitAvailableFrequencies();
 };
 
 }

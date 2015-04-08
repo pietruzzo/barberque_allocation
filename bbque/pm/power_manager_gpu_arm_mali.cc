@@ -25,6 +25,8 @@ namespace bbque {
 ARM_Mali_GPUPowerManager::ARM_Mali_GPUPowerManager() {
 	// Enable sensors
 	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_GPU"enable", 1);
+	// Supported frequencies
+	InitAvailableFrequencies();
 }
 
 ARM_Mali_GPUPowerManager::~ARM_Mali_GPUPowerManager() {
@@ -82,11 +84,35 @@ ARM_Mali_GPUPowerManager::GetClockFrequency(
 	return PMResult::OK;
 }
 
+void
+ARM_Mali_GPUPowerManager::InitAvailableFrequencies() {
+	bu::IoFs::ExitCode_t result;
+	char buffer[100];
+	result = bu::IoFs::ReadValueFrom(BBQUE_ARM_MALI_SYS_FREQS, buffer, 100);
+	if (result != bu::IoFs::ExitCode_t::OK) {
+		logger->Warn("ARM Mali GPU: Missing available frequencies table");
+		return;
+	}
+	buffer[strlen(buffer)-2] = '\0';
+	logger->Info("ARM Mali GPU: Frequency set = { %s }", buffer);
+
+	char * f = strtok(buffer, " ");
+	while (f) {
+		freqs.push_back(std::stol(f));
+		f = strtok(NULL, " ");
+	}
+}
+
 PowerManager::PMResult
 ARM_Mali_GPUPowerManager::GetAvailableFrequencies(
 		br::ResourcePathPtr_t const & rp,
-		std::vector<unsigned long> & freqs) {
-
+		std::vector<unsigned long> & gpu_freqs) {
+	(void) rp;
+	if (freqs.empty()) {
+		logger->Warn("ARM Mali GPU: No frequencies table available");
+		return PMResult::ERR_INFO_NOT_SUPPORTED;
+	}
+	gpu_freqs = freqs;
 	return PMResult::OK;
 }
 
