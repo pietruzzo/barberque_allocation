@@ -85,17 +85,28 @@ ODROID_XU_CPUPowerManager::GetTemperature(
 		br::ResourcePathPtr_t const & rp,
 		uint32_t & celsius) {
 	bu::IoFs::ExitCode_t result;
-	char buffer[100];
-
-	result = bu::IoFs::ReadValueFrom(
-			BBQUE_ODROID_SENSORS_TEMP,
-			buffer, 80);
-
 	std::string value;
-	value.assign(buffer, BBQUE_ODROID_SENSORS_OFFSET_A15_0, 6);
+	celsius = 0;
 
-	if (result != bu::IoFs::OK)
+	// Sensors available only for A15 cores
+	int core_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	PlatformProxy & pp(PlatformProxy::GetInstance());
+	if(!pp.isHighPerformance(core_id)) {
+		return PMResult::ERR_INFO_NOT_SUPPORTED;
+	}
+
+
+	// Get the offset in the TMU file
+	int offset  = BBQUE_ODROID_SENSORS_OFFSET_A15_0 +
+			BBQUE_ODROID_SENSORS_OFFSET_SHIFT *
+			(core_id - 4);
+	// Get the temperature
+	result = bu::IoFs::ReadValueFromWithOffset(
+			BBQUE_ODROID_SENSORS_TEMP,
+			value, 6, offset);
+	if (result != bu::IoFs::OK) {
 		return PMResult::ERR_SENSORS_ERROR;
+	}
 	celsius = std::stoi(value) / 1000;
 
 	return PMResult::OK;
