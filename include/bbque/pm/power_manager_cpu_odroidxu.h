@@ -42,15 +42,6 @@ public:
 
 private:
 
-	/*** Array of cluster prefix path strings */
-	static std::array<std::string, 2> cluster_prefix;
-
-	/**
-	 * Prefix path for the sensors of the clusters. The index of the array
-	 * is supposed to be the CPU core id. e.g., cluster_prefix[5] = 'A15 path..'
-	 */
-	std::array<std::string, BBQUE_ODROID_CPU_CORES_NUM> core_prefix;
-
 	/**
 	 * Prefix path for the sensors of the clusters. The index of the array
 	 * is supposed to be the CPU core id. e.g., cluster_prefix[5] = 'A15 path..'

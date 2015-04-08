@@ -18,37 +18,19 @@
 #include <cstring>
 
 #include "bbque/pm/power_manager_cpu_odroidxu.h"
+#include "bbque/platform_proxy.h"
 #include "bbque/utils/iofs.h"
 
 namespace bu = bbque::utils;
 
 namespace bbque {
 
-std::array<std::string, 2>
-	ODROID_XU_CPUPowerManager::cluster_prefix {{
-		BBQUE_ODROID_SENSORS_DIR_A7,
-		BBQUE_ODROID_SENSORS_DIR_A15
-	}};
 
 ODROID_XU_CPUPowerManager::ODROID_XU_CPUPowerManager() {
 	// Enable sensors
 	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_A7"/enable",  1);
 	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_A15"/enable", 1);
 	bu::IoFs::WriteValueTo<int>(BBQUE_ODROID_SENSORS_DIR_MEM"/enable", 1);
-	char big_cores_str[] = BBQUE_BIG_LITTLE_HIGH;
-	uint16_t first_big = std::stoi(std::strtok(big_cores_str, "-"));
-	uint16_t last_big  = std::stoi(std::strtok(NULL, "-"));
-
-	for (int16_t j = 0; j < BBQUE_ODROID_CPU_CORES_NUM; ++j) {
-		if (j < first_big || j > last_big) {
-			logger->Info("ODROID-XU: %d is a little core", j);
-			core_prefix[j] = cluster_prefix[0];
-		}
-		else {
-			logger->Info("ODROID-XU: %d is a big core", j);
-			core_prefix[j] = cluster_prefix[1];
-		}
-	}
 }
 
 ODROID_XU_CPUPowerManager::~ODROID_XU_CPUPowerManager() {
@@ -65,8 +47,13 @@ ODROID_XU_CPUPowerManager::GetSensorsPrefixPath(
 
 	if (rp->Type() == br::Resource::MEMORY)
 		filepath = BBQUE_ODROID_SENSORS_DIR_MEM;
-	else if (rp->Type() == br::Resource::PROC_ELEMENT)
-		filepath = core_prefix[rp->GetID(br::Resource::PROC_ELEMENT)];
+	else if (rp->Type() == br::Resource::PROC_ELEMENT) {
+		PlatformProxy & pp(PlatformProxy::GetInstance());
+		if (pp.isHighPerformance(rp->GetID(br::Resource::PROC_ELEMENT)))
+			filepath = BBQUE_ODROID_SENSORS_DIR_A15;
+		else
+			filepath = BBQUE_ODROID_SENSORS_DIR_A7;
+	}
 	else {
 		logger->Error("ODROID-XU: Resource type '%s 'not available",
 				rp->ToString().c_str());

@@ -26,8 +26,6 @@ namespace bbque {
  ***********************************************/
 #ifdef CONFIG_TARGET_ODROID_XU
 
-#define  BBQUE_ODROID_CPU_CORES_NUM    8
-
 // Drivers directory
 #define BBQUE_ODROID_SYS_DIR_GPU\
 	"/sys/bus/platform/drivers/mali/11800000.mali/"
