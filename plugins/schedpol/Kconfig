@@ -13,6 +13,9 @@ choice
   config BBQUE_SCHEDPOL_DEFAULT_CLOVES
     bool "Cloves"
     select BBQUE_SCHEDPOL_CLOVES
+  config BBQUE_SCHEDPOL_DEFAULT_TEMPURA
+    bool "Tempura"
+    select BBQUE_SCHEDPOL_TEMPURA
 ##NP
 
 endchoice
@@ -21,3 +24,4 @@ source barbeque/plugins/schedpol/yams/Kconfig
 source barbeque/plugins/schedpol/yamca/Kconfig
 source barbeque/plugins/schedpol/random/Kconfig
 source barbeque/plugins/schedpol/cloves/Kconfig
+source barbeque/plugins/schedpol/tempura/Kconfig
