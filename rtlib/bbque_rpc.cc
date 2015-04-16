@@ -1324,6 +1324,28 @@ RTLIB_ExitCode_t BbqueRPC::UpdateStatistics(pregExCtx_t prec) {
 	return RTLIB_OK;
 }
 
+RTLIB_ExitCode_t BbqueRPC::UpdateMonitorStatistics(pregExCtx_t prec) {
+	double last_monitor_ms;
+	pAwmStats_t pstats(prec->pAwmStats);
+	last_monitor_ms  = prec->exc_tmr.getElapsedTimeMs();
+	last_monitor_ms -= prec->mon_tstart;
+
+	pstats->time_monitoring += last_monitor_ms;
+	pstats->monitor_samples(last_monitor_ms);
+
+	// Statistic features extraction for cycle time estimation:
+	DB(
+	uint32_t _count = count(pstats->monitor_samples);
+	double _min = min(pstats->monitor_samples);
+	double _max = max(pstats->monitor_samples);
+	double _avg = mean(pstats->monitor_samples);
+	double _var = variance(pstats->monitor_samples);
+	logger->Debug("Monitor #%08d: m: %.3f, M: %.3f, a: %.3f, v: %.3f) [ms]",
+		_count, _min, _max, _avg, _var);
+	)
+	return RTLIB_OK;
+}
+
 RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 		pregExCtx_t prec,
 		RTLIB_WorkingModeParams_t *wm) {
@@ -3016,6 +3038,7 @@ void BbqueRPC::NotifyPreMonitor(
 
 	// Keep track of monitoring start time
 	prec->mon_tstart = prec->exc_tmr.getElapsedTimeMs();
+
 }
 
 void BbqueRPC::NotifyPostMonitor(
@@ -3034,23 +3057,7 @@ void BbqueRPC::NotifyPostMonitor(
 	logger->Debug("<=== NotifyMonitor");
 
 	// Update monitoring statistics
-	pAwmStats_t pstats = prec->pAwmStats;
-	double last_monitor_ms = prec->exc_tmr.getElapsedTimeMs();
-	last_monitor_ms -= prec->mon_tstart;
-
-	pstats->time_monitoring += last_monitor_ms;
-	pstats->monitor_samples(last_monitor_ms);
-
-	// Statistic features extraction for cycle time estimation:
-	DB(
-	uint32_t _count = count(pstats->monitor_samples);
-	double _min = min(pstats->monitor_samples);
-	double _max = max(pstats->monitor_samples);
-	double _avg = mean(pstats->monitor_samples);
-	double _var = variance(pstats->monitor_samples);
-	logger->Debug("Monitor #%08d: m: %.3f, M: %.3f, a: %.3f, v: %.3f) [ms]",
-		_count, _min, _max, _avg, _var);
-	)
+	UpdateMonitorStatistics(prec);
 
 	// Update cycle time
 	prec->cps_ctime.update(

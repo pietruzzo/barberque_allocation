@@ -761,6 +761,12 @@ private:
 	RTLIB_ExitCode_t UpdateStatistics(pregExCtx_t prec);
 
 	/**
+	 * @brief Update statistics about onMonitor execution for the currently
+	 * selected awm
+	 */
+	RTLIB_ExitCode_t UpdateMonitorStatistics(pregExCtx_t prec);
+
+	/**
 	 * @brief Log the header for statistics collection
 	 */
 	void DumpStatsHeader();
