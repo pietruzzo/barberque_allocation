@@ -271,6 +271,17 @@ config BBQUE_RTLIB_GGAP_THRESHOLD_FORWARD
   if it is not greater than a predefined and configured value.
   This configuration defines the default for that threshold value.
 
+config BBQUE_RTLIB_CPS_TIME_SAMPLES
+  int "CPS: Cycle-time EMA Samples "
+  default 3
+  ---help---
+  The number of samples that must be cumulated in the exponential mean
+  computation of the RTLIB "cycle-time".
+
+  A value equal to 1 means to get the instantaneous value of time sampled
+  during the previous execution cycle.  The higher is the value specified, the
+  slower is the variation of mean cycle time.
+
 endmenu # RTLib Configuration
 
 ################################################################################

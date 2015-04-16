@@ -21,6 +21,7 @@
 #include "bbque/rtlib.h"
 #include "bbque/config.h"
 #include "bbque/rtlib/rpc_messages.h"
+#include "bbque/utils/stats.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/timer.h"
 #include "bbque/utils/logging/logger.h"
@@ -169,6 +170,16 @@ public:
 	 */
 	RTLIB_ExitCode_t SetCPS(RTLIB_ExecutionContextHandler_t ech,
 			float cps);
+
+	/**
+	 * @brief Get the measured Cycles Per Second (CPS) value
+	 *
+	 * This allows to retrive the actual measured CPS value the
+	 * application is achiving at run-time.
+	 *
+	 * @return the measured CPS value
+	 */
+	float GetCPS(RTLIB_ExecutionContextHandler_t ech);
 
 	/**
 	 * @brief Set the required Cycle time [us]
@@ -397,16 +408,17 @@ protected:
 		double cps_tstart = 0; // [ms] at the last cycle start time
 		float cps_max = 0;     // [Hz] the requried maximum CPS
 		float cps_expect = 0;  // [ms] the expected cycle time
+		bu::EMA cps_ctime;     // [ms] Cycle Time on-line estimation
 
 		RegisteredExecutionContext(const char *_name, uint8_t id) :
-			name(_name), exc_id(id) {
+			name(_name), exc_id(id), cps_ctime(BBQUE_RTLIB_CPS_TIME_SAMPLES) {
+		//		rr.user_threshold = RTLIB_RR_THRESHOLD_DISABLE;
 		}
 
 		~RegisteredExecutionContext() {
 			stats.clear();
 			pAwmStats = pAwmStats_t();
 		}
-
 
 	} RegisteredExecutionContext_t;
 

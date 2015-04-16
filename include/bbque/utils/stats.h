@@ -20,6 +20,8 @@
 
 #include <memory>
 
+#include <bbque/utils/utility.h>
+
 namespace bbque { namespace utils {
 
 

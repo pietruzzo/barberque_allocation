@@ -1253,6 +1253,9 @@ void BbqueRPC::_SyncTimeEstimation(pregExCtx_t prec) {
 	pstats->cycle_samples(last_cycle_ms);
 	prec->cycles_count += 1;
 
+	// Push sample into CPS estimator
+	prec->cps_ctime.update(last_cycle_ms);
+
 	// Statistic features extraction for cycle time estimation:
 	DB(
 	uint32_t _count = count(pstats->cycle_samples);
@@ -2761,6 +2764,33 @@ RTLIB_ExitCode_t BbqueRPC::SetCPS(
 	logger->Info("Set cycle-rate @ %.3f[Hz] (%.3f[ms])",
 				prec->cps_max, prec->cps_expect);
 	return RTLIB_OK;
+
+}
+
+float BbqueRPC::GetCPS(
+	RTLIB_ExecutionContextHandler_t ech) {
+	pregExCtx_t prec;
+	float ctime = 0;
+	float cps = 0;
+
+	// Get a reference to the EXC to control
+	assert(ech);
+	prec = getRegistered(ech);
+	if (!prec) {
+		fprintf(stderr, FE("Get CPS for EXC [%p] FAILED "
+				"(EXC not registered)\n"), (void*)ech);
+		return RTLIB_EXC_NOT_REGISTERED;
+	}
+	assert(isRegistered(prec) == true);
+
+	// Get the current measured CPS
+	ctime = (float) prec->cps_ctime.get();
+	if (ctime != 0)
+		cps = 1000.0 / ctime;
+
+	DB(fprintf(stderr, FD("Current cycle-rate is %.3f[Hz] (%.3f[ms])\n"),
+				cps, ctime));
+	return cps;
 
 }
 

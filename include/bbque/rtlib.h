@@ -655,6 +655,21 @@ typedef RTLIB_ExitCode_t (*RTLIB_CPS_Set)(
 		float cps);
 
 /**
+ * @brief Get the measured Cycles Per Seconds (CPS)
+ * @ingroup rtlib_sec03_plain_cps
+ *
+ * The RTLib provides the support to monitor the actual cycle rate an
+ * application is achieving at run-time. This method allows to get an
+ * estimation of the current cycle rate.
+ *
+ * @param ech the handler of the EXC to configure
+ *
+ * @return the measured cycle rate
+ */
+typedef float (*RTLIB_CPS_Get)(
+		RTLIB_ExecutionContextHandler_t ech);
+
+/**
  * @brief Setup the Cycles Time [us] support
  * @ingroup rtlib_sec03_plain_cps
  *
@@ -1062,6 +1077,7 @@ struct RTLIB_Services {
 	/* Cycles Time Control interface */
 	struct {
 		RTLIB_CPS_Set Set;
+		RTLIB_CPS_Get Get;
 		RTLIB_CPS_CTimeUs SetCTimeUs;
 	} CPS;
 
