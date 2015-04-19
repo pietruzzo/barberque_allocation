@@ -419,12 +419,12 @@ public:
 	 *
 	 * @param percent the asserted GoalGap value, 0 to reset the Goal Gap.
 	 */
-	ExitCode_t SetGoalGap(uint8_t percent);
+	ExitCode_t SetGoalGap(int8_t percent);
 
 	/**
 	 * @brief Return the current value for the Goal-Gap
 	 */
-	inline uint8_t GetGoalGap() const {
+	inline int8_t GetGoalGap() const {
 		return ggap_percent;
 	}
 
@@ -507,8 +507,8 @@ private:
 	/** Current scheduling informations */
 	SchedulingInfo_t schedule;
 
-	/** The current Goal-Gap value, must be in [0,100] */
-	uint8_t ggap_percent = 0;
+	/** The current Goal-Gap value, must be in [-100,100] */
+	int8_t ggap_percent = 0;
 
 	/**
 	 * Platform Specifica Data properly initialized

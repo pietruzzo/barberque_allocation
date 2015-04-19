@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cmath>
+
 #include "bbque/config.h"
 #include "bbque/rtlib/bbque_rpc.h"
 #include "bbque/rtlib/rpc_fifo_client.h"
@@ -1876,21 +1878,21 @@ RTLIB_ExitCode_t BbqueRPC::Clear(
 
 RTLIB_ExitCode_t BbqueRPC::GGap(
 		const RTLIB_ExecutionContextHandler_t ech,
-		uint8_t percent) {
+		int8_t percent) {
 	RTLIB_ExitCode_t result;
 	pregExCtx_t prec;
 
 	assert(ech);
 
 	// Enforce the Goal-Gap domain
-	if (unlikely(percent > 100)) {
+	if (unlikely(std::abs(percent > 100))) {
 		logger->Error("Set Goal-Gap for EXC [%p] "
-				"(Error: out-of-bound)", (void*)ech);
+				"(Error: '%d' out-of-bound)", (void*)ech, percent);
 		return RTLIB_ERROR;
 	}
 
 	// Goal-Gap filtering based on pre-configured threshold value
-	if (unlikely(percent < conf.asrtm.ggap_forward_threshold)) {
+	if (unlikely(std::abs(percent) < conf.asrtm.ggap_forward_threshold)) {
 		logger->Error("Set Goal-Gap [%2d] FILTERED for EXC [%p] "
 				"(Lower than threshold value [%d])",
 				percent, (void*)ech,

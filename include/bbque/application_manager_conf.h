@@ -149,7 +149,7 @@ public:
 	 * @param papp pointer to the application to enable
 	 * @param gap the current goal-gap value
 	 */
-	virtual ExitCode_t SetGoalGapEXC(AppPtr_t papp, uint8_t gap) = 0;
+	virtual ExitCode_t SetGoalGapEXC(AppPtr_t papp, int8_t gap) = 0;
 
 	/**
 	 * @brief Set the Goal-Gap on the specified EXC
@@ -161,8 +161,8 @@ public:
 	 * @param exc_id the Execution Context ID to enable
 	 * @param gap the current goal-gap value
 	 */
-	virtual ExitCode_t SetGoalGapEXC(AppPid_t pid, uint8_t exc_id,
-			uint8_t gap) = 0;
+	virtual ExitCode_t SetGoalGapEXC(
+			AppPid_t pid, uint8_t exc_id, int8_t gap) = 0;
 
 	/**
 	 * @brief Enable the EXC for resources scheduling

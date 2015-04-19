@@ -183,7 +183,7 @@ typedef struct rpc_msg_EXC_GGAP {
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The asserted Goal-Gap */
-	uint8_t gap;
+	int8_t gap;
 } rpc_msg_EXC_GGAP_t;
 
 /**

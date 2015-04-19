@@ -591,7 +591,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Clear(pregExCtx_t prec) {
 	return (RTLIB_ExitCode_t)chResp.result;
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_GGap(pregExCtx_t prec, uint8_t gap) {
+RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_GGap(pregExCtx_t prec, int8_t gap) {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
 	rpc_fifo_EXC_GGAP_t rf_EXC_GGAP = {
 		{

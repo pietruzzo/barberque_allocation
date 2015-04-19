@@ -382,7 +382,7 @@ public:
 	/**
 	 * @brief Return the current value for the Goal-Gap
 	 */
-	virtual uint8_t GetGoalGap() const = 0;
+	virtual int8_t GetGoalGap() const = 0;
 
 	/**
 	 * @brief Statics about a specific resource usage requirement

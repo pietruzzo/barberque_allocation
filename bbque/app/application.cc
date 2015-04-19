@@ -19,8 +19,10 @@
 
 #ifdef CONFIG_TARGET_ANDROID
 # include <stdint.h>
+# include <math.h>
 #else
 # include <cstdint>
+# include <cmath>
 #endif
 #include <limits>
 
@@ -1046,10 +1048,10 @@ void Application::ClearWorkingModeConstraints() {
 			awms.enabled_list.size());
 }
 
-Application::ExitCode_t Application::SetGoalGap(uint8_t percent) {
+Application::ExitCode_t Application::SetGoalGap(int8_t percent) {
 
 	// Enfore the Goal-Gap domain
-	if (unlikely(percent > 100)) {
+	if (unlikely(std::abs(percent > 100))) {
 		logger->Warn("SetGoalGap [%d] on EXC [%s] FAILED "
 				"(Error: out-of-bound)",
 				percent, StrId());

@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cmath>
+
 #include "bbque/application_manager.h"
 
 #include "bbque/config.h"
@@ -1289,11 +1291,11 @@ ApplicationManager::ClearConstraintsEXC(AppPid_t pid, uint8_t exc_id) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::SetGoalGapEXC(AppPtr_t papp, uint8_t gap) {
+ApplicationManager::SetGoalGapEXC(AppPtr_t papp, int8_t gap) {
 	Application::ExitCode_t result;
 
 	// Define the contraints for this execution context
-	logger->Debug("Setting Goal-Gap on EXC [%s]...", papp->StrId());
+	logger->Debug("Setting Goal-Gap [%d] on EXC [%s]...", gap, papp->StrId());
 
 	// Set the Goal-Gap for the specified application
 	result = papp->SetGoalGap(gap);
@@ -1303,7 +1305,7 @@ ApplicationManager::SetGoalGapEXC(AppPtr_t papp, uint8_t gap) {
 	// FIXME the reschedule should be activated based on some
 	// configuration parameter or policy decision
 	// Check for the need of a new schedule request
-	if (gap > ggap_threshold_optimize) {
+	if (std::abs(gap) > ggap_threshold_optimize) {
 		logger->Warn("Re-schedule required for [%s], GoalGap [%2d]",
 				papp->StrId(), gap);
 		return AM_RESCHED_REQUIRED;
@@ -1313,7 +1315,7 @@ ApplicationManager::SetGoalGapEXC(AppPtr_t papp, uint8_t gap) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::SetGoalGapEXC(AppPid_t pid, uint8_t exc_id, uint8_t gap) {
+ApplicationManager::SetGoalGapEXC(AppPid_t pid, uint8_t exc_id, int8_t gap) {
 	AppPtr_t papp;
 
 	// Find the required EXC

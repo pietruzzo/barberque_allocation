@@ -311,7 +311,7 @@ public:
  *
  * @ingroup rtlib_sec02_aem_constr
  */
-	RTLIB_ExitCode_t SetGoalGap(uint8_t percent);
+	RTLIB_ExitCode_t SetGoalGap(int8_t percent);
 
 
 /*******************************************************************************

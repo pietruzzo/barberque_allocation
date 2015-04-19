@@ -798,7 +798,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
 
 bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 		SchedEntityPtr_t & se2) {
-	uint8_t gg1, gg2;
+	int8_t gg1, gg2;
 
 	// Metrics (primary sorting key)
 	if (se1->metrics < se2->metrics)
