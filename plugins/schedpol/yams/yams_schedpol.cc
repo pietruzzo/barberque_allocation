@@ -560,7 +560,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 		sched_ul.lock();
 		entities.push_back(pschd_domain);
 		sched_ul.unlock();
-		logger->Info("EvalAWM: %s scheduling metrics = %1.4f [%d]",
+		logger->Debug"EvalAWM: %s scheduling metrics = %1.4f [%d]",
 				pschd->StrId(), pschd->metrics, entities.size());
 	}
 #else
@@ -641,7 +641,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 
 		// Check resource availability
 		if (bd_info.full[bd_id]) {
-			logger->Info("EvalBindings: [%s%d] is full, skipping...",
+			logger->Debug("EvalBindings: [%s%d] is full, skipping...",
 				bd_info.d_path->ToString().c_str(), bd_id);
 			continue;
 		}
@@ -740,7 +740,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
 
 	BindingMap_t & bindings(ra.GetBindingOptions());
 	br::Resource::Type_t bd_type = pschd_bd->bind_type;
-	logger->Info("GetBoundContrib: =========== BINDING:'%s' ID[%2d ] ===========",
+	logger->Debug("GetBoundContrib: =========== BINDING:'%s' ID[%2d ] ===========",
 			bindings[bd_type]->d_path->ToString().c_str(),
 			pschd_bd->bind_id);
 
@@ -759,9 +759,9 @@ YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
 					scms[bd_type]->GetString(sc_types[i])[0], sc_value);
 	}
 	mlog[mlog_len-2] = '\0';
-	logger->Info("GetBoundContrib: %s metrics %s -> %5.4f",
+	logger->Debug("GetBoundContrib: %s metrics %s -> %5.4f",
 			pschd_bd->StrId(), mlog, value);
-	logger->Info("GetBoundContrib: ================================================= ");
+	logger->Debug("GetBoundContrib: ================================================= ");
 
 	return YAMS_SUCCESS;
 }
