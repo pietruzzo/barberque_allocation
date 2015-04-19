@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cmath>
+
 #include "sc_value.h"
 
 namespace ba = bbque::app;
@@ -68,26 +70,32 @@ SCValue::Init(void * params) {
 SchedContrib::ExitCode_t
 SCValue::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
-	std::string rsrc_tmp_path;
-	br::UsagesMap_t::const_iterator usage_it;
 	ba::AwmPtr_t const & curr_awm(evl_ent.papp->CurrentAWM());
-	float nap = 0.0;
 
 	// Initialize the index contribute to the AWM static value
-	ctrib = (1.0 - nap_weight) * evl_ent.pawm->Value();
-	logger->Debug("%s: AWM static value: %.4f", evl_ent.StrId(), ctrib);
-
-	// NAP set?
-	nap = nap_weight * static_cast<float>(evl_ent.papp->GetGoalGap()) / 100.0;
-	if (!curr_awm || (nap == 0) ||
-			(curr_awm->Value() >= evl_ent.pawm->Value()))
+	if (!curr_awm || (evl_ent.papp->GetGoalGap() == 0)) {
+		ctrib = evl_ent.pawm->Value();
+		logger->Debug("%s: Static value = %.2f ",
+				evl_ent.StrId(), evl_ent.pawm->Value());
 		return SC_SUCCESS;
-	logger->Debug("%s: Normalized Actual Penalty (NAP) = %d/100): %.4f",
-			evl_ent.StrId(), evl_ent.papp->GetGoalGap(), nap);
+	}
 
-	// Add the NAP part to the value of the contribution
-	ctrib += nap;
-	logger->Debug("%s: AWM Value index: %.4f", evl_ent.StrId(),	ctrib);
+	// Negative Goal-Gap => Over-performance  - AWM to be decreased
+	// Positive Goal-Gap => Under-performance - AWM to be increased
+	// Compute an "ideal" AWM value, scaling the current AWM by the value of
+	// the Goal-Gap.
+	float goal_gap_perc = static_cast<float>(evl_ent.papp->GetGoalGap()) / 100.0;
+	float ideal_value   = curr_awm->Value() * (1 + goal_gap_perc);
+	logger->Debug("%s: Gap=%.2f, currV=%.2f, idealV=%.2f, dV=%.2f",
+			evl_ent.StrId(), goal_gap_perc, evl_ent.pawm->Value(), ideal_value,
+			static_cast<float>(evl_ent.pawm->Value()) - ideal_value);
+
+	// Get the delta between the value of the AWM under evaluation and the
+	// value of the ideal AWM value. The evaluated AWM with the value closest
+	// to the "ideal" one estimated is promoted
+	float delta = std::abs(static_cast<float>(evl_ent.pawm->Value()) - ideal_value);
+	ctrib = 1.0 - std::min<float>(1.0, delta);
+	logger->Debug("%s: AWM Value index: %.4f", evl_ent.StrId(), ctrib);
 
 	return SC_SUCCESS;
 }
