@@ -355,7 +355,7 @@ RTLIB_ExitCode_t BbqueEXC::ClearConstraints() {
 	return result;
 }
 
-RTLIB_ExitCode_t BbqueEXC::SetGoalGap(int8_t percent) {
+RTLIB_ExitCode_t BbqueEXC::SetGoalGap(int percent) {
 	std::unique_lock<std::mutex> ctrl_ul(ctrl_mtx);
 	RTLIB_ExitCode_t result = RTLIB_OK;
 

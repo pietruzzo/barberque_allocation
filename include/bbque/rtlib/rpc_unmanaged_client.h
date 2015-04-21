@@ -94,7 +94,7 @@ protected:
 		return RTLIB_OK;
 	}
 
-	RTLIB_ExitCode_t _GGap(pregExCtx_t prec, int8_t gap) {
+	RTLIB_ExitCode_t _GGap(pregExCtx_t prec, int gap) {
 		// Remove compilation warning
 		(void)prec;
 		(void)gap;

@@ -1048,16 +1048,7 @@ void Application::ClearWorkingModeConstraints() {
 			awms.enabled_list.size());
 }
 
-Application::ExitCode_t Application::SetGoalGap(int8_t percent) {
-
-	// Enfore the Goal-Gap domain
-	if (unlikely(std::abs(percent > 100))) {
-		logger->Warn("SetGoalGap [%d] on EXC [%s] FAILED "
-				"(Error: out-of-bound)",
-				percent, StrId());
-		return APP_ABORT;
-	}
-
+Application::ExitCode_t Application::SetGoalGap(int percent) {
 	// A Goal-Gap could be assigned only for applications already running
 	if (State() != RUNNING) {
 		logger->Warn("SetGoalGap [%d] on EXC [%s] FAILED "

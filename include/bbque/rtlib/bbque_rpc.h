@@ -135,7 +135,7 @@ public:
 
 	RTLIB_ExitCode_t GGap(
 			const RTLIB_ExecutionContextHandler_t ech,
-			int8_t percent);
+			int percent);
 
 	RTLIB_ExitCode_t GetWorkingMode(
 			RTLIB_ExecutionContextHandler_t ech,
@@ -606,7 +606,7 @@ protected:
 
 	virtual RTLIB_ExitCode_t _Clear(pregExCtx_t prec) = 0;
 
-	virtual RTLIB_ExitCode_t _GGap(pregExCtx_t prec, int8_t percent) = 0;
+	virtual RTLIB_ExitCode_t _GGap(pregExCtx_t prec, int percent) = 0;
 
 	virtual RTLIB_ExitCode_t _ScheduleRequest(pregExCtx_t prec) = 0;
 

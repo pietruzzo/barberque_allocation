@@ -69,7 +69,7 @@ protected:
 
 	RTLIB_ExitCode_t _Clear(pregExCtx_t prec);
 
-	RTLIB_ExitCode_t _GGap(pregExCtx_t prec, int8_t gap);
+	RTLIB_ExitCode_t _GGap(pregExCtx_t prec, int gap);
 
 	void _Exit();
 

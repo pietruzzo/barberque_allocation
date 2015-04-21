@@ -1878,18 +1878,11 @@ RTLIB_ExitCode_t BbqueRPC::Clear(
 
 RTLIB_ExitCode_t BbqueRPC::GGap(
 		const RTLIB_ExecutionContextHandler_t ech,
-		int8_t percent) {
+		int percent) {
 	RTLIB_ExitCode_t result;
 	pregExCtx_t prec;
 
 	assert(ech);
-
-	// Enforce the Goal-Gap domain
-	if (unlikely(std::abs(percent > 100))) {
-		logger->Error("Set Goal-Gap for EXC [%p] "
-				"(Error: '%d' out-of-bound)", (void*)ech, percent);
-		return RTLIB_ERROR;
-	}
 
 	// Goal-Gap filtering based on pre-configured threshold value
 	if (unlikely(std::abs(percent) < conf.asrtm.ggap_forward_threshold)) {

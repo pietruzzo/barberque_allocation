@@ -1291,7 +1291,7 @@ ApplicationManager::ClearConstraintsEXC(AppPid_t pid, uint8_t exc_id) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::SetGoalGapEXC(AppPtr_t papp, int8_t gap) {
+ApplicationManager::SetGoalGapEXC(AppPtr_t papp, int gap) {
 	Application::ExitCode_t result;
 
 	// Define the contraints for this execution context
@@ -1315,7 +1315,7 @@ ApplicationManager::SetGoalGapEXC(AppPtr_t papp, int8_t gap) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::SetGoalGapEXC(AppPid_t pid, uint8_t exc_id, int8_t gap) {
+ApplicationManager::SetGoalGapEXC(AppPid_t pid, uint8_t exc_id, int gap) {
 	AppPtr_t papp;
 
 	// Find the required EXC
