@@ -85,7 +85,7 @@ SCValue::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	// Compute an "ideal" AWM value, scaling the current AWM by the value of
 	// the Goal-Gap.
 	float goal_gap_perc = static_cast<float>(evl_ent.papp->GetGoalGap()) / 100.0;
-	float ideal_value   = curr_awm->Value() * (1 + goal_gap_perc);
+	float ideal_value   = curr_awm->Value() * (1 + (nap_weight) * goal_gap_perc);
 	logger->Debug("%s: Gap=%.2f, currV=%.2f, idealV=%.2f, dV=%.2f",
 			evl_ent.StrId(), goal_gap_perc, evl_ent.pawm->Value(), ideal_value,
 			static_cast<float>(evl_ent.pawm->Value()) - ideal_value);
