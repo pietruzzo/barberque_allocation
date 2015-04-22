@@ -62,8 +62,13 @@ public:
 		SCHED_BIND_DOMAIN_FULL,
 		/** Application must be skipped due to a Disable/Stop event */
 		SCHED_SKIP_APP,
-		/** Error */
+		/** Error during initialization */
+		SCHED_ERROR_INIT,
+		/** Error in using the resource state view */
+		SCHED_ERROR_VIEW,
+		/** Undefined error */
 		SCHED_ERROR
+
 	} ExitCode_t;
 
 	/**
