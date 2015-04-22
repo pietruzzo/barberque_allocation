@@ -104,6 +104,11 @@ public:
 	uint64_t GetAmount();
 
 	/**
+	 * @brief Set the amount of resource
+	 */
+	void SetAmount(uint64_t value);
+
+	/**
 	 * @brief Get the entire list of resources
 	 *
 	 * @return A reference to the resources list

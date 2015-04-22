@@ -33,6 +33,10 @@ uint64_t Usage::GetAmount() {
 	return amount;
 }
 
+void Usage::SetAmount(uint64_t value) {
+	amount = value;
+}
+
 ResourcePtrList_t & Usage::GetResourcesList() {
 	return resources;
 }
