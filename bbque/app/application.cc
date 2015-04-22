@@ -631,7 +631,8 @@ Application::ExitCode_t Application::Unschedule() {
 
 	// Otherwise, the application should be running...
 	if (_State() != RUNNING) {
-		logger->Crit("Rescheduling FAILED (Error: wrong application status)");
+		logger->Crit("Rescheduling FAILED (Error: wrong application status "
+				"{%s/%s})", StateStr(_State()), SyncStateStr(_SyncState()));
 		assert(_State() == RUNNING);
 		return APP_ABORT;
 	}
@@ -650,8 +651,10 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 
 	// App is SYNC/BLOCKED for a previously failed scheduling.
 	// Reset state and syncState for this new attempt.
-	if (_Blocking())
+	if (_Blocking()) {
+		logger->Warn("Schedule request for blocking application");
 		SetState(schedule.preSyncState, SYNC_NONE);
+	}
 
 	logger->Debug("Schedule request for [%s] into AWM [%02d:%s]",
 			papp->StrId(), awm->Id(), awm->Name().c_str());
