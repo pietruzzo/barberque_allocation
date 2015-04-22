@@ -1272,10 +1272,10 @@ ResourceAccounter::IncBookingCounts(
 	br::UsagesMap_t::const_iterator usages_end(rsrc_usages->end());
 	for (; usages_it != usages_end;	++usages_it) {
 		// Current required resource (Usage object)
-		ResourcePathPtr_t const & rsrc_path(usages_it->first);
+		br::ResourcePathPtr_t const & rsrc_path(usages_it->first);
 		br::UsagePtr_t pusage(usages_it->second);
-		logger->Debug("Booking: [%s] requires resource {%s}",
-				papp->StrId(), rsrc_path->ToString().c_str());
+		logger->Debug("Booking: [%s] requires resource {%s}: [% " PRIu64 "] ",
+				papp->StrId(), rsrc_path->ToString().c_str(), pusage->GetAmount());
 
 		// Do booking for the current resource request
 		result = DoResourceBooking(papp, pusage, vtok);
