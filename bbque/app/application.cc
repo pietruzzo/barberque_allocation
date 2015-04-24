@@ -1057,7 +1057,11 @@ Application::ExitCode_t Application::SetGoalGap(int percent) {
 		return APP_ABORT;
 	}
 
-	ggap_percent = percent;
+	if (ggap_percent > 0)
+		ggap_percent += percent;
+	else
+		ggap_percent = percent;
+
 	logger->Info("Setting Goal-Gap [%d] for EXC [%s]", ggap_percent, StrId());
 
 	return APP_SUCCESS;
