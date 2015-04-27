@@ -34,6 +34,7 @@
 
 namespace br = bbque::res;
 namespace bu = bbque::utils;
+namespace bw = bbque::pm;
 namespace po = boost::program_options;
 
 namespace bbque { namespace plugins {
@@ -59,8 +60,9 @@ char const * TempuraSchedPol::Name() {
 
 TempuraSchedPol::TempuraSchedPol():
 		cm(ConfigurationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance()) {
-
+		ra(ResourceAccounter::GetInstance()),
+		mm(bw::ModelManager::GetInstance())
+{
 	// Logger instance
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
@@ -150,8 +152,15 @@ TempuraSchedPol::InitBudgets() {
 			resource_budgets.insert(
 					std::pair<br::ResourcePathPtr_t, br::UsagePtr_t>(
 						r_path, rbudget));
-			logger->Debug("Init: Budgeting on '%s'",
-					r_path->ToString().c_str());
+			// Add into models identifiers map
+			std::string model_id;
+			if (!r_list.empty())
+				model_id = r_list.front()->Model();
+			model_ids.insert(
+					std::pair<br::ResourcePathPtr_t, std::string>(
+						r_path, model_id));
+			logger->Debug("Init: Budgeting on '%s' [Model: %s]",
+					r_path->ToString().c_str(), model_id.c_str());
 		}
 	}
 

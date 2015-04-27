@@ -20,11 +20,13 @@
 
 #include <cstdint>
 #include <list>
+#include <map>
 #include <memory>
 
 #include "bbque/configuration_manager.h"
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/scheduler_policy.h"
+#include "bbque/pm/model_manager.h"
 #include "bbque/scheduler_manager.h"
 #include "bbque/resource_manager.h"
 
@@ -32,6 +34,8 @@
 
 #define MODULE_NAMESPACE SCHEDULER_POLICY_NAMESPACE "." SCHEDULER_POLICY_NAME
 
+using bbque::pm::ModelManager;
+using bbque::pm::ModelPtr_t;
 using bbque::res::RViewToken_t;
 using bbque::utils::MetricsCollector;
 using bbque::utils::Timer;
@@ -101,6 +105,9 @@ private:
 	/** Resource accounter instance */
 	ResourceAccounter & ra;
 
+	/** P/T model manager */
+	ModelManager & mm;
+
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
@@ -136,6 +143,8 @@ private:
 	/** Resource budgets according to the power budgets */
 	br::UsagesMap_t resource_budgets;
 
+	/** Power-thermal models for each resource to bind  */
+	std::map<br::ResourcePathPtr_t, std::string> model_ids;
 
 
 	/** An High-Resolution timer */
