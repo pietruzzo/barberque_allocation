@@ -36,6 +36,8 @@
 
 #define MODULE_NAMESPACE POWER_MANAGER_NAMESPACE
 
+namespace bw = bbque::pm;
+
 namespace bbque {
 
 std::array<
@@ -73,6 +75,7 @@ PowerManager & PowerManager::GetInstance() {
 PowerManager::PowerManager() {
 	static bool initialized = false;
 	cm = &(CommandManager::GetInstance());
+	mm = &(bw::ModelManager::GetInstance());
 
 	// Get a logger module
 	logger = bu::Logger::GetLogger(POWER_MANAGER_NAMESPACE);

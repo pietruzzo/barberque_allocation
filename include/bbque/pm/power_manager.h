@@ -24,12 +24,14 @@
 #include <vector>
 
 #include "bbque/command_manager.h"
+#include "bbque/pm/model_manager.h"
 #include "bbque/utils/logging/logger.h"
 
 #define POWER_MANAGER_NAMESPACE "bq.pm"
 
 
 namespace bu = bbque::utils;
+namespace bw = bbque::pm;
 
 namespace bbque {
 
@@ -205,6 +207,11 @@ protected:
 	 * Command manager instance
 	 */
 	CommandManager * cm;
+
+	/**
+	 * P/T model manager
+	 */
+	bw::ModelManager * mm;
 
 	/**
 	 * @brief The logger used by the power manager.
