@@ -2,6 +2,10 @@
 # Add the power manager
 set (POWER_MANAGER_SRC power_manager)
 
+# Add model manages and platform P/T models
+set (POWER_MANAGER_SRC model_manager ${POWER_MANAGER_SRC})
+add_subdirectory(models)
+
 # Add the battery manager
 if (CONFIG_BBQUE_PM_BATTERY)
  set (POWER_MANAGER_LIBS boost_filesystem ${POWER_MANAGER_LIBS})
@@ -35,5 +39,6 @@ add_library(bbque_pm STATIC ${POWER_MANAGER_SRC})
 # Link static library
 target_link_libraries(
 	bbque_pm
+	bbque_pm_models
 	${POWER_MANAGER_LIBS}
 )
