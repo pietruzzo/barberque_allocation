@@ -195,9 +195,38 @@ private:
 	 * (power capping)
 	 *
 	 * @param rp The resource path
+	 * @param pmodel The resource powert-thermal model
+	 *
 	 * @return The power value to cap (in milliwatts)
 	 */
-	uint32_t GetPowerBudget(br::ResourcePathPtr_t const & rp);
+	uint32_t GetPowerBudget(
+			br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
+
+	/**
+	 * @brief Define the power budget given specified thermal constraints
+	 *
+	 * Consider for instance critical thermal threshold
+	 *
+	 * @param rp The resource path
+	 * @param pmodel The resource powert-thermal model
+	 *
+	 * @return The power value to cap (in milliwatts)
+	 */
+	uint32_t GetPowerBudgetFromThermalConstraints(
+			br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
+
+	/**
+	 * @brief Define the power budget given specified energy constraints
+	 *
+	 * Consider for instance battery lifetime goals
+	 *
+	 * @param rp The resource path
+	 * @param pmodel The resource powert-thermal model
+	 *
+	 * @return The power value to cap (in milliwatts)
+	 */
+	uint32_t GetPowerBudgetFromEnergyConstraints(
+			br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
 
 	/**
 	 * @brief Define the resource budget to allocate according to the power
@@ -208,9 +237,12 @@ private:
 	 * the CPU cores frequencies.
 	 *
 	 * @param rp The resource path
+	 * @param pmodel The resource powert-thermal model
+	 *
 	 * @return The total amount of allocatable resource
 	 */
-	int64_t GetResourceBudget(br::ResourcePathPtr_t const & rp);
+	int64_t GetResourceBudget(
+			br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
 
 	/**
 	 * @brief Perform the resource partitioning among active applications

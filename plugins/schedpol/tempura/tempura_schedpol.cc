@@ -228,10 +228,15 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 		br::ResourcePathPtr_t const & r_path(pb_entry.first);
 		br::UsagePtr_t & budget(pb_entry.second);
 
-		uint32_t p_budget = GetPowerBudget(r_path);
+		// Power budget (cap)
+	//	bw::ModelPtr_t pmodel(mm.GetModel("ARM Cortex A15"));
+		bw::ModelPtr_t pmodel(mm.GetModel(model_ids[r_path]));
+		logger->Fatal("Power-themal model: %s", pmodel->GetID().c_str());
+		uint32_t p_budget = GetPowerBudget(r_path, pmodel);
 		budget->SetAmount(p_budget);
 
-		uint64_t r_budget = GetResourceBudget(r_path);
+		// Resource budget
+		uint64_t r_budget = GetResourceBudget(r_path, pmodel);
 		resource_budgets[r_path]->SetAmount(r_budget);
 		logger->Info("Budget: [%s] has a budget of %" PRIu64 "",
 				r_path->ToString().c_str(),
@@ -241,16 +246,39 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 	return SCHED_OK;
 }
 
-uint32_t TempuraSchedPol::GetPowerBudget(br::ResourcePathPtr_t const & rp) {
-	(void) rp;
-	return 5;
-
+inline uint32_t TempuraSchedPol::GetPowerBudget(
+		br::ResourcePathPtr_t const & r_path,
+		ModelPtr_t pmodel) {
+	uint32_t temp_pwr_budget  = GetPowerBudgetFromThermalConstraints(
+			r_path, pmodel);
+	uint32_t energy_pwr_budget = GetPowerBudgetFromEnergyConstraints(
+			r_path, pmodel);
+	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);
 }
 
-int64_t TempuraSchedPol::GetResourceBudget(br::ResourcePathPtr_t const & rp) {
-	(void) rp;
-	return 80;
+uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
+		br::ResourcePathPtr_t const & r_path,
+		ModelPtr_t pmodel) {
+	// Get the critical thermal threshold of the resource
+	uint32_t crit_temp = 90;
+	return pmodel->GetPowerFromTemperature(crit_temp);
+}
 
+uint32_t TempuraSchedPol::GetPowerBudgetFromEnergyConstraints(
+		br::ResourcePathPtr_t const & r_path,
+		ModelPtr_t pmodel) {
+	(void) pmodel;
+	return 100;
+}
+
+int64_t TempuraSchedPol::GetResourceBudget(
+		br::ResourcePathPtr_t const & r_path,
+		bw::ModelPtr_t pmodel) {
+	uint64_t resource_budget = sys->ResourceTotal(r_path);
+	resource_budget *=
+		pmodel->GetResourcePercentageFromPower(
+				power_budgets[r_path]->GetAmount());
+	return resource_budget;
 }
 
 SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoResourcePartitioning() {
