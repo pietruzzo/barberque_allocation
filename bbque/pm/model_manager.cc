@@ -15,7 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "bbque/config.h"
 #include "bbque/pm/model_manager.h"
+#include "bbque/pm/models/model_arm_cortexa15.h"
 
 #define MODULE_MANAGER_NAMESPACE "bq.mm"
 
@@ -32,6 +34,9 @@ ModelManager::ModelManager() {
 	logger->Info("Model Manager initialization...");
 	default_model = ModelPtr_t(new Model());
 	Register(default_model);
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+	Register(ModelPtr_t(new ARM_CortexA15_Model()));
+#endif
 }
 
 ModelManager::~ModelManager() {
