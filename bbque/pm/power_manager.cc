@@ -83,9 +83,8 @@ PowerManager::PowerManager() {
 
 	// Block recursion on vendor specific construction
 	if (initialized) return;
-	initialized = true;
-
 	logger->Info("Initialize PowerManager...");
+	initialized = true;
 
 	// Register command to set device fan speed
 #define CMD_FANSPEED_SET "fanspeed_set"
