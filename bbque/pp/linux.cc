@@ -250,6 +250,15 @@ LinuxPP::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) {
 			ra.UpdateResource(resourcePath, "", cpu_quota);
 		else {
 			ra.RegisterResource(resourcePath, "", cpu_quota);
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+			br::ResourcePtr_t rsrc(ra.GetResource(resourcePath));
+			if (highPerfCores[first_cpu_id])
+				rsrc->SetModel("ARM Cortex A15");
+			else
+				rsrc->SetModel("ARM Cortex A7");
+			logger->Info("PLAT LNX: [%s] CPU model = %s",
+					rsrc->Path().c_str(), rsrc->Model().c_str());
+#endif
 #ifdef CONFIG_BBQUE_WM
 			PowerMonitor & wm(PowerMonitor::GetInstance());
 			wm.Register(resourcePath);
