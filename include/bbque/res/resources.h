@@ -193,6 +193,26 @@ public:
 	}
 
 	/**
+	 * @brief Set the resource model name
+
+	 * e.g. The model name of a CPU ("Intel i7-2640M")
+	 */
+	inline void SetModel(std::string const & _name) {
+		model.assign(_name);
+	}
+
+	/**
+	 * @brief Get the resource model name
+	 *
+	 * e.g. The model name of a CPU ("Intel i7-2640M")
+	 *
+	 * @return A char string object reference
+	 */
+	inline std::string const & Model() {
+		return model;
+	}
+
+	/**
 	 * @brief Set the resource path string
 	 */
 	inline void SetPath(std::string const & r_path) {
@@ -383,6 +403,9 @@ private:
 
 	/** Former resource path string  */
 	std::string path;
+
+	/** Resource name, e.g. CPU architecture name */
+	std::string model;
 
 	/** True if this resource is currently offline */
 	bool offline;
