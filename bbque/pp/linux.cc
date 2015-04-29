@@ -1034,7 +1034,7 @@ jump_quota_management:
 	// CGroup not yet configure.
 
 	logger->Notice("PLAT LNX: [%s] => "
-			"{cpus [%s: %" PRIu64 " %], mems[%s: %" PRIu64 " B]}",
+			"{cpus [%s: %ld], mems[%s: %ld B]}",
 			pcgd->papp->StrId(),
 			prlb->cpus, prlb->amount_cpus,
 			prlb->mems, prlb->amount_memb);
