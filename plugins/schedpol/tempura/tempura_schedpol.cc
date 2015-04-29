@@ -391,6 +391,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoScheduling() {
 			logger->Error("DoScheduling: [%s] failed", psched->StrId());
 			continue;
 		}
+		psched->papp->SetValue(1.0);
 		logger->Debug("DoScheduling: [%s] success", psched->StrId());
 	}
 	logger->Debug("DoScheduling: STOP");
