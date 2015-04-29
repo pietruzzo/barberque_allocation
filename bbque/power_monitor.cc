@@ -79,6 +79,11 @@ PowerMonitor::PowerMonitor():
 		(MODULE_CONFIG ".log.enabled",
 		 po::value<bool>(&wm_info.log_enabled)->default_value(false),
 		 "Default status of the data logging");
+	// Thermal threshold configuration
+	opts_desc.add_options()
+		(MODULE_CONFIG ".temp.critical",
+		 po::value<uint32_t>(&temp[WM_TEMP_CRITICAL_ID])->default_value(90),
+		 "Default status of the data logging");
 	po::variables_map opts_vm;
 	cfm.ParseConfigurationFile(opts_desc, opts_vm);
 

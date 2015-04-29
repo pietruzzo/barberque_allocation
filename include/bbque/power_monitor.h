@@ -113,6 +113,21 @@ public:
 	 */
 	void Stop();
 
+	/**
+	 * @brief Thermal theshold set
+	 *
+	 * @param level The critical level. 0 = critical, 1 = warning
+	 *
+	 * @return The temperature in Celsius degree
+	 */
+	uint32_t GetThermalThreshold(uint level = 0) {
+		if (level > (sizeof(temp) / sizeof(uint32_t))) {
+			logger->Warn("Thermal level '%d' out of bounds", level);
+			return 0;
+		}
+		return temp[level];
+	}
+
 private:
 
 	/*
@@ -166,6 +181,14 @@ private:
 		/** Monitoring period (milliseconds) */
 		uint32_t period_ms;
 	} wm_info;
+
+
+#define WM_TEMP_CRITICAL_ID  0
+#define WM_TEMP_WARNING_ID   1
+
+	/*** Thermal thresholds  */
+	uint32_t temp[2] = {80, 100};
+
 
 	/** Function pointer to PowerManager member functions */
 	typedef PowerManager::PMResult (PowerManager::*PMfunc)
