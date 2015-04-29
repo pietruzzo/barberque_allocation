@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include "bbque/modules_factory.h"
+#include "bbque/power_monitor.h"
 #include "bbque/utils/logging/logger.h"
 
 #include "bbque/app/working_mode.h"
@@ -259,8 +260,9 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
 		br::ResourcePathPtr_t const & r_path,
 		ModelPtr_t pmodel) {
-	// Get the critical thermal threshold of the resource
-	uint32_t crit_temp = 90;
+	PowerMonitor & wm(PowerMonitor::GetInstance());
+	uint32_t crit_temp = wm.GetThermalThreshold(0);
+	logger->Notice("Critical temperature is %d", crit_temp);
 	return pmodel->GetPowerFromTemperature(crit_temp);
 }
 
