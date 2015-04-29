@@ -173,7 +173,15 @@ ResourceBitset ResourceBinder::GetMask(
 				&& (rp_type == r_type)) {
 			DB(fprintf(stderr, FD("GetMask: scope found in R{%s}!\n"),
 						ppath->ToString().c_str()));
-			return GetMask(pusage->GetResourcesList(), r_type, papp, vtok);
+
+			// TODO: Find a smarter solution here
+			br::ResourceBitset r_mask_temp =
+				GetMask(pusage->GetResourcesList(), r_type, papp, vtok);
+			for (int i = 0; i < 16; ++i) {
+				if (r_mask_temp.Test(i))
+					r_mask.Set(i);
+			}
+		//	r_mask |= GetMask(pusage->GetResourcesList(), r_type, papp, vtok);
 		}
 	}
 	return r_mask;
