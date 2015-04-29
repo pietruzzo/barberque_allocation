@@ -714,6 +714,11 @@ LinuxPP::_LoadPlatformData() {
 	// Load OpenCL platforms and devices
 	oclProxy.LoadPlatformData();
 #endif
+
+#ifdef CONFIG_BBQUE_WM
+	PowerMonitor & wm(PowerMonitor::GetInstance());
+	wm.Start();
+#endif
 	// Switch to refresh mode for the upcoming calls
 	refreshMode = true;
 
