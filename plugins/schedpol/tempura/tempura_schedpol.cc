@@ -342,19 +342,22 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 	for (auto & rb_entry: resource_budgets) {
 		br::ResourcePathPtr_t const & r_path(rb_entry.first);
 		br::UsagePtr_t & resource_budget(rb_entry.second);
-
-		// Slots to allocate for this resource binding domain
 		logger->Debug("Assign: Resource [%s] budget = % " PRIu64 "",
 				r_path->ToString().c_str(), resource_budget->GetAmount());
+
+		// Slots to allocate for this resource binding domain
 		resource_slot  = resource_budget->GetAmount() / slots;
 		logger->Debug("Assign: [%s] rslots of [%s] assigned = %4d",
 				papp->StrId(), r_path->ToString().c_str(), resource_slot);
+
+		// Resource amount to allocate
 		resource_amount =
 				(sys->ApplicationLowestPriority() - papp->Priority() + 1) *
 				resource_slot;
 		logger->Debug("Assign: [%s] amount of [%s] assigned = %4d",
 				papp->StrId(), r_path->ToString().c_str(), resource_amount);
-		pawm->AddResourceUsage(r_path->ToString(), resource_amount);
+		if (resource_amount > 0)
+			pawm->AddResourceUsage(r_path->ToString(), resource_amount);
 	}
 
 	// Enqueue scheduling entity
