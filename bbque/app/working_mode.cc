@@ -60,7 +60,7 @@ WorkingMode::WorkingMode(uint8_t _id,
 	resources.binding_masks.resize(br::ResourceIdentifier::TYPE_COUNT);
 
 	// Set the log string id
-	snprintf(str_id, 15, "AWM{%d,%s}", id, name.c_str());
+	snprintf(str_id, 22, "{id=%02d, n=%-9s}", id, name.c_str());
 
 	// Default value for configuration time (if no profiled)
 	memset(&config_time, 0, sizeof(ConfigTimeAttribute_t));
@@ -72,10 +72,7 @@ WorkingMode::~WorkingMode() {
 	resources.requested.clear();
 	if (resources.sync_bindings)
 		resources.sync_bindings->clear();
-	// Trash all the scheduling bindings
 	if (!resources.sched_bindings.empty()) {
-		logger->Fatal("resource sched bindings: %d",
-				resources.sched_bindings.size());
 		resources.sched_bindings.clear();
 	}
 }
@@ -90,7 +87,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	// Init the resource path starting from the prefix
 	br::ResourcePathPtr_t ppath(new br::ResourcePath(ra.GetPrefixPath()));
 	if (!ppath) {
-		logger->Error("%s AddResourceUsage: {%s} invalid prefix path",
+		logger->Error("AddResourceUsage: %s '%s' invalid prefix path",
 				str_id,	ra.GetPrefixPath().ToString().c_str());
 		return WM_RSRC_ERR_TYPE;
 	}
@@ -98,14 +95,14 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	// Build the resource path object
 	rp_result = ppath->Concat(rsrc_path);
 	if (rp_result != br::ResourcePath::OK) {
-		logger->Error("%s AddResourceUsage: {%s} invalid path",
+		logger->Error("AddResourceUsage: %s '%s' invalid path",
 				str_id,	rsrc_path.c_str());
 		return WM_RSRC_ERR_TYPE;
 	}
 
 	// Check the existance of the resource required
 	if (!ra.ExistResource(ppath)) {
-		logger->Warn("%s AddResourceUsage: {%s} not found.",
+		logger->Warn("AddResourceUsage: %s '%s' not found.",
 				str_id, ppath->ToString().c_str());
 		result = WM_RSRC_NOT_FOUND;
 	}
@@ -114,8 +111,10 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	br::UsagePtr_t pusage(br::UsagePtr_t(new br::Usage(required_amount)));
 	resources.requested.insert(
 			std::pair<ResourcePathPtr_t, br::UsagePtr_t>(ppath, pusage));
-	logger->Debug("%s AddResourceUsage: added {%s}\t[usage: %" PRIu64 "]",
-			str_id, ppath->ToString().c_str(), required_amount);
+	logger->Debug("AddResourceUsage: %s added {%s}"
+			"\t[usage: %" PRIu64 "] [c=%2d]",
+			str_id, ppath->ToString().c_str(),required_amount,
+			resources.requested.size());
 
 	return result;
 }
@@ -142,7 +141,7 @@ WorkingMode::ExitCode_t WorkingMode::Validate() {
 		// can be mapped on more than one system/HW resource.
 		total_amount = ra.Total(rcp_path, ResourceAccounter::TEMPLATE);
 		if (total_amount < rcp_pusage->GetAmount()) {
-			logger->Warn("%s Validate: {%s} usage required (%" PRIu64 ") "
+			logger->Warn("%s Validate: %s usage required (%" PRIu64 ") "
 					"exceeds total (%" PRIu64 ")",
 					str_id, rcp_path->ToString().c_str(),
 					rcp_pusage->GetAmount(), total_amount);
@@ -180,18 +179,19 @@ size_t WorkingMode::BindResource(
 	uint32_t b_count;
 	size_t n_refn;
 	std::map<size_t, br::UsagesMapPtr_t>::iterator pum_it;
+	logger->Debug("BindResource: %s owner is %s", str_id, owner->StrId());
 
 	// Allocate a new temporary resource usages map
 	br::UsagesMapPtr_t bind_pum(br::UsagesMapPtr_t(new br::UsagesMap_t()));
 
 	if (b_refn == 0) {
-		logger->Debug("BindResource: [%s] binding resources from recipe", str_id);
+		logger->Debug("BindResource: %s binding resources from recipe", str_id);
 		src_pum = &resources.requested;
 	}
 	else {
 		pum_it = resources.sched_bindings.find(b_refn);
 		if (pum_it == resources.sched_bindings.end()) {
-			logger->Error("BindResource: [%s] invalid binding reference [%ld]",
+			logger->Error("BindResource: %s invalid binding reference [%ld]",
 				str_id, b_refn);
 			return 0;
 		}
@@ -203,14 +203,14 @@ size_t WorkingMode::BindResource(
 			*src_pum, r_type, src_ID, dst_ID, bind_pum,
 			filter_rtype, filter_mask);
 	if (b_count == 0) {
-		logger->Warn("BindResource: [%s] nothing to bind", str_id);
+		logger->Warn("BindResource: %s nothing to bind", str_id);
 		return 0;
 	}
 
 	// Store the resource binding
 	n_refn = std::hash<std::string>()(BindingStr(r_type, src_ID, dst_ID, b_refn));
 	resources.sched_bindings[n_refn] = bind_pum;
-	logger->Debug("BindResource: [%s] R{%s} refn[%ld] size:%d count:%d",
+	logger->Debug("BindResource: %s R{%-3s} refn[%ld] size:%d count:%d",
 			str_id, br::ResourceIdentifier::StringFromType(r_type),
 			n_refn, bind_pum->size(), b_count);
 	return n_refn;
@@ -233,8 +233,8 @@ br::UsagesMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
 	std::map<size_t, br::UsagesMapPtr_t>::const_iterator sched_it;
 	sched_it = resources.sched_bindings.find(b_refn);
 	if (sched_it == resources.sched_bindings.end()) {
-		logger->Error("GetSchedResourceBinding: "
-			"invalid reference [%ld]", b_refn);
+		logger->Error("GetSchedResourceBinding: %s invalid reference [%ld]",
+				str_id, b_refn);
 		return nullptr;
 	}
 	return sched_it->second;
@@ -246,7 +246,8 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
 	// Set the new binding / resource usages map
 	resources.sync_bindings = GetSchedResourceBinding(b_refn);
 	if (resources.sync_bindings == nullptr) {
-		logger->Error("SetBinding: invalid scheduling binding [%ld]", b_refn);
+		logger->Error("SetBinding: %s invalid scheduling binding [%ld]",
+				str_id, b_refn);
 		return WM_BIND_FAILED;
 	}
 	resources.sync_refn = b_refn;
@@ -254,7 +255,8 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
 	// Update the resource binding bit-masks
 	UpdateBindingInfo(vtok, true);
 
-	logger->Debug("SetBinding: resource binding [%ld] to allocate", b_refn);
+	logger->Debug("SetBinding: %s resource binding [%ld] to allocate",
+			str_id, b_refn);
 	return WM_SUCCESS;
 }
 
@@ -272,8 +274,8 @@ void WorkingMode::UpdateBindingInfo(
 
 		if (r_type == br::ResourceIdentifier::PROC_ELEMENT ||
 			r_type == br::ResourceIdentifier::MEMORY) {
-			logger->Debug("SetBinding: [%s] is a terminal resource",
-					br::ResourceIdentifier::TypeStr[r_type]);
+			logger->Debug("SetBinding: %s R{%-3s} is terminal",
+					str_id, br::ResourceIdentifier::TypeStr[r_type]);
 			// 'Deep' get bit-mask in this case
 			new_mask = br::ResourceBinder::GetMask(
 				resources.sched_bindings[resources.sync_refn],
@@ -286,8 +288,8 @@ void WorkingMode::UpdateBindingInfo(
 				resources.sched_bindings[resources.sync_refn],
 				static_cast<br::ResourceIdentifier::Type_t>(r_type));
 		}
-		logger->Debug("SetBinding: [%s] bitmask: %s",
-				br::ResourceIdentifier::TypeStr[r_type],
+		logger->Debug("SetBinding: %s R{%-3s}: %s",
+				str_id, br::ResourceIdentifier::TypeStr[r_type],
 				new_mask.ToStringCG().c_str());
 
 		// Check if the bit-masks have changed only if required
@@ -301,7 +303,7 @@ void WorkingMode::UpdateBindingInfo(
 
 		// Set the flag if changed and print a log message
 		bi.changed = bi.prev != new_mask;
-		logger->Debug("%s SetBinding: R{%-3s} changed? [%d]",
+		logger->Debug("SetBinding: %s R{%-3s} changed? (%d)",
 				str_id, br::ResourceIdentifier::TypeStr[r_type],
 				bi.changed);
 	}

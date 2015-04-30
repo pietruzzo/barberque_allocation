@@ -376,7 +376,7 @@ public:
 	 */
 	inline void IncSchedulingCount() {
 		sched_count++;
-		logger->Debug("Scheduling count = %d", sched_count);
+		logger->Debug("Selection count: %d", sched_count);
 	}
 
 	/**
@@ -472,7 +472,7 @@ private:
 	std::string name = "UNDEF";
 
 	/** Logger messages ID string */
-	char str_id[15];
+	char str_id[22];
 
 	/**
 	 * Whether the AWM includes resource requirements that cannot be
