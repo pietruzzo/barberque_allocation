@@ -96,20 +96,9 @@ public:
 		return bit_set[pos];
 	}
 
-	ResourceBitset operator|= (const ResourceBitset & rbs) {
-		bit_set |= rbs.bit_set;
-		return *this;
-	}
+	ResourceBitset operator|= (const ResourceBitset & rbs);
 
-	ResourceBitset operator&= (const ResourceBitset & rbs) {
-		bit_set &= rbs.bit_set;
-		return *this;
-	}
-
-	ResourceBitset operator^= (const ResourceBitset & rbs) {
-		bit_set ^= rbs.bit_set;
-		return *this;
-	}
+	ResourceBitset operator&= (const ResourceBitset & rbs);
 
 private:
 

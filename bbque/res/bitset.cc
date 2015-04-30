@@ -33,6 +33,24 @@ ResourceBitset::ResourceBitset():
 
 ResourceBitset::~ResourceBitset() {}
 
+/******************************
+ *         Operators          *
+ ******************************/
+
+ResourceBitset ResourceBitset::operator|= (const ResourceBitset & rbs) {
+	int _bit = rbs.FirstSet();
+	while (_bit <= rbs.LastSet())
+		if (rbs.Test(_bit)) Set(_bit++);
+	return *this;
+}
+
+ResourceBitset ResourceBitset::operator&= (const ResourceBitset & rbs) {
+	Reset();
+	return (*this |= rbs);
+}
+
+/**/
+
 ResourceBitset::ExitCode_t ResourceBitset::Set(ResID_t pos) {
 	char buff[4] = "";
 
