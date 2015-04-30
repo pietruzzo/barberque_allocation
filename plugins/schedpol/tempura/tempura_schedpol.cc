@@ -232,7 +232,8 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 		// Power budget (cap)
 	//	bw::ModelPtr_t pmodel(mm.GetModel("ARM Cortex A15"));
 		bw::ModelPtr_t pmodel(mm.GetModel(model_ids[r_path]));
-		logger->Fatal("Power-themal model: %s", pmodel->GetID().c_str());
+		logger->Debug("Budget: Using power-themal model '%s'",
+				pmodel->GetID().c_str());
 		uint32_t p_budget = GetPowerBudget(r_path, pmodel);
 		budget->SetAmount(p_budget);
 
@@ -262,7 +263,7 @@ uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
 		ModelPtr_t pmodel) {
 	PowerMonitor & wm(PowerMonitor::GetInstance());
 	uint32_t crit_temp = wm.GetThermalThreshold(0);
-	logger->Notice("Critical temperature is %d", crit_temp);
+	logger->Notice("Budget: critical temperature = %d °C", crit_temp);
 	return pmodel->GetPowerFromTemperature(crit_temp);
 }
 
@@ -356,7 +357,7 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 		resource_amount =
 				(sys->ApplicationLowestPriority() - papp->Priority() + 1) *
 				resource_slot;
-		logger->Debug("Assign: [%s] amount of [%s] assigned = %4d",
+		logger->Info("Assign: [%s] amount of [%s] assigned = %4d",
 				papp->StrId(), r_path->ToString().c_str(), resource_amount);
 		if (resource_amount > 0)
 			pawm->AddResourceUsage(r_path->ToString(), resource_amount);
