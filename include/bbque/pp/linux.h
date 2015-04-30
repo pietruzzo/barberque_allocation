@@ -320,7 +320,10 @@ private:
  */
 
 	ExitCode_t GetResourceMapping(
-			ba::AppPtr_t papp, br::UsagesMapPtr_t pum, RLinuxBindingsPtr_t prlb);
+			ba::AppPtr_t papp,
+			br::UsagesMapPtr_t pum,
+			RLinuxBindingsPtr_t prlb,
+			br::ResID_t node_id);
 
 	ExitCode_t BuildCGroup(CGroupDataPtr_t &pcgd);
 

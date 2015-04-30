@@ -733,33 +733,49 @@ LinuxPP::_LoadPlatformData() {
 
 LinuxPP::ExitCode_t
 LinuxPP::GetResourceMapping(
-		AppPtr_t papp, UsagesMapPtr_t pum, RLinuxBindingsPtr_t prlb) {
+		AppPtr_t papp,
+		UsagesMapPtr_t pum,
+		RLinuxBindingsPtr_t prlb,
+		br::ResID_t node_id) {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
-	br::ResourceBitset core_ids;
-	br::ResourceBitset mem_ids;
+
 
 	// CPU core set
-	core_ids = papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT);
+	br::ResourceBitset core_ids(
+		br::ResourceBinder::GetMask(pum,
+				br::Resource::PROC_ELEMENT,
+				br::Resource::CPU, node_id));
 	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
+	logger->Debug("PLAT LNX: Node [%d] cores: { %s }", node_id, prlb->cpus);
+
 	// Memory nodes
-	mem_ids  = papp->NextAWM()->BindingSet(br::Resource::MEMORY);
-	strncpy(prlb->mems, mem_ids.ToStringCG().c_str(), 3*MaxMemsCount);
+	br::ResourceBitset mem_ids(
+			br::ResourceBinder::GetMask(pum,
+				br::Resource::PROC_ELEMENT,
+				br::Resource::MEMORY, node_id));
+	if (mem_ids.Count() == 0)
+		strncpy(prlb->mems, "0", 1);
+	else
+		strncpy(prlb->mems, mem_ids.ToStringCG().c_str(), 3*MaxMemsCount);
+	logger->Debug("PLAT LNX: Node [%d] mems : { %s }", node_id, prlb->mems);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 	// CPU quota
-	prlb->amount_cpus = ra.GetUsageAmount(pum, br::Resource::PROC_ELEMENT, br::Resource::CPU);
-#else
 	prlb->amount_cpus = -1;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
+	prlb->amount_cpus = ra.GetUsageAmount(
+			pum, br::Resource::PROC_ELEMENT, br::Resource::CPU, node_id);
 #endif
+	logger->Debug("PLAT LNX: Node [%d] quota: { %ld }",
+			node_id, prlb->amount_cpus);
 
+	// Memory amount
+	prlb->amount_memb = -1;
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
-	// Amount of memory
-	prlb->amount_memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
-	if (prlb->amount_memb <= 0) {
-		strncpy(prlb->mems, "-1", 2);
-		return OK;
-	}
+	prlb->amount_memb = ra.GetUsageAmount(
+			pum, br::Resource::MEMORY, br::Resource::CPU);
 #endif
+	logger->Debug("PLAT LNX: Node [%d] memb : { %ld }",
+			node_id, prlb->amount_memb);
 
 	return OK;
 }
@@ -814,7 +830,7 @@ LinuxPP::BuildCGroup(CGroupDataPtr_t &pcgd) {
 	// Create the kernel-space CGroup
 	// NOTE: the current libcg API is quite confuse and unclear
 	// regarding the "ignore_ownership" second parameter
-	logger->Notice("PLAT LNX: Create kernel CGroup [%s]", pcgd->cgpath);
+	logger->Info("PLAT LNX: Create kernel CGroup [%s]", pcgd->cgpath);
 	result = cgroup_create_cgroup(pcgd->pcg, 0);
 	if (result && errno) {
 		logger->Error("PLAT LNX: CGroup resource mapping FAILED "
@@ -1146,7 +1162,6 @@ LinuxPP::_MapResources(
 	}
 #endif
 
-	RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
 	// FIXME: update once a better SetAttributes support is available
 	CGroupDataPtr_t pcgd;
 	ExitCode_t result;
@@ -1158,17 +1173,25 @@ LinuxPP::_MapResources(
 	if (result != OK)
 		return result;
 
-	result = GetResourceMapping(papp, pum, prlb);
-	if (result != OK) {
-		logger->Error("PLAT LNX: binding parsing FAILED");
-		return PLATFORM_MAPPING_FAILED;
+	// Map resources for each node (e.g., CPU)
+	br::ResourceBitset nodes(
+			br::ResourceBinder::GetMask(pum, br::Resource::CPU));
+	br::ResID_t node_id = nodes.FirstSet();
+	for (; node_id <= nodes.LastSet(); ++node_id) {
+		logger->Debug("PLAT LNX: CGroup resource mapping node [%d]", node_id);
+		if (!nodes.Test(node_id)) continue;
+
+		// Node resource mapping
+		RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
+		result = GetResourceMapping(papp, pum, prlb, node_id);
+		if (result != OK) {
+			logger->Error("PLAT LNX: binding parsing FAILED");
+			return PLATFORM_MAPPING_FAILED;
+		}
+
+		// Configure the CGroup based on resource bindings
+		SetupCGroup(pcgd, prlb, excl, true);
 	}
-	//prlb->cpus << "7";
-	//prlb->mems << "0";
-
-	// Configure the CGroup based on resource bindings
-	SetupCGroup(pcgd, prlb, excl, true);
-
 	logger->Debug("PLAT LNX: CGroup resource mapping DONE!");
 	return OK;
 }
