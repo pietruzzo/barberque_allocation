@@ -245,11 +245,15 @@ public:
 	 */
 	uint64_t GetUsageAmount(br::UsagesMapPtr_t const & pum,
 			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED) const;
+			br::ResourceIdentifier::Type_t r_scope_type =
+			br::Resource::UNDEFINED,
+			br::ResID_t r_scope_id = R_ID_ANY) const;
 
 	uint64_t GetUsageAmount(br::UsagesMap_t const & um,
 			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED) const;
+			br::ResourceIdentifier::Type_t r_scope_type =
+			br::Resource::UNDEFINED,
+			br::ResID_t r_scope_id = R_ID_ANY) const;
 
 	/**
 	 * @brief Show the system resources status
@@ -727,8 +731,9 @@ private:
 			br::UsagesMap_t::const_iterator & begin,
 			br::UsagesMap_t::const_iterator & end,
 			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type = br::Resource::UNDEFINED)
-		const;
+			br::ResourceIdentifier::Type_t r_scope_type =
+			br::Resource::UNDEFINED,
+			br::ResID_t r_scope_id = R_ID_ANY) const;
 
 	/**
 	 * @brief Check the resource availability for a whole set

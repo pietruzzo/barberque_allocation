@@ -546,7 +546,8 @@ uint64_t ResourceAccounter::QueryStatus(
 uint64_t ResourceAccounter::GetUsageAmount(
 		br::UsagesMapPtr_t const & pum,
 		br::ResourceIdentifier::Type_t r_type,
-		br::ResourceIdentifier::Type_t r_scope_type) const {
+		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResID_t r_scope_id) const {
 
 	if (pum == nullptr) {
 		logger->Fatal("GetUsageAmount: empty map");
@@ -555,24 +556,28 @@ uint64_t ResourceAccounter::GetUsageAmount(
 
 	br::UsagesMap_t::const_iterator b_it = pum->begin();
 	br::UsagesMap_t::const_iterator e_it = pum->end();
-	return  GetAmountFromUsagesMap(b_it, e_it, r_type, r_scope_type);
+	return  GetAmountFromUsagesMap(
+			b_it, e_it, r_type, r_scope_type, r_scope_id);
 }
 
 uint64_t ResourceAccounter::GetUsageAmount(
 		br::UsagesMap_t const & um,
 		br::ResourceIdentifier::Type_t r_type,
-		br::ResourceIdentifier::Type_t r_scope_type) const {
+		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResID_t r_scope_id) const {
 
 	br::UsagesMap_t::const_iterator b_it = um.begin();
 	br::UsagesMap_t::const_iterator e_it = um.end();
-	return  GetAmountFromUsagesMap(b_it, e_it, r_type, r_scope_type);
+	return  GetAmountFromUsagesMap(
+			b_it, e_it, r_type, r_scope_type, r_scope_id);
 }
 
 uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		br::UsagesMap_t::const_iterator & begin,
 		br::UsagesMap_t::const_iterator & end,
 		br::ResourceIdentifier::Type_t r_type,
-		br::ResourceIdentifier::Type_t r_scope_type) const {
+		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResID_t r_scope_id) const {
 	br::UsagesMap_t::const_iterator uit;
 	uint64_t amount = 0;
 
@@ -584,16 +589,18 @@ uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		logger->Debug("GetUsageAmount: type:{%-3s} scope:{%-3s}",
 			br::ResourceIdentifier::TypeStr[r_type],
 			br::ResourceIdentifier::TypeStr[r_scope_type]);
-
+		// Scope resource type
 		if ((r_scope_type != br::Resource::UNDEFINED)
 			&& (ppath->GetIdentifier(r_scope_type) == nullptr))
 			continue;
-		// Get the amount used
+		// Scope resource ID
+		if ((r_scope_id > 0) && (r_scope_id != ppath->GetID(r_scope_type)))
+			continue;
+		// Resource type
 		if (ppath->Type() != r_type)
 			continue;
 		amount += pusage->GetAmount();
 	}
-
 	logger->Debug("GetUsageAmount: R{%-3s} U = %" PRIu64 "",
 			br::ResourceIdentifier::TypeStr[r_type], amount);
 	return amount;
