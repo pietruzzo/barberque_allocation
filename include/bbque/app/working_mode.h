@@ -267,6 +267,10 @@ public:
 		return resources.requested.size();
 	}
 
+	inline void ClearResourceUsages() {
+		resources.requested.clear();
+	}
+
 /******************************************************************************
  * Resource binding
  *******************************************************************************/
