@@ -297,6 +297,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoResourcePartitioning() {
 	// Running applications
 	papp = sys->GetFirstRunning(app_it);
 	for (; papp; papp = sys->GetNextRunning(app_it)) {
+		papp->CurrentAWM()->ClearResourceUsages();
 		AssignWorkingMode(papp);
 	}
 
