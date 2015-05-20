@@ -15,20 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bbque/em/event.h"
+#include "bbque/em/event_wrapper.h"
 
 namespace bbque {
 
-Event::Event(std::string const & module, std::string const & type, 
-	const int & value):
-	timestamp(0),
-	module(module),
-	type(type),
-	value(value) {
+EventWrapper::EventWrapper(std::vector<Event> const & events):
+	events(events) {
 
 }
 
-Event::~Event() {
+EventWrapper::~EventWrapper() {
 
 }
 

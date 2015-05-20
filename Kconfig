@@ -352,4 +352,12 @@ config BBQUE_BUILD_TESTS
   NOTE: this is an experimental and not completed feaure, leave un-selected is
   unsure.
 
+config BBQUE_EM
+  bool "Enable Event Management support"
+  default n
+  ---help---
+  Build the BarbequeRTRM with support for Event Management (EM).
+
+  If unsure say no, this will disable all the EM related features.
+
 endmenu # Advanced options

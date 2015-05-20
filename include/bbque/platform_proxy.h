@@ -28,6 +28,11 @@
 #include "bbque/cpp11/thread.h"
 #include "bbque/utils/worker.h"
 
+#ifdef CONFIG_BBQUE_EM
+#include "bbque/em/event.h"
+#include "bbque/em/event_manager.h"
+#endif
+
 #ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
 # include "bbque/test_platform_data.h"
 #endif // CONFIG_BBQUE_TEST_PLATFORM_DATA

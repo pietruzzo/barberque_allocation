@@ -15,100 +15,73 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_EVENT_H_
-#define BBQUE_EVENT_H_
+#ifndef BBQUE_EVENT_WRAPPER_H_
+#define BBQUE_EVENT_WRAPPER_H_
 
-#include <cstdint>
-#include <string>
-#include <ctime>
+#include "bbque/em/event.h"
 
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/vector.hpp>
 
 namespace bbque {
 
-class Event {
+class EventWrapper {
 
 public:
 
-	Event() {
+	EventWrapper() {
 
 	}
 
 	/**
 	 * @brief Constructor
-	 * @param module The module which has triggered the event
-	 * @param type of event
-	 * @param value associated to the event
+	 * @param events The list of events
 	 */
-	Event(std::string const & module, std::string const & type,
-		const int & value);
+	EventWrapper(std::vector<Event> const & events);
 
 	/**
 	 * @brief Destructor
 	 */
-	~Event();
+	~EventWrapper();
 
 	/**
-	 * @brief Get the module which has triggered the event
+	 * @brief Get the list of events 
 	 */
-	inline std::string GetModule() {
-		return this->module;
+	inline std::vector<Event> GetEvents() {
+		return this->events;
 	}
 
 	/**
-	 * @brief Get the type of event
+	 * @brief Set the list of events
 	 */
-	inline std::string GetType() {
-		return this->type;
+	inline void SetEvents(std::vector<Event> events) {
+		this->events = events;
 	}
 
 	/**
-	 * @brief Get the timestamp
+	 * @brief Add an event to the list of events
 	 */
-	inline std::time_t GetTimestamp() {
-		return this->timestamp;
-	}
-
-	/**
-	 * @brief Get the value associated to the event
-	 */
-	inline int GetValue() {
-		return this->value;
-	}
-
-	/**
-	 * @brief Set the timestamp
-	 */
-	inline void SetTimestamp(std::time_t timestamp) {
-		this->timestamp = timestamp;
+	inline void AddEvent(Event event) {
+		this->events.insert(this->events.begin(), event);
 	}
 
 private:
-
+	
 	friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
     	if (version == 0 || version != 0)
     	{
-    		ar & timestamp;
-	        ar & module;
-	        ar & type;
-	        ar & value;
-	    }
-	}
-
-    std::time_t timestamp;
-
-	std::string module;
-
-	std::string type;
-
-	int value;
+        	ar & events;
+        }
+    }
+    
+	std::vector<Event> events;
 
 };
 
 } // namespace bbque
 
-#endif // BBQUE_EVENT_H_
+#endif // BBQUE_EVENT_WRAPPER_H_
 

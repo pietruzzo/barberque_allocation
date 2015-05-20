@@ -144,6 +144,13 @@ ResourceManager::ResourceManager() :
 	mc(MetricsCollector::GetInstance()),
 	pp(PlatformProxy::GetInstance()),
 	cm(CommandManager::GetInstance()),
+
+#ifdef CONFIG_BBQUE_EM
+
+	em(EventManager::GetInstance()),
+
+#endif
+
 	optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this)) {
 
 	//---------- Setup all the module metrics
@@ -166,6 +173,13 @@ ResourceManager::ResourceManager() :
 #define CMD_OPT_FORCE ".opt_force"
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_OPT_FORCE, static_cast<CommandHandler*>(this),
 			"Force a new scheduling event");
+
+#ifdef CONFIG_BBQUE_EM
+
+	Event event("rm", "startup", 1);
+	em.InitializeArchive(event);
+
+#endif
 
 }
 

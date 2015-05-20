@@ -91,6 +91,9 @@ endif (CONFIG_TARGET_ANDROID)
 if (CONFIG_BBQUE_PM)
   add_subdirectory(pm)
 endif (CONFIG_BBQUE_PM)
+if (CONFIG_BBQUE_EM)
+  add_subdirectory(em)
+endif (CONFIG_BBQUE_EM)
 
 
 # Add "barbeque" target binary
@@ -170,6 +173,14 @@ target_link_libraries(barbeque
 	bbque_pm
 )
 endif (CONFIG_BBQUE_PM)
+
+# Linking EventManagement support
+if (CONFIG_BBQUE_EM)
+target_link_libraries(
+	barbeque
+	bbque_em
+)
+endif (CONFIG_BBQUE_EM)
 
 # Use link path ad RPATH
 set_property(TARGET barbeque PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)

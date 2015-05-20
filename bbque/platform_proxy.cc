@@ -228,6 +228,14 @@ PlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres, bool excl) {
 		papp->SetPlatformData();
 	}
 
+#ifdef CONFIG_BBQUE_EM
+
+	EventManager &em = EventManager::GetInstance();
+	Event event("pp", "demo", 1);
+	em.Push(event);
+
+#endif
+
 	// Map resources
 	result = _MapResources(papp, pres, rvt, excl);
 

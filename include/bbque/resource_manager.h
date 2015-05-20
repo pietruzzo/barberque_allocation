@@ -30,6 +30,11 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/command_manager.h"
 
+#ifdef CONFIG_BBQUE_EM
+#include "bbque/em/event.h"
+#include "bbque/em/event_manager.h"
+#endif
+
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/timer.h"
 #include "bbque/utils/deferrable.h"
@@ -214,6 +219,11 @@ private:
 	 * @brief The Commands Manager module
 	 */
 	CommandManager & cm;
+
+	/**
+	 * @brief The Event Manager module
+	 */
+	EventManager & em;
 
 	std::bitset<EVENTS_COUNT> pendingEvts;
 
