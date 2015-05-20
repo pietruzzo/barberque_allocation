@@ -25,6 +25,7 @@
 namespace bu = bbque::utils;
 
 #define EVENT_MANAGER_NAMESPACE "bq.em"
+#define ARCHIVE_FOLDER BBQUE_PATH_PREFIX "/var/events/"
 
 namespace bbque {
 
@@ -86,7 +87,7 @@ private:
 	/**
 	 * @brief The path to the currently used archive.
 	 */
-	std::string path;
+	std::string archive_path;
 
 };
 

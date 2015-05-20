@@ -21,6 +21,7 @@
 #include <fstream>
 #include <sstream>
 
+#include <boost/filesystem.hpp>
 #include <boost/serialization/serialization.hpp>
 //#include <boost/archive/binary_oarchive.hpp>
 //#include <boost/archive/binary_iarchive.hpp>
@@ -41,9 +42,18 @@ EventManager::EventManager() {
 	assert(logger);
 
 	std::time_t timestamp = std::time(nullptr);
-	path = BBQUE_PATH_PREFIX + std::string("/var/events/events_") + TimeToString(timestamp) + std::string(".txt");
 
-	std::ofstream ofs(path);
+	archive_path = ARCHIVE_FOLDER + std::string("events_") + TimeToString(timestamp) + std::string(".txt");
+
+	// Create events folder if it doesn't exist
+	const char* folder_path = std::string(ARCHIVE_FOLDER).c_str();
+    boost::filesystem::path dir(folder_path);
+    if(boost::filesystem::create_directory(dir))
+    {
+        logger->Info("Create events Archive folder...");
+    }
+
+	std::ofstream ofs(archive_path);
 }
 
 EventManager::~EventManager() {
@@ -58,7 +68,7 @@ EventManager & EventManager::GetInstance() {
 void EventManager::Serialize(EventWrapper ew) {
 
 	// create and open the archive for output
-	std::ofstream ofs(path);
+	std::ofstream ofs(archive_path);
 
 	if (ofs.good()) {
 		try {
@@ -77,7 +87,7 @@ EventWrapper EventManager::Deserialize() {
 	EventWrapper ew;
 
 	// open the archive for input
-    std::ifstream ifs(path);
+    std::ifstream ifs(archive_path);
 
     if (ifs.good()) {
     	try {
