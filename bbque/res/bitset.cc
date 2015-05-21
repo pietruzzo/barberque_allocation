@@ -39,8 +39,10 @@ ResourceBitset::~ResourceBitset() {}
 
 ResourceBitset ResourceBitset::operator|= (const ResourceBitset & rbs) {
 	int _bit = rbs.FirstSet();
-	while (_bit <= rbs.LastSet())
-		if (rbs.Test(_bit)) Set(_bit++);
+	while (_bit <= rbs.LastSet()) {
+		if (rbs.Test(_bit)) Set(_bit);
+		_bit++;
+	}
 	return *this;
 }
 
