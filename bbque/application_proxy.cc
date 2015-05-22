@@ -334,7 +334,7 @@ ApplicationProxy::Prof_GetRuntimeDataRecv(pcmdSn_t pcs) {
 	assert(pmsg_hdr->typ == bl::RPC_BBQ_RESP);
 
 	// Update application/EXC profile data
-	logger->Debug("APPs PRX: Runtime profile data: {%d, %d}",
+	logger->Info("APPs PRX: Profile timings [us]: { exec: %d mem: %d }",
 			pmsg_pyl->exec_time, pmsg_pyl->mem_time);
 
 	assert(pcs->papp->CurrentAWM());
