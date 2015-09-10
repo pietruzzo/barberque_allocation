@@ -3083,9 +3083,6 @@ void BbqueRPC::NotifyPostMonitor(
 	// Update monitoring statistics
 	UpdateMonitorStatistics(prec);
 
-	// Update cycle time
-	prec->cps_ctime.update(
-			prec->exc_tmr.getElapsedTimeMs());
 
 	// CPS Enforcing
 	if (prec->cps_expect != 0)
