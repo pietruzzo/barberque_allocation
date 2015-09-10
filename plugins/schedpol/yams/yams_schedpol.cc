@@ -1030,11 +1030,11 @@ void YamsSchedPol::CowsUnitsBalance() {
 					sum(binding_domains[j].stalls_info) -
 					(mean(syswide_sums[COWS_STALLS]) +
 					cows_info.perf_data[COWS_STALLS]/cpu_bindings->count);
-				float dist_from_avg_iret =
+			float dist_from_avg_iret =
 					sum(binding_domains[j].iret_info) -
 					(mean(syswide_sums[COWS_IRET]) +
 					cows_info.perf_data[COWS_IRET]/cpu_bindings->count);
-				float dist_from_avg_flops =
+			float dist_from_avg_flops =
 					sum(binding_domains[j].flops_info) -
 					(mean(syswide_sums[COWS_FLOPS]) +
 					cows_info.perf_data[COWS_FLOPS]/cpu_bindings->count);
