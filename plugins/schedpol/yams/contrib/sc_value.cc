@@ -54,7 +54,7 @@ SCValue::SCValue(
 
 	// Convent to a indexed value [0..1]
 	nap_weight = static_cast<float>(napw) / 100.0;
-	logger->Debug("Normalized Actual Penalty weight \t= %.2f", nap_weight);
+	logger->Info("Goal-gap weight \t= %.2f", nap_weight);
 }
 
 SCValue::~SCValue() {
@@ -73,10 +73,10 @@ SCValue::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	ba::AwmPtr_t const & curr_awm(evl_ent.papp->CurrentAWM());
 
 	// Initialize the index contribute to the AWM static value
+	logger->Debug("%s: Static value = %.2f ",
+			evl_ent.StrId(), evl_ent.pawm->Value());
 	if (!curr_awm || (evl_ent.papp->GetGoalGap() == 0)) {
 		ctrib = evl_ent.pawm->Value();
-		logger->Debug("%s: Static value = %.2f ",
-				evl_ent.StrId(), evl_ent.pawm->Value());
 		return SC_SUCCESS;
 	}
 
@@ -86,8 +86,9 @@ SCValue::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	// the Goal-Gap.
 	float goal_gap_perc = static_cast<float>(evl_ent.papp->GetGoalGap()) / 100.0;
 	float ideal_value   = curr_awm->Value() * (1 + (nap_weight) * goal_gap_perc);
-	logger->Debug("%s: Gap=%.2f, currV=%.2f, idealV=%.2f, dV=%.2f",
-			evl_ent.StrId(), goal_gap_perc, evl_ent.pawm->Value(), ideal_value,
+	logger->Debug("%s: Gap=%.2f, currV=%.2f, evalV=%2f, idealV=%.2f, dV=%.2f",
+			evl_ent.StrId(), goal_gap_perc,
+			curr_awm->Value(), evl_ent.pawm->Value(), ideal_value,
 			static_cast<float>(evl_ent.pawm->Value()) - ideal_value);
 
 	// Get the delta between the value of the AWM under evaluation and the
