@@ -306,6 +306,12 @@ RTLIB_ExitCode_t BbqueEXC::SetCPS(float cps) {
 	return rtlib->CPS.Set(exc_hdl, cps);
 }
 
+RTLIB_ExitCode_t BbqueEXC::SetCPSGoal(float cps) {
+	DB(logger->Debug("Set cycles-rate goal to [%.3f] [Hz] for EXC [%s] (@%p)...",
+			cps, exc_name.c_str(), (void*)exc_hdl));
+	return rtlib->CPS.SetGoal(exc_hdl, cps);
+}
+
 RTLIB_ExitCode_t BbqueEXC::SetCTimeUs(uint32_t us) {
 	DB(logger->Debug("Set cycles-time to [%" PRIu32 "] [us] for EXC [%s] (@%p)...",
 			us, exc_name.c_str(), (void*)exc_hdl));

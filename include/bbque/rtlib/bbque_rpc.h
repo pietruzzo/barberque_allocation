@@ -184,6 +184,19 @@ public:
 	float GetCPS(RTLIB_ExecutionContextHandler_t ech);
 
 	/**
+	 * @brief Set the required Cycles Per Second goal (CPS)
+	 *
+	 * This allows to define the required and expected cycles rate.
+	 * Conversely from "SetCPS" if the (percentage) gap between the current
+	 * CPS performance and the CPS goal overpass the configured threshold, a
+	 * SetGoalGap is automatically called. This relieves the application
+	 * developer from the burden of explicitely sending a goal-gap at each
+	 * iteration.
+	 */
+	RTLIB_ExitCode_t SetCPSGoal(RTLIB_ExecutionContextHandler_t ech,
+			float cps);
+
+	/**
 	 * @brief Set the required Cycle time [us]
 	 *
 	 * This allows to define the required and expected cycle time. If at
@@ -407,10 +420,12 @@ protected:
 
 		double mon_tstart = 0; // [ms] at the last monitoring start time
 
+		/** CPS performance monitoring/control */
 		double cps_tstart = 0; // [ms] at the last cycle start time
-		float cps_max = 0;     // [Hz] the requried maximum CPS
-		float cps_expect = 0;  // [ms] the expected cycle time
+		float  cps_expect = 0; // [ms] the expected cycle time
 		bu::EMA cps_ctime;     // [ms] Cycle Time on-line estimation
+		float  cps_goal   = 0; // [Hz] the required CPS
+		float  cps_max    = 0; // [Hz] the required maximum CPS
 
 		RegisteredExecutionContext(const char *_name, uint8_t id) :
 			name(_name), exc_id(id), cps_ctime(BBQUE_RTLIB_CPS_TIME_SAMPLES) {

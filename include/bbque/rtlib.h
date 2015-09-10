@@ -670,6 +670,22 @@ typedef float (*RTLIB_CPS_Get)(
 		RTLIB_ExecutionContextHandler_t ech);
 
 /**
+ * @brief Setup the Cycles Per Seconds (CPS) goal
+ * @ingroup rtlib_sec03_plain_cps
+ *
+ * The RTLib provides the support to specify a certain cycle rate goal.
+ * If the goal is not matched, a SetGoalGap request is sent to the
+ * BarbequeRTRM daemon.
+ *
+ * @param ech the handler of the EXC to configure
+ * @param cps the required Cycles Per Seconds [Hz]
+ */
+typedef RTLIB_ExitCode_t (*RTLIB_CPS_Goal_Set)(
+		RTLIB_ExecutionContextHandler_t ech,
+		float cps);
+
+
+/**
  * @brief Setup the Cycles Time [us] support
  * @ingroup rtlib_sec03_plain_cps
  *
@@ -1078,6 +1094,7 @@ struct RTLIB_Services {
 	struct {
 		RTLIB_CPS_Set Set;
 		RTLIB_CPS_Get Get;
+		RTLIB_CPS_Goal_Set SetGoal;
 		RTLIB_CPS_CTimeUs SetCTimeUs;
 	} CPS;
 

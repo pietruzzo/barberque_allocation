@@ -1911,6 +1911,8 @@ RTLIB_ExitCode_t BbqueRPC::GGap(
 				(void*)ech, prec->name.c_str(), result,RTLIB_ErrorStr(result));
 		return RTLIB_EXC_ENABLE_FAILED;
 	}
+	logger->Notice("Set Goal-Gap for EXC [%p:%s] = %.d", (void*)ech,
+			prec->name.c_str(), percent);
 
 	return RTLIB_OK;
 }
@@ -2810,7 +2812,6 @@ RTLIB_ExitCode_t BbqueRPC::SetCPS(
 	logger->Info("Set cycle-rate @ %.3f[Hz] (%.3f[ms])",
 				prec->cps_max, prec->cps_expect);
 	return RTLIB_OK;
-
 }
 
 float BbqueRPC::GetCPS(
@@ -2869,6 +2870,29 @@ void BbqueRPC::ForceCPS(pregExCtx_t prec) {
 
 	// Update the start time of the next cycle
 	prec->cps_tstart = bbque_tmr.getElapsedTimeMs();
+}
+
+
+RTLIB_ExitCode_t BbqueRPC::SetCPSGoal(
+	RTLIB_ExecutionContextHandler_t ech,
+	float cps) {
+	pregExCtx_t prec;
+
+	// Get a reference to the EXC to control
+	assert(ech);
+	prec = getRegistered(ech);
+	if (!prec) {
+		logger->Error("Unregister EXC [%p] FAILED "
+				"(EXC not registered)", (void*)ech);
+		return RTLIB_EXC_NOT_REGISTERED;
+	}
+	assert(isRegistered(prec) == true);
+
+	// Keep track of the maximum required CPS
+	prec->cps_goal = cps;
+	logger->Info("Set cycle-rate Goal (CPS) @ %.3f[Hz] (%.3f[ms])",
+				prec->cps_goal, 1000.0 / prec->cps_goal);
+	return RTLIB_OK;
 }
 
 /*******************************************************************************
@@ -3083,6 +3107,14 @@ void BbqueRPC::NotifyPostMonitor(
 	// Update monitoring statistics
 	UpdateMonitorStatistics(prec);
 
+	// Send a goal-gap is the CPS goal is set
+	if (prec->cps_goal > 0) {
+		float curr_cps = 1000.0 / prec->cps_ctime.get();
+		int ctime_gap_percent = ((curr_cps - prec->cps_goal) / prec->cps_goal)*100;
+		logger->Debug("GetCPS: %.3f GoalCPS: %.3f GGap: %d",
+				curr_cps, prec->cps_goal, ctime_gap_percent);
+		GGap(ech, ctime_gap_percent);
+	}
 
 	// CPS Enforcing
 	if (prec->cps_expect != 0)

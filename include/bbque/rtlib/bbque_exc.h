@@ -360,6 +360,25 @@ public:
 	RTLIB_ExitCode_t SetCPS(float cps);
 
 /**
+ * @brief Set the cycle rate goal for this EXC
+ *
+ * The AEM defined by this API runs a processing cycle which corresponds to a
+ * loop of \ref onRun and \ref onMonitor calls.
+ *
+ * This method allows to set a cycle rate goal to the specified <i>Cycles
+ * Per Second (CPS)</i> value. In case of performance gap (CPS percentage)
+ * overpassing a configurable threshold, a SetGoalGap is automatically called.
+ * As a consequence the BarbequeRTRM is aware of the performance gap and can
+ * properly re-assign the resources.
+ *
+ * @return RTLIB_OK on success, RTLIB_ERROR or one of the other exit codes
+ * otherwise.
+ *
+ * @ingroup rtlib_sec02_aem_utils
+ */
+	RTLIB_ExitCode_t SetCPSGoal(float cps);
+
+/**
  * @brief Set the cycle time for this EXC
  *
  * The AEM defined by this API runs a processing cycle which corresponds to a
