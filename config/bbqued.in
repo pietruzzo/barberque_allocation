@@ -223,7 +223,7 @@ setup() {
 	fi
 
 	echo "Loading CGroups configuration [$CGSETUP]..."
-	$BBQUE_CGPARSER -l $CGSETUP || exit 1
+	LD_PRELOAD=$SYSROOT/lib/libcgroup.so $BBQUE_CGPARSER -l $CGSETUP || exit 1
 
 	echo "Setup CGroups shield..."
 	ShieldBuild
