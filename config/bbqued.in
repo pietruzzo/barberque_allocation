@@ -148,6 +148,16 @@ setup() {
 
 	# Check for required ROOT permissions
 	check_root
+	eval `env | grep SUDO_USER`
+	echo "Sudo user: " $SUDO_USER
+
+	# Check for runt-time R/W directories
+	if [ ! -d "$BRTRW" ]; then
+		mkdir -p $BRTRW/bbque
+		mkdir -p $BRTRW/lock
+		mkdir -p $BRTRW/run
+		chown $SUDO_USER:$SUDO_USER $BRTRW -R
+	fi
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
 	if [ -z "$PILNAME" ]; then
