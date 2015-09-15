@@ -169,15 +169,15 @@ void Battery::LogReportStatus() {
 }
 
 std::string Battery::PrintChargeBar() {
-	char bar[] = "          ";
-	char str[20];
-	int charge = GetChargePerc();
 	int i;
+	int charge = GetChargePerc();
+	std::string bar("[");
 	for (i = 0; i < (charge / 10); ++i)
-		bar[i] = '=';
-	sprintf(str, "[%d %%][%-10s] ", charge, bar);
-	std::string bar_str(str);
-	return bar_str;
+		bar += "=";
+	bar += "] ";
+	bar += std::to_string(charge);
+	bar += "%";
+	return bar;
 }
 
 
