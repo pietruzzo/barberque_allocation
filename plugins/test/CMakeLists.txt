@@ -1,8 +1,4 @@
 
-#----- Add "testing" target dynamic library
-set(PLUGIN_TEST_COREINT_SRC  coreint_test coreint_plugin)
-add_library(plugin_test_coreint MODULE ${PLUGIN_TEST_COREINT_SRC})
-
 #----- Add "testing" target static library
 set(PLUGIN_DUMMY_SRC  dummy_test dummy_plugin)
 #add_library(plugin_test_dummy STATIC ${PLUGIN_DUMMY_SRC})
