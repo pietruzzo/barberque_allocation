@@ -140,6 +140,10 @@ private:
 	 * @brief Battery manager instance
 	 */
 	BatteryManager & bm;
+	/*
+	 * @brief Battery object instance
+	 */
+	BatteryPtr_t pbatt;
 #endif
 
 	/**

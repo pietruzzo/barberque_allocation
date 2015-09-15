@@ -92,9 +92,18 @@ PowerMonitor::PowerMonitor():
 			static_cast<CommandHandler*>(this),
 			"Start/stop power monitor data logging");
 
+#ifdef CONFIG_BBQUE_PM_BATTERY
+	pbatt = bm.GetBattery();
+	if (pbatt == nullptr)
+		logger->Warn("Battery available: NO");
+	else
+		logger->Info("Battery available: %s", pbatt->StrId().c_str());
+#endif // CONFIG_BBQUE_PM_BATTERY
+
 	//---------- Setup Worker
 	Worker::Setup(BBQUE_MODULE_NAME("wm"), POWER_MONITOR_NAMESPACE);
 	Worker::Start();
+
 }
 
 void PowerMonitor::Init() {
@@ -128,6 +137,11 @@ void PowerMonitor::Task() {
 			Sample();
 			std::this_thread::sleep_for(
 					std::chrono::milliseconds(wm_info.period_ms));
+#ifdef CONFIG_BBQUE_PM_BATTERY
+			if (pbatt == nullptr) continue;
+			logger->Debug("PWR MNT: Battery power = %.2f W",
+					(((float) pbatt->GetPower()) / 1e3));
+#endif // CONFIG_BBQUE_PM_BATTERY
 		}
 	}
 }
