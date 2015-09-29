@@ -27,6 +27,7 @@
 #define BBQUE_LINUX_SYS_CPU_PREFIX   "/sys/devices/system/cpu/cpu"
 #define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/devices/platform/coretemp.0/temp"
 
+
 using namespace bbque::res;
 
 namespace bbque {
@@ -34,7 +35,7 @@ namespace bbque {
 /**
  * @class CPUPowerManager
  *
- * Provide power management related API for AMD GPU devices, by extending @ref
+ * Provide generic power management API related to CPUs, by extending @ref
  * PowerManager class.
  */
 class CPUPowerManager: public PowerManager {
@@ -84,6 +85,15 @@ public:
 	 */
 	PMResult GetAvailableFrequencies(
 			ResourcePathPtr_t const & rp, std::vector<unsigned long> &freqs);
+
+	/** Power consumption  */
+
+	PMResult GetPowerUsage(
+			br::ResourcePathPtr_t const & rp, uint32_t & mwatt) {
+		(void) rp;
+		mwatt = 0;
+		return PMResult::ERR_API_NOT_SUPPORTED;
+	}
 
 
 protected:
