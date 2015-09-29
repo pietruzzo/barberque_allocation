@@ -31,6 +31,9 @@
 #ifdef CONFIG_TARGET_ODROID_XU // Odroid XU-3
 # include "bbque/pm/power_manager_cpu_odroidxu.h"
 #endif // CONFIG_TARGET_ODROID_XU
+#ifdef CONFIG_TARGET_ARM_CORTEX_A9
+# include "bbque/pm/power_manager_cpu_arm_cortexa9.h"
+#endif // CONFIG_TARGET_FREESCALE_IMX6Q
 #endif
 
 
@@ -104,14 +107,21 @@ PowerManager::PowerManager() {
 
 	// CPU
 #ifdef CONFIG_BBQUE_PM_CPU
-#ifdef CONFIG_TARGET_ODROID_XU
+# ifdef CONFIG_TARGET_ODROID_XU
 	logger->Notice("Using ODROID-XU CPU power management module");
 	cpu = std::unique_ptr<PowerManager>(new ODROID_XU_CPUPowerManager());
-#else
-	logger->Notice("Using CPU power management module");
+	return;
+# endif
+# ifdef CONFIG_TARGET_ARM_CORTEX_A9
+	logger->Notice("Using ARM Cortex A9 CPU power management module");
+	cpu = std::unique_ptr<PowerManager>(new ARM_CortexA9_CPUPowerManager());
+	return;
+# endif
+   // Generic
+	logger->Notice("Using generic CPU power management module");
 	cpu = std::unique_ptr<PowerManager>(new CPUPowerManager());
-#endif // CONFIG_TARGET_ODROID_XU
-#endif
+#endif // CONFIG_BBQUE_PM_CPU
+
 }
 
 
