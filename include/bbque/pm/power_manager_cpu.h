@@ -101,6 +101,9 @@ protected:
 	/*** Mapping processing elements / CPU cores */
 	std::map<int,int> core_ids;
 
+	/*** Mapping system CPU cores to thermal sensors path */
+	std::map<int, std::string * > core_therms;
+
 	/*** Available clock frequencies for each processing element (core) */
 	std::map<int, std::vector<unsigned long> * > core_freqs;
 

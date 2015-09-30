@@ -47,7 +47,19 @@ CPUPowerManager::CPUPowerManager() {
 	bu::IoFs::ExitCode_t result;
 	int cpu_id  = -1;
 	int core_id = 0;
-
+	// CPU <--> Core id mapping:
+	// CPU is commonly used to reference the cores while in the BarbequeRTRM
+	// 'core' is referenced as 'processing element', thus it needs a unique id
+	// number. For instance in a SMT Intel 4-core:
+	// -----------------------------------------------------------------------
+	// CPU/HWt  Cores
+	// 0        0
+	// 1        0
+	// 2        1
+	// 3        1
+	// ------------------------------------------------------------------------
+	// Therefore we consider 'processing element' what Linux calls CPU
+	//-------------------------------------------------------------------------
 	while (++cpu_id) {
 		result = bu::IoFs::ReadIntValueFrom<int>(
 				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(cpu_id) +
@@ -59,6 +71,35 @@ CPUPowerManager::CPUPowerManager() {
 		core_ids[cpu_id]   = core_id;
 		// Available frequencies per core
 		core_freqs[cpu_id] = _GetAvailableFrequencies(cpu_id);
+	}
+
+	// Thermal sensors mapping
+	char str_value[8];
+	int sensor_id = TEMP_SENSOR_FIRST_ID;
+	while (1) {
+		std::string therm_file(
+				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
+				"_label");
+		result = bu::IoFs::ReadValueFrom(therm_file.c_str(), str_value, 8);
+		if (result != bu::IoFs::OK) {
+			logger->Warn("Failed in reading from %s", therm_file.c_str());
+			break;
+		}
+
+		// Look for the label containing the core ID required
+		std::string core_label(str_value);
+		sensor_id += TEMP_SENSOR_STEP_ID;
+		if (core_label.find("Core") != 0) {
+			logger->Crit("Label = %s", core_label.c_str());
+			continue;
+		}
+
+		int core_id = std::stoi(core_label.substr(5));
+		core_therms[core_id] = new std::string(
+				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
+				"_input");
+		logger->Crit("Thermal sensors: PE (core) %d: %s", core_id,
+				therm_file.c_str());
 	}
 }
 
@@ -237,54 +278,27 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 		ResourcePathPtr_t const & rp,
 		uint32_t & celsius){
 	PMResult result = PMResult::ERR_INFO_NOT_SUPPORTED;
+	bu::IoFs::ExitCode_t io_result;
 	celsius = 0;
 
-	// Extracting the PE ID, and searching for its Core in the map
-	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
-	std::map<int,int>::iterator core_id_iter = core_ids.find(pe_id);
-	if(core_id_iter == core_ids.end())
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
-	int core_id = core_id_iter->second;
-
-	// The sensor we are searching for contains this label (e.g. `Core 2`)
-	std::string sensor_name = "Core " + std::to_string(core_id);
-	std::string sensor_label;
-	std::string sensor_value;
-	int sensor_id = TEMP_SENSOR_FIRST_ID;
-
-	// Cycling through the available sensors
-	while (1) {
-		// Look for the sensors
-		std::ifstream sensor_info(
-				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
-				"_label");
-		if (!sensor_info) break;
-
-		// Look for the label containing the core ID required
-		std::getline(sensor_info, sensor_label);
-		if (sensor_label.compare(sensor_name) != 0) {
-			sensor_id += TEMP_SENSOR_STEP_ID;
-			continue;
-		}
-
-		// Get the value
-		std::ifstream sensor_data(
-				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
-				"_input");
-		if (!sensor_data) {
-			logger->Error("Unable to read data from "
-				"temperature sensor %d", sensor_id);
-			return PMResult::ERR_SENSORS_ERROR;
-		}
-		std::getline(sensor_data, sensor_value);
-		celsius = (uint32_t) atoi(sensor_value.c_str()) / 1000;
-		logger->Debug("Temperature @sensor %d: %s °C",
-			sensor_id, sensor_value.c_str());
-		result = PMResult::OK;
-		break;
+	int pe_id   = rp->GetID(br::Resource::PROC_ELEMENT);
+	// We may have the same sensor for more than one processing element, the
+	// sensor is referenced at "core" level
+	int core_id = core_ids[pe_id];
+	if (nullptr == core_therms[core_id]) {
+		logger->Debug("Thermal sensor: not available");
+		return result;
 	}
 
-	return result;
+	io_result =	bu::IoFs::ReadIntValueFrom<uint32_t>(
+				core_therms[core_id]->c_str(), celsius);
+	if (io_result != bu::IoFs::OK) {
+		logger->Error("Cannot read current temperature for %s",
+				rp->ToString().c_str());
+		return PMResult::ERR_SENSORS_ERROR;
+	}
+	logger->Debug("Thermal sensor [%s] = %d", rp->ToString().c_str(), celsius);
+	return PMResult::OK;
 }
 
 PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
