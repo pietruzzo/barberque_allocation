@@ -20,9 +20,11 @@
 
 #include <cstdint>
 #include <string>
-#include <ctime>
+//#include <ctime>
+#include "bbque/cpp11/chrono.h"
 
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/binary_object.hpp>
 
 namespace bbque {
 
@@ -36,12 +38,15 @@ public:
 
 	/**
 	 * @brief Constructor
-	 * @param module The module which has triggered the event
+	 * @param module the module which has triggered the event
+	 * @param resource the resource destination of the event
+	 * @param application the application
 	 * @param type of event
 	 * @param value associated to the event
 	 */
-	Event(std::string const & module, std::string const & type,
-		const int & value);
+	Event(std::string const & module, std::string const & resource,
+	 	std::string const & application, std::string const & type, 
+	 	const int & value);
 
 	/**
 	 * @brief Destructor
@@ -56,16 +61,33 @@ public:
 	}
 
 	/**
+	 * @brief Get the resource destination of the event 
+	 */
+	inline std::string GetResource() {
+		return this->resource;
+	}
+
+	/**
+	 * @brief Get the application
+	 */
+	inline std::string GetApplication() {
+		return this->application;
+	}
+
+	/**
 	 * @brief Get the type of event
 	 */
 	inline std::string GetType() {
 		return this->type;
 	}
 
-	/**
-	 * @brief Get the timestamp
-	 */
-	inline std::time_t GetTimestamp() {
+	/*
+	inline long GetTimestamp() {
+		return this->timestamp;
+	}
+	*/
+
+	inline std::chrono::milliseconds GetTimestamp() {
 		return this->timestamp;
 	}
 
@@ -75,11 +97,14 @@ public:
 	inline int GetValue() {
 		return this->value;
 	}
+	
+	/*
+	inline void SetTimestamp(std::chrono::milliseconds timestamp) {
+		this->timestamp = (long long int)timestamp.count();
+	}
+	*/
 
-	/**
-	 * @brief Set the timestamp
-	 */
-	inline void SetTimestamp(std::time_t timestamp) {
+	inline void SetTimestamp(std::chrono::milliseconds timestamp) {
 		this->timestamp = timestamp;
 	}
 
@@ -91,16 +116,24 @@ private:
     {
     	if (version == 0 || version != 0)
     	{
-    		ar & timestamp;
+    		//ar & timestamp;
+    		ar & boost::serialization::make_binary_object(&timestamp, sizeof(timestamp));        
 	        ar & module;
+	        ar & resource;
+	        ar & application;
 	        ar & type;
 	        ar & value;
 	    }
 	}
 
-    std::time_t timestamp;
+	//long long int timestamp;
+    std::chrono::milliseconds timestamp;
 
 	std::string module;
+
+	std::string resource;
+
+	std::string application;
 
 	std::string type;
 

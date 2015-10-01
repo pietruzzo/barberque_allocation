@@ -28,6 +28,8 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
+using namespace std::chrono;
+
 namespace bbque {
 
 std::string EventManager::TimeToString(time_t t) {
@@ -106,7 +108,7 @@ EventWrapper EventManager::Deserialize() {
 void EventManager::InitializeArchive(Event event) {
 	logger->Info("Initialize Archive...");
 
-	std::time_t timestamp = std::time(nullptr);
+	milliseconds timestamp = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 	event.SetTimestamp(timestamp);
 
 	EventWrapper ew;
@@ -117,10 +119,11 @@ void EventManager::InitializeArchive(Event event) {
 void EventManager::Push(Event event) {
 	logger->Info("Push Event...");
 
-	std::time_t timestamp = std::time(nullptr);
+	milliseconds timestamp = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 	event.SetTimestamp(timestamp);
 
 	EventWrapper ew;
+	
     ew = Deserialize();
     ew.AddEvent(event);
     Serialize(ew);

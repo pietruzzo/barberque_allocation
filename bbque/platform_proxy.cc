@@ -231,7 +231,7 @@ PlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres, bool excl) {
 #ifdef CONFIG_BBQUE_EM
 
 	EventManager &em = EventManager::GetInstance();
-	Event event("pp", "demo", 1);
+	Event event("module1", "resource1", "application1", "type1", 1);
 	em.Push(event);
 
 #endif
