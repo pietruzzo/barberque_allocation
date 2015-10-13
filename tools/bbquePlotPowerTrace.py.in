@@ -1,0 +1,191 @@
+#!/usr/bin/python
+#
+# Copyright (C) 2015  Politecnico di Milano
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>!/u
+
+import getopt
+import glob
+import os
+import string
+import sys
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib import rc, rcParams
+from mpl_toolkits.axes_grid1 import host_subplot
+import mpl_toolkits.axisartist as AA
+
+rcParams['ps.useafm'] = True
+rcParams['pdf.use14corefonts'] = True
+rcParams['text.usetex'] = False
+rcParams['text.latex.unicode']=True
+
+
+hposition = {
+        'Load'       : 0,
+        'Temperature': 1,
+        'Frequency'  : 2,
+        'Power'      : 3
+}
+
+# Header
+samples = {
+        'Load'       : [],
+        'Temperature': [],
+        'Frequency'  : [],
+        'Power'      : []
+}
+
+# Header
+plotparams = {
+        'Load'       : ['grey'],
+        'Temperature': ['#FF4400'],
+        'Frequency'  : ['green'],
+        'Power'      : ['red']
+}
+# Header
+plotunits = {
+        'Load'       : ' %',
+        'Temperature': ' [C]',
+        'Frequency'  : ' [MHz]',
+        'Power'      : ' [W]'
+}
+
+samples_per_second = 2
+filename_pattern   = 'sys*.dat'
+data_dir = '/tmp'
+out_dir  = "/tmp"
+
+
+def usageHelp():
+    print ""
+    print sys.argv[0], "-o <output_dir> [-i <input_dir>=/tmp]"
+    print ""
+
+
+def getFileList(search_root_dir, search_pattern):
+    filelist = []
+    os.chdir(search_root_dir)
+    print "[I] Searching data files... ",
+    for filename in glob.glob(search_pattern):
+        filelist.append(search_root_dir + '/' + filename)
+    print "{} found.".format(len(filelist))
+    return filelist
+
+
+def loadData(filename):
+    print "[I] Loading [{}]... ".format(filename)
+    data = samples
+    for column in data.keys():
+        loaded_data = np.loadtxt(filename, usecols=[hposition[column]])
+        if column == 'Frequency' or column=='Temperature':
+            data[column] = [ f/1e3 for f in loaded_data ]
+        else:
+            data[column] = loaded_data
+#        print column.ljust(12), " ", data[column]
+    return data
+
+
+def extractPrefixName(cstring):
+    sparts = cstring.split("/")
+    prefix = sparts[len(sparts)-1].split(".dat")
+    return prefix[0]
+
+
+def plotTraceOverlap(data, out_dir, prefix):
+    host = host_subplot(111, axes_class=AA.Axes)
+    plt.subplots_adjust(right=0.75)
+
+    par1 = host.twinx()
+    par2 = host.twinx()
+    offset = 60
+    new_fixed_axis = par2.get_grid_helper().new_fixed_axis
+    par2.axis["right"] = new_fixed_axis(loc="right", axes=par2, offset=(offset, 0))
+    par2.axis["right"].toggle(all=True)
+
+    time = range(0, len(data['Load']) * samples_per_second, samples_per_second)
+    host.set_ylim(0, 110)
+#    host.set_xlim(0, max(x)+(0.25*max(x)))
+    host.set_xlabel("Time [s]")
+    host.set_ylabel("Load [%]")
+    par1.set_ylabel("Temperature [C]")
+    par2.set_ylabel("Frequency [MHz]")
+
+    p1, = host.fill(time, data['Load'], label="Load",
+            color=plotparams['Load'][0], alpha=0.4, linewidth=1,
+            edgecolor='black')
+    p2, = par1.plot(time, data['Temperature'], label="Temperature",
+            color=plotparams['Temperature'][0], linewidth=2)
+    p3, = par2.plot(time, data['Frequency'], label="Frequency",
+            color=plotparams['Frequency'][0], linewidth=1.8)
+
+    par1.set_ylim(20, max(data['Temperature'])+(0.1*max(data['Temperature'])))
+    par2.set_ylim(0, max(data['Frequency'])+(0.1*max(data['Frequency'])))
+    host.legend(loc='upper center', bbox_to_anchor=(0.5, 1.10),
+                  ncol=3, fancybox=True, shadow=True)
+#    host.axis["left"].label.set_color(p1.get_color())
+    par1.axis["right"].label.set_color(p2.get_color())
+    par1.axis["right"].major_ticks.set_color(p2.get_color())
+    par1.axis["right"].major_ticklabels.set_color(p2.get_color())
+
+    par2.axis["right"].label.set_color(p3.get_color())
+    par2.axis["right"].major_ticks.set_color(p3.get_color())
+    par2.axis["right"].major_ticklabels.set_color(p3.get_color())
+
+    plt.draw()
+    plt.title("The BarbequeRTRM: Power data trace plot")
+    filename = out_dir +'/bbque-power-' + prefix + ".png"
+    plt.savefig(filename, papertype = 'a3', format = 'png')
+    print "[I] Plot generated: ", filename
+    plt.close()
+
+#######################################################################
+# MAIN
+#######################################################################
+
+if __name__ == "__main__":
+    print  "=========================================================="
+    print  "| The BarbequeRTRM: Power data trace plot                |"
+    print  "=========================================================="
+    # Arguments parsing
+    opts, args = getopt.getopt(
+            sys.argv[1:], "ho:i:",
+            ["help", "output=", "input="])
+    for o, a in opts:
+        if o in ("-o", "--output"):
+            out_dir = a
+        elif o in ("-i", "--input"):
+            data_dir = a
+        else:
+            usageHelp()
+            sys.exit(1)
+    print "| Input data directory : {}".format(data_dir)
+    print "| Output data directory: {}".format(data_dir)
+    print  "----------------------------------------------------------"
+
+    # Retrieve all the data traces
+    datafiles = getFileList(data_dir, filename_pattern)
+    if len(datafiles) == 0:
+        print "[E] No power trace files found. "\
+            "Check power monitor data logging status."
+        sys.exit(2)
+    # Plot
+    for filename in datafiles:
+        data = loadData(filename)
+        prefix = extractPrefixName(filename)
+        print "[I] File name prefix : {}".format(prefix)
+        plotTraceOverlap(data, out_dir, prefix)
+

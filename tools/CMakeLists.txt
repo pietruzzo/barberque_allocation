@@ -141,3 +141,13 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/pysched/modules/barbeque_utils.py"
 	DESTINATION ${BBQUE_PATH_BBQ}/pysched/modules/
 )
 
+# ------- Deploy the BarbequeRTRM power traces plotter
+configure_file (
+	"${PROJECT_SOURCE_DIR}/tools/bbquePlotPowerTrace.py.in"
+	"${PROJECT_BINARY_DIR}/tools/bbquePlotPowerTrace.py"
+	@ONLY
+)
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbquePlotPowerTrace.py"
+	DESTINATION ${BBQUE_PATH_BBQ}
+	RENAME bbque-plotrace)
+
