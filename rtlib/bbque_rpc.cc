@@ -1898,7 +1898,7 @@ RTLIB_ExitCode_t BbqueRPC::GGap(
 
 	// Goal-Gap filtering based on pre-configured threshold value
 	if (unlikely(std::abs(percent) < conf.asrtm.ggap_forward_threshold)) {
-		logger->Warn("Set Goal-Gap [%2d] FILTERED for EXC [%p] "
+		logger->Debug("Set Goal-Gap [%2d] FILTERED for EXC [%p] "
 				"(Lower than threshold value [%d])",
 				percent, (void*)ech,
 				conf.asrtm.ggap_forward_threshold);
@@ -3114,7 +3114,6 @@ void BbqueRPC::NotifyPostMonitor(
 		return;
 	}
 	assert(isRegistered(prec) == true);
-
 	logger->Debug("<=== NotifyMonitor");
 
 	// Update monitoring statistics
@@ -3123,7 +3122,8 @@ void BbqueRPC::NotifyPostMonitor(
 	// Send a goal-gap is the CPS goal is set
 	if (prec->cps_goal > 0) {
 		float curr_cps = 1000.0 / prec->cps_ctime.get();
-		int ctime_gap_percent = ((curr_cps - prec->cps_goal) / prec->cps_goal)*100;
+		int ctime_gap_percent =
+			((curr_cps - prec->cps_goal) / prec->cps_goal)*100;
 		logger->Debug("GetCPS: %.3f GoalCPS: %.3f GGap: %d",
 				curr_cps, prec->cps_goal, ctime_gap_percent);
 		GGap(ech, ctime_gap_percent);
