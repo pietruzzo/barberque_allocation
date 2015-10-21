@@ -979,6 +979,7 @@ typedef struct RTLIB_Conf {
 	// Application-Specific RTM
 	struct {
 		int ggap_forward_threshold;
+		uint16_t ggap_forward_rate;
 	} asrtm;
 
 

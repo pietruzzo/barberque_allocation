@@ -138,6 +138,8 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions() {
 
 	conf.asrtm.ggap_forward_threshold =
 		BBQUE_DEFAULT_GGAP_THRESHOLD_FORWARD;
+	conf.asrtm.ggap_forward_rate =
+		BBQUE_DEFAULT_GGAP_RATE_FORWARD;
 
 	conf.unmanaged.enabled = false;
 	conf.unmanaged.awm_id = 0;

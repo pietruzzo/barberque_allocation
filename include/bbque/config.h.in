@@ -260,9 +260,17 @@
  * asserted GoalGap value is greater than a predefined and configured value.
  * The run-time value could be configured via the:
  *   ApplicationManager.ggap.threshold_optimize
- * parameter of the BarbqueRTRM configuration file.
+ * parameter of the BarbequeRTRM configuration file.
  */
 #define BBQUE_DEFAULT_GGAP_THRESHOLD_OPTIMIZE ${CONFIG_BBQUE_GGAP_THRESHOLD_OPTIMIZE}
+
+/**
+ * @brief The GoalGap Forward Rate
+ *
+ * The RTLib can be configured to forward a goal-gap only every N cycles.
+ * Where N is the value of this paramenter.
+ */
+#define BBQUE_DEFAULT_GGAP_RATE_FORWARD ${CONFIG_BBQUE_RTLIB_GGAP_RATE_FORWARD}
 
 /**
  * @brief CPS: Cycle-time number of samples for EMA computation
