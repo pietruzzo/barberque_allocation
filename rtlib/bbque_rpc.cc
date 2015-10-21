@@ -1885,6 +1885,12 @@ RTLIB_ExitCode_t BbqueRPC::GGap(
 	pregExCtx_t prec;
 
 	assert(ech);
+	prec = getRegistered(ech);
+	if (!prec) {
+		logger->Error("Set Goal-Gap for EXC [%p] "
+				"(Error: EXC not registered)", (void*)ech);
+		return RTLIB_EXC_NOT_REGISTERED;
+	}
 
 	// Goal-Gap filtering based on pre-configured reactivity value
 	if ((prec->cycles_count - prec->ggap_last_cycle)
@@ -1903,13 +1909,6 @@ RTLIB_ExitCode_t BbqueRPC::GGap(
 				percent, (void*)ech,
 				conf.asrtm.ggap_forward_threshold);
 		return RTLIB_OK;
-	}
-
-	prec = getRegistered(ech);
-	if (!prec) {
-		logger->Error("Set Goal-Gap for EXC [%p] "
-				"(Error: EXC not registered)", (void*)ech);
-		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	// Check the application is not in sync
