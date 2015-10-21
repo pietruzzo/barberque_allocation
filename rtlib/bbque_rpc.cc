@@ -1886,6 +1886,16 @@ RTLIB_ExitCode_t BbqueRPC::GGap(
 
 	assert(ech);
 
+	// Goal-Gap filtering based on pre-configured reactivity value
+	if ((prec->cycles_count - prec->ggap_last_cycle)
+			< conf.asrtm.ggap_forward_rate) {
+		logger->Debug("Set Goal-Gap [%2d] FILTERED for EXC [%p] "
+				"(Lower than reactivity cycle count [%d])",
+				percent, (void*)ech,
+				conf.asrtm.ggap_forward_rate);
+		return RTLIB_OK;
+	}
+
 	// Goal-Gap filtering based on pre-configured threshold value
 	if (unlikely(std::abs(percent) < conf.asrtm.ggap_forward_threshold)) {
 		logger->Warn("Set Goal-Gap [%2d] FILTERED for EXC [%p] "
@@ -1916,6 +1926,7 @@ RTLIB_ExitCode_t BbqueRPC::GGap(
 	logger->Notice("Set Goal-Gap for EXC [%p:%s] = %.d", (void*)ech,
 			prec->name.c_str(), percent);
 
+	prec->ggap_last_cycle = prec->cycles_count;
 	return RTLIB_OK;
 }
 

@@ -427,6 +427,9 @@ protected:
 		float  cps_goal   = 0; // [Hz] the required CPS
 		float  cps_max    = 0; // [Hz] the required maximum CPS
 
+		/** Cycle of the last goal-gap assertion */
+		uint64_t ggap_last_cycle = 0;
+
 		RegisteredExecutionContext(const char *_name, uint8_t id) :
 			name(_name), exc_id(id), cps_ctime(BBQUE_RTLIB_CPS_TIME_SAMPLES) {
 		//		rr.user_threshold = RTLIB_RR_THRESHOLD_DISABLE;
