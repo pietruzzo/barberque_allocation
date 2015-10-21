@@ -1888,7 +1888,7 @@ RTLIB_ExitCode_t BbqueRPC::GGap(
 
 	// Goal-Gap filtering based on pre-configured threshold value
 	if (unlikely(std::abs(percent) < conf.asrtm.ggap_forward_threshold)) {
-		logger->Error("Set Goal-Gap [%2d] FILTERED for EXC [%p] "
+		logger->Warn("Set Goal-Gap [%2d] FILTERED for EXC [%p] "
 				"(Lower than threshold value [%d])",
 				percent, (void*)ech,
 				conf.asrtm.ggap_forward_threshold);
@@ -2811,7 +2811,7 @@ RTLIB_ExitCode_t BbqueRPC::SetCPS(
 		prec->cps_expect = static_cast<float>(1e3) / prec->cps_max;
 	}
 
-	logger->Info("Set cycle-rate @ %.3f[Hz] (%.3f[ms])",
+	logger->Notice("Set cycle-rate @ %.3f[Hz] (%.3f[ms])",
 				prec->cps_max, prec->cps_expect);
 	return RTLIB_OK;
 }
@@ -2892,7 +2892,7 @@ RTLIB_ExitCode_t BbqueRPC::SetCPSGoal(
 
 	// Keep track of the maximum required CPS
 	prec->cps_goal = cps;
-	logger->Info("Set cycle-rate Goal (CPS) @ %.3f[Hz] (%.3f[ms])",
+	logger->Notice("Set cycle-rate Goal (CPS) @ %.3f[Hz] (%.3f[ms])",
 				prec->cps_goal, 1000.0 / prec->cps_goal);
 	return RTLIB_OK;
 }
@@ -3078,7 +3078,7 @@ void BbqueRPC::NotifyPreMonitor(
 	assert(ech);
 	prec = getRegistered(ech);
 	if (!prec) {
-		logger->Error("NotifyPostMonitor EXC [%p] FAILED "
+		logger->Error("NotifyPreMonitor EXC [%p] FAILED "
 				"(EXC not registered)", (void*)ech);
 		return;
 	}
@@ -3121,7 +3121,6 @@ void BbqueRPC::NotifyPostMonitor(
 	// CPS Enforcing
 	if (prec->cps_expect != 0)
 		ForceCPS(prec);
-
 }
 
 #ifdef CONFIG_BBQUE_OPENCL
