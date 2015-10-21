@@ -196,6 +196,33 @@ config BBQUE_RTLIB_UNMANAGED_SUPPORT
 
   Say NO to this option if unsure.
 
+menu "Performance API Configuration"
+
+config BBQUE_RTLIB_GGAP_THRESHOLD_FORWARD
+  int "GoalGap Forward Threshold"
+  default 20
+  ---help---
+  The minimum GoalGap value which is forwarded to BarbequeRTRM.
+
+  Once an EXC asserts a GoalGap, the RTLib can decide to do not forward this
+  request if it is not greater than a predefined and configured value.
+  This configuration defines the default for that threshold value.
+
+config BBQUE_RTLIB_CPS_TIME_SAMPLES
+  int "Cycle-time Samples for Mean computation"
+  default 3
+  ---help---
+  The number of samples that must be cumulated in the exponential mean
+  computation of the RTLIB "cycle-time".
+
+  A value equal to 1 means to get the instantaneous value of time sampled
+  during the previous execution cycle.  The higher is the value specified, the
+  slower is the variation of mean cycle time.
+
+endmenu # Performance
+
+
+
 comment "Advanced Options"
 
 config BBQUE_YM_SYNC_FORCE
@@ -239,27 +266,6 @@ config BBQUE_YP_SASB_ASYNC
   host machine and with a average high number of concurrent applications.
 
   If unsure, select Y. Select N for Android targets.
-
-config BBQUE_RTLIB_GGAP_THRESHOLD_FORWARD
-  int "GoalGap Forward Threshold"
-  default 20
-  ---help---
-  The minimum GoalGap value which is forwarded to BarbequeRTRM.
-
-  Once an EXC asserts a GoalGap, the RTLib could decide to not forward this request
-  if it is not greater than a predefined and configured value.
-  This configuration defines the default for that threshold value.
-
-config BBQUE_RTLIB_CPS_TIME_SAMPLES
-  int "CPS: Cycle-time EMA Samples "
-  default 3
-  ---help---
-  The number of samples that must be cumulated in the exponential mean
-  computation of the RTLIB "cycle-time".
-
-  A value equal to 1 means to get the instantaneous value of time sampled
-  during the previous execution cycle.  The higher is the value specified, the
-  slower is the variation of mean cycle time.
 
 endmenu # RTLib Configuration
 
