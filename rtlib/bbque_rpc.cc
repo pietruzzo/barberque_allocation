@@ -2887,7 +2887,8 @@ void BbqueRPC::ForceCPS(pregExCtx_t prec) {
 
 RTLIB_ExitCode_t BbqueRPC::SetCPSGoal(
 	RTLIB_ExecutionContextHandler_t ech,
-	float cps) {
+	float cps,
+	uint16_t fwd_rate) {
 	pregExCtx_t prec;
 
 	// Get a reference to the EXC to control
@@ -2902,8 +2903,11 @@ RTLIB_ExitCode_t BbqueRPC::SetCPSGoal(
 
 	// Keep track of the maximum required CPS
 	prec->cps_goal = cps;
-	logger->Notice("Set cycle-rate Goal (CPS) @ %.3f[Hz] (%.3f[ms])",
-				prec->cps_goal, 1000.0 / prec->cps_goal);
+	conf.asrtm.ggap_forward_rate = fwd_rate;
+	logger->Notice("Set cycle-rate Goal (CPS) @ %.3f[Hz] (%.3f[ms])"
+			" every %d cycles",
+				prec->cps_goal, 1000.0 / prec->cps_goal,
+				conf.asrtm.ggap_forward_rate);
 	return RTLIB_OK;
 }
 

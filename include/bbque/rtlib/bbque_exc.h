@@ -376,7 +376,9 @@ public:
  *
  * @ingroup rtlib_sec02_aem_utils
  */
-	RTLIB_ExitCode_t SetCPSGoal(float cps);
+	RTLIB_ExitCode_t SetCPSGoal(
+			float cps,
+			uint16_t fwd_rate = BBQUE_DEFAULT_GGAP_RATE_FORWARD);
 
 /**
  * @brief Set the cycle time for this EXC

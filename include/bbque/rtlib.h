@@ -679,10 +679,13 @@ typedef float (*RTLIB_CPS_Get)(
  *
  * @param ech the handler of the EXC to configure
  * @param cps the required Cycles Per Seconds [Hz]
+ * @param fwd_rate the number of cycles after which RTLib can periodically
+ * assert the goal-gap to the BarbequeRTRM daemon
  */
 typedef RTLIB_ExitCode_t (*RTLIB_CPS_Goal_Set)(
 		RTLIB_ExecutionContextHandler_t ech,
-		float cps);
+		float cps,
+		uint16_t fwd_rate);
 
 
 /**

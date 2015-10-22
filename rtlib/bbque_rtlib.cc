@@ -151,8 +151,9 @@ static float rtlib_cps_get(
 
 static RTLIB_ExitCode_t rtlib_cps_goal_set(
 		RTLIB_ExecutionContextHandler_t ech,
-		float cps) {
-	return rpc->SetCPSGoal(ech, cps);
+		float cps,
+		uint16_t fwd_rate) {
+	return rpc->SetCPSGoal(ech, cps, fwd_rate);
 }
 
 static RTLIB_ExitCode_t rtlib_cps_set_ctime_us(

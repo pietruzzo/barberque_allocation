@@ -193,8 +193,10 @@ public:
 	 * developer from the burden of explicitely sending a goal-gap at each
 	 * iteration.
 	 */
-	RTLIB_ExitCode_t SetCPSGoal(RTLIB_ExecutionContextHandler_t ech,
-			float cps);
+	RTLIB_ExitCode_t SetCPSGoal(
+			RTLIB_ExecutionContextHandler_t ech,
+			float cps,
+			uint16_t fwd_rate);
 
 	/**
 	 * @brief Set the required Cycle time [us]
