@@ -21,7 +21,7 @@
 #include <cstdint>
 
 #include "bbque/res/usage.h"
-
+#include "bbque/utils/logging/logger.h"
 
 namespace bbque { namespace res {
 
@@ -151,6 +151,7 @@ public:
 	 */
 	static ExitCode_t Compatible(
 			UsagesMapPtr_t src_pum, UsagesMapPtr_t dst_pum);
+
 };
 
 

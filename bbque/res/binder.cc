@@ -22,8 +22,9 @@
 #include "bbque/res/bitset.h"
 #include "bbque/res/resource_path.h"
 
+#define MODULE_NAMESPACE 	"bq.rbind"
 
-#define MODULE_NAMESPACE 	"bq.rb"
+namespace bu = bbque::utils;
 
 namespace bbque { namespace res {
 
@@ -41,6 +42,7 @@ uint32_t ResourceBinder::Bind(
 	ResourcePath::ExitCode_t rp_result;
 	ResourcePtrList_t r_list;
 	uint32_t count = 0;
+	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 
 	// Sanity check
 	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
@@ -59,16 +61,13 @@ uint32_t ResourceBinder::Bind(
 		// Replace ID of the given resource type with the bound ID
 		rp_result = dst_ppath->ReplaceID(r_type, src_r_id, dst_r_id);
 		if (rp_result == ResourcePath::OK) {
-			DB(fprintf(stderr, FD("Bind: [%s] to [%s] done\n"),
-					src_ppath->ToString().c_str(),
-					dst_ppath->ToString().c_str());
-			);
+			logger->Debug("Bind: [%s] to [%s] done",
+					src_ppath->ToString().c_str(), dst_ppath->ToString().c_str());
 			++count;
 		}
 		else {
-			DB(fprintf(stderr, FD("Bind: Nothing to do in [%s]\n"),
+			logger->Debug("Bind: Nothing to do in [%s]",
 					src_ppath->ToString().c_str());
-			);
 		}
 
 		// Create a new Usage object and set the binding list
@@ -146,15 +145,15 @@ ResourceBitset ResourceBinder::GetMask(
 	br::ResourceIdentifier::Type_t rp_type;
 	ResourceBitset r_mask;
 	br::ResID_t rs_id;
+	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 
 	// Sanity check
 	if ((r_type >= br::ResourceIdentifier::TYPE_COUNT)       ||
 		(r_scope_type >= br::ResourceIdentifier::TYPE_COUNT))
 		return r_mask;
-
-	DB(fprintf(stderr, FD("GetMask: scope='%s%d' r='%s' view=%lu\n"),
+	logger->Debug("GetMask: scope=[%s%d] r={%s} view=%lu",
 				br::ResourceIdentifier::TypeStr[r_scope_type], r_scope_id,
-				br::ResourceIdentifier::TypeStr[r_type], vtok););
+				br::ResourceIdentifier::TypeStr[r_type], vtok);
 
 	// Scan the resource usages map
 	for (pum_it = pum->begin();	pum_it != pum->end(); ++pum_it) {
@@ -168,14 +167,19 @@ ResourceBitset ResourceBinder::GetMask(
 
 		// If the ID has been found and the type of resource is the one
 		// requested, then set the the bit
-		DB(fprintf(stderr, FD("GetMask: ID search:%d found:%d\n"), r_scope_id, rs_id));
+		logger->Debug("GetMask: search ID={%2d} found={%2d}", r_scope_id, rs_id);
 		if (((r_scope_id == R_ID_ANY) || (rs_id == r_scope_id))
 				&& (rp_type == r_type)) {
-			DB(fprintf(stderr, FD("GetMask: scope found in R{%s}!\n"),
-						ppath->ToString().c_str()));
+			logger->Debug("GetMask: scope [%s] found in resource {%s}!",
+					br::ResourceIdentifier::TypeStr[r_scope_type],
+					ppath->ToString().c_str());
 			r_mask |= GetMask(pusage->GetResourcesList(), r_type, papp, vtok);
 		}
 	}
+	logger->Debug("GetMask: type [%s] in scope [%s]  = %s",
+			br::ResourceIdentifier::TypeStr[r_type],
+			br::ResourceIdentifier::TypeStr[r_scope_type],
+			r_mask.ToString().c_str());
 	return r_mask;
 }
 
@@ -185,20 +189,29 @@ ResourceBitset ResourceBinder::GetMask(
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
 	ResourceBitset r_mask;
+	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 
 	// Sanity check
-	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
+	if ((r_type >= br::ResourceIdentifier::TYPE_COUNT) || (!papp))
 		return r_mask;
 
 	// Scan the resources list
 	for (ResourcePtr_t const & pres: rpl) {
-		DB(fprintf(stderr, FD("GetMaskL: %s\n"), pres->Name().c_str()));
-		if (papp && (pres->ApplicationUsage(papp, vtok) == 0))
+		if (pres->ApplicationUsage(papp, vtok) == 0) {
+			logger->Debug("GetMask: {%s} not used by %s. Skipping...",
+					pres->Name().c_str(), papp->StrId());
 			continue;
+		}
+		else {
+			logger->Debug("GetMask: {%s} used by %s. Continuing...",
+					pres->Name().c_str(), papp->StrId());
+		}
 		if (pres->Type() == r_type)
 			r_mask.Set(pres->ID());
 	}
-	DB(fprintf(stderr, FD("GetMaskL: %s\n"), r_mask.ToString().c_str()));
+	logger->Debug("GetMask: type [%s] = %s",
+			br::ResourceIdentifier::TypeStr[r_type],
+			r_mask.ToString().c_str());
 	return r_mask;
 }
 
