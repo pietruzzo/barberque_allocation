@@ -176,7 +176,7 @@ ResourceManager::ResourceManager() :
 
 #ifdef CONFIG_BBQUE_EM
 
-	Event event("rm", "", "bbque", "startup", 1);
+	Event event(true, "rm", "", "barbeque", "__startup", 1);
 	em.InitializeArchive(event);
 
 #endif

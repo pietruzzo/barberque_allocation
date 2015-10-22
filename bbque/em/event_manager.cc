@@ -20,6 +20,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <time.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -43,9 +44,36 @@ EventManager::EventManager() {
 	logger = bu::Logger::GetLogger(EVENT_MANAGER_NAMESPACE);
 	assert(logger);
 
-	std::time_t timestamp = std::time(nullptr);
+	high_resolution_clock::time_point p = high_resolution_clock::now();
 
-	archive_path = ARCHIVE_FOLDER + std::string("events_") + TimeToString(timestamp) + std::string(".txt");
+    milliseconds ms = duration_cast<milliseconds>(p.time_since_epoch());
+
+    seconds s = duration_cast<seconds>(ms);
+
+    std::time_t t = s.count();
+
+    std::size_t fs = ms.count() % 1000;
+
+    std::ostringstream ostr;
+
+    ostr << fs;
+
+    std::string fractional_seconds = ostr.str();
+
+    struct tm * timeinfo;
+
+    char buffer[80];
+
+    timeinfo = gmtime(&t);
+
+    strftime(buffer, 80, "bbque-events_%a_%d_%b_%Y_%T", timeinfo);
+
+    std::string filename(buffer);
+
+    filename = filename + ":" + fractional_seconds + ".txt";
+
+	archive_path = ARCHIVE_FOLDER + filename;
+
 
 	// Create events folder if it doesn't exist
 	const char* folder_path = std::string(ARCHIVE_FOLDER).c_str();

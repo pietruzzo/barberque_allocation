@@ -19,9 +19,10 @@
 
 namespace bbque {
 
-Event::Event(std::string const & module, std::string const & resource, 
+Event::Event(bool const & valid, std::string const & module, std::string const & resource, 
 	std::string const & application, std::string const & type, 
 	const int & value):
+	valid(valid),
 	timestamp(0),
 	module(module),
 	resource(resource),

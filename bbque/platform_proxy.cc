@@ -231,8 +231,20 @@ PlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres, bool excl) {
 #ifdef CONFIG_BBQUE_EM
 
 	EventManager &em = EventManager::GetInstance();
-	Event event("module1", "resource1", "application1", "type1", 1);
+	Event event(true, "module14", "resource32", "application41", "type15", 16);
 	em.Push(event);
+	usleep(10000);
+	Event event1(true, "module13", "resource32", "application43", "type15", 23);
+	em.Push(event1);
+	usleep(400);
+	Event event2(true, "module12", "resource32", "application44", "type15", 1);
+	em.Push(event2);
+	usleep(7000);
+	Event event3(true, "module12", "resource32", "application45", "type14", 34);
+	em.Push(event3);
+	usleep(20000);
+	Event event4(true, "module11", "resource32", "application45", "type13", 9);
+	em.Push(event4);
 
 #endif
 
