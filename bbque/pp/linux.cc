@@ -736,15 +736,15 @@ LinuxPP::GetResourceMapping(
 		AppPtr_t papp,
 		UsagesMapPtr_t pum,
 		RLinuxBindingsPtr_t prlb,
-		br::ResID_t node_id) {
+		br::ResID_t node_id,
+		br::RViewToken_t rvt) {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
-
 
 	// CPU core set
 	br::ResourceBitset core_ids(
 		br::ResourceBinder::GetMask(pum,
 				br::Resource::PROC_ELEMENT,
-				br::Resource::CPU, node_id));
+				br::Resource::CPU, node_id, papp, rvt));
 	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
 	logger->Debug("PLAT LNX: Node [%d] cores: { %s }", node_id, prlb->cpus);
 
@@ -752,7 +752,7 @@ LinuxPP::GetResourceMapping(
 	br::ResourceBitset mem_ids(
 			br::ResourceBinder::GetMask(pum,
 				br::Resource::PROC_ELEMENT,
-				br::Resource::MEMORY, node_id));
+				br::Resource::MEMORY, node_id, papp, rvt));
 	if (mem_ids.Count() == 0)
 		strncpy(prlb->mems, "0", 1);
 	else
@@ -1183,7 +1183,7 @@ LinuxPP::_MapResources(
 
 		// Node resource mapping
 		RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
-		result = GetResourceMapping(papp, pum, prlb, node_id);
+		result = GetResourceMapping(papp, pum, prlb, node_id, rvt);
 		if (result != OK) {
 			logger->Error("PLAT LNX: binding parsing FAILED");
 			return PLATFORM_MAPPING_FAILED;

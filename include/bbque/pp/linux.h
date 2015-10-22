@@ -323,7 +323,8 @@ private:
 			ba::AppPtr_t papp,
 			br::UsagesMapPtr_t pum,
 			RLinuxBindingsPtr_t prlb,
-			br::ResID_t node_id);
+			br::ResID_t node_id,
+			br::RViewToken_t rvt);
 
 	ExitCode_t BuildCGroup(CGroupDataPtr_t &pcgd);
 
