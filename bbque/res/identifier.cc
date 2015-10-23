@@ -42,7 +42,6 @@ ResourceIdentifier::ResourceIdentifier(
 		ResID_t _id):
 	type(_type),
 	id(_id) {
-	char buff[MAX_R_NAME_LEN];
 
 	// Sanity check
 	if (((_id < R_ID_NONE)   || (_id > MAX_R_ID_NUM)) ||
@@ -52,11 +51,10 @@ ResourceIdentifier::ResourceIdentifier(
 	}
 
 	// Set the text string form
-	if ((_id == R_ID_NONE) || (_id == R_ID_ANY))
-		snprintf(buff, MAX_R_NAME_LEN, "%s",   TypeStr[type]);
-	else
-		snprintf(buff, MAX_R_NAME_LEN, "%s%d", TypeStr[type], id);
-	name.assign(buff);
+	name.assign(TypeStr[type]);
+	if (id == R_ID_NONE)
+		return;
+	name += std::to_string(id);
 }
 
 bool ResourceIdentifier::operator< (ResourceIdentifier const & ri) {
@@ -68,19 +66,17 @@ bool ResourceIdentifier::operator< (ResourceIdentifier const & ri) {
 }
 
 void ResourceIdentifier::SetID(ResID_t _id) {
-	char id_str[3];
-	id = _id;
+	id   = _id;
+	name = TypeStr[type];
+
 	// ID boundaries check
 	if ((_id == R_ID_NONE) || (_id == R_ID_ANY) ||
 		(_id > MAX_R_ID_NUM)) {
 		id = R_ID_NONE;
-		strncpy(id_str, "", 1);
+		return;
 	}
-	else
-		snprintf(id_str, 3, "%d", id);
-	// Update the resource name
-	name = TypeStr[type];
-	name.append(id_str);
+	// Update the numerical id in the name string
+	name += std::to_string(id);
 }
 
 
