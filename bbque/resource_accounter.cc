@@ -1459,6 +1459,7 @@ void ResourceAccounter::DecBookingCounts(
 		br::UsagesMapPtr_t const & app_usages,
 		ba::AppSPtr_t const & papp,
 		br::RViewToken_t vtok) {
+	ExitCode_t ra_result;
 	// Maps of resource usages per Application/EXC
 	br::UsagesMap_t::const_iterator usages_it(app_usages->begin());
 	br::UsagesMap_t::const_iterator usages_end(app_usages->end());
@@ -1471,14 +1472,16 @@ void ResourceAccounter::DecBookingCounts(
 		br::UsagePtr_t pusage(usages_it->second);
 
 		// Release the resources bound to the current request
-		UndoResourceBooking(papp, pusage, vtok);
+		ra_result = UndoResourceBooking(papp, pusage, vtok);
+		if (ra_result == RA_ERR_MISS_VIEW)
+			return;
 		logger->Debug("DecCount: [%s] has freed {%s} of %" PRIu64 "",
 				papp->StrId(), rsrc_path->ToString().c_str(),
 				pusage->GetAmount());
 	}
 }
 
-void ResourceAccounter::UndoResourceBooking(
+ResourceAccounter::ExitCode_t ResourceAccounter::UndoResourceBooking(
 		ba::AppSPtr_t const & papp,
 		br::UsagePtr_t & pusage,
 		br::RViewToken_t vtok) {
@@ -1487,6 +1490,10 @@ void ResourceAccounter::UndoResourceBooking(
 
 	// Get the set of resources referenced in the view
 	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(vtok));
+	if (rsrc_view == rsrc_per_views.end()) {
+		logger->Fatal("UndoResourceBooking: Cannot find view [%ld]", vtok);
+		return RA_ERR_MISS_VIEW;
+	}
 	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
 
 	// For each resource binding release the amount allocated to the App/EXC
@@ -1505,6 +1512,7 @@ void ResourceAccounter::UndoResourceBooking(
 			rsrc_set->erase(rsrc);
 	}
 	assert(usage_freed == pusage->GetAmount());
+	return RA_SUCCESS;
 }
 
 /************************************************************************

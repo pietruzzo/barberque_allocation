@@ -891,7 +891,7 @@ private:
 	 * @param pusage Usage object
 	 * @param vtok The token referencing the resource state view
 	 */
-	void UndoResourceBooking(
+	ExitCode_t UndoResourceBooking(
 			ba::AppSPtr_t const & papp,
 			br::UsagePtr_t & pusage,
 			br::RViewToken_t vtok);
