@@ -836,8 +836,8 @@ void ResourceAccounter::ReleaseResources(
 		_ReleaseResources(papp, sync_ssn.view);
 
 	// Decrease resources in the required view
-	_ReleaseResources(papp, vtok);
-
+	if (vtok != sync_ssn.view)
+		_ReleaseResources(papp, vtok);
 }
 
 void ResourceAccounter::_ReleaseResources(
