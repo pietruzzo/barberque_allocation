@@ -28,12 +28,13 @@ SCCongestion::SCCongestion(
 		uint16_t const cfg_params[]):
 	SchedContrib(_name, _bd_info, cfg_params) {
 	char conf_str[50];
+	memset(conf_str, '\0', sizeof(conf_str));
 
 	// Configuration parameters
 	po::options_description opts_desc("Congestion contribute parameters");
 
 	// Base for exponential
-	snprintf(conf_str, 50, SC_CONF_BASE_STR"%s.expbase", name);
+	snprintf(conf_str, sizeof(conf_str)-1, SC_CONF_BASE_STR"%s.expbase", name);
 	opts_desc.add_options()
 		(conf_str,
 		 po::value<uint16_t>(&expbase)->default_value(SC_CONG_DEFAULT_EXPBASE),
