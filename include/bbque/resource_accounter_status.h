@@ -73,6 +73,8 @@ public:
 		RA_ERR_MEM,
 		/** Unable to find the state view specified */
 		RA_ERR_MISS_VIEW,
+		/** Unauthorized system state view manipulation attempt */
+		RA_ERR_UNAUTH_VIEW,
 		/** Application reference missing */
 		RA_ERR_MISS_APP,
 		/** Resource usages map missing	 */
