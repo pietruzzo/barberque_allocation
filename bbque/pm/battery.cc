@@ -56,14 +56,16 @@ Battery::Battery(
 	}
 
 	// Technology string
-	char t_str[10];
-	ReadValue(info_dir + BBQUE_BATTERY_IF_TECHNOLOGY, t_str, 10);
-	t_str[strlen(t_str)-1] = '\0';
+	char t_str[12];
+	memset(t_str, '\0', sizeof(t_str));
+	ReadValue(info_dir + BBQUE_BATTERY_IF_TECHNOLOGY, t_str, sizeof(t_str)-1);
 	technology = t_str;
 
 	// Full capacity
 	char cf_str[20];
-	ReadValue(info_dir + BBQUE_BATTERY_IF_CHARGE_FULL, cf_str, 20);
+	memset(cf_str, '\0', sizeof(cf_str));
+	ReadValue(info_dir + BBQUE_BATTERY_IF_CHARGE_FULL, cf_str,
+			sizeof(cf_str)-1);
 	charge_full = std::stol(cf_str) / 1000;
 
 	// Status report
@@ -88,16 +90,18 @@ unsigned long Battery::GetChargeFull() {
 }
 
 bool Battery::IsDischarging() {
-	char status[12];
-	ReadValue(info_dir + BBQUE_BATTERY_IF_STATUS, status, 12);
-	status[strlen(status)-1] = '\0';
+	char status[13];
+	memset(status, '\0', sizeof(status));
+	ReadValue(info_dir + BBQUE_BATTERY_IF_STATUS, status, sizeof(status)-1);
 	return (strncmp(status, BBQUE_BATTERY_STATUS_DIS, 3) == 0);
 }
 
 uint8_t Battery::GetChargePerc() {
-	char perc_str[3];
-	uint8_t perc;
-	ReadValue(info_dir + BBQUE_BATTERY_IF_CHARGE_PERC, perc_str, 3);
+	uint8_t perc = 0;
+	char perc_str[4];
+	memset(perc_str, '\0', sizeof(perc_str));
+	ReadValue(info_dir + BBQUE_BATTERY_IF_CHARGE_PERC,
+			perc_str, sizeof(perc_str)-1);
 	if (!isdigit(perc_str[0])) {
 		logger->Error("Not valid charge value");
 		return 0;
@@ -112,8 +116,9 @@ uint8_t Battery::GetChargePerc() {
 }
 
 unsigned long Battery::GetChargeMAh() {
-	char mah[9];
-	ReadValue(info_dir + BBQUE_BATTERY_IF_CHARGE_MAH, mah, 9);
+	char mah[10];
+	memset(mah, '\0', sizeof(mah));
+	ReadValue(info_dir + BBQUE_BATTERY_IF_CHARGE_MAH, mah, sizeof(mah)-1);
 	if (!isdigit(mah[0])) {
 		logger->Error("Not valid charge value");
 		return 0;
@@ -122,9 +127,10 @@ unsigned long Battery::GetChargeMAh() {
 }
 
 uint32_t Battery::GetVoltage() {
-	char volt[6];
+	char volt[7];
+	memset(volt, '\0', sizeof(volt));
 	ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
-			BBQUE_BATTERY_PROC_STATE_VOLT, volt, 6);
+			BBQUE_BATTERY_PROC_STATE_VOLT, volt, sizeof(volt)-1);
 	if (!isdigit(volt[0])) {
 		logger->Error("Not valid voltage value");
 		return 0;
@@ -141,9 +147,10 @@ uint32_t Battery::GetDischargingRate() {
 		return 0;
 	}
 
-	char rate[6];
+	char rate[7];
+	memset(rate, '\0', sizeof(rate));
 	ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
-			BBQUE_BATTERY_PROC_STATE_RATE, rate, 6);
+			BBQUE_BATTERY_PROC_STATE_RATE, rate, sizeof(rate)-1);
 	if (!isdigit(rate[0])) {
 		logger->Error("Not valid discharging rate");
 		return 0;
