@@ -413,7 +413,7 @@ public:
 	/**
 	 * @see ResourceAccounterConfIF
 	 */
-	void PutView(br::RViewToken_t tok);
+	ExitCode_t PutView(br::RViewToken_t tok);
 
 	/**
 	 * @brief Get the system resource state view
@@ -676,7 +676,7 @@ private:
 	/**
 	 * @brief Thread unsafe version of @ref PutView
 	 */
-	void _PutView(br::RViewToken_t tok);
+	ExitCode_t _PutView(br::RViewToken_t tok);
 
 
 	/**

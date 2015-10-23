@@ -273,7 +273,8 @@ public:
 	/**
 	 * @see ResourceAccounterConfIF::PutView()
 	 */
-	inline void PutResourceStateView(br::RViewToken_t tok) {
+	inline ResourceAccounterStatusIF::ExitCode_t PutResourceStateView(
+			br::RViewToken_t tok) {
 		return ra.PutView(tok);
 	}
 

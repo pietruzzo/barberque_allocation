@@ -61,7 +61,7 @@ public:
 	 *
 	 * @param tok The token used as reference to the resources state view.
 	 */
-	virtual void PutView(br::RViewToken_t tok) = 0;
+	virtual ExitCode_t PutView(br::RViewToken_t tok) = 0;
 
 };
 

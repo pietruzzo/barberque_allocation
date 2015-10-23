@@ -1000,8 +1000,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_GetView(
 	return RA_SUCCESS;
 }
 
-
-void ResourceAccounter::PutView(br::RViewToken_t vtok) {
+ResourceAccounter::ExitCode_t ResourceAccounter::PutView(br::RViewToken_t vtok) {
 	std::unique_lock<std::mutex> status_ul(status_mtx);
 	while (status != State::READY) {
 		status_cv.wait(status_ul);
@@ -1009,18 +1008,19 @@ void ResourceAccounter::PutView(br::RViewToken_t vtok) {
 	return _PutView(vtok);
 }
 
-void ResourceAccounter::_PutView(br::RViewToken_t vtok) {
+ResourceAccounter::ExitCode_t ResourceAccounter::_PutView(
+		br::RViewToken_t vtok) {
 	// Do nothing if the token references the system state view
 	if (vtok == sys_view_token) {
 		logger->Warn("PutView: Cannot release the system resources view");
-		return;
+		return RA_ERR_UNAUTH_VIEW;
 	}
 
 	// Get the resource set using the referenced view
 	ResourceViewsMap_t::iterator rviews_it(rsrc_per_views.find(vtok));
 	if (rviews_it == rsrc_per_views.end()) {
 		logger->Error("PutView: Cannot find resource view token %d", vtok);
-		return;
+		return RA_ERR_MISS_VIEW;
 	}
 
 	// For each resource delete the view
@@ -1037,6 +1037,8 @@ void ResourceAccounter::_PutView(br::RViewToken_t vtok) {
 	logger->Debug("PutView: view %d cleared", vtok);
 	logger->Debug("PutView: %d resource set and %d usages per view currently managed",
 			rsrc_per_views.size(), usages_per_views.erase(vtok));
+
+	return RA_SUCCESS;
 }
 
 br::RViewToken_t ResourceAccounter::SetView(br::RViewToken_t vtok) {
