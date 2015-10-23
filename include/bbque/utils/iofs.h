@@ -59,8 +59,8 @@ public:
 			int offset) {
 		ExitCode_t result;
 		char buffer[100];
-
-		result = ReadValueFrom(filepath, buffer, 100);
+		memset(buffer, '\0', sizeof(buffer));
+		result = ReadValueFrom(filepath, buffer, sizeof(buffer)-1);
 		if (result != ExitCode_t::OK)
 			return ExitCode_t::ERR_FILE_NOT_FOUND;
 		fprintf(stderr, "Buffer: %s\n", buffer);
@@ -74,7 +74,8 @@ public:
 	static ExitCode_t ReadIntValueFrom(
 			std::string const & filepath, T & value, int scale = 1) {
 		char value_str[16];
-		ReadValueFrom(filepath, value_str, 16);
+		memset(value_str, '\0', sizeof(value_str));
+		ReadValueFrom(filepath, value_str, sizeof(value_str)-1);
 		value = std::stoi(value_str) * scale;
 		return ExitCode_t::OK;
 	 }
@@ -82,7 +83,8 @@ public:
 	static ExitCode_t ReadFloatValueFrom(
 			std::string const & filepath, float & value, int scale = 1) {
 		char value_str[16];
-		ReadValueFrom(filepath, value_str, 16);
+		memset(value_str, '\0', sizeof(value_str));
+		ReadValueFrom(filepath, value_str, sizeof(value_str)-1);
 		value = std::stof(value_str) * scale;
 		return ExitCode_t::OK;
 	 }
