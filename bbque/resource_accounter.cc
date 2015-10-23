@@ -96,7 +96,8 @@ ResourceAccounter::ResourceAccounter() :
 }
 
 void ResourceAccounter::InitBindingOptions() {
-	size_t end_pos, beg_pos = 0;
+	size_t end_pos = 0;
+	size_t beg_pos = 0;
 	std::string domains;
 	std::string binding_str;
 	br::Resource::Type_t binding_type;
