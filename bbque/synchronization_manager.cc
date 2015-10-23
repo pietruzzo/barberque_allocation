@@ -343,14 +343,11 @@ SynchronizationManager::Sync_SyncChange(
 	}
 
 	// Collecting EXC responses
-	for (resp_it = rsp_map.begin();
-			resp_it != rsp_map.end();
-			++resp_it) {
-
+	resp_it = rsp_map.begin();
+	for (; resp_it != rsp_map.end(); ++resp_it) {
 		papp  = (*resp_it).first;
 		presp = (*resp_it).second;
 #endif
-
 		// Jumping meanwhile disabled applications
 		if (papp->Disabled()) {
 			logger->Debug("STEP 2: ignoring disabled EXC [%s]",
