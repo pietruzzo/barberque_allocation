@@ -825,6 +825,12 @@ void ResourceAccounter::ReleaseResources(
 		logger->Fatal("Release: Null pointer to the application descriptor");
 		return;
 	}
+
+	if (rsrc_per_views.find(vtok) == rsrc_per_views.end()) {
+		logger->Debug("Release: Resource state view already cleared");
+		return;
+	}
+
 	// Decrease resources in the sync view
 	if (vtok == 0 && Synching())
 		_ReleaseResources(papp, sync_ssn.view);
@@ -1327,6 +1333,10 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 	// Get the set of resources referenced in the view
 	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(vtok));
 	assert(rsrc_view != rsrc_per_views.end());
+	if (rsrc_view == rsrc_per_views.end()) {
+		logger->Fatal("DoResourceBooking: Cannot find view [%ld]", vtok);
+		return RA_ERR_MISS_VIEW;
+	}
 	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
 
 	// Amount of resource to book
