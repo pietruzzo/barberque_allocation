@@ -160,7 +160,7 @@ uint32_t Battery::GetDischargingRate() {
 
 unsigned long Battery::GetEstimatedLifetime() {
 	float hours = (float) GetChargeMAh() / (float) GetDischargingRate();
-	logger->Debug("Est. time: \thours=%.2f (min=%.2f)",
+	logger->Debug("Est. time   : \thours=%.2f (min=%.2f)",
 			hours, hours * 60);
 	return static_cast<unsigned long>(hours * 3600);
 }

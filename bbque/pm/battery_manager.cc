@@ -56,7 +56,7 @@ BatteryManager::BatteryManager() {
 		if (!batt->IsReady())
 			continue;
 		batteries.push_back(batt);
-		logger->Info("Batteries in the system: %d", batteries.size());
+		logger->Info("Batteries   : \t%d", batteries.size());
 	}
 }
 
