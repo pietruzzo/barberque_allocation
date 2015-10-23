@@ -48,7 +48,7 @@ char const * SchedContribManager::sc_str[SC_COUNT] = {
 	"reconfig",
 	"fairness",
 	"migration",
-	"congestion",
+	"congestio",
 	//"power",
 	//"thermal",
 	//"stability",
