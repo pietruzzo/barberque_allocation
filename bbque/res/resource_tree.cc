@@ -39,8 +39,9 @@ ResourceTree::ResourceTree():
 	assert(logger);
 
 	// Initialize the root node
+	std::string root_name("bbque");
 	root         = new ResourceNode_t;
-	root->data   = ResourcePtr_t(new Resource("root"));
+	root->data   = ResourcePtr_t(new Resource(root_name));
 	root->parent = NULL;
 	root->depth  = 0;
 }
