@@ -171,31 +171,6 @@ private:
 	/*** The supplied voltage */
 	uint32_t voltage;
 
-
-	/**
-	 * @brief Read a numeric value from an attribute file
-	 *
-	 * @param path The attribute file path
-	 * @param value The buffer to fill with the value
-	 * @param len The size of the buffer
-	 */
-	void ReadValue(std::string const & path, char * value, int len);
-
-	/**
-	 * @brief Read a numeric value from an attribute file, on a line matching
-	 * a given pattern
-	 *
-	 * @param path The attribute file path
-	 * @param pattern The pattern to match
-	 * @param value The buffer to fill with the value
-	 * @param len The size of the buffer
-	 */
-	void ParseValue(
-			std::string const & path,
-			const char * pattern,
-			char * value,
-			int len);
-
 };
 
 } // namespace bbque

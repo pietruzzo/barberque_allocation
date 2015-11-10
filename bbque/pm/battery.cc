@@ -22,10 +22,11 @@
 #include <boost/filesystem.hpp>
 
 #include "bbque/pm/battery.h"
-
+#include "bbque/utils/iofs.h"
 
 #define MODULE_NAMESPACE "bq.pm.bat"
 
+namespace bu = bbque::utils;
 
 namespace bbque {
 
@@ -58,14 +59,15 @@ Battery::Battery(
 	// Technology string
 	char t_str[12];
 	memset(t_str, '\0', sizeof(t_str));
-	ReadValue(info_dir + BBQUE_BATTERY_IF_TECHNOLOGY, t_str, sizeof(t_str)-1);
+	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_TECHNOLOGY,
+			t_str, sizeof(t_str)-1);
 	technology = t_str;
 
 	// Full capacity
 	char cf_str[20];
 	memset(cf_str, '\0', sizeof(cf_str));
-	ReadValue(info_dir + BBQUE_BATTERY_IF_CHARGE_FULL, cf_str,
-			sizeof(cf_str)-1);
+	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_CHARGE_FULL,
+			cf_str, sizeof(cf_str)-1);
 	charge_full = std::stol(cf_str) / 1000;
 
 	// Status report
@@ -92,7 +94,8 @@ unsigned long Battery::GetChargeFull() {
 bool Battery::IsDischarging() {
 	char status[13];
 	memset(status, '\0', sizeof(status));
-	ReadValue(info_dir + BBQUE_BATTERY_IF_STATUS, status, sizeof(status)-1);
+	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_STATUS,
+			status, sizeof(status)-1);
 	return (strncmp(status, BBQUE_BATTERY_STATUS_DIS, 3) == 0);
 }
 
@@ -100,7 +103,7 @@ uint8_t Battery::GetChargePerc() {
 	uint8_t perc = 0;
 	char perc_str[4];
 	memset(perc_str, '\0', sizeof(perc_str));
-	ReadValue(info_dir + BBQUE_BATTERY_IF_CHARGE_PERC,
+	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_CHARGE_PERC,
 			perc_str, sizeof(perc_str)-1);
 	if (!isdigit(perc_str[0])) {
 		logger->Error("Not valid charge value");
@@ -118,7 +121,8 @@ uint8_t Battery::GetChargePerc() {
 unsigned long Battery::GetChargeMAh() {
 	char mah[10];
 	memset(mah, '\0', sizeof(mah));
-	ReadValue(info_dir + BBQUE_BATTERY_IF_CHARGE_MAH, mah, sizeof(mah)-1);
+	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_CHARGE_MAH,
+			mah, sizeof(mah)-1);
 	if (!isdigit(mah[0])) {
 		logger->Error("Not valid charge value");
 		return 0;
@@ -129,7 +133,7 @@ unsigned long Battery::GetChargeMAh() {
 uint32_t Battery::GetVoltage() {
 	char volt[7];
 	memset(volt, '\0', sizeof(volt));
-	ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
+	bu::IoFs::ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
 			BBQUE_BATTERY_PROC_STATE_VOLT, volt, sizeof(volt)-1);
 	if (!isdigit(volt[0])) {
 		logger->Error("Not valid voltage value");
@@ -149,7 +153,7 @@ uint32_t Battery::GetDischargingRate() {
 
 	char rate[7];
 	memset(rate, '\0', sizeof(rate));
-	ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
+	bu::IoFs::ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
 			BBQUE_BATTERY_PROC_STATE_RATE, rate, sizeof(rate)-1);
 	if (!isdigit(rate[0])) {
 		logger->Error("Not valid discharging rate");
@@ -185,40 +189,6 @@ std::string Battery::PrintChargeBar() {
 	bar += std::to_string(charge);
 	bar += "%";
 	return bar;
-}
-
-
-/*******************************************************************
- * Private member functions                                        *
- * *****************************************************************/
-
-void Battery::ReadValue(std::string const & path, char * value, int len) {
-	fd.open(path);
-	fd.read(value, len);
-	fd.close();
-}
-
-void Battery::ParseValue(
-		std::string const & path,
-		const char * pattern,
-		char * value,
-		int len) {
-	std::string line;
-	size_t b_pos, e_pos;
-
-	fd.open(path);
-	while (!fd.eof()) {
-		std::getline(fd, line);
-		// Pattern matching
-		if (line.find(pattern) == std::string::npos)
-			continue;
-		// Value substring
-		b_pos = line.find_first_of("0123456789");
-		e_pos = line.find_last_of("0123456789") - b_pos;
-		strncpy(value, (line.substr(b_pos, e_pos+1)).c_str(), len);
-		break;
-	}
-	fd.close();
 }
 
 } // namespace bbque
