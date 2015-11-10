@@ -22,6 +22,7 @@
 #include "bbque/power_monitor.h"
 
 #include "bbque/res/resource_path.h"
+#include "bbque/utils/utility.h"
 
 #define MODULE_CONFIG "PowerMonitor"
 #define MODULE_NAMESPACE POWER_MONITOR_NAMESPACE
@@ -91,8 +92,12 @@ PowerMonitor::PowerMonitor():
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_DATALOG,
 			static_cast<CommandHandler*>(this),
 			"Start/stop power monitor data logging");
-
 #ifdef CONFIG_BBQUE_PM_BATTERY
+#define CMD_WM_SYSLIFETIME "syslifetime"
+	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_SYSLIFETIME,
+			static_cast<CommandHandler*>(this),
+			"Set the system target lifetime");
+
 	pbatt = bm.GetBattery();
 	if (pbatt == nullptr)
 		logger->Warn("Battery available: NO");
@@ -160,7 +165,20 @@ int PowerMonitor::CommandsCb(int argc, char *argv[]) {
 		}
 		return DataLogCmdHandler(argv[1]);
 	}
-
+#ifdef CONFIG_BBQUE_PM_BATTERY
+	// System life-time target
+	if (!strncmp(CMD_WM_SYSLIFETIME , command_id, strlen(CMD_WM_SYSLIFETIME))) {
+		if (argc < 2) {
+			logger->Error("PWR MNTR: Command [%s] missing argument"
+					"[set/clear/info/help]", command_id);
+			return 1;
+		}
+		if (argc > 2)
+			return SystemLifetimeCmdHandler(argv[1], argv[2]);
+		else
+			return SystemLifetimeCmdHandler(argv[1], "");
+	}
+#endif
 	logger->Error("PWR MNTR: Command unknown [%s]", command_id);
 	return -1;
 }
@@ -370,6 +388,81 @@ int PowerMonitor::DataLogCmdHandler(const char * arg) {
 		action.c_str());
 	return -1;
 }
+
+/*******************************************************************
+ *                 ENERGY BUDGET MANAGEMENT                        *
+ *******************************************************************/
+
+#ifdef CONFIG_BBQUE_PM_BATTERY
+
+int PowerMonitor::SystemLifetimeCmdHandler(
+		const std::string action, const std::string hours) {
+	std::chrono::system_clock::time_point now;
+	logger->Info("PWR MNTR: action=[%s], hours=[%s]",
+			action.c_str(), hours.c_str());
+	// Help
+	if (action.compare("help") == 0) {
+		logger->Notice("PWR MNTR: %s set <HOURS> (set hours)", CMD_WM_SYSLIFETIME);
+		logger->Notice("PWR MNTR: %s info  (target lifetime)", CMD_WM_SYSLIFETIME);
+		logger->Notice("PWR MNTR: %s clear (clear setting)",   CMD_WM_SYSLIFETIME);
+		logger->Notice("PWR MNTR: %s help  (this help)",  CMD_WM_SYSLIFETIME);
+		return 0;
+	}
+	// Clear the target lifetime setting
+	if (action.compare("clear") == 0) {
+		logger->Notice("PWR MNTR: Clearing system target lifetime...");
+		sys_lifetime.power_budget_mw = 0;
+		sys_lifetime.always_on   = false;
+		return 0;
+	}
+	// Return information about last target lifetime set
+	if (action.compare("info") == 0) {
+		logger->Notice("PWR MNTR: System target lifetime information...");
+		sys_lifetime.power_budget_mw = ComputeSysPowerBudget();
+		PrintSystemLifetimeInfo();
+		return 0;
+	}
+	// Set the target lifetime
+	if (action.compare("set") == 0) {
+		logger->Notice("PWR MNTR: Setting system target lifetime...");
+		// Argument check
+		if (!IsNumber(hours)) {
+			logger->Error("PWR MNTR: Invalid argument");
+			return -1;
+		}
+		else if (hours.compare("always_on") == 0) {
+			logger->Info("PWR MNTR: Set to 'always on'");
+			sys_lifetime.power_budget_mw = -1;
+			sys_lifetime.always_on     = true;
+			return 0;
+		}
+		// Compute system clock target lifetime
+		now = std::chrono::system_clock::now();
+		std::chrono::hours h(std::stoi(hours));
+		sys_lifetime.target_time     = now + h;
+		sys_lifetime.always_on       = false;
+		sys_lifetime.power_budget_mw = ComputeSysPowerBudget();
+		PrintSystemLifetimeInfo();
+	}
+	return 0;
+}
+
+
+void PowerMonitor::PrintSystemLifetimeInfo() const {
+	std::chrono::seconds secs_from_now;
+	// Print output
+	std::time_t time_out = std::chrono::system_clock::to_time_t(
+			sys_lifetime.target_time);
+	logger->Notice("PWR MNTR: System target lifetime: %s",
+			ctime(&time_out));
+	secs_from_now = GetSysLifetimeLeft();
+	logger->Notice("PWR MNTR: System target lifetime [s]: %d",
+			secs_from_now.count());
+	logger->Notice("PWR MNTR: System power budget [mW]: %d",
+			sys_lifetime.power_budget_mw);
+}
+
+#endif // Battery management enabled
 
 } // namespace bbque
 
