@@ -56,21 +56,21 @@ public:
 	 *
 	 * @return The sysfs directory name
 	 */
-	std::string const & StrId();
+	std::string const & StrId() const;
 
 	/**
 	 * @brief The battery technology
 	 *
 	 * @return A string describing the technology
 	 */
-	std::string const & GetTechnology();
+	std::string const & GetTechnology() const;
 
 	/**
 	 * @brief Check if the battery object has been successfully initialized
 	 *
 	 * @return true if the battery object is ready, false otherwise
 	 */
-	bool IsReady();
+	bool IsReady() const;
 
 	/**
 	 * @brief Check the battery status
@@ -98,7 +98,7 @@ public:
 	 *
 	 * @return The capacity value in mAh
 	 */
-	unsigned long GetChargeFull();
+	unsigned long GetChargeFull() const;
 
 	/**
 	 * @brief The current charge of the battery in mAh

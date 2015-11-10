@@ -75,19 +75,19 @@ Battery::Battery(
 	LogReportStatus();
 }
 
-bool Battery::IsReady() {
+bool Battery::IsReady() const {
 	return ready;
 }
 
-std::string const & Battery::StrId() {
+std::string const & Battery::StrId() const {
 	return str_id;
 }
 
-std::string const & Battery::GetTechnology() {
+std::string const & Battery::GetTechnology() const {
 	return technology;
 }
 
-unsigned long Battery::GetChargeFull() {
+unsigned long Battery::GetChargeFull() const {
 	return charge_full;
 }
 
