@@ -393,6 +393,34 @@ int PowerMonitor::DataLogCmdHandler(const char * arg) {
  *                 ENERGY BUDGET MANAGEMENT                        *
  *******************************************************************/
 
+
+int32_t PowerMonitor::GetSysPowerBudget() {
+#ifndef CONFIG_BBQUE_PM_BATTERY
+	return 0;
+#else
+/*
+	if (!pbatt->IsDischarging() && pbatt->GetChargePerc() == 100) {
+		logger->Debug("System battery full charged and power plugged");
+		return 0;
+	}
+*/
+
+	if (sys_lifetime.always_on) {
+		logger->Debug("PWR MNTR: System lifetime target = 'always_on'");
+		return -1;
+	}
+
+	if (sys_lifetime.power_budget_mw == 0) {
+		logger->Debug("PWR MNTR: No system lifetime target");
+		return 0;
+	}
+
+	// Compute power budget
+	sys_lifetime.power_budget_mw = ComputeSysPowerBudget();
+	return sys_lifetime.power_budget_mw;
+#endif
+}
+
 #ifdef CONFIG_BBQUE_PM_BATTERY
 
 int PowerMonitor::SystemLifetimeCmdHandler(

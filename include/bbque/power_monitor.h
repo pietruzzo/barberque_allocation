@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Politecnico di Milano
+ * Copyright (C) 2015  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 #ifndef BBQUE_POWER_MONITOR_H_
 #define BBQUE_POWER_MONITOR_H_
@@ -142,6 +141,14 @@ public:
 				sys_lifetime.target_time - now);
 	}
 #endif
+
+	/**
+	 * @brief System power budget, given the target lifetime set
+	 *
+	 * @return The power value in milliwatts; 0: No target set; -1: Always on
+	 * mode required
+	 */
+	int32_t GetSysPowerBudget();
 
 private:
 
