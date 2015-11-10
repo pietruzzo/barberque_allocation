@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
+#include <cctype>
 
 #include <sys/prctl.h>
 #include <sys/syscall.h>
@@ -152,6 +153,11 @@ public:
 	}
 };
 
-
+inline bool IsNumber(const std::string & str) {
+	size_t p = 0;
+	while (p < str.length())
+		if (!isdigit(str[p++])) return false;
+	return true;
+}
 
 #endif // BBQUE_UTILITY_H_
