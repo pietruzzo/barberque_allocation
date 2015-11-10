@@ -75,7 +75,7 @@ bool ResourcePath::operator< (ResourcePath const & cmp_path) {
 }
 
 ResourcePath::CResult_t ResourcePath::Compare(
-		ResourcePath const & cmp_path) {
+		ResourcePath const & cmp_path) const {
 	ResourcePath::ConstIterator it, cmp_it;
 	br::ResourceIdentifierPtr_t prid, pcmp_rid;
 	CResult_t result;

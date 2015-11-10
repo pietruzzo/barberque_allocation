@@ -135,7 +135,7 @@ public:
 	 *
 	 * @return The result of the comparison
 	 */
-	CResult_t Compare(ResourcePath const & r_path);
+	CResult_t Compare(ResourcePath const & r_path) const;
 
 	/**
 	 * @brief Append a resource type+id
