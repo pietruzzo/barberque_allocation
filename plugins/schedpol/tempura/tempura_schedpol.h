@@ -26,6 +26,7 @@
 #include "bbque/configuration_manager.h"
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/scheduler_policy.h"
+#include "bbque/pm/battery_manager.h"
 #include "bbque/pm/model_manager.h"
 #include "bbque/scheduler_manager.h"
 #include "bbque/resource_manager.h"
@@ -108,6 +109,14 @@ private:
 	/** P/T model manager */
 	ModelManager & mm;
 
+#ifdef CONFIG_BBQUE_PM_BATTERY
+	/** Battery manager instance  */
+	BatteryManager & bm;
+
+	/** Battery object instance	 */
+	BatteryPtr_t pbatt;
+#endif
+
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
@@ -136,6 +145,9 @@ private:
 	/** Allocatable resource slots */
 	uint32_t slots ;
 
+
+	/** System power budget */
+	int32_t sys_power_budget;
 
 	/** Power budgets due to thermal or energy constraints */
 	br::UsagesMap_t power_budgets;

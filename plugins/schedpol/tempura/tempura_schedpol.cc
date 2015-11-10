@@ -63,16 +63,24 @@ TempuraSchedPol::TempuraSchedPol():
 		cm(ConfigurationManager::GetInstance()),
 		ra(ResourceAccounter::GetInstance()),
 		mm(bw::ModelManager::GetInstance())
+#ifdef CONFIG_BBQUE_PM_BATTERY
+		,
+		bm(BatteryManager::GetInstance())
+#endif
 {
 	// Logger instance
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
-
 	if (logger)
 		logger->Info("tempura: Built a new dynamic object[%p]", this);
 	else
 		fprintf(stderr,
 				FI("tempura: Built new dynamic object [%p]\n"), (void *)this);
+#ifdef CONFIG_BBQUE_PM_BATTERY
+	pbatt = bm.GetBattery();
+	if (pbatt == nullptr)
+		logger->Error("No battery available. Cannot perform energy budgeting");
+#endif
 }
 
 
@@ -82,6 +90,7 @@ TempuraSchedPol::~TempuraSchedPol() {
 
 SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 	ExitCode_t result = SCHED_OK;
+	PowerMonitor & wm(PowerMonitor::GetInstance());
 
 	// Resource state view
 	result = InitResourceStateView();
@@ -92,6 +101,10 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 
 	// Application slots
 	InitSlots();
+
+	// System power budget
+	sys_power_budget = wm.GetSysPowerBudget();
+	logger->Debug("Init: System power budget = %d", sys_power_budget);
 
 	// Power budgets data structures
 	if (!power_budgets.empty()) {
@@ -251,10 +264,18 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 inline uint32_t TempuraSchedPol::GetPowerBudget(
 		br::ResourcePathPtr_t const & r_path,
 		ModelPtr_t pmodel) {
-	uint32_t temp_pwr_budget  = GetPowerBudgetFromThermalConstraints(
+	uint32_t energy_pwr_budget = 0;
+	uint32_t temp_pwr_budget   = GetPowerBudgetFromThermalConstraints(
 			r_path, pmodel);
-	uint32_t energy_pwr_budget = GetPowerBudgetFromEnergyConstraints(
-			r_path, pmodel);
+#ifdef CONFIG_BBQUE_PM_BATTERY
+	if (pbatt && (pbatt->IsDischarging() || pbatt->GetChargePerc() < 100)) {
+		logger->Debug("Budget: System battery full charged and power plugged");
+		energy_pwr_budget = GetPowerBudgetFromEnergyConstraints(r_path, pmodel);
+	}
+#endif
+	logger->Debug("Budget: mW(T)=[%d], mw(E)=[%d]", temp_pwr_budget, energy_pwr_budget);
+	if (energy_pwr_budget == 0)
+		return temp_pwr_budget;
 	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);
 }
 
@@ -270,6 +291,9 @@ uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
 uint32_t TempuraSchedPol::GetPowerBudgetFromEnergyConstraints(
 		br::ResourcePathPtr_t const & r_path,
 		ModelPtr_t pmodel) {
+
+//	sys_power_budget;
+
 	(void) pmodel;
 	return 100;
 }
