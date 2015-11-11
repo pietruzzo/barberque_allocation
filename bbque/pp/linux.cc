@@ -1173,10 +1173,16 @@ LinuxPP::_MapResources(
 	if (result != OK)
 		return result;
 
-	// Map resources for each node (e.g., CPU)
+	// Get the set of assigned (bound) computing nodes (e.g., CPUs)
 	br::ResourceBitset nodes(
 			br::ResourceBinder::GetMask(pum, br::Resource::CPU));
 	br::ResID_t node_id = nodes.FirstSet();
+	if (node_id < 0) {
+		logger->Fatal("PLAT LNX: Missing binding to nodes/CPUs");
+		return PLATFORM_MAPPING_FAILED;
+	}
+
+	// Map resources for each node (e.g., CPU)
 	for (; node_id <= nodes.LastSet(); ++node_id) {
 		logger->Debug("PLAT LNX: CGroup resource mapping node [%d]", node_id);
 		if (!nodes.Test(node_id)) continue;
