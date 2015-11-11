@@ -620,6 +620,13 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 			break;
 		}
 
+		if (result != PlatformProxy::OK) {
+			logger->Error("STEP M: Cannot synchronize application [%s]",
+					papp->StrId());
+			am.DisableEXC(papp, true);
+			continue;
+		}
+
 		logger->Info("STEP M: <--------- OK -- [%s]", papp->StrId());
 	}
 
