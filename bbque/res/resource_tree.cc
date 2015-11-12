@@ -180,8 +180,8 @@ bool ResourceTree::findNode(
 		}
 
 		// Stop whether only the first matching has been required
-		if (match_flags & RT_MATCH_FIRST)
-			break;
+		if (found && (match_flags & RT_MATCH_FIRST))
+			return true;
 	}
 
 	// Back to one level up
