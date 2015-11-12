@@ -85,6 +85,18 @@ uint32_t ResourceBinder::Bind(
 	return count;
 }
 
+inline void SetBit(
+		ResourcePathPtr_t ppath,
+		br::ResourceIdentifier::Type_t r_type,
+		ResourceBitset & r_mask) {
+	// Get the ID of the resource type in the path
+	br::ResID_t r_id = ppath->GetID(r_type);
+	if ((r_id == R_ID_NONE) || (r_id == R_ID_ANY))
+		return;
+	// Set the ID-th bit in the mask
+	r_mask.Set(r_id);
+}
+
 ResourceBitset ResourceBinder::GetMask(
 		UsagesMapPtr_t pum,
 		br::ResourceIdentifier::Type_t r_type) {
@@ -94,23 +106,20 @@ ResourceBitset ResourceBinder::GetMask(
 ResourceBitset ResourceBinder::GetMask(
 		br::UsagesMap_t const & um,
 		br::ResourceIdentifier::Type_t r_type) {
-	UsagesMap_t::const_iterator um_it;
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceBitset r_mask;
-	br::ResID_t r_id;
 
 	// Sanity check
 	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
 		return r_mask;
 
 	// Scan the resource usages map
-	for (um_it = um.begin(); um_it != um.end(); ++um_it) {
-		ResourcePathPtr_t const & ppath(um_it->first);
-		// Get the ID of the resource type in the path
-		r_id = ppath->GetID(r_type);
-		if ((r_id == R_ID_NONE) || (r_id == R_ID_ANY))
-			continue;
-		// Set the ID-th bit in the mask
-		r_mask.Set(r_id);
+	for (auto & ru_entry: um) {
+		br::ResourcePathPtr_t const & ppath(ru_entry.first);
+		br::UsagePtr_t const & pusage(ru_entry.second);
+		SetBit(ppath, r_type, r_mask);
+		for (br::ResourcePtr_t const & rsrc: pusage->GetResourcesList())
+			SetBit(ra.GetPath(rsrc->Path()), r_type, r_mask);
 	}
 	return r_mask;
 }
