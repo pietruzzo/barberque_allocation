@@ -257,7 +257,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Sample() {
 	// Power status monitoring over all the registered resources
 	for (auto & r_entry: wm_info.resources) {
 		br::ResourcePathPtr_t const & r_path(r_entry.first);
-		br::ResourcePtr_t rsrc(r_entry.second);
+		br::ResourcePtr_t & rsrc(r_entry.second);
 
 		std::string log_inst_values("[");
 		std::string log_mean_values("[");
