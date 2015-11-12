@@ -301,6 +301,11 @@ public:
 
 	/**
 	 * @brief Get a resource descriptor
+	 *
+	 * If the path provided is of type "template" or "mixed" the result is a
+	 * list of resource descriptors. In such a case, the function will return
+	 * the topmost
+	 *
 	 * @param path Resource path
 	 * @return A shared pointer to the resource descriptor
 	 */

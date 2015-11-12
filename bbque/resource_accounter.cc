@@ -318,22 +318,20 @@ void ResourceAccounter::PrintAppDetails(
  ************************************************************************/
 
 br::ResourcePtr_t ResourceAccounter::GetResource(std::string const & path) const {
-	std::map<std::string, ResourcePathPtr_t>::const_iterator rp_it;
-	// Retrieve the resource path object
-	rp_it = r_paths.find(path);
-	if (rp_it == r_paths.end())
+	// Build a resource path object.
+	// It can be a MIXED path(not inserted in r_paths)
+	ResourcePathPtr_t ppath(new br::ResourcePath(path));
+	if (ppath == nullptr)
 		return br::ResourcePtr_t();
-	// Call the resource path based function member
-	ResourcePathPtr_t const & ppath((*rp_it).second);
 	return GetResource(ppath);
 }
 
 br::ResourcePtr_t ResourceAccounter::GetResource(ResourcePathPtr_t ppath) const {
-	br::ResourcePtrList_t matchings;
-	matchings = resources.findList(*(ppath.get()), RT_MATCH_FIRST);
+	br::ResourcePtrList_t matchings(
+			resources.findList(*(ppath.get()), RT_MATCH_FIRST | RT_MATCH_MIXED));
 	if (matchings.empty())
 		return br::ResourcePtr_t();
-	return *(matchings.begin());
+	return matchings.front();
 }
 
 
