@@ -135,7 +135,6 @@ void ResourceAccounter::InitBindingOptions() {
 
 		// New binding info structure
 		binding_options.insert(
-				//BindingPair_t(binding_type, BindingInfoPtr_t(new BindingInfo_t)));
 				BindingPair_t(binding_type, new BindingInfo_t));
 		binding_options[binding_type]->d_path = binding_rp;
 		logger->Info("Resource binding domain:'%s' Type:%s",
@@ -221,14 +220,11 @@ static char *PrettyFormat(float value) {
 	return str;
 }
 
-void ResourceAccounter::PrintStatusReport(br::RViewToken_t vtok, bool verbose) const {
-	std::map<std::string, ResourcePathPtr_t>::const_iterator path_it;
-	std::map<std::string, ResourcePathPtr_t>::const_iterator end_path;
-	end_path = r_paths.end();
+void ResourceAccounter::PrintStatusReport(
+		br::RViewToken_t vtok, bool verbose) const {
 	//                        +--------- 22 ------------+     +-- 11 ---+   +-- 11 ---+   +-- 11 ---+
 	char rsrc_text_row[] = "| sys0.cpu0.mem0              I : 1234.123e+1 | 1234.123e+1 | 1234.123e+1 |";
-	uint64_t rsrc_used;
-
+	uint64_t rsrc_used = 0;
 
 	// Print the head of the report table
 	if (verbose) {
@@ -246,10 +242,9 @@ void ResourceAccounter::PrintStatusReport(br::RViewToken_t vtok, bool verbose) c
 		);
 	}
 
-	for (path_it = r_paths.begin(); path_it != end_path; ++path_it) {
-		ResourcePathPtr_t ppath((*path_it).second);
-
-		// Amount of resource used
+	// For each resource get the used amount
+	for (auto const & path_entry: r_paths) {
+		ResourcePathPtr_t const & ppath(path_entry.second);
 		rsrc_used = Used(ppath, EXACT, vtok);
 
 		// Build the resource text row
@@ -257,7 +252,6 @@ void ResourceAccounter::PrintStatusReport(br::RViewToken_t vtok, bool verbose) c
 		char online = 'I';
 		if (IsOfflineResource(ppath))
 			online = 'O';
-
 		len += sprintf(rsrc_text_row + len, "| %-27s %c : %11s | ",
 				ppath->ToString().c_str(), online,
 				PrettyFormat(rsrc_used));
@@ -265,15 +259,11 @@ void ResourceAccounter::PrintStatusReport(br::RViewToken_t vtok, bool verbose) c
 				PrettyFormat(Unreserved(ppath)));
 		len += sprintf(rsrc_text_row + len, "%11s |",
 				PrettyFormat(Total(ppath)));
-
 		PRINT_NOTICE_IF_VERBOSE(verbose, rsrc_text_row);
 
-		// No details to print if usage = 0
-		if (rsrc_used == 0)
-			continue;
-
 		// Print details about how usage is partitioned among applications
-		PrintAppDetails(ppath, vtok, verbose);
+		if (rsrc_used > 0)
+			PrintAppDetails(ppath, vtok, verbose);
 	}
 	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV1);
 }
@@ -352,7 +342,6 @@ br::ResourcePtrList_t ResourceAccounter::GetResources(
 	ResourcePathPtr_t ppath(new br::ResourcePath(path));
 	if (!ppath)
 		return br::ResourcePtrList_t();
-	// Call the resource path based function
 	return GetResources(ppath);
 }
 
@@ -375,8 +364,8 @@ bool ResourceAccounter::ExistResource(std::string const & path) const {
 }
 
 bool ResourceAccounter::ExistResource(ResourcePathPtr_t ppath) const {
-	br::ResourcePtrList_t matchings =
-		resources.findList(*(ppath.get()), RT_MATCH_TYPE | RT_MATCH_FIRST);
+	br::ResourcePtrList_t matchings(
+		resources.findList(*(ppath.get()), RT_MATCH_TYPE | RT_MATCH_FIRST));
 	return !matchings.empty();
 }
 
@@ -399,7 +388,7 @@ ResourcePathPtr_t const ResourceAccounter::GetPath(
 
 inline uint64_t ResourceAccounter::Total(
 		std::string const & path) const {
-	br::ResourcePtrList_t matchings = GetResources(path);
+	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_TOTAL, 0);
 }
 
@@ -413,7 +402,7 @@ inline uint64_t ResourceAccounter::Total(
 inline uint64_t ResourceAccounter::Total(
 		ResourcePathPtr_t ppath,
 		PathClass_t rpc) const {
-	br::ResourcePtrList_t matchings = GetList(ppath, rpc);
+	br::ResourcePtrList_t matchings(GetList(ppath, rpc));
 	return QueryStatus(matchings, RA_TOTAL, 0);
 }
 
@@ -421,7 +410,7 @@ inline uint64_t ResourceAccounter::Total(
 inline uint64_t ResourceAccounter::Used(
 		std::string const & path,
 		br::RViewToken_t vtok) const {
-	br::ResourcePtrList_t matchings = GetResources(path);
+	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_USED, vtok);
 }
 
@@ -437,7 +426,7 @@ inline uint64_t ResourceAccounter::Used(
 		ResourcePathPtr_t ppath,
 		PathClass_t rpc,
 		br::RViewToken_t vtok) const {
-	br::ResourcePtrList_t matchings = GetList(ppath, rpc);
+	br::ResourcePtrList_t matchings(GetList(ppath, rpc));
 	return QueryStatus(matchings, RA_USED, vtok);
 }
 
@@ -446,7 +435,7 @@ inline uint64_t ResourceAccounter::Available(
 		std::string const & path,
 		br::RViewToken_t vtok,
 		ba::AppSPtr_t papp) const {
-	br::ResourcePtrList_t matchings = GetResources(path);
+	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_AVAIL, vtok, papp);
 }
 
@@ -464,13 +453,13 @@ inline uint64_t ResourceAccounter::Available(
 		PathClass_t rpc,
 		br::RViewToken_t vtok,
 		ba::AppSPtr_t papp) const {
-	br::ResourcePtrList_t matchings = GetList(ppath, rpc);
+	br::ResourcePtrList_t matchings(GetList(ppath, rpc));
 	return QueryStatus(matchings, RA_AVAIL, vtok, papp);
 }
 
 inline uint64_t ResourceAccounter::Unreserved(
 		std::string const & path) const {
-	br::ResourcePtrList_t matchings = GetResources(path);
+	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_UNRESERVED, 0);
 }
 
@@ -483,14 +472,14 @@ inline uint64_t ResourceAccounter::Unreserved(
 
 inline uint64_t ResourceAccounter::Unreserved(
 		ResourcePathPtr_t ppath) const {
-	br::ResourcePtrList_t matchings = GetList(ppath, MIXED);
+	br::ResourcePtrList_t matchings(GetList(ppath, MIXED));
 	return QueryStatus(matchings, RA_UNRESERVED, 0);
 }
 
 
 inline uint16_t ResourceAccounter::Count(
 		ResourcePathPtr_t ppath) const {
-	br::ResourcePtrList_t matchings = GetResources(ppath);
+	br::ResourcePtrList_t matchings(GetResources(ppath));
 	return matchings.size();
 }
 
@@ -518,14 +507,11 @@ uint64_t ResourceAccounter::QueryStatus(
 		QueryOption_t _att,
 		br::RViewToken_t vtok,
 		ba::AppSPtr_t papp) const {
-	br::ResourcePtrList_t::const_iterator res_it(rsrc_list.begin());
-	br::ResourcePtrList_t::const_iterator res_end(rsrc_list.end());
 	uint64_t value = 0;
 
 	// For all the descriptors in the list add the quantity of resource in the
 	// specified state (available, used, total)
-	for (; res_it != res_end; ++res_it) {
-		br::ResourcePtr_t const & rsrc(*res_it);
+	for (br::ResourcePtr_t const & rsrc: rsrc_list) {
 		switch(_att) {
 		case RA_AVAIL:
 			value += rsrc->Available(papp, vtok);
@@ -555,8 +541,8 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		return 0;
 	}
 
-	br::UsagesMap_t::const_iterator b_it = pum->begin();
-	br::UsagesMap_t::const_iterator e_it = pum->end();
+	br::UsagesMap_t::const_iterator b_it(pum->begin());
+	br::UsagesMap_t::const_iterator e_it(pum->end());
 	return  GetAmountFromUsagesMap(
 			b_it, e_it, r_type, r_scope_type, r_scope_id);
 }
@@ -567,8 +553,8 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		br::ResourceIdentifier::Type_t r_scope_type,
 		br::ResID_t r_scope_id) const {
 
-	br::UsagesMap_t::const_iterator b_it = um.begin();
-	br::UsagesMap_t::const_iterator e_it = um.end();
+	br::UsagesMap_t::const_iterator b_it(um.begin());
+	br::UsagesMap_t::const_iterator e_it(um.end());
 	return  GetAmountFromUsagesMap(
 			b_it, e_it, r_type, r_scope_type, r_scope_id);
 }
@@ -579,13 +565,12 @@ uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
 		br::ResID_t r_scope_id) const {
-	br::UsagesMap_t::const_iterator uit;
 	uint64_t amount = 0;
 
-	uit = begin;
+	br::UsagesMap_t::const_iterator uit(begin);
 	for ( ; uit != end; ++uit) {
-		br::ResourcePathPtr_t ppath = (*uit).first;
-		br::UsagePtr_t pusage = (*uit).second;
+		br::ResourcePathPtr_t const & ppath((*uit).first);
+		br::UsagePtr_t const & pusage((*uit).second);
 
 		logger->Debug("GetUsageAmount: type:{%-3s} scope:{%-3s}",
 			br::ResourceIdentifier::TypeStr[r_type],
@@ -612,13 +597,11 @@ ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 		br::RViewToken_t vtok,
 		ba::AppSPtr_t papp) const {
 	uint64_t avail = 0;
-	br::UsagesMap_t::const_iterator usages_it(usages->begin());
-	br::UsagesMap_t::const_iterator usages_end(usages->end());
 
 	// Check availability for each Usage object
-	for (; usages_it != usages_end; ++usages_it) {
-		br::ResourcePathPtr_t const & rsrc_path(usages_it->first);
-		br::UsagePtr_t const & pusage(usages_it->second);
+	for (auto const & ru_entry: *(usages.get())) {
+		br::ResourcePathPtr_t const & rsrc_path(ru_entry.first);
+		br::UsagePtr_t const & pusage(ru_entry.second);
 
 		// Query the availability of the resources in the list
 		avail = QueryStatus(pusage->GetResourcesList(), RA_AVAIL, vtok, papp);
@@ -640,9 +623,9 @@ ResourceAccounter::ExitCode_t ResourceAccounter::GetAppUsagesByView(
 		br::RViewToken_t vtok,
 		AppUsagesMapPtr_t & apps_usages) {
 	// Get the map of all the Apps/EXCs resource usages
+	// (default system resource state view)
 	AppUsagesViewsMap_t::iterator view_it;
 	if (vtok == 0) {
-		// Default view / System state
 		assert(sys_usages_view);
 		apps_usages = sys_usages_view;
 		return RA_SUCCESS;
@@ -719,14 +702,12 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 		std::string const & _path,
 		std::string const & _units,
 		uint64_t _amount) {
-	br::ResourcePtr_t pres;
-	br::ResourcePathPtr_t ppath;
 	uint64_t availability;
 	uint64_t reserved;
 	std::unique_lock<std::mutex> status_ul(status_mtx, std::defer_lock);
 
 	// Lookup for the resource to be updated
-	ppath = GetPath(_path);
+	br::ResourcePathPtr_t ppath(GetPath(_path));
 	if (ppath == nullptr) {
 		logger->Fatal("Updating resource FAILED "
 			"(Error: path [%s] does not reference a specific resource",
@@ -735,7 +716,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	}
 
 	// Get the path of the resource to update
-	pres = GetResource(ppath);
+	br::ResourcePtr_t pres(GetResource(ppath));
 	if (pres == nullptr) {
 		logger->Fatal("Updating resource FAILED "
 			"(Error: resource [%s] not found",
@@ -897,7 +878,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 		std::string const & path,
 		uint64_t amount) {
-	ResourcePathPtr_t ppath(new br::ResourcePath(path));
+	br::ResourcePathPtr_t ppath(GetPath(path));
 	logger->Info("Reserve: built %d from %s", ppath.get(), path.c_str());
 
 	if (ppath == nullptr) {
@@ -934,7 +915,7 @@ bool  ResourceAccounter::IsOfflineResource(ResourcePathPtr_t ppath) const {
 
 ResourceAccounter::ExitCode_t  ResourceAccounter::OfflineResources(
 		std::string const & path) {
-	br::ResourcePtrList_t rlist = GetResources(path);
+	br::ResourcePtrList_t rlist(GetResources(path));
 	br::ResourcePtrListIterator_t rit = rlist.begin();
 
 	logger->Info("Offlining resources [%s]...", path.c_str());
@@ -953,7 +934,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::OfflineResources(
 
 ResourceAccounter::ExitCode_t  ResourceAccounter::OnlineResources(
 		std::string const & path) {
-	br::ResourcePtrList_t rlist = GetResources(path);
+	br::ResourcePtrList_t rlist(GetResources(path));
 	br::ResourcePtrListIterator_t rit = rlist.begin();
 
 	logger->Info("Onlining resources [%s]...", path.c_str());
@@ -1284,12 +1265,9 @@ ResourceAccounter::IncBookingCounts(
 	}
 
 	// Book resources for the application
-	br::UsagesMap_t::const_iterator usages_it(rsrc_usages->begin());
-	br::UsagesMap_t::const_iterator usages_end(rsrc_usages->end());
-	for (; usages_it != usages_end;	++usages_it) {
-		// Current required resource (Usage object)
-		br::ResourcePathPtr_t const & rsrc_path(usages_it->first);
-		br::UsagePtr_t pusage(usages_it->second);
+	for (auto & ru_entry: *(rsrc_usages.get())) {
+		br::ResourcePathPtr_t const & rsrc_path(ru_entry.first);
+		br::UsagePtr_t & pusage(ru_entry.second);
 		logger->Debug("Booking: [%s] requires resource {%s}: [% " PRIu64 "] ",
 				papp->StrId(), rsrc_path->ToString().c_str(), pusage->GetAmount());
 
@@ -1327,9 +1305,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 		ba::AppSPtr_t const & papp,
 		br::UsagePtr_t & pusage,
 		br::RViewToken_t vtok) {
-	br::ResourcePtrListIterator_t it_bind(pusage->GetResourcesList().begin());
-	br::ResourcePtrListIterator_t end_it(pusage->GetResourcesList().end());
 	bool first_resource = false;
+
 
 	// Get the set of resources referenced in the view
 	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(vtok));
@@ -1340,13 +1317,14 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 	}
 	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
 
-	// Amount of resource to book
+	// Amount of resource to book and list of resource descriptors
 	uint64_t requested = pusage->GetAmount();
+	br::ResourcePtrListIterator_t it_bind(pusage->GetResourcesList().begin());
+	br::ResourcePtrListIterator_t end_it(pusage->GetResourcesList().end());
 
 	// Get the list of resource binds
 	for (; it_bind != end_it; ++it_bind) {
 		br::ResourcePtr_t & rsrc(*it_bind);
-
 		// Break if the required resource has been completely allocated
 		if (requested == 0)
 			break;
@@ -1471,17 +1449,13 @@ void ResourceAccounter::DecBookingCounts(
 		ba::AppSPtr_t const & papp,
 		br::RViewToken_t vtok) {
 	ExitCode_t ra_result;
-	// Maps of resource usages per Application/EXC
-	br::UsagesMap_t::const_iterator usages_it(app_usages->begin());
-	br::UsagesMap_t::const_iterator usages_end(app_usages->end());
-	logger->Debug("DecCount: [%s] holds %d resources", papp->StrId(),
-			app_usages->size());
+	logger->Debug("DecCount: [%s] holds %d resources",
+			papp->StrId(), app_usages->size());
 
 	// Release the all the resources hold by the Application/EXC
-	for (; usages_it != usages_end; ++usages_it) {
-		ResourcePathPtr_t const  & rsrc_path(usages_it->first);
-		br::UsagePtr_t pusage(usages_it->second);
-
+	for (auto & ru_entry: *(app_usages.get())) {
+		br::ResourcePathPtr_t const & rsrc_path(ru_entry.first);
+		br::UsagePtr_t & pusage(ru_entry.second);
 		// Release the resources bound to the current request
 		ra_result = UndoResourceBooking(papp, pusage, vtok);
 		if (ra_result == RA_ERR_MISS_VIEW)
@@ -1508,13 +1482,12 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UndoResourceBooking(
 	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
 
 	// For each resource binding release the amount allocated to the App/EXC
-	br::ResourcePtrListIterator_t it_bind(pusage->GetResourcesList().begin());
-	br::ResourcePtrListIterator_t  end_it(pusage->GetResourcesList().end());
-	for(; usage_freed < pusage->GetAmount(); ++it_bind) {
-		assert(it_bind != end_it);
+	assert(!pusage->GetResourcesList().empty());
+	for (br::ResourcePtr_t & rsrc: pusage->GetResourcesList()) {
+		if (usage_freed == pusage->GetAmount())
+			break;
 
 		// Release the quantity hold by the Application/EXC
-		br::ResourcePtr_t & rsrc(*it_bind);
 		usage_freed += rsrc->Release(papp, vtok);
 
 		// If no more applications are using this resource, remove it from
