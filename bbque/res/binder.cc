@@ -65,10 +65,9 @@ uint32_t ResourceBinder::Bind(
 					src_ppath->ToString().c_str(), dst_ppath->ToString().c_str());
 			++count;
 		}
-		else {
+		else
 			logger->Debug("Bind: Nothing to do in [%s]",
 					src_ppath->ToString().c_str());
-		}
 
 		// Create a new Usage object and set the binding list
 		UsagePtr_t dst_pusage(new Usage(src_pusage->GetAmount()));
@@ -89,29 +88,11 @@ uint32_t ResourceBinder::Bind(
 ResourceBitset ResourceBinder::GetMask(
 		UsagesMapPtr_t pum,
 		br::ResourceIdentifier::Type_t r_type) {
-	UsagesMap_t::iterator pum_it;
-	ResourceBitset r_mask;
-	br::ResID_t r_id;
-
-	// Sanity check
-	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
-		return r_mask;
-
-	// Scan the resource usages map
-	for (pum_it = pum->begin();	pum_it != pum->end(); ++pum_it) {
-		ResourcePathPtr_t const & ppath(pum_it->first);
-		// Get the ID of the resource type in the path
-		r_id = ppath->GetID(r_type);
-		if ((r_id == R_ID_NONE) || (r_id == R_ID_ANY))
-			continue;
-		// Set the ID-th bit in the mask
-		r_mask.Set(r_id);
-	}
-	return r_mask;
+	return GetMask(*(pum.get()), r_type);
 }
 
 ResourceBitset ResourceBinder::GetMask(
-		UsagesMap_t const & um,
+		br::UsagesMap_t const & um,
 		br::ResourceIdentifier::Type_t r_type) {
 	UsagesMap_t::const_iterator um_it;
 	ResourceBitset r_mask;
@@ -156,9 +137,9 @@ ResourceBitset ResourceBinder::GetMask(
 				br::ResourceIdentifier::TypeStr[r_type], vtok);
 
 	// Scan the resource usages map
-	for (pum_it = pum->begin();	pum_it != pum->end(); ++pum_it) {
-		ResourcePathPtr_t const & ppath(pum_it->first);
-		UsagePtr_t const & pusage(pum_it->second);
+	for (auto const & ru_entry: *(pum.get())) {
+		br::ResourcePathPtr_t const & ppath(ru_entry.first);
+		br::UsagePtr_t const & pusage(ru_entry.second);
 
 		// From the resource path extract the ID of the "scope" resource type,
 		// and the type of resource referenced
@@ -202,10 +183,10 @@ ResourceBitset ResourceBinder::GetMask(
 					pres->Name().c_str(), papp->StrId());
 			continue;
 		}
-		else {
+		else
 			logger->Debug("GetMask: {%s} used by %s. Continuing...",
 					pres->Name().c_str(), papp->StrId());
-		}
+		// Set if the resource type matches
 		if (pres->Type() == r_type)
 			r_mask.Set(pres->ID());
 	}
