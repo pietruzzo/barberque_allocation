@@ -71,8 +71,7 @@ private:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
-    	if (version == 0 || version != 0)
-    	{
+    	if (version == 0 || version != 0) {
         	ar & events;
         }
     }

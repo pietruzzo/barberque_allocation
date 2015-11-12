@@ -20,12 +20,8 @@
 
 #include <fstream>
 #include <sstream>
-#include <time.h>
-
 #include <boost/filesystem.hpp>
 #include <boost/serialization/serialization.hpp>
-//#include <boost/archive/binary_oarchive.hpp>
-//#include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
@@ -45,41 +41,29 @@ EventManager::EventManager() {
 	assert(logger);
 
 	high_resolution_clock::time_point p = high_resolution_clock::now();
-
     milliseconds ms = duration_cast<milliseconds>(p.time_since_epoch());
 
     seconds s = duration_cast<seconds>(ms);
-
     std::time_t t = s.count();
-
     std::size_t fs = ms.count() % 1000;
 
     std::ostringstream ostr;
-
     ostr << fs;
-
     std::string fractional_seconds = ostr.str();
 
     struct tm * timeinfo;
-
     char buffer[80];
-
     timeinfo = gmtime(&t);
-
     strftime(buffer, 80, "bbque-events_%a_%d_%b_%Y_%T", timeinfo);
-
     std::string filename(buffer);
 
     filename = filename + ":" + fractional_seconds + ".txt";
-
 	archive_path = ARCHIVE_FOLDER + filename;
-
 
 	// Create events folder if it doesn't exist
 	const char* folder_path = std::string(ARCHIVE_FOLDER).c_str();
     boost::filesystem::path dir(folder_path);
-    if(boost::filesystem::create_directory(dir))
-    {
+    if(boost::filesystem::create_directory(dir)) {
         logger->Info("Create events Archive folder...");
     }
 
@@ -93,6 +77,10 @@ EventManager::~EventManager() {
 EventManager & EventManager::GetInstance() {
 	static EventManager instance;
 	return instance;
+}
+
+void EventManager::SetArchive(std::string archive) {
+    archive_path = ARCHIVE_FOLDER + archive;
 }
 
 void EventManager::Serialize(EventWrapper ew) {

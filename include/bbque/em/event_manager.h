@@ -49,6 +49,12 @@ public:
 	static EventManager & GetInstance();
 
 	/**
+	 * @brief Set the archive path to which the EventManager points to
+	 * @param archive name of the archive
+	 */
+	void SetArchive(std::string archive);
+
+	/**
 	 * @brief TimeToString
 	 * @param timestamp The timestamp to convert
 	 */

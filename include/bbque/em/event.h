@@ -20,7 +20,7 @@
 
 #include <cstdint>
 #include <string>
-//#include <ctime>
+#include <ctime>
 #include "bbque/cpp11/chrono.h"
 
 #include <boost/serialization/access.hpp>
@@ -38,16 +38,16 @@ public:
 
 	/**
 	 * @brief Constructor
-	 * @param validity of the event
+	 * @param valid validity of the event
 	 * @param module the module which has triggered the event
 	 * @param resource the resource destination of the event
 	 * @param application the application
 	 * @param type of event
 	 * @param value associated to the event
 	 */
-	Event(bool const & valid, std::string const & module, std::string const & resource,
-	 	std::string const & application, std::string const & type, 
-	 	const int & value);
+	Event(bool const & valid, std::string const & module, 
+		std::string const & resource, std::string const & application, 
+		std::string const & type, const int & value);
 
 	/**
 	 * @brief Destructor
@@ -57,12 +57,12 @@ public:
 	/**
      * @brief Says whether the event is valid or not
      */
-    inline bool IsValid() const{
+    inline bool IsValid() const {
         return this->valid;
     }
 
     /**
-     * @brief Says whether the event is valid or not
+     * @brief Set the validity of the event
      */
     inline void SetValid(bool valid = false) {
         this->valid = valid;
@@ -71,54 +71,48 @@ public:
 	/**
 	 * @brief Get the module which has triggered the event
 	 */
-	inline std::string GetModule() const{
+	inline std::string GetModule() const {
 		return this->module;
 	}
 
 	/**
 	 * @brief Get the resource destination of the event 
 	 */
-	inline std::string GetResource() const{
+	inline std::string GetResource() const {
 		return this->resource;
 	}
 
 	/**
 	 * @brief Get the application
 	 */
-	inline std::string GetApplication() const{
+	inline std::string GetApplication() const {
 		return this->application;
 	}
 
 	/**
 	 * @brief Get the type of event
 	 */
-	inline std::string GetType() const{
+	inline std::string GetType() const {
 		return this->type;
 	}
 
-	/*
-	inline long GetTimestamp() const{
-		return this->timestamp;
-	}
-	*/
-
-	inline std::chrono::milliseconds GetTimestamp() const{
+	/**
+	 * @brief Get the timestamp of the event
+	 */
+	inline std::chrono::milliseconds GetTimestamp() const {
 		return this->timestamp;
 	}
 
 	/**
 	 * @brief Get the value associated to the event
 	 */
-	inline int GetValue() const{
+	inline int GetValue() const {
 		return this->value;
 	}
-	
-	/*
-	inline void SetTimestamp(std::chrono::milliseconds timestamp) {
-		this->timestamp = (long long int)timestamp.count();
-	}
-	*/
 
+	/**
+     * @brief Set the timestamp of the event
+     */
 	inline void SetTimestamp(std::chrono::milliseconds timestamp) {
 		this->timestamp = timestamp;
 	}
@@ -127,12 +121,9 @@ private:
 
 	friend class boost::serialization::access;
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
-    {
-    	if (version == 0 || version != 0)
-    	{
+    void serialize(Archive & ar, const unsigned int version) {
+    	if (version == 0 || version != 0) {
     		ar & valid;
-    		//ar & timestamp;
     		ar & boost::serialization::make_binary_object(&timestamp, sizeof(timestamp));        
 	        ar & module;
 	        ar & resource;
@@ -143,7 +134,7 @@ private:
 	}
 
 	bool valid = false;
-	//long long int timestamp;
+
     std::chrono::milliseconds timestamp;
 
 	std::string module;
