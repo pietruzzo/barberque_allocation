@@ -134,7 +134,9 @@ ResourceManager::ResourceManager() :
 	ps(PlatformServices::GetInstance()),
 	sm(SchedulerManager::GetInstance()),
 	ym(SynchronizationManager::GetInstance()),
+#ifdef CONFIG_BBQUE_SCHED_PROFILING
 	om(ProfileManager::GetInstance()),
+#endif
 	am(ApplicationManager::GetInstance()),
 	ap(ApplicationProxy::GetInstance()),
 	pm(PluginManager::GetInstance()),
@@ -345,6 +347,7 @@ void ResourceManager::Optimize() {
 
 sched_profile:
 
+#ifdef CONFIG_BBQUE_SCHED_PROFILING
 	//--- Profiling
 	logger->Info(LNPROB);
 	optimization_tmr.start();
@@ -355,6 +358,9 @@ sched_profile:
 	}
 	logger->Info(LNPROE);
 	logger->Notice("Prof Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
+#else
+	logger->Debug("Scheduling profiling disabled");
+#endif
 
 }
 

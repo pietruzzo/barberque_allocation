@@ -315,6 +315,16 @@ config BBQUE_APP_PRIO_LEVELS
 
   Recipies define the priority of the corresponding Application.
 
+config BBQUE_SCHED_PROFILING
+  bool "Scheduling Profiling"
+  default n
+  ---help---
+  Enable the scheduling profiling support
+
+  This will collect statistics about the resource allocation metrics (e.g.,
+  mean and variance of the AWM from the scheduled applications, fairness
+  index, etc...)
+
 config BBQUE_BUILD_TESTS
   bool "Build the TEST suite"
   default n

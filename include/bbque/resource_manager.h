@@ -169,10 +169,13 @@ private:
 	 */
 	SynchronizationManager & ym;
 
+
+#ifdef CONFIG_BBQUE_SCHED_PROFILING
 	/**
 	 * @brief The Profiling Manager module
 	 */
 	ProfileManager & om;
+#endif
 
 	/**
 	 * @brief The Application Proxy module

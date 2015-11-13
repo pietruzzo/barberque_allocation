@@ -203,6 +203,9 @@
 /** Enabled SASB Synchronization policy asynchronous calls */
 #cmakedefine CONFIG_BBQUE_YP_SASB_ASYNC
 
+/** Enable the scheduling policy profiling  */
+#cmakedefine CONFIG_BBQUE_SCHED_PROFILING
+
 /** Target platform support C++11 required features */
 #cmakedefine CONFIG_TARGET_SUPPORT_CPP11
 
