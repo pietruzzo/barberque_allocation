@@ -133,6 +133,14 @@ void ResourceAccounter::InitBindingOptions() {
 			continue;
 		}
 
+#ifndef CONFIG_BBQUE_OPENCL
+		if (binding_type == br::Resource::GPU) {
+			logger->Warn("Binding: OpenCL support disabled."
+					" Discarding 'GPU' binding type");
+			continue;
+		}
+#endif
+
 		// New binding info structure
 		binding_options.insert(
 				BindingPair_t(binding_type, new BindingInfo_t));
