@@ -39,6 +39,12 @@ public:
 	EventManager();
 
 	/**
+	 * @brief Constructor
+	 * @param external unused parameter inserted just to differentiate
+	 * the constructor from the main one (used just within barbeque)
+	 */
+	EventManager(bool external);
+	/**
 	 * @brief Destructor
 	 */
 	~EventManager();

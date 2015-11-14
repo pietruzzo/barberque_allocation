@@ -64,6 +64,10 @@ EventManager::EventManager() {
 	std::ofstream ofs(archive_path);
 }
 
+EventManager::EventManager(bool external) {
+	(void)external;
+}
+
 EventManager::~EventManager() {
 
 }
