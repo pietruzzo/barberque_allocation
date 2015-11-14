@@ -29,12 +29,6 @@ using namespace std::chrono;
 
 namespace bbque {
 
-std::string EventManager::TimeToString(time_t t) {
-   std::stringstream strm;
-   strm << t;
-   return strm.str();
-}
-
 EventManager::EventManager() {
 	// Get a logger module
 	logger = bu::Logger::GetLogger(EVENT_MANAGER_NAMESPACE);
