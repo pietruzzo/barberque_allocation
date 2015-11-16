@@ -103,7 +103,8 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 	}
 
 	// Application slots
-	InitSlots();
+	if (sys->HasApplications(ApplicationStatusIF::READY))
+		InitSlots();
 
 	// System power budget
 	sys_power_budget = wm.GetSysPowerBudget();
