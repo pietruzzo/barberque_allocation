@@ -85,7 +85,10 @@ TempuraSchedPol::TempuraSchedPol():
 
 
 TempuraSchedPol::~TempuraSchedPol() {
-
+	power_budgets.clear();
+	resource_budgets.clear();
+	model_ids.clear();
+	entities.clear();
 }
 
 SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
@@ -428,6 +431,8 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoScheduling() {
 		logger->Debug("DoScheduling: [%s] success", psched->StrId());
 	}
 	logger->Debug("DoScheduling: STOP");
+	entities.clear();
+
 	return SCHED_OK;
 }
 
