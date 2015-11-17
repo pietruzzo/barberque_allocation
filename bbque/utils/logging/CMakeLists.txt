@@ -36,3 +36,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
 if (BBQUE_LOGGER_LIBS)
 	target_link_libraries(bbque_logger ${BBQUE_LOGGER_LIBS})
 endif (BBQUE_LOGGER_LIBS)
+
+install(TARGETS bbque_logger ARCHIVE
+	DESTINATION "${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque")
+
