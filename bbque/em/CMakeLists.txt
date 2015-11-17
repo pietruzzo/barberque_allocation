@@ -9,6 +9,7 @@ add_library(bbque_em STATIC ${EVENT_MANAGER_SRC})
 target_link_libraries(
 	bbque_em
 	${Boost_LIBRARIES}
+	bbque_logger
 )
 
 install(TARGETS bbque_em ARCHIVE
@@ -17,3 +18,4 @@ install(TARGETS bbque_em ARCHIVE
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/bbque/em"
 		DESTINATION "${BBQUE_PATH_HEADERS}"
 		FILES_MATCHING PATTERN "*.h")
+
