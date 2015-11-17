@@ -138,7 +138,7 @@ TempuraSchedPol::InitResourceStateView() {
 	ra_result = ra.GetView(status_view_id, sched_status_view);
 	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS)
 		return SCHED_ERROR_VIEW;
-	logger->Info("Init: Resources state view token: %d", sched_status_view);
+	logger->Debug("Init: Resources state view token: %d", sched_status_view);
 
 	return result;
 }
@@ -193,7 +193,7 @@ TempuraSchedPol::InitSlots() {
 		logger->Debug("Init: Slots for prio %d [c=%d] = %d",
 				p, sys->ApplicationsCount(p), slots);
 	}
-	logger->Info("Init: Slots for partitioning = %d", slots);
+	logger->Debug("Init: Slots for partitioning = %d", slots);
 
 	return SCHED_OK;
 }
@@ -257,7 +257,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 		// Resource budget
 		uint64_t r_budget = GetResourceBudget(r_path, pmodel);
 		resource_budgets[r_path]->SetAmount(r_budget);
-		logger->Info("Budget: [%s] has a budget of %" PRIu64 "",
+		logger->Debug("Budget: [%s] has a budget of %" PRIu64 "",
 				r_path->ToString().c_str(),
 				resource_budgets[r_path]->GetAmount());
 	}
@@ -277,7 +277,7 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 		energy_pwr_budget = GetPowerBudgetFromEnergyConstraints(r_path, pmodel);
 	}
 #endif
-	logger->Debug("Budget: mW(T)=[%d], mw(E)=[%d]", temp_pwr_budget, energy_pwr_budget);
+	logger->Debug("Budget: P(T)=[%d]mW, P(E)=[%d]mW", temp_pwr_budget, energy_pwr_budget);
 	if (energy_pwr_budget == 0)
 		return temp_pwr_budget;
 	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);
@@ -288,7 +288,15 @@ uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
 		ModelPtr_t pmodel) {
 	PowerMonitor & wm(PowerMonitor::GetInstance());
 	uint32_t crit_temp = wm.GetThermalThreshold(0);
-	logger->Notice("Budget: critical temperature = %d °C", crit_temp);
+	br::ResourcePtr_t rsrc(ra.GetResource(r_path));
+	if (unlikely(rsrc == nullptr))
+		logger->Fatal("Budget: No resource {}", r_path->ToString().c_str());
+	else {
+		logger->Info("Budget: {%s} Tcrit=[%3d °C], Tcurr=[%3.0f °C], L=[%3.1f]",
+				rsrc->Path().c_str(), crit_temp,
+				rsrc->GetPowerInfo(PowerManager::InfoType::TEMPERATURE),
+				rsrc->GetPowerInfo(PowerManager::InfoType::LOAD));
+	}
 	return pmodel->GetPowerFromTemperature(crit_temp);
 }
 
@@ -421,7 +429,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoScheduling() {
 		}
 
 		// Scheduling request
-		logger->Info("DoScheduling: [%s] scheduling request", psched->StrId());
+		logger->Debug("DoScheduling: [%s] scheduling request...", psched->StrId());
 		app_result = psched->papp->ScheduleRequest(
 				psched->pawm, sched_status_view, psched->bind_refn);
 		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
