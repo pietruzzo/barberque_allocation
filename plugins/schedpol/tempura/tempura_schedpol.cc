@@ -125,7 +125,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 	return result;
 }
 
-SchedulerPolicyIF::ExitCode_t
+inline SchedulerPolicyIF::ExitCode_t
 TempuraSchedPol::InitResourceStateView() {
 	ResourceAccounterStatusIF::ExitCode_t ra_result;
 	ExitCode_t result = SCHED_OK;
@@ -185,7 +185,7 @@ TempuraSchedPol::InitBudgets() {
 	return SCHED_OK;
 }
 
-SchedulerPolicyIF::ExitCode_t
+inline SchedulerPolicyIF::ExitCode_t
 TempuraSchedPol::InitSlots() {
 	slots = 0;
 	for (AppPrio_t p = 0; p <= sys->ApplicationLowestPriority(); p++) {
@@ -283,7 +283,7 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);
 }
 
-uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
+inline uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
 		br::ResourcePathPtr_t const & r_path,
 		ModelPtr_t pmodel) {
 	PowerMonitor & wm(PowerMonitor::GetInstance());
@@ -300,7 +300,7 @@ uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
 	return pmodel->GetPowerFromTemperature(crit_temp);
 }
 
-uint32_t TempuraSchedPol::GetPowerBudgetFromEnergyConstraints(
+inline uint32_t TempuraSchedPol::GetPowerBudgetFromEnergyConstraints(
 		br::ResourcePathPtr_t const & r_path,
 		ModelPtr_t pmodel) {
 
@@ -310,7 +310,7 @@ uint32_t TempuraSchedPol::GetPowerBudgetFromEnergyConstraints(
 	return 100;
 }
 
-int64_t TempuraSchedPol::GetResourceBudget(
+inline int64_t TempuraSchedPol::GetResourceBudget(
 		br::ResourcePathPtr_t const & r_path,
 		bw::ModelPtr_t pmodel) {
 	uint64_t resource_budget = sys->ResourceTotal(r_path);
@@ -340,7 +340,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoResourcePartitioning() {
 	return SCHED_OK;
 }
 
-bool TempuraSchedPol::CheckSkip(ba::AppCPtr_t const & papp) {
+inline bool TempuraSchedPol::CheckSkip(ba::AppCPtr_t const & papp) {
 	if (!papp->Active() && !papp->Blocking()) {
 		logger->Debug("Skipping [%s] State = [%s, %s]",
 				papp->StrId(),
