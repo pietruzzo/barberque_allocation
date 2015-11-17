@@ -508,7 +508,7 @@ br::ResourcePtrList_t ResourceAccounter::GetList(
 }
 
 
-uint64_t ResourceAccounter::QueryStatus(
+inline uint64_t ResourceAccounter::QueryStatus(
 		br::ResourcePtrList_t const & rsrc_list,
 		QueryOption_t _att,
 		br::RViewToken_t vtok,
@@ -565,7 +565,7 @@ uint64_t ResourceAccounter::GetUsageAmount(
 			b_it, e_it, r_type, r_scope_type, r_scope_id);
 }
 
-uint64_t ResourceAccounter::GetAmountFromUsagesMap(
+inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		br::UsagesMap_t::const_iterator & begin,
 		br::UsagesMap_t::const_iterator & end,
 		br::ResourceIdentifier::Type_t r_type,
@@ -598,7 +598,7 @@ uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 	return amount;
 }
 
-ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
+inline ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 		br::UsagesMapPtr_t const & usages,
 		br::RViewToken_t vtok,
 		ba::AppSPtr_t papp) const {
@@ -625,7 +625,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 	return RA_SUCCESS;
 }
 
-ResourceAccounter::ExitCode_t ResourceAccounter::GetAppUsagesByView(
+inline ResourceAccounter::ExitCode_t ResourceAccounter::GetAppUsagesByView(
 		br::RViewToken_t vtok,
 		AppUsagesMapPtr_t & apps_usages) {
 	// Get the map of all the Apps/EXCs resource usages
