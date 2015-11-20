@@ -465,14 +465,6 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoBinding(
 			ref_n = psched->pawm->BindResource(bd_type, bd_id, bd_id, ref_n);
 			logger->Debug("DoBinding: [%s] reference number %ld",
 					psched->StrId(), ref_n);
-
-			// The resource binding should never fail
-			if (ref_n == 0) {
-				logger->Error("DoBinding: [%d] on '%s%d' failed",
-						psched->StrId(),
-						br::ResourceIdentifier::TypeStr[bd_type], bd_id);
-				return SCHED_ERROR;
-			}
 		}
 
 		// Set scheduled binding reference number
