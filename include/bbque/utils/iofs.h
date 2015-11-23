@@ -42,6 +42,7 @@ public:
 	 */
 	static ExitCode_t ReadValueFrom(
 			std::string const & filepath, char * value, int len = 1) {
+		memset(value, '\0', len);
 		std::ifstream fd(filepath);
 		if (!fd) {
 			fprintf(stderr, "File not found\n\n ");
