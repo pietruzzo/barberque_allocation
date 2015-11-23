@@ -52,10 +52,6 @@ ModelPtr_t ModelManager::GetModel(std::string const & id) {
 	return models[id];
 }
 
-ModelsMap_t const & ModelManager::GetModels() {
-	return models;
-}
-
 void ModelManager::Register(ModelPtr_t model) {
 	std::string id(model->GetID());
 	models.insert(std::pair<std::string, ModelPtr_t>(id, model));

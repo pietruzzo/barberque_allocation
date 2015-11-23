@@ -69,7 +69,9 @@ public:
 	 *
 	 * @return A referecen to the models map
 	 */
-	ModelsMap_t const & GetModels();
+	inline ModelsMap_t const & GetModels() {
+		return models;
+	}
 
 	/**
 	 * @brief Register a model object
