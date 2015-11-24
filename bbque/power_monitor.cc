@@ -398,6 +398,7 @@ int32_t PowerMonitor::GetSysPowerBudget() {
 #ifndef CONFIG_BBQUE_PM_BATTERY
 	return 0;
 #else
+	std::unique_lock<std::mutex> ul(sys_lifetime.mtx);
 /*
 	if (!pbatt->IsDischarging() && pbatt->GetChargePerc() == 100) {
 		logger->Debug("System battery full charged and power plugged");
@@ -425,6 +426,7 @@ int32_t PowerMonitor::GetSysPowerBudget() {
 
 int PowerMonitor::SystemLifetimeCmdHandler(
 		const std::string action, const std::string hours) {
+	std::unique_lock<std::mutex> ul(sys_lifetime.mtx);
 	std::chrono::system_clock::time_point now;
 	logger->Info("PWR MNTR: action=[%s], hours=[%s]",
 			action.c_str(), hours.c_str());

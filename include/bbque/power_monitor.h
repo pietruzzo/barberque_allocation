@@ -171,6 +171,8 @@ private:
 	 * @brief System power budget information
 	 */
 	struct SystemLifetimeInfo_t {
+		/** Mutex to protect concurrent accesses */
+		std::mutex mtx;
 		/** Time point of the reuired system lifetime */
 		std::chrono::system_clock::time_point target_time;
 		/** System power budget for guarateeing the required lifetime */
