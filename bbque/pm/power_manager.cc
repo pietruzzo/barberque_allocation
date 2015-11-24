@@ -193,10 +193,9 @@ PowerManager::GetClockFrequencyInfo(
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
 		return gpu->GetClockFrequencyInfo(rp, khz_min, khz_max, khz_step);
-	case br::ResourceIdentifier::CPU: {
+	case br::ResourceIdentifier::CPU:
 		if (!cpu) break;
 		return cpu->GetClockFrequencyInfo(rp, khz_min, khz_max, khz_step);
-	}
 	default:
 		logger->Warn("(PM) GetClockFrequencyInfo not supported for [%s]",
 			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
