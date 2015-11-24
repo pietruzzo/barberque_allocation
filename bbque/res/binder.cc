@@ -141,7 +141,7 @@ ResourceBitset ResourceBinder::GetMask(
 	if ((r_type >= br::ResourceIdentifier::TYPE_COUNT)       ||
 		(r_scope_type >= br::ResourceIdentifier::TYPE_COUNT))
 		return r_mask;
-	logger->Debug("GetMask: scope=[%s%d] r={%s} view=%lu",
+	logger->Debug("GetMask: scope=[%s%d] resource={%s} view=%d",
 				br::ResourceIdentifier::TypeStr[r_scope_type], r_scope_id,
 				br::ResourceIdentifier::TypeStr[r_type], vtok);
 
