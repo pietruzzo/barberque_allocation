@@ -138,6 +138,8 @@ public:
 	static ResourceBitset GetMask(
 			ResourcePtrList_t const & rpl,
 			ResourceIdentifier::Type_t r_type,
+			ResourceIdentifier::Type_t r_scope_type,
+			ResID_t r_scope_id,
 			AppSPtr_t papp = nullptr,
 			RViewToken_t vtok = 0);
 
