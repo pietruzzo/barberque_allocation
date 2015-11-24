@@ -230,6 +230,9 @@ PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
 		return gpu->SetClockFrequency(rp, khz);
+	case br::ResourceIdentifier::CPU:
+		if (!cpu) break;
+		return cpu->SetClockFrequency(rp, khz);
 	default:
 		break;
 	}
