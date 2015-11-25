@@ -164,6 +164,7 @@ CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 
 CPUPowerManager::~CPUPowerManager() {
 	core_ids.clear();
+	core_therms.clear();
 	core_freqs.clear();
 	cpufreq_governors.clear();
 }
