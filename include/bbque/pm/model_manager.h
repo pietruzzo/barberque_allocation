@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef BBQUE_MODEL_MANAGER_H_
 #define BBQUE_MODEL_MANAGER_H_
 
@@ -24,6 +23,7 @@
 #include <string>
 
 #include "bbque/pm/models/model.h"
+#include "bbque/pm/models/system_model.h"
 #include "bbque/utils/logging/logger.h"
 
 
@@ -33,6 +33,7 @@ namespace bbque  { namespace pm {
 
 typedef std::shared_ptr<Model> ModelPtr_t;
 typedef std::map<std::string, ModelPtr_t> ModelsMap_t;
+typedef std::shared_ptr<SystemModel> SystemModelPtr_t;
 
 /**
  * @class ModelManager
@@ -74,6 +75,15 @@ public:
 	}
 
 	/**
+	 * @brief The system power-thermal model
+	 *
+	 * @param model A shared pointer to the system model object
+	 */
+	SystemModelPtr_t GetSystemModel() {
+		return system_model;
+	}
+
+	/**
 	 * @brief Register a model object
 	 *
 	 * @param model A shared pointer to the model object
@@ -93,6 +103,9 @@ private:
 
 	/*** Default model (base class) */
 	ModelPtr_t default_model;
+
+	/***  The system power-thermal model */
+	SystemModelPtr_t system_model;
 };
 
 } // namespace pm
