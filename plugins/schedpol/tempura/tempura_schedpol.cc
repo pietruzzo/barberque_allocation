@@ -72,7 +72,7 @@ TempuraSchedPol::TempuraSchedPol():
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 	if (logger)
-		logger->Info("tempura: Built a new dynamic object[%p]", this);
+		logger->Debug("tempura: Built a new dynamic object[%p]", this);
 	else
 		fprintf(stderr,
 				FI("tempura: Built new dynamic object [%p]\n"), (void *)this);
@@ -90,6 +90,11 @@ TempuraSchedPol::~TempuraSchedPol() {
 	model_ids.clear();
 	entities.clear();
 }
+
+
+/*************************************************************
+ * Initialization
+ ************************************************************/
 
 SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 	ExitCode_t result = SCHED_OK;
@@ -112,7 +117,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 
 	// Power budgets data structures
 	if (!power_budgets.empty()) {
-		logger->Debug("Init: Power budgets initialized");
+		logger->Debug("Init: Power budgets already initialized");
 		return SCHED_OK;
 	}
 
@@ -198,6 +203,10 @@ TempuraSchedPol::InitSlots() {
 	return SCHED_OK;
 }
 
+/*************************************************************
+ * Resource allocation
+ ************************************************************/
+
 SchedulerPolicyIF::ExitCode_t
 TempuraSchedPol::Schedule(
 		System & system,
@@ -249,17 +258,14 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 		// Power budget (cap)
 	//	bw::ModelPtr_t pmodel(mm.GetModel("ARM Cortex A15"));
 		bw::ModelPtr_t pmodel(mm.GetModel(model_ids[r_path]));
-		logger->Debug("Budget: Using power-themal model '%s'",
-				pmodel->GetID().c_str());
+		logger->Debug("Budget: [%s] using power-thermal model '%s'",
+				r_path->ToString().c_str(), pmodel->GetID().c_str());
 		uint32_t p_budget = GetPowerBudget(r_path, pmodel);
 		budget->SetAmount(p_budget);
 
 		// Resource budget
 		uint64_t r_budget = GetResourceBudget(r_path, pmodel);
 		resource_budgets[r_path]->SetAmount(r_budget);
-		logger->Debug("Budget: [%s] has a budget of %" PRIu64 "",
-				r_path->ToString().c_str(),
-				resource_budgets[r_path]->GetAmount());
 	}
 
 	return SCHED_OK;
@@ -283,19 +289,21 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);
 }
 
+	// Thermal constraints
 inline uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
 		br::ResourcePathPtr_t const & r_path,
 		ModelPtr_t pmodel) {
 	PowerMonitor & wm(PowerMonitor::GetInstance());
 	uint32_t crit_temp = wm.GetThermalThreshold(0);
+	// Resource information
 	br::ResourcePtr_t rsrc(ra.GetResource(r_path));
 	if (unlikely(rsrc == nullptr))
 		logger->Fatal("Budget: No resource {}", r_path->ToString().c_str());
 	else {
-		logger->Info("Budget: {%s} Tcrit=[%3d °C], Tcurr=[%3.0f °C], L=[%3.1f]",
+		logger->Info("Budget: [%s] T_crit=[%3d]C, T_curr=[%3.0f]C, P=[%5.0f]mW",
 				rsrc->Path().c_str(), crit_temp,
 				rsrc->GetPowerInfo(PowerManager::InfoType::TEMPERATURE),
-				rsrc->GetPowerInfo(PowerManager::InfoType::LOAD));
+				rsrc->GetPowerInfo(PowerManager::InfoType::POWER));
 	}
 	return pmodel->GetPowerFromTemperature(crit_temp);
 }
@@ -384,7 +392,7 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 	for (auto & rb_entry: resource_budgets) {
 		br::ResourcePathPtr_t const & r_path(rb_entry.first);
 		br::UsagePtr_t & resource_budget(rb_entry.second);
-		logger->Debug("Assign: Resource [%s] budget = % " PRIu64 "",
+		logger->Debug("Assign: [%s] R_budget = % " PRIu64 "",
 				r_path->ToString().c_str(), resource_budget->GetAmount());
 
 		// Slots to allocate for this resource binding domain
