@@ -771,8 +771,9 @@ LinuxPP::GetResourceMapping(
 	// Memory amount
 	prlb->amount_memb = -1;
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
-	prlb->amount_memb = ra.GetUsageAmount(
-			pum, br::Resource::MEMORY, br::Resource::CPU);
+	uint64_t memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
+	if (memb > 0)
+		prlb->amount_memb = memb;
 #endif
 	logger->Debug("PLAT LNX: Node [%d] memb : { %ld }",
 			node_id, prlb->amount_memb);
