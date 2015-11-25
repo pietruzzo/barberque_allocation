@@ -67,6 +67,15 @@ float Model::GetResourcePercentageFromPower(
 	return 1.0;
 }
 
+uint32_t Model::GetResourceFromPower(
+		uint32_t power_mw,
+		uint32_t total_amount,
+		std::string const & freq_governor) {
+	(void) power_mw;
+	(void) freq_governor;
+	return total_amount;
+}
+
 } // namespace pm
 
 } // namespace bbque

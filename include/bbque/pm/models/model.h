@@ -27,7 +27,6 @@
 
 namespace bbque  { namespace pm {
 
-
 /**
  * @class Model
  *
@@ -121,6 +120,25 @@ public:
 	 */
 	virtual float GetResourcePercentageFromPower(
 			uint32_t power_mw,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
+
+	/**
+	 * @brief The estimated resource utilization given a power consumption
+	 * value
+	 *
+	 * @param power_mw The profiled power consumption (in milliwatts)
+	 * @param total_amount The maximum amount of resource that can be
+	 * allocated
+	 * @param freq_governor The frequency governor (e.g., CPUfreq governor:
+	 * "ondemand", "performance", etc...)
+	 *
+	 * @return The amount resource that can be used to consume at most the
+	 * given amount of power value
+	 */
+	virtual uint32_t GetResourceFromPower(
+			uint32_t power_mw,
+			uint32_t total_amount,
 			std::string const & freq_governor
 				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
 
