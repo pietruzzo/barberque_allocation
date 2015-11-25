@@ -147,7 +147,10 @@ private:
 
 
 	/** System power budget */
-	int32_t sys_power_budget;
+	int32_t sys_power_budget = 0;
+
+	/** Resource power consumption derived from the system power budget */
+	uint32_t tot_resource_power_budget = 0;
 
 	/** Power-thermal model for the entire system  */
 	bw::SystemModelPtr_t pmodel_sys;
@@ -160,6 +163,10 @@ private:
 
 	/** Power-thermal models for each resource to bind  */
 	std::map<br::ResourcePathPtr_t, std::string> model_ids;
+
+	/** Default CPU frequency governor that the policy set */
+	std::string cpufreq_gov = BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR;
+
 
 
 	/** An High-Resolution timer */

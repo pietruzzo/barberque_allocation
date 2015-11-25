@@ -117,7 +117,15 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 
 	// System power budget
 	sys_power_budget = wm.GetSysPowerBudget();
-	logger->Debug("Init: System power budget = %d", sys_power_budget);
+	if (sys_power_budget > 0) {
+		tot_resource_power_budget =
+			pmodel_sys->GetResourcePowerFromSystem(
+					sys_power_budget, cpufreq_gov);
+		logger->Debug("Init: Power budget [System: %d mW] => "
+				"[Resource: %d mW] freqgov: %s",
+				sys_power_budget, tot_resource_power_budget,
+				cpufreq_gov.c_str());
+	}
 
 	// Power budgets data structures
 	if (!power_budgets.empty()) {
