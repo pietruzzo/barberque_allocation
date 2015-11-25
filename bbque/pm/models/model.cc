@@ -35,18 +35,35 @@ uint32_t Model::GetTPD() {
 	return tpd;
 }
 
-uint32_t Model::GetPowerFromTemperature(uint32_t temp_mc) {
+uint32_t Model::GetPowerFromTemperature(
+		uint32_t temp_mc,
+		std::string const & freq_governor) {
 	(void) temp_mc;
+	(void) freq_governor;
 	return tpd;
 }
 
-uint32_t Model::GetTemperatureFromPower(uint32_t power_mw) {
+uint32_t Model::GetPowerFromSystemBudget(
+		uint32_t power_mw,
+		std::string const & freq_governor) {
 	(void) power_mw;
+	(void) freq_governor;
+	return tpd;
+}
+
+uint32_t Model::GetTemperatureFromPower(
+		uint32_t power_mw,
+		std::string const & freq_governor) {
+	(void) power_mw;
+	(void) freq_governor;
 	return BBQUE_PM_DEFAULT_CRITICAL_TEMPERATURE;
 }
 
-float Model::GetResourcePercentageFromPower(uint32_t power_mw) {
+float Model::GetResourcePercentageFromPower(
+		uint32_t power_mw,
+		std::string const & freq_governor) {
 	(void) power_mw;
+	(void) freq_governor;
 	return 1.0;
 }
 

@@ -23,6 +23,7 @@
 #include <string>
 
 #define BBQUE_PM_DEFAULT_CRITICAL_TEMPERATURE 95
+#define BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR     "ondemand"
 
 namespace bbque  { namespace pm {
 
@@ -66,26 +67,62 @@ public:
 	virtual uint32_t GetTPD();
 
 	/**
-	 * @brief The estimated power from the given power temperature
+	 * @brief The estimated power from the given reported power temperature
+	 *
+	 * @param temp_mc Temperature in millidegree (Celsius)
+	 * @param freq_governor The frequency governor (e.g., CPUfreq governor:
+	 * "ondemand", "performance", etc...)
 	 *
 	 * @return Power in milliwatts
 	 */
-	virtual uint32_t GetPowerFromTemperature(uint32_t temp_mc);
+	virtual uint32_t GetPowerFromTemperature(
+			uint32_t temp_mc,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
+
+	/**
+	 * @brief The estimated power budget/consumption of the resource, given
+	 * the overall system power consumption
+	 *
+	 * @param power_mw The profiled power consumption (in milliwatts)
+	 * @param freq_governor The frequency governor (e.g., CPUfreq governor:
+	 * "ondemand", "performance", etc...)
+	 *
+	 * @return Power in milliwatts
+	 */
+	virtual uint32_t GetPowerFromSystemBudget(
+			uint32_t power_mw,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
 
 	/**
 	 * @brief The estimated temperature from the given power value
 	 *
+	 * @param power_mw The profiled power consumption (in milliwatts)
+	 * @param freq_governor The frequency governor (e.g., CPUfreq governor:
+	 * "ondemand", "performance", etc...)
+	 *
 	 * @return Temperature in millidegree (Celsius)
 	 */
-	virtual uint32_t GetTemperatureFromPower(uint32_t power_mw);
+	virtual uint32_t GetTemperatureFromPower(
+			uint32_t power_mw,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
 
 	/**
 	 * @brief The estimated percentage of resource utilization given a power
 	 * value
 	 *
+	 * @param power_mw The profiled power consumption (in milliwatts)
+	 * @param freq_governor The frequency governor (e.g., CPUfreq governor:
+	 * "ondemand", "performance", etc...)
+	 *
 	 * @return A floating point value in the range [0..1]
 	 */
-	virtual float GetResourcePercentageFromPower(uint32_t power_mw);
+	virtual float GetResourcePercentageFromPower(
+			uint32_t power_mw,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
 
 protected:
 
