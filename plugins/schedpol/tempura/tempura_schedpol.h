@@ -216,38 +216,15 @@ private:
 	 * @brief Define the power budget of a specific resource to allocate
 	 * (power capping)
 	 *
+	 * The function computes the power budgets coming from themal and energy
+	 * budget constraints.
+	 *
 	 * @param rp The resource path
-	 * @param pmodel The resource powert-thermal model
+	 * @param pmodel The resource power-thermal model
 	 *
 	 * @return The power value to cap (in milliwatts)
 	 */
 	uint32_t GetPowerBudget(
-			br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
-
-	/**
-	 * @brief Define the power budget given specified thermal constraints
-	 *
-	 * Consider for instance critical thermal threshold
-	 *
-	 * @param rp The resource path
-	 * @param pmodel The resource powert-thermal model
-	 *
-	 * @return The power value to cap (in milliwatts)
-	 */
-	uint32_t GetPowerBudgetFromThermalConstraints(
-			br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
-
-	/**
-	 * @brief Define the power budget given specified energy constraints
-	 *
-	 * Consider for instance battery lifetime goals
-	 *
-	 * @param rp The resource path
-	 * @param pmodel The resource powert-thermal model
-	 *
-	 * @return The power value to cap (in milliwatts)
-	 */
-	uint32_t GetPowerBudgetFromEnergyConstraints(
 			br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
 
 	/**

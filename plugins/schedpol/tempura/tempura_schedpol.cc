@@ -286,27 +286,15 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 inline uint32_t TempuraSchedPol::GetPowerBudget(
 		br::ResourcePathPtr_t const & r_path,
 		ModelPtr_t pmodel) {
+	PowerManager & pm(PowerManager::GetInstance());
 	uint32_t energy_pwr_budget = 0;
-	uint32_t temp_pwr_budget   = GetPowerBudgetFromThermalConstraints(
-			r_path, pmodel);
-#ifdef CONFIG_BBQUE_PM_BATTERY
-	if (pbatt && (pbatt->IsDischarging() || pbatt->GetChargePerc() < 100)) {
-		logger->Debug("Budget: System battery full charged and power plugged");
-		energy_pwr_budget = GetPowerBudgetFromEnergyConstraints(r_path, pmodel);
-	}
-#endif
-	logger->Debug("Budget: P(T)=[%d]mW, P(E)=[%d]mW", temp_pwr_budget, energy_pwr_budget);
-	if (energy_pwr_budget == 0)
-		return temp_pwr_budget;
-	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);
-}
+	uint32_t temp_pwr_budget   = 0;
 
 	// Thermal constraints
-inline uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
-		br::ResourcePathPtr_t const & r_path,
-		ModelPtr_t pmodel) {
 	PowerMonitor & wm(PowerMonitor::GetInstance());
 	uint32_t crit_temp = wm.GetThermalThreshold(0);
+	temp_pwr_budget = pmodel->GetPowerFromTemperature(crit_temp*1e3);
+
 	// Resource information
 	br::ResourcePtr_t rsrc(ra.GetResource(r_path));
 	if (unlikely(rsrc == nullptr))
@@ -316,18 +304,30 @@ inline uint32_t TempuraSchedPol::GetPowerBudgetFromThermalConstraints(
 				rsrc->Path().c_str(), crit_temp,
 				rsrc->GetPowerInfo(PowerManager::InfoType::TEMPERATURE),
 				rsrc->GetPowerInfo(PowerManager::InfoType::POWER));
+		pm.SetClockFrequencyGovernor(ra.GetPath(rsrc->Path()), cpufreq_gov);
+//		std::string cpu_gov;
+//		pm.GetClockFrequencyGovernor(ra.GetPath(rsrc->Path()), cpu_gov);
+//		logger->Debug("[%s] cpufreq governor: %s",
+//				rsrc->Path().c_str(), cpu_gov.c_str());
 	}
-	return pmodel->GetPowerFromTemperature(crit_temp);
-}
 
-inline uint32_t TempuraSchedPol::GetPowerBudgetFromEnergyConstraints(
-		br::ResourcePathPtr_t const & r_path,
-		ModelPtr_t pmodel) {
+	if (tot_resource_power_budget < 1) {
+		logger->Debug("Budget: [%s] P(T)=[%d]mW, P(E)=[-]",
+				rsrc->Path().c_str(), temp_pwr_budget);
+		return temp_pwr_budget;
+	}
+	// Energy constraints
+#ifdef CONFIG_BBQUE_PM_BATTERY
+	if (pbatt && (pbatt->IsDischarging() || pbatt->GetChargePerc() < 100)) {
+		logger->Debug("Budget: System battery full charged and power plugged");
+		energy_pwr_budget =
+			pmodel->GetPowerFromSystemBudget(tot_resource_power_budget);
+	}
+#endif
+	logger->Debug("Budget: [%s] P(T)=[%d]mW, P(E)=[%d]mW",
+			rsrc->Path().c_str(), temp_pwr_budget, energy_pwr_budget);
 
-//	sys_power_budget;
-
-	(void) pmodel;
-	return 100;
+	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);
 }
 
 
