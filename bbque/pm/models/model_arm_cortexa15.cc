@@ -18,24 +18,59 @@
 #include "bbque/pm/models/model_arm_cortexa15.h"
 
 #include <cmath>
+#include <cstring>
 
 namespace bbque  { namespace pm {
 
+/*
+   --- CPUfreq = ondemand ---
+   T = f(P):  [  0.36515765   3.19384347  51.80211498]
+   P = f(T):  [ -1.02236632e-03   2.94065642e-01  -1.27568814e+01]
+   C = f(P):  [ -0.19491434   2.03944065  40.9271282   27.69173536]
+
+   --- CPUfreq = performance ---
+   T = f(P):  [ -0.91933073  15.69965691  33.3279612 ]
+   P = f(T):  [ -5.69142325e-04   1.86787028e-01  -7.41306315e+00]
+   C = f(P):  [   2.20101853  -23.81482262  120.31158665 -117.61752503]
+*/
 
 uint32_t ARM_CortexA15_Model::GetPowerFromTemperature(
-		uint32_t t_mc) {
-	return 2.19e-03 * pow(t_mc, 2.0) + (-2.29e-01 * t_mc) + 8.48e+00;
+		uint32_t temp_mc,
+		std::string const & freq_governor) {
+	double x = temp_mc / 1e3;
+	// OLD:
+//	return (2.19e-03*pow(x,2) - 2.29e-01*(x) + 8.48) * 1e3;
+	// performance
+	if (freq_governor.compare(0, 3, "per") == 0)
+		return (-5.69e-04*pow(x,2) + 1.87*(x) - 7.41) * 1e3;
+	// ondemand
+	return (-1.02e-03*pow(x,2) + 2.94e-01*(x) - 1.28e+01) * 1e3;
+}
+
+uint32_t ARM_CortexA15_Model::GetPowerFromSystemBudget(
+		uint32_t power_mw,
+		std::string const & freq_governor) {
+	(void) freq_governor;
+	double x = power_mw * 0.9;
+	return static_cast<uint32_t>(x);
 }
 
 uint32_t ARM_CortexA15_Model::GetTemperatureFromPower(
-		uint32_t p_mw) {
-	(void) p_mw;
+		uint32_t power_mw,
+		std::string const & freq_governor) {
+	(void) power_mw;
+	(void) freq_governor;
 	return 0;
 }
 
 float ARM_CortexA15_Model::GetResourcePercentageFromPower(
-		uint32_t p_mw) {
-	return 0.011592 * pow(p_mw, 2.0) + (0.057145 * p_mw) + 0.018222;
+		uint32_t power_mw,
+		std::string const & freq_governor) {
+	(void) freq_governor;
+	double x = power_mw / 1e3;
+	// OLD:
+	return (0.0116 * pow(x,2) + 0.057*(x) + 0.018);
+}
 }
 
 } // namespace pm

@@ -18,6 +18,8 @@
 #ifndef BBQUE_MODEL_ARM_CORTEXA15_H_
 #define BBQUE_MODEL_ARM_CORTEXA15_H_
 
+#include <string>
+
 #include "bbque/pm/models/model.h"
 
 #define BBQUE_MODEL_ARM_CORTEXA15_ID   "ARM Cortex A15"
@@ -50,27 +52,32 @@ public:
 	 */
 	virtual ~ARM_CortexA15_Model() {};
 
-	/**
-	 * @brief The estimated power from the given power temperature
-	 *
-	 * @return Power in milliwatts
-	 */
-	uint32_t GetPowerFromTemperature(uint32_t temp_mc);
 
-	/**
-	 * @brief The estimated temperature from the given power value
-	 *
-	 * @return Temperature in millidegree (Celsius)
-	 */
-	uint32_t GetTemperatureFromPower(uint32_t power_mw);
+	/*** Member functions to override ***/
 
-	/**
-	 * @brief The estimated percentage of resource utilization given a power
-	 * value
-	 *
-	 * @return A floating point value in the range [0..1]
-	 */
-	float GetResourcePercentageFromPower(uint32_t power_mw);
+	uint32_t GetPowerFromTemperature(
+			uint32_t temp_mc,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
+
+	uint32_t GetPowerFromSystemBudget(
+			uint32_t power_mw,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
+
+
+	uint32_t GetTemperatureFromPower(
+			uint32_t power_mw,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
+
+	float GetResourcePercentageFromPower(
+			uint32_t power_mw,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
+
+
+
 
 };
 
