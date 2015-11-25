@@ -71,6 +71,18 @@ float ARM_CortexA15_Model::GetResourcePercentageFromPower(
 	// OLD:
 	return (0.0116 * pow(x,2) + 0.057*(x) + 0.018);
 }
+
+uint32_t ARM_CortexA15_Model::GetResourceFromPower(
+		uint32_t power_mw,
+		uint32_t total_amount,
+		std::string const & freq_governor) {
+	(void) total_amount;
+	double x = power_mw / 1e3;
+	// performance
+	if (freq_governor.compare(0, 3, "per") == 0)
+		return (2.20*pow(x,3) - 23.81*pow(x,2) + 120.31*(x) - 117.62);
+	// ondemand
+	return (-0.19*pow(x,3) + 2.04*pow(x,2) + 40.93*(x) + 27.69);
 }
 
 } // namespace pm

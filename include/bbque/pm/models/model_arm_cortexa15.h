@@ -77,6 +77,11 @@ public:
 				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
 
 
+	uint32_t GetResourceFromPower(
+			uint32_t power_mw,
+			uint32_t total_amount,
+			std::string const & freq_governor
+				= BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR);
 
 
 };
