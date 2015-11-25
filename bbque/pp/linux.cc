@@ -745,7 +745,9 @@ LinuxPP::GetResourceMapping(
 		br::ResourceBinder::GetMask(pum,
 				br::Resource::PROC_ELEMENT,
 				br::Resource::CPU, node_id, papp, rvt));
-	strncpy(prlb->cpus, core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
+	if (strlen(prlb->cpus) > 0)
+		strcat(prlb->cpus, ",");
+	strncat(prlb->cpus, + core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
 	logger->Debug("PLAT LNX: Node [%d] cores: { %s }", node_id, prlb->cpus);
 
 	// Memory nodes
@@ -760,10 +762,11 @@ LinuxPP::GetResourceMapping(
 	logger->Debug("PLAT LNX: Node [%d] mems : { %s }", node_id, prlb->mems);
 
 	// CPU quota
-	prlb->amount_cpus = -1;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
-	prlb->amount_cpus = ra.GetUsageAmount(
+	prlb->amount_cpus += ra.GetUsageAmount(
 			pum, br::Resource::PROC_ELEMENT, br::Resource::CPU, node_id);
+#else
+	prlb->amount_cpus = -1;
 #endif
 	logger->Debug("PLAT LNX: Node [%d] quota: { %ld }",
 			node_id, prlb->amount_cpus);
@@ -1184,12 +1187,12 @@ LinuxPP::_MapResources(
 	}
 
 	// Map resources for each node (e.g., CPU)
+	RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
 	for (; node_id <= nodes.LastSet(); ++node_id) {
 		logger->Debug("PLAT LNX: CGroup resource mapping node [%d]", node_id);
 		if (!nodes.Test(node_id)) continue;
 
 		// Node resource mapping
-		RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
 		result = GetResourceMapping(papp, pum, prlb, node_id, rvt);
 		if (result != OK) {
 			logger->Error("PLAT LNX: binding parsing FAILED");
