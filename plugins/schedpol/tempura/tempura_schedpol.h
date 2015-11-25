@@ -149,6 +149,9 @@ private:
 	/** System power budget */
 	int32_t sys_power_budget;
 
+	/** Power-thermal model for the entire system  */
+	bw::SystemModelPtr_t pmodel_sys;
+
 	/** Power budgets due to thermal or energy constraints */
 	br::UsagesMap_t power_budgets;
 

@@ -81,6 +81,10 @@ TempuraSchedPol::TempuraSchedPol():
 	if (pbatt == nullptr)
 		logger->Error("No battery available. Cannot perform energy budgeting");
 #endif
+
+	// System power-thermal model
+	pmodel_sys = mm.GetSystemModel();
+	logger->Debug("Init: System model: [%s]", pmodel_sys->GetID().c_str());
 }
 
 
