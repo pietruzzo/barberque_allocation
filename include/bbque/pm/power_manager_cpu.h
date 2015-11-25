@@ -54,7 +54,7 @@ public:
 	 */
 	CPUPowerManager();
 
-	~CPUPowerManager();
+	virtual ~CPUPowerManager();
 
 	/**
 	 * @see class PowerManager
