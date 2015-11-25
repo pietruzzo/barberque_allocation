@@ -44,19 +44,23 @@ public:
 
 	/**
 	 * @brief Constructor
+	 *
 	 * @param id Identifier string
+	 *
 	 * @param tpd Thermal-Power Design value in milliwatts
 	 */
 	Model(std::string id = "generic", uint32_t tpd = 100);
 
 	/**
 	 * @brief Model identifier
+	 *
 	 * @return Identifier string
 	 */
 	virtual std::string const & GetID();
 
 	/**
 	 * @brief Thermal-Power Design value
+	 *
 	 * @return Power value in milliwatts
 	 */
 	virtual uint32_t GetTPD();
