@@ -330,13 +330,20 @@ inline uint32_t TempuraSchedPol::GetPowerBudgetFromEnergyConstraints(
 	return 100;
 }
 
+
 inline int64_t TempuraSchedPol::GetResourceBudget(
 		br::ResourcePathPtr_t const & r_path,
 		bw::ModelPtr_t pmodel) {
-	uint64_t resource_budget = sys->ResourceTotal(r_path);
-	resource_budget *=
-		pmodel->GetResourcePercentageFromPower(
-				power_budgets[r_path]->GetAmount());
+	uint64_t resource_total  = sys->ResourceTotal(r_path);
+	uint64_t resource_budget = pmodel->GetResourceFromPower(
+				power_budgets[r_path]->GetAmount(),
+				resource_total);
+
+	resource_budget = std::min<uint32_t>(resource_budget, resource_total);
+	logger->Debug("Budget: [%s] P=[%4llu]mW, R=[%lu]",
+			r_path->ToString().c_str(),
+			power_budgets[r_path]->GetAmount(),
+			resource_budget);
 	return resource_budget;
 }
 
