@@ -242,6 +242,62 @@ PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
 }
 
 
+std::vector<std::string> const &
+PowerManager::GetAvailableFrequencyGovernors(br::ResourcePathPtr_t const & rp) {
+	switch (rp->ParentType(rp->Type())) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetAvailableFrequencyGovernors(rp);
+	case br::ResourceIdentifier::CPU:
+		if (!cpu) break;
+		return cpu->GetAvailableFrequencyGovernors(rp);
+	default:
+		break;
+	}
+	logger->Warn("(PM) GetClockFrequencyGovernors not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+	return cpufreq_governors;
+}
+
+PowerManager::PMResult
+PowerManager::GetClockFrequencyGovernor(
+		br::ResourcePathPtr_t const & rp,
+		std::string & governor) {
+	switch (rp->ParentType(rp->Type())) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->GetClockFrequencyGovernor(rp, governor);
+	case br::ResourceIdentifier::CPU:
+		if (!cpu) break;
+		return cpu->GetClockFrequencyGovernor(rp, governor);
+	default:
+		break;
+	}
+	logger->Warn("(PM) SetClockFrequencyGovernor not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+	return PMResult::ERR_API_NOT_SUPPORTED;
+}
+
+PowerManager::PMResult
+PowerManager::SetClockFrequencyGovernor(
+		br::ResourcePathPtr_t const & rp,
+		std::string const & governor) {
+	switch (rp->ParentType(rp->Type())) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->SetClockFrequencyGovernor(rp, governor);
+	case br::ResourceIdentifier::CPU:
+		if (!cpu) break;
+		return cpu->SetClockFrequencyGovernor(rp, governor);
+	default:
+		break;
+	}
+	logger->Warn("(PM) SetClockFrequencyGovernor not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+	return PMResult::ERR_API_NOT_SUPPORTED;
+}
+
+
 PowerManager::PMResult
 PowerManager::GetVoltage(ResourcePathPtr_t const & rp, uint32_t &volt) {
 	switch (rp->ParentType(rp->Type())) {

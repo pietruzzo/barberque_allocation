@@ -129,9 +129,20 @@ public:
 		br::ResourcePathPtr_t const & rp,
 		std::vector<unsigned long> & freqs);
 
-
 	virtual PMResult SetClockFrequency(
 		br::ResourcePathPtr_t const & rp, uint32_t khz);
+
+
+	virtual std::vector<std::string> const & GetAvailableFrequencyGovernors(
+			br::ResourcePathPtr_t const & rp);
+
+	virtual PMResult GetClockFrequencyGovernor(
+			br::ResourcePathPtr_t const & rp,
+			std::string & governor);
+
+	virtual PMResult SetClockFrequencyGovernor(
+			br::ResourcePathPtr_t const & rp,
+			std::string const & governor);
 
 
 	/** Voltage information */
@@ -232,6 +243,12 @@ protected:
 	 *
 	 */
 	std::unique_ptr<PowerManager> cpu;
+
+
+	/**
+	 * @brief Available CPU frequency governors
+	 */
+	std::vector<std::string> cpufreq_governors;
 
 	/*
 	 * @brief Command handler for setting a device fan speed
