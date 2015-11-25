@@ -86,6 +86,25 @@ public:
 	PMResult GetAvailableFrequencies(
 			ResourcePathPtr_t const & rp, std::vector<unsigned long> &freqs);
 
+	/**
+	 * @see class PowerManager
+	 */
+	std::vector<std::string> const & GetAvailableFrequencyGovernors(
+			br::ResourcePathPtr_t const & rp) {
+		(void) rp;
+		return cpufreq_governors;
+	}
+
+	PMResult GetClockFrequencyGovernor(
+			br::ResourcePathPtr_t const & rp,
+			std::string & governor);
+
+	PMResult SetClockFrequencyGovernor(
+			br::ResourcePathPtr_t const & rp,
+			std::string const & governor);
+
+
+
 	/** Power consumption  */
 
 	PMResult GetPowerUsage(
@@ -106,6 +125,10 @@ protected:
 
 	/*** Available clock frequencies for each processing element (core) */
 	std::map<int, std::vector<unsigned long> * > core_freqs;
+
+	/*** SysFS CPU prefix path ***/
+	std::string prefix_sys_cpu;
+
 
 	/**
 	 * Save the information of a single /proc/stat sampling

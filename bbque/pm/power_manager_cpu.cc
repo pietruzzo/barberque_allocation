@@ -43,7 +43,8 @@ namespace bu = bbque::utils;
 
 namespace bbque {
 
-CPUPowerManager::CPUPowerManager() {
+CPUPowerManager::CPUPowerManager():
+		prefix_sys_cpu(BBQUE_LINUX_SYS_CPU_PREFIX) {
 	bu::IoFs::ExitCode_t result;
 	int cpu_id  = -1;
 	int core_id = 0;
@@ -101,7 +102,26 @@ CPUPowerManager::CPUPowerManager() {
 		logger->Crit("Thermal sensors: PE (core) %d: %s", core_id,
 				therm_file.c_str());
 	}
+
+	// CPUfreq governors
+	char govs[100];
+	memset(govs, 0, sizeof(govs)-1);
+	std::string cpufreq_path(prefix_sys_cpu +
+			"0/cpufreq/scaling_available_governors");
+	result = bu::IoFs::ReadValueFrom(cpufreq_path, govs, 100);
+	if (result != bu::IoFs::OK) {
+		logger->Error("Error reading: %s", cpufreq_path.c_str());
+		return;
+	}
+	logger->Info("CPUfreq governors: ");
+	std::string govs_str(govs);
+	while (govs_str.size() > 1)
+		cpufreq_governors.push_back(
+				br::ResourcePathUtils::SplitAndPop(govs_str, " "));
+	for (std::string & g: cpufreq_governors)
+		logger->Info("---> %s", g.c_str());
 }
+
 
 CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 		CPUPowerManager::LoadInfo * info,
@@ -145,6 +165,7 @@ CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 CPUPowerManager::~CPUPowerManager() {
 	core_ids.clear();
 	core_freqs.clear();
+	cpufreq_governors.clear();
 }
 
 PowerManager::PMResult CPUPowerManager::GetLoad(
@@ -340,6 +361,41 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 				rp->ToString().c_str());
 	}
 	freqs = *(core_freqs[pe_id]);
+
+	return PowerManager::PMResult::OK;
+}
+
+
+PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
+		br::ResourcePathPtr_t const & rp,
+		std::string & governor) {
+	bu::IoFs::ExitCode_t result;
+	char gov[12];
+	int cpu_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	std::string cpufreq_path(prefix_sys_cpu + std::to_string(cpu_id) +
+			"/cpufreq/scaling_governor");
+
+	result = bu::IoFs::ReadValueFrom(cpufreq_path, gov, 12);
+	if (result != bu::IoFs::ExitCode_t::OK)
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+
+	governor.assign(gov);
+	return PowerManager::PMResult::OK;
+
+}
+
+PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
+		br::ResourcePathPtr_t const & rp,
+		std::string const & governor) {
+	bu::IoFs::ExitCode_t result;
+	int cpu_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	std::string cpufreq_path(prefix_sys_cpu + std::to_string(cpu_id) +
+			"/cpufreq/scaling_governor");
+
+	result = bu::IoFs::WriteValueTo<std::string>(cpufreq_path, governor);
+	logger->Debug("SetGovernor: %s", cpufreq_path.c_str());
+	if (result != bu::IoFs::ExitCode_t::OK)
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 
 	return PowerManager::PMResult::OK;
 }
