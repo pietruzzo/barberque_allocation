@@ -59,7 +59,7 @@ endchoice # Memory locality
 menu "OpenCL Support"
 
 config BBQUE_OPENCL
-  bool "Enable OpenCL run-time management support"
+  bool "OpenCL Run-time Management Support"
   depends on TARGET_LINUX
   depends on !BBQUE_TEST_PLATFORM_DATA
   select EXTERNAL_OPENCL
@@ -86,7 +86,7 @@ menu "Optimization Policy"
 comment "Advanced Options"
 
 config BBQUE_SP_YAMS_PARALLEL
-  bool "YaMS parallelized execution"
+  bool "YaMS Parallel Execution"
   default y
   ---help---
   Build the YaMS policy with support for parallelized metrics computation.
@@ -97,7 +97,7 @@ config BBQUE_SP_YAMS_PARALLEL
   If unsure, say Y
 
 config BBQUE_SP_COWS_BINDING
-  bool "Co-scheduling workloads (COWS) binding"
+  bool "Co-scheduling Workloads (COWS) binding"
   depends on !BBQUE_OPENCL
   default n
   ---help---
@@ -237,7 +237,7 @@ endmenu # Performance
 comment "Advanced Options"
 
 config BBQUE_YM_SYNC_FORCE
-  bool "Synchronization point forcing"
+  bool "Synchronization Point forcing"
   default n
   ---help---
   Enable the Sync Point forcing via Synchronization Manager and RTLib.
@@ -262,7 +262,7 @@ config BBQUE_YM_SYNC_FORCE
   If unsure, select N
 
 config BBQUE_YP_SASB_ASYNC
-  bool "Parallelized re-configurations"
+  bool "Parallel Re-configurations"
   default n if TARGET_ANDROID
   default y
   ---help---
@@ -307,7 +307,7 @@ config BBQUE_GGAP_THRESHOLD_OPTIMIZE
   This configuration defines the default for that threshold value.
 
 config BBQUE_APP_PRIO_LEVELS
-  int "Number of priority levels"
+  int "Number of Priority Levels"
   default 5
   ---help---
   Applications are scheduled according to their priority which is a value
