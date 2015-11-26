@@ -84,7 +84,10 @@ TempuraSchedPol::TempuraSchedPol():
 
 	// System power-thermal model
 	pmodel_sys = mm.GetSystemModel();
-	logger->Debug("Init: System model: [%s]", pmodel_sys->GetID().c_str());
+	if (pmodel_sys)
+		logger->Debug("Init: System model: [%s]", pmodel_sys->GetID().c_str());
+	else
+		logger->Debug("Init: No system model");
 }
 
 
