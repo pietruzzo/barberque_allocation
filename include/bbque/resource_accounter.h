@@ -243,13 +243,19 @@ public:
 	 *
 	 * @return The amount of resource usage
 	 */
-	uint64_t GetUsageAmount(br::UsagesMapPtr_t const & pum,
+	uint64_t GetUsageAmount(
+			br::UsagesMapPtr_t const & pum,
+			ba::AppSPtr_t papp,
+			br::RViewToken_t vtok,
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type =
 			br::Resource::UNDEFINED,
 			br::ResID_t r_scope_id = R_ID_ANY) const;
 
-	uint64_t GetUsageAmount(br::UsagesMap_t const & um,
+	uint64_t GetUsageAmount(
+			br::UsagesMap_t const & um,
+			ba::AppSPtr_t papp,
+			br::RViewToken_t vtok,
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type =
 			br::Resource::UNDEFINED,
@@ -731,9 +737,10 @@ private:
 			br::UsagesMap_t::const_iterator & begin,
 			br::UsagesMap_t::const_iterator & end,
 			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type =
-			br::Resource::UNDEFINED,
-			br::ResID_t r_scope_id = R_ID_ANY) const;
+			br::ResourceIdentifier::Type_t r_scope_type,
+			br::ResID_t r_scope_id,
+			ba::AppSPtr_t papp,
+			br::RViewToken_t vtok) const;
 
 	/**
 	 * @brief Check the resource availability for a whole set

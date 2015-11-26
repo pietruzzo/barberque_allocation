@@ -538,6 +538,8 @@ inline uint64_t ResourceAccounter::QueryStatus(
 
 uint64_t ResourceAccounter::GetUsageAmount(
 		br::UsagesMapPtr_t const & pum,
+		ba::AppSPtr_t papp,
+		br::RViewToken_t vtok,
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
 		br::ResID_t r_scope_id) const {
@@ -550,11 +552,13 @@ uint64_t ResourceAccounter::GetUsageAmount(
 	br::UsagesMap_t::const_iterator b_it(pum->begin());
 	br::UsagesMap_t::const_iterator e_it(pum->end());
 	return  GetAmountFromUsagesMap(
-			b_it, e_it, r_type, r_scope_type, r_scope_id);
+			b_it, e_it, r_type, r_scope_type, r_scope_id, papp, vtok);
 }
 
 uint64_t ResourceAccounter::GetUsageAmount(
 		br::UsagesMap_t const & um,
+		ba::AppSPtr_t papp,
+		br::RViewToken_t vtok,
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
 		br::ResID_t r_scope_id) const {
@@ -562,7 +566,7 @@ uint64_t ResourceAccounter::GetUsageAmount(
 	br::UsagesMap_t::const_iterator b_it(um.begin());
 	br::UsagesMap_t::const_iterator e_it(um.end());
 	return  GetAmountFromUsagesMap(
-			b_it, e_it, r_type, r_scope_type, r_scope_id);
+			b_it, e_it, r_type, r_scope_type, r_scope_id, papp, vtok);
 }
 
 inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
@@ -570,7 +574,9 @@ inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		br::UsagesMap_t::const_iterator & end,
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
-		br::ResID_t r_scope_id) const {
+		br::ResID_t r_scope_id,
+		ba::AppSPtr_t papp,
+		br::RViewToken_t vtok) const {
 	uint64_t amount = 0;
 
 	br::UsagesMap_t::const_iterator uit(begin);
@@ -585,16 +591,20 @@ inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		if ((r_scope_type != br::Resource::UNDEFINED)
 			&& (ppath->GetIdentifier(r_scope_type) == nullptr))
 			continue;
-		// Scope resource ID
-		if ((r_scope_id > 0) && (r_scope_id != ppath->GetID(r_scope_type)))
-			continue;
-		// Resource type
-		if (ppath->Type() != r_type)
-			continue;
-		amount += pusage->GetAmount();
+		for (br::ResourcePtr_t const & rsrc: pusage->GetResourcesList()) {
+			br::ResourcePathPtr_t r_path(GetPath(rsrc->Path()));
+			logger->Debug("GetUsageAmount: path:<%s>", r_path->ToString().c_str());
+			// Scope resource ID
+			if ((r_scope_id >= 0) && (r_scope_id != r_path->GetID(r_scope_type)))
+				continue;
+			// Resource type
+			if (r_path->Type() != r_type)
+				continue;
+			amount += rsrc->ApplicationUsage(papp, vtok);
+		}
 	}
-	logger->Debug("GetUsageAmount: R{%-3s} U = %" PRIu64 "",
-			br::ResourceIdentifier::TypeStr[r_type], amount);
+	logger->Debug("GetUsageAmount: EXC:[%s] R:<%-3s> U:%" PRIu64 "",
+			papp->StrId(), br::ResourceIdentifier::TypeStr[r_type], amount);
 	return amount;
 }
 

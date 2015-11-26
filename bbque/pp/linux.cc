@@ -764,7 +764,8 @@ LinuxPP::GetResourceMapping(
 	// CPU quota
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 	prlb->amount_cpus += ra.GetUsageAmount(
-			pum, br::Resource::PROC_ELEMENT, br::Resource::CPU, node_id);
+			pum, papp, rvt,
+			br::Resource::PROC_ELEMENT, br::Resource::CPU, node_id);
 #else
 	prlb->amount_cpus = -1;
 #endif
@@ -774,7 +775,8 @@ LinuxPP::GetResourceMapping(
 	// Memory amount
 	prlb->amount_memb = -1;
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
-	uint64_t memb = ra.GetUsageAmount(pum, br::Resource::MEMORY, br::Resource::CPU);
+	uint64_t memb = ra.GetUsageAmount(
+			pum, papp, rvt, br::Resource::MEMORY, br::Resource::CPU);
 	if (memb > 0)
 		prlb->amount_memb = memb;
 #endif
