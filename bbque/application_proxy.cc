@@ -1340,12 +1340,12 @@ void ApplicationProxy::RpcExcStop(prqsSn_t prqs) {
 	if (!pcon)
 		return;
 
-	// Registering a new Execution Context
+	// Stopping an Execution Context
 	logger->Info("APPs PRX: Stopping EXC "
 			"[app: %s, pid: %d, exc: %d]",
 			pcon->app_name, pcon->app_pid, pmsg_hdr->exc_id);
 
-	// Enabling the EXC to the ApplicationManager
+	// Disabling the EXC from the ApplicationManager
 	result = am.DisableEXC(pcon->app_pid, pmsg_hdr->exc_id, true);
 	if (result != ApplicationManager::AM_SUCCESS) {
 		logger->Error("APPs PRX: EXC "
@@ -1356,11 +1356,11 @@ void ApplicationProxy::RpcExcStop(prqsSn_t prqs) {
 		return;
 	}
 
-	// Notify the ResourceManager for a new application willing to start
+	// Notify the ResourceManager for the application stopped
 	logger->Debug("APPs PRX: Notifing ResourceManager...");
 	rm.NotifyEvent(ResourceManager::EXC_STOP);
 
-	// Sending ACK response to application
+	// Sending ACK response to the RTLib
 	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
 
 }
