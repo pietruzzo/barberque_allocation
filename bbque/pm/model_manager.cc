@@ -57,7 +57,7 @@ ModelManager::~ModelManager() {
 
 ModelPtr_t ModelManager::GetModel(std::string const & id) {
 	if (models[id] == nullptr) {
-		logger->Warn("Model '%s' missing. Using default model (%s)",
+		logger->Debug("Model '%s' missing. Using default model (%s)",
 				id.c_str(), default_model->GetID().c_str());
 		return default_model;
 	}
