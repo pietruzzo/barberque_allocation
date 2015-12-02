@@ -405,9 +405,8 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	if (pawm == nullptr) {
-		pawm = ba::AwmPtr_t(new ba::WorkingMode(
-					papp->WorkingModes().size(),"Run-time", 1));
-		pawm->SetOwner(papp);
+		pawm = std::make_shared<ba::WorkingMode>(
+				papp->WorkingModes().size(),"Run-time", 1, papp);
 	}
 
 	// Resource assignment (from each binding domain)
