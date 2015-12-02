@@ -173,30 +173,25 @@ TempuraSchedPol::InitBudgets() {
 
 		// Resource path e.g., "sys0.cpu[0..n].XX"
 		for (br::ResourcePtr_t const & rsrc: bd_info.rsrcs) {
-			br::ResourcePathPtr_t r_path(new br::ResourcePath(rsrc->Path()));
+			br::ResourcePathPtr_t r_path(
+					std::make_shared<br::ResourcePath>(rsrc->Path()));
 			r_path->AppendString("pe");
 			// Budget object (path + budget value)
 			br::ResourcePtrList_t r_list(ra.GetResources(r_path));
-			br::UsagePtr_t pbudget(new br::Usage(0));
-			br::UsagePtr_t rbudget(new br::Usage(0));
+			br::UsagePtr_t pbudget(std::make_shared<br::Usage>(0));
+			br::UsagePtr_t rbudget(std::make_shared<br::Usage>(0));
 			pbudget->SetResourcesList(r_list);
 			rbudget->SetResourcesList(r_list);
 
 			// Add to the power budgets map
-			power_budgets.insert(
-					std::pair<br::ResourcePathPtr_t, br::UsagePtr_t>(
-						r_path, pbudget));
+			power_budgets.emplace(r_path, pbudget);
 			// Add to the resource budgets map
-			resource_budgets.insert(
-					std::pair<br::ResourcePathPtr_t, br::UsagePtr_t>(
-						r_path, rbudget));
+			resource_budgets.emplace(r_path, rbudget);
 			// Add into models identifiers map
 			std::string model_id;
 			if (!r_list.empty())
 				model_id = r_list.front()->Model();
-			model_ids.insert(
-					std::pair<br::ResourcePathPtr_t, std::string>(
-						r_path, model_id));
+			model_ids.emplace(r_path, model_id);
 			logger->Debug("Init: Budgeting on '%s' [Model: %s]",
 					r_path->ToString().c_str(), model_id.c_str());
 		}
