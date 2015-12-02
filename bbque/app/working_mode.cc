@@ -44,9 +44,11 @@ WorkingMode::WorkingMode():
 	strncpy(str_id, "", 12);
 }
 
-WorkingMode::WorkingMode(uint8_t _id,
+WorkingMode::WorkingMode(
+		uint8_t _id,
 		std::string const & _name,
-		float _value):
+		float _value,
+		AppSPtr_t _owner):
 	id(_id),
 	name(_name),
 	hidden(false) {
@@ -66,6 +68,10 @@ WorkingMode::WorkingMode(uint8_t _id,
 	memset(&config_time, 0, sizeof(ConfigTimeAttribute_t));
 	memset(&rt_prof, 0, sizeof(RuntimeProfiling_t));
 	config_time.normal = -1;
+
+	// Set the owner application
+	if (_owner)
+		SetOwner(_owner);
 }
 
 WorkingMode::~WorkingMode() {

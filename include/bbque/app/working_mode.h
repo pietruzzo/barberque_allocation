@@ -56,8 +56,11 @@ public:
 	 * @param name Working mode descripting name
 	 * @param value The QoS value read from the recipe
 	 */
-	explicit WorkingMode(uint8_t id, std::string const & name,
-			float value);
+	explicit WorkingMode(
+			uint8_t id,
+			std::string const & name,
+			float value,
+			AppSPtr_t owner = nullptr);
 
 	/**
 	 * @brief Default destructor
