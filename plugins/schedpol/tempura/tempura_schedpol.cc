@@ -303,6 +303,7 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 				rsrc->GetPowerInfo(PowerManager::InfoType::TEMPERATURE),
 				rsrc->GetPowerInfo(PowerManager::InfoType::POWER));
 		pm.SetClockFrequencyGovernor(ra.GetPath(rsrc->Path()), cpufreq_gov);
+
 //		std::string cpu_gov;
 //		pm.GetClockFrequencyGovernor(ra.GetPath(rsrc->Path()), cpu_gov);
 //		logger->Debug("[%s] cpufreq governor: %s",
@@ -442,18 +443,21 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoScheduling() {
 		// Bind the assigned resources and try to schedule
 		result = DoBinding(psched);
 		if (result != SCHED_OK) {
-			logger->Error("DoScheduling: [%s] skipping scheduling", psched->StrId());
+			logger->Error("DoScheduling: [%s] skipping scheduling",
+                                psched->StrId());
 			continue;
 		}
 
 		// Check application status
 		if (CheckSkip(psched->papp)) {
-			logger->Debug("DoScheduling: [%s] skipping status", psched->StrId());
+			logger->Debug("DoScheduling: [%s] skipping status",
+                                psched->StrId());
 			continue;
 		}
 
 		// Scheduling request
-		logger->Debug("DoScheduling: [%s] scheduling request...", psched->StrId());
+		logger->Debug("DoScheduling: [%s] scheduling request...",
+                        psched->StrId());
 		app_result = psched->papp->ScheduleRequest(
 				psched->pawm, sched_status_view, psched->bind_refn);
 		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
@@ -484,7 +488,9 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoBinding(
 		for (br::ResourcePtr_t const & rsrc: bd_info.rsrcs) {
 			br::ResID_t bd_id = rsrc->ID();
 			logger->Debug("DoBinding: [%s] binding to %s%d",
-					psched->StrId(), br::ResourceIdentifier::TypeStr[bd_type], bd_id);
+					psched->StrId(),
+					br::ResourceIdentifier::TypeStr[bd_type],
+					bd_id);
 
 			ref_n = psched->pawm->BindResource(bd_type, bd_id, bd_id, ref_n);
 			logger->Debug("DoBinding: [%s] reference number %ld",
