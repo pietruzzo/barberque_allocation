@@ -1450,6 +1450,48 @@ waiting_done:
 	return RTLIB_OK;
 }
 
+RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
+		RTLIB_ExecutionContextHandler_t ech,
+		const RTLIB_WorkingModeParams_t *wm,
+		RTLIB_ResourceType_t r_type,
+		int32_t & r_amount) {
+
+	pregExCtx_t prec = getRegistered(ech);
+	if (!prec) {
+		logger->Error("Getting resources for EXC [%p] FAILED "
+			"(Error: EXC not registered)", (void*)ech);
+		r_amount = -1;
+		return RTLIB_EXC_NOT_REGISTERED;
+	}
+
+	if (!isAwmAssigned(prec)) {
+		logger->Error("Getting resources for EXC [%p] FAILED "
+			"(Error: No resources assigned yet)", (void*)ech);
+		r_amount = -1;
+		return RTLIB_EXC_NOT_STARTED;
+	}
+
+	switch (r_type) {
+	case PROC_ELEMENT:
+		r_amount = wm->r_pes;
+		break;
+	case MEMORY:
+		r_amount = wm->r_mem;
+		break;
+#ifdef CONFIG_BBQUE_OPENCL
+	case GPU:
+		r_amount = wm->r_gpu;
+		break;
+	case ACCELERATOR:
+		r_amount = wm->r_acc;
+		break;
+#endif // CONFIG_BBQUE_OPENCL
+	default:
+		r_amount = -1;
+		break;
+	}
+	return RTLIB_OK;
+}
 
 RTLIB_ExitCode_t BbqueRPC::WaitForSyncDone(pregExCtx_t prec) {
 	std::unique_lock<std::mutex> rec_ul(prec->mtx);

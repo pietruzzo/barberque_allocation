@@ -144,6 +144,12 @@ public:
 
 	RTLIB_ExitCode_t GetRuntimeProfile(rpc_msg_BBQ_GET_PROFILE_t & msg);
 
+	RTLIB_ExitCode_t GetAssignedResources(
+			RTLIB_ExecutionContextHandler_t ech,
+			const RTLIB_WorkingModeParams_t *wm,
+			RTLIB_ResourceType_t r_type,
+			int32_t & r_amount);
+
 /*******************************************************************************
  *    Utility Functions
  ******************************************************************************/

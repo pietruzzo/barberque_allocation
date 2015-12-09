@@ -272,6 +272,23 @@ typedef enum RTLIB_SyncType {
 	RTLIB_SYNC_STATEFULL
 } RTLIB_SyncType_t;
 
+
+/**
+ * @brief The assigned resource types
+ * @ingroup rtlib_sec03_plain_exc
+ *
+ * This enumerated type lists all the types of resources that the
+ * BarbequeRTRM can assign to the application.
+ */
+typedef enum RTLIB_ResourceType {
+	SYSTEM = 0,
+	CPU,
+	GPU,
+	ACCELERATOR,
+	PROC_ELEMENT,
+	MEMORY
+} RTLIB_ResourceType_t;
+
 /**
  * @brief The recipe of an Execution Context (EXC).
  * @ingroup rtlib_sec03_plain_exc
