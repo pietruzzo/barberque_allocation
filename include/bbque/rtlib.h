@@ -324,6 +324,18 @@ struct RTLIB_WorkingModeParams {
 	uint8_t awm_id;
 	/** The set of platform supported services */
 	const RTLIB_Services_t* services;
+	/** Amount of assigned resources (CPU)*/
+	int32_t r_cpu = 0;
+	/** Amount of assigned resources (Processing Cores quota)*/
+	int32_t r_pes = 0;
+	/** Amount of assigned resources (Memory)*/
+	int32_t r_mem = 0;
+#ifdef CONFIG_BBQUE_OPENCL
+	/** Amount of assigned resources (GPU)*/
+	int32_t r_gpu = 0;
+	/** Amount of assigned resources (HW Accelerator)*/
+	int32_t r_acc = 0;
+#endif // CONFIG_BBQUE_OPENCL
 };
 
 /**

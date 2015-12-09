@@ -1382,12 +1382,19 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 
 	logger->Debug("Valid AWM assigned");
 	wm->awm_id = prec->awm_id;
-
+	wm->r_cpu  = prec->r_cpu;
+	wm->r_pes  = prec->r_pes;
+	wm->r_mem  = prec->r_mem;
+#ifdef CONFIG_BBQUE_OPENCL
+	wm->r_gpu  = prec->r_gpu;
+	wm->r_acc  = prec->r_acc;
+#endif
 	// Update AWM statistics
 	UpdateStatistics(prec);
 
 	return RTLIB_OK;
 }
+
 
 RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 		pregExCtx_t prec,
@@ -1429,6 +1436,13 @@ waiting_done:
 
 	setAwmValid(prec);
 	wm->awm_id = prec->awm_id;
+	wm->r_cpu  = prec->r_cpu;
+	wm->r_pes  = prec->r_pes;
+	wm->r_mem  = prec->r_mem;
+#ifdef CONFIG_BBQUE_OPENCL
+	wm->r_gpu  = prec->r_gpu;
+	wm->r_acc  = prec->r_acc;
+#endif
 
 	// Setup AWM statistics
 	SetupStatistics(prec);
@@ -1669,11 +1683,18 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
 	// Set the new required AWM (if not being blocked)
 	if (prec->event != RTLIB_EXC_GWM_BLOCKED) {
 		prec->awm_id = msg.awm;
+		prec->r_cpu  = msg.r_cpu;
+		prec->r_pes  = msg.r_pes;
+		prec->r_mem  = msg.r_mem;
 #ifdef CONFIG_BBQUE_OPENCL
+		prec->r_gpu  = msg.r_gpu;
+		prec->r_acc  = msg.r_acc;
 		prec->dev_id = msg.dev;
 #endif
 		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned AWM [%d]",
 				msg.hdr.exc_id, msg.event, msg.awm);
+		logger->Debug("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned PROC=<%d>",
+				msg.hdr.exc_id, msg.event, msg.r_pes);
 	} else {
 		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d:BLOCKED]",
 				msg.hdr.exc_id, msg.event);
