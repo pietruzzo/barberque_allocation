@@ -431,6 +431,15 @@ public:
 	}
 
 	/**
+	 * @brief Get the synchronization resource state view
+	 *
+	 * @return The token of the synchronization state view
+	 */
+	inline br::RViewToken_t GetSyncView() const {
+		return sync_ssn.view;
+	}
+
+	/**
 	 * @brief Get the scheduled resource state view
 	 *
 	 * @return The token of the scheduled view
