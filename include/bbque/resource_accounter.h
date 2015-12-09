@@ -426,7 +426,7 @@ public:
 	 *
 	 * @return The token of the system view
 	 */
-	inline br::RViewToken_t GetSystemView() {
+	inline br::RViewToken_t GetSystemView() const {
 		return sys_view_token;
 	}
 
@@ -435,7 +435,7 @@ public:
 	 *
 	 * @return The token of the scheduled view
 	 */
-	inline br::RViewToken_t GetScheduledView() {
+	inline br::RViewToken_t GetScheduledView() const {
 		return sch_view_token;
 	}
 
