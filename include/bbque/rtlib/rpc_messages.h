@@ -231,10 +231,17 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE {
 	uint8_t event;
 	/** The selected AWM */
 	uint16_t awm;
+
+	int32_t r_cpu;
+	int32_t r_pes;
+	int32_t r_mem;
 #ifdef CONFIG_BBQUE_OPENCL
+	int32_t r_gpu;
+	int32_t r_acc;
 	/** Assigned OpenCL device */
 	int8_t dev;
 #endif
+
 } rpc_msg_BBQ_SYNCP_PRECHANGE_t;
 
 /**
