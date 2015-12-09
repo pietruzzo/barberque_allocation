@@ -296,6 +296,12 @@ const char *BbqueEXC::GetChUid() const {
 	return rtlib->Utils.GetChUid();
 }
 
+RTLIB_ExitCode_t BbqueEXC::GetAssignedResources(
+		RTLIB_ResourceType_t r_type,
+		int32_t & r_amount) {
+	return rtlib->Utils.GetResources(exc_hdl, &wmp, r_type, r_amount);
+}
+
 /*******************************************************************************
  *    Cycles Per Second (CPS) Control Support
  ******************************************************************************/

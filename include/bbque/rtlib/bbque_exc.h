@@ -322,7 +322,7 @@ public:
  * @brief Get the (string) EXC Unique IDentifier
  *
  * Each EXC is assigned a Unique IDentifier (UID) which is used for logging
- * both at RTLib and BqrbequeRTRM side. This method gives a reference to a
+ * both at RTLib and BarbequeRTRM side. This method gives a reference to a
  * string representing this UID.
  *
  * @return a pointer to the UID string identitying this EXC
@@ -340,6 +340,20 @@ public:
 	inline AppUid_t GetUid() const {
 		return uid;
 	};
+
+/**
+ * @brief Get the amount of resource assigned by the BarbequeRTRM
+ *
+ * @param r_type The type of resource to check (@see RTLIB_ResourceType_t)
+ * @param r_amount The amount of resource assigned
+ *
+ * @return RTLIB_OK in case of success. RTLIB_EXC_NOT_REGISTERED in case
+ * of not registered application. RTLIB_EXC_NOT_STARTED in case of not
+ * scheduled application.
+ */
+	RTLIB_ExitCode_t GetAssignedResources(
+			RTLIB_ResourceType_t r_type,
+			int32_t & r_amount);
 
 /**
  * @brief Set the cycle rate for this EXC

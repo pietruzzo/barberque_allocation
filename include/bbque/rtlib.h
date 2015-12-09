@@ -653,6 +653,19 @@ typedef BBQUE_UID_TYPE AppUid_t;
 typedef AppUid_t (*RTLIB_Utils_GetUid)(
 		RTLIB_ExecutionContextHandler_t ech);
 
+/**
+ * @brief Get the amount of resources assigned by the BarbequeRTRM
+ * @ingroup rtlib_sec03_plain_rtrm
+ *
+ * Every scheduled EXC gets a certain amount of resources. By specifying
+ * the required resource type, the application can read the related
+ * assigned amount.
+ */
+typedef RTLIB_ExitCode_t (*RTLIB_Utils_GetResources) (
+		RTLIB_ExecutionContextHandler_t ech,
+		const RTLIB_WorkingModeParams_t *wm,
+		RTLIB_ResourceType_t r_type,
+		int32_t & r_amount);
 /**@}*/
 
 /*******************************************************************************
@@ -1121,6 +1134,7 @@ struct RTLIB_Services {
 	struct {
 		RTLIB_Utils_GetChUid GetChUid;
 		RTLIB_Utils_GetUid GetUid;
+		RTLIB_Utils_GetResources GetResources;
 	} Utils;
 
 	/* Cycles Time Control interface */
