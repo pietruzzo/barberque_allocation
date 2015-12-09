@@ -578,6 +578,7 @@ inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		ba::AppSPtr_t papp,
 		br::RViewToken_t vtok) const {
 	uint64_t amount = 0;
+	logger->Debug("GetUsageAmount: Getting usage amount from view [%d]", vtok);
 
 	br::UsagesMap_t::const_iterator uit(begin);
 	for ( ; uit != end; ++uit) {
