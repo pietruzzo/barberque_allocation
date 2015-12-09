@@ -2004,7 +2004,6 @@ RTLIB_ExitCode_t BbqueRPC::StopExecution(
 
 RTLIB_ExitCode_t BbqueRPC::GetRuntimeProfile(
 		rpc_msg_BBQ_GET_PROFILE_t & msg) {
-	uint32_t exec_time, mem_time;
 
 	pregExCtx_t prec = getRegistered(msg.hdr.exc_id);
 	if (!prec) {
@@ -2022,6 +2021,7 @@ RTLIB_ExitCode_t BbqueRPC::GetRuntimeProfile(
 		return RTLIB_OK;
 
 #ifdef CONFIG_BBQUE_OPENCL
+	uint32_t exec_time, mem_time;
 	OclGetRuntimeProfile(prec, exec_time, mem_time);
 
 	// Send the profile to the resource manager
