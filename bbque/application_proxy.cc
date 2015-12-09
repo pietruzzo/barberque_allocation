@@ -19,6 +19,7 @@
 
 #include "bbque/config.h"
 #include "bbque/application_manager.h"
+#include "bbque/resource_accounter.h"
 #include "bbque/resource_manager.h"
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
@@ -365,14 +366,34 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		// If the application is BLOCKING we don't have a NextAWM but we also
 		// don't care at RTLib side about the value of this parameter
 		0,
+		// Resource amount (CPU, PROC_ELEMENT, MEMORY)
+		0, 0, 0,
 #ifdef CONFIG_BBQUE_OPENCL
+		// Resource amount (GPU, ACCELERATOR)
+		0, 0,
+		// Device ID
 		R_ID_NONE,
 #endif
 	};
 
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
 	// Set the next AWM only if the application is not going to be blocked
 	if (likely(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
+		syncp_prechange_msg.r_pes = ra.GetUsageAmount(
+			papp->NextAWM()->GetResourceBinding(),
+			papp, ra.GetScheduledView(),
+			br::ResourceIdentifier::PROC_ELEMENT);
+		syncp_prechange_msg.r_mem = ra.GetUsageAmount(
+			papp->NextAWM()->GetResourceBinding(),
+			papp, ra.GetScheduledView(),
+			br::ResourceIdentifier::MEMORY);
+		logger->Debug("APPs PRX: Send Command [RPC_BBQ_SYNCP_PRECHANGE] to "
+			"EXC [%s], PROC=<%d>,MEM=<%d> @{%d}", papp->StrId(),
+			syncp_prechange_msg.r_pes, syncp_prechange_msg.r_mem,
+			ra.GetScheduledView());
+
 #ifdef CONFIG_BBQUE_OPENCL
 		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(br::Resource::GPU));
 		br::ResID_t r_id = gpu_ids.FirstSet();
