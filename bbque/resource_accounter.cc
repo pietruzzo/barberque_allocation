@@ -609,6 +609,35 @@ inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 	return amount;
 }
 
+uint64_t ResourceAccounter::GetUsageAmount(
+		br::UsagesMap_t const & um,
+		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResID_t r_scope_id) const {
+	uint64_t amount = 0;
+	for (auto & ru_entry: um) {
+		br::ResourcePathPtr_t const & ppath(ru_entry.first);
+		br::UsagePtr_t const & pusage(ru_entry.second);
+
+		logger->Debug("GetUsageAmount: type:<%-3s> scope:<%-3s>",
+			br::ResourceIdentifier::TypeStr[r_type],
+			br::ResourceIdentifier::TypeStr[r_scope_type]);
+		// Scope resource type
+		if ((r_scope_type != br::Resource::UNDEFINED)
+			&& (ppath->GetIdentifier(r_scope_type) == nullptr))
+			continue;
+		// Scope resource ID
+		if ((r_scope_id >= 0) && (r_scope_id != ppath->GetID(r_scope_type)))
+			continue;
+		// Resource type
+		if (ppath->Type() != r_type)
+				continue;
+		amount += pusage->GetAmount();
+	}
+	return amount;
+}
+
+
 inline ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 		br::UsagesMapPtr_t const & usages,
 		br::RViewToken_t vtok,

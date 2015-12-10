@@ -238,8 +238,11 @@ public:
 	 * @brief Get the cumulative amount of resource usage
 	 *
 	 * @param pum A map of Usage pointers
+	 * @param papp The application requiring resource usages
+	 * @param vtok The token referencing the resource state view
 	 * @param r_type The type of resource to query
 	 * @param r_scope_type The scope under which consider the resource
+	 * @param r_scope_id  [optional] The ID of the resource scope type
 	 *
 	 * @return The amount of resource usage
 	 */
@@ -249,7 +252,7 @@ public:
 			br::RViewToken_t vtok,
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type =
-			br::Resource::UNDEFINED,
+				br::Resource::UNDEFINED,
 			br::ResID_t r_scope_id = R_ID_ANY) const;
 
 	uint64_t GetUsageAmount(
@@ -258,7 +261,36 @@ public:
 			br::RViewToken_t vtok,
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type =
-			br::Resource::UNDEFINED,
+				br::Resource::UNDEFINED,
+			br::ResID_t r_scope_id = R_ID_ANY) const;
+
+	/**
+	 * @brief Get the cumulative amount of resource usage
+	 *
+	 * This version should be used in case of query on a unbound resource
+	 * usages map.
+	 *
+	 * @param pum A map of Usage pointers
+	 * @param r_type The type of resource to query
+	 * @param r_scope_type The scope under which consider the resource
+	 * @param r_scope_id  [optional] The ID of the resoruce scope type
+	 *
+	 * @return The amount of resource usage
+	 */
+	inline uint64_t GetUsageAmount(
+			br::UsagesMapPtr_t const & pum,
+			br::ResourceIdentifier::Type_t r_type,
+			br::ResourceIdentifier::Type_t r_scope_type =
+				br::Resource::UNDEFINED,
+			br::ResID_t r_scope_id = R_ID_ANY) const {
+		return GetUsageAmount(*(pum.get()), r_type, r_scope_type, r_scope_id);
+	}
+
+	uint64_t GetUsageAmount(
+			br::UsagesMap_t const & um,
+			br::ResourceIdentifier::Type_t r_type,
+			br::ResourceIdentifier::Type_t r_scope_type =
+				br::Resource::UNDEFINED,
 			br::ResID_t r_scope_id = R_ID_ANY) const;
 
 	/**
