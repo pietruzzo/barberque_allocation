@@ -618,7 +618,6 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 	// domain type under evaluation
 	uint64_t amount = ra.GetUsageAmount(
 		pschd_domain->pawm->RecipeResourceUsages(),
-		pschd_domain->papp, vtok,
 		br::ResourceIdentifier::PROC_ELEMENT, bd_type);
 	if (amount == 0) {
 		logger->Debug("EvalBindings: nothing to bind [%s], usage null",
