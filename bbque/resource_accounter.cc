@@ -127,7 +127,7 @@ void ResourceAccounter::InitBindingOptions() {
 		binding_type = binding_rp->Type();
 		if (binding_type == br::Resource::UNDEFINED ||
 				binding_type == br::Resource::TYPE_COUNT) {
-			logger->Error("Binding: Invalid domain type '%s'",
+			logger->Error("Binding: Invalid domain type <%s>",
 					binding_str.c_str());
 			beg_pos = end_pos + 1;
 			continue;
@@ -136,7 +136,7 @@ void ResourceAccounter::InitBindingOptions() {
 #ifndef CONFIG_BBQUE_OPENCL
 		if (binding_type == br::Resource::GPU) {
 			logger->Warn("Binding: OpenCL support disabled."
-					" Discarding 'GPU' binding type");
+					" Discarding <GPU> binding type");
 			continue;
 		}
 #endif
@@ -145,7 +145,7 @@ void ResourceAccounter::InitBindingOptions() {
 		binding_options.insert(
 				BindingPair_t(binding_type, new BindingInfo_t));
 		binding_options[binding_type]->d_path = binding_rp;
-		logger->Info("Resource binding domain:'%s' Type:%s",
+		logger->Info("Resource binding domain: '%s' Type:<%s>",
 				binding_options[binding_type]->d_path->ToString().c_str(),
 				br::ResourceIdentifier::TypeStr[binding_type]);
 
@@ -188,17 +188,17 @@ void ResourceAccounter::LoadBindingOptions() {
 
 		// Skip missing resource bindings
 		if (binding.count == 0) {
-			logger->Warn("Init: No bindings R{%s} available",
+			logger->Warn("Init: No bindings R<%s> available",
 					binding.d_path->ToString().c_str());
 		}
 
 		// Get all the possible resource binding IDs
 		for (br::ResourcePtr_t & rsrc: binding.rsrcs) {
 			binding.ids.push_back(rsrc->ID());
-			logger->Info("Init: R{%s} ID: %d",
+			logger->Info("Init: R<%s> ID: %d",
 					binding.d_path->ToString().c_str(), rsrc->ID());
 		}
-		logger->Info("Init: R{%s}: %d possible bindings",
+		logger->Info("Init: R<%s>: %d possible bindings",
 				binding.d_path->ToString().c_str(), binding.count);
 	}
 }
@@ -356,7 +356,7 @@ br::ResourcePtrList_t ResourceAccounter::GetResources(
 	// If the path is a template find all the resources matching the
 	// template. Otherwise perform a "mixed path" based search.
 	if (ppath->IsTemplate()) {
-		logger->Debug("GetResources: path {%s} is a template",
+		logger->Debug("GetResources: path <%s> is a template",
 				ppath->ToString().c_str());
 		return resources.findList(*(ppath.get()), RT_MATCH_TYPE);
 	}
@@ -585,7 +585,7 @@ inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		br::ResourcePathPtr_t const & ppath((*uit).first);
 		br::UsagePtr_t const & pusage((*uit).second);
 
-		logger->Debug("GetUsageAmount: type:{%-3s} scope:{%-3s}",
+		logger->Debug("GetUsageAmount: type:<%-3s> scope:<%-3s>",
 			br::ResourceIdentifier::TypeStr[r_type],
 			br::ResourceIdentifier::TypeStr[r_scope_type]);
 		// Scope resource type
@@ -654,7 +654,7 @@ inline ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 
 		// If the availability is less than the amount required...
 		if (avail < pusage->GetAmount()) {
-			logger->Debug("Check availability: Exceeding request for {%s}"
+			logger->Debug("Check availability: Exceeding request for <%s>"
 					"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "] ",
 					rsrc_path->ToString().c_str(), pusage->GetAmount(), avail,
 					QueryStatus(pusage->GetResourcesList(), RA_TOTAL));
@@ -707,7 +707,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
 	// Build a resource path object (from the string)
 	ResourcePathPtr_t ppath(new br::ResourcePath(path_str));
 	if (!ppath) {
-		logger->Fatal("Register R{%s}: Invalid resource path",
+		logger->Fatal("Register R<%s>: Invalid resource path",
 				path_str.c_str());
 		return RA_ERR_MISS_PATH;
 	}
@@ -715,14 +715,14 @@ ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
 	// Insert a new resource in the tree
 	br::ResourcePtr_t pres(resources.insert(*(ppath.get())));
 	if (!pres) {
-		logger->Crit("Register R{%s}: "
+		logger->Crit("Register R<%s>: "
 				"Unable to allocate a new resource descriptor",
 				path_str.c_str());
 		return RA_ERR_MEM;
 	}
 	pres->SetTotal(br::ConvertValue(amount, units));
 	pres->SetPath(path_str);
-	logger->Debug("Register R{%s}: Total = %llu %s",
+	logger->Debug("Register R<%s>: Total = %llu %s",
 			path_str.c_str(), pres->Total(), units.c_str());
 
 	// Insert the path in the paths set
@@ -738,7 +738,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
 	else
 		++r_count[type];
 
-	logger->Debug("Register R{%s}: Total = %llu %s DONE (c[%d]=%d)",
+	logger->Debug("Register R<%s>: Total = %llu %s DONE (c[%d]=%d)",
 			path_str.c_str(), Total(path_str), units.c_str(),
 			type, r_count[type]);
 	return RA_SUCCESS;
@@ -1331,7 +1331,7 @@ ResourceAccounter::IncBookingCounts(
 		}
 
 		assert(result == RA_SUCCESS);
-		logger->Info("Booking: R{%s} SUCCESS "
+		logger->Info("Booking: R<%s> SUCCESS "
 				"[U:%" PRIu64 " | A:%" PRIu64 " | T:%" PRIu64 "]",
 				rsrc_path->ToString().c_str(), pusage->GetAmount(),
 				Available(rsrc_path, MIXED, vtok, papp),

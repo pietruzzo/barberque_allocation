@@ -312,8 +312,8 @@ public:
 	 * @param vtok The token referencing the resource state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
-	void PrintAppDetails(br::ResourcePathPtr_t path, br::RViewToken_t vtok,
-			bool verbose) const;
+	void PrintAppDetails(
+			br::ResourcePathPtr_t path, br::RViewToken_t vtok, bool verbose) const;
 
 	/**
 	 * @brief A prefix path for recipe validation
