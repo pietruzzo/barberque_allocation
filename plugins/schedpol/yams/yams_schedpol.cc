@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2012  Politecnico di Milano
+/**
+ * Copyright (C) 2015  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -369,14 +369,14 @@ inline bool YamsSchedPol::CheckSkipConditions(ba::AppCPtr_t const & papp) {
 
 	// Avoid double AWM selection for already RUNNING applications
 	if ((papp->State() == Application::RUNNING) && papp->NextAWM()) {
-		logger->Debug("Skipping [%s] AWM %d => No reconfiguration",
+		logger->Debug("Skipping [%s] AWM(%2d) => No reconfiguration",
 				papp->StrId(), papp->CurrentAWM()->Id());
 		return true;
 	}
 
 	// Avoid double AWM selection for already SYNC applications
 	if ((papp->State() == Application::SYNC) && papp->NextAWM()) {
-		logger->Debug("Skipping [%s] AWM already assigned [%d]",
+		logger->Debug("Skipping [%s] AWM already assigned (%2d)",
 				papp->StrId(), papp->NextAWM()->Id());
 		return true;
 	}
@@ -444,20 +444,20 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 		// Send the schedule request
 		app_result = pschd->papp->ScheduleRequest(
 				pschd->pawm, vtok, pschd->bind_refn);
-		logger->Debug("Selecting: %s schedule requested", pschd->StrId());
+		logger->Debug("Selecting: [%s] schedule requested", pschd->StrId());
 		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
-			logger->Debug("Selecting: %s rejected!", pschd->StrId());
+			logger->Debug("Selecting: [%s] rejected!", pschd->StrId());
 			continue;
 		}
 #endif
 
 		if (!pschd->papp->Synching() || pschd->papp->Blocking()) {
-			logger->Debug("Selecting: [%s] state %s|%s", pschd->papp->StrId(),
+			logger->Debug("Selecting: [%s] state {%s|%s}", pschd->papp->StrId(),
 					Application::StateStr(pschd->papp->State()),
 					Application::SyncStateStr(pschd->papp->SyncState()));
 			continue;
 		}
-		logger->Notice("Selecting: %s on [%s] SCHEDULED metrics: %.4f",
+		logger->Notice("Selecting: [%s] on <%s> SCHEDULED metrics = %.4f",
 				pschd->StrId(),
 				br::ResourceIdentifier::TypeStr[pschd->bind_type],
 				pschd->metrics);
@@ -529,7 +529,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	for (auto & bd_entry: bindings) {
 		br::Resource::Type_t  bd_type = bd_entry.first;
 		BindingInfo_t const & bd_info(*(bd_entry.second));
-		logger->Debug("EvalAWM: current domain: %s",
+		logger->Debug("EvalAWM: current resource binding domain: <%s>",
 				br::ResourceIdentifier::TypeStr[bd_type]);
 
 		// Skipping empty binding domains
@@ -549,7 +549,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 							sc_types[i])[0], sc_value);
 		}
 		mlog[mlog_len-2] = '\0';
-		logger->Info("EvalAWM: %s metrics %s -> %5.4f",
+		logger->Info("EvalAWM: [%s] metrics %s -> %5.4f",
 				pschd_domain->StrId(), mlog,
 				pschd_domain->metrics);
 		// Base evaluation (without bound resources)
@@ -607,7 +607,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 	BindingMap_t & bindings(ra.GetBindingOptions());
 	bd_it = bindings.find(bd_type);
 	if (bd_it == bindings.end()) {
-		logger->Fatal("EvalBindings: Unexpected binding type: %d", bd_type);
+		logger->Fatal("EvalBindings: Unexpected binding type (%d)", bd_type);
 		return YAMS_ERROR;
 	}
 	logger->Debug("EvalBindings: [%s] base (AWM) metrics %1.4f",
@@ -620,7 +620,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 		pschd_domain->pawm->RecipeResourceUsages(),
 		br::ResourceIdentifier::PROC_ELEMENT, bd_type);
 	if (amount == 0) {
-		logger->Debug("EvalBindings: nothing to bind [%s], usage null",
+		logger->Debug("EvalBindings: no <%s> processing requests to bind",
 			br::ResourceIdentifier::TypeStr[bd_type]);
 		return YAMS_IGNORE;
 	}
@@ -635,12 +635,12 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 	BindingInfo_t bd_info = *(bd_it->second);
 	for (br::ResID_t & bd_id: bd_info.ids) {
 		next_it = dom_it;
-		logger->Debug("EvalBindings: [%s] ID = %d",
+		logger->Debug("EvalBindings: <%s> ID = %d",
 			br::ResourceIdentifier::TypeStr[bd_type], bd_id);
 
 		// Check resource availability
 		if (bd_info.full[bd_id]) {
-			logger->Debug("EvalBindings: [%s%d] is full, skipping...",
+			logger->Debug("EvalBindings: <%s%d> is full, skipping...",
 				bd_info.d_path->ToString().c_str(), bd_id);
 			continue;
 		}
@@ -651,7 +651,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 		pschd_bound->SetBindingID(bd_id, bd_type);
 		result = GetBoundContrib(pschd_bound, base_refn, sc_value);
 		if (result != YAMS_SUCCESS) {
-			logger->Debug("EvalBindings: nothing to bind to [%s]",
+			logger->Warn("EvalBindings: <%s> nothing to bind here",
 				br::ResourceIdentifier::TypeStr[bd_type]);
 			return YAMS_IGNORE;
 		}
@@ -662,7 +662,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 
 		// Next binding domain? Go recursively
 		if (++next_it != dom_end) {
-			logger->Debug("EvalBindings: next domain is [%s]",
+			logger->Debug("EvalBindings: next domain is <%s>",
 				br::ResourceIdentifier::TypeStr[next_it->first]);
 			EvalBindings(next_it, dom_end, next_it, pschd_bound);
 		}
@@ -677,7 +677,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 	sched_ul.lock();
 	entities.push_back(pschd_parent);
 	sched_ul.unlock();
-	logger->Info("EvalBindings: %s scheduling metrics = %1.4f [%d]",
+	logger->Info("EvalBindings: [%s] scheduling metrics = %1.4f (entities: %d)",
 			pschd_parent->StrId(),
 			pschd_parent->metrics, entities.size());
 
@@ -710,13 +710,13 @@ void YamsSchedPol::GetSchedContribValue(
 		// SchedContrib specific error handling
 		switch (sc_ret) {
 		case SchedContrib::SC_RSRC_NO_PE:
-			logger->Debug("SchedContrib: No available PEs in {%s} %d",
+			logger->Debug("SchedContrib: No available PEs in <%s%d>",
 					bindings[bd_type]->d_path->ToString().c_str(),
 					pschd->bind_id);
 			bindings[bd_type]->full.Set(pschd->bind_id);
 			return;
 		default:
-			logger->Warn("SchedContrib: Unable to schedule in {%s} %d [err:%d]",
+			logger->Warn("SchedContrib: Unable to schedule in <%s%d> [err:%d]",
 					bindings[bd_type]->d_path->ToString().c_str(),
 					pschd->bind_id, sc_ret);
 			YAMS_GET_TIMING(coll_mct_metrics, sc_type, comp_tmr);
@@ -724,7 +724,7 @@ void YamsSchedPol::GetSchedContribValue(
 		}
 	}
 	YAMS_GET_TIMING(coll_mct_metrics, sc_type, comp_tmr);
-	logger->Debug("SchedContrib: domain:%s, sc:%d",
+	logger->Debug("SchedContrib: domain <%s>, sc:%d",
 		br::ResourceIdentifier::TypeStr[bd_type], sc_type);
 }
 
@@ -739,7 +739,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
 
 	BindingMap_t & bindings(ra.GetBindingOptions());
 	br::Resource::Type_t bd_type = pschd_bd->bind_type;
-	logger->Debug("GetBoundContrib: =========== BINDING:'%s' ID[%2d ] ===========",
+	logger->Debug("GetBoundContrib: =========== BINDING:<%s%d> ===========",
 			bindings[bd_type]->d_path->ToString().c_str(),
 			pschd_bd->bind_id);
 
@@ -758,7 +758,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
 					scms[bd_type]->GetString(sc_types[i])[0], sc_value);
 	}
 	mlog[mlog_len-2] = '\0';
-	logger->Debug("GetBoundContrib: %s metrics %s -> %5.4f",
+	logger->Debug("GetBoundContrib: [%s] metrics %s -> %5.4f",
 			pschd_bd->StrId(), mlog, value);
 	logger->Debug("GetBoundContrib: ================================================= ");
 
@@ -778,17 +778,17 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
 	// Since the policy handles more than one binding per AWM the resource
 	// binding is referenced by a number.
 	r_refn = pawm->BindResource(bd_type, R_ID_ANY, bd_id, b_refn);
-	logger->Debug("BindResources: reference number %ld", r_refn);
+	logger->Debug("BindResources: reference number {%ld}", r_refn);
 
 	// The resource binding should never fail
 	if (r_refn == 0) {
-		logger->Error("BindResources: AWM{%d} on '%s%d' failed",
+		logger->Error("BindResources: AWM{%d} on <%s%d> failed",
 			pawm->Id(), br::ResourceIdentifier::TypeStr[bd_type], bd_id);
 		return YAMS_ERROR;
 	}
 
 	pschd->bind_refn = r_refn;
-	logger->Info("BindResources: AWM{%d} to resource '%s' ID=%d [%ld]",
+	logger->Info("BindResources: AWM{%d} to resource <%s%d> [%ld]",
 			pawm->Id(), bindings[bd_type]->d_path->ToString().c_str(),
 			bd_id, pschd->bind_refn);
 
@@ -1238,7 +1238,7 @@ void YamsSchedPol::ReconfigSchedContribWeights(
 
 	for (scm_it = scms.begin(); scm_it != scms.end(); ++scm_it) {
 		SchedContribManager * scm = scm_it->second;
-		logger->Notice("ReconfigSchedContribWeights: BD[%s] %d weights...",
+		logger->Notice("ReconfigSchedContribWeights: BD<%s> %d weights...",
 				br::ResourceIdentifier::TypeStr[scm_it->first],
 				scm->GetNumMax());
 
