@@ -61,6 +61,12 @@ public:
 	void SetArchive(std::string archive);
 
 	/**
+	 * @brief Set the path of the folder to which the EventManager points to
+	 * @param path path of the archive folder
+	 */
+	void SetPath(std::string path);
+
+	/**
 	 * @brief TimeToString
 	 * @param timestamp The timestamp to convert
 	 */
@@ -100,6 +106,11 @@ private:
 	 * @brief The path to the currently used archive.
 	 */
 	std::string archive_path;
+
+	/**
+	 * @brief The path of the current archive folder.
+	 */
+	std::string archive_folder_path;
 
 };
 

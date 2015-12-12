@@ -34,6 +34,8 @@ EventManager::EventManager() {
 	logger = bu::Logger::GetLogger(EVENT_MANAGER_NAMESPACE);
 	assert(logger);
 
+	archive_folder_path = ARCHIVE_FOLDER;
+
 	high_resolution_clock::time_point p = high_resolution_clock::now();
     milliseconds ms = duration_cast<milliseconds>(p.time_since_epoch());
 
@@ -52,10 +54,10 @@ EventManager::EventManager() {
     std::string filename(buffer);
 
     filename = filename + ":" + fractional_seconds + ".txt";
-	archive_path = ARCHIVE_FOLDER + filename;
+	archive_path = archive_folder_path + filename;
 
 	// Create events folder if it doesn't exist
-	const char* folder_path = std::string(ARCHIVE_FOLDER).c_str();
+	const char* folder_path = std::string(archive_folder_path).c_str();
     boost::filesystem::path dir(folder_path);
     if(boost::filesystem::create_directory(dir)) {
         logger->Info("Create events Archive folder...");
@@ -65,7 +67,7 @@ EventManager::EventManager() {
 }
 
 EventManager::EventManager(bool external) {
-	(void)external;
+	archive_folder_path = ARCHIVE_FOLDER;
 }
 
 EventManager::~EventManager() {
@@ -78,7 +80,11 @@ EventManager & EventManager::GetInstance() {
 }
 
 void EventManager::SetArchive(std::string archive) {
-    archive_path = ARCHIVE_FOLDER + archive;
+    archive_path = archive_folder_path + archive;
+}
+
+void EventManager::SetPath(std::string path) {
+    archive_folder_path = path;
 }
 
 void EventManager::Serialize(EventWrapper ew) {
