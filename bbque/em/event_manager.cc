@@ -50,7 +50,7 @@ EventManager::EventManager() {
     struct tm * timeinfo;
     char buffer[80];
     timeinfo = gmtime(&t);
-    strftime(buffer, 80, "bbque-events_%a_%d_%b_%Y_%T", timeinfo);
+    strftime(buffer, 80, "bbque-events_%Y_%m_%d_%T", timeinfo);
     std::string filename(buffer);
 
     filename = filename + ":" + fractional_seconds + ".txt";
