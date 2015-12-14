@@ -847,6 +847,11 @@ private:
 	 * @param app_usages Map of next resource usages
 	 * @param app The application acquiring the resources
 	 * @param vtok The token referencing the resource state view
+	 *
+	 * @return RA_SUCCESS for successful return.
+	 * RA_ERR_MISS_VIEW if the resource state view provided is missing.
+	 * RA_ERR_MISS_APP if the application to schedule cannot be retrieved.
+	 * RA_ERR_APP_USAGES if the application is already scheduled.
 	 */
 	ExitCode_t IncBookingCounts(
 			br::UsagesMapPtr_t const & app_usages,
@@ -862,6 +867,7 @@ private:
 	 * @param papp The Application/ExC using the resource
 	 * @param pusage Usage object
 	 * @param vtok The token referencing the resource state view
+	 * @param rsrc_set The set of systems resources in use
 	 *
 	 * @return RA_ERR_USAGE_EXC if the usage required overcome the
 	 * availability. RA_SUCCESS otherwise.
@@ -869,7 +875,8 @@ private:
 	ExitCode_t DoResourceBooking(
 			ba::AppSPtr_t const & papp,
 			br::UsagePtr_t & pusage,
-			br::RViewToken_t vtok);
+			br::RViewToken_t vtok,
+			ResourceSetPtr_t & rsrc_set);
 
 	/**
 	 * @brief Release the resources
@@ -938,11 +945,18 @@ private:
 	 * @param papp The Application/ExC using the resource
 	 * @param pusage Usage object
 	 * @param vtok The token referencing the resource state view
+	 * @param rsrc_set The set of systems resources in use
+	 *
+	 * @return RA_SUCCESS for successful return.
+	 * RA_ERR_MISS_VIEW if the resource state view provided is missing.
+	 * RA_ERR_MISS_APP if the application to schedule cannot be retrieved.
+	 * RA_ERR_APP_USAGES if the application is already scheduled.
 	 */
 	ExitCode_t UndoResourceBooking(
 			ba::AppSPtr_t const & papp,
 			br::UsagePtr_t & pusage,
-			br::RViewToken_t vtok);
+			br::RViewToken_t vtok,
+			ResourceSetPtr_t & rsrc_set);
 
 	/**
 	 * @brief Init the synchronized mode session

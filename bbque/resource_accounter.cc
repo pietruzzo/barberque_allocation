@@ -1293,13 +1293,22 @@ ResourceAccounter::IncBookingCounts(
 		br::RViewToken_t vtok) {
 	ResourceAccounter::ExitCode_t result;
 
+	// Get the set of resources referenced in the view
+	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(vtok));
+	assert(rsrc_view != rsrc_per_views.end());
+	if (rsrc_view == rsrc_per_views.end()) {
+		logger->Fatal("Booking: Invalid resource state view token [%ld]", vtok);
+		return RA_ERR_MISS_VIEW;
+	}
+	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
+
 	// Get the map of resources used by the application (from the state view
-	// referenced by 'vtok'). A missing view implies that the token is not
-	// valid.
+	// referenced by 'vtok').
 	AppUsagesMapPtr_t apps_usages;
 	if (GetAppUsagesByView(vtok, apps_usages) == RA_ERR_MISS_VIEW) {
-		logger->Fatal("Booking: Invalid resource state view token");
-		return RA_ERR_MISS_VIEW;
+		logger->Fatal("Booking: No applications using resource in state view "
+				"[%ld]", vtok);
+		return RA_ERR_MISS_APP;
 	}
 
 	// Each application can hold just one resource usages set
@@ -1318,7 +1327,7 @@ ResourceAccounter::IncBookingCounts(
 				papp->StrId(), rsrc_path->ToString().c_str(), pusage->GetAmount());
 
 		// Do booking for the current resource request
-		result = DoResourceBooking(papp, pusage, vtok);
+		result = DoResourceBooking(papp, pusage, vtok, rsrc_set);
 		if (result != RA_SUCCESS)  {
 			logger->Crit("Booking: unexpected fail! %s "
 					"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "]",
@@ -1350,18 +1359,9 @@ ResourceAccounter::IncBookingCounts(
 ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 		ba::AppSPtr_t const & papp,
 		br::UsagePtr_t & pusage,
-		br::RViewToken_t vtok) {
+		br::RViewToken_t vtok,
+		ResourceSetPtr_t & rsrc_set) {
 	bool first_resource = false;
-
-
-	// Get the set of resources referenced in the view
-	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(vtok));
-	assert(rsrc_view != rsrc_per_views.end());
-	if (rsrc_view == rsrc_per_views.end()) {
-		logger->Fatal("DoResourceBooking: Cannot find view [%ld]", vtok);
-		return RA_ERR_MISS_VIEW;
-	}
-	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
 
 	// Amount of resource to book and list of resource descriptors
 	uint64_t requested = pusage->GetAmount();
@@ -1498,12 +1498,20 @@ void ResourceAccounter::DecBookingCounts(
 	logger->Debug("DecCount: [%s] holds %d resources",
 			papp->StrId(), app_usages->size());
 
+	// Get the set of resources referenced in the view
+	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(vtok));
+	if (rsrc_view == rsrc_per_views.end()) {
+		logger->Fatal("DecCount: Invalid resource state view token [%ld]", vtok);
+		return;
+	}
+	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
+
 	// Release the all the resources hold by the Application/EXC
 	for (auto & ru_entry: *(app_usages.get())) {
 		br::ResourcePathPtr_t const & rsrc_path(ru_entry.first);
 		br::UsagePtr_t & pusage(ru_entry.second);
 		// Release the resources bound to the current request
-		ra_result = UndoResourceBooking(papp, pusage, vtok);
+		ra_result = UndoResourceBooking(papp, pusage, vtok, rsrc_set);
 		if (ra_result == RA_ERR_MISS_VIEW)
 			return;
 		logger->Debug("DecCount: [%s] has freed {%s} of %" PRIu64 "",
@@ -1515,17 +1523,10 @@ void ResourceAccounter::DecBookingCounts(
 ResourceAccounter::ExitCode_t ResourceAccounter::UndoResourceBooking(
 		ba::AppSPtr_t const & papp,
 		br::UsagePtr_t & pusage,
-		br::RViewToken_t vtok) {
+		br::RViewToken_t vtok,
+		ResourceSetPtr_t & rsrc_set) {
 	// Keep track of the amount of resource freed
 	uint64_t usage_freed = 0;
-
-	// Get the set of resources referenced in the view
-	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(vtok));
-	if (rsrc_view == rsrc_per_views.end()) {
-		logger->Fatal("UndoResourceBooking: Cannot find view [%ld]", vtok);
-		return RA_ERR_MISS_VIEW;
-	}
-	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
 
 	// For each resource binding release the amount allocated to the App/EXC
 	assert(!pusage->GetResourcesList().empty());
