@@ -52,16 +52,16 @@ samples = {
 # Header
 plotparams = {
         'Load'       : ['grey'],
-        'Temperature': ['#FF4400'],
+        'Temperature': ['red'],
         'Frequency'  : ['green'],
-        'Power'      : ['red']
+        'Power'      : ['blue']
 }
 # Header
 plotunits = {
-        'Load'       : ' %',
+        'Load'       : ' [%]',
         'Temperature': ' [C]',
         'Frequency'  : ' [MHz]',
-        'Power'      : ' [W]'
+        'Power'      : ' [mW]'
 }
 
 samples_per_second = 2
@@ -91,7 +91,7 @@ def loadData(filename):
     data = samples
     for column in data.keys():
         loaded_data = np.loadtxt(filename, usecols=[hposition[column]])
-        if column == 'Frequency' or column=='Temperature':
+        if column == 'Frequency':
             data[column] = [ f/1e3 for f in loaded_data ]
         else:
             data[column] = loaded_data
@@ -105,7 +105,7 @@ def extractPrefixName(cstring):
     return prefix[0]
 
 
-def plotTraceOverlap(data, out_dir, prefix):
+def plotTraceOverlap(data, fill_area_data, out_dir, prefix):
     host = host_subplot(111, axes_class=AA.Axes)
     plt.subplots_adjust(right=0.75)
 
@@ -117,16 +117,17 @@ def plotTraceOverlap(data, out_dir, prefix):
     par2.axis["right"].toggle(all=True)
 
     time = range(0, len(data['Load']) * samples_per_second, samples_per_second)
-    host.set_ylim(0, 110)
+    host.set_ylim(0, max(data[fill_area_data]*1.25))
 #    host.set_xlim(0, max(x)+(0.25*max(x)))
     host.set_xlabel("Time [s]")
-    host.set_ylabel("Load [%]")
+    host.set_ylabel(fill_area_data + " " + plotunits[fill_area_data])
     par1.set_ylabel("Temperature [C]")
     par2.set_ylabel("Frequency [MHz]")
 
-    p1, = host.fill(time, data['Load'], label="Load",
-            color=plotparams['Load'][0], alpha=0.4, linewidth=1,
-            edgecolor='black')
+    p1, = host.fill(time, data[fill_area_data], label=fill_area_data,
+		    color=plotparams[fill_area_data][0],
+		    alpha=0.4, linewidth=1, edgecolor='black')
+
     p2, = par1.plot(time, data['Temperature'], label="Temperature",
             color=plotparams['Temperature'][0], linewidth=2)
     p3, = par2.plot(time, data['Frequency'], label="Frequency",
@@ -147,7 +148,7 @@ def plotTraceOverlap(data, out_dir, prefix):
 
     plt.draw()
     plt.title("The BarbequeRTRM: Power data trace plot")
-    filename = out_dir +'/bbque-power-' + prefix + ".png"
+    filename = out_dir +'/bbque-power-' + fill_area_data + '-' + prefix + ".png"
     plt.savefig(filename, papertype = 'a3', format = 'png')
     print "[I] Plot generated: ", filename
     plt.close()
@@ -187,5 +188,6 @@ if __name__ == "__main__":
         data = loadData(filename)
         prefix = extractPrefixName(filename)
         print "[I] File name prefix : {}".format(prefix)
-        plotTraceOverlap(data, out_dir, prefix)
+        plotTraceOverlap(data, 'Load', out_dir, prefix)
+        plotTraceOverlap(data, 'Power', out_dir, prefix)
 
