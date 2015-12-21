@@ -46,7 +46,7 @@ RTLIB_ExitCode_t MyApp::onSetup() {
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t MyApp::onConfigure(uint8_t awm_id) {
+RTLIB_ExitCode_t MyApp::onConfigure(int8_t awm_id) {
 
 	logger->Warn("MyApp::onConfigure(): EXC [%s] => AWM [%02d]",
 		exc_name.c_str(), awm_id);
