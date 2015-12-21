@@ -94,7 +94,7 @@ public:
 	 * @brief Working Mode ID
 	 * @return An integer number
 	 */
-	virtual uint8_t Id() const = 0;
+	virtual int8_t Id() const = 0;
 
 	/**
 	 * @brief Get the application owning the working mode

@@ -45,7 +45,7 @@ WorkingMode::WorkingMode():
 }
 
 WorkingMode::WorkingMode(
-		uint8_t _id,
+		int8_t _id,
 		std::string const & _name,
 		float _value,
 		AppSPtr_t _owner):

@@ -57,7 +57,7 @@ public:
 	 * @param value The QoS value read from the recipe
 	 */
 	explicit WorkingMode(
-			uint8_t id,
+			int8_t id,
 			std::string const & name,
 			float value,
 			AppSPtr_t owner = nullptr);
@@ -77,7 +77,7 @@ public:
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline uint8_t Id() const {
+	inline int8_t Id() const {
 		return id;
 	}
 
@@ -469,7 +469,7 @@ private:
 	AppSPtr_t owner;
 
 	/** A numerical ID  */
-	uint8_t id = 0;
+	int8_t id = 0;
 
 	/** A descriptive name */
 	std::string name = "UNDEF";
