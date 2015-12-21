@@ -390,7 +390,7 @@ protected:
 		/** The last required synchronization action */
 		RTLIB_ExitCode_t event = RTLIB_OK;
 		/** The ID of the assigned AWM (if valid) */
-		uint8_t awm_id = 0;
+		int8_t awm_id = 0;
 
 		int32_t r_cpu = 0;
 		int32_t r_pes = 0;
@@ -586,7 +586,7 @@ protected:
 #ifdef CONFIG_BBQUE_OPENCL
 	void OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status);
 	void OclClearStats();
-	void OclCollectStats(uint8_t awm_id, OclEventsStatsMap_t & ocl_events_map);
+	void OclCollectStats(int8_t awm_id, OclEventsStatsMap_t & ocl_events_map);
 	void OclPrintStats(pAwmStats_t pstats);
 	void OclPrintCmdStats(QueueProfPtr_t, cl_command_queue);
 	void OclPrintAddrStats(QueueProfPtr_t, cl_command_queue);

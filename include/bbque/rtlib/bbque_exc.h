@@ -579,14 +579,16 @@ protected:
  * set of automatized mechanisms to define a compile time a look-up table for
  * such parameters starting form the content of a recipe file.
  *
- * @param awm_id the ID of the currently assigned AWM
+ * @param awm_id the ID of the currently assigned AWM. If the BarbequeRTRM
+ * scheduling policy does not use the recipe as input, it can returns AWM
+ * equal to -1
  *
  * @return RTLIB_OK on success, RTLIB_ERROR or one of the other exit codes
  * otherwise.
  *
  * @ingroup rtlib_sec02_aem_app
  */
-	virtual RTLIB_ExitCode_t onConfigure(uint8_t awm_id);
+	virtual RTLIB_ExitCode_t onConfigure(int8_t awm_id);
 
 /**
  * @brief Suspend the execution of this EXC
@@ -773,7 +775,7 @@ private:
 
 	RTLIB_ExitCode_t Setup();
 
-	RTLIB_ExitCode_t Configure(uint8_t awm_id, RTLIB_ExitCode_t event);
+	RTLIB_ExitCode_t Configure(int8_t awm_id, RTLIB_ExitCode_t event);
 
 	RTLIB_ExitCode_t Suspend();
 

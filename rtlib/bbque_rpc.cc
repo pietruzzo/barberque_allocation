@@ -720,7 +720,7 @@ void BbqueRPC::DumpStatsHeader() {
 void BbqueRPC::DumpStatsConsole(pregExCtx_t prec, bool verbose) {
 	AwmStatsMap_t::iterator it;
 	pAwmStats_t pstats;
-	uint8_t awm_id;
+	int8_t awm_id;
 
 	uint32_t cycles_count;
 	double cycle_min, cycle_max, cycle_avg, cycle_var;
@@ -843,7 +843,7 @@ static inline void _setMetricPrefix(const char *exc_name, uint8_t awm_id) {
 void BbqueRPC::DumpStatsMOST(pregExCtx_t prec) {
 	AwmStatsMap_t::iterator it;
 	pAwmStats_t pstats;
-	uint8_t awm_id;
+	int8_t awm_id;
 
 	uint32_t cycles_count, monitor_count, config_count;
 	double cycle_min, cycle_max, cycle_avg, cycle_var;
@@ -2654,7 +2654,7 @@ void BbqueRPC::OclClearStats() {
 }
 
 void BbqueRPC::OclCollectStats(
-		uint8_t awm_id,
+		int8_t awm_id,
 		OclEventsStatsMap_t & ocl_events_map) {
 	rtlib_ocl_prof_run(awm_id, ocl_events_map, conf.profile.opencl.level);
 }
@@ -2763,7 +2763,7 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queu
 void BbqueRPC::OclDumpStats(pregExCtx_t prec) {
 	AwmStatsMap_t::iterator it;
 	pAwmStats_t pstats;
-	uint8_t awm_id;
+	int8_t awm_id;
 
 	// Print RTLib stats for each AWM
 	it = prec->stats.begin();

@@ -338,7 +338,7 @@ struct RTLIB_APIVersion {
  */
 struct RTLIB_WorkingModeParams {
 	/** The ID of the working mode */
-	uint8_t awm_id;
+	int8_t awm_id;
 	/** The set of platform supported services */
 	const RTLIB_Services_t* services;
 	/** Amount of assigned resources (CPU)*/

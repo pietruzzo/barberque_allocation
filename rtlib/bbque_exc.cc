@@ -230,7 +230,7 @@ RTLIB_ExitCode_t BbqueEXC::onSetup() {
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueEXC::onConfigure(uint8_t awm_id) {
+RTLIB_ExitCode_t BbqueEXC::onConfigure(int8_t awm_id) {
 
 	DB(logger->Warn("<< Default switching of EXC [%s] into AWM [%d], latency 10[ms] >>",
 			exc_name.c_str(), awm_id));
@@ -415,7 +415,7 @@ RTLIB_ExitCode_t BbqueEXC::GetWorkingMode() {
 	return result;
 }
 
-RTLIB_ExitCode_t BbqueEXC::Configure(uint8_t awm_id, RTLIB_ExitCode_t event) {
+RTLIB_ExitCode_t BbqueEXC::Configure(int8_t awm_id, RTLIB_ExitCode_t event) {
 
 	if (suspended || (event == RTLIB_EXC_GWM_START)) {
 		// Call the user-defined resuming procedure

@@ -204,7 +204,7 @@ typedef struct rpc_msg_EXC_STOP {
 
 /**
  * @brief Command to ask for being scheduled.
- * 
+ *
  * This message is send by the RTLIB once an EXC ask the RTRM to be scheduled
  * (as soon as possible). The RTRM should identify the best AWM to be assigned
  * for the requesting execution context.
@@ -230,7 +230,7 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE {
 	/** Synchronization Action required */
 	uint8_t event;
 	/** The selected AWM */
-	uint16_t awm;
+	int8_t awm;
 
 	int32_t r_cpu;
 	int32_t r_pes;
