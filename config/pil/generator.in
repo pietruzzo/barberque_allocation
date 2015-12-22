@@ -115,6 +115,24 @@ function HalfASocket() {
 
 }
 
+function SingleBindingDomain() {
+
+	MDEV_PES=""
+	RESERVE_FOR_MDEV=0
+	for PE in $PROCESSING_ELEMENTS; do
+
+		[[ $RESERVE_FOR_MDEV != 0 ]] && MDEV_PES=$MDEV_PES" "$PE
+		let RESERVE_FOR_MDEV++
+
+	done
+
+	# Storing results for both the nodes
+	StoreResults $MAX_NODE_ID "0" "0"
+	let MAX_NODE_ID++
+	StoreResults $MAX_NODE_ID "$MDEV_PES" "0"
+
+}
+
 # Trim away starting and ending whitespaces
 function Clean() {
 
@@ -363,16 +381,22 @@ while read LINE; do
 done < topology
 
 # At least two nodes are needed, one for the HOST and one for the MDEV. Thus,
-# if only a node has been found the algorithm can not continue. If we are
+# if only a node has been found, we are in "single binding domain" mode. If we are
 # using the HalfASocket policy, however, the node will be split and become
-# two distinct nodes. So, in this case, we have not an error.
+# two distinct nodes. So, in this case, we still have multiple binding domains.
 # Note that the last detected node will be analyzed below. Thus, if only a node
 # has been detected, the MAX_NODE_ID counter is still set to 0
-[ "$MAX_NODE_ID" == "0" ] && \
-	[ -z "$HALF_A_SOCKET" ] && \
-	echo -e \
-"[BPL Generation] \tOnly one NODE found. Try selecting a different memory
-\t\t\tlocality level from the barbeque menuconfig" >> $ERRORLOG
+if [ "$MAX_NODE_ID" == "0" ]; then
+	 if [ -z "$HALF_A_SOCKET" ]; then
+
+		SingleBindingDomain
+
+		# Resetting the lists for new nodes
+		PROCESSING_ELEMENTS=""
+		MEMORIES=""
+
+	fi
+fi
 
 # Storing information about the last found node. Remember that each node
 # detection causes the previous node info to be stored. Thus, noone stored
@@ -461,6 +485,11 @@ HOST_MEMS=${mems[0]}
 
 MDEV_PES=""
 MDEV_MEMS=""
+
+# Create PIL folder containing .bpl files
+if [ ! -d $BPL_FOLDER ]; then
+	mkdir $BPL_FOLDER
+fi
 
 for N in `seq 0 $MAX_NODE_ID`; do
 
