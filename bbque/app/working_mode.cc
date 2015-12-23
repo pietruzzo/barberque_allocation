@@ -117,8 +117,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	// Insert a new resource usage object in the map
 	br::UsagePtr_t pusage = std::make_shared<br::Usage>(
 			required_amount, usage_policy);
-	resources.requested.insert(
-			std::pair<ResourcePathPtr_t, br::UsagePtr_t>(ppath, pusage));
+	resources.requested.emplace(ppath, pusage);
 	logger->Debug("AddResourceUsage: %s added {%s}"
 			"\t[usage: %" PRIu64 "] [c=%2d]",
 			str_id, ppath->ToString().c_str(),required_amount,
@@ -186,18 +185,16 @@ size_t WorkingMode::BindResource(
 	br::UsagesMap_t * src_pum;
 	uint32_t b_count;
 	size_t n_refn;
-	std::map<size_t, br::UsagesMapPtr_t>::iterator pum_it;
 	logger->Debug("BindResource: %s owner is %s", str_id, owner->StrId());
 
-	// Allocate a new temporary resource usages map
-	br::UsagesMapPtr_t bind_pum(br::UsagesMapPtr_t(new br::UsagesMap_t()));
-
+	// First resource binding call
 	if (b_refn == 0) {
 		logger->Debug("BindResource: %s binding resources from recipe", str_id);
 		src_pum = &resources.requested;
 	}
 	else {
-		pum_it = resources.sched_bindings.find(b_refn);
+		std::map<size_t, br::UsagesMapPtr_t>::iterator pum_it(
+				resources.sched_bindings.find(b_refn));
 		if (pum_it == resources.sched_bindings.end()) {
 			logger->Error("BindResource: %s invalid binding reference [%ld]",
 				str_id, b_refn);
@@ -206,7 +203,9 @@ size_t WorkingMode::BindResource(
 		src_pum = (pum_it->second).get();
 	}
 
-	// Binding
+	// Allocate a new temporary resource usages map to store the bound
+	// resource usages
+	br::UsagesMapPtr_t bind_pum = std::make_shared<br::UsagesMap_t>();
 	b_count = br::ResourceBinder::Bind(
 			*src_pum, r_type, src_ID, dst_ID, bind_pum,
 			filter_rtype, filter_mask);
