@@ -430,7 +430,8 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 	}
 
 	// Enqueue scheduling entity
-	SchedEntityPtr_t psched(new SchedEntity_t(papp, pawm, R_ID_ANY, 0));
+	SchedEntityPtr_t psched = std::make_shared<SchedEntity_t>(
+			papp, pawm, R_ID_ANY, 0);
 	entities.push_back(psched);
 
 	return SCHED_OK;
