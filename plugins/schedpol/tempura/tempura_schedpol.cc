@@ -424,7 +424,9 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 		logger->Info("Assign: [%s] amount of [%s] assigned = %4d",
 				papp->StrId(), r_path->ToString().c_str(), resource_amount);
 		if (resource_amount > 0)
-			pawm->AddResourceUsage(r_path->ToString(), resource_amount);
+			pawm->AddResourceUsage(
+					r_path->ToString(), resource_amount,
+					br::Usage::Policy::BALANCED);
 	}
 
 	// Enqueue scheduling entity
