@@ -85,7 +85,8 @@ WorkingMode::~WorkingMode() {
 
 WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 		std::string const & rsrc_path,
-		uint64_t required_amount) {
+		uint64_t required_amount,
+		br::Usage::Policy usage_policy) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	br::ResourcePath::ExitCode_t rp_result;
 	ExitCode_t result = WM_SUCCESS;
@@ -114,7 +115,8 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	}
 
 	// Insert a new resource usage object in the map
-	br::UsagePtr_t pusage(br::UsagePtr_t(new br::Usage(required_amount)));
+	br::UsagePtr_t pusage = std::make_shared<br::Usage>(
+			required_amount, usage_policy);
 	resources.requested.insert(
 			std::pair<ResourcePathPtr_t, br::UsagePtr_t>(ppath, pusage));
 	logger->Debug("AddResourceUsage: %s added {%s}"

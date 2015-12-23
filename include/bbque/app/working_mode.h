@@ -22,6 +22,7 @@
 
 #include "bbque/app/working_mode_conf.h"
 #include "bbque/res/bitset.h"
+#include "bbque/res/usage.h"
 #include "bbque/utils/logging/logger.h"
 
 #define AWM_NAMESPACE "bq.awm"
@@ -249,7 +250,11 @@ public:
 	 * types have been specified in the resource path string).
 	 * WM_SUCCESS if the request has been correctly added
 	 */
-	ExitCode_t AddResourceUsage(std::string const & rsrc_path, uint64_t amount);
+	ExitCode_t AddResourceUsage(
+			std::string const & rsrc_path,
+			uint64_t amount,
+			br::Usage::Policy usage_policy =
+				br::Usage::Policy::SEQUENTIAL);
 
 	/**
 	 * @see WorkingModeStatusIF
