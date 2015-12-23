@@ -49,12 +49,13 @@ uint32_t ResourceBinder::Bind(
 		return 0;
 
 	// Proceed with the resource binding...
-	src_end = src_um.end();
-	for (src_it = src_um.begin(); src_it != src_um.end(); ++src_it) {
-		ResourcePathPtr_t const & src_ppath(src_it->first);
-		UsagePtr_t const        & src_pusage(src_it->second);
+	for (auto & ru_entry: src_um) {
+		br::ResourcePathPtr_t const & src_ppath(ru_entry.first);
+		br::UsagePtr_t const      & src_pusage(ru_entry.second);
 
-		ResourcePathPtr_t dst_ppath(new ResourcePath(src_ppath->ToString()));
+		// Build a new resource path
+		br::ResourcePathPtr_t dst_ppath = std::make_shared<ResourcePath>(
+				src_ppath->ToString());
 		if (dst_ppath->NumLevels() == 0)
 			return 0;
 
@@ -81,8 +82,7 @@ uint32_t ResourceBinder::Bind(
 			dst_pusage->SetResourcesList(r_list);
 
 		// Insert the resource usage object in the output map
-		dst_pum->insert(
-				std::pair<ResourcePathPtr_t, UsagePtr_t>(dst_ppath, dst_pusage));
+		dst_pum->emplace(dst_ppath, dst_pusage);
 	}
 	return count;
 }
