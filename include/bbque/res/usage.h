@@ -86,10 +86,35 @@ public:
 	};
 
 	/**
-	 * @brief Constructor
-	 * @param usage_amount The amount of resource usage
+	 * @enum class Policy
+	 *
+	 * The usage must be bind to a set of physical resources. This can be done
+	 * by the resource allocation policy through a per-resource fine-grained
+	 * binding, or can be left to the Resource Accounter, specifying a
+	 * predefined "filling" policy. The policy defines how the amount of
+	 * resource required must be spread over the set of physical resources
+	 * that the Usage object is referencing.
 	 */
-	Usage(uint64_t usage_amount);
+	enum class Policy {
+		/**
+		 * Usage should be distributed over the resource list in a sequential
+		 * manner
+		 */
+		SEQUENTIAL,
+		/**
+		 * Usage should be evenly distributed over all the resources in the
+		 * list
+		 */
+		BALANCED
+	};
+
+	/**
+	 * @brief Constructor
+
+	 * @param amount The amount of resource usage
+	 * @param policy The filling policy
+	 */
+	Usage(uint64_t amount, Policy policy = Policy::SEQUENTIAL);
 
 	/**
 	 * @brief Destructor
@@ -166,6 +191,24 @@ public:
 		return resources.empty();
 	}
 
+
+	/**
+	 * @brief Set the resources list filling policy
+	 */
+	inline void SetPolicy(Policy policy) {
+		fill_policy = policy;
+	}
+
+	/**
+	 * @brief Get the resources list filling policy
+	 *
+	 * @return The policy set
+	 */
+	inline Policy GetPolicy() const {
+		return fill_policy;
+	}
+
+
 	/**
 	 * @brief Get the first resource from the binding list
 	 *
@@ -238,6 +281,12 @@ private:
 
 	/** List of resource descriptors which to the resource usage is bound */
 	ResourcePtrList_t resources;
+
+	/**
+	 * The resources list filling policy, i.e., how the resource amount
+	 * should be distributed over the resources list
+	 */
+	Policy fill_policy;
 
 	/** List iterator pointing to the first resource used by the App/EXC */
 	ResourcePtrListIterator_t first_resource_it;

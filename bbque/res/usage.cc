@@ -21,8 +21,9 @@
 namespace bbque { namespace res {
 
 
-Usage::Usage(uint64_t usage_amount):
-	amount(usage_amount) {
+Usage::Usage(uint64_t usage_amount, Policy policy):
+	amount(usage_amount),
+	fill_policy(policy) {
 }
 
 Usage::~Usage() {
