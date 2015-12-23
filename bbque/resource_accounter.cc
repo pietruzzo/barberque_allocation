@@ -1367,6 +1367,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 	uint64_t requested = pusage->GetAmount();
 	br::ResourcePtrListIterator_t it_bind(pusage->GetResourcesList().begin());
 	br::ResourcePtrListIterator_t end_it(pusage->GetResourcesList().end());
+	size_t num_rsrcs_left = pusage->GetResourcesList().size();
+	uint64_t per_rsrc_allocated = 0;
 
 	// Get the list of resource binds
 	for (; it_bind != end_it; ++it_bind) {
@@ -1385,14 +1387,19 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 			continue;
 		}
 
-		// Scheduling: allocate required resource among its bindings
-		SchedResourceBooking(papp, rsrc, requested, vtok);
-		if ((requested == pusage->GetAmount()) || first_resource)
-			continue;
+		// In case of "balanced" filling policy, spread the requested amount
+		// of resource over all the resources of the given binding
+		if (pusage->GetPolicy() == br::Usage::Policy::BALANCED)
+			per_rsrc_allocated = requested / num_rsrcs_left;
 
-		// Keep track of the first resource granted from the bindings
-		pusage->TrackFirstResource(papp, it_bind, vtok);
-		first_resource = true;
+		// Scheduling: allocate required resource among its bindings
+		SchedResourceBooking(papp, rsrc, vtok, requested, per_rsrc_allocated);
+		if ((requested != pusage->GetAmount()) && !first_resource) {
+			// Keep track of the first resource granted from the bindings
+			pusage->TrackFirstResource(papp, it_bind, vtok);
+			first_resource = true;
+		}
+		--num_rsrcs_left;
 	}
 
 	// Keep track of the last resource granted from the bindings (only if we
@@ -1454,15 +1461,18 @@ bool ResourceAccounter::IsReshuffling(
 inline void ResourceAccounter::SchedResourceBooking(
 		ba::AppSPtr_t const & papp,
 		br::ResourcePtr_t & rsrc,
+		br::RViewToken_t vtok,
 		uint64_t & requested,
-		br::RViewToken_t vtok) {
+		uint64_t per_rsrc_allocated) {
 	// Check the available amount in the current resource binding
 	uint64_t available = rsrc->Available(papp, vtok);
 
 	// If it is greater than the required amount, acquire the whole
 	// quantity from the current resource binding, otherwise split
 	// it among sibling resource bindings
-	if (requested < available)
+	if ((per_rsrc_allocated >0) && (per_rsrc_allocated <= available))
+		requested -= rsrc->Acquire(papp, per_rsrc_allocated, vtok);
+	else if (requested < available)
 		requested -= rsrc->Acquire(papp, requested, vtok);
 	else
 		requested -= rsrc->Acquire(papp, available, vtok);

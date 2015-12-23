@@ -902,8 +902,9 @@ private:
 	void SchedResourceBooking(
 			ba::AppSPtr_t const & papp,
 			br::ResourcePtr_t & rsrc,
+			br::RViewToken_t vtok,
 			uint64_t & requested,
-			br::RViewToken_t vtok);
+			uint64_t per_rsrc_allocated = 0);
 
 	/**
 	 * @brief Allocate a quota of resource in the synchronization case
