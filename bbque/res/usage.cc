@@ -75,9 +75,6 @@ void Usage::SetResourcesList(
 	}
 }
 
-bool Usage::EmptyResourcesList() {
-	return resources.empty();
-}
 
 ResourcePtr_t Usage::GetFirstResource(
 		ResourcePtrListIterator_t & it) {

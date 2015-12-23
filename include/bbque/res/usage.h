@@ -162,7 +162,9 @@ public:
 	 *
 	 * @return true if the list is empty, false otherwise.
 	 */
-	bool EmptyResourcesList();
+	inline bool EmptyResourcesList() const {
+		return resources.empty();
+	}
 
 	/**
 	 * @brief Get the first resource from the binding list
