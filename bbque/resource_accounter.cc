@@ -1323,18 +1323,17 @@ ResourceAccounter::IncBookingCounts(
 	for (auto & ru_entry: *(rsrc_usages.get())) {
 		br::ResourcePathPtr_t const & rsrc_path(ru_entry.first);
 		br::UsagePtr_t & pusage(ru_entry.second);
-		logger->Debug("Booking: [%s] requires resource {%s}: [% " PRIu64 "] ",
+		logger->Debug("Booking: [%s] requires resource <%s>: [% " PRIu64 "] ",
 				papp->StrId(), rsrc_path->ToString().c_str(), pusage->GetAmount());
 
 		// Do booking for the current resource request
 		result = DoResourceBooking(papp, pusage, vtok, rsrc_set);
 		if (result != RA_SUCCESS)  {
-			logger->Crit("Booking: unexpected fail! %s "
+			logger->Crit("Booking: unexpected fail! <%s> "
 					"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "]",
 				rsrc_path->ToString().c_str(), pusage->GetAmount(),
 				Available(rsrc_path, MIXED, vtok, papp),
 				Total(rsrc_path, MIXED));
-
 			// Print the report table of the resource assignments
 			PrintStatusReport();
 		}
@@ -1347,13 +1346,11 @@ ResourceAccounter::IncBookingCounts(
 				Total(rsrc_path, MIXED));
 	}
 
-	apps_usages->insert(std::pair<AppUid_t, br::UsagesMapPtr_t>
-			(papp->Uid(), rsrc_usages));
+	apps_usages->emplace(papp->Uid(), rsrc_usages);
 	logger->Debug("Booking: [%s] now holds %d resources",
 			papp->StrId(), rsrc_usages->size());
 
 	return RA_SUCCESS;
-
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
@@ -1370,15 +1367,14 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 	size_t num_rsrcs_left = pusage->GetResourcesList().size();
 	uint64_t per_rsrc_allocated = 0;
 
-	// Get the list of resource binds
+	// Get the list of the bound resources
 	for (; it_bind != end_it; ++it_bind) {
-		br::ResourcePtr_t & rsrc(*it_bind);
 		// Break if the required resource has been completely allocated
 		if (requested == 0)
 			break;
-
 		// Add the current resource binding to the set of resources used in
 		// the view referenced by 'vtok'
+		br::ResourcePtr_t & rsrc(*it_bind);
 		rsrc_set->insert(rsrc);
 
 		// Synchronization: booking according to scheduling decisions
