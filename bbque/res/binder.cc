@@ -70,7 +70,8 @@ uint32_t ResourceBinder::Bind(
 					src_ppath->ToString().c_str());
 
 		// Create a new Usage object and set the binding list
-		UsagePtr_t dst_pusage(new Usage(src_pusage->GetAmount()));
+		UsagePtr_t dst_pusage = std::make_shared<Usage>(
+				src_pusage->GetAmount(), src_pusage->GetPolicy());
 		r_list = ra.GetResources(dst_ppath);
 		if ((filter_rtype != br::ResourceIdentifier::UNDEFINED)
 				&& (filter_mask != nullptr))
