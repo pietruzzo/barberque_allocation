@@ -61,12 +61,13 @@ uint32_t ResourceBinder::Bind(
 		// Replace ID of the given resource type with the bound ID
 		rp_result = dst_ppath->ReplaceID(r_type, src_r_id, dst_r_id);
 		if (rp_result == ResourcePath::OK) {
-			logger->Debug("Bind: [%s] to [%s] done",
-					src_ppath->ToString().c_str(), dst_ppath->ToString().c_str());
+			logger->Debug("Bind: <%s> to <%s> done",
+					src_ppath->ToString().c_str(),
+					dst_ppath->ToString().c_str());
 			++count;
 		}
 		else
-			logger->Debug("Bind: Nothing to do in [%s]",
+			logger->Debug("Bind: Nothing to do in <%s>",
 					src_ppath->ToString().c_str());
 
 		// Create a new Usage object and set the binding list
@@ -142,7 +143,7 @@ ResourceBitset ResourceBinder::GetMask(
 	if ((r_type >= br::ResourceIdentifier::TYPE_COUNT)       ||
 		(r_scope_type >= br::ResourceIdentifier::TYPE_COUNT))
 		return r_mask;
-	logger->Debug("GetMask: scope=[%s%d] resource={%s} view=%d",
+	logger->Debug("GetMask: scope=<%s%d> resource=<%s> view=%d",
 				br::ResourceIdentifier::TypeStr[r_scope_type], r_scope_id,
 				br::ResourceIdentifier::TypeStr[r_type], vtok);
 
@@ -159,9 +160,9 @@ ResourceBitset ResourceBinder::GetMask(
 
 		// Skip in case scope or resource type do not match with the required
 		// values
-		logger->Debug("GetMask: path=[%s]", ppath->ToString().c_str());
+		logger->Debug("GetMask: path=<%s>", ppath->ToString().c_str());
 		if ((found_scope_type != r_scope_type) || (found_rsrc_type != r_type)) {
-			logger->Debug("GetMask: skipping scope=[%s] resource=[%s]",
+			logger->Debug("GetMask: skipping scope=<%s> resource=<%s>",
 					br::ResourceIdentifier::TypeStr[found_scope_type],
 					br::ResourceIdentifier::TypeStr[r_type]);
 			continue;
@@ -173,14 +174,14 @@ ResourceBitset ResourceBinder::GetMask(
 		// found is "ANY" or "NONE" => We need to inspect the list of resource
 		// descriptors
 		if ((found_scope_id < 0) || (found_scope_id == r_scope_id)) {
-			logger->Debug("GetMask: scope [%s] found in resource {%s}!",
+			logger->Debug("GetMask: scope <%s> found in resource <%s>!",
 					br::ResourceIdentifier::TypeStr[r_scope_type],
 					ppath->ToString().c_str());
 			r_mask |= GetMask(pusage->GetResourcesList(),
 					r_type,	r_scope_type, r_scope_id, papp, vtok);
 		}
 	}
-	logger->Debug("GetMask: type {%s} in scope [%s]  = %s",
+	logger->Debug("GetMask: type <%s> in scope <%s> = {%s}",
 			br::ResourceIdentifier::TypeStr[r_type],
 			br::ResourceIdentifier::TypeStr[r_scope_type],
 			r_mask.ToString().c_str());
@@ -205,19 +206,19 @@ ResourceBitset ResourceBinder::GetMask(
 	// Scan the resources list
 	for (ResourcePtr_t const & rsrc: rpl) {
 		if (rsrc->Type() != r_type) {
-			logger->Warn("GetMask: Skipping resource type{%s}",
+			logger->Warn("GetMask: Skipping resource type <%s>",
 					br::ResourceIdentifier::TypeStr[rsrc->Type()]);
 			continue;
 		}
 
 		// Is the application using it?
 		if (rsrc->ApplicationUsage(papp, vtok) == 0) {
-			logger->Debug("GetMask: {%s} not used by [%s]. Skipping...",
+			logger->Debug("GetMask: <%s> not used by [%s]. Skipping...",
 					rsrc->Path().c_str(), papp->StrId());
 			continue;
 		}
 		else
-			logger->Debug("GetMask: {%s} used by [%s]. Continuing...",
+			logger->Debug("GetMask: <%s> used by [%s]. Continuing...",
 					rsrc->Path().c_str(), papp->StrId());
 
 		// Scope resource (type and identifier)
@@ -225,12 +226,12 @@ ResourceBitset ResourceBinder::GetMask(
 		if (r_path->ParentType(r_type) == r_scope_type
 				&& (r_path->GetID(r_scope_type) == r_scope_id
 					|| r_scope_id == R_ID_ANY)) {
-			logger->Debug("GetMask: ready to set {%s}",
+			logger->Debug("GetMask: ready to set <%s>",
 					br::ResourceIdentifier::TypeStr[r_type]);
 			SetBit(r_path, r_type, r_mask);
 		}
 	}
-	logger->Debug("GetMask: type [%s] = %s",
+	logger->Debug("GetMask: type <%s> = {%s}",
 			br::ResourceIdentifier::TypeStr[r_type],
 			r_mask.ToString().c_str());
 	return r_mask;
