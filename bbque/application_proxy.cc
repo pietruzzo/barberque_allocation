@@ -366,8 +366,10 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		// If the application is BLOCKING we don't have a NextAWM but we also
 		// don't care at RTLib side about the value of this parameter
 		0,
-		// Resource amount (CPU, PROC_ELEMENT, MEMORY)
-		0, 0, 0,
+		// Number of resources (CPU, PROC_ELEMENT cores)
+		0, 0,
+		// Resource amount (PROC_ELEMENT, MEMORY)
+		0, 0,
 #ifdef CONFIG_BBQUE_OPENCL
 		// Resource amount (GPU, ACCELERATOR)
 		0, 0,
@@ -385,6 +387,10 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		// CPUs (processors)
 		syncp_prechange_msg.nr_cpus =
 			papp->NextAWM()->BindingSet(br::Resource::CPU).Count();
+		// Processing elements (number of)
+		syncp_prechange_msg.nr_procs =
+			papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT).Count();
+		// Processing elements (quota)
 		syncp_prechange_msg.r_proc = ra.GetUsageAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
@@ -398,8 +404,10 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		logger->Warn("APPs PRX: TPD enabled. No resource assignment enforcing");
 #endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
 		logger->Debug("APPs PRX: Send Command [RPC_BBQ_SYNCP_PRECHANGE] to "
-			"EXC [%s], CPU=<%d>, PROC=<%d>,MEM=<%d> @sv{%d}", papp->StrId(),
+			"EXC [%s], CPUs=<%d>, PROCs=<%2d [%d%%]>,MEM=<%d> @sv{%d}",
+			papp->StrId(),
 			syncp_prechange_msg.nr_cpus,
+			syncp_prechange_msg.nr_procs,
 			syncp_prechange_msg.r_proc,
 			syncp_prechange_msg.r_mem,
 			ra.GetScheduledView());
