@@ -173,7 +173,8 @@ ResourceBitset ResourceBinder::GetMask(
 		// Check the scope id number. Go deeper if it matches, or if the id
 		// found is "ANY" or "NONE" => We need to inspect the list of resource
 		// descriptors
-		if ((found_scope_id < 0) || (found_scope_id == r_scope_id)) {
+		if ((r_scope_id < 0) || (found_scope_id < 0)
+				|| (found_scope_id == r_scope_id)) {
 			logger->Debug("GetMask: scope <%s> found in resource <%s>!",
 					br::ResourceIdentifier::TypeStr[r_scope_type],
 					ppath->ToString().c_str());
