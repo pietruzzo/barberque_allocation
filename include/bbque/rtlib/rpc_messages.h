@@ -233,7 +233,7 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE {
 	int8_t awm;
 
 	int32_t r_cpu;
-	int32_t r_pes;
+	int32_t r_proc;
 	int32_t r_mem;
 #ifdef CONFIG_BBQUE_OPENCL
 	int32_t r_gpu;

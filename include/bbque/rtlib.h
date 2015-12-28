@@ -344,7 +344,7 @@ struct RTLIB_WorkingModeParams {
 	/** Amount of assigned resources (CPU)*/
 	int32_t r_cpu = 0;
 	/** Amount of assigned resources (Processing Cores quota)*/
-	int32_t r_pes = 0;
+	int32_t r_proc = 0;
 	/** Amount of assigned resources (Memory)*/
 	int32_t r_mem = 0;
 #ifdef CONFIG_BBQUE_OPENCL

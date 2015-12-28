@@ -393,7 +393,7 @@ protected:
 		int8_t awm_id = 0;
 
 		int32_t r_cpu = 0;
-		int32_t r_pes = 0;
+		int32_t r_proc = 0;
 		int32_t r_mem = 0;
 #ifdef CONFIG_BBQUE_OPENCL
 		int32_t r_gpu = 0;
