@@ -234,6 +234,9 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE {
 
 	/** Number of CPU (processors) assigned */
 	int16_t nr_cpus;
+	/** Number of processing elements assigned */
+	int16_t nr_procs;
+	/** Amount of processing quota assigned */
 	int32_t r_proc;
 	int32_t r_mem;
 #ifdef CONFIG_BBQUE_OPENCL

@@ -283,6 +283,7 @@ typedef enum RTLIB_SyncType {
 typedef enum RTLIB_ResourceType {
 	SYSTEM = 0,
 	CPU,
+	PROC_NR,
 	GPU,
 	ACCELERATOR,
 	PROC_ELEMENT,
@@ -343,7 +344,9 @@ struct RTLIB_WorkingModeParams {
 	const RTLIB_Services_t* services;
 	/** Number of assigned CPU (processors) */
 	int16_t nr_cpus  = 0;
-	/** Amount of assigned resources (Processing Cores quota)*/
+	/** Number of assigned processing cores */
+	int16_t nr_procs = 0;
+	/** Amount of assigned processing quota */
 	int32_t r_proc = 0;
 	/** Amount of assigned resources (Memory)*/
 	int32_t r_mem = 0;

@@ -394,6 +394,9 @@ protected:
 
 		/** Number of CPU (processors) assigned */
 		int16_t nr_cpus  = 0;
+		/** Number of processing elements assigned */
+		int16_t nr_procs = 0;
+		/** Amount of processing quota assigned */
 		int32_t r_proc = 0;
 		int32_t r_mem = 0;
 #ifdef CONFIG_BBQUE_OPENCL
