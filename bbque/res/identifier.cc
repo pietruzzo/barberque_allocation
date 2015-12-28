@@ -44,7 +44,7 @@ ResourceIdentifier::ResourceIdentifier(
 	id(_id) {
 
 	// Sanity check
-	if (((_id < R_ID_NONE)   || (_id > MAX_R_ID_NUM)) ||
+	if (((_id < R_ID_NONE)   || (_id > BBQUE_MAX_R_ID_NUM)) ||
 		((_type < UNDEFINED) || (_type > TYPE_COUNT))) {
 		type = UNDEFINED;
 		id   = R_ID_NONE;
@@ -71,7 +71,7 @@ void ResourceIdentifier::SetID(ResID_t _id) {
 
 	// ID boundaries check
 	if ((_id == R_ID_NONE) || (_id == R_ID_ANY) ||
-		(_id > MAX_R_ID_NUM)) {
+		(_id > BBQUE_MAX_R_ID_NUM)) {
 		id = R_ID_NONE;
 		return;
 	}

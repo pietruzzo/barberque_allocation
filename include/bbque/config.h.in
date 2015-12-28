@@ -240,6 +240,15 @@
 #define BBQUE_APP_PRIO_LEVELS ${CONFIG_BBQUE_APP_PRIO_LEVELS}
 
 /**
+ * @brief The maximum number of resources per resource type
+ *
+ * For example, the maximum ID number of a processing element (computing
+ * cores) of a processor. This value is used for initializing the resource
+ * bitset type.
+ */
+#define BBQUE_MAX_R_ID_NUM ${CONFIG_BBQUE_RESOURCE_MAX_NUM}-1
+
+/**
  * @brief The type used to represent UIDs
  *
  * The UID is a unique identifier for each BabrequeRTRM managed application.

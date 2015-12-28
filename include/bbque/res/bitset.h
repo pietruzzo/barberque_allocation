@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Politecnico di Milano
+ * Copyright (C) 2015  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ public:
 
 private:
 
-	std::bitset<MAX_R_ID_NUM> bit_set;
+	std::bitset<BBQUE_MAX_R_ID_NUM> bit_set;
 
 	ResID_t first_set;
 

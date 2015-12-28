@@ -317,6 +317,16 @@ config BBQUE_APP_PRIO_LEVELS
 
   Recipies define the priority of the corresponding Application.
 
+config BBQUE_RESOURCE_MAX_NUM
+  int "Number of Resources per Type"
+  default 16
+  ---help---
+  The maximum number of resources per resource type.
+
+  For example, the maximum number of processing elements (computing cores)
+  available per processor.
+
+
 config BBQUE_SCHED_PROFILING
   bool "Scheduling Profiling"
   default n
