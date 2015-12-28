@@ -384,10 +384,12 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		// CPUs (processors)
 		br::ResourceBitset cpu_ids(papp->NextAWM()->BindingSet(br::Resource::CPU));
 		syncp_prechange_msg.r_cpu = cpu_ids.Count();
+		// CPU quota (processing element quota)
 		syncp_prechange_msg.r_pes = ra.GetUsageAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
 			br::ResourceIdentifier::PROC_ELEMENT);
+		// Memory amount
 		syncp_prechange_msg.r_mem = ra.GetUsageAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
