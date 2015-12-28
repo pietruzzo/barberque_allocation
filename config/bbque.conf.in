@@ -140,6 +140,7 @@ category.bq.re = 	NOTICE
 category.bq.rm = 	NOTICE
 category.bq.rp = 	NOTICE
 category.bq.rt = 	NOTICE
+category.bq.rbind =	NOTICE
 #category.bq.ap = 	INFO
 #category.bq.app = 	INFO
 #category.bq.awm =	INFO
