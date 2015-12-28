@@ -284,10 +284,10 @@ typedef enum RTLIB_ResourceType {
 	SYSTEM = 0,
 	CPU,
 	PROC_NR,
+	PROC_ELEMENT,
+	MEMORY,
 	GPU,
 	ACCELERATOR,
-	PROC_ELEMENT,
-	MEMORY
 } RTLIB_ResourceType_t;
 
 /**
@@ -348,7 +348,7 @@ struct RTLIB_WorkingModeParams {
 	int16_t nr_procs = 0;
 	/** Amount of assigned processing quota */
 	int32_t r_proc = 0;
-	/** Amount of assigned resources (Memory)*/
+	/** Amount of assigned memory */
 	int32_t r_mem = 0;
 #ifdef CONFIG_BBQUE_OPENCL
 	/** Amount of assigned resources (GPU)*/

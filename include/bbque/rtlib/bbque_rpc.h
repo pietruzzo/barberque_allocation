@@ -398,6 +398,7 @@ protected:
 		int16_t nr_procs = 0;
 		/** Amount of processing quota assigned */
 		int32_t r_proc = 0;
+		/** Amount of memory assigned */
 		int32_t r_mem = 0;
 #ifdef CONFIG_BBQUE_OPENCL
 		int32_t r_gpu = 0;
