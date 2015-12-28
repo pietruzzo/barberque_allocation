@@ -232,7 +232,8 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE {
 	/** The selected AWM */
 	int8_t awm;
 
-	int32_t r_cpu;
+	/** Number of CPU (processors) assigned */
+	int16_t nr_cpus;
 	int32_t r_proc;
 	int32_t r_mem;
 #ifdef CONFIG_BBQUE_OPENCL

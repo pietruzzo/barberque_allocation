@@ -383,9 +383,8 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 		// CPUs (processors)
-		br::ResourceBitset cpu_ids(papp->NextAWM()->BindingSet(br::Resource::CPU));
-		syncp_prechange_msg.r_cpu = cpu_ids.Count();
-		// CPU quota (processing element quota)
+		syncp_prechange_msg.nr_cpus =
+			papp->NextAWM()->BindingSet(br::Resource::CPU).Count();
 		syncp_prechange_msg.r_proc = ra.GetUsageAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
@@ -400,7 +399,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 #endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
 		logger->Debug("APPs PRX: Send Command [RPC_BBQ_SYNCP_PRECHANGE] to "
 			"EXC [%s], CPU=<%d>, PROC=<%d>,MEM=<%d> @sv{%d}", papp->StrId(),
-			syncp_prechange_msg.r_cpu,
+			syncp_prechange_msg.nr_cpus,
 			syncp_prechange_msg.r_proc,
 			syncp_prechange_msg.r_mem,
 			ra.GetScheduledView());

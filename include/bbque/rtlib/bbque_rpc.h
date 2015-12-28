@@ -392,7 +392,8 @@ protected:
 		/** The ID of the assigned AWM (if valid) */
 		int8_t awm_id = 0;
 
-		int32_t r_cpu = 0;
+		/** Number of CPU (processors) assigned */
+		int16_t nr_cpus  = 0;
 		int32_t r_proc = 0;
 		int32_t r_mem = 0;
 #ifdef CONFIG_BBQUE_OPENCL

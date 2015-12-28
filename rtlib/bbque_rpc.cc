@@ -1382,7 +1382,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 
 	logger->Debug("Valid AWM assigned");
 	wm->awm_id = prec->awm_id;
-	wm->r_cpu  = prec->r_cpu;
+	wm->nr_cpus  = prec->nr_cpus;
 	wm->r_proc = prec->r_proc;
 	wm->r_mem  = prec->r_mem;
 #ifdef CONFIG_BBQUE_OPENCL
@@ -1436,7 +1436,7 @@ waiting_done:
 
 	setAwmValid(prec);
 	wm->awm_id = prec->awm_id;
-	wm->r_cpu  = prec->r_cpu;
+	wm->nr_cpus  = prec->nr_cpus;
 	wm->r_proc = prec->r_proc;
 	wm->r_mem  = prec->r_mem;
 #ifdef CONFIG_BBQUE_OPENCL
@@ -1472,6 +1472,9 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 	}
 
 	switch (r_type) {
+	case CPU:
+		r_amount = wm->nr_cpus;
+		break;
 	case PROC_ELEMENT:
 		r_amount = wm->r_proc;
 		break;
@@ -1725,7 +1728,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
 	// Set the new required AWM (if not being blocked)
 	if (prec->event != RTLIB_EXC_GWM_BLOCKED) {
 		prec->awm_id = msg.awm;
-		prec->r_cpu  = msg.r_cpu;
+		prec->nr_cpus  = msg.nr_cpus;
 		prec->r_proc = msg.r_proc;
 		prec->r_mem  = msg.r_mem;
 #ifdef CONFIG_BBQUE_OPENCL

@@ -341,8 +341,8 @@ struct RTLIB_WorkingModeParams {
 	int8_t awm_id;
 	/** The set of platform supported services */
 	const RTLIB_Services_t* services;
-	/** Amount of assigned resources (CPU)*/
-	int32_t r_cpu = 0;
+	/** Number of assigned CPU (processors) */
+	int16_t nr_cpus  = 0;
 	/** Amount of assigned resources (Processing Cores quota)*/
 	int32_t r_proc = 0;
 	/** Amount of assigned resources (Memory)*/
