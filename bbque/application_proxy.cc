@@ -381,6 +381,9 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 	// Set the next AWM only if the application is not going to be blocked
 	if (likely(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
+		// CPUs (processors)
+		br::ResourceBitset cpu_ids(papp->NextAWM()->BindingSet(br::Resource::CPU));
+		syncp_prechange_msg.r_cpu = cpu_ids.Count();
 		syncp_prechange_msg.r_pes = ra.GetUsageAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
@@ -390,8 +393,10 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 			papp, ra.GetScheduledView(),
 			br::ResourceIdentifier::MEMORY);
 		logger->Debug("APPs PRX: Send Command [RPC_BBQ_SYNCP_PRECHANGE] to "
-			"EXC [%s], PROC=<%d>,MEM=<%d> @{%d}", papp->StrId(),
-			syncp_prechange_msg.r_pes, syncp_prechange_msg.r_mem,
+			"EXC [%s], CPU=<%d>, PROC=<%d>,MEM=<%d> @sv{%d}", papp->StrId(),
+			syncp_prechange_msg.r_cpu,
+			syncp_prechange_msg.r_pes,
+			syncp_prechange_msg.r_mem,
 			ra.GetScheduledView());
 
 #ifdef CONFIG_BBQUE_OPENCL
