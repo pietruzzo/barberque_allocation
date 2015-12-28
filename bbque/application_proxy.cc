@@ -381,6 +381,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 	// Set the next AWM only if the application is not going to be blocked
 	if (likely(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
+#ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 		// CPUs (processors)
 		br::ResourceBitset cpu_ids(papp->NextAWM()->BindingSet(br::Resource::CPU));
 		syncp_prechange_msg.r_cpu = cpu_ids.Count();
@@ -394,6 +395,9 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
 			br::ResourceIdentifier::MEMORY);
+#else
+		logger->Warn("APPs PRX: TPD enabled. No resource assignment enforcing");
+#endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
 		logger->Debug("APPs PRX: Send Command [RPC_BBQ_SYNCP_PRECHANGE] to "
 			"EXC [%s], CPU=<%d>, PROC=<%d>,MEM=<%d> @sv{%d}", papp->StrId(),
 			syncp_prechange_msg.r_cpu,
