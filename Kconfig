@@ -85,11 +85,13 @@ menu "Optimization Policy"
 
 comment "Advanced Options"
 
-config BBQUE_SP_YAMS_PARALLEL
-  bool "YaMS Parallel Execution"
+config BBQUE_SP_PARALLEL
+  bool "Policy Parallel Execution"
   default y
   ---help---
-  Build the YaMS policy with support for parallelized metrics computation.
+  If selected enable the multi-threaded/parallel execution of the scheduling policy.
+  This in case of policy implementation supporting sequential and parallel
+  execution flow. It can be useful to disable this option for debug purpose.
 
   Select this option if you plan to run the BarbequeRTRM daemon on a multi-core
   host machine.
