@@ -1,0 +1,59 @@
+
+Summary of changes from v1.0 to v1.1
+==============================================================================
+
+[AWM]
+  * Runtime profiling data collection
+
+[BOSPShell]
+  * New color theme
+  * Fixed double start daemon corruption
+
+[Config]
+  * Added the setting of the system critical temperature
+  * Added the setting of power monitoring activity
+
+[Platforms]
+  * Added support to ODROID-XU3 board
+  * Added support to Freescale i.MX6Q board
+  * Automatic generation of the platform description (bpl) for not recognized
+    platforms
+  * Added board supported platform description files
+  * LINUX: multi-node allocation support
+  * LINUX: Control Groups memory controller optional
+ 
+[Power Management]
+  * CPU power management minor improvements
+  * CPUfreq governors management
+  * Added power monitoring infrastructure
+  * Added ARM Mali GPU power manager
+  * Added ODROID-XU3 CPU power manager
+  * Added power models
+  * Added the Battery manager
+  * Added the setting of the system lifetime goal (via command interface)
+
+[Resource Accounter]
+  * Introduced the BALANCED filling policy (along with the default
+    'SEQUENTIAL')
+
+[RTLib]
+  * Goal-Gap as signed unbound value
+  * Goal-Gap collection configurable via Kconfig (Performance API menu)
+  * Added GetCPS() function with cycle time estimation
+  * Added SetCPSGoal() function
+  * Added GetAssignedResources() function to notify applications about the
+    assigned resources
+  * Signed AWM identifier value
+
+[Scheduling Policies]
+  * YaMS improvements in Goal-Gap management
+  * Added new policy TEMPURA
+  * Added new policy CLoves (experimental) for OpenCL workloads
+
+[Tests]
+  * Removed outdated code
+
+[Tools]
+  * Added 'bbque-plotrace' to plot power related data collected through the
+    power monitoring task
+
