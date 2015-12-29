@@ -21,7 +21,7 @@ choice
 endchoice
 
 source barbeque/plugins/schedpol/yams/Kconfig
-source barbeque/plugins/schedpol/yamca/Kconfig
+#source barbeque/plugins/schedpol/yamca/Kconfig
 source barbeque/plugins/schedpol/random/Kconfig
 source barbeque/plugins/schedpol/cloves/Kconfig
 source barbeque/plugins/schedpol/tempura/Kconfig
