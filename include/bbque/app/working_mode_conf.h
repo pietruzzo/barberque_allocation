@@ -56,19 +56,21 @@ public:
 	 * @param r_type The type of resource to bind
 	 * @param src_ID Recipe resource name ID
 	 * @param dst_ID System resource name ID
-	 * @param b_id An optional binding identifier
+	 * @param b_refn [optional] Reference number of an already started binding
+	 * @param filter_rtype [optional] Second level resource type
+	 * @param filter_mask  [optional] Binding mask for the second level
+	 * resource type
 	 *
-	 * @return WM_SUCCESS if the binding has been correctly performed.
-	 * WM_ERR_RSRC_TYPE if the resource type specified is not correct, and
-	 * WM_BIND_ID_OVERFLOW in case of binding ID provided overflow. In this
-	 * regards the maximum number is defined by BBQUE_MAX_R_ID_NUM macro.
-	 *
+	 * @return The number of resource binding performed
 	 * @note Use R_ID_ANY if you want to bind the resource without care
 	 * about its ID.
 	 */
-	virtual size_t BindResource(br::ResourceIdentifier::Type_t r_type,
-			br::ResID_t src_ID, br::ResID_t dst_ID, size_t b_refn = 0,
-			br::ResourceIdentifier::Type_t filter_child_rtype =
+	virtual size_t BindResource(
+			br::ResourceIdentifier::Type_t r_type,
+			br::ResID_t src_ID,
+			br::ResID_t dst_ID,
+			size_t b_refn = 0,
+			br::ResourceIdentifier::Type_t filter_rtype =
 				br::ResourceIdentifier::UNDEFINED,
 			br::ResourceBitset * filter_mask = nullptr) = 0;
 
