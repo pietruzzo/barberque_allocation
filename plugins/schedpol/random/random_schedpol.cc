@@ -25,6 +25,9 @@
 #include "bbque/utils/logging/logger.h"
 
 #include <iostream>
+#include <random>
+
+#define NR_ATTEMPTS_MAX  5
 
 namespace ba = bbque::app;
 namespace br = bbque::res;
@@ -71,53 +74,67 @@ char const * RandomSchedPol::Name() {
 	return SCHEDULER_POLICY_NAME;
 }
 
-
-/**
- * The RNG used for AWM selection.
- */
-std::mt19937 rng_engine(time(0));
-
 void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
+	Application::ExitCode_t app_result = Application::APP_SUCCESS;
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	ba::AwmPtrList_t::const_iterator it;
-	ba::AwmPtrList_t::const_iterator end;
-	uint32_t selected_awm;
+	ba::AwmPtr_t selected_awm;
+	int8_t selected_awm_id;
 	uint32_t selected_bd;
 	uint8_t bd_count;
 	size_t b_refn;
+	std::default_random_engine generator;
 
 	assert(papp);
 
 	// Check for a valid binding domain count
-	bd_count = ra.Total(binding_domain.c_str());
+	BindingMap_t & bindings(ra.GetBindingOptions());
+	bd_count = bindings[br::Resource::CPU]->count;
 	if (bd_count == 0) {
 		assert(bd_count != 0);
 		return;
 	}
 
-	// Select a random AWM for this EXC
 	ba::AwmPtrList_t const & awms(papp->WorkingModes());
-	selected_awm = dist(rng_engine) % awms.size();
-	logger->Debug("Scheduling EXC [%s] on AWM [%d of %d]",
-			papp->StrId(), selected_awm, awms.size());
-	it = awms.begin();
-	end = awms.end();
-	for ( ; selected_awm && it!=end; --selected_awm, ++it);
-	assert(it!=end);
+	std::uniform_int_distribution<int> awm_dist(0, awms.size()-1);
+	std::uniform_int_distribution<int> bd_dist(0, bd_count);
+	bool binding_done = false;
+	int  nr_attempts  = 0;
 
-	// Bind to a random virtual binding domain
-	selected_bd = dist(rng_engine) % bd_count;
-	logger->Debug("Scheduling EXC [%s] on binding domain [%d of %d]",
-			papp->StrId(), selected_bd, ra.Total(binding_domain.c_str()));
-	b_refn = (*it)->BindResource(binding_type, R_ID_ANY, selected_bd);
-	if (b_refn == 0) {
-		logger->Error("Resource biding for EXC [%s] FAILED", papp->StrId());
-		return;
+	while (!binding_done) {
+		// Select a random AWM for this EXC
+		selected_awm_id = awm_dist(generator);
+		logger->Debug("Scheduling EXC [%s] on AWM [%d of %d]",
+				papp->StrId(), selected_awm_id, awms.size());
+		for (auto & pawm: awms)
+			if (pawm->Id() == selected_awm_id)
+				selected_awm = pawm;
+		assert(selected_awm != nullptr);
+
+		// Bind to a random virtual binding domain
+		selected_bd = bd_dist(generator);
+		logger->Debug("Scheduling EXC [%s] on binding domain <%d of %d>",
+				papp->StrId(), selected_bd, bd_count);
+		b_refn = selected_awm->BindResource(binding_type, R_ID_ANY, selected_bd);
+		if (b_refn == 0) {
+			logger->Error("Resource binding for EXC [%s] FAILED", papp->StrId());
+			goto error_handling;
+		}
+
+		// Schedule the selected AWM on the selected binding domain
+		app_result = papp->ScheduleRequest(selected_awm, ra_view, b_refn);
+		if (app_result == ba::ApplicationStatusIF::APP_WM_ACCEPTED) {
+			logger->Info("Scheduling EXC [%s] on binding domain <%d> done.",
+					papp->StrId(), selected_bd);
+			binding_done = true;
+			continue;
+		}
+error_handling:
+		logger->Warn("Resource binding for EXC [%s] on <%d> FAILED "
+				"(attempt %d of %d)",
+				papp->StrId(), selected_bd, nr_attempts, NR_ATTEMPTS_MAX);
+		if (++nr_attempts >= NR_ATTEMPTS_MAX)
+			return;
 	}
-
-	// Schedule the selected AWM on the selected binding domain
-	papp->ScheduleRequest((*it), ra_view);
-
 }
 
 SchedulerPolicyIF::ExitCode_t
