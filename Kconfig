@@ -20,6 +20,7 @@ config BBQUE_TEST_PLATFORM_DATA
 
 
 menu "Linux Control Groups"
+depends on !BBQUE_TEST_PLATFORM_DATA
 
 config BBQUE_LINUX_CG_MEMORY
   bool "Memory controller"
@@ -35,6 +36,7 @@ endmenu # Linux Control Groups
 
 
 choice
+depends on !BBQUE_TEST_PLATFORM_DATA
   prompt "Memory locality"
   default BBQUE_MEMLOC_L3
 
@@ -57,6 +59,7 @@ endchoice # Memory locality
 
 
 menu "OpenCL Support"
+depends on !BBQUE_TEST_PLATFORM_DATA
 
 config BBQUE_OPENCL
   bool "OpenCL Run-time Management Support"
@@ -70,6 +73,7 @@ config BBQUE_OPENCL
 endmenu # OpenCL Support
 
 menu "Power Management Support"
+depends on !BBQUE_TEST_PLATFORM_DATA
 	source "barbeque/bbque/pm/Kconfig"
 
 endmenu # Power Management
