@@ -33,6 +33,8 @@
 
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
+#define BBQUE_TEMPURA_LITTLECPU_FIXED_BUDGET  50
+
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 namespace bw = bbque::pm;
@@ -334,9 +336,24 @@ inline int64_t TempuraSchedPol::GetResourceBudget(
 		br::ResourcePathPtr_t const & r_path,
 		bw::ModelPtr_t pmodel) {
 	uint64_t resource_total  = sys->ResourceTotal(r_path);
-	uint64_t resource_budget = pmodel->GetResourceFromPower(
+	uint64_t resource_budget = 0;
+
+#ifdef CONFIG_TARGET_ODROID_XU
+	if (!pmodel->GetID().compare("ARM Cortex A15")) {
+		resource_budget = BBQUE_TEMPURA_LITTLECPU_FIXED_BUDGET;
+		logger->Warn("ARM Cortex A7: CPU budget = %d",
+				BBQUE_TEMPURA_LITTLECPU_FIXED_BUDGET);
+	}
+	else {
+		resource_budget = pmodel->GetResourceFromPower(
 				power_budgets[r_path]->GetAmount(),
 				resource_total);
+	}
+#else
+	resource_budget = pmodel->GetResourceFromPower(
+			power_budgets[r_path]->GetAmount(),
+			resource_total);
+#endif
 
 	resource_budget = std::min<uint32_t>(resource_budget, resource_total);
 	logger->Debug("Budget: [%s] P=[%4llu]mW, R=[%lu]",
