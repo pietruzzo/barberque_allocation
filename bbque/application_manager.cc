@@ -1204,7 +1204,7 @@ ApplicationManager::DestroyEXC(AppPid_t pid) {
 			return result;
 	}
 
-	logger->Info("APP [%d:*:*] TERMINATED", pid);
+	logger->Info("EXC [%d:*:*] TERMINATED", pid);
 
 	return AM_SUCCESS;
 }
@@ -1381,7 +1381,11 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 	// NOTE: other code-path should check wheter an application is still
 	// !DISABLED to _assume_ a normal operation
 
-	logger->Debug("Disabling EXC [%s]...", papp->StrId());
+	logger->Debug("Disabling EXC [%s:%s/%s]...",
+			papp->StrId(),
+			Application::stateStr[papp->State()],
+			Application::syncStateStr[papp->SyncState()]);
+
 	// Be sure that the ResourceAccounter is not performing a synchronization
 	ra.SyncWait();
 
