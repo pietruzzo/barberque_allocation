@@ -533,6 +533,14 @@ public:
 	 */
 	ExitCode_t SyncCommit();
 
+	/**
+	 * @brief Wait for the synchronization completion
+	 *
+	 * This member function is useful whenever a thread accesses a data
+	 * structure that may be modified during a synchronization phase
+	 */
+	void SyncWait();
+
 
 	/**
 	 * @see CommandHandler

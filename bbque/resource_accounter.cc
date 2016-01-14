@@ -1283,6 +1283,13 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncFinalize() {
 	return RA_SUCCESS;
 }
 
+void ResourceAccounter::SyncWait() {
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	while (status != State::READY) {
+		status_cv.wait(status_ul);
+	}
+}
+
 /************************************************************************
  *                   RESOURCE ACCOUNTING                                *
  ************************************************************************/
