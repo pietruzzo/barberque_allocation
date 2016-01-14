@@ -848,6 +848,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::BookResources(
 void ResourceAccounter::ReleaseResources(
 		ba::AppSPtr_t papp,
 		br::RViewToken_t vtok) {
+	std::unique_lock<std::mutex> sync_ul(status_mtx);
 	// Sanity check
 	if (!papp) {
 		logger->Fatal("Release: Null pointer to the application descriptor");
