@@ -273,6 +273,8 @@ void WorkingMode::UpdateBindingInfo(
 		bool update_changed) {
 	br::ResourceBitset new_mask;
 	uint8_t r_type;
+	logger->Debug("UpdateBinding: mask update required (%s)",
+			update_changed ? "Y" : "N");
 
 	// Update the resource binding bitmask (for each type)
 	for (r_type = br::ResourceIdentifier::SYSTEM;
@@ -281,7 +283,7 @@ void WorkingMode::UpdateBindingInfo(
 
 		if (r_type == br::ResourceIdentifier::PROC_ELEMENT ||
 			r_type == br::ResourceIdentifier::MEMORY) {
-			logger->Debug("SetBinding: %s R{%-3s} is terminal",
+			logger->Debug("UpdateBinding: %s R{%-3s} is terminal",
 					str_id, br::ResourceIdentifier::TypeStr[r_type]);
 			// 'Deep' get bit-mask in this case
 			new_mask = br::ResourceBinder::GetMask(
@@ -295,13 +297,16 @@ void WorkingMode::UpdateBindingInfo(
 				resources.sched_bindings[resources.sync_refn],
 				static_cast<br::ResourceIdentifier::Type_t>(r_type));
 		}
-		logger->Debug("SetBinding: %s R{%-3s}: %s",
+		logger->Debug("UpdateBinding: %s R{%-3s}: %s",
 				str_id, br::ResourceIdentifier::TypeStr[r_type],
 				new_mask.ToStringCG().c_str());
 
 		// Check if the bit-masks have changed only if required
-		if (!update_changed)
+		if (!update_changed) {
+			logger->Debug("UpdateBinding: %s R{%-3s} mask update skipped",
+				str_id, br::ResourceIdentifier::TypeStr[r_type]);
 			continue;
+		}
 
 		// Update previous/current bit-masks
 		if (new_mask.Count() == 0) continue;
@@ -310,7 +315,7 @@ void WorkingMode::UpdateBindingInfo(
 
 		// Set the flag if changed and print a log message
 		bi.changed = bi.prev != new_mask;
-		logger->Debug("SetBinding: %s R{%-3s} changed? (%d)",
+		logger->Debug("UpdateBinding: %s R{%-3s} changed? (%d)",
 				str_id, br::ResourceIdentifier::TypeStr[r_type],
 				bi.changed);
 	}
