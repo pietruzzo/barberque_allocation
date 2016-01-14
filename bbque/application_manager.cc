@@ -1382,6 +1382,8 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 	// !DISABLED to _assume_ a normal operation
 
 	logger->Debug("Disabling EXC [%s]...", papp->StrId());
+	// Be sure that the ResourceAccounter is not performing a synchronization
+	ra.SyncWait();
 
 	if (papp->Disable() != Application::APP_SUCCESS) {
 		return AM_ABORT;
