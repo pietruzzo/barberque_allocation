@@ -150,6 +150,8 @@ def plotTraceOverlap(data, fill_area_data, out_dir, prefix):
     plt.title("The BarbequeRTRM: Power data trace plot")
     filename = out_dir +'/bbque-power-' + fill_area_data + '-' + prefix + ".png"
     plt.savefig(filename, papertype = 'a3', format = 'png')
+    filename = out_dir +'/bbque-power-' + fill_area_data + '-' + prefix + ".pdf"
+    plt.savefig(filename, papertype = 'a3', format = 'pdf')
     print "[I] Plot generated: ", filename
     plt.close()
 
