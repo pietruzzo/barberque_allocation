@@ -91,8 +91,8 @@ def loadData(filename):
     data = samples
     for column in data.keys():
         loaded_data = np.loadtxt(filename, usecols=[hposition[column]])
-        if column == 'Frequency':
-            data[column] = [ f/1e3 for f in loaded_data ]
+        if column == 'Frequency' or column == 'Temperature':
+            data[column] = [ d/1e3 for d in loaded_data ]
         else:
             data[column] = loaded_data
 #        print column.ljust(12), " ", data[column]
