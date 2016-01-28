@@ -142,6 +142,9 @@
 /** Use Test Platform Data */
 #cmakedefine CONFIG_BBQUE_TEST_PLATFORM_DATA
 
+/** Enable Linux Process Listener module */
+#cmakedefine CONFIG_BBQUE_LINUX_PROC_LISTENER
+
 /* Enable Linux Control Groups 'memory' controller */
 #cmakedefine CONFIG_BBQUE_LINUX_CG_MEMORY
 

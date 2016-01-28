@@ -18,6 +18,14 @@ config BBQUE_TEST_PLATFORM_DATA
   application development and integration, without worry about daemon
   setup or requiring to run the daemon as root.
 
+config BBQUE_LINUX_PROC_LISTENER
+  bool "Linux Process Listener
+  ---help---
+  Enables BarbequeRTRM to monitor the status of other processes running
+  on the machine.
+
+  This option is experimental but has no side effect on other running
+  processes.
 
 menu "Linux Control Groups"
 depends on !BBQUE_TEST_PLATFORM_DATA

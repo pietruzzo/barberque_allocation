@@ -22,6 +22,7 @@
 #include "bbque/resource_manager.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/utility.h"
+#include "bbque/pp/proc_listener.h"
 
 #ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
 # warning Using Test Platform Data (TPD)
@@ -54,7 +55,11 @@ PlatformProxy::PlatformProxy() : Worker(),
 	// Mark the Platform Integration Layer (PIL) as initialized
 	SetPilInitialized();
 #endif // !CONFIG_BBQUE_TEST_PLATFORM_DATA
-
+#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+	// Initialize Linux Process Listener
+	ProcessListener &pl(ProcessListener::GetInstance());
+	pl.Start();
+#endif
 }
 
 PlatformProxy::~PlatformProxy() {

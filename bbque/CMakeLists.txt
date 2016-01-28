@@ -124,6 +124,9 @@ if (CONFIG_BBQUE_PM)
 	set (BARBEQUE_SRC power_monitor ${BARBEQUE_SRC})
 endif (CONFIG_BBQUE_PM)
 
+if (CONFIG_BBQUE_LINUX_PROC_LISTENER)
+	set (BARBEQUE_SRC pp/proc_listener ${BARBEQUE_SRC})
+endif (CONFIG_BBQUE_LINUX_PROC_LISTENER)
 
 
 add_executable (barbeque ${BARBEQUE_SRC})
