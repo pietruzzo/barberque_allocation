@@ -24,6 +24,8 @@
 #include <unistd.h>
 #include <proc/procps.h>
 #include <errno.h>
+#include <sstream>
+#include <fstream>
 
 namespace bbque {
 
@@ -32,12 +34,22 @@ ProcessListener & ProcessListener::GetInstance(){
 	return instance;
 }
 
+std::string ProcessListener::GetProcName(int pid){
+	std::stringstream ss;
+	ss<<"/proc/"<<pid<<"/comm";
+	std::ifstream ifs(ss.str());
+	std::string pname;
+	ifs>>pname;
+	ifs.close();
+	return pname;
+}
+
 ProcessListener::ProcessListener(){
 	sock = -1;
 	buffSize = getpagesize();
 	buf = new char[buffSize];
 	logger = bu::Logger::GetLogger("bq.pp.pl");
-	logger->Info("Linux Process Listener Instatiated!");
+	logger->Info("Linux Process Listener Started");
 	/*
 	 * Initialization of Linux Connector Channel
 	 */
@@ -167,12 +179,15 @@ void ProcessListener::Task(){
 			// Event Processing
 			switch (e->what){
 			case proc_event::PROC_EVENT_EXEC:
-				logger->Debug("Event : [ EXEC , pid: %i ]",
-					e->event_data.exec.process_pid);
+				logger->Debug("Event : [ EXEC, pid: %i, name: %s ]",
+					e->event_data.exec.process_pid,
+					GetProcName(e->event_data.exec.process_pid).c_str());
 				break;
 			case proc_event::PROC_EVENT_EXIT:
-				logger->Debug("Event : [ EXIT , pid: %i , exit code: %i ]",
+				logger->Debug("Event : [ EXIT, pid: %i, name: %s, "
+						"exit code: %i ]",
 					e->event_data.exec.process_pid,
+					GetProcName(e->event_data.exec.process_pid).c_str(),
 					e->event_data.exit.exit_code);
 				break;
 			}

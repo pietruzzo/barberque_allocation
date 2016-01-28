@@ -20,6 +20,7 @@
 
 
 #include <memory>
+#include <string>
 #include <linux/cn_proc.h>
 #include "bbque/config.h"
 #include "bbque/configuration_manager.h"
@@ -70,6 +71,10 @@ private:
 	 */
 	char *buf;
 	int buffSize;
+	/**
+	 * @brief Helper function to retrieve the name of a given PID
+	 */
+	std::string GetProcName(int pid);
 };
 
 } // namespace bbque
