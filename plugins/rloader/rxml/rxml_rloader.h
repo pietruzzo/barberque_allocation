@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Politecnico di Milano
+ * Copyright (C) 2015  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 #include "bbque/plugins/recipe_loader.h"
 
-#include <rapidxml.hpp>
+#include <rapidxml/rapidxml.hpp>
 
 #include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
