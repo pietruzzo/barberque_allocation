@@ -338,6 +338,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(
 }
 
 int OpenCLProxy::CommandsCb(int argc, char *argv[]) {
+	(void) argc;
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
 	char * command_id  = argv[0] + cmd_offset;
 	logger->Error("PLAT OCL: Unknown command [%s]", command_id);
