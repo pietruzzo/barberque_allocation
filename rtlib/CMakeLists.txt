@@ -16,8 +16,13 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBBQUE_RTLIB")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
 
+if (CONFIG_BBQUE_OPENCL)
+	include_directories(${OPENCL_INCLUDE_DIR})
+endif (CONFIG_BBQUE_OPENCL)
+
 set (RTLIB_SRC bbque_rtlib bbque_rpc ${PROJECT_BINARY_DIR}/bbque/version.cc)
 set (RTLIB_SRC bbque_exc ${RTLIB_SRC})
+
 if (CONFIG_BBQUE_OPENCL)
 	set (RTLIB_SRC bbque_ocl ${RTLIB_SRC})
 endif (CONFIG_BBQUE_OPENCL)
@@ -70,9 +75,11 @@ install (TARGETS bbque_rtlib LIBRARY
 		DESTINATION ${BBQUE_PATH_RTLIB}
 		PUBLIC_HEADER DESTINATION ${BBQUE_PATH_HEADERS}
 		COMPONENT BarbequeRTLib)
+
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/bbque/utils"
 		DESTINATION "${BBQUE_PATH_HEADERS}"
 		FILES_MATCHING PATTERN "*.h")
+
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/bbque/cpp11"
 		DESTINATION "${BBQUE_PATH_HEADERS}"
 		FILES_MATCHING PATTERN "*.h")
