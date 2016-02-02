@@ -292,9 +292,9 @@ install (DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/api-doc/man/man3
 
 # display status message for important variables
 message ( STATUS )
-message ( STATUS "=====[ Barbeque RTRM - Building System Configuration ]"
-                 "==========================" )
-message ( STATUS "Barbeque Version...... ${VERSION}" )
+message ( STATUS "=====[ BarbequeRTRM - Building System Configuration ]"
+                 "===========================" )
+message ( STATUS "Version............... ${VERSION}" )
 message ( STATUS "Build Flavor.......... ${BBQUE_BUILD_FLAVOR}" )
 message ( STATUS "   Target............. ${CONFIG_TARGET_NAME} ${CONFIG_TARGET_DESCRIPTION}" )
 message ( STATUS "   CFLAGS............. ${CMAKE_C_FLAGS}")
@@ -315,8 +315,10 @@ message ( STATUS "   Base dir........... ${BASE_DIR}" )
 message ( STATUS "   SySroot............ ${BOSP_SYSROOT}" )
 message ( STATUS "   CMake Modules...... ${BOSP_CMAKE_MODULES}" )
 message ( STATUS )
+message ( STATUS "======================================================"
+                 "==========================" )
 message ( STATUS "To change build settings, run the configuration menu with:")
-message ( STATUS "   make menuconfig")
+message ( STATUS "$ make menuconfig")
 message ( STATUS "======================================================"
                  "==========================" )
 message(STATUS)

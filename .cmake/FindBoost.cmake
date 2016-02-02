@@ -1159,7 +1159,7 @@ else(_boost_IN_CACHE)
 endif(_boost_IN_CACHE)
 
 if (Boost_FOUND)
-	message(STATUS "Found Boos versiont: ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}")
+	message(STATUS "Boost version found: ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}")
   message("**  Boost include directory...: " ${Boost_INCLUDE_DIRS})
   message("**  Boost library directory...: " ${Boost_LIBRARY_DIRS})
   message("**  Boost libs................: " ${Boost_LIBRARIES})

@@ -136,16 +136,14 @@ target_link_libraries(barbeque
 
 # Linking static plugins
 set (BBQUE_RLOADER  "bbque_rloader_${BBQUE_RLOADER_DEFAULT}")
-target_link_libraries(
-	barbeque
+target_link_libraries(barbeque
 	-Wl,-whole-archive ${BBQUE_RLOADER} -Wl,-no-whole-archive
 )
 
 
 # Linking dependencies for Generic-Linux targets
 if (CONFIG_TARGET_LINUX)
-target_link_libraries(
-	barbeque
+target_link_libraries(barbeque
 	${CGroup_LIBRARIES}
 	-ldl -lrt
 )
@@ -153,8 +151,7 @@ endif (CONFIG_TARGET_LINUX)
 
 # Linking dependencies for Android-Linux targets
 if (CONFIG_TARGET_ANDROID)
-target_link_libraries(
-	barbeque
+target_link_libraries(barbeque
 	bbque_android
 	-Wl,-whole-archive bbque_cpp11 -Wl,-no-whole-archive
 )
@@ -162,16 +159,14 @@ endif (CONFIG_TARGET_ANDROID)
 
 # Linking dependencyes for OpenCL support
 if (CONFIG_BBQUE_OPENCL)
-target_link_libraries(
-	barbeque
+target_link_libraries(barbeque
 	${OPENCL_LIBRARY}
 )
 endif (CONFIG_BBQUE_OPENCL)
 
 # Linking PowerManagement support
 if (CONFIG_BBQUE_PM)
-target_link_libraries(
-	barbeque
+target_link_libraries(barbeque
 	bbque_pm
 )
 endif (CONFIG_BBQUE_PM)

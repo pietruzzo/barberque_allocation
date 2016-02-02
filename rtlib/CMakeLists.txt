@@ -33,27 +33,26 @@ add_subdirectory(monitors)
 add_library(bbque_rtlib SHARED ${RTLIB_SRC})
 
 # Linking dependencies
-target_link_libraries(
-	bbque_rtlib
+target_link_libraries(bbque_rtlib
 	bbque_utils
 	${Boost_LIBRARIES}
+	pthread
 )
 
 # Add "Generic-Linux" specific flags
 if (CONFIG_TARGET_LINUX)
-target_link_libraries(
-	bbque_rtlib
+target_link_libraries(bbque_rtlib
 	-ldl -lrt
 )
 endif (CONFIG_TARGET_LINUX)
 
 # Linking dependencies for Android-Linux targets
 if (CONFIG_TARGET_ANDROID)
-target_link_libraries(
-	bbque_rtlib
+target_link_libraries(bbque_rtlib
 	-Wl,-whole-archive bbque_cpp11 -Wl,-no-whole-archive
 )
 endif (CONFIG_TARGET_ANDROID)
+
 
 # Use link path ad RPATH
 set_property (TARGET bbque_rtlib PROPERTY
