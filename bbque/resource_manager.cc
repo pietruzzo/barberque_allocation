@@ -274,7 +274,6 @@ void ResourceManager::Optimize() {
 	std::unique_lock<std::mutex> pendingEvts_ul(pendingEvts_mtx);
 	SynchronizationManager::ExitCode_t syncResult;
 	SchedulerManager::ExitCode_t schedResult;
-	ProfileManager::ExitCode_t profResult;
 	static bu::Timer optimization_tmr;
 	double period;
 
@@ -351,7 +350,7 @@ sched_profile:
 	//--- Profiling
 	logger->Info(LNPROB);
 	optimization_tmr.start();
-	profResult = om.ProfileSchedule();
+	ProfileManager::ExitCode_t profResult = om.ProfileSchedule();
 	optimization_tmr.stop();
 	if (profResult != ProfileManager::OK) {
 		logger->Warn("Scheduler profiling FAILED");
