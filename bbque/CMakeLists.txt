@@ -126,12 +126,12 @@ endif (CONFIG_BBQUE_PM)
 add_executable (barbeque ${BARBEQUE_SRC})
 
 # Linking dependencies
-target_link_libraries(
-	barbeque
+target_link_libraries(barbeque
 	bbque_utils
 	bbque_resources
 	bbque_apps
 	${Boost_LIBRARIES}
+	pthread
 )
 
 # Linking static plugins
