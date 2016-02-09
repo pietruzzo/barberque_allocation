@@ -1,16 +1,18 @@
-/**
- *      @file   MpiRun_main.cc
- *      @brief  The main file of bbque-mpirun
+/*
+ * Copyright (C) 2016  Politecnico di Milano
  *
- *     @author  Federico Reghenzani (federeghe), federico1.reghenzani@mail.polimi.it
- *     @author  Gianmario Pozzi (kom-broda), gianmario.pozzi@mail.polimi.it
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- *     Company  Politecnico di Milano
- *   Copyright  Copyright (c) 2015
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * This source code is released for free distribution under the terms of the
- * GNU General Public License as published by the Free Software Foundation.
- * =====================================================================================
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 

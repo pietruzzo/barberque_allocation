@@ -1,17 +1,18 @@
-/**
- *      @file   ProcessChecker.cc
- *      @brief  This class checks for a process termination, then it closes the
- *              socket.
+/*
+ * Copyright (C) 2016  Politecnico di Milano
  *
- *     @author  Federico Reghenzani (federeghe), federico1.reghenzani@mail.polimi.it
- *     @author  Gianmario Pozzi (kom-broda), gianmario.pozzi@mail.polimi.it
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- *     Company  Politecnico di Milano
- *   Copyright  Copyright (c) 2015
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * This source code is released for free distribution under the terms of the
- * GNU General Public License as published by the Free Software Foundation.
- * =====================================================================================
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <csignal>
@@ -24,16 +25,14 @@
 
 #include "process_checker.h"
 
+
 namespace mpirun {
 
-
 ProcessChecker::ProcessChecker(int pid, int socket) noexcept
-									: pid(pid), socket(socket) {
-
+			: pid(pid), socket(socket) {
 	// Set the PID and start the thread
-	this->stopped = false;
+	this->stopped   = false;
 	this->my_thread = std::thread(&ProcessChecker::checker, this);
-
 }
 
 void ProcessChecker::stop() noexcept {
@@ -42,25 +41,20 @@ void ProcessChecker::stop() noexcept {
 
 ProcessChecker::~ProcessChecker() noexcept {
 	this->stop();
-	this->my_thread.join();		// Wait for thread exists
+	this->my_thread.join();
 }
 
 void ProcessChecker::checker() noexcept {
 
 	while (!this->stopped) {
-
 		pid_t result = ::waitpid(this->pid, NULL, WNOHANG);
 		if (result != 0) {
-			// The child is terminated
-			::shutdown(this->socket, SHUT_RDWR	);	// Close the socket so the
-													// accept blocking function can return
-
+			// Child terminated: close the socket so the accept() can return
+			::shutdown(this->socket, SHUT_RDWR	);
 			this->stopped = true;
 		}
-
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
-
 }
 
-}	// End namespace
+} // namespace mpirun

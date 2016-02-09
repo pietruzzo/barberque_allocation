@@ -1,16 +1,18 @@
-/**
- *      @file  CommandsManager.h
- *      @brief  The core class to manage command incoming from `mpirun` RAS.
+/*
+ * Copyright (C) 2016  Politecnico di Milano
  *
- *     @author  Federico Reghenzani (federeghe), federico1.reghenzani@mail.polimi.it
- *     @author  Gianmario Pozzi (kom-broda), gianmario.pozzi@mail.polimi.it
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- *     Company  Politecnico di Milano
- *   Copyright  Copyright (c) 2015
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * This source code is released for free distribution under the terms of the
- * GNU General Public License as published by the Free Software Foundation.
- * =====================================================================================
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef MPIRUN_COMMANDSMANAGER_H_
@@ -31,7 +33,7 @@ public:
 	/**
 	 * @brief The constructor. It just initializes the object and save the
 	 *        socket passed as argument.
-	 * @param socket    the socket of ras client connected
+	 * @param socket the socket of RAS client connected
 	 */
 	CommandsManager(int socket) noexcept;
 
@@ -55,23 +57,32 @@ public:
 	/**
 	 * @brief It returns true if an error occurs, false otherwise.
 	 */
-	bool get_if_error()      const noexcept { return this->error; }
+	inline bool get_if_error() const noexcept {
+		return this->error;
+	}
 
 	/**
-	 * @brief Setter for the list of available resources. You must
-	 *        call this method with valid resources before any call
-	 *        to get_and_manage_commands().
+	 * @brief Setter for the list of available resources
+	 *
+	 * You must call this method with valid resources before any call
+	 * to get_and_manage_commands().
 	 */
-	void set_available_resources(const res_list *av) noexcept {this->available_resources = av;}
+	inline void set_available_resources(const res_list *av) noexcept {
+		this->available_resources = av;
+	}
 
 	/**
-	 * @brief getter for previous setted list of available_resources.
-	 * @return the list of available resources. If resources are never been
-	 *         setted NULL is returned.
+	 * @brief Getter for previous set list of available_resources
+	 *
+	 * @return The list of available resources. If resources are never been
+	 * set NULL is returned.
 	 */
-	const res_list *get_available_resources() const noexcept {return this->available_resources;}
+	inline const res_list *get_available_resources() const noexcept {
+		return this->available_resources;
+	}
 
 private:
+
 	bool error = false;
 	int socket_client;
 
@@ -82,6 +93,6 @@ private:
 
 };
 
-}
+} // namespace mpirun
 
-#endif /* INCLUDE_COMMANDSMANAGER_H_ */
+#endif // MPIRUN_COMMANDSMANAGER_H_

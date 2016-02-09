@@ -1,30 +1,31 @@
-/**
- *      @file   bbq_ompi_types.h
- *      @brief  The shared file with RAS that defines common structs to
- *              communicate.
+/*
+ * Copyright (C) 2016  Politecnico di Milano
  *
- *     @author  Federico Reghenzani (federeghe), federico1.reghenzani@mail.polimi.it
- *     @author  Gianmario Pozzi (kom-broda), gianmario.pozzi@mail.polimi.it
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- *     Company  Politecnico di Milano
- *   Copyright  Copyright (c) 2015
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * This source code is released for free distribution under the terms of the
- * GNU General Public License as published by the Free Software Foundation.
- * =====================================================================================
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
-#ifndef BBQ_TYPES
-#define BBQ_TYPES
+#ifndef BBQUE_OMPI_TYPES
+#define BBQUE_OMPI_TYPES
 
-#define BBQ_CMD_FINISHED -2
-#define BBQ_CMD_NONE -1
-#define BBQ_CMD_NODES_REQUEST 0
-#define BBQ_CMD_NODES_REPLY 1
-#define BBQ_CMD_TERMINATE 2
+#define BBQ_CMD_FINISHED       -2
+#define BBQ_CMD_NONE           -1
+#define BBQ_CMD_NODES_REQUEST   0
+#define BBQ_CMD_NODES_REPLY     1
+#define BBQ_CMD_TERMINATE       2
 
-#include <stdint.h>
+#include <cstdint>
 
 /***********  Common   ************/
 struct local_bbq_cmd_t {
@@ -51,4 +52,5 @@ struct local_bbq_res_item_t {
 };
 typedef struct local_bbq_res_item_t local_bbq_res_item_t;
 
-#endif
+
+#endif // BBQUE_OMPI_TYPES

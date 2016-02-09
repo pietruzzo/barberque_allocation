@@ -34,33 +34,28 @@ extern int config_updatetime_resources;
 
 namespace mpirun {
 
-MpiRun::MpiRun(std::string const & name, std::string const & recipe,
-		RTLIB_Services_t *rtlib, std::vector<const char *> &mpirunArguments) :
+MpiRun::MpiRun(
+		std::string const & name, std::string const & recipe, RTLIB_Services_t *rtlib,
+		std::vector<const char *> &mpirunArguments) :
 	BbqueEXC(name, recipe, rtlib), cmd_arguments(mpirunArguments) {
 
-	// NOTE: since RTLib 1.1 the derived class construct should be used
-	// mainly to specify instantiation parameters. All resource
-	// acquisition, especially threads creation, should be palced into the
-	// new onSetup() method.
-
-	logger->Info("EXC Unique IDentifier (UID): %u", GetUid());
-
+	logger->Info("bbque-mpirun unique identifier (UID): %u", GetUid());
 }
 
 MpiRun::~MpiRun() {
-
 	this->clean_sockets();
 	MPIRUN_SAFE_DESTROY(avail_res);
 	MPIRUN_SAFE_DESTROY(all_res);
 	MPIRUN_SAFE_DESTROY(this->cm);
-	MPIRUN_SAFE_DESTROY(this->pc);	// This should be always == NULL at this point, but just to be sure...
+	// This should be always == NULL at this point, but just to be sure...
+	MPIRUN_SAFE_DESTROY(this->pc);
 }
 
 RTLIB_ExitCode_t MpiRun::onSetup() {
 	logger->Info("MpiRun::onSetup()");
-
 	logger->Debug("Config readed: config_addresses=%s config_slots_per_addr=%s",
-			               config_addresses.c_str(),config_slots_per_addr.c_str());
+			config_addresses.c_str(),
+			config_slots_per_addr.c_str());
 
 	// Load the bbq configuration
 	auto ex_addresses = MpiRun::string_explode(config_addresses, ',');
@@ -74,63 +69,55 @@ RTLIB_ExitCode_t MpiRun::onSetup() {
 				) );
 	}
 
-
 	if (ex_addresses.size() != ex_slots.size()) {
-		logger->Crit("Configuration problem: there are %i nodes.addrs, but %i nodes.slots",
+		logger->Crit("Configuration error: %i nodes.addrs and %i nodes.slots",
 				ex_addresses.size(), ex_slots.size());
 		return RTLIB_ERROR;
 	}
-
-	logger->Debug("Configuration loaded.");
+	logger->Debug("Configuration loaded");
 
 	if (!this->open_socket())	// Open the socket for MPI communication.
 		return RTLIB_ERROR;		// if the socket fails to bind/listen/etc.
 								// stops execution here.
 
-	logger->Debug("Ready to receive incoming connection, starting mpirun...");
 	// Ok we can call mpirun command now (start another process, not blocking)
+	logger->Debug("Ready to receive incoming connection, starting mpirun...");
 	this->call_mpirun();
 
-	logger->Info("Waiting for `mpirun` (RAS) incoming connection...");
-
 	// Let's accept the connection from mpirun just started
+	logger->Info("Waiting for `mpirun` (RAS) incoming connection...");
 	bool status = this->accept_socket();
 
-	if (!status) 			// Various causes: mpirun terminates, socket problems, etc.
+	// Check mpirun terminates, socket problems, etc...
+	if (!status)
 		return RTLIB_ERROR;
 
 	this->cm = new CommandsManager(this->socket_client);
-
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t MpiRun::onConfigure(uint8_t awm_id) {
+RTLIB_ExitCode_t MpiRun::onConfigure(int8_t awm_id) {
 
-	logger->Warn("MpiRun::onConfigure(): EXC [%s] => AWM [%02d]",
-		exc_name.c_str(), awm_id);
-
-	// TODO: get the bit map from bbq
+	logger->Info("MpiRun::onConfigure(): AWM [%02d]", awm_id);
+	// TODO: Get the bit map from BBQ
 
 	// Avail resources is the minimum between awm_id+1 and the
 	// resources list size
 	avail_res_n = (size_t)awm_id+1 < all_res->size() ? (size_t)awm_id+1 : all_res->size();
-
 	avail_res_n = all_res->size();	// Test TODO remove
 
-	// Recreate the subvector of resource available
+	// Recreate the subvector of resource available, and update the amount of
+	// available resources
 	MPIRUN_SAFE_DESTROY(avail_res);
 	avail_res = new res_list( all_res->begin(), all_res->begin()+avail_res_n );
-	// Update available resources to CommandManager
 	this->cm->set_available_resources(avail_res);
 
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t MpiRun::onRun() {
-
-	// Do nothing: this application as no particular workload
+	// Do nothing: the command has no real workload
 	usleep(config_updatetime_resources*1000);	// milliseconds -> microseconds
-
 	return RTLIB_OK;
 }
 
@@ -138,16 +125,15 @@ RTLIB_ExitCode_t MpiRun::onRun() {
 RTLIB_ExitCode_t MpiRun::onMonitor() {
 	RTLIB_WorkingModeParams_t const wmp = WorkingModeParams();
 
-	logger->Warn("MpiRun::onMonitor()  : EXC [%s]  @ AWM [%02d], Cycle [%4d]",
-		exc_name.c_str(), wmp.awm_id, Cycles());
+	logger->Info("MpiRun::onMonitor(): AWM [%02d], Cycle [%4d]",
+		wmp.awm_id, Cycles());
 
-	// Now check if MPI wants something...
+	// Now check for MPI requests
+	// If a 'true' is returned the execution should continue, 'false'
+	// otherwise.
 	bool status = this->cm->get_and_manage_commands();
-
-	// Previous instruction returns 'true' if the execution
-	// should continue, 'false' otherwise.
-
-	if (! status) {			// Error or clean shutdown
+	if (!status) {
+		// Error or clean shutdown
 		return RTLIB_EXC_WORKLOAD_NONE;
 	}
 
@@ -156,26 +142,21 @@ RTLIB_ExitCode_t MpiRun::onMonitor() {
 
 RTLIB_ExitCode_t MpiRun::onRelease() {
 	// TODO
-	logger->Warn("MpiRun::onRelease()  : exit");
+	logger->Info("MpiRun::onRelease(): exit");
 
 	return RTLIB_OK;
 }
 
-/**
- * @brief Similar to PHP explode function, it trasform a string into a vector
- *        with as elements the substring that are separated by 'delim' in original
- *        string.
- */
-std::vector<std::string> MpiRun::string_explode(std::string const & s, char delim)
-{
+
+std::vector<std::string> MpiRun::string_explode(
+		std::string const & s,
+		char delim) {
+
     std::vector<std::string> result;
     std::istringstream iss(s);
 
     for (std::string token; std::getline(iss, token, delim); )
-    {
         result.push_back(std::move(token));
-    }
-
     return result;
 }
 
