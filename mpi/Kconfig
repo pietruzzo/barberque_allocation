@@ -1,0 +1,13 @@
+
+config BBQUE_MPI
+  bool "OpenMPI support"
+#  depends on EXTERNAL_OPENMPI
+  select CONTRIBS
+  default n
+  ---help---
+
+  Enable the support to MPI applications.
+  
+  Build the custom 'bbque-mpirun' command to use for the runtime management of
+  MPI applications.
+  
