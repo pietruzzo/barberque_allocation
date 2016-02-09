@@ -103,6 +103,14 @@ penalty.mem   = 10
 #ggap.threshold_optimize = ${CONFIG_BBQUE_GGAP_THRESHOLD_OPTIMIZE}
 
 ################################################################################
+# OpenMPI Options
+################################################################################
+[ompi]
+nodes.addrs = 127.0.0.1      # list of addresses separated by comma
+nodes.slots = 2              # list of slots per address separated by comma
+updatetime.resources = 500   # In milliseconds
+
+################################################################################
 # Logger Options
 ################################################################################
 [logger]
