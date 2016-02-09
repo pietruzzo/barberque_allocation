@@ -103,6 +103,12 @@ depends on !BBQUE_TEST_PLATFORM_DATA
 
 endmenu # Power Management
 
+
+menu "Distributed Systems"
+  source "barbeque/mpi/Kconfig
+
+endmenu # Distributed Systems
+
 endmenu # PIL Configuration
 
 ################################################################################
