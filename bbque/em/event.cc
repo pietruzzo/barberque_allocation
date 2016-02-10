@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 namespace bbque {
 
-Event::Event(bool const & valid, std::string const & module, 
-	std::string const & resource, std::string const & application, 
+Event::Event(bool const & valid, std::string const & module,
+	std::string const & resource, std::string const & application,
 	std::string const & type, const int & value):
 	valid(valid),
 	timestamp(0),

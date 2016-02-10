@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,9 +32,7 @@ class Event {
 
 public:
 
-	Event() {
-
-	}
+	Event() {}
 
 	/**
 	 * @brief Constructor
@@ -45,9 +43,13 @@ public:
 	 * @param type of event
 	 * @param value associated to the event
 	 */
-	Event(bool const & valid, std::string const & module, 
-		std::string const & resource, std::string const & application, 
-		std::string const & type, const int & value);
+	Event(
+		bool const & valid,
+		std::string const & module,
+		std::string const & resource,
+		std::string const & application,
+		std::string const & type,
+		const int & value);
 
 	/**
 	 * @brief Destructor
@@ -55,18 +57,18 @@ public:
 	~Event();
 
 	/**
-     * @brief Says whether the event is valid or not
-     */
-    inline bool IsValid() const {
-        return this->valid;
-    }
+	 * @brief Says whether the event is valid or not
+	 */
+	inline bool IsValid() const {
+		return this->valid;
+	}
 
-    /**
-     * @brief Set the validity of the event
-     */
-    inline void SetValid(bool valid = false) {
-        this->valid = valid;
-    }
+	/**
+	 * @brief Set the validity of the event
+	 */
+	inline void SetValid(bool valid = false) {
+		this->valid = valid;
+	}
 
 	/**
 	 * @brief Get the module which has triggered the event
@@ -76,7 +78,7 @@ public:
 	}
 
 	/**
-	 * @brief Get the resource destination of the event 
+	 * @brief Get the resource destination of the event
 	 */
 	inline std::string GetResource() const {
 		return this->resource;
@@ -111,8 +113,8 @@ public:
 	}
 
 	/**
-     * @brief Set the timestamp of the event
-     */
+	 * @brief Set the timestamp of the event
+	 */
 	inline void SetTimestamp(std::chrono::milliseconds timestamp) {
 		this->timestamp = timestamp;
 	}
@@ -120,22 +122,23 @@ public:
 private:
 
 	friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-    	if (version == 0 || version != 0) {
-    		ar & valid;
-    		ar & boost::serialization::make_binary_object(&timestamp, sizeof(timestamp));        
-	        ar & module;
-	        ar & resource;
-	        ar & application;
-	        ar & type;
-	        ar & value;
-	    }
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version) {
+		if (version == 0 || version != 0) {
+			ar & valid;
+			ar & boost::serialization::make_binary_object(
+				&timestamp, sizeof(timestamp));
+			ar & module;
+			ar & resource;
+			ar & application;
+			ar & type;
+			ar & value;
+		}
 	}
 
 	bool valid = false;
 
-    std::chrono::milliseconds timestamp;
+	std::chrono::milliseconds timestamp;
 
 	std::string module;
 
@@ -145,7 +148,7 @@ private:
 
 	std::string type;
 
-	int value;
+	int value = -1;
 
 };
 

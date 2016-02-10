@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,7 @@ class EventWrapper {
 
 public:
 
-	EventWrapper() {
-
-	}
+	EventWrapper() { }
 
 	/**
 	 * @brief Constructor
@@ -45,7 +43,7 @@ public:
 	~EventWrapper();
 
 	/**
-	 * @brief Get the list of events 
+	 * @brief Get the list of events
 	 */
 	inline std::vector<Event> GetEvents() {
 		return this->events;
@@ -66,16 +64,16 @@ public:
 	}
 
 private:
-	
+
 	friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
-    {
-    	if (version == 0 || version != 0) {
-        	ar & events;
-        }
-    }
-    
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version)
+	{
+		if (version == 0 || version != 0) {
+			ar & events;
+		}
+	}
+
 	std::vector<Event> events;
 
 };
