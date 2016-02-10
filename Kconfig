@@ -353,10 +353,13 @@ config BBQUE_BUILD_TESTS
   unsure.
 
 config BBQUE_EM
-  bool "Enable Event Management support"
+  bool "Event Manager"
   default n
   ---help---
   Build the BarbequeRTRM with support for Event Management (EM).
+
+  The Event Manager is a component for tracing internal BarbequeRTRM events.
+  The events archive can be then plotted by using the Event Viewer tool.
 
   If unsure say no, this will disable all the EM related features.
 
