@@ -17,12 +17,12 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # Installation items
 ################################################################################
 
-set (MPIRUN_PATH_BINS    "usr/bin")
-set (MPIRUN_PATH_CONFIG  "etc/bbque")
-set (MPIRUN_PATH_RECIPES "etc/bbque/recipes")
-set (MPIRUN_PATH_DOCS    "usr/share/bbque/bbque-mpirun")
+set (MPIRUN_PATH_BINS    "${CMAKE_INSTALL_PREFIX}/usr/bin")
+set (MPIRUN_PATH_CONFIG  "${CMAKE_INSTALL_PREFIX}/etc/bbque")
+set (MPIRUN_PATH_RECIPES "${CMAKE_INSTALL_PREFIX}/etc/bbque/recipes")
+set (MPIRUN_PATH_DOCS    "${CMAKE_INSTALL_PREFIX}/usr/share/bbque/bbque-mpirun")
 
-set (CMAKE_INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque:${CONFIG_BOSP_RUNTIME_PATH}/lib")
+set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/bbque:${CMAKE_INSTALL_PREFIX}}/lib")
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 
@@ -134,13 +134,13 @@ message ( STATUS )
 message ( STATUS "===================[ bbque-mpirun - Building System Configuration ]"
                  "====================" )
 message ( STATUS "Version............... ${VERSION}" )
-message ( STATUS "Build Flavor.......... ${BBQUE_BUILD_FLAVOR}" )
+message ( STATUS "Build Flavor.......... ${CMAKE_BUILD_TYPE}" )
 message ( STATUS "   Target............. ${CONFIG_TARGET_NAME} ${CONFIG_TARGET_DESCRIPTION}" )
 message ( STATUS "   CFLAGS............. ${CMAKE_C_FLAGS}")
 message ( STATUS " CXXFLAGS............. ${CMAKE_CXX_FLAGS}")
 message ( STATUS "Installation prefix... ${CMAKE_INSTALL_PREFIX}" )
-message ( STATUS "   Binary............. <prefix>/${MPIRUN_PATH_BINS}" )
-message ( STATUS "   Documentation...... <prefix>/${MPIRUN_PATH_DOCS}" )
+message ( STATUS "   Binary............. ${MPIRUN_PATH_BINS}" )
+message ( STATUS "   Documentation...... ${MPIRUN_PATH_DOCS}" )
 message ( STATUS "Using RTLib........... ${BBQUE_RTLIB_LIBRARY}" )
 message ( STATUS "Boost library......... ${Boost_LIBRARY_DIRS}" )
 message ( STATUS )
