@@ -220,10 +220,12 @@ private:
 	 */
 	CommandManager & cm;
 
+#ifdef CONFIG_BBQUE_EM
 	/**
 	 * @brief The Event Manager module
 	 */
 	EventManager & em;
+#endif
 
 	std::bitset<EVENTS_COUNT> pendingEvts;
 
