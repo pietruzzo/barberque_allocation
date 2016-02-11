@@ -68,6 +68,7 @@ link_directories(
 target_link_libraries(bbque-mpirun
 	${Boost_LIBRARIES}
 	${BBQUE_RTLIB_LIBRARY}
+	pthread
 )
 
 # Use link path ad RPATH
