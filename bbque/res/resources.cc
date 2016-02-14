@@ -249,7 +249,8 @@ void Resource::DeleteView(RViewToken_t vtok) {
 	state_views.erase(vtok);
 }
 
-uint16_t Resource::ApplicationsCount(AppUseQtyMap_t & apps_map,
+uint16_t Resource::ApplicationsCount(
+		AppUseQtyMap_t & apps_map,
 		RViewToken_t vtok) {
 	// Retrieve the state view
 	ResourceStatePtr_t view = GetStateView(vtok);
@@ -261,7 +262,8 @@ uint16_t Resource::ApplicationsCount(AppUseQtyMap_t & apps_map,
 	return apps_map.size();
 }
 
-uint64_t Resource::ApplicationUsage(AppSPtr_t const & papp,
+uint64_t Resource::ApplicationUsage(
+		AppSPtr_t const & papp,
 		AppUseQtyMap_t & apps_map) {
 	// Sanity check
 	if (!papp) {

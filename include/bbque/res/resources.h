@@ -115,16 +115,16 @@ struct ResourceState {
 
 
 /**
- * @brief A generic resource
+ * @brief A generic resource descriptor
  *
- * Of course the "Resource" is the fundamental entity for Barbeque RTRM.
+ * Of course the "Resource" is the fundamental entity for BarbequeRTRM.
  * To access a resource is a matter of using a "path". A resource path is
  * built recursively, as a sequence of resources name, in a hierarchical
  * form (@see ResourceAccounter, @see ResourceTree).
  *
  * Basically, a resource has a identifying name, a total amount value,  and a
  * state. In our design, MORE than one state.
- * The idea is to have a default state, the "real" one, and a possibile set of
+ * The idea is to have a default state, the "real" one, and a possible set of
  * temporary states to use as "buffers". Thus each state is a different VIEW
  * of resource. This feature is particularly useful for components like the
  * Scheduler/Optimizer (see below.)
@@ -152,6 +152,10 @@ public:
 		MEAN
 	};
 
+
+	/**********************************************************************
+	 * GENERAL INFORMATION                                                  *
+	 **********************************************************************/
 	/**
 	 * Information related to the power/thermal status of the hardware
 	 * resource
@@ -227,6 +231,11 @@ public:
 		return path;
 	}
 
+
+	/**********************************************************************
+	 * ACCOUNTING INFORMATION                                             *
+	 **********************************************************************/
+
 	/**
 	 * @brief Resource total
 	 * @return The total amount of resource
@@ -234,32 +243,6 @@ public:
 	inline uint64_t Total() {
 		return total;
 	}
-
-	/**
-	 * @brief Not reserved resources
-	 *
-	 * The amount of resources not being currently reserved, this value is
-	 * equal to Total just when there are not reserved resources.
-	 *
-	 * @return The amount of resources not being currently reserved
-	 */
-	inline uint64_t Unreserved() {
-		return (total - reserved);
-	}
-
-	ExitCode_t  Reserve(uint64_t amount);
-
-	inline uint64_t Reserved() const {
-		return reserved;
-	}
-
-	inline bool IsOffline() const {
-		return offline;
-	}
-
-	void SetOffline();
-
-	void SetOnline();
 
 	/**
 	 * @brief Amount of resource used
@@ -320,8 +303,11 @@ public:
 	 * @param vtok The token referencing the resource view
 	 * @return RS_SUCCESS if the App/EXC has been found, RS_NO_APPS otherwise
 	 */
-	ExitCode_t UsedBy(AppUid_t & app_uid, uint64_t & amount, uint8_t idx = 0,
-			RViewToken_t vtok = 0); 
+	ExitCode_t UsedBy(
+			AppUid_t & app_uid,
+			uint64_t & amount,
+			uint8_t idx = 0,
+			RViewToken_t vtok = 0);
 
 
 	/**
@@ -332,7 +318,66 @@ public:
 		return state_views.size();
 	}
 
+
+	/**********************************************************************
+	 * RUNTIME (PHYSICAL) AVAILABILITY                                    *
+	 **********************************************************************/
+
+	/**
+	 * @brief Not reserved resources
+	 *
+	 * The amount of resources not being currently reserved, this value is
+	 * equal to Total just when there are not reserved resources.
+	 *
+	 * @return The amount of resources not being currently reserved
+	 */
+	inline uint64_t Unreserved() {
+		return (total - reserved);
+	}
+
+	/**
+	 * @brief Make unavailable a given amount of resource
+	 *
+	 * @return
+	 */
+	ExitCode_t  Reserve(uint64_t amount);
+
+	/**
+	 * @brief Amount not available, not allocable
+	 *
+	 * @return The not allocable amount
+	 */
+	inline uint64_t Reserved() const {
+		return reserved;
+	}
+
+	/**
+	 * @brief Check if the resource is completely not available
+	 *
+	 * @return true if it is offline, false otherwise
+	 */
+	inline bool IsOffline() const {
+		return offline;
+	}
+
+	/**
+	 * @brief Make the resource completely not available
+	 *
+	 */
+	void SetOffline();
+
+	/**
+	 * @brief Resume the availability of the resource
+	 */
+	void SetOnline();
+
+
+
 #ifdef CONFIG_BBQUE_PM
+
+	/**********************************************************************
+	 * POWER INFORMATION                                                  *
+	 **********************************************************************/
 
 	/**
 	 * @brief Enable the collection of power-thermal status information
@@ -395,6 +440,16 @@ public:
 
 private:
 
+	/**
+	 * @brief The metrics to track run-time availability of a resource
+	 */
+	typedef struct AvailabilityProfile {
+		Timer online_tmr;         ///> Timer to keep track of online time;
+		Timer offline_tmr;        ///> Timer to keep track of offline time;
+		uint64_t lastOnlineTime;  ///> Last online timeframe [ms]
+		uint64_t lastOfflineTime; ///> Last offline timeframe [ms]
+	} AvailabilityProfile_t;
+
 	/** The total amount of resource  */
 	uint64_t total;
 
@@ -410,13 +465,6 @@ private:
 	/** True if this resource is currently offline */
 	bool offline;
 
-	/** The metrics to track run-time availability of a resource */
-	typedef struct AvailabilityProfile {
-		Timer online_tmr; ///> Timer to keep track of online time;
-		Timer offline_tmr; ///> Timer to keep track of offline time;
-		uint64_t lastOnlineTime;  ///> Last online timeframe [ms]
-		uint64_t lastOfflineTime; ///> Last offline timeframe [ms]
-	} AvailabilityProfile_t;
 
 	/** The run-time availability profile of this resource */
 	AvailabilityProfile_t av_profile;
@@ -441,7 +489,7 @@ private:
 	 *
 	 * It's up to the Resource Accounter to maintain a consistent view of the
 	 * system state. Thus ResourceAccounter will manage tokens and the state
-	 * views lifecycle.
+	 * views life-cycle.
 	 */
 	RSHashMap_t state_views;
 
