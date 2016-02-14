@@ -156,18 +156,6 @@ public:
 	/**********************************************************************
 	 * GENERAL INFORMATION                                                  *
 	 **********************************************************************/
-	/**
-	 * Information related to the power/thermal status of the hardware
-	 * resource
-	 */
-	typedef struct PowerProfile {
-		/** Flags of the available run-time information */
-		PowerManager::SamplesArray_t samples_window;
-		/** Sampled values */
-		std::vector<pEma_t> values;
-		/** Count of power profiling info enabled */
-		uint enabled_count;
-	} PowerProfile_t;
 
 	/**
 	 * @brief Constructor
@@ -449,6 +437,21 @@ private:
 		uint64_t lastOnlineTime;  ///> Last online timeframe [ms]
 		uint64_t lastOfflineTime; ///> Last offline timeframe [ms]
 	} AvailabilityProfile_t;
+
+
+	/**
+	 * @brief Information related to the power/thermal status of the resource
+	 */
+	typedef struct PowerProfile {
+		/** Flags of the available run-time information */
+		PowerManager::SamplesArray_t samples_window;
+		/** Sampled values */
+		std::vector<pEma_t> values;
+		/** Count of power profiling info enabled */
+		uint enabled_count;
+	} PowerProfile_t;
+
+
 
 	/** The total amount of resource  */
 	uint64_t total;
