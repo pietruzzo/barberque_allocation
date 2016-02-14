@@ -110,7 +110,7 @@ void Resource::SetOnline() {
 
 uint64_t Resource::Used(RViewToken_t vtok) {
 	// Retrieve the state view
-	ResourceStatePtr_t view = GetStateView(vtok);
+	ResourceStatePtr_t view(GetStateView(vtok));
 	if (!view)
 		return 0;
 
@@ -148,7 +148,7 @@ uint64_t Resource::Available(AppSPtr_t papp, RViewToken_t vtok) {
 
 uint64_t Resource::ApplicationUsage(AppSPtr_t const & papp, RViewToken_t vtok) {
 	// Retrieve the state view
-	ResourceStatePtr_t view = GetStateView(vtok);
+	ResourceStatePtr_t view(GetStateView(vtok));
 	if (!view) {
 		DB(fprintf(stderr, FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
 					name.c_str(), vtok));
@@ -194,7 +194,7 @@ Resource::ExitCode_t Resource::UsedBy(AppUid_t & app_uid,
 uint64_t Resource::Acquire(AppSPtr_t const & papp, uint64_t amount,
 		RViewToken_t vtok) {
 	// Retrieve the state view
-	ResourceStatePtr_t view = GetStateView(vtok);
+	ResourceStatePtr_t view(GetStateView(vtok));
 	if (!view) {
 		view = ResourceStatePtr_t(new ResourceState());
 		state_views[vtok] = view;
@@ -213,7 +213,7 @@ uint64_t Resource::Acquire(AppSPtr_t const & papp, uint64_t amount,
 
 uint64_t Resource::Release(AppSPtr_t const & papp, RViewToken_t vtok) {
 	// Retrieve the state view
-	ResourceStatePtr_t view = GetStateView(vtok);
+	ResourceStatePtr_t view(GetStateView(vtok));
 	if (!view) {
 		DB(fprintf(stderr, FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
 					name.c_str(), vtok));
@@ -249,7 +249,7 @@ uint16_t Resource::ApplicationsCount(
 		AppUseQtyMap_t & apps_map,
 		RViewToken_t vtok) {
 	// Retrieve the state view
-	ResourceStatePtr_t view = GetStateView(vtok);
+	ResourceStatePtr_t view(GetStateView(vtok));
 	if (!view)
 		return 0;
 
