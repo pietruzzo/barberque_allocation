@@ -499,7 +499,7 @@ private:
 	/**
 	 * @brief Availability information initialization
 	 */
-	void InitAvailabilityInfo();
+	void InitProfilingInfo();
 
 	/**
 	 * @brief Set the total amount of resource

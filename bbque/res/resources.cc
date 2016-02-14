@@ -42,12 +42,8 @@ Resource::Resource(std::string const & res_path, uint64_t tot):
 	else
 		name = res_path;
 
-	// Initialize availability profile monitors;
-	InitAvailabilityInfo();
-
-#ifdef CONFIG_BBQUE_PM
-	pw_profile.values.resize(8);
-#endif
+	// Initialize profiling data structures
+	InitProfilingInfo();
 }
 
 Resource::Resource(br::ResourceIdentifier::Type_t type, br::ResID_t id, uint64_t tot):
@@ -56,20 +52,20 @@ Resource::Resource(br::ResourceIdentifier::Type_t type, br::ResID_t id, uint64_t
 	reserved(0),
 	offline(false) {
 
-	// Initialize availability profile monitors;
-	InitAvailabilityInfo();
-
-#ifdef CONFIG_BBQUE_PM
-	pw_profile.values.resize(8);
-#endif
-
+	// Initialize profiling data structures
+	InitProfilingInfo();
 }
 
-inline void Resource::InitAvailabilityInfo() {
+
+void Resource::InitProfilingInfo() {
 	av_profile.online_tmr.start();
 	av_profile.lastOfflineTime = 0;
 	av_profile.lastOnlineTime  = 0;
+#ifdef CONFIG_BBQUE_PM
+	pw_profile.values.resize(8);
+#endif
 }
+
 
 Resource::ExitCode_t Resource::Reserve(uint64_t amount) {
 
