@@ -86,8 +86,10 @@ ResourceAccounter::ResourceAccounter() :
 	r_prefix_path = br::ResourcePathPtr_t(new br::ResourcePath(PREFIX_PATH));
 
 	// Register set quota command
-#define CMD_SET_QUOTA "set_quota"
-	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_SET_QUOTA,
+#define CMD_SET_TOTAL "set_total"
+	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_SET_TOTAL,
+		static_cast<CommandHandler*>(this),
+		"Set a new amount of resource that can be allocated");
 		static_cast<CommandHandler*>(this),
 		"Set a new amount of resource that can be allocated");
 
@@ -1570,13 +1572,14 @@ int ResourceAccounter::CommandsCb(int argc, char *argv[]) {
 	logger->Info("Processing command [%s]", command_id);
 
 	// Set a new resource total quota
-	if (!strncmp(CMD_SET_QUOTA, command_id, strlen(CMD_SET_QUOTA))) {
+	if (!strncmp(CMD_SET_TOTAL, command_id, strlen(CMD_SET_TOTAL))) {
 		if (argc != 3) {
-			logger->Error("'%s' expecting 2 parameters.", CMD_SET_QUOTA);
-			logger->Error("Ex: 'bq.ra.%s sys0.cpu0.pe0 80'", CMD_SET_QUOTA);
+			logger->Error("'%s' expecting 2 parameters.", CMD_SET_TOTAL);
+			logger->Error("Ex: 'bq.ra.%s <resource_path> (e.g., sys0.cpu0.pe0)"
+				" <new_total_value> (e.g. 90)'", CMD_SET_TOTAL);
 			return 1;
 		}
-		return SetQuotaHandler(argv[1], argv[2]);
+		return SetResourceTotalHandler(argv[1], argv[2]);
 	}
 
 	logger->Error("Unexpected command: %s", command_id);
@@ -1584,17 +1587,17 @@ int ResourceAccounter::CommandsCb(int argc, char *argv[]) {
 	return 0;
 }
 
-int ResourceAccounter::SetQuotaHandler(char * r_path, char * value) {
+int ResourceAccounter::SetResourceTotalHandler(char * r_path, char * value) {
 	uint64_t amount = atoi(value);
 
 	ExitCode_t ra_result = UpdateResource(r_path, "", amount);
 	if (ra_result != RA_SUCCESS) {
-		logger->Error("SetQuotaHandler: "
+		logger->Error("SetResourceTotalHandler: "
 			"cannot set quota %" PRIu64 " to [%s]", amount, r_path);
 		return 2;
 	}
 
-	logger->Info("SetQuotaHandler: "
+	logger->Info("SetResourceTotalHandler: "
 			"set quota %" PRIu64 " to [%s]", amount, r_path);
 	PrintStatusReport(0, true);
 

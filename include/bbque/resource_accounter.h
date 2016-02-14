@@ -552,11 +552,11 @@ public:
 	 * amount of resource that can be allocated.
 	 *
 	 * @param r_path The resource path (char string)
-	 * @value value  The new total amount
+	 * @param value  The new total amount
 	 *
 	 * @return 0 if success, a positive integer value otherwise
 	 */
-	int SetQuotaHandler(char * r_path, char * value);
+	int SetResourceTotalHandler(char * r_path, char * value);
 
 private:
 
