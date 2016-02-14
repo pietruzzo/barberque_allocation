@@ -426,6 +426,39 @@ public:
 
 #endif // CONFIG_BBQUE_PM
 
+
+	/**********************************************************************
+	 * RELIABILITY INFORMATION                                            *
+	 **********************************************************************/
+
+	/**
+	 * @brief Update the current performance degradation
+	 *
+	 * @param deg_perc Percentage of performance degradation
+	 */
+	 inline void UpdateDegradationPerc(uint8_t deg_perc) {
+		rb_profile.degradation_perc->update(deg_perc);
+	 }
+
+	/**
+	 * @brief The current performance degradation (last notification)
+	 *
+	 * @return Current percentage of performance degradation
+	 */
+	 inline uint8_t CurrentDegradationPerc() {
+		return rb_profile.degradation_perc->last_value();
+	 }
+
+	/**
+	 * @brief Performance degradation (exponential mean value)
+	 *
+	 * @return Mean percentage of performance degradation
+	 */
+	 inline float MeanDegradationPerc() {
+		return rb_profile.degradation_perc->get();
+	 }
+
+
 private:
 
 	/**
@@ -450,6 +483,16 @@ private:
 		/** Count of power profiling info enabled */
 		uint enabled_count;
 	} PowerProfile_t;
+
+
+	/**
+	 * @brief Runtime information about the reliability of the resource
+	 */
+	typedef struct ReliabilityProfile {
+		/** Percentage of degradation of the performance delivered
+		 * (statistics) */
+		pEma_t degradation_perc;
+	} ReliabilityProfile_t;
 
 
 
@@ -479,6 +522,10 @@ private:
 	PowerManager::SamplesArray_t default_samples_window =
 		{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE};
 #endif
+
+	/** The run-time reliability profile of this resource */
+	ReliabilityProfile_t rb_profile;
+
 
 	/**
 	 * Hash map with all the views of the resource.

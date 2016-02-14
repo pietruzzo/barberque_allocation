@@ -64,6 +64,7 @@ void Resource::InitProfilingInfo() {
 #ifdef CONFIG_BBQUE_PM
 	pw_profile.values.resize(8);
 #endif
+	rb_profile.degradation_perc = std::make_shared<bu::EMA>(3);
 }
 
 
