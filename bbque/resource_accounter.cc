@@ -90,6 +90,9 @@ ResourceAccounter::ResourceAccounter() :
 	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_SET_TOTAL,
 		static_cast<CommandHandler*>(this),
 		"Set a new amount of resource that can be allocated");
+	// Notify the degradation of a resource
+#define CMD_NOTIFY_DEGRADATION "notify_degradation"
+	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_NOTIFY_DEGRADATION,
 		static_cast<CommandHandler*>(this),
 		"Set a new amount of resource that can be allocated");
 
@@ -1582,6 +1585,19 @@ int ResourceAccounter::CommandsCb(int argc, char *argv[]) {
 		return SetResourceTotalHandler(argv[1], argv[2]);
 	}
 
+	// Set the degradation value of the given resources
+	if (!strncmp(CMD_NOTIFY_DEGRADATION, command_id, strlen(CMD_NOTIFY_DEGRADATION))) {
+		if (!(argc % 2)) {
+			logger->Error("'bq.ra.%s' expecting {resource path, value} pairs.",
+				CMD_NOTIFY_DEGRADATION);
+			logger->Error("Example: 'bq.ra.%s <resource_path> (e.g., sys0.cpu0.pe0)"
+				" <degradation_percentage> (e.g. 10) ...'",
+				CMD_NOTIFY_DEGRADATION);
+			return 2;
+		}
+		return ResourceDegradationHandler(argc, argv);
+	}
+
 	logger->Error("Unexpected command: %s", command_id);
 
 	return 0;
@@ -1603,5 +1619,37 @@ int ResourceAccounter::SetResourceTotalHandler(char * r_path, char * value) {
 
 	return 0;
 }
+
+int ResourceAccounter::ResourceDegradationHandler(int argc, char * argv[]) {
+	int idx = 1;
+	argc--;
+
+	// Parsing the "<resource> <degradation_value>" pairs
+	while (argc) {
+		br::ResourcePtr_t rsrc(GetResource(argv[idx]));
+		if (rsrc == nullptr) {
+			logger->Error("Resource degradation: <%s> not a valid resource",
+				argv[idx]);
+			goto next_arg;
+		}
+
+		if (IsNumber(argv[idx+1])) {
+			rsrc->UpdateDegradationPerc(atoi(argv[idx+1]));
+			logger->Warn("Resource degradation: <%s> = %2d%% [mean=%.2f]",
+				argv[idx],
+				rsrc->CurrentDegradationPerc(),
+				rsrc->MeanDegradationPerc());
+		}
+		else
+			logger->Error("Resource degradation: <%s> not a valid value",
+				argv[idx+1]);
+next_arg:
+		idx  += 2;
+		argc -= 2;
+	}
+
+	return 0;
+}
+
 
 }   // namespace bbque
