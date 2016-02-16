@@ -33,8 +33,20 @@ if (GCC_TAG LESS "48")
 endif(GCC_TAG LESS "48")
 
 
+################################################################################
+# Lookup for library dependencies
+################################################################################
+
 #----- Check for the required RTLib library
 find_package(BbqRTLib REQUIRED)
+
+# Force usage of BOSP provided BOOST installation
+unset(Boost_INCLUDE_DIR CACHE)
+unset(Boost_LIBRARY_DIRS CACHE)
+set (Boost_NO_SYSTEM_PATHS ON)
+set (BOOST_ROOT ${CMAKE_INSTALL_PREFIX})
+
+# Check for required libs and packages (headers + lib)
 find_package(Boost 1.45.0 REQUIRED program_options)
 
 
