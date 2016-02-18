@@ -22,6 +22,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <boost/date_time.hpp>
@@ -46,8 +47,8 @@ namespace bbque {
 CPUPowerManager::CPUPowerManager():
 		prefix_sys_cpu(BBQUE_LINUX_SYS_CPU_PREFIX) {
 	bu::IoFs::ExitCode_t result;
-	int cpu_id  = -1;
-	int core_id = 0;
+	int cpu_id = 0;
+	int pe_id  = 0;
 	// CPU <--> Core id mapping:
 	// CPU is commonly used to reference the cores while in the BarbequeRTRM
 	// 'core' is referenced as 'processing element', thus it needs a unique id
@@ -61,18 +62,32 @@ CPUPowerManager::CPUPowerManager():
 	// ------------------------------------------------------------------------
 	// Therefore we consider 'processing element' what Linux calls CPU
 	//-------------------------------------------------------------------------
-	while (++cpu_id) {
-		result = bu::IoFs::ReadIntValueFrom<int>(
-				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(cpu_id) +
-				"/topology/core_id",
-				core_id);
-		if (result != bu::IoFs::OK) break;
+	while (1) {
+		std::string freq_av_filepath(
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+				"/topology/core_id");
+		if (!boost::filesystem::exists(freq_av_filepath)) break;
 
-		// Processing element (cpu_id) / core_id
-		core_ids[cpu_id]   = core_id;
+		// Processing element <-> CPU id
+		logger->Debug("Reading... %s", freq_av_filepath.c_str());
+		result = bu::IoFs::ReadIntValueFrom<int>(freq_av_filepath, cpu_id);
+		if (result != bu::IoFs::OK) {
+			logger->Error("Failed in reading %s", freq_av_filepath.c_str());
+			break;
+		}
+		logger->Debug("<sys.cpu%d.pe%d> cpufreq reference found", cpu_id, pe_id);
+		core_ids[pe_id] = cpu_id;
+
 		// Available frequencies per core
-		core_freqs[cpu_id] = std::make_shared<std::vector<uint32_t>>();
-		_GetAvailableFrequencies(cpu_id, core_freqs[cpu_id]);
+		core_freqs[pe_id] = std::make_shared<std::vector<uint32_t>>();
+		_GetAvailableFrequencies(pe_id, core_freqs[pe_id]);
+		if (core_freqs[pe_id]->empty())
+			logger->Fatal("<sys.cpu%d.pe%d>: no frequency list [%d]",
+				cpu_id, pe_id, core_freqs[pe_id]->size());
+		else
+			logger->Info("<sys.cpu%d.pe%d>: available frequencies: %d",
+				cpu_id, pe_id, core_freqs[pe_id]->size());
+		++pe_id;
 	}
 
 	// Thermal sensors mapping
