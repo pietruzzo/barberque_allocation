@@ -77,7 +77,13 @@ public:
 		char value_str[16];
 		memset(value_str, '\0', sizeof(value_str));
 		ReadValueFrom(filepath, value_str, sizeof(value_str)-1);
-		value = std::stoi(value_str) * scale;
+		try {
+			value = std::stoi(value_str) * scale;
+		}
+		catch (const std::invalid_argument & ia) {
+			value = 0;
+		}
+
 		return ExitCode_t::OK;
 	 }
 
@@ -86,7 +92,13 @@ public:
 		char value_str[16];
 		memset(value_str, '\0', sizeof(value_str));
 		ReadValueFrom(filepath, value_str, sizeof(value_str)-1);
-		value = std::stof(value_str) * scale;
+		try {
+			value = std::stof(value_str) * scale;
+		}
+		catch (const std::invalid_argument & ia) {
+			value = 0.0;
+		}
+
 		return ExitCode_t::OK;
 	 }
 
