@@ -97,26 +97,26 @@ CPUPowerManager::CPUPowerManager():
 		std::string therm_file(
 				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
 				"_label");
+		logger->Debug("Reading thermal sensors @ %s ", therm_file.c_str());
 		result = bu::IoFs::ReadValueFrom(therm_file.c_str(), str_value, 8);
 		if (result != bu::IoFs::OK) {
-			logger->Warn("Failed in reading from %s", therm_file.c_str());
+			logger->Debug("Failed in reading from %s", therm_file.c_str());
 			break;
 		}
 
 		// Look for the label containing the core ID required
 		std::string core_label(str_value);
-		sensor_id += TEMP_SENSOR_STEP_ID;
-		if (core_label.find("Core") != 0) {
-			logger->Crit("Label = %s", core_label.c_str());
-			continue;
-		}
+		if (core_label.find("Core") != 0)
+			goto next_temp;
 
-		int core_id = std::stoi(core_label.substr(5));
-		core_therms[core_id] = new std::string(
+		cpu_id = std::stoi(core_label.substr(5));
+		core_therms[cpu_id] = new std::string(
 				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
 				"_input");
-		logger->Crit("Thermal sensors: PE (core) %d: %s", core_id,
-				therm_file.c_str());
+		logger->Info("Thermal sensors on CPU %d @ %s",
+				cpu_id,	core_therms[cpu_id]->c_str());
+	next_temp:
+		sensor_id += TEMP_SENSOR_STEP_ID;
 	}
 
 	// CPUfreq governors
