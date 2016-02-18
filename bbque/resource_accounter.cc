@@ -94,7 +94,7 @@ ResourceAccounter::ResourceAccounter() :
 #define CMD_NOTIFY_DEGRADATION "notify_degradation"
 	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_NOTIFY_DEGRADATION,
 		static_cast<CommandHandler*>(this),
-		"Set a new amount of resource that can be allocated");
+		"Performance degradation affecting the resource [percentage]");
 
 	// Init
 	InitBindingOptions();
