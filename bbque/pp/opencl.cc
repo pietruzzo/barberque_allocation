@@ -139,7 +139,7 @@ void OpenCLProxy::PrintGPUPowerInfo() {
 				gpu_rp->ToString().c_str(),
 				min/1000, max/1000, step/1000);
 
-		std::vector<unsigned long> freqs;
+		std::vector<uint32_t> freqs;
 		std::string freqs_str(" ");
 		pm_result = pm.GetAvailableFrequencies(gpu_rp, freqs);
 		if (pm_result == PowerManager::PMResult::OK) {

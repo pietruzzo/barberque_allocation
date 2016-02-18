@@ -127,7 +127,7 @@ public:
 
 	virtual PMResult GetAvailableFrequencies(
 		br::ResourcePathPtr_t const & rp,
-		std::vector<unsigned long> & freqs);
+		std::vector<uint32_t> & freqs);
 
 	virtual PMResult SetClockFrequency(
 		br::ResourcePathPtr_t const & rp, uint32_t khz);

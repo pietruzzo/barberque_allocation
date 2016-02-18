@@ -208,7 +208,7 @@ PowerManager::GetClockFrequencyInfo(
 PowerManager::PMResult
 PowerManager::GetAvailableFrequencies(
 		ResourcePathPtr_t const & rp,
-		std::vector<unsigned long> & freqs) {
+		std::vector<uint32_t> & freqs) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceIdentifier::GPU:
 		if (!gpu) break;
