@@ -60,7 +60,8 @@ CPUPowerManager::CPUPowerManager():
 	// 2        1
 	// 3        1
 	// ------------------------------------------------------------------------
-	// Therefore we consider 'processing element' what Linux calls CPU
+	// Therefore we consider "processing element" what Linux calls CPU and "cpu"
+	// what Linux calls "Core"
 	//-------------------------------------------------------------------------
 	while (1) {
 		std::string freq_av_filepath(
@@ -82,15 +83,16 @@ CPUPowerManager::CPUPowerManager():
 		core_freqs[pe_id] = std::make_shared<std::vector<uint32_t>>();
 		_GetAvailableFrequencies(pe_id, core_freqs[pe_id]);
 		if (core_freqs[pe_id]->empty())
-			logger->Fatal("<sys.cpu%d.pe%d>: no frequency list [%d]",
+			logger->Error("<sys.cpu%d.pe%d>: no frequency list [%d]",
 				cpu_id, pe_id, core_freqs[pe_id]->size());
 		else
-			logger->Info("<sys.cpu%d.pe%d>: available frequencies: %d",
+			logger->Info("<sys.cpu%d.pe%d>: %d available frequencies",
 				cpu_id, pe_id, core_freqs[pe_id]->size());
 		++pe_id;
 	}
 
-	// Thermal sensors mapping
+
+	// ------------------------------------- Thermal sensors mapping
 	char str_value[8];
 	int sensor_id = TEMP_SENSOR_FIRST_ID;
 	while (1) {
@@ -187,7 +189,7 @@ CPUPowerManager::~CPUPowerManager() {
 
 PowerManager::PMResult CPUPowerManager::GetLoad(
 		ResourcePathPtr_t const & rp,
-		uint32_t & perc){
+		uint32_t & perc) {
 	PMResult result;
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
