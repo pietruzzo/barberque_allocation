@@ -38,8 +38,8 @@
 #define WM_EVENT_UPDATE      0
 #define WM_EVENT_COUNT       1
 
-#define WM_STRW  { 4,4,10,5,6,6,3,3}
-#define WM_STRP  { 1,1, 0,1,1,1,1,1}
+#define WM_STRW  { 5,10,10,9,6,3,3,3}
+#define WM_STRP  { 1, 1, 0,1,1,1,1,1}
 
 namespace bu = bbque::utils;
 namespace br = bbque::res;
