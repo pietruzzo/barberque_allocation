@@ -34,7 +34,7 @@ public:
 	};
 
 	/**
-	 * @brief Read a numeric value from an attribute file
+	 * @brief Read a string value from an attribute file
 	 *
 	 * @param path The attribute file path
 	 * @param value The buffer to fill with the value
@@ -49,6 +49,30 @@ public:
 			return ExitCode_t::ERR_FILE_NOT_FOUND;
 		}
 		fd.read(value, len);
+		fd.close();
+		return ExitCode_t::OK;
+	}
+
+	/**
+	 * @brief Read a string value from an attribute file
+	 *
+	 * @param path The attribute file path
+	 * @param value The string object to set to the value
+	 */
+	static ExitCode_t ReadValueFrom(
+			std::string const & filepath, std::string & value) {
+
+		std::ifstream fd(filepath);
+		if (!fd.is_open()) {
+			fprintf(stderr, "File not found\n\n ");
+			return ExitCode_t::ERR_FILE_NOT_FOUND;
+		}
+		while (!fd.eof()) {
+			std::string substr;
+			fd >> substr;
+			value += substr;
+			value += " ";
+		}
 		fd.close();
 		return ExitCode_t::OK;
 	}
