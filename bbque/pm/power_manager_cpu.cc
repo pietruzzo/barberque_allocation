@@ -121,21 +121,20 @@ CPUPowerManager::CPUPowerManager():
 		sensor_id += TEMP_SENSOR_STEP_ID;
 	}
 
-	// CPUfreq governors
-	char govs[100];
-	memset(govs, 0, sizeof(govs)-1);
+
+	// ---------------------------------------- CPUfreq governors
+	std::string govs;
 	std::string cpufreq_path(prefix_sys_cpu +
 			"0/cpufreq/scaling_available_governors");
-	result = bu::IoFs::ReadValueFrom(cpufreq_path, govs, 100);
+	result = bu::IoFs::ReadValueFrom(cpufreq_path, govs);
 	if (result != bu::IoFs::OK) {
 		logger->Error("Error reading: %s", cpufreq_path.c_str());
 		return;
 	}
 	logger->Info("CPUfreq governors: ");
-	std::string govs_str(govs);
-	while (govs_str.size() > 1)
+	while (govs.size() > 1)
 		cpufreq_governors.push_back(
-				br::ResourcePathUtils::SplitAndPop(govs_str, " "));
+				br::ResourcePathUtils::SplitAndPop(govs, " "));
 	for (std::string & g: cpufreq_governors)
 		logger->Info("---> %s", g.c_str());
 }
@@ -220,28 +219,35 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 }
 
 
-
 void CPUPowerManager::_GetAvailableFrequencies(
-		int cpu_id,
+		int pe_id,
 		std::shared_ptr<std::vector<uint32_t>> cpu_freqs) {
 	bu::IoFs::ExitCode_t result;
 
-	// Extracting available frequencies
-	char cpu_available_freqs[100];
+	// Extracting available frequencies string
+	std::string cpu_available_freqs;
 	result = bu::IoFs::ReadValueFrom(
-				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(cpu_id) +
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
 				"/cpufreq/scaling_available_frequencies",
-				cpu_available_freqs, 100);
+				cpu_available_freqs);
 	if (result != bu::IoFs::OK) {
-		logger->Warn("List of frequencies not available for cpu %d", cpu_id);
+		logger->Warn("List of frequencies not available for <...pe%d>", pe_id);
 		return;
 	}
 
-	// Storing the frequencies values in the vector
-	char * freq = strtok(cpu_available_freqs, " ");
-	while (freq != nullptr) {
-		cpu_freqs->push_back(std::stoi(freq));
-		strtok(cpu_available_freqs, " ");
+	if (result != bu::IoFs::OK)
+		return;
+	logger->Debug("<...pe%d> frequencies: %s", pe_id, cpu_available_freqs.c_str());
+
+	// Fill the vector with the integer frequency values
+	while (cpu_available_freqs.size() > 1) {
+		std::string freq(
+			br::ResourcePathUtils::SplitAndPop(cpu_available_freqs, " "));
+		try {
+			uint32_t freq_value = std::stoi(freq);
+			cpu_freqs->push_back(freq_value);
+		}
+		catch (std::invalid_argument & ia) {}
 	}
 }
 
