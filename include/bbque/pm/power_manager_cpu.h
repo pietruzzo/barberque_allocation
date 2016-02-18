@@ -84,7 +84,7 @@ public:
 	 * @see class PowerManager
 	 */
 	PMResult GetAvailableFrequencies(
-			ResourcePathPtr_t const & rp, std::vector<unsigned long> &freqs);
+			ResourcePathPtr_t const & rp, std::vector<uint32_t> &freqs);
 
 	/**
 	 * @see class PowerManager
@@ -124,7 +124,7 @@ protected:
 	std::map<int, std::string * > core_therms;
 
 	/*** Available clock frequencies for each processing element (core) */
-	std::map<int, std::vector<unsigned long> * > core_freqs;
+	std::map<int, std::shared_ptr<std::vector<uint32_t>> > core_freqs;
 
 	/*** SysFS CPU prefix path ***/
 	std::string prefix_sys_cpu;
@@ -140,7 +140,7 @@ protected:
 		int32_t idle = 0;
 	};
 
-	std::vector<unsigned long> * _GetAvailableFrequencies(int cpu_id);
+	void _GetAvailableFrequencies(int cpu_id, std::shared_ptr<std::vector<uint32_t>> v);
 
 	/**
 	 *  Sample CPU activity samples from /proc/stat

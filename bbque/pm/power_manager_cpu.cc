@@ -71,7 +71,8 @@ CPUPowerManager::CPUPowerManager():
 		// Processing element (cpu_id) / core_id
 		core_ids[cpu_id]   = core_id;
 		// Available frequencies per core
-		core_freqs[cpu_id] = _GetAvailableFrequencies(cpu_id);
+		core_freqs[cpu_id] = std::make_shared<std::vector<uint32_t>>();
+		_GetAvailableFrequencies(cpu_id, core_freqs[cpu_id]);
 	}
 
 	// Thermal sensors mapping
@@ -202,7 +203,10 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 }
 
 
-std::vector<unsigned long> * CPUPowerManager::_GetAvailableFrequencies(int cpu_id) {
+
+void CPUPowerManager::_GetAvailableFrequencies(
+		int cpu_id,
+		std::shared_ptr<std::vector<uint32_t>> cpu_freqs) {
 	bu::IoFs::ExitCode_t result;
 
 	// Extracting available frequencies
@@ -213,18 +217,15 @@ std::vector<unsigned long> * CPUPowerManager::_GetAvailableFrequencies(int cpu_i
 				cpu_available_freqs, 100);
 	if (result != bu::IoFs::OK) {
 		logger->Warn("List of frequencies not available for cpu %d", cpu_id);
-		return nullptr;
+		return;
 	}
 
 	// Storing the frequencies values in the vector
-	std::vector<unsigned long>  * cpu_freqs =
-		new  std::vector<unsigned long>();
 	char * freq = strtok(cpu_available_freqs, " ");
 	while (freq != nullptr) {
 		cpu_freqs->push_back(std::stoi(freq));
 		strtok(cpu_available_freqs, " ");
 	}
-	return cpu_freqs;
 }
 
 PowerManager::PMResult CPUPowerManager::GetLoadCPU(
@@ -349,7 +350,7 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
 
 PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 		ResourcePathPtr_t const & rp,
-		std::vector<unsigned long> & freqs) {
+		std::vector<uint32_t> & freqs) {
 
 	// Extracting the selected CPU from the resource path. -1 if error
 	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
