@@ -69,6 +69,11 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
+	PMResult SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz);
+
+	/**
+	 * @see class PowerManager
+	 */
 	PMResult GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius);
 
 	/**
