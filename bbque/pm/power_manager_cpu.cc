@@ -125,7 +125,7 @@ CPUPowerManager::CPUPowerManager():
 
 CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 		CPUPowerManager::LoadInfo * info,
-		br::ResID_t cpu_core_id) {
+		br::ResID_t cpu_core_id) const {
 	// Information about kernel activity is available in the /proc/stat
 	// file. All the values are aggregated since the system first booted.
 	// Thus, to compute the load, the variation of these values in a little
@@ -229,7 +229,7 @@ std::vector<unsigned long> * CPUPowerManager::_GetAvailableFrequencies(int cpu_i
 
 PowerManager::PMResult CPUPowerManager::GetLoadCPU(
 		ResID_t cpu_core_id,
-		uint32_t & load) {
+		uint32_t & load) const {
 	CPUPowerManager::ExitStatus result;
 	CPUPowerManager::LoadInfo start_info, end_info;
 
