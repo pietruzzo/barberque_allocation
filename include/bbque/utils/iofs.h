@@ -44,7 +44,7 @@ public:
 			std::string const & filepath, char * value, int len = 1) {
 		memset(value, '\0', len);
 		std::ifstream fd(filepath);
-		if (!fd) {
+		if (!fd.is_open()) {
 			fprintf(stderr, "File not found\n\n ");
 			return ExitCode_t::ERR_FILE_NOT_FOUND;
 		}
@@ -83,46 +83,46 @@ public:
 			int len,
 			int offset) {
 		ExitCode_t result;
-		char buffer[100];
-		memset(buffer, '\0', sizeof(buffer));
-		result = ReadValueFrom(filepath, buffer, sizeof(buffer)-1);
+		std::string buffer;
+		result = ReadValueFrom(filepath, buffer);
 		if (result != ExitCode_t::OK)
 			return ExitCode_t::ERR_FILE_NOT_FOUND;
-		fprintf(stderr, "Buffer: %s\n", buffer);
 
 		value.assign(buffer, offset, len);
-		fprintf(stderr, "\nvalue: %s\n", value.c_str());
+		// fprintf(stderr, "\nvalue: %s\n", value.c_str());
 		return ExitCode_t::OK;
 	}
 
 	template<class T>
 	static ExitCode_t ReadIntValueFrom(
 			std::string const & filepath, T & value, int scale = 1) {
-		char value_str[16];
-		memset(value_str, '\0', sizeof(value_str));
-		ReadValueFrom(filepath, value_str, sizeof(value_str)-1);
+		ExitCode_t result;
+		std::string value_str;
+		result = ReadValueFrom(filepath, value_str);
+		if (result != ExitCode_t::OK)
+			return result;
 		try {
 			value = std::stoi(value_str) * scale;
 		}
 		catch (const std::invalid_argument & ia) {
 			value = 0;
 		}
-
 		return ExitCode_t::OK;
 	 }
 
 	static ExitCode_t ReadFloatValueFrom(
 			std::string const & filepath, float & value, int scale = 1) {
-		char value_str[16];
-		memset(value_str, '\0', sizeof(value_str));
-		ReadValueFrom(filepath, value_str, sizeof(value_str)-1);
+		ExitCode_t result;
+		std::string value_str;
+		result = ReadValueFrom(filepath, value_str);
+		if (result != ExitCode_t::OK)
+			return result;
 		try {
 			value = std::stof(value_str) * scale;
 		}
 		catch (const std::invalid_argument & ia) {
 			value = 0.0;
 		}
-
 		return ExitCode_t::OK;
 	 }
 
