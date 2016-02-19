@@ -139,6 +139,17 @@ CPUPowerManager::CPUPowerManager():
 		logger->Info("---> %s", g.c_str());
 }
 
+CPUPowerManager::~CPUPowerManager() {
+	core_ids.clear();
+	core_therms.clear();
+	core_freqs.clear();
+	cpufreq_governors.clear();
+}
+
+
+/**********************************************************************
+ * Load                                                               *
+ **********************************************************************/
 
 CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 		CPUPowerManager::LoadInfo * info,
@@ -179,12 +190,6 @@ CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 	return CPUPowerManager::ExitStatus::OK;
 }
 
-CPUPowerManager::~CPUPowerManager() {
-	core_ids.clear();
-	core_therms.clear();
-	core_freqs.clear();
-	cpufreq_governors.clear();
-}
 
 PowerManager::PMResult CPUPowerManager::GetLoad(
 		ResourcePathPtr_t const & rp,
@@ -218,38 +223,6 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 	return PowerManager::PMResult::OK;
 }
 
-
-void CPUPowerManager::_GetAvailableFrequencies(
-		int pe_id,
-		std::shared_ptr<std::vector<uint32_t>> cpu_freqs) {
-	bu::IoFs::ExitCode_t result;
-
-	// Extracting available frequencies string
-	std::string cpu_available_freqs;
-	result = bu::IoFs::ReadValueFrom(
-				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-				"/cpufreq/scaling_available_frequencies",
-				cpu_available_freqs);
-	if (result != bu::IoFs::OK) {
-		logger->Warn("List of frequencies not available for <...pe%d>", pe_id);
-		return;
-	}
-
-	if (result != bu::IoFs::OK)
-		return;
-	logger->Debug("<...pe%d> frequencies: %s", pe_id, cpu_available_freqs.c_str());
-
-	// Fill the vector with the integer frequency values
-	while (cpu_available_freqs.size() > 1) {
-		std::string freq(
-			br::ResourcePathUtils::SplitAndPop(cpu_available_freqs, " "));
-		try {
-			uint32_t freq_value = std::stoi(freq);
-			cpu_freqs->push_back(freq_value);
-		}
-		catch (std::invalid_argument & ia) {}
-	}
-}
 
 PowerManager::PMResult CPUPowerManager::GetLoadCPU(
 		ResID_t cpu_core_id,
@@ -293,32 +266,9 @@ PowerManager::PMResult CPUPowerManager::GetLoadCPU(
 }
 
 
-PowerManager::PMResult CPUPowerManager::GetClockFrequency(
-		ResourcePathPtr_t const & rp,
-		uint32_t & khz){
-	bu::IoFs::ExitCode_t result;
-
-	// Extracting the PE id from the resource path
-	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
-	if (pe_id < 0) {
-		logger->Warn("Frequency value not available for %s",
-				rp->ToString().c_str());
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
-	}
-
-	// Getting the frequency value
-	result = bu::IoFs::ReadIntValueFrom<uint32_t>(
-				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-				"/cpufreq/scaling_cur_freq",
-				khz);
-	if (result != bu::IoFs::OK) {
-		logger->Warn("Cannot read current frequency for %s",
-				rp->ToString().c_str());
-		return PMResult::ERR_SENSORS_ERROR;
-	}
-
-	return PowerManager::PMResult::OK;
-}
+/**********************************************************************
+ * Temperature                                                        *
+ **********************************************************************/
 
 PowerManager::PMResult CPUPowerManager::GetTemperature(
 		ResourcePathPtr_t const & rp,
@@ -346,6 +296,66 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 	logger->Debug("Thermal sensor [%s] = %d", rp->ToString().c_str(), celsius);
 	return PMResult::OK;
 }
+
+
+
+/**********************************************************************
+ * Clock frequency management                                         *
+ **********************************************************************/
+
+PowerManager::PMResult CPUPowerManager::GetClockFrequency(
+		ResourcePathPtr_t const & rp,
+		uint32_t & khz){
+	bu::IoFs::ExitCode_t result;
+
+	// Extracting the PE id from the resource path
+	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	if (pe_id < 0) {
+		logger->Warn("Frequency value not available for %s",
+				rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
+	// Getting the frequency value
+	result = bu::IoFs::ReadIntValueFrom<uint32_t>(
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+				"/cpufreq/scaling_cur_freq",
+				khz);
+	if (result != bu::IoFs::OK) {
+		logger->Warn("Cannot read current frequency for %s",
+				rp->ToString().c_str());
+		return PMResult::ERR_SENSORS_ERROR;
+	}
+
+	return PowerManager::PMResult::OK;
+}
+
+
+PowerManager::PMResult CPUPowerManager::SetClockFrequency(
+		ResourcePathPtr_t const & rp, uint32_t khz) {
+	bu::IoFs::ExitCode_t result;
+	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	if (pe_id < 0) {
+		logger->Warn("Frequency setting not available for %s",
+				rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
+	result = bu::IoFs::WriteValueTo<uint32_t>(
+			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+			"/cpufreq/scaling_min_freq", khz);
+	if (result != bu::IoFs::ExitCode_t::OK)
+		return PMResult::ERR_SENSORS_ERROR;
+
+	result = bu::IoFs::WriteValueTo<uint32_t>(
+			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+			"/cpufreq/scaling_max_freq", khz);
+	if (result != bu::IoFs::ExitCode_t::OK)
+		return PMResult::ERR_SENSORS_ERROR;
+
+	return PMResult::OK;
+}
+
 
 PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
 		br::ResourcePathPtr_t const & rp,
@@ -391,6 +401,44 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 }
 
 
+void CPUPowerManager::_GetAvailableFrequencies(
+		int pe_id,
+		std::shared_ptr<std::vector<uint32_t>> cpu_freqs) {
+	bu::IoFs::ExitCode_t result;
+
+	// Extracting available frequencies string
+	std::string cpu_available_freqs;
+	result = bu::IoFs::ReadValueFrom(
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+				"/cpufreq/scaling_available_frequencies",
+				cpu_available_freqs);
+	if (result != bu::IoFs::OK) {
+		logger->Warn("List of frequencies not available for <...pe%d>", pe_id);
+		return;
+	}
+
+	if (result != bu::IoFs::OK)
+		return;
+	logger->Debug("<...pe%d> frequencies: %s", pe_id, cpu_available_freqs.c_str());
+
+	// Fill the vector with the integer frequency values
+	while (cpu_available_freqs.size() > 1) {
+		std::string freq(
+			br::ResourcePathUtils::SplitAndPop(cpu_available_freqs, " "));
+		try {
+			uint32_t freq_value = std::stoi(freq);
+			cpu_freqs->push_back(freq_value);
+		}
+		catch (std::invalid_argument & ia) {}
+	}
+}
+
+
+
+/**********************************************************************
+ * Clock frequency governors                                          *
+ **********************************************************************/
+
 PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
 		br::ResourcePathPtr_t const & rp,
 		std::string & governor) {
@@ -431,29 +479,5 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
 	return PowerManager::PMResult::OK;
 }
 
-PowerManager::PMResult CPUPowerManager::SetClockFrequency(
-		ResourcePathPtr_t const & rp, uint32_t khz) {
-	bu::IoFs::ExitCode_t result;
-	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
-	if (pe_id < 0) {
-		logger->Warn("Frequency setting not available for %s",
-				rp->ToString().c_str());
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
-	}
-
-	result = bu::IoFs::WriteValueTo<uint32_t>(
-			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			"/cpufreq/scaling_min_freq", khz);
-	if (result != bu::IoFs::ExitCode_t::OK)
-		return PMResult::ERR_SENSORS_ERROR;
-
-	result = bu::IoFs::WriteValueTo<uint32_t>(
-			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			"/cpufreq/scaling_max_freq", khz);
-	if (result != bu::IoFs::ExitCode_t::OK)
-		return PMResult::ERR_SENSORS_ERROR;
-
-	return PMResult::OK;
-}
 
 } // namespace bbque
