@@ -132,6 +132,11 @@ public:
 	virtual PMResult SetClockFrequency(
 		br::ResourcePathPtr_t const & rp, uint32_t khz);
 
+	virtual PMResult SetClockFrequency(
+		br::ResourcePathPtr_t const & rp,
+		uint32_t khz_min,
+		uint32_t khz_max);
+
 
 	virtual std::vector<std::string> const & GetAvailableFrequencyGovernors(
 			br::ResourcePathPtr_t const & rp);

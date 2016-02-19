@@ -242,6 +242,26 @@ PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
 }
 
 
+PowerManager::PMResult
+PowerManager::SetClockFrequency(
+		ResourcePathPtr_t const & rp,
+		uint32_t min_khz, uint32_t max_khz) {
+	switch (rp->ParentType(rp->Type())) {
+	case br::ResourceIdentifier::GPU:
+		if (!gpu) break;
+		return gpu->SetClockFrequency(rp, min_khz, max_khz);
+	case br::ResourceIdentifier::CPU:
+		if (!cpu) break;
+		return cpu->SetClockFrequency(rp, min_khz, max_khz);
+	default:
+		break;
+	}
+	logger->Warn("(PM) SetClockFrequency not supported for [%s]",
+			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+	return PMResult::ERR_API_NOT_SUPPORTED;
+}
+
+
 std::vector<std::string> const &
 PowerManager::GetAvailableFrequencyGovernors(br::ResourcePathPtr_t const & rp) {
 	switch (rp->ParentType(rp->Type())) {
