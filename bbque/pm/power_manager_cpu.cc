@@ -40,6 +40,16 @@
 #define TEMP_SENSOR_FIRST_ID 1
 #define TEMP_SENSOR_STEP_ID  1
 
+
+#define GET_PROC_ELEMENT_ID(rp, pe_id) \
+	pe_id = rp->GetID(br::Resource::PROC_ELEMENT);  \
+	if (pe_id < 0) { \
+		logger->Warn("<%s> does not reference valid processing elements", \
+				rp->ToString().c_str()); \
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;\
+	}
+
+
 namespace bu = bbque::utils;
 
 namespace bbque {
@@ -274,10 +284,11 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 		ResourcePathPtr_t const & rp,
 		uint32_t & celsius){
 	PMResult result = PMResult::ERR_INFO_NOT_SUPPORTED;
-	bu::IoFs::ExitCode_t io_result;
 	celsius = 0;
+	bu::IoFs::ExitCode_t io_result;
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
 
-	int pe_id   = rp->GetID(br::Resource::PROC_ELEMENT);
 	// We may have the same sensor for more than one processing element, the
 	// sensor is referenced at "core" level
 	int core_id = core_ids[pe_id];
@@ -293,6 +304,7 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 				rp->ToString().c_str());
 		return PMResult::ERR_SENSORS_ERROR;
 	}
+
 	logger->Debug("Thermal sensor [%s] = %d", rp->ToString().c_str(), celsius);
 	return PMResult::OK;
 }
@@ -307,14 +319,8 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequency(
 		ResourcePathPtr_t const & rp,
 		uint32_t & khz){
 	bu::IoFs::ExitCode_t result;
-
-	// Extracting the PE id from the resource path
-	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
-	if (pe_id < 0) {
-		logger->Warn("Frequency value not available for %s",
-				rp->ToString().c_str());
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
-	}
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
 
 	// Getting the frequency value
 	result = bu::IoFs::ReadIntValueFrom<uint32_t>(
@@ -334,12 +340,8 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequency(
 PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 		ResourcePathPtr_t const & rp, uint32_t khz) {
 	bu::IoFs::ExitCode_t result;
-	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
-	if (pe_id < 0) {
-		logger->Warn("Frequency setting not available for %s",
-				rp->ToString().c_str());
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
-	}
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
 
 	result = bu::IoFs::WriteValueTo<uint32_t>(
 			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
@@ -362,13 +364,8 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
 		uint32_t &khz_min,
 		uint32_t &khz_max,
 		uint32_t &khz_step) {
-	// Extracting the PE id from the resource path
-	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
-	if (pe_id < 0) {
-		logger->Warn("Frequency info not available for %s",
-				rp->ToString().c_str());
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
-	}
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
 
 	// Max and min frequency values
 	auto edges = std::minmax_element(
@@ -442,8 +439,10 @@ void CPUPowerManager::_GetAvailableFrequencies(
 PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
 		br::ResourcePathPtr_t const & rp,
 		std::string & governor) {
-	return GetClockFrequencyGovernor(
-			rp->GetID(br::Resource::PROC_ELEMENT), governor);
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
+
+	return GetClockFrequencyGovernor(pe_id, governor);
 }
 
 PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
@@ -467,10 +466,11 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
 		br::ResourcePathPtr_t const & rp,
 		std::string const & governor) {
 	bu::IoFs::ExitCode_t result;
-	int cpu_id = rp->GetID(br::Resource::PROC_ELEMENT);
-	std::string cpufreq_path(prefix_sys_cpu + std::to_string(cpu_id) +
-			"/cpufreq/scaling_governor");
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
 
+	std::string cpufreq_path(prefix_sys_cpu + std::to_string(pe_id) +
+			"/cpufreq/scaling_governor");
 	result = bu::IoFs::WriteValueTo<std::string>(cpufreq_path, governor);
 	logger->Debug("SetGovernor: %s", cpufreq_path.c_str());
 	if (result != bu::IoFs::ExitCode_t::OK)
