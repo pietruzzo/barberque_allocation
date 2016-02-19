@@ -40,6 +40,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
@@ -354,6 +355,7 @@ protected:
 
 	} AwmStats_t;
 
+
 	/**
 	 * @brief A pointer to AWM statistics
 	 */
@@ -363,6 +365,16 @@ protected:
 	 * @brief Map AWMs ID into its statistics
 	 */
 	typedef std::map<uint8_t, pAwmStats_t> AwmStatsMap_t;
+
+    /**
+     * @brief A pointer to the system resources
+     */
+    typedef std::shared_ptr<SystemResources_t> pSystemResources_t;
+
+    /**
+     * @brief Map systemid - system resources
+     */
+    typedef std::map<uint8_t, pSystemResources_t> SysResMap_t;
 
 	typedef struct RegisteredExecutionContext {
 		/** The Execution Context data */
@@ -392,20 +404,8 @@ protected:
 		/** The ID of the assigned AWM (if valid) */
 		int8_t awm_id = 0;
 
-		/** Number of CPU (processors) assigned */
-		int16_t nr_cpus  = 0;
-		/** Number of processing elements assigned */
-		int16_t nr_procs = 0;
-		/** Amount of processing quota assigned */
-		int32_t r_proc = 0;
-		/** Amount of memory assigned */
-		int32_t r_mem = 0;
-#ifdef CONFIG_BBQUE_OPENCL
-		int32_t r_gpu = 0;
-		int32_t r_acc = 0;
-		/** The ID of the assigned OpenCL device */
-		uint8_t dev_id;
-#endif
+		/** The map containing resources of all systems **/
+		SysResMap_t systems;
 
 		/** The mutex protecting access to this structure */
 		std::mutex mtx;
@@ -679,8 +679,8 @@ protected:
 	 * @brief A synchronization protocol Pre-Change for the EXC with the
 	 * specified ID.
 	 */
-	RTLIB_ExitCode_t SyncP_PreChangeNotify(
-			rpc_msg_BBQ_SYNCP_PRECHANGE_t &msg);
+	RTLIB_ExitCode_t SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t msg,
+	        std::vector<rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t> &systems);
 
 //----- SyncChange
 

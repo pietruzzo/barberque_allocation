@@ -1380,14 +1380,22 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 
 	logger->Debug("Valid AWM assigned");
 	wm->awm_id = prec->awm_id;
-	wm->nr_cpus  = prec->nr_cpus;
-	wm->nr_procs = prec->nr_procs;
-	wm->r_proc = prec->r_proc;
-	wm->r_mem  = prec->r_mem;
-#ifdef CONFIG_BBQUE_OPENCL
-	wm->r_gpu  = prec->r_gpu;
-	wm->r_acc  = prec->r_acc;
-#endif
+
+	wm->sys_num = prec->systems.size();
+	wm->sys_array = (SystemResources_t*)malloc(sizeof(SystemResources_t) * wm->sys_num);
+	int i=0;
+    for (auto it=prec->systems.begin(); it!=prec->systems.end(); ++it, ++i) {
+        wm->sys_array[i].nr_cpus  = it->second->nr_cpus;
+        wm->sys_array[i].nr_procs = it->second->nr_procs;
+        wm->sys_array[i].r_proc = it->second->r_proc;
+        wm->sys_array[i].r_mem  = it->second->r_mem;
+    #ifdef CONFIG_BBQUE_OPENCL
+        wm->sys_array[i].r_gpu  = it->second->r_gpu;
+        wm->sys_array[i].r_acc  = it->second->r_acc;
+    #endif
+
+    }
+
 	// Update AWM statistics
 	UpdateStatistics(prec);
 
@@ -1435,14 +1443,21 @@ waiting_done:
 
 	setAwmValid(prec);
 	wm->awm_id = prec->awm_id;
-	wm->nr_cpus  = prec->nr_cpus;
-	wm->nr_procs = prec->nr_procs;
-	wm->r_proc = prec->r_proc;
-	wm->r_mem  = prec->r_mem;
-#ifdef CONFIG_BBQUE_OPENCL
-	wm->r_gpu  = prec->r_gpu;
-	wm->r_acc  = prec->r_acc;
-#endif
+
+    wm->sys_num = prec->systems.size();
+    wm->sys_array = (SystemResources_t*)malloc(sizeof(SystemResources_t) * wm->sys_num);
+    int i=0;
+    for (auto it=prec->systems.begin(); it!=prec->systems.end(); ++it, ++i) {
+        wm->sys_array[i].nr_cpus  = it->second->nr_cpus;
+        wm->sys_array[i].nr_procs = it->second->nr_procs;
+        wm->sys_array[i].r_proc = it->second->r_proc;
+        wm->sys_array[i].r_mem  = it->second->r_mem;
+    #ifdef CONFIG_BBQUE_OPENCL
+        wm->sys_array[i].r_gpu  = it->second->r_gpu;
+        wm->sys_array[i].r_acc  = it->second->r_acc;
+    #endif
+
+    }
 
 	// Setup AWM statistics
 	SetupStatistics(prec);
@@ -1473,23 +1488,23 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 
 	switch (r_type) {
 	case CPU:
-		r_amount = wm->nr_cpus;
+		r_amount = wm->sys_array[0].nr_cpus;
 		break;
 	case PROC_NR:
-		r_amount = wm->nr_procs;
+		r_amount = wm->sys_array[0].nr_procs;
 		break;
 	case PROC_ELEMENT:
-		r_amount = wm->r_proc;
+		r_amount = wm->sys_array[0].r_proc;
 		break;
 	case MEMORY:
-		r_amount = wm->r_mem;
+		r_amount = wm->sys_array[0].r_mem;
 		break;
 #ifdef CONFIG_BBQUE_OPENCL
 	case GPU:
-		r_amount = wm->r_gpu;
+		r_amount = wm->sys_array[0].r_gpu;
 		break;
 	case ACCELERATOR:
-		r_amount = wm->r_acc;
+		r_amount = wm->sys_array[0].r_acc;
 		break;
 #endif // CONFIG_BBQUE_OPENCL
 	default:
@@ -1705,8 +1720,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(pregExCtx_t prec) {
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
-		rpc_msg_BBQ_SYNCP_PRECHANGE_t &msg) {
+RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t msg,
+		std::vector<rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t> &systems) {
 	RTLIB_ExitCode_t result;
 	uint32_t syncLatency;
 	pregExCtx_t prec;
@@ -1731,19 +1746,22 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(
 	// Set the new required AWM (if not being blocked)
 	if (prec->event != RTLIB_EXC_GWM_BLOCKED) {
 		prec->awm_id = msg.awm;
-		prec->nr_cpus  = msg.nr_cpus;
-		prec->nr_procs = msg.nr_procs;
-		prec->r_proc = msg.r_proc;
-		prec->r_mem  = msg.r_mem;
+
+
+		pSystemResources_t tmp = std::make_shared<SystemResources_t>();
+		tmp->nr_cpus  = systems[0].nr_cpus;
+		tmp->nr_procs = systems[0].nr_procs;
+		tmp->r_proc = systems[0].r_proc;
+		tmp->r_mem  = systems[0].r_mem;
 #ifdef CONFIG_BBQUE_OPENCL
-		prec->r_gpu  = msg.r_gpu;
-		prec->r_acc  = msg.r_acc;
-		prec->dev_id = msg.dev;
+		tmp->r_gpu  = systems[0].r_gpu;
+		tmp->r_acc  = systems[0].r_acc;
+		tmp->dev_id = systems[0].dev;
 #endif
 		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned AWM [%d]",
 				msg.hdr.exc_id, msg.event, msg.awm);
 		logger->Debug("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned PROC=<%d>",
-				msg.hdr.exc_id, msg.event, msg.r_proc);
+				msg.hdr.exc_id, msg.event, systems[0].r_proc);
 	} else {
 		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d:BLOCKED]",
 				msg.hdr.exc_id, msg.event);

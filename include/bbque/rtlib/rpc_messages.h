@@ -91,7 +91,7 @@ typedef struct rpc_msg_header {
 } rpc_msg_header_t;
 
 /**
- * @brief The responce to a command
+ * @brief The response to a command
  */
 typedef struct rpc_msg_resp {
 	/** The RPC fifo command header */
@@ -232,22 +232,34 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE {
 	/** The selected AWM */
 	int8_t awm;
 
-	/** Number of CPU (processors) assigned */
-	int16_t nr_cpus;
-	/** Number of processing elements assigned */
-	int16_t nr_procs;
-	/** Amount of processing quota assigned */
-	int32_t r_proc;
-	/** Amount of memory assigned */
-	int32_t r_mem;
-#ifdef CONFIG_BBQUE_OPENCL
-	int32_t r_gpu;
-	int32_t r_acc;
-	/** Assigned OpenCL device */
-	int8_t dev;
-#endif
+    /** The number of systems assigned, that corresponds
+     * to the number of subsequent rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t
+     * messages **/
+    uint16_t nr_sys;
 
 } rpc_msg_BBQ_SYNCP_PRECHANGE_t;
+
+typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM {
+
+    /** The system number */
+    int16_t sys_id;
+
+    /** Number of CPU (processors) assigned */
+    int16_t nr_cpus;
+    /** Number of processing elements assigned */
+    int16_t nr_procs;
+    /** Amount of processing quota assigned */
+    int32_t r_proc;
+    /** Amount of memory assigned */
+    int32_t r_mem;
+#ifdef CONFIG_BBQUE_OPENCL
+    int32_t r_gpu;
+    int32_t r_acc;
+    /** Assigned OpenCL device */
+    int8_t dev;
+#endif
+
+} rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t;
 
 /**
  * @brief Synchronization Protocol PreChange response

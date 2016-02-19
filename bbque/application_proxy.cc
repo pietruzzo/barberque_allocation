@@ -366,6 +366,12 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		// If the application is BLOCKING we don't have a NextAWM but we also
 		// don't care at RTLib side about the value of this parameter
 		0,
+		// Currently we consider only one system
+		1
+	};
+	bl::rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t local_sys_msg = {
+	    // SystemID
+	    0,
 		// Number of resources (CPU, PROC_ELEMENT cores)
 		0, 0,
 		// Resource amount (PROC_ELEMENT, MEMORY)
@@ -385,18 +391,18 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 		// CPUs (processors)
-		syncp_prechange_msg.nr_cpus =
+		local_sys_msg.nr_cpus =
 			papp->NextAWM()->BindingSet(br::Resource::CPU).Count();
 		// Processing elements (number of)
-		syncp_prechange_msg.nr_procs =
+		local_sys_msg.nr_procs =
 			papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT).Count();
 		// Processing elements (quota)
-		syncp_prechange_msg.r_proc = ra.GetUsageAmount(
+		local_sys_msg.r_proc = ra.GetUsageAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
 			br::ResourceIdentifier::PROC_ELEMENT);
 		// Memory amount
-		syncp_prechange_msg.r_mem = ra.GetUsageAmount(
+		local_sys_msg.r_mem = ra.GetUsageAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
 			br::ResourceIdentifier::MEMORY);
@@ -406,10 +412,10 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		logger->Debug("APPs PRX: Send Command [RPC_BBQ_SYNCP_PRECHANGE] to "
 			"EXC [%s], CPUs=<%d>, PROCs=<%2d [%d%%]>,MEM=<%d> @sv{%d}",
 			papp->StrId(),
-			syncp_prechange_msg.nr_cpus,
-			syncp_prechange_msg.nr_procs,
-			syncp_prechange_msg.r_proc,
-			syncp_prechange_msg.r_mem,
+			local_sys_msg.nr_cpus,
+			local_sys_msg.nr_procs,
+			local_sys_msg.r_proc,
+			local_sys_msg.r_mem,
 			ra.GetScheduledView());
 
 #ifdef CONFIG_BBQUE_OPENCL
@@ -464,6 +470,16 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 				papp->StrId());
 		return RTLIB_BBQUE_CHANNEL_WRITE_FAILED;
 	}
+
+	result = rpc->SendMessage(pcon->pd, (rpc_msg_header_t*)(&local_sys_msg),
+			(size_t)RPC_PKT_SIZE(BBQ_SYNCP_PRECHANGE_SYSTEM));
+	if (result == -1) {
+		logger->Error("APPs PRX: Send Command [RPC_BBQ_SYNCP_PRECHANGE] "
+				"to EXC [%s] FAILED (Error: write failed)",
+				papp->StrId());
+		return RTLIB_BBQUE_CHANNEL_WRITE_FAILED;
+	}
+
 
 	return RTLIB_OK;
 }

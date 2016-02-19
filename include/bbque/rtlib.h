@@ -83,6 +83,15 @@ extern "C" {
  */
 #define RTLIB_RECIPE_NAME_LENGTH 64
 
+/**
+ * @brief the maximum length for hostnames
+ *
+ * When barbeque runs in distributed environment, it will send the systems
+ * list to the applications, and foreach system, it sends the hostname and
+ * assigned resoruces.
+ */
+#define RTLIB_MAX_HOSTNAME_LENGTH 256
+
 // Forward declarations
 typedef struct RTLIB_Services RTLIB_Services_t;
 typedef struct RTLIB_APIVersion RTLIB_APIVersion_t;
@@ -331,6 +340,32 @@ struct RTLIB_APIVersion {
 	int32_t minor;
 };
 
+
+typedef struct SystemResources {
+
+    /** The system ID **/
+    int16_t sys_id =0;
+
+    /** The system hostname **/
+    char sys_hostname[RTLIB_MAX_HOSTNAME_LENGTH];
+
+    /** Number of CPU (processors) assigned */
+    int16_t nr_cpus  = 0;
+    /** Number of processing elements assigned */
+    int16_t nr_procs = 0;
+    /** Amount of processing quota assigned */
+    int32_t r_proc = 0;
+    /** Amount of memory assigned */
+    int32_t r_mem = 0;
+#ifdef CONFIG_BBQUE_OPENCL
+    int32_t r_gpu = 0;
+    int32_t r_acc = 0;
+    /** The ID of the assigned OpenCL device */
+    uint8_t dev_id;
+#endif
+
+} SystemResources_t;
+
 /**
  * @brief The information passed to an application to set its new Working Mode.
  * @ingroup rtlib_sec03_plain_exc
@@ -340,20 +375,11 @@ struct RTLIB_WorkingModeParams {
 	int8_t awm_id;
 	/** The set of platform supported services */
 	const RTLIB_Services_t* services;
-	/** Number of assigned CPU (processors) */
-	int16_t nr_cpus  = 0;
-	/** Number of assigned processing cores */
-	int16_t nr_procs = 0;
-	/** Amount of assigned processing quota */
-	int32_t r_proc = 0;
-	/** Amount of assigned memory */
-	int32_t r_mem = 0;
-#ifdef CONFIG_BBQUE_OPENCL
-	/** Amount of assigned resources (GPU)*/
-	int32_t r_gpu = 0;
-	/** Amount of assigned resources (HW Accelerator)*/
-	int32_t r_acc = 0;
-#endif // CONFIG_BBQUE_OPENCL
+
+	/** Number of systems **/
+	int16_t sys_num;
+	/** The array of systems containing resources **/
+	SystemResources_t* sys_array;
 };
 
 /**

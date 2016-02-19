@@ -698,20 +698,51 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPreChangeResp(
 }
 
 void BbqueRPC_FIFO_Client::RpcBbqSyncpPreChange() {
-	rpc_msg_BBQ_SYNCP_PRECHANGE_t msg;
-	size_t bytes;
 
-	// Read response RPC header
-	bytes = ::read(client_fifo_fd, (void*)&msg,
-			RPC_PKT_SIZE(BBQ_SYNCP_PRECHANGE));
-	if (bytes <= 0) {
-		logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
-				app_fifo_path.c_str(), errno, strerror(errno));
-		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+    rpc_msg_BBQ_SYNCP_PRECHANGE_t msg;
+    size_t bytes;
+
+    // Read response RPC header
+    bytes = ::read(client_fifo_fd, (void*)&msg,
+            RPC_PKT_SIZE(BBQ_SYNCP_PRECHANGE));
+    if (bytes <= 0) {
+        logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+                app_fifo_path.c_str(), errno, strerror(errno));
+        chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+    }
+
+
+
+    std::vector<rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t> messages;
+
+    for (uint_fast16_t i=0; i<msg.nr_sys; i++)
+    {
+		rpc_fifo_header_t hdr;
+		size_t bytes;
+
+		// Read FIFO header
+		bytes = ::read(client_fifo_fd, (void*)&hdr, FIFO_PKT_SIZE(header));
+		if (bytes<=0) {
+			logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+					app_fifo_path.c_str(), errno, strerror(errno));
+			assert(bytes==FIFO_PKT_SIZE(header));
+			return;
+		}
+
+		// Read the message
+        rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t msg_sys;
+        bytes = ::read(client_fifo_fd, (void*)&msg_sys,
+                RPC_PKT_SIZE(BBQ_SYNCP_PRECHANGE_SYSTEM));
+        if (bytes <= 0) {
+            logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
+                    app_fifo_path.c_str(), errno, strerror(errno));
+            chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+        }
+
+	    messages.push_back(msg_sys);
 	}
-
 	// Notify the Pre-Change
-	SyncP_PreChangeNotify(msg);
+	SyncP_PreChangeNotify(msg,messages);
 
 }
 
