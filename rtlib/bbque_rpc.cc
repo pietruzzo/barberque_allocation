@@ -26,6 +26,7 @@
 #include "bbque/utils/logging/console_logger.h"
 
 #include <cstdio>
+#include <cmath>
 #include <cstring>
 #include <sys/stat.h>
 
@@ -1381,17 +1382,18 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 	logger->Debug("Valid AWM assigned");
 	wm->awm_id = prec->awm_id;
 
-	wm->sys_num = prec->systems.size();
-	wm->sys_array = (SystemResources_t*)malloc(sizeof(SystemResources_t) * wm->sys_num);
+	wm->nr_sys = prec->systems.size();
+	wm->systems = (RTLIB_SystemResources_t*)malloc(sizeof(RTLIB_SystemResources_t) * wm->nr_sys);
 	int i=0;
     for (auto it=prec->systems.begin(); it!=prec->systems.end(); ++it, ++i) {
-        wm->sys_array[i].nr_cpus  = it->second->nr_cpus;
-        wm->sys_array[i].nr_procs = it->second->nr_procs;
-        wm->sys_array[i].r_proc = it->second->r_proc;
-        wm->sys_array[i].r_mem  = it->second->r_mem;
+        wm->systems[i].sys_id = it->second->sys_id;
+        wm->systems[i].nr_cpus  = it->second->nr_cpus;
+        wm->systems[i].nr_procs = it->second->nr_procs;
+        wm->systems[i].r_proc = it->second->r_proc;
+        wm->systems[i].r_mem  = it->second->r_mem;
     #ifdef CONFIG_BBQUE_OPENCL
-        wm->sys_array[i].r_gpu  = it->second->r_gpu;
-        wm->sys_array[i].r_acc  = it->second->r_acc;
+        wm->systems[i].r_gpu  = it->second->r_gpu;
+        wm->systems[i].r_acc  = it->second->r_acc;
     #endif
 
     }
@@ -1444,17 +1446,18 @@ waiting_done:
 	setAwmValid(prec);
 	wm->awm_id = prec->awm_id;
 
-    wm->sys_num = prec->systems.size();
-    wm->sys_array = (SystemResources_t*)malloc(sizeof(SystemResources_t) * wm->sys_num);
+    wm->nr_sys = prec->systems.size();
+    wm->systems = (RTLIB_SystemResources_t*)malloc(sizeof(RTLIB_SystemResources_t) * wm->nr_sys);
     int i=0;
     for (auto it=prec->systems.begin(); it!=prec->systems.end(); ++it, ++i) {
-        wm->sys_array[i].nr_cpus  = it->second->nr_cpus;
-        wm->sys_array[i].nr_procs = it->second->nr_procs;
-        wm->sys_array[i].r_proc = it->second->r_proc;
-        wm->sys_array[i].r_mem  = it->second->r_mem;
+        wm->systems[i].sys_id = it->second->sys_id;
+        wm->systems[i].nr_cpus  = it->second->nr_cpus;
+        wm->systems[i].nr_procs = it->second->nr_procs;
+        wm->systems[i].r_proc = it->second->r_proc;
+        wm->systems[i].r_mem  = it->second->r_mem;
     #ifdef CONFIG_BBQUE_OPENCL
-        wm->sys_array[i].r_gpu  = it->second->r_gpu;
-        wm->sys_array[i].r_acc  = it->second->r_acc;
+        wm->systems[i].r_gpu  = it->second->r_gpu;
+        wm->systems[i].r_acc  = it->second->r_acc;
     #endif
 
     }
@@ -1487,24 +1490,27 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 	}
 
 	switch (r_type) {
+	case SYSTEM:
+	    r_amount = wm->nr_sys;
+	    break;
 	case CPU:
-		r_amount = wm->sys_array[0].nr_cpus;
+		r_amount = wm->systems[0].nr_cpus;
 		break;
 	case PROC_NR:
-		r_amount = wm->sys_array[0].nr_procs;
+		r_amount = wm->systems[0].nr_procs;
 		break;
 	case PROC_ELEMENT:
-		r_amount = wm->sys_array[0].r_proc;
+		r_amount = wm->systems[0].r_proc;
 		break;
 	case MEMORY:
-		r_amount = wm->sys_array[0].r_mem;
+		r_amount = wm->systems[0].r_mem;
 		break;
 #ifdef CONFIG_BBQUE_OPENCL
 	case GPU:
-		r_amount = wm->sys_array[0].r_gpu;
+		r_amount = wm->systems[0].r_gpu;
 		break;
 	case ACCELERATOR:
-		r_amount = wm->sys_array[0].r_acc;
+		r_amount = wm->systems[0].r_acc;
 		break;
 #endif // CONFIG_BBQUE_OPENCL
 	default:
@@ -1513,6 +1519,71 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 	}
 	return RTLIB_OK;
 }
+
+RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
+        RTLIB_ExecutionContextHandler_t ech,
+        const RTLIB_WorkingModeParams_t *wm,
+        RTLIB_ResourceType_t r_type,
+        int32_t * sys_array,
+        uint16_t array_size) {
+
+    pregExCtx_t prec = getRegistered(ech);
+    if (!prec) {
+        logger->Error("Getting resources for EXC [%p] FAILED "
+            "(Error: EXC not registered)", (void*)ech);
+        return RTLIB_EXC_NOT_REGISTERED;
+    }
+
+    if (!isAwmAssigned(prec)) {
+        logger->Error("Getting resources for EXC [%p] FAILED "
+            "(Error: No resources assigned yet)", (void*)ech);
+        return RTLIB_EXC_NOT_STARTED;
+    }
+
+    int n_to_copy = wm->nr_sys < array_size ? wm->nr_sys : array_size;
+
+
+    switch (r_type) {
+    case SYSTEM:
+        for (int i=0; i < n_to_copy; i++)
+            sys_array[i] = wm->systems[i].sys_id;
+        break;
+    case CPU:
+        for (int i=0; i < n_to_copy; i++)
+            sys_array[i] = wm->systems[i].nr_cpus;
+        break;
+    case PROC_NR:
+        for (int i=0; i < n_to_copy; i++)
+            sys_array[i] = wm->systems[i].nr_procs;
+        break;
+    case PROC_ELEMENT:
+        for (int i=0; i < n_to_copy; i++)
+            sys_array[i] = wm->systems[i].r_proc;
+        break;
+    case MEMORY:
+        for (int i=0; i < n_to_copy; i++)
+            sys_array[i] = wm->systems[i].r_mem;
+        break;
+#ifdef CONFIG_BBQUE_OPENCL
+    case GPU:
+        for (int i=0; i < n_to_copy; i++)
+            sys_array[i] = wm->systems[i].r_gpu;
+        break;
+    case ACCELERATOR:
+        for (int i=0; i < n_to_copy; i++)
+            sys_array[i] = wm->systems[i].r_acc;
+        break;
+#endif // CONFIG_BBQUE_OPENCL
+    default:
+        for (int i=0; i < n_to_copy; i++)
+            sys_array[i] = -1;
+        break;
+    }
+
+
+    return RTLIB_OK;
+}
+
 
 RTLIB_ExitCode_t BbqueRPC::WaitForSyncDone(pregExCtx_t prec) {
 	std::unique_lock<std::mutex> rec_ul(prec->mtx);
@@ -1747,17 +1818,21 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t 
 	if (prec->event != RTLIB_EXC_GWM_BLOCKED) {
 		prec->awm_id = msg.awm;
 
-
-		pSystemResources_t tmp = std::make_shared<SystemResources_t>();
-		tmp->nr_cpus  = systems[0].nr_cpus;
-		tmp->nr_procs = systems[0].nr_procs;
-		tmp->r_proc = systems[0].r_proc;
-		tmp->r_mem  = systems[0].r_mem;
+		for (uint16_t i=0; i<systems.size(); i++) {
+            pSystemResources_t tmp = std::make_shared<RTLIB_SystemResources_t>();
+            tmp->sys_id = i;
+            tmp->nr_cpus  = systems[i].nr_cpus;
+            tmp->nr_procs = systems[i].nr_procs;
+            tmp->r_proc = systems[i].r_proc;
+            tmp->r_mem  = systems[i].r_mem;
 #ifdef CONFIG_BBQUE_OPENCL
-		tmp->r_gpu  = systems[0].r_gpu;
-		tmp->r_acc  = systems[0].r_acc;
-		tmp->dev_id = systems[0].dev;
+            tmp->r_gpu  = systems[i].r_gpu;
+            tmp->r_acc  = systems[i].r_acc;
+            tmp->dev_id = systems[i].dev;
 #endif
+            prec->systems[i] = tmp;
+
+		}
 		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned AWM [%d]",
 				msg.hdr.exc_id, msg.event, msg.awm);
 		logger->Debug("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned PROC=<%d>",

@@ -341,14 +341,10 @@ struct RTLIB_APIVersion {
 };
 
 
-typedef struct SystemResources {
+typedef struct RTLIB_SystemResources {
 
     /** The system ID **/
     int16_t sys_id =0;
-
-    /** The system hostname **/
-    char sys_hostname[RTLIB_MAX_HOSTNAME_LENGTH];
-
     /** Number of CPU (processors) assigned */
     int16_t nr_cpus  = 0;
     /** Number of processing elements assigned */
@@ -364,7 +360,7 @@ typedef struct SystemResources {
     uint8_t dev_id;
 #endif
 
-} SystemResources_t;
+} RTLIB_SystemResources_t;
 
 /**
  * @brief The information passed to an application to set its new Working Mode.
@@ -377,9 +373,9 @@ struct RTLIB_WorkingModeParams {
 	const RTLIB_Services_t* services;
 
 	/** Number of systems **/
-	int16_t sys_num;
+	int16_t nr_sys;
 	/** The array of systems containing resources **/
-	SystemResources_t* sys_array;
+	RTLIB_SystemResources_t* systems;
 };
 
 /**
@@ -693,6 +689,23 @@ typedef RTLIB_ExitCode_t (*RTLIB_Utils_GetResources) (
 		const RTLIB_WorkingModeParams_t *wm,
 		RTLIB_ResourceType_t r_type,
 		int32_t & r_amount);
+
+/**
+ * @brief Get the amount of resources assigned by the BarbequeRTRM to the
+ *        various systems. System[0] is the local system.
+ * @ingroup rtlib_sec03_plain_rtrm
+ *
+ * Every scheduled EXC gets a certain amount of resources. By specifying
+ * the required resource type, the application can read the related
+ * assigned amount.
+ */
+typedef RTLIB_ExitCode_t (*RTLIB_Utils_GetResourcesArray) (
+        RTLIB_ExecutionContextHandler_t ech,
+        const RTLIB_WorkingModeParams_t *wm,
+        RTLIB_ResourceType_t r_type,
+        int32_t * res_array,
+        uint16_t array_size);
+
 /**@}*/
 
 /*******************************************************************************
@@ -1162,6 +1175,7 @@ struct RTLIB_Services {
 		RTLIB_Utils_GetChUid GetChUid;
 		RTLIB_Utils_GetUid GetUid;
 		RTLIB_Utils_GetResources GetResources;
+		RTLIB_Utils_GetResourcesArray GetResourcesArray;
 	} Utils;
 
 	/* Cycles Time Control interface */

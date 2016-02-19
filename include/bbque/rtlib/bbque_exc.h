@@ -354,6 +354,24 @@ public:
 	RTLIB_ExitCode_t GetAssignedResources(
 			RTLIB_ResourceType_t r_type,
 			int32_t & r_amount);
+	/**
+	 * @brief Get the amount of resource assigned by the BarbequeRTRM
+	 *
+	 * @param r_type The type of resource to check (@see RTLIB_ResourceType_t)
+	 * @param systems The array where to save the resource-per-system. The user
+	 *                must provide an already allocated array, according to
+	 *                GetAssignedResources(SYSTEM, size).
+	 * @param a_size the size of systems.
+	 *
+	 * @return RTLIB_OK in case of success. RTLIB_EXC_NOT_REGISTERED in case
+	 * of not registered application. RTLIB_EXC_NOT_STARTED in case of not
+	 * scheduled application.
+	 */
+    RTLIB_ExitCode_t GetAssignedResources(
+            RTLIB_ResourceType_t r_type,
+            int32_t * systems,
+            uint16_t array_size);
+
 
 /**
  * @brief Set the cycle rate for this EXC

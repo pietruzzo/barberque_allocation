@@ -142,6 +142,15 @@ static RTLIB_ExitCode_t rtlib_utils_get_resources(
 	return rpc->GetAssignedResources(ech, wm, r_type, r_amount);
 }
 
+static RTLIB_ExitCode_t rtlib_utils_get_resources_array(
+        RTLIB_ExecutionContextHandler_t ech,
+        const RTLIB_WorkingModeParams_t *wm,
+        RTLIB_ResourceType_t r_type,
+        int32_t *sys_array,
+        uint16_t array_size) {
+    return rpc->GetAssignedResources(ech, wm, r_type, sys_array, array_size);
+}
+
 /*******************************************************************************
  *    Cycles Per Second (CPS) Control Support
  ******************************************************************************/
@@ -284,6 +293,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char *name, RTLIB_Services_t **rtlib) {
 	rtlib_services.Utils.GetChUid = rtlib_utils_getchuid;
 	rtlib_services.Utils.GetUid = rtlib_utils_getuid;
 	rtlib_services.Utils.GetResources = rtlib_utils_get_resources;
+	rtlib_services.Utils.GetResourcesArray = rtlib_utils_get_resources_array;
 
 	// Cycles Time Control interface
 	rtlib_services.CPS.Set = rtlib_cps_set;

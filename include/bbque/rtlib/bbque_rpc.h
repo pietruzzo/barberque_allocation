@@ -151,6 +151,14 @@ public:
 			RTLIB_ResourceType_t r_type,
 			int32_t & r_amount);
 
+    RTLIB_ExitCode_t GetAssignedResources(
+            RTLIB_ExecutionContextHandler_t ech,
+            const RTLIB_WorkingModeParams_t *wm,
+            RTLIB_ResourceType_t r_type,
+            int32_t* sys_array,
+            uint16_t array_size);
+
+
 /*******************************************************************************
  *    Utility Functions
  ******************************************************************************/
@@ -369,12 +377,12 @@ protected:
     /**
      * @brief A pointer to the system resources
      */
-    typedef std::shared_ptr<SystemResources_t> pSystemResources_t;
+    typedef std::shared_ptr<RTLIB_SystemResources_t> pSystemResources_t;
 
     /**
      * @brief Map systemid - system resources
      */
-    typedef std::map<uint8_t, pSystemResources_t> SysResMap_t;
+    typedef std::map<uint16_t, pSystemResources_t> SysResMap_t;
 
 	typedef struct RegisteredExecutionContext {
 		/** The Execution Context data */

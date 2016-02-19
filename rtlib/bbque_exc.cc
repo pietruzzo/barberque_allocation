@@ -302,6 +302,13 @@ RTLIB_ExitCode_t BbqueEXC::GetAssignedResources(
 	return rtlib->Utils.GetResources(exc_hdl, &wmp, r_type, r_amount);
 }
 
+RTLIB_ExitCode_t BbqueEXC::GetAssignedResources(
+        RTLIB_ResourceType_t r_type,
+        int32_t * sys_array,
+        uint16_t array_size) {
+    return rtlib->Utils.GetResourcesArray(exc_hdl, &wmp, r_type, sys_array, array_size);
+}
+
 /*******************************************************************************
  *    Cycles Per Second (CPS) Control Support
  ******************************************************************************/
