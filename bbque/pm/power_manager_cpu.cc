@@ -345,13 +345,30 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 
 	result = bu::IoFs::WriteValueTo<uint32_t>(
 			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			"/cpufreq/scaling_min_freq", khz);
+			"/cpufreq/scaling_setspeed", khz);
+	if (result != bu::IoFs::ExitCode_t::OK)
+		return PMResult::ERR_SENSORS_ERROR;
+
+	return PMResult::OK;
+}
+
+PowerManager::PMResult CPUPowerManager::SetClockFrequency(
+		ResourcePathPtr_t const & rp,
+		uint32_t min_khz,
+		uint32_t max_khz) {
+	bu::IoFs::ExitCode_t result;
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
+
+	result = bu::IoFs::WriteValueTo<uint32_t>(
+			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+			"/cpufreq/scaling_min_freq", min_khz);
 	if (result != bu::IoFs::ExitCode_t::OK)
 		return PMResult::ERR_SENSORS_ERROR;
 
 	result = bu::IoFs::WriteValueTo<uint32_t>(
 			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			"/cpufreq/scaling_max_freq", khz);
+			"/cpufreq/scaling_max_freq", max_khz);
 	if (result != bu::IoFs::ExitCode_t::OK)
 		return PMResult::ERR_SENSORS_ERROR;
 
