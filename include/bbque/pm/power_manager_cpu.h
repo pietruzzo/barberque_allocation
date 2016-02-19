@@ -157,6 +157,11 @@ protected:
 	 */
 	ExitStatus GetLoadInfo(LoadInfo *info, br::ResID_t cpu_core_id) const;
 
+	/**
+	 *  Set Cpufreq scaling governor for PE pe_id
+	 */
+	PMResult GetClockFrequencyGovernor(int pe_id, std::string & governor);
+
 };
 
 }

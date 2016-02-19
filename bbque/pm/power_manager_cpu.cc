@@ -394,10 +394,16 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
 		br::ResourcePathPtr_t const & rp,
 		std::string & governor) {
+	return GetClockFrequencyGovernor(
+			rp->GetID(br::Resource::PROC_ELEMENT), governor);
+}
+
+PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
+		int pe_id,
+		std::string & governor) {
 	bu::IoFs::ExitCode_t result;
 	char gov[12];
-	int cpu_id = rp->GetID(br::Resource::PROC_ELEMENT);
-	std::string cpufreq_path(prefix_sys_cpu + std::to_string(cpu_id) +
+	std::string cpufreq_path(prefix_sys_cpu + std::to_string(pe_id) +
 			"/cpufreq/scaling_governor");
 
 	result = bu::IoFs::ReadValueFrom(cpufreq_path, gov, 12);
