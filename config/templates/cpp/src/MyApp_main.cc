@@ -143,14 +143,21 @@ int main(int argc, char *argv[]) {
 	// with the Barbeque RTRM
 	logger->Info("STEP 0. Initializing RTLib, application [%s]...",
 			::basename(argv[0]));
-	RTLIB_Init(::basename(argv[0]), &rtlib);
+
+	if ( RTLIB_Init(::basename(argv[0]), &rtlib) != RTLIB_OK) {
+		logger->Fatal("Unable to init RTLib (Did you start the BarbequeRTRM daemon?)");
+		return RTLIB_ERROR;
+	}
+
 	assert(rtlib);
 
 	logger->Info("STEP 1. Registering EXC using [%s] recipe...",
 			recipe.c_str());
 	pexc = pBbqueEXC_t(new MyApp("MyApp", recipe, rtlib));
-	if (!pexc->isRegistered())
+	if (!pexc->isRegistered()) {
+		logger->Fatal("Registering failure.");
 		return RTLIB_ERROR;
+	}
 
 
 	logger->Info("STEP 2. Starting EXC control thread...");
