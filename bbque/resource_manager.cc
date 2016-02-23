@@ -546,6 +546,7 @@ void ResourceManager::EvtBbqExit() {
 
 	logger->Notice("Terminating Barbeque...");
 	done = true;
+	pendingEvts_cv.notify_one();
 
 	// Dumping collected stats before termination
 	EvtBbqUsr1();
@@ -645,6 +646,11 @@ void ResourceManager::ControlLoop() {
 	// Wait for a new event
 	if (!pendingEvts.any())
 		pendingEvts_cv.wait(pendingEvts_ul);
+
+	if (done == true) {
+		logger->Warn("Control Loop: returning");
+		return;
+	}
 
 	// Checking for pending events, starting from higer priority ones.
 	for(uint8_t evt=EVENTS_COUNT; evt; --evt) {
