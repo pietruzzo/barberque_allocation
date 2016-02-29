@@ -36,7 +36,7 @@ void AndroidLogger::Debug(const char *fmt, ...) {
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_DEBUG, category.c_str(), str);
+	__android_log_print(ANDROID_LOG_DEBUG, configuration.category, str);
 }
 #endif
 
@@ -47,7 +47,7 @@ void AndroidLogger::Info(const char *fmt, ...) {
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_VERBOSE, category.c_str(), str); 
+	__android_log_print(ANDROID_LOG_VERBOSE, configuration.category, str); 
 
 }
 
@@ -58,7 +58,7 @@ void AndroidLogger::Notice(const char *fmt, ...) {
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_INFO, category.c_str(), str); 
+	__android_log_print(ANDROID_LOG_INFO, configuration.category, str); 
 }
 
 void AndroidLogger::Warn(const char *fmt, ...) {
@@ -68,7 +68,7 @@ void AndroidLogger::Warn(const char *fmt, ...) {
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_WARN, category.c_str(), str); 
+	__android_log_print(ANDROID_LOG_WARN, configuration.category, str); 
 }
 
 void AndroidLogger::Error(const char *fmt, ...) {
@@ -78,7 +78,7 @@ void AndroidLogger::Error(const char *fmt, ...) {
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_ERROR, category.c_str(), str); 
+	__android_log_print(ANDROID_LOG_ERROR, configuration.category, str); 
 }
 
 void AndroidLogger::Crit(const char *fmt, ...) {
@@ -88,7 +88,7 @@ void AndroidLogger::Crit(const char *fmt, ...) {
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_ERROR, category.c_str(), str); 
+	__android_log_print(ANDROID_LOG_ERROR, configuration.category, str); 
 }
 
 void AndroidLogger::Alert(const char *fmt, ...) {
@@ -98,7 +98,7 @@ void AndroidLogger::Alert(const char *fmt, ...) {
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_ERROR, category.c_str(), str); 
+	__android_log_print(ANDROID_LOG_ERROR, configuration.category, str); 
 }
 
 void AndroidLogger::Fatal(const char *fmt, ...) {
@@ -108,7 +108,7 @@ void AndroidLogger::Fatal(const char *fmt, ...) {
 	va_start(args, fmt);
 	vsnprintf(str, LOG_MAX_SENTENCE, fmt, args);
 	va_end(args);
-	__android_log_print(ANDROID_LOG_FATAL, category.c_str(), str); 
+	__android_log_print(ANDROID_LOG_FATAL, configuration.category, str); 
 }
 
 } // namespace utils
