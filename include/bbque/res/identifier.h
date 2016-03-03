@@ -75,6 +75,7 @@ public:
 		ACCELERATOR  ,
 		PROC_ELEMENT ,
 		MEMORY       ,
+		NETWORK      ,
 		INTERCONNECT ,
 		IO           ,
 		CUSTOM       ,

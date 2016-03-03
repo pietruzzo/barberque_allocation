@@ -32,6 +32,7 @@ const char * ResourceIdentifier::TypeStr[TYPE_COUNT] = {
 	"acc" ,
 	"pe"  ,
 	"mem" ,
+	"net" ,
 	"icn" ,
 	"io"  ,
 	"cst"
