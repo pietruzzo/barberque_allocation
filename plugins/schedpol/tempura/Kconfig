@@ -1,5 +1,7 @@
 config BBQUE_SCHEDPOL_TEMPURA
   bool "Tempura"
   default n
+  select BBQUE_PM
+  select BBQUE_PM_CPU
   ---help---
   Description...
