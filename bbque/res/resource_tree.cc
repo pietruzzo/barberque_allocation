@@ -18,6 +18,7 @@
 #include "bbque/res/resource_tree.h"
 
 #include <iostream>
+#include <memory>
 
 #include "bbque/modules_factory.h"
 #include "bbque/res/resources.h"
@@ -40,10 +41,7 @@ ResourceTree::ResourceTree():
 
 	// Initialize the root node
 	std::string root_name("bbque");
-	root         = new ResourceNode_t;
-	root->data   = ResourcePtr_t(new Resource(root_name));
-	root->parent = NULL;
-	root->depth  = 0;
+	root = std::make_shared<ResourceNode>(std::make_shared<Resource>(root_name));
 }
 
 ResourcePtrList_t
@@ -61,7 +59,7 @@ ResourceTree::findList(ResourcePath & rsrc_path, uint16_t match_flags) const {
 }
 
 ResourcePtr_t & ResourceTree::insert(ResourcePath const & rsrc_path) {
-	ResourceNode_t * curr_node;
+	ResourceNodePtr_t curr_node;
 	ResourcePath::ConstIterator path_it, path_end;
 	ResourceNodesList_t::iterator tree_it, tree_end;
 
@@ -112,7 +110,7 @@ ResourcePtr_t & ResourceTree::insert(ResourcePath const & rsrc_path) {
 }
 
 bool ResourceTree::findNode(
-		ResourceNode_t * curr_node,
+		ResourceNodePtr_t curr_node,
 		ResourcePath::Iterator & path_it,
 		ResourcePath::Iterator const & path_end,
 		uint16_t match_flags,
@@ -190,8 +188,8 @@ bool ResourceTree::findNode(
 	return !matchings.empty();
 }
 
-ResourceTree::ResourceNode_t *
-ResourceTree::addChild(ResourceNode_t * curr_node, ResourcePtr_t pres) {
+ResourceTree::ResourceNodePtr_t
+ResourceTree::addChild(ResourceNodePtr_t curr_node, ResourcePtr_t pres) {
 	// Set the path string of the new resource
 	std::string path_prefix("");
 	if (curr_node->data)
@@ -199,17 +197,15 @@ ResourceTree::addChild(ResourceNode_t * curr_node, ResourcePtr_t pres) {
 	pres->SetPath(path_prefix + "." + pres->Name());
 
 	// Create the new resource node
-	ResourceNode_t * new_node = new ResourceNode_t;
-	new_node->data   = pres;
-	new_node->parent = curr_node;
-	new_node->depth  = curr_node->depth + 1;
+	ResourceNodePtr_t new_node = std::make_shared<ResourceNode>(
+		pres, curr_node, curr_node->depth+1);
 
 	// Append it as child of the current node
 	curr_node->children.push_back(new_node);
 	return new_node;
 }
 
-void ResourceTree::print_children(ResourceNode_t * _node, int _depth) {
+void ResourceTree::print_children(ResourceNodePtr_t _node, int _depth) {
 	// Increase the level of depth
 	++_depth;
 
@@ -229,7 +225,7 @@ void ResourceTree::print_children(ResourceNode_t * _node, int _depth) {
 	}
 }
 
-void ResourceTree::clear_node(ResourceNode_t * _node) {
+void ResourceTree::clear_node(ResourceNodePtr_t _node) {
 	ResourceNodesList_t::iterator it(_node->children.begin());
 	ResourceNodesList_t::iterator end(_node->children.end());
 

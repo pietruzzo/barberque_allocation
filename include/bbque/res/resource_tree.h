@@ -68,27 +68,40 @@ class ResourceTree {
 
 public:
 
-	// Forward declaration
-	struct ResourceNode_t;
-
-	/** List of pointers to ResourceNode_t */
-	typedef std::list<ResourceNode_t *> ResourceNodesList_t;
+	// Forward declarations
+	struct ResourceNode;
+	typedef std::shared_ptr<ResourceNode> ResourceNodePtr_t;
+	typedef std::list<ResourceNodePtr_t>  ResourceNodesList_t;
 
 	/**
-	 * @struct ResourceNode_t
+	 * @class ResourceNode
 	 *
-	 * The base node of the ResourceTree
+	 * The base node of the ResourceTree containing a reference to a Resource
+	 * descriptor.
 	 */
-	struct ResourceNode_t {
-		/** Data node */
-		ResourcePtr_t data;
-		/** Children nodes */
-		ResourceNodesList_t children;
-		/** Parent node */
-		ResourceNode_t * parent;
-		/** Depth in the tree */
-		uint16_t depth;
+	class ResourceNode {
+		public:
+			ResourceNode(ResourcePtr_t r):
+				data(r) {};
+
+			ResourceNode(
+				ResourcePtr_t r, ResourceNodePtr_t pnode, uint16_t d):
+				data(r), parent(pnode), depth(d) {};
+
+			virtual ~ResourceNode() {
+				children.clear();
+			}
+
+			/** Data node (resource descriptor pointer) */
+			ResourcePtr_t data = nullptr;
+			/** Parent node */
+			ResourceNodePtr_t parent = nullptr;
+			/** Depth in the tree */
+			uint16_t depth = 0;
+			/** Children nodes */
+			ResourceNodesList_t children;
 	};
+
 
 	/**
 	 * @brief Constructor
@@ -186,7 +199,7 @@ private:
 	std::unique_ptr<bu::Logger> logger;
 
 	/** Pointer to the root of the tree*/
-	ResourceNode_t * root;
+	ResourceNodePtr_t root;
 
 	/** Maximum depth of the tree */
 	uint16_t max_depth;
@@ -207,7 +220,7 @@ private:
 	 *
 	 * @return True if the search have found some matchings.
 	 */
-	bool findNode(ResourceNode_t * curr_node,
+	bool findNode(ResourceNodePtr_t curr_node,
 			std::vector<ResourceIdentifierPtr_t>::iterator & rp_it,
 			std::vector<ResourceIdentifierPtr_t>::iterator const & rp_end,
 			uint16_t match_flags,
@@ -221,7 +234,7 @@ private:
 	 *
 	 * @return The child node just created
 	 */
-	ResourceNode_t * addChild(ResourceNode_t * curr_node, ResourcePtr_t pres);
+	ResourceNodePtr_t addChild(ResourceNodePtr_t curr_node, ResourcePtr_t pres);
 
 	/**
 	 * @brief Recursive method for printing nodes content in a tree-like form
@@ -229,14 +242,14 @@ private:
 	 * @param node Pointer to the starting tree node
 	 * @param depth Node depth
 	 */
-	void print_children(ResourceNode_t * node, int depth);
+	void print_children(ResourceNodePtr_t node, int depth);
 
 	/**
 	 * @brief Clear a node of the tree
 	 *
 	 * @param node Pointer to the node to clear
 	 */
-	void clear_node(ResourceNode_t * node);
+	void clear_node(ResourceNodePtr_t node);
 
 };
 
