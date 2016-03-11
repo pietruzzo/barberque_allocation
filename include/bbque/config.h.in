@@ -263,6 +263,8 @@
  */
 #define BBQUE_UID_TYPE uint32_t
 
+#define BBQUE_RID_TYPE int16_t
+
 /**
  * @brief The GoalGap Forward Threshold
  *

@@ -508,7 +508,7 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
 	std::map<br::Resource::Type_t, SchedEntityPtr_t> pschd_map;
 	std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator next_it;
-	std::vector<br::ResID_t>::reverse_iterator ids_it;
+	std::vector<BBQUE_RID_TYPE>::reverse_iterator ids_it;
 	float sc_value   = 0.0;
 	uint8_t mlog_len = 0;
 	char mlog[255];
@@ -633,7 +633,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 
 	// Binding IDs
 	BindingInfo_t bd_info = *(bd_it->second);
-	for (br::ResID_t & bd_id: bd_info.ids) {
+	for (BBQUE_RID_TYPE & bd_id: bd_info.ids) {
 		next_it = dom_it;
 		logger->Debug("EvalBindings: <%s> ID = %d",
 			br::ResourceIdentifier::TypeStr[bd_type], bd_id);
@@ -769,7 +769,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
 		SchedEntityPtr_t pschd,
 		size_t b_refn) {
 	ba::AwmPtr_t & pawm(pschd->pawm);
-	br::ResID_t & bd_id(pschd->bind_id);
+	BBQUE_RID_TYPE & bd_id(pschd->bind_id);
 	br::Resource::Type_t & bd_type(pschd->bind_type);
 	size_t r_refn;
 

@@ -146,7 +146,7 @@ public:
 	 * @return OK for success, ERR_UNKN_TYPE for unknown resource type,
 	 * ERR_USED_TYPE if the type has been already included in the path
 	 */
-	ExitCode_t Append(std::string const & str_type, ResID_t r_id);
+	ExitCode_t Append(std::string const & str_type, BBQUE_RID_TYPE r_id);
 
 	/**
 	 * @brief Append a resource type+id
@@ -157,7 +157,7 @@ public:
 	 * @return OK for success, ERR_UNKN_TYPE for unknown resource type,
 	 * ERR_USED_TYPE if the type has been already included in the path
 	 */
-	ExitCode_t Append(ResourceIdentifier::Type_t r_type, ResID_t r_id);
+	ExitCode_t Append(ResourceIdentifier::Type_t r_type, BBQUE_RID_TYPE r_id);
 
 	/**
 	 * @brief Append a set of resource identifiers from a string path
@@ -258,7 +258,7 @@ public:
 	/**
 	 * @brief Get the ID associated to a resource (type) in the path
 	 */
-	ResID_t GetID(ResourceIdentifier::Type_t r_type) const;
+	BBQUE_RID_TYPE GetID(ResourceIdentifier::Type_t r_type) const;
 
 	/**
 	 * @brief Replace the ID associated to a resource (type) in the path
@@ -272,8 +272,8 @@ public:
 	 */
 	ExitCode_t ReplaceID(
 			ResourceIdentifier::Type_t r_type,
-			ResID_t src_r_id,
-			ResID_t dst_r_id);
+			BBQUE_RID_TYPE src_r_id,
+			BBQUE_RID_TYPE dst_r_id);
 
 	/**
 	 * @brief Check if the resource path is of "template" class

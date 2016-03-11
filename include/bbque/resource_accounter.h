@@ -80,7 +80,7 @@ typedef struct BindingInfo {
 	/** Resource pointer descriptor list */
 	br::ResourcePtrList_t rsrcs;
 	/** The IDs of all the possible bindings */
-	std::vector<br::ResID_t> ids;
+	std::vector<BBQUE_RID_TYPE> ids;
 	/** Keep track the bindings without available processing elements */
 	br::ResourceBitset full;
 	/** Number of binding domains on the platform	 */
@@ -253,7 +253,7 @@ public:
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type =
 				br::Resource::UNDEFINED,
-			br::ResID_t r_scope_id = R_ID_ANY) const;
+			BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
 
 	uint64_t GetUsageAmount(
 			br::UsagesMap_t const & um,
@@ -262,7 +262,7 @@ public:
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type =
 				br::Resource::UNDEFINED,
-			br::ResID_t r_scope_id = R_ID_ANY) const;
+			BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
 
 	/**
 	 * @brief Get the cumulative amount of resource usage
@@ -282,7 +282,7 @@ public:
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type =
 				br::Resource::UNDEFINED,
-			br::ResID_t r_scope_id = R_ID_ANY) const {
+			BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const {
 		return GetUsageAmount(*(pum.get()), r_type, r_scope_type, r_scope_id);
 	}
 
@@ -291,7 +291,7 @@ public:
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type =
 				br::Resource::UNDEFINED,
-			br::ResID_t r_scope_id = R_ID_ANY) const;
+			BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
 
 	/**
 	 * @brief Show the system resources status
@@ -798,7 +798,7 @@ private:
 			br::UsagesMap_t::const_iterator & end,
 			br::ResourceIdentifier::Type_t r_type,
 			br::ResourceIdentifier::Type_t r_scope_type,
-			br::ResID_t r_scope_id,
+			BBQUE_RID_TYPE r_scope_id,
 			ba::AppSPtr_t papp,
 			br::RViewToken_t vtok) const;
 

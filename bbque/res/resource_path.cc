@@ -107,7 +107,7 @@ ResourcePath::CResult_t ResourcePath::Compare(
 
 ResourcePath::ExitCode_t ResourcePath::Append(
 		std::string const & r_name,
-		br::ResID_t r_id) {
+		BBQUE_RID_TYPE r_id) {
 	br::ResourceIdentifier::Type_t r_type;
 
 	// Resolve resource type from name first
@@ -118,7 +118,7 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 
 ResourcePath::ExitCode_t ResourcePath::Append(
 		br::ResourceIdentifier::Type_t r_type,
-		br::ResID_t r_id) {
+		BBQUE_RID_TYPE r_id) {
 	br::ResourceIdentifierPtr_t prid;
 
 	// Resource type checking
@@ -155,7 +155,7 @@ ResourcePath::ExitCode_t ResourcePath::AppendString(
 		bool smart_mode) {
 	std::string head, tail;
 	std::string r_name;
-	br::ResID_t r_id;
+	BBQUE_RID_TYPE r_id;
 	ExitCode_t result;
 
 	// Iterate over all the resources in the path string
@@ -286,8 +286,8 @@ bool ResourcePath::IsTemplate() const {
 
 ResourcePath::ExitCode_t ResourcePath::ReplaceID(
 		br::ResourceIdentifier::Type_t r_type,
-		br::ResID_t src_r_id,
-		br::ResID_t dst_r_id) {
+		BBQUE_RID_TYPE src_r_id,
+		BBQUE_RID_TYPE dst_r_id) {
 	br::ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
 	if (!prid)
 		return ERR_UNKN_TYPE;
@@ -304,7 +304,7 @@ ResourcePath::ExitCode_t ResourcePath::ReplaceID(
 	return OK;
 }
 
-br::ResID_t ResourcePath::GetID(br::ResourceIdentifier::Type_t r_type) const {
+BBQUE_RID_TYPE ResourcePath::GetID(br::ResourceIdentifier::Type_t r_type) const {
 	br::ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
 	if (!prid)
 		return R_ID_NONE;

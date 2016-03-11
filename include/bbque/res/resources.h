@@ -77,7 +77,7 @@ typedef std::unordered_map<RViewToken_t, ResourceStatePtr_t> RSHashMap_t;
 /**
  * @brief The status of a resource
  *
- * It syntetizes the concept of resource state:
+ * The class keep track of the status of the resource, from the usage standpoint.
  * How many resources are used/available? Which application is using the
  * resource? How much is using it ?
  * This are the basic information we need to track upon resources.
@@ -172,7 +172,7 @@ public:
 	 * @param id Resource integer ID
 	 * @param tot The total amount of resource
 	 */
-	Resource(ResourceIdentifier::Type_t type, ResID_t id, uint64_t tot = 1);
+	Resource(ResourceIdentifier::Type_t type, BBQUE_RID_TYPE id, uint64_t tot = 1);
 
 	/**
 	 * Destructor

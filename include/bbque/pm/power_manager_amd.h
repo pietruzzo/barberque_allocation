@@ -212,7 +212,7 @@ private:
 	int adapters_count;
 
 	/*** Mapping BBQ resource id -> ADL adapter id */
-	std::map<br::ResID_t, int> adapters_map;
+	std::map<BBQUE_RID_TYPE, int> adapters_map;
 
 	/*** Activity resume for each adapter */
 	std::map<int, ActivityPtr_t> activity_map;

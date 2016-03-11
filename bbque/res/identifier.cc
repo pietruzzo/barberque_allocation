@@ -40,7 +40,7 @@ const char * ResourceIdentifier::TypeStr[TYPE_COUNT] = {
 
 ResourceIdentifier::ResourceIdentifier(
 		ResourceIdentifier::Type_t _type,
-		ResID_t _id):
+		BBQUE_RID_TYPE _id):
 	type(_type),
 	id(_id) {
 
@@ -66,7 +66,7 @@ bool ResourceIdentifier::operator< (ResourceIdentifier const & ri) {
 	return false;
 }
 
-void ResourceIdentifier::SetID(ResID_t _id) {
+void ResourceIdentifier::SetID(BBQUE_RID_TYPE _id) {
 	id   = _id;
 	name = TypeStr[type];
 

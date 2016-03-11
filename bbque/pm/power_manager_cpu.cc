@@ -163,7 +163,7 @@ CPUPowerManager::~CPUPowerManager() {
 
 CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 		CPUPowerManager::LoadInfo * info,
-		br::ResID_t cpu_core_id) const {
+		BBQUE_RID_TYPE cpu_core_id) const {
 	// Information about kernel activity is available in the /proc/stat
 	// file. All the values are aggregated since the system first booted.
 	// Thus, to compute the load, the variation of these values in a little
@@ -209,7 +209,7 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 
 	// Extract the single CPU core (PE) id from the resource path
 	// (e.g., "cpu2.pe3", pe_id = 3)
-	br::ResID_t pe_id = rp->GetID(br::ResourceIdentifier::PROC_ELEMENT);
+	BBQUE_RID_TYPE pe_id = rp->GetID(br::ResourceIdentifier::PROC_ELEMENT);
 	if (pe_id >= 0) {
 		result = GetLoadCPU(pe_id, perc);
 		if (result != PMResult::OK) return result;
@@ -235,7 +235,7 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 
 
 PowerManager::PMResult CPUPowerManager::GetLoadCPU(
-		ResID_t cpu_core_id,
+		BBQUE_RID_TYPE cpu_core_id,
 		uint32_t & load) const {
 	CPUPowerManager::ExitStatus result;
 	CPUPowerManager::LoadInfo start_info, end_info;

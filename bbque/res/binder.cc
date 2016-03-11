@@ -32,8 +32,8 @@ namespace bbque { namespace res {
 uint32_t ResourceBinder::Bind(
 		UsagesMap_t const & src_um,
 		br::ResourceIdentifier::Type_t r_type,
-		br::ResID_t src_r_id,
-		br::ResID_t dst_r_id,
+		BBQUE_RID_TYPE src_r_id,
+		BBQUE_RID_TYPE dst_r_id,
 		UsagesMapPtr_t dst_pum,
 		br::ResourceIdentifier::Type_t filter_rtype,
 		ResourceBitset * filter_mask) {
@@ -92,7 +92,7 @@ inline void SetBit(
 		br::ResourceIdentifier::Type_t r_type,
 		ResourceBitset & r_mask) {
 	// Get the ID of the resource type in the path
-	br::ResID_t r_id = ppath->GetID(r_type);
+	BBQUE_RID_TYPE r_id = ppath->GetID(r_type);
 	if ((r_id == R_ID_NONE) || (r_id == R_ID_ANY))
 		return;
 	// Set the ID-th bit in the mask
@@ -130,13 +130,13 @@ ResourceBitset ResourceBinder::GetMask(
 		UsagesMapPtr_t pum,
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
-		br::ResID_t r_scope_id,
+		BBQUE_RID_TYPE r_scope_id,
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
 	UsagesMap_t::iterator pum_it;
 	ResourceBitset r_mask;
 	br::ResourceIdentifier::Type_t found_rsrc_type, found_scope_type;
-	br::ResID_t found_scope_id;
+	BBQUE_RID_TYPE found_scope_id;
 	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 
 	// Sanity check
@@ -193,7 +193,7 @@ ResourceBitset ResourceBinder::GetMask(
 		ResourcePtrList_t const & rpl,
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
-		br::ResID_t r_scope_id,
+		BBQUE_RID_TYPE r_scope_id,
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
 	ResourceBitset r_mask;

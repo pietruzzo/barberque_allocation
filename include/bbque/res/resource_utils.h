@@ -157,7 +157,7 @@ public:
 	 * @return The updated string
 	 */
 	inline static std::string AppendID(std::string const & orig_name,
-			ResID_t rid) {
+			BBQUE_RID_TYPE rid) {
 		std::string ret_name(orig_name);
 
 		// Check ID validity
@@ -185,8 +185,8 @@ public:
 	 */
 	inline static std::string ReplaceID(std::string const & curr_rsrc_path,
 					std::string	const & rsrc_name,
-					ResID_t src_ID,
-					ResID_t dst_ID) {
+					BBQUE_RID_TYPE src_ID,
+					BBQUE_RID_TYPE dst_ID) {
 
 		// Search the resource name in the current path
 		std::string bind_rsrc_path(curr_rsrc_path);
@@ -212,7 +212,7 @@ public:
 	 * @return The ID of the resource if it is part of the part.
 	 * R_ID_NONE otherwise.
 	 */
-	inline static ResID_t GetID(std::string const & rsrc_path,
+	inline static BBQUE_RID_TYPE GetID(std::string const & rsrc_path,
 					std::string	const & rsrc_name) {
 		// Find the ID of the resource in the path
 		size_t start_pos = rsrc_path.find(rsrc_name);
@@ -267,7 +267,7 @@ public:
 	}
 
 	inline static void GetNameID(std::string const & rsrc_str,
-			std::string & rsrc_name, ResID_t & rsrc_id) {
+			std::string & rsrc_name, BBQUE_RID_TYPE & rsrc_id) {
 		size_t id_pos, dot_pos;
 
 		rsrc_id = R_ID_NONE;

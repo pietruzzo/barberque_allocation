@@ -68,8 +68,8 @@ public:
 	static uint32_t Bind(
 			UsagesMap_t const & src_um,
 			ResourceIdentifier::Type_t r_type,
-			ResID_t	src_r_id,
-			ResID_t dst_r_id,
+			BBQUE_RID_TYPE	src_r_id,
+			BBQUE_RID_TYPE dst_r_id,
 			UsagesMapPtr_t dst_pum,
 			ResourceIdentifier::Type_t filter_rtype =
 				ResourceIdentifier::UNDEFINED,
@@ -121,7 +121,7 @@ public:
 			UsagesMapPtr_t pum,
 			ResourceIdentifier::Type_t r_type,
 			ResourceIdentifier::Type_t r_scope_type,
-			ResID_t r_scope_id,
+			BBQUE_RID_TYPE r_scope_id,
 			AppSPtr_t papp = nullptr,
 			RViewToken_t vtok = 0);
 
@@ -139,7 +139,7 @@ public:
 			ResourcePtrList_t const & rpl,
 			ResourceIdentifier::Type_t r_type,
 			ResourceIdentifier::Type_t r_scope_type,
-			ResID_t r_scope_id,
+			BBQUE_RID_TYPE r_scope_id,
 			AppSPtr_t papp = nullptr,
 			RViewToken_t vtok = 0);
 

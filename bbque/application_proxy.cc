@@ -414,7 +414,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 
 #ifdef CONFIG_BBQUE_OPENCL
 		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(br::Resource::GPU));
-		br::ResID_t r_id = gpu_ids.FirstSet();
+		BBQUE_RID_TYPE r_id = gpu_ids.FirstSet();
 		// If no GPU have been bound, the CPU is the OpenCL device assigned
 		if (r_id == R_ID_NONE) {
 			VectorUInt8Ptr_t pdev_ids = oclProxy.GetDeviceIDs(br::Resource::CPU);

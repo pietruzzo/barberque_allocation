@@ -67,8 +67,8 @@ public:
 	 */
 	virtual size_t BindResource(
 			br::ResourceIdentifier::Type_t r_type,
-			br::ResID_t src_ID,
-			br::ResID_t dst_ID,
+			BBQUE_RID_TYPE src_ID,
+			BBQUE_RID_TYPE dst_ID,
 			size_t b_refn = 0,
 			br::ResourceIdentifier::Type_t filter_rtype =
 				br::ResourceIdentifier::UNDEFINED,

@@ -90,7 +90,7 @@ void AMDPowerManager::LoadAdaptersInfo() {
 		}
 		// Adapters ID mapping and resouce path
 		adapters_map.insert(
-			std::pair<br::ResID_t, int>(adapters_map.size(), i));
+			std::pair<BBQUE_RID_TYPE, int>(adapters_map.size(), i));
 		activity_map.insert(
 			std::pair<int, ActivityPtr_t>(
 				i, ActivityPtr_t(new ADLPMActivity)));
@@ -151,7 +151,7 @@ AMDPowerManager::~AMDPowerManager() {
 }
 
 int AMDPowerManager::GetAdapterId(br::ResourcePathPtr_t const & rp) const {
-	std::map<br::ResID_t, int>::const_iterator it;
+	std::map<BBQUE_RID_TYPE, int>::const_iterator it;
 	if (rp == nullptr) {
 		logger->Error("ADL: Null resource path");
 		return -1;

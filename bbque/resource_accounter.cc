@@ -547,7 +547,7 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		br::RViewToken_t vtok,
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
-		br::ResID_t r_scope_id) const {
+		BBQUE_RID_TYPE r_scope_id) const {
 
 	if (pum == nullptr) {
 		logger->Fatal("GetUsageAmount: empty map");
@@ -566,7 +566,7 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		br::RViewToken_t vtok,
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
-		br::ResID_t r_scope_id) const {
+		BBQUE_RID_TYPE r_scope_id) const {
 
 	br::UsagesMap_t::const_iterator b_it(um.begin());
 	br::UsagesMap_t::const_iterator e_it(um.end());
@@ -579,7 +579,7 @@ inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		br::UsagesMap_t::const_iterator & end,
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
-		br::ResID_t r_scope_id,
+		BBQUE_RID_TYPE r_scope_id,
 		ba::AppSPtr_t papp,
 		br::RViewToken_t vtok) const {
 	uint64_t amount = 0;
@@ -618,7 +618,7 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		br::UsagesMap_t const & um,
 		br::ResourceIdentifier::Type_t r_type,
 		br::ResourceIdentifier::Type_t r_scope_type,
-		br::ResID_t r_scope_id) const {
+		BBQUE_RID_TYPE r_scope_id) const {
 	uint64_t amount = 0;
 	for (auto & ru_entry: um) {
 		br::ResourcePathPtr_t const & ppath(ru_entry.first);

@@ -45,7 +45,7 @@ namespace bbque { namespace res {
 class ResourceIdentifier;
 
 /** Data-type for the Resource IDs */
-typedef int16_t ResID_t;
+typedef int16_t BBQUE_RID_TYPE;
 /** Shared pointer to a ResourceIdentifier object */
 typedef std::shared_ptr<ResourceIdentifier> ResourceIdentifierPtr_t;
 
@@ -104,7 +104,7 @@ public:
 	 * @param type The resource type
 	 * @param id The ID number of the resource
 	 */
-	ResourceIdentifier(Type_t type, ResID_t id);
+	ResourceIdentifier(Type_t type, BBQUE_RID_TYPE id);
 
 	/**
 	 * @brief Operator < overloading
@@ -128,7 +128,7 @@ public:
 	 *
 	 * @return The ID number
 	 */
-	inline ResID_t ID() const {
+	inline BBQUE_RID_TYPE ID() const {
 		return id;
 	}
 
@@ -137,7 +137,7 @@ public:
 	 *
 	 * @param _id The ID number to set
 	 */
-	void SetID(ResID_t _id);
+	void SetID(BBQUE_RID_TYPE _id);
 
 	/**
 	 * @brief Get the resource type
@@ -188,7 +188,7 @@ protected:
 	Type_t type;
 
 	/** ID of the resource */
-	ResID_t id;
+	BBQUE_RID_TYPE id;
 
 };
 

@@ -86,7 +86,7 @@ public:
 		 * @param _pawm AWM to evaluate
 		 * @param _bid Cluster ID for resource binding
 		 */
-		EvalEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, br::ResID_t _bid):
+		EvalEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, BBQUE_RID_TYPE _bid):
 			papp(_papp),
 			pawm(_pawm),
 			bind_id(_bid) {
@@ -98,7 +98,7 @@ public:
 		/** Candidate AWM */
 		ba::AwmPtr_t pawm;
 		/** Candidate cluster for resource binding */
-		br::ResID_t bind_id;
+		BBQUE_RID_TYPE bind_id;
 		/** Type of resource for the candidate binding */
 		br::ResourceIdentifier::Type_t bind_type;
 		/**
@@ -136,7 +136,7 @@ public:
 		}
 
 		/** Set the binding ID to track */
-		inline void SetBindingID(br::ResID_t bid, br::Resource::Type_t btype) {
+		inline void SetBindingID(BBQUE_RID_TYPE bid, br::Resource::Type_t btype) {
 			bind_id = bid;
 			bind_type = btype;
 			_BuildStr();
@@ -181,7 +181,7 @@ public:
 		 * @param _metr The related scheduling metrics (also "application
 		 * value")
 		 */
-		SchedEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, br::ResID_t _bid,
+		SchedEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, BBQUE_RID_TYPE _bid,
 				float _metr):
 			EvalEntity_t(_papp, _pawm, _bid),
 			metrics(_metr) {

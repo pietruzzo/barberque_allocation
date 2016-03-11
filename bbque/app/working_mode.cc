@@ -177,8 +177,8 @@ uint64_t WorkingMode::ResourceUsageAmount(
 
 size_t WorkingMode::BindResource(
 		br::ResourceIdentifier::Type_t r_type,
-		br::ResID_t src_ID,
-		br::ResID_t dst_ID,
+		BBQUE_RID_TYPE src_ID,
+		BBQUE_RID_TYPE dst_ID,
 		size_t b_refn,
 		br::ResourceIdentifier::Type_t filter_rtype,
 		br::ResourceBitset * filter_mask) {
@@ -225,8 +225,8 @@ size_t WorkingMode::BindResource(
 
 std::string WorkingMode::BindingStr(
 		br::ResourceIdentifier::Type_t r_type,
-		br::ResID_t src_ID,
-		br::ResID_t dst_ID,
+		BBQUE_RID_TYPE src_ID,
+		BBQUE_RID_TYPE dst_ID,
 		size_t b_refn) {
 	char tail_str[40];
 	std::string str(br::ResourceIdentifier::TypeStr[r_type]);

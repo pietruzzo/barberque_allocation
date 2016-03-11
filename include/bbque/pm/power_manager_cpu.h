@@ -158,12 +158,12 @@ protected:
 	/**
 	 *  Sample CPU activity samples from /proc/stat
 	 */
-	PMResult GetLoadCPU(br::ResID_t cpu_core_id, uint32_t & load) const;
+	PMResult GetLoadCPU(BBQUE_RID_TYPE cpu_core_id, uint32_t & load) const;
 
 	/**
 	 *  Sample CPU activity samples from /proc/stat
 	 */
-	ExitStatus GetLoadInfo(LoadInfo *info, br::ResID_t cpu_core_id) const;
+	ExitStatus GetLoadInfo(LoadInfo *info, BBQUE_RID_TYPE cpu_core_id) const;
 
 	/**
 	 *  Set Cpufreq scaling governor for PE pe_id

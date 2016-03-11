@@ -81,7 +81,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 	char r_path_str[20];
 	uint64_t bd_r_avail;
 	AppPrio_t priority;
-	std::vector<br::ResID_t>::iterator ids_it;
+	std::vector<BBQUE_RID_TYPE>::iterator ids_it;
 	std::list<br::Resource::Type_t>::iterator type_it;
 
 	// Applications/EXC to schedule, given the priority level
@@ -105,7 +105,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 		min_bd_r_avail[r_type] = r_avail[r_type];
 		max_bd_r_avail[r_type] = 0;
 
-		for (br::ResID_t & bd_id: bd_info.ids) {
+		for (BBQUE_RID_TYPE & bd_id: bd_info.ids) {
 			snprintf(r_path_str, 20, "%s%d.%s",
 					bd_info.d_path->ToString().c_str(),
 					bd_id,

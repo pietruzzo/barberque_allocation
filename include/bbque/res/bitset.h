@@ -46,25 +46,25 @@ public:
 
 	~ResourceBitset();
 
-	ExitCode_t Set(ResID_t pos);
+	ExitCode_t Set(BBQUE_RID_TYPE pos);
 
 	ExitCode_t Reset();
 
-	ExitCode_t Reset(ResID_t pos);
+	ExitCode_t Reset(BBQUE_RID_TYPE pos);
 
-	inline bool Test(ResID_t pos) const {
+	inline bool Test(BBQUE_RID_TYPE pos) const {
 		return bit_set.test(pos);
 	}
 
-	inline ResID_t Count() const {
+	inline BBQUE_RID_TYPE Count() const {
 		return count;
 	}
 
-	inline ResID_t FirstSet() const {
+	inline BBQUE_RID_TYPE FirstSet() const {
 		return first_set;
 	}
 
-	inline ResID_t LastSet() const {
+	inline BBQUE_RID_TYPE LastSet() const {
 		return last_set;
 	}
 
@@ -92,7 +92,7 @@ public:
 		return bit_set != rbs.bit_set;
 	}
 
-	bool operator[] (ResID_t pos) {
+	bool operator[] (BBQUE_RID_TYPE pos) {
 		return bit_set[pos];
 	}
 
@@ -104,11 +104,11 @@ private:
 
 	std::bitset<BBQUE_MAX_R_ID_NUM> bit_set;
 
-	ResID_t first_set;
+	BBQUE_RID_TYPE first_set;
 
-	ResID_t last_set;
+	BBQUE_RID_TYPE last_set;
 
-	ResID_t count;
+	BBQUE_RID_TYPE count;
 
 	bool none;
 

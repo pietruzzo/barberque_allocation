@@ -506,7 +506,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoBinding(
 		// Resource path e.g., "sys0.cpu[0..n].XX"
 		if (bd_info.rsrcs.empty()) continue;
 		for (br::ResourcePtr_t const & rsrc: bd_info.rsrcs) {
-			br::ResID_t bd_id = rsrc->ID();
+			BBQUE_RID_TYPE bd_id = rsrc->ID();
 			logger->Debug("DoBinding: [%s] binding to %s%d",
 					psched->StrId(),
 					br::ResourceIdentifier::TypeStr[bd_type],

@@ -53,7 +53,7 @@ ResourceBitset ResourceBitset::operator&= (const ResourceBitset & rbs) {
 
 /**/
 
-ResourceBitset::ExitCode_t ResourceBitset::Set(ResID_t pos) {
+ResourceBitset::ExitCode_t ResourceBitset::Set(BBQUE_RID_TYPE pos) {
 	char buff[4] = "";
 
 	// Boundary check
