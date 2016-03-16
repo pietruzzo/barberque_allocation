@@ -137,7 +137,6 @@ target_link_libraries(barbeque
 	bbque_resources
 	bbque_apps
 	${Boost_LIBRARIES}
-	pthread
 )
 
 # Linking static plugins
@@ -159,8 +158,10 @@ endif (CONFIG_TARGET_LINUX)
 if (CONFIG_TARGET_ANDROID)
 target_link_libraries(barbeque
 	bbque_android
-	-Wl,-whole-archive bbque_cpp11 -Wl,-no-whole-archive
 )
+else (CONFIG_TARGET_ANDROID)
+target_link_libraries(barbeque
+  pthread)
 endif (CONFIG_TARGET_ANDROID)
 
 # Linking dependencyes for OpenCL support

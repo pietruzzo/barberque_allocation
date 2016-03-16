@@ -41,7 +41,6 @@ add_library(bbque_rtlib SHARED ${RTLIB_SRC})
 target_link_libraries(bbque_rtlib
 	bbque_utils
 	${Boost_LIBRARIES}
-	pthread
 )
 
 # Add "Generic-Linux" specific flags
@@ -51,12 +50,10 @@ target_link_libraries(bbque_rtlib
 )
 endif (CONFIG_TARGET_LINUX)
 
-# Linking dependencies for Android-Linux targets
-if (CONFIG_TARGET_ANDROID)
-target_link_libraries(bbque_rtlib
-	-Wl,-whole-archive bbque_cpp11 -Wl,-no-whole-archive
-)
-endif (CONFIG_TARGET_ANDROID)
+# Linking dependencies for not Android-Linux targets
+if (NOT CONFIG_TARGET_ANDROID)
+  target_link_libraries(bbque_rtlib pthread)
+endif (NOT CONFIG_TARGET_ANDROID)
 
 
 # Use link path ad RPATH
