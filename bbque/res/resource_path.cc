@@ -54,8 +54,7 @@ ResourcePath::ResourcePath(ResourcePath const & r_path):
 }
 
 ResourcePath::~ResourcePath() {
-	identifiers.clear();
-	types_idx.clear();
+	Clear();
 }
 
 
