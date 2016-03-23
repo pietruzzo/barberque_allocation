@@ -58,6 +58,11 @@ ResourcePath::~ResourcePath() {
 	types_idx.clear();
 }
 
+
+/******************************************************************
+ * Check / Comparison                                             *
+ ******************************************************************/
+
 bool ResourcePath::operator< (ResourcePath const & cmp_path) {
 	ResourcePath::ConstIterator it, cmp_it;
 	it     = identifiers.begin();
@@ -72,6 +77,18 @@ bool ResourcePath::operator< (ResourcePath const & cmp_path) {
 			return true;
 	}
 	return false;
+}
+
+bool ResourcePath::IsTemplate() const {
+	ConstIterator rid_it(identifiers.begin());
+	ConstIterator rid_end(identifiers.end());
+	// A template has all the resources IDs unset
+	for (; rid_it != rid_end; ++rid_it) {
+		if (((*rid_it)->ID() != R_ID_NONE) &&
+			((*rid_it)->ID() != R_ID_ANY))
+			return false;
+	}
+	return true;
 }
 
 ResourcePath::CResult_t ResourcePath::Compare(
@@ -103,6 +120,18 @@ ResourcePath::CResult_t ResourcePath::Compare(
 	logger->Debug("Resource identifier comparison: %s EQUAL to %s",
 			prid->Name().c_str(), pcmp_rid->Name().c_str());
 	return result;
+}
+
+/******************************************************************
+ * Manipulation                                                   *
+ ******************************************************************/
+
+void ResourcePath::Clear() {
+	identifiers.clear();
+	types_idx.clear();
+	types_bits.reset();
+	global_type = br::ResourceIdentifier::UNDEFINED;
+	level_count = 0;
 }
 
 ResourcePath::ExitCode_t ResourcePath::Append(
@@ -220,29 +249,19 @@ ResourcePath::ExitCode_t ResourcePath::Concat(
 	return AppendString(str_path, true);
 }
 
-void ResourcePath::Clear() {
-	identifiers.clear();
-	types_idx.clear();
-	types_bits.reset();
-	global_type = br::ResourceIdentifier::UNDEFINED;
-	level_count = 0;
+
+/******************************************************************
+ * Resource identifiers manipulation                              *
+ ******************************************************************/
+
+int8_t ResourcePath::GetLevel(br::ResourceIdentifier::Type_t r_type) const {
+	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
+	index_it = types_idx.find(static_cast<uint16_t>(r_type));
+	if (index_it == types_idx.end())
+		return -1;
+	return index_it->second;
 }
 
-br::ResourceIdentifier::Type_t ResourcePath::ParentType(
-		br::ResourceIdentifier::Type_t r_type) const {
-	// Find the index of the given resource type
-	int8_t level = GetLevel(r_type);
-	if (level < 0)
-		return br::ResourceIdentifier::UNDEFINED;
-
-	// Retrieve the position of the parent
-	int8_t parent_index = level - 1;
-	if (parent_index < 0)
-		return br::ResourceIdentifier::UNDEFINED;
-
-	// Parent type
-	return identifiers.at(parent_index)->Type();
-}
 
 br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 		uint8_t depth_level) const {
@@ -264,24 +283,11 @@ br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 	return identifiers.at(level);
 }
 
-int8_t ResourcePath::GetLevel(br::ResourceIdentifier::Type_t r_type) const {
-	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
-	index_it = types_idx.find(static_cast<uint16_t>(r_type));
-	if (index_it == types_idx.end())
-		return -1;
-	return index_it->second;
-}
-
-bool ResourcePath::IsTemplate() const {
-	ConstIterator rid_it(identifiers.begin());
-	ConstIterator rid_end(identifiers.end());
-	// A template has all the resources IDs unset
-	for (; rid_it != rid_end; ++rid_it) {
-		if (((*rid_it)->ID() != R_ID_NONE) &&
-			((*rid_it)->ID() != R_ID_ANY))
-			return false;
-	}
-	return true;
+BBQUE_RID_TYPE ResourcePath::GetID(br::ResourceIdentifier::Type_t r_type) const {
+	br::ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
+	if (!prid)
+		return R_ID_NONE;
+	return prid->ID();
 }
 
 ResourcePath::ExitCode_t ResourcePath::ReplaceID(
@@ -304,12 +310,27 @@ ResourcePath::ExitCode_t ResourcePath::ReplaceID(
 	return OK;
 }
 
-BBQUE_RID_TYPE ResourcePath::GetID(br::ResourceIdentifier::Type_t r_type) const {
-	br::ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
-	if (!prid)
-		return R_ID_NONE;
-	return prid->ID();
+
+/******************************************************************
+ * Miscellanea                                                    *
+ ******************************************************************/
+
+br::ResourceIdentifier::Type_t ResourcePath::ParentType(
+		br::ResourceIdentifier::Type_t r_type) const {
+	// Find the index of the given resource type
+	int8_t level = GetLevel(r_type);
+	if (level < 0)
+		return br::ResourceIdentifier::UNDEFINED;
+
+	// Retrieve the position of the parent
+	int8_t parent_index = level - 1;
+	if (parent_index < 0)
+		return br::ResourceIdentifier::UNDEFINED;
+
+	// Parent type
+	return identifiers.at(parent_index)->Type();
 }
+
 
 std::string ResourcePath::ToString() const {
 	ResourcePath::ConstIterator it;

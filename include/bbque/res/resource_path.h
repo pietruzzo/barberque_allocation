@@ -235,7 +235,8 @@ public:
 	 * @return The related @ref ResourceIdentifier::Type_t value
 	 **/
 	ResourceIdentifier::Type_t ParentType(
-		br::ResourceIdentifier::Type_t r_type = br::ResourceIdentifier::PROC_ELEMENT) const;
+		br::ResourceIdentifier::Type_t r_type =
+			br::ResourceIdentifier::PROC_ELEMENT) const;
 
 	/** Iterators **/
 
@@ -275,22 +276,7 @@ public:
 			BBQUE_RID_TYPE src_r_id,
 			BBQUE_RID_TYPE dst_r_id);
 
-	/**
-	 * @brief Check if the resource path is of "template" class
-	 *
-	 * A template path does not feature any ID.
-	 * Example: "sys.cpu.mem"
-	 *
-	 * @return true if the path is a template, false otherwise
-	 */
-	bool IsTemplate() const;
 
-	/**  Utility member functions  **/
-
-	/**
-	 * @brief Return the resource path in text string format
-	 */
-	std::string ToString() const;
 
 	/**
 	 * @brief Retrieve a resource identifier
@@ -327,6 +313,23 @@ public:
 	inline size_t NumLevels() const {
 		return identifiers.size();
 	}
+
+	/**
+	 * @brief Check if the resource path is of "template" class
+	 *
+	 * A template path does not feature any ID.
+	 * Example: "sys.cpu.mem"
+	 *
+	 * @return true if the path is a template, false otherwise
+	 */
+	bool IsTemplate() const;
+
+	/**  Utility member functions  **/
+
+	/**
+	 * @brief Return the resource path in text string format
+	 */
+	std::string ToString() const;
 
 private:
 
