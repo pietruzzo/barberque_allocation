@@ -32,6 +32,9 @@
 #  include "bbque/pp/linux.h"
 #  define  PLATFORM_PROXY LinuxPP
 # endif
+# ifdef CONFIG_TARGET_ANDROID
+#  error Not implemented yet: AndroidPP
+# endif
 #endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
 
 #define PLATFORM_PROXY_NAMESPACE "bq.pp"
