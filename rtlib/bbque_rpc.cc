@@ -25,8 +25,6 @@
 #include "bbque/utils/cgroups.h"
 #include "bbque/utils/logging/console_logger.h"
 
-#include <libcgroup.h>
-
 #include <cstdio>
 #include <cstring>
 #include <sys/stat.h>

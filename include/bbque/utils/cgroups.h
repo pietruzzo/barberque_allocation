@@ -21,7 +21,9 @@
 #include "bbque/utils/utility.h"
 #include "bbque/utils/logging/logger.h"
 
-#include <libcgroup.h>
+#ifdef CONFIG_EXTERNAL_LIBCG
+# include <libcgroup.h>
+#endif
 
 namespace bu = bbque::utils;
 
