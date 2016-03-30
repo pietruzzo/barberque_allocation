@@ -32,10 +32,6 @@
 #  include "bbque/pp/linux.h"
 #  define  PLATFORM_PROXY LinuxPP
 # endif
-# ifdef CONFIG_TARGET_P2012
-#  include "bbque/pp/p2012.h"
-#  define  PLATFORM_PROXY P2012PP
-# endif
 #endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
 
 #define PLATFORM_PROXY_NAMESPACE "bq.pp"
