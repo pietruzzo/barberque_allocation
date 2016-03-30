@@ -21,7 +21,9 @@
 
 #include "bbque/utils/logging/android_logger.h"
 #include "bbque/utils/logging/console_logger.h"
-#include "bbque/utils/logging/log4cpp_logger.h"
+#ifdef CONFIG_EXTERNAL_LOG4CPP
+# include "bbque/utils/logging/log4cpp_logger.h"
+#endif
 
 namespace bbque { namespace utils {
 
