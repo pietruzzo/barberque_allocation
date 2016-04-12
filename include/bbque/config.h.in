@@ -167,6 +167,9 @@
 /** Enable Power Management support */
 #cmakedefine CONFIG_BBQUE_PM
 
+/** Disable ACPI Battery monitoring */
+#cmakedefine CONFIG_BBQUE_PM_BATTERY_NOACPI
+
 /** Enable periodic Power monitoring */
 #cmakedefine CONFIG_BBQUE_WM
 

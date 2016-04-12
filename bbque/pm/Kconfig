@@ -18,6 +18,13 @@ config  BBQUE_PM_BATTERY
   ---help---
   Enable the interface with the system battery, if available.
 
+config BBQUE_PM_BATTERY_NOACPI
+  bool "NO ACPI Interface"
+  depends on BBQUE_PM_BATTERY
+  default n
+   ---help---
+  Avoid using the ACPI interface to monitor the battery status.
+
 config BBQUE_WM
   bool "Periodic Monitoring"
   depends on BBQUE_PM

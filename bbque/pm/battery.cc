@@ -50,11 +50,13 @@ Battery::Battery(
 		logger->Error("Missing directory: %s", info_dir.c_str());
 		return;
 	}
+#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
 	status_dir.append("/" + str_id + "/");
 	if (!boost::filesystem::exists(status_dir)) {
 		logger->Error("Missing directory: %s", status_dir.c_str());
 		return;
 	}
+#endif // CONFIG_BBQUE_PM_BATTERY_NOACPI
 
 	// Technology string
 	char t_str[12];
@@ -99,6 +101,23 @@ bool Battery::IsDischarging() {
 	return (strncmp(status, BBQUE_BATTERY_STATUS_DIS, 3) == 0);
 }
 
+inline uint32_t Battery::GetMilliUInt32From(std::string const & path) {
+	bu::IoFs::ExitCode_t result;
+	uint32_t m_value;
+
+	if (!boost::filesystem::exists(path)) {
+		logger->Error("Missing file: %s", path.c_str());
+		return 0;
+	}
+
+	result = bu::IoFs::ReadIntValueFrom<uint32_t>(path, m_value);
+	if (result != bu::IoFs::OK) {
+		logger->Error("Failed in reading %s", path.c_str());
+		return 0;
+	}
+	return m_value / 1e3;
+}
+
 uint8_t Battery::GetChargePerc() {
 	uint8_t perc = 0;
 	char perc_str[4];
@@ -131,35 +150,30 @@ unsigned long Battery::GetChargeMAh() {
 }
 
 uint32_t Battery::GetVoltage() {
-	char volt[7];
-	memset(volt, '\0', sizeof(volt));
-	bu::IoFs::ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
-			BBQUE_BATTERY_PROC_STATE_VOLT, volt, sizeof(volt)-1);
-	if (!isdigit(volt[0])) {
-		logger->Error("Not valid voltage value");
-		return 0;
-	}
-	return std::stoi(volt);
+#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+	return ACPI_GetVoltage();
+#else
+	return GetMilliUInt32From(info_dir + BBQUE_BATTERY_IF_VOLTAGE_NOW);
+#endif
 }
 
 uint32_t Battery::GetPower() {
+#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
 	return (GetDischargingRate() * GetVoltage()) / 1e3;
+#else
+	return GetMilliUInt32From(info_dir + BBQUE_BATTERY_IF_POWER_NOW);
+#endif
 }
 
 uint32_t Battery::GetDischargingRate() {
-	if (!IsDischarging()) {
-		return 0;
-	}
-
-	char rate[7];
-	memset(rate, '\0', sizeof(rate));
-	bu::IoFs::ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
-			BBQUE_BATTERY_PROC_STATE_RATE, rate, sizeof(rate)-1);
-	if (!isdigit(rate[0])) {
-		logger->Error("Not valid discharging rate");
-		return 0;
-	}
-	return std::stoi(rate);
+#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+	return ACPI_GetDischargingRate();
+#else
+	uint32_t current = GetMilliUInt32From(info_dir + BBQUE_BATTERY_IF_CURRENT_NOW);
+	if (current == 0)
+		return (GetPower() * 1e3) / GetVoltage();
+	return current;
+#endif
 }
 
 unsigned long Battery::GetEstimatedLifetime() {
@@ -190,6 +204,42 @@ std::string Battery::PrintChargeBar() {
 	bar += "%";
 	return bar;
 }
+
+/********************** ACPI dependent code ***************************/
+
+#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+
+uint32_t Battery::ACPI_GetVoltage() {
+	char volt[7];
+	memset(volt, '\0', sizeof(volt));
+	bu::IoFs::ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
+			BBQUE_BATTERY_PROC_STATE_VOLT, volt, sizeof(volt)-1);
+	if (!isdigit(volt[0])) {
+		logger->Error("Not valid voltage value");
+		return 0;
+	}
+	return std::stoi(volt);
+}
+
+uint32_t Battery::ACPI_GetDischargingRate() {
+	if (!IsDischarging()) {
+		return 0;
+	}
+
+	char rate[7];
+	memset(rate, '\0', sizeof(rate));
+	bu::IoFs::ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
+			BBQUE_BATTERY_PROC_STATE_RATE, rate, sizeof(rate)-1);
+	if (!isdigit(rate[0])) {
+		logger->Error("Not valid discharging rate");
+		return 0;
+	}
+	return std::stoi(rate);
+}
+
+#endif // CONFIG_BBQUE_PM_BATTERY_NOACPI
+
+
 
 } // namespace bbque
 

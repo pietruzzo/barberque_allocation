@@ -171,6 +171,18 @@ private:
 	/*** The supplied voltage */
 	uint32_t voltage;
 
+
+	uint32_t GetMilliUInt32From(std::string const & path);
+
+
+#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+
+	uint32_t ACPI_GetVoltage();
+
+	uint32_t ACPI_GetDischargingRate();
+
+#endif // CONFIG_BBQUE_PM_BATTERY_NOACPI
+
 };
 
 } // namespace bbque

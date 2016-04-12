@@ -15,23 +15,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+ #include "bbque/config.h"
+
 #ifndef BBQUE_BATTERY_CONFIG_H_
 #define BBQUE_BATTERY_CONFIG_H_
 
-// sysfs path and attributes
+/************ SysFS interfaces **********************/
+
 #define BBQUE_BATTERY_SYS_ROOT         "/sys/class/power_supply/"
 #define BBQUE_BATTERY_IF_TECHNOLOGY    "technology"
-#define BBQUE_BATTERY_IF_CHARGE_FULL   "charge_full"
-#define BBQUE_BATTERY_IF_CHARGE_MAH    "charge_now"
+
+#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+  #define BBQUE_BATTERY_IF_CHARGE_FULL   "charge_full"
+  #define BBQUE_BATTERY_IF_CHARGE_MAH    "charge_now"
+#else
+  #define BBQUE_BATTERY_IF_CHARGE_FULL   "energy_full"
+  #define BBQUE_BATTERY_IF_CHARGE_MAH    "energy_now"
+#endif
+
 #define BBQUE_BATTERY_IF_CHARGE_PERC   "capacity"
 #define BBQUE_BATTERY_IF_STATUS        "status"
+
+#define BBQUE_BATTERY_IF_CURRENT_NOW   "current_now"
+#define BBQUE_BATTERY_IF_VOLTAGE_NOW   "voltage_now"
+#define BBQUE_BATTERY_IF_POWER_NOW     "power_now"
 
 // Status strings
 #define BBQUE_BATTERY_STATUS_DIS       "Discharging"
 #define BBQUE_BATTERY_STATUS_CHR       "Charging"
 #define BBQUE_BATTERY_STATUS_FULL      "Full"
 
-// procfs attributes
+
+/************ ACPI interfaces **********************/
+
 #define BBQUE_BATTERY_PROC_ROOT        "/proc/acpi/battery/"
 #define BBQUE_BATTERY_IF_PROC_STATE    "state"
 #define BBQUE_BATTERY_PROC_STATE_RATE  "present rate:"
