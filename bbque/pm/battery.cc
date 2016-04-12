@@ -50,6 +50,9 @@ Battery::Battery(
 		logger->Error("Missing directory: %s", info_dir.c_str());
 		return;
 	}
+	logger->Debug("Directory %s found", info_dir.c_str());
+
+
 #ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
 	status_dir.append("/" + str_id + "/");
 	if (!boost::filesystem::exists(status_dir)) {
@@ -64,6 +67,7 @@ Battery::Battery(
 	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_TECHNOLOGY,
 			t_str, sizeof(t_str)-1);
 	technology = t_str;
+	logger->Debug("Technology: %s", t_str);
 
 	// Full capacity
 	char cf_str[20];
@@ -71,6 +75,7 @@ Battery::Battery(
 	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_CHARGE_FULL,
 			cf_str, sizeof(cf_str)-1);
 	charge_full = std::stol(cf_str) / 1000;
+	logger->Debug("Charge full: %s", cf_str);
 
 	// Status report
 	ready = true;
