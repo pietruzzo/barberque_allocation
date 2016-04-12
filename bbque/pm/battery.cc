@@ -100,7 +100,6 @@ unsigned long Battery::GetChargeFull() const {
 
 bool Battery::IsDischarging() {
 	char status[13];
-	memset(status, '\0', sizeof(status));
 	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_STATUS,
 			status, sizeof(status)-1);
 	return (strncmp(status, BBQUE_BATTERY_STATUS_DIS, 3) == 0);
@@ -126,7 +125,7 @@ inline uint32_t Battery::GetMilliUInt32From(std::string const & path) {
 uint8_t Battery::GetChargePerc() {
 	uint8_t perc = 0;
 	char perc_str[4];
-	memset(perc_str, '\0', sizeof(perc_str));
+
 	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_CHARGE_PERC,
 			perc_str, sizeof(perc_str)-1);
 	if (!isdigit(perc_str[0])) {
@@ -144,7 +143,7 @@ uint8_t Battery::GetChargePerc() {
 
 unsigned long Battery::GetChargeMAh() {
 	char mah[10];
-	memset(mah, '\0', sizeof(mah));
+
 	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_CHARGE_MAH,
 			mah, sizeof(mah)-1);
 	if (!isdigit(mah[0])) {
@@ -216,7 +215,6 @@ std::string Battery::PrintChargeBar() {
 
 uint32_t Battery::ACPI_GetVoltage() {
 	char volt[7];
-	memset(volt, '\0', sizeof(volt));
 	bu::IoFs::ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
 			BBQUE_BATTERY_PROC_STATE_VOLT, volt, sizeof(volt)-1);
 	if (!isdigit(volt[0])) {
@@ -232,7 +230,6 @@ uint32_t Battery::ACPI_GetDischargingRate() {
 	}
 
 	char rate[7];
-	memset(rate, '\0', sizeof(rate));
 	bu::IoFs::ParseValue(status_dir + BBQUE_BATTERY_IF_PROC_STATE,
 			BBQUE_BATTERY_PROC_STATE_RATE, rate, sizeof(rate)-1);
 	if (!isdigit(rate[0])) {
