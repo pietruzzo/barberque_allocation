@@ -36,7 +36,7 @@ BatteryManager::BatteryManager() {
 
 	// Check the directories
 	if (!boost::filesystem::exists(BBQUE_BATTERY_SYS_ROOT)) {
-		logger->Error("PWR MNT: No batteries");
+		logger->Error("Cannot detect any battery in the system");
 		return;
 	}
 
@@ -53,8 +53,11 @@ BatteryManager::BatteryManager() {
 			(dir_prefix.compare("bat") != 0)) continue;
 
 		BatteryPtr_t batt(new Battery(itr->path().filename().c_str()));
-		if (!batt->IsReady())
+		if ((batt == nullptr) || !batt->IsReady()) {
+			logger->Error("Cannot create the battery object [%s]",
+				itr->path().filename().c_str());
 			continue;
+		}
 		batteries.push_back(batt);
 		logger->Info("Batteries   : \t%d", batteries.size());
 	}
