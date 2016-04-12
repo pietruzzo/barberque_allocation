@@ -157,6 +157,7 @@ public:
 		if (!fd)
 			return ExitCode_t::ERR_FILE_NOT_FOUND;
 
+		memset(value, '\0', len);
 		while (!fd.eof()) {
 			std::getline(fd, line);
 			// Pattern matching
