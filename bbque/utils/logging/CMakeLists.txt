@@ -23,6 +23,7 @@ endif (CONFIG_EXTERNAL_LOG4CPP)
 #----- Android specific settings
 if (CONFIG_TARGET_ANDROID)
 	set (BBQUE_LOGGER_SRC ${BBQUE_LOGGER_SRC} android_logger)
+  set (BBQUE_LOGGER_LIBS -llog)
 endif (CONFIG_TARGET_ANDROID)
 
 #----- Add static library
