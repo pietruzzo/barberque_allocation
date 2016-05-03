@@ -18,6 +18,7 @@
 #ifndef BBQUE_CGROUPS_H_
 #define BBQUE_CGROUPS_H_
 
+#include "bbque/config.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/logging/logger.h"
 

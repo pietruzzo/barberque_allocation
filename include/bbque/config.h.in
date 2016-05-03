@@ -201,6 +201,9 @@
 /** Log4CPP Support */
 #cmakedefine CONFIG_EXTERNAL_LOG4CPP
 
+/** cgroup support */
+#cmakedefine CONFIG_EXTERNAL_LIBCG
+
 /** Enabled YaMS Scheduling policy parallel execution */
 #cmakedefine CONFIG_BBQUE_SP_PARALLEL
 
