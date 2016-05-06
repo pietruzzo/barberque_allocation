@@ -21,8 +21,8 @@ myapp: external
 		mkdir -p $(MODULE_CONTRIB_USER_MYAPP)/build/$(BUILD_TYPE) || \
 		exit 1
 	@cd $(MODULE_CONTRIB_USER_MYAPP)/build/$(BUILD_TYPE) && \
-		CC=$(CC) CFLAGS=$(TARGET_FLAGS) \
-		CXX=$(CXX) CXXFLAGS=$(TARGET_FLAGS) \
+		CC=$(CC) CFLAGS="$(TARGET_FLAGS)" \
+		CXX=$(CXX) CXXFLAGS="$(TARGET_FLAGS)" \
 		cmake $(CMAKE_COMMON_OPTIONS) ../.. || \
 		exit 1
 	@cd $(MODULE_CONTRIB_USER_MYAPP)/build/$(BUILD_TYPE) && \
