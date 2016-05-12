@@ -69,6 +69,9 @@ public:
 	/** Data type for the structure storing the plugin-specific data */
 	typedef std::map<std::string, PluginDataPtr_t> PluginDataMap_t;
 
+	/** Data type for the structure storing the attributes */
+	typedef std::map<std::string, std::string> AttributesMap_t;
+
 
 	/**
 	 * @brief Constructor
@@ -116,8 +119,48 @@ public:
 	 */
 	void ClearPluginData(
 			std::string const & plugin_name, std::string const & key = "");
+
+	/******************************************************************
+	 *                       Attributes                               *
+	 ******************************************************************/
+
+	/**
+	 * @brief Insert/Set an attribute value (string)
+	 *
+	 * Set the value of a specific attribute referenced by the given key
+	 *
+	 * @param key The attribute key
+	 * @param value A string value
+	 */
+	inline void SetAttribute(
+			std::string const & key, std::string const & value) {
+		attributes[key] = value;
+	}
+
+	/**
+	 * @brief Get an attribute value
+	 *
+	 * Return the value of a specific attribute referenced by the given key
+	 *
 	 * @param key The attribute key
 	 */
+	inline std::string GetAttribute(std::string const & key) const {
+		AttributesMap_t::const_iterator c_it(attributes.find(key));
+		if (c_it == attributes.end())
+			return "";
+		return c_it->second;
+	}
+
+	/**
+	 * @brief Clear an attribute
+	 *
+	 * Remove a specific attribute referenced by the given key
+	 *
+	 * @param key The attribute key
+	 */
+	void ClearAttribute(std::string const & key) {
+		attributes.erase(key);
+	}
 
 protected:
 
@@ -130,6 +173,13 @@ protected:
 	 * class in order to store the data value.
 	 */
 	PluginDataMap_t plugin_data;
+
+	/**
+	 * @brief Map storing the attributes
+	 *
+	 * Key value pairs of type string.
+	 */
+	AttributesMap_t attributes;
 };
 
 } // namespace utils

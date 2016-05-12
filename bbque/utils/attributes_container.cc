@@ -29,6 +29,7 @@ AttributesContainer::AttributesContainer() {
 
 AttributesContainer::~AttributesContainer() {
 	plugin_data.clear();
+	attributes.clear();
 }
 
 PluginDataPtr_t AttributesContainer::GetPluginData(
