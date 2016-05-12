@@ -201,8 +201,8 @@ Application::SetRecipe(RecipePtr_t & _recipe, AppPtr_t & papp) {
 	logger->Info("%d constraints in the application", rsrc_constraints.size());
 
 	// Specific attributes (i.e. plugin specific)
-	attributes = AttributesMap_t(recipe->attributes);
-	logger->Info("%d plugin-specific attributes", attributes.size());
+	plugin_data = PluginDataMap_t(recipe->plugin_data);
+	logger->Info("%d plugin-specific attributes", plugin_data.size());
 
 	return APP_SUCCESS;
 }

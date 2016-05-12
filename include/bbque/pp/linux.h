@@ -156,7 +156,7 @@ private:
 
 	typedef std::shared_ptr<RLinuxBindings_t> RLinuxBindingsPtr_t;
 
-	typedef struct CGroupData : public bu::AttributesContainer::Attribute {
+	typedef struct CGroupData : public bu::PluginData_t {
 		ba::AppPtr_t papp; /** The controlled application */
 #define BBQUE_LINUXPP_CGROUP_PATH_MAX 22 // "bbque/12345:ABCDEF:00";
 		char cgpath[BBQUE_LINUXPP_CGROUP_PATH_MAX];
@@ -166,7 +166,7 @@ private:
 		struct cgroup_controller *pc_memory;
 
 		CGroupData(ba::AppPtr_t pa) :
-			Attribute(PLAT_LNX_ATTRIBUTE, "cgroup"),
+			bu::PluginData_t(PLAT_LNX_ATTRIBUTE, "cgroup"),
 			papp(pa), pcg(NULL), pc_cpu(NULL),
 			pc_cpuset(NULL), pc_memory(NULL) {
 			snprintf(cgpath, BBQUE_LINUXPP_CGROUP_PATH_MAX,
@@ -175,7 +175,7 @@ private:
 		}
 
 		CGroupData(const char *cgp) :
-			Attribute(PLAT_LNX_ATTRIBUTE, "cgroup"),
+			bu::PluginData_t(PLAT_LNX_ATTRIBUTE, "cgroup"),
 			pcg(NULL), pc_cpu(NULL),
 			pc_cpuset(NULL), pc_memory(NULL) {
 			snprintf(cgpath, BBQUE_LINUXPP_CGROUP_PATH_MAX,

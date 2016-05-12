@@ -535,9 +535,9 @@ void XMLRecipeLoader::GetPluginData(T _container,
 		plugdata_node->ToElement()->GetText(&value, false);
 
 		// Set the plugin data
-		ba::PluginAttrPtr_t pattr(new ba::PluginAttr_t(_plug_name, key));
+		ba::AppPluginDataPtr_t pattr(new ba::AppPluginData_t(_plug_name, key));
 		pattr->str = value;
-		_container->SetAttribute(pattr);
+		_container->SetPluginData(pattr);
 
 	} catch (ticpp::Exception &ex) {
 		logger->Error(ex.what());

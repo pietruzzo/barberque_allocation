@@ -563,17 +563,13 @@ template<class T>
 void RXMLRecipeLoader::GetPluginData(T _container,
 		rapidxml::xml_node<> * plugdata_node,
 		std::string const & _plug_name) {
-	std::string key;
-	std::string value;
-	try {
-		// Get the pair key - value
-		key = plugdata_node->name();
-		value = plugdata_node->value();
 
+	try {
 		// Set the plugin data
-		ba::PluginAttrPtr_t pattr(new ba::PluginAttr_t(_plug_name, key));
-		pattr->str = value;
-		_container->SetAttribute(pattr);
+		ba::AppPluginDataPtr_t pattr(new ba::AppPluginData_t(
+			_plug_name, plugdata_node->name()));
+		pattr->str = plugdata_node->value();
+		_container->SetPluginData(pattr);
 
 	} catch (rapidxml::parse_error ex) {
 		logger->Error(ex.what());

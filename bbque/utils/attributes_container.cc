@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,63 +28,42 @@ AttributesContainer::AttributesContainer() {
 }
 
 AttributesContainer::~AttributesContainer() {
-	attributes.clear();
+	plugin_data.clear();
 }
 
-AttributesContainer::AttrPtr_t
-AttributesContainer::GetAttribute(std::string const & _ns,
-		std::string const & _key) {
+PluginDataPtr_t AttributesContainer::GetPluginData(
+		std::string const & _plugin_name,
+		std::string const & _key) const {
 
-	for (auto &attribute : attributes)
-		if (attribute.first.c_str() == _ns)
-			if (attribute.second->key.c_str() == _key)
-				return attribute.second;
-
+	for (auto & data : plugin_data)
+		if (data.first.c_str() == _plugin_name)
+			if (data.second->key.c_str() == _key)
+				return data.second;
 	// Null return
-	return AttrPtr_t();
+	return PluginDataPtr_t();
 }
 
-AttributesContainer::ExitCode_t
-AttributesContainer::SetAttribute(AttrPtr_t _attr) {
-	// Debug: check the correctness of the insertion
-	DB(
-		size_t before_sz = attributes.size();
-	);
-
-	// Insert into the multi-map
-	attributes.insert(attributes.begin(),
-			std::pair<std::string, AttrPtr_t>(_attr->ns, _attr));
-
-	DB (
-		assert(attributes.size() > before_sz);
-	);
-
-	return ATTR_OK;
-}
-
-void AttributesContainer::ClearAttribute(std::string const & _ns,
+void AttributesContainer::ClearPluginData(
+		std::string const & _plugin_name,
 		std::string const & _key) {
 	// Remove all the attributes under the namespace
 	if (_key.empty()) {
-		attributes.erase(_ns);
+		plugin_data.erase(_plugin_name);
 		return;
 	}
 
 	// Find the plugin set of pairs
-	std::pair<AttributesMap_t::iterator, AttributesMap_t::iterator> range =
-		attributes.equal_range(_ns);
+	std::pair<PluginDataMap_t::iterator, PluginDataMap_t::iterator> range =
+		plugin_data.equal_range(_plugin_name);
 
 	// Find the specific attribute
-	AttributesMap_t::iterator it = range.first;
-	while (it != range.second &&
-		it->second->key.compare(_key) != 0) {
-		++it;
-	}
+	PluginDataMap_t::iterator it = range.first;
+	while (it != range.second && it->second->key.compare(_key) != 0) ++it;
 
 	// Remove the single attribute
-	if (it == attributes.end())
+	if (it == plugin_data.end())
 		return;
-	attributes.erase(it);
+	plugin_data.erase(it);
 }
 
 } // namespace utils

@@ -899,7 +899,7 @@ LinuxPP::GetCGroupData(AppPtr_t papp, CGroupDataPtr_t &pcgd) {
 
 	// Loop-up for application control group data
 	pcgd = std::static_pointer_cast<CGroupData_t>(
-			papp->GetAttribute(PLAT_LNX_ATTRIBUTE, "cgroup")
+			papp->GetPluginData(PLAT_LNX_ATTRIBUTE, "cgroup")
 		);
 	if (pcgd)
 		return OK;
@@ -912,7 +912,7 @@ LinuxPP::GetCGroupData(AppPtr_t papp, CGroupDataPtr_t &pcgd) {
 	// Keep track of this control group
 	// FIXME check return value otherwise multiple BuildCGroup could be
 	// called for the same application
-	papp->SetAttribute(pcgd);
+	papp->SetPluginData(pcgd);
 
 	return OK;
 
@@ -1115,7 +1115,7 @@ LinuxPP::ExitCode_t
 LinuxPP::_Release(AppPtr_t papp) {
 	// Release CGroup plugin data
 	// ... thus releasing the corresponding control group
-	papp->ClearAttribute(PLAT_LNX_ATTRIBUTE);
+	papp->ClearPluginData(PLAT_LNX_ATTRIBUTE);
 	return OK;
 }
 

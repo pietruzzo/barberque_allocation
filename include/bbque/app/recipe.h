@@ -61,17 +61,16 @@ typedef std::map<ResourcePathPtr_t, ConstrPtr_t> ConstrMap_t;
 /**
  * @brief Attribute structure for plugin specific data
  */
-typedef struct PluginAttr: public bu::AttributesContainer::Attribute {
+typedef struct AppPluginData: public bu::PluginData_t {
 	/** Constructor */
-	PluginAttr(std::string const & _ns, std::string const & _key):
-		bu::AttributesContainer::Attribute(_ns, _key) {}
-
-	/** Attribute value: a string object */
+	AppPluginData(std::string const & _pname, std::string const & _key):
+		bu::PluginData_t(_pname, _key) {}
+	/** Value: a string object */
 	std::string str;
-} PluginAttr_t;
+} AppPluginData_t;
 
-/** Shared pointer to PluginAttr_t */
-typedef std::shared_ptr<PluginAttr_t> PluginAttrPtr_t;
+/// Shared pointer to AppPluginData_t
+typedef std::shared_ptr<AppPluginData_t> AppPluginDataPtr_t;
 
 /**
  * @brief An application recipe
