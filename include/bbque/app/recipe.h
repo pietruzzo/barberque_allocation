@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 #include "bbque/utils/logging/logger.h"
-#include "bbque/utils/attributes_container.h"
+#include "bbque/utils/extra_data_container.h"
 #include "bbque/res/resource_constraints.h"
 
 #define RECIPE_NAMESPACE "rcp"
@@ -81,7 +81,7 @@ typedef std::shared_ptr<AppPluginData_t> AppPluginDataPtr_t;
  * one recipe, but a single instance must specify the one upon which base its
  * execution.
  */
-class Recipe: public bu::AttributesContainer {
+class Recipe: public bu::ExtraDataContainer {
 
 friend class Application;
 

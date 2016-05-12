@@ -27,7 +27,7 @@
 #include "bbque/app/working_mode.h"
 #include "bbque/utils/logging/logger.h"
 #include "contrib/sched_contrib_manager.h"
-#include "bbque/utils/attributes_container.h"
+#include "bbque/utils/extra_data_container.h"
 
 namespace po = boost::program_options;
 

@@ -24,7 +24,7 @@
 #include "bbque/platform_proxy.h"
 #include "bbque/command_manager.h"
 #include "bbque/res/bitset.h"
-#include "bbque/utils/attributes_container.h"
+#include "bbque/utils/extra_data_container.h"
 
 #include <libcgroup.h>
 

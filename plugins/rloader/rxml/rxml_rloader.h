@@ -26,7 +26,7 @@
 #include "bbque/plugin_manager.h"
 #include "bbque/plugins/plugin.h"
 #include "bbque/utils/logging/logger.h"
-#include "bbque/utils/attributes_container.h"
+#include "bbque/utils/extra_data_container.h"
 
 #define MODULE_NAMESPACE RECIPE_LOADER_NAMESPACE".rxml"
 #define MODULE_CONFIG RECIPE_LOADER_CONFIG".rxml"
@@ -37,7 +37,7 @@ using bbque::app::Application;
 using bbque::app::AppPtr_t;
 using bbque::app::AwmPtr_t;
 using bbque::app::WorkingMode;
-using bbque::utils::AttributesContainer;
+using bbque::utils::ExtraDataContainer;
 
 // Parameters received by the PluginManager on create calls
 struct PF_ObjectParams;

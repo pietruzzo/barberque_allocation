@@ -24,7 +24,7 @@
 #include <memory>
 
 #include "bbque/res/identifier.h"
-#include "bbque/utils/attributes_container.h"
+#include "bbque/utils/extra_data_container.h"
 #include "bbque/utils/utility.h"
 
 namespace br = bbque::res;
@@ -59,7 +59,7 @@ typedef std::shared_ptr<ApplicationStatusIF> AppSPtr_t;
  *
  * Read-only interface for the WorkingMode runtime status
  */
-class WorkingModeStatusIF: public bu::AttributesContainer {
+class WorkingModeStatusIF: public bu::ExtraDataContainer {
 
 public:
 

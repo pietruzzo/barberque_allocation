@@ -24,15 +24,15 @@
 namespace bbque { namespace utils {
 
 
-AttributesContainer::AttributesContainer() {
+ExtraDataContainer::ExtraDataContainer() {
 }
 
-AttributesContainer::~AttributesContainer() {
+ExtraDataContainer::~ExtraDataContainer() {
 	plugin_data.clear();
 	attributes.clear();
 }
 
-PluginDataPtr_t AttributesContainer::GetPluginData(
+PluginDataPtr_t ExtraDataContainer::GetPluginData(
 		std::string const & _plugin_name,
 		std::string const & _key) const {
 
@@ -44,7 +44,7 @@ PluginDataPtr_t AttributesContainer::GetPluginData(
 	return PluginDataPtr_t();
 }
 
-void AttributesContainer::ClearPluginData(
+void ExtraDataContainer::ClearPluginData(
 		std::string const & _plugin_name,
 		std::string const & _key) {
 	// Remove all the attributes under the namespace

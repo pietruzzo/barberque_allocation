@@ -42,7 +42,7 @@
 
 using bbque::app::AppSPtr_t;
 using bbque::app::AppUid_t;
-using bbque::utils::AttributesContainer;
+using bbque::utils::ExtraDataContainer;
 using bbque::utils::Timer;
 using bbque::utils::pEma_t;
 
@@ -129,7 +129,7 @@ struct ResourceState {
  * of resource. This feature is particularly useful for components like the
  * Scheduler/Optimizer (see below.)
  */
-class Resource: public ResourceIdentifier, public AttributesContainer {
+class Resource: public ResourceIdentifier, public ExtraDataContainer {
 
 // This makes method SetTotal() accessible to RA
 friend class bbque::ResourceAccounter;

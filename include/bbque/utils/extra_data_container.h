@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_ATTRIBUTES_H_
-#define BBQUE_ATTRIBUTES_H_
+#ifndef BBQUE_EXTRA_DATA_CONTAINER_H_
+#define BBQUE_EXTRA_DATA_CONTAINER_H_
 
 #include <map>
 #include <memory>
@@ -62,7 +62,7 @@ typedef std::shared_ptr<PluginData_t> PluginDataPtr_t;
  * instance how many times it has been re-scheduled, or in the WorkingMode
  * descriptor (e.g. How much that working mode is "good" for the scheduling).
  */
-class AttributesContainer {
+class ExtraDataContainer {
 
 public:
 
@@ -76,12 +76,12 @@ public:
 	/**
 	 * @brief Constructor
 	 */
-	AttributesContainer();
+	ExtraDataContainer();
 
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~AttributesContainer();
+	virtual ~ExtraDataContainer();
 
 	/******************************************************************
 	 *                   Plugin-specific data                         *
@@ -186,4 +186,4 @@ protected:
 
 } // namespace bbque
 
-#endif // BBQUE_ATTRIBUTES_H_
+#endif // BBQUE_EXTRA_DATA_CONTAINER_H_
