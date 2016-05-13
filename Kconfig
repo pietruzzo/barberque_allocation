@@ -105,7 +105,7 @@ endmenu # Power Management
 
 
 menu "Distributed Systems"
-  source "barbeque/mpi/Kconfig
+  source "barbeque/mpi/Kconfig"
 
 endmenu # Distributed Systems
 
