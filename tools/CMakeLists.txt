@@ -5,10 +5,12 @@
 # - have a name starting by "bbque-"
 
 #----- Deploy the PIL Layouts parser and CGroup generator script
-install(PROGRAMS bbquePlatformLayoutParser.awk
-	DESTINATION ${BBQUE_PATH_BBQ}
-	COMPONENT BarbequeTOOLS
-	RENAME bbque-plp)
+if (CONFIG_BBQUE_PLP_LEGACY)
+	install(PROGRAMS bbquePlatformLayoutParser.awk
+		DESTINATION ${BBQUE_PATH_BBQ}
+		COMPONENT BarbequeTOOLS
+		RENAME bbque-plp)
+endif (CONFIG_BBQUE_PLP_LEGACY)
 
 # .:: Accessory Tools to simplify the usage of the BarbequeRTRM
 # These tools must be:
@@ -151,3 +153,4 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbquePlotPowerTrace.py"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	RENAME bbque-plotrace)
 
+add_subdirectory(plpxml)

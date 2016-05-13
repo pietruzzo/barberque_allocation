@@ -394,4 +394,19 @@ config BBQUE_EM
 
   If unsure say no, this will disable all the EM related features.
 
+choice
+  prompt "Barbeque Platform Layout parser"
+  default BBQUE_PLP_LEGACY
+  config BBQUE_PLP_LEGACY
+    bool "Legacy BPL parser"
+    ---help---
+    The old parser for Barbeque Platform Layout files (under pil directory)
+  config BBQUE_PLP_XML
+    bool "XML parser"
+    ---help---
+    The new XML parser for Barbque Platform Layout files, that enable also
+    multi-systems environment.
+
+endchoice
+
 endmenu # Advanced options
