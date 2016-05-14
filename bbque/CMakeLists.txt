@@ -54,11 +54,21 @@ configure_file (
 )
 
 # Setup BPL generator
-configure_file (
-	"${PROJECT_SOURCE_DIR}/config/pil/generator.in"
-	"${PROJECT_BINARY_DIR}/config/pil/bbque-pil-generator"
-	@ONLY
-)
+if (CONFIG_BBQUE_PLP_LEGACY)
+	configure_file (
+		"${PROJECT_SOURCE_DIR}/config/pil/generator.in"
+		"${PROJECT_BINARY_DIR}/config/pil/bbque-pil-generator"
+		@ONLY
+	)
+endif (CONFIG_BBQUE_PLP_LEGACY)
+if (CONFIG_BBQUE_PLP_XML)
+	configure_file (
+		"${PROJECT_SOURCE_DIR}/config/pil/generator_xml.in"
+		"${PROJECT_BINARY_DIR}/config/pil/bbque-pil-generator"
+		@ONLY
+	)
+endif (CONFIG_BBQUE_PLP_XML)
+
 
 # Setup Template generator
 configure_file (

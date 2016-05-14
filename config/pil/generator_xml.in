@@ -1,0 +1,291 @@
+#!/bin/bash
+
+DEBUG_MODE=0
+declare TMP_FOLDER=/tmp/bbque_bpl
+
+BPL_FOLDER="@CONFIG_BOSP_RUNTIME_PATH@/etc/bbque/pil"
+TARGET_SYS="$BPL_FOLDER/`hostname`.xml"
+TARGET_GLOBAL="$BPL_FOLDER/systems.xml"
+
+
+################################################################################
+# From here below, please, do not change anything!
+################################################################################
+
+# Used to store checklist results
+declare DIALOG_TEMP_FILE=$TMP_FOLDER/dialog
+
+# Cache used to define Barbeque CPUs.
+# A Barbeque CPU is a set of Processing Elements sharing a cache of that level
+declare PARTITION_CACHE_LEVEL="L3Cache"
+
+# Processing elements used to host Linux
+declare HOST_PES=""
+
+################################################################################
+# FUNCTIONS
+################################################################################
+
+function PopulateDebugLog {
+	if [[ $DEBUG_MODE == 1 ]]; then
+		echo "# $@." >> $TMP_FOLDER/debug.log
+	fi
+}
+
+function CloseGenerator {
+	rm $TMP_FOLDER/* &> /dev/null
+	rmdir $TMP_FOLDER/* &> /dev/null
+	exit
+}
+
+function CheckPackage {
+	HAVE_PACKAGE=$($1 --version 2> /dev/null)
+	if [ "$HAVE_PACKAGE" == "" ]; then
+		echo "ERROR: '$1' package missing. Please install it from repositories"
+		exit
+	fi
+	PopulateDebugLog "[CheckPackage $1] $HAVE_PACKAGE"
+}
+
+function GreetingBanner {
+	dialog --title 'Welcome' \
+--msgbox 'Welcome to the BarbequeRTRM platform layout generator. This script
+will guide you through the process of layout generation, whose
+output is an xml file.
+
+This script relies on lstopo and dialog packages to work. If you
+are reading this prompt, such packages are installed on your
+system. Please note that lstopo output may differ from a system
+to another; if you find bugs, they are probably due to lstopo.
+In that case, please run the script in debug mode by setting
+DEBUG_MODE=1 on line one and send me the output.
+
+Enjoy! [contacts: simone.libutti@polimi.it]
+
+Press enter to create your own platform layout!' 20 70; clear
+}
+
+function CacheSelection {
+dialog --clear --title "Chosing the partition" \
+        --menu "Choose how your CPU resources will be partitioned:" 20 70 2 \
+        "L2"  "Processing elements that share the L2 cache" \
+        "L3" "Processing elements that share the L3 cache"  2> $DIALOG_TEMP_FILE
+	clear
+
+	SELECTED_CACHE=$(cat $DIALOG_TEMP_FILE)
+	rm $DIALOG_TEMP_FILE
+
+	case $SELECTED_CACHE in
+		"L2")	PARTITION_CACHE_LEVEL="L2Cache" ;;
+		"L3")	PARTITION_CACHE_LEVEL="L3Cache" ;;
+		   *)	echo "No choice taken. Aborting"
+				CloseGenerator;;
+	esac
+
+	PopulateDebugLog "Partition cache level: $PARTITION_CACHE_LEVEL"
+}
+
+function Setup {
+	mkdir -p $TMP_FOLDER
+	rm $TMP_FOLDER/* &> /dev/null
+
+	lstopo -v --no-io --no-bridges --no-icaches | \
+		grep -v "Machine\|L1dCache" | \
+		awk '{if($1 == "depth") exit; print $0}' > $TMP_FOLDER/lstopo_description
+
+	lstopo -v --no-io --no-bridges --no-icaches | \
+		head -n1 > $TMP_FOLDER/machine_description
+
+	lstopo --no-io --no-bridges --no-caches -v | \
+		grep -v "Machine" | grep "PU.*L#" | grep -o "P#[0-9]\{1,\}" | \
+		awk -F'#' '{print $2" proc_element_"$2" off"}' > $TMP_FOLDER/pes_list
+}
+
+function PrintTopology {
+	echo
+	echo "Barbeque divides resources into 'host' and 'managed' partitions."
+	echo
+	echo -e " * \e[1mHost partition\e[0m    hosts the Operating System"
+	echo -e " * \e[1mManaged partition\e[0m hosts integrated applications"
+	echo
+	echo -e "You must choose which processing elements will act as " \
+			"\e[7mHOST Partition\e[0m."
+	echo
+	echo "Here follows a graphical representation (or textual if not possible)."
+	echo "Take note of the IDs of the chosen processing elements (PUs)."
+
+	lstopo --no-bridges --no-io &>/dev/null &
+}
+
+function SetHostPartition {
+
+	OPTIONS=$(cat $TMP_FOLDER/pes_list)
+	read -p "Press a key to continue"
+
+	dialog --checklist "Select which PUs will be marked as 'host' (spacebar or mouse)" \
+		20 75 15 $OPTIONS 2> $DIALOG_TEMP_FILE
+	clear
+
+	HOST_PES=$(cat $DIALOG_TEMP_FILE)
+
+	if [ "$HOST_PES" == "" ]; then
+		echo "No host device selected. Aborting."
+		CloseGenerator
+	fi
+}
+
+function XML_WriteHead {
+	echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > $TARGET_SYS
+	echo "<system hostname=\""$HOSTNAME"\" address=\""$MACHINE_IP"\">" >> $TARGET_SYS
+
+}
+
+function XML_PrintTail {
+	echo "    </cpu>" >> $TARGET_SYS
+	cat $TMP_FOLDER/xml_mems >> $TARGET_SYS
+	echo "</system>" >> $TARGET_SYS
+}
+
+function XML_PrintOutput {
+	cat $TARGET_SYS
+}
+
+function PrintDebugLog {
+	if [[ $DEBUG_MODE == 1 ]]; then
+		echo "#####################################################################"
+		echo "# DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG #"
+		echo "#####################################################################"
+		lstopo --no-io --no-bridges --no-caches -v > $TMP_FOLDER/debug_lstopo.log
+		while read line; do echo "# "$line; done < $TMP_FOLDER/debug_lstopo.log
+		echo "#####################################################################"
+		cat $TMP_FOLDER/debug.log
+		echo "#####################################################################"
+		echo "# DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG #"
+		echo "#####################################################################"
+		echo -e "\n"
+	fi
+}
+
+function XML_CreateSystems {
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > $TARGET_GLOBAL
+        echo "<systems>" >> $TARGET_GLOBAL
+        echo "    <include local=\"true\">"`hostname`".xml</include>" >> $TARGET_GLOBAL
+        echo "</systems>" >> $TARGET_GLOBAL
+
+}
+
+################################################################################
+# Check for args. Anyway, args are not needed.
+################################################################################
+
+if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+	echo "Just run the script. No arguments."
+	echo "To run in debug mode, change the first line to 'DEBUG_MODE=1'"
+	exit
+fi
+
+################################################################################
+# The generator
+################################################################################
+
+CheckPackage lstopo # Checking for needed packages
+CheckPackage dialog # Checking for needed packages
+
+Setup # Setting up temp files directory
+
+GreetingBanner # Description and info
+CacheSelection # Cache partition selection
+
+PrintTopology # Show the user the topology, so he chooses a host partition
+SetHostPartition # Make the user choose a host partition
+
+MACHINE_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | \
+	cut -f1  -d'/')
+PopulateDebugLog "Ip of this machine: $MACHINE_IP"
+
+HOSTNAME=$(hostname)
+PopulateDebugLog "Hostname of this machine: $HOSTNAME"
+
+ARCH=$(uname -m)
+PopulateDebugLog "Architecture of this machine: $ARCH"
+
+NUMA_NODES=$(cat $TMP_FOLDER/lstopo_description | grep NUMANode | wc -l)
+PopulateDebugLog "Number NUMA nodes (0 means UMA): $NUMA_NODES"
+
+UMA_INFO=$(cat $TMP_FOLDER/machine_description | head -n1 | \
+	grep -o "local=[^\t]\{1,\}" | sed -e 's/local=//g')
+PopulateDebugLog "Total RAM $UMA_INFO"
+
+CURRENT_MEMORY_SIZE=$(echo $UMA_INFO | grep -o "[0-9]\{1,\}")
+PopulateDebugLog " - RAM VALUE: $CURRENT_MEMORY_SIZE"
+
+CURRENT_MEMORY_SIZE_UNIT=$(echo $UMA_INFO | grep -o "[^0-9]\{1,\}")
+PopulateDebugLog " - UNIT: $CURRENT_MEMORY_SIZE_UNIT"
+
+CURRENT_CPU_ID=-1
+CURRENT_NUMA_NODE=0
+CURRENT_SOCKET=0
+
+XML_WriteHead # Write a part of the XML output on a file
+
+
+# From now on, I refuse to stick to 80 columns width. Really.
+while read lstopo_entry; do
+	KEYWORD=$(echo $lstopo_entry | sed -e 's/Socket/Package/g' | awk '{print $1}')
+
+	case $KEYWORD in
+		"NUMANode")
+			CURRENT_MEMORY_NODE=$(echo $lstopo_entry | grep -o "P#[0-9]\{1,\}" | grep -o "[0-9]\{1,\}")
+			CURRENT_SOCKET=$(echo $lstopo_entry | grep -o "L#[0-9]\{1,\}" | grep -o "[0-9]\{1,\}")
+			NUMA_INFO=$(echo $lstopo_entry | grep -o "local=[^\t]\{1,\}" | sed -e 's/local=//g')
+			CURRENT_MEMORY_SIZE=$(echo $NUMA_INFO | grep -o "[0-9]\{1,\}")
+			CURRENT_MEMORY_SIZE_UNIT=$(echo $NUMA_INFO | grep -o "[^0-9]\{1,\}")
+			echo "    <mem id=\""$CURRENT_MEMORY_NODE"\" quantity=\""$CURRENT_MEMORY_SIZE"\" unit=\""$CURRENT_MEMORY_SIZE_UNIT"\"/>" >> $TMP_FOLDER/xml_mems
+			PopulateDebugLog "    Found a NUMA node. ID: $CURRENT_MEMORY_NODE, size: $CURRENT_MEMORY_SIZE$CURRENT_MEMORY_SIZE_UNIT"
+			;;
+		"Package")
+			if [ "$NUMA_NODES" == "0" ]; then
+				CURRENT_MEMORY_NODE=$(echo $lstopo_entry | grep -o "L#[0-9]\{1,\}" | grep -o "[0-9]\{1,\}")
+				echo "    <mem id=\""$CURRENT_MEMORY_NODE"\" quantity=\""$CURRENT_MEMORY_SIZE"\" unit=\""$CURRENT_MEMORY_SIZE_UNIT"\"/>" >> $TMP_FOLDER/xml_mems
+				PopulateDebugLog "Found memory of a Socket. ID: $CURRENT_MEMORY_NODE, size: $CURRENT_MEMORY_SIZE$CURRENT_MEMORY_SIZE_UNIT"
+			else
+				PopulateDebugLog "Found memory of a Socket. Ignoring it (should have been found at NUMA node level)"
+			fi
+			;;
+		"$PARTITION_CACHE_LEVEL")
+			if [[ $CURRENT_CPU_ID -ge 0 ]]; then echo "    </cpu>" >> $TARGET_SYS; fi
+			let CURRENT_CPU_ID++
+			echo "    <cpu arch=\""$ARCH"\" id=\""$CURRENT_CPU_ID"\" socket_id=\""$CURRENT_SOCKET"\" mem_id=\""$CURRENT_MEMORY_NODE"\">" >> $TARGET_SYS
+			PopulateDebugLog "Creating a new Barbeque CPU. arch: $ARCH, ID: $CURRENT_CPU_ID, socket_id: $CURRENT_SOCKET, mem_id: $CURRENT_MEMORY_NODE"
+			;;
+		"Core")
+			CURRENT_CORE=$(echo $lstopo_entry | grep -o "P#[0-9]\{1,\}" | grep -o "[0-9]\{1,\}")
+			PopulateDebugLog "Found a core. Multiple PUs in this core would mean hyper-threading. ID: $CURRENT_CORE"
+			;;
+		"PU")
+			MARKED="true"
+			CURRENT_PE=$(echo $lstopo_entry | grep -o "P#[0-9]\{1,\}" | grep -o "[0-9]\{1,\}")
+			for PE in $HOST_PES; do
+				if [ "$PE" == "$CURRENT_PE" ]; then
+					MARKED="false"
+				fi
+			done
+			echo "        <pe id=\""$CURRENT_PE"\" core_id=\""$CURRENT_CORE"\" share=\"100\" managed=\""$MARKED"\"/>" >> $TARGET_SYS
+			PopulateDebugLog "Found a Processing Element. ID: $CURRENT_PE, core_id: $CURRENT_CORE, managed: $MARKED"
+			;;
+		*)
+			PopulateDebugLog "Unknown Keyword: $KEYWORD"
+			;;
+	esac
+
+done < $TMP_FOLDER/lstopo_description
+
+XML_PrintTail # Write a part of the XML output on a file
+
+PrintDebugLog
+
+XML_CreateSystems
+
+#XML_PrintOutput # Print the final output
+CloseGenerator
+

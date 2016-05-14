@@ -6,7 +6,7 @@ if (CONFIG_BBQUE_PLP_XML)
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
 
 	#----- Add thereafter all the regression tests we want to run
-	set(BBQUE_PLPXML_SRC xml_parser)
+	set(BBQUE_PLPXML_SRC plp_translator plpxml)
 
 
 	#----- Add "bbque-plp" target application

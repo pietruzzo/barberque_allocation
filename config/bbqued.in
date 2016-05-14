@@ -161,13 +161,17 @@ setup() {
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
 	if [ -z "$PILNAME" ]; then
-		PILNAME=`hostname`
+		if [ ! -z "@CONFIG_BBQUE_PLP_LEGACY@" ]; then
+			PILNAME=`hostname`.bpl
+		else
+			PILNAME=systems.xml
+		fi
 	fi
-	echo "Checking platform description file: "$PILNAME".bpl"
+	echo "Checking platform description file: "$PILNAME""
 
-	if [ ! -f $BBQUE_PILSETUPS/$PILNAME".bpl" ]; then
+	if [ ! -f $BBQUE_PILSETUPS/$PILNAME ]; then
 		# Generating the bpl file on the fly, exploiting menuconfig info
-		echo "Generating platform description setup... ["$BBQUE_PILSETUPS/$PILNAME".bpl]"
+		echo "Generating platform description setup... ["$BBQUE_PILSETUPS/$PILNAME"]"
 		HIERARCHY_DEPTH=""
 
 		[ -z "@CONFIG_BBQUE_MEMLOC_L3@" ] || HIERARCHY_DEPTH="L3"
@@ -181,13 +185,13 @@ setup() {
 		# If the generator experiences errors, the bpl file is not created.
 		# The error log is shown by the generator itself, so we can exit
 		# without warnings
-		[ ! -f $BBQUE_PILSETUPS/$PILNAME".bpl" ] && exit
+		[ ! -f $BBQUE_PILSETUPS/$PILNAME ] && exit
 	fi
 
 	# Lookup for host specific PIL Layout and
 	# setup the corresponing CGgroup configuration
-	PILSETUP=$BBQUE_PILSETUPS/$PILNAME".bpl"
-	CGSETUP=$BBQUE_CGCONFS/$PILNAME".cgroup"
+	PILSETUP=$BBQUE_PILSETUPS/$PILNAME
+	CGSETUP=$BBQUE_CGCONFS/`hostname`".cgroup"
 
 	# Check if the CGroup hierarcy is already mounted
 	if [ ! -f $BBQUE_CGMOUNT/tasks ]; then
@@ -213,13 +217,19 @@ setup() {
 	PLAT_MEMS=`cat $BBQUE_CGMOUNT/cpuset.mems`
 
 	if [ ! -f $CGSETUP -o $PILSETUP -nt $CGSETUP ]; then
-		echo "Compiling PIL Layout [$PILSETUP]..."
+		[ ! -z "@CONFIG_BBQUE_PLP_LEGACY@" ] && \
+                echo "Compiling PIL Layout [$PILSETUP]..."
 		$BBQUE_PILPARSER \
 				-v BBQUE_PLAT_CPUS="$PLAT_CPUS" \
 				-v BBQUE_PLAT_MEMS="$PLAT_MEMS" \
 				-v BBQUE_FEAT_CPUQ="$CGROUP_FEATURES_CPUQ" \
 				-v BBQUE_FEAT_MEMC="$CGROUP_FEATURES_MEMC" \
 				$PILSETUP > $CGSETUP
+                if [ $? -ne 0 ]; then
+                                echo 'Platform Layout Parser FAILED'
+                                echo 'BarbequeRTRM could not be started'
+                                exit 3
+                fi
 	fi
 
 	echo "Loading CGroups configuration [$CGSETUP]..."
