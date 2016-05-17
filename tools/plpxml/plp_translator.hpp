@@ -1,4 +1,5 @@
 #include <bitset>
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include "rapidxml/rapidxml.hpp"
@@ -37,11 +38,18 @@ private:
     std::bitset<MAX_ALLOWED_PES> mdev_pes;
     std::bitset<MAX_ALLOWED_PES> host_mems;
     std::bitset<MAX_ALLOWED_PES> mdev_mems;
+    std::bitset<MAX_ALLOWED_PES> mdev_currentcpu_pes;
+    std::bitset<MAX_ALLOWED_PES> mdev_currentcpu_mems;
+    std::unordered_map<std::string, long> memories_size;
 
 	std::string explore_systems (const std::string &filename);
 	void        explore_localsys(const std::string &filename);
 	void        add_pe(int type, const std::string &pe_id,
                            const std::string &memory);
+
+    void commit_mdev(const std::string &memory_id);
+    std::string subnodes;   // sub cgroups
+    int quota_sum=0;
 
     static std::string bitset_to_string(const std::bitset<MAX_ALLOWED_PES> &bs) noexcept;
 };

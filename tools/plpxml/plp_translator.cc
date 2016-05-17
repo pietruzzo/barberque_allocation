@@ -93,6 +93,39 @@ void PLPTranslator::explore_localsys(const std::string &filename) {
     if(!root_node)
         throw std::runtime_error("Missing <system> root node in "+filename+".");
 
+    // For all memory
+    for (rapidxml::xml_node<> * node = root_node->first_node("mem");
+         node;
+         node = node->next_sibling("mem")) {
+
+        if ( ! node->first_attribute("id")) {
+            throw std::runtime_error("Missing mandatory 'id' argument in <mem>");
+        }
+        if ( ! node->first_attribute("quantity")) {
+            throw std::runtime_error("Missing mandatory 'quantity' argument in <mem>");
+        }
+        if ( ! node->first_attribute("unit")) {
+            throw std::runtime_error("Missing mandatory 'unit' argument in <mem>");
+        }
+
+        long multiplier;
+        if      (node->first_attribute("unit")->value() == std::string( "B")) multiplier = 1;
+        else if (node->first_attribute("unit")->value() == std::string("KB")) multiplier = 1024L;
+        else if (node->first_attribute("unit")->value() == std::string("MB")) multiplier = 1024L*1024;
+        else if (node->first_attribute("unit")->value() == std::string("GB")) multiplier = 1024L*1024*1024;
+        else if (node->first_attribute("unit")->value() == std::string("TB")) multiplier = 1024L*1024*1024*1024;
+        else throw std::runtime_error("Invalid 'unit' argument in <mem>");
+
+        long mem_int;
+        try {
+            mem_int = std::stol(node->first_attribute("quantity")->value());
+        } catch (...) {
+            throw std::runtime_error("Invalid 'quantity' argument in <mem>");
+        }
+
+        memories_size[node->first_attribute("id")->value()] = mem_int * multiplier;
+    }
+
 	// For all cpu groups
 	for (rapidxml::xml_node<> * node = root_node->first_node("cpu");
 		 node;
@@ -104,7 +137,7 @@ void PLPTranslator::explore_localsys(const std::string &filename) {
 		if ( node->first_attribute("mem_id")) {
 			curr_mem = node->first_attribute("mem_id")->value();
 		} else {
-			throw std::runtime_error("Missing mandatory mem_id argument in <cpu>");		
+            throw std::runtime_error("Missing mandatory 'mem_id' argument in <cpu>");
 		}
 
 		for (rapidxml::xml_node<> * pe = node->first_node("pe");
@@ -112,20 +145,42 @@ void PLPTranslator::explore_localsys(const std::string &filename) {
              pe = pe->next_sibling("pe")) {
 
 			if ( ! pe->first_attribute("id")) {
-				throw std::runtime_error("Missing mandatory id argument in <pe>");		
+                throw std::runtime_error("Missing mandatory 'id' argument in <pe>");
 			}
 
-			if ( pe->first_attribute("managed") &&
-                 pe->first_attribute("managed")->value() == std::string("false")) {
+            if (!pe->first_attribute("partition")) {
+                throw std::runtime_error("Missing mandatory 'partition' argument in <pe>");
+            }
+
+            if (! pe->first_attribute("share")) {
+                throw std::runtime_error("Missing mandatory 'share' argument in <pe>");
+            }
+
+            int quota;
+            try {
+                quota = std::stoi(pe->first_attribute("share")->value());
+            } catch(...) {
+                throw std::runtime_error("Invalid 'share' argument in <pe>");
+            }
+
+            if (pe->first_attribute("partition")->value() == std::string("host")) {
                 add_pe(HOST, pe->first_attribute("id")->value(), curr_mem);
-			} else {
+            }
+            else if (pe->first_attribute("partition")->value() == std::string("mdev")){
                 add_pe(MDEV, pe->first_attribute("id")->value(), curr_mem);
+                quota_sum += quota;
+            } else {
+                add_pe(HOST, pe->first_attribute("id")->value(), curr_mem);
+                add_pe(MDEV, pe->first_attribute("id")->value(), curr_mem);
+                quota_sum += quota;
 			}
 		}
 
+        this->commit_mdev(curr_mem);
+
 	}
 	
-}
+} // explore_localsys
 
 void PLPTranslator::add_pe(int type, const std::string &pe_id,
                            const std::string &memory) {
@@ -150,6 +205,9 @@ void PLPTranslator::add_pe(int type, const std::string &pe_id,
     } else {
         mdev_pes[pe_id_int] = 1;
         mdev_mems[mem_id_int] = 1;
+        mdev_currentcpu_pes[pe_id_int] = 1;
+        mdev_currentcpu_mems[mem_id_int] = 1;
+
     }
 }
 
@@ -223,9 +281,50 @@ std::string PLPTranslator::get_output() const noexcept {
            "        cpuset.cpus = \"" + mdev_pes_str + "\";\n"
            "        cpuset.mems = \"" + mdev_mems_str + "\";\n"
            "    }\n"
-           "}\n"
+           "}\n" + subnodes
            ;
 } // get_output
+
+void PLPTranslator::commit_mdev(const std::string &memory_id) {
+    static int n=0;
+
+    std::string mdev_pes_str  = bitset_to_string(this->mdev_currentcpu_pes);
+    std::string mdev_mems_str = bitset_to_string(this->mdev_currentcpu_mems);
+
+    if (this->mdev_currentcpu_pes.count() == 0)
+        return;
+
+    subnodes +=  std::string("") +
+            "# BarbequeRTRM MDEV Node\n"
+            "group bbque/res/node"+ std::to_string(++n) +" {\n"
+            "    perm {\n"
+            "        task {\n"
+            "            uid = " + data.uid  + ";\n"
+            "            gid = " + data.guid + ";\n"
+            "        }\n"
+            "        admin {\n"
+            "            uid = " + data.uid  + ";\n"
+            "            gid = " + data.guid + ";\n"
+            "        }\n"
+            "    }\n"
+            "    cpuset {\n"
+            "        cpuset.cpus = \"" + mdev_pes_str + "\";\n"
+            "        cpuset.mems = \"" + mdev_mems_str + "\";\n"
+            "    }\n"
+            "    cpu {\n"
+            "        cpu.cfs_period_us = \"100000\";\n"
+            "        cpu.cfs_quota_us =  \"" + std::to_string(quota_sum*1000/this->mdev_currentcpu_pes.count()) + "\";\n"
+            "    }\n"
+            "    memory {\n"
+            "        memory.limit_in_bytes = \"" + std::to_string(memories_size[memory_id]) + "\";\n"
+            "    }\n"
+            "}\n"
+            ;
+
+    this->mdev_currentcpu_pes.reset();
+    this->mdev_currentcpu_mems.reset();
+    quota_sum=0;
+}
 
 std::string PLPTranslator::bitset_to_string(const std::bitset<MAX_ALLOWED_PES> &bs) noexcept {
     std::string ret_s;
