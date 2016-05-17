@@ -1,35 +1,41 @@
+#include <cstdlib>
 #include <exception>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
-#include "plp_translator.hpp"
+#include <boost/filesystem.hpp>
 
-// Return values:
-#define PLP_ERROR   1
-#define PLP_SUCCESS 0
+#include "plp_translator.hpp"
 
 // Internal use only:
 #define HOST 0
 #define MDEV 1
 
-namespace bbque::tools {
+namespace bbque {
+namespace tools {
 
 int PLPTranslator::parse(const std::string &filename) noexcept{
 	
-
 	try {
 		std::string filename_local;
-		filename_local = this->explore_systems(filename);
-		explore_localsys(filename_local);
+
+        // Get the path of filename
+        boost::filesystem::path pil_path = filename;
+        pil_path.remove_filename();
+
+        // And use it to compose the path of the local filename
+        filename_local = this->explore_systems(filename);
+        filename_local = pil_path.string() + "/" + filename_local;
+
+        this->explore_localsys(filename_local);
 	} catch (std::runtime_error e) {
 		std::cerr << e.what() << std::endl;
-		return PLP_ERROR;
+		return EXIT_FAILURE;
 	}
 
-	return PLP_ERROR;
-	return PLP_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 std::string PLPTranslator::explore_systems(const std::string &filename) {
@@ -68,26 +74,29 @@ std::string PLPTranslator::explore_systems(const std::string &filename) {
 void PLPTranslator::explore_localsys(const std::string &filename) {
 	// Open the systems.xml file  and search for the 
 	// local node.
-	std::ifstream systems_file(filename);
-	if(!systems_file)
-		throw std::runtime_error("Local system file is not accessible.");
+    std::ifstream localsys_file(filename);
+    if(!localsys_file)
+        throw std::runtime_error("Local system file " +filename+ " is not accessible.");
 
-	// Read all characters to a local buffer
+    // Read all characters to a local buffer
 	std::stringstream buffer;
-	buffer << systems_file.rdbuf();
-	systems_file.close();
+    buffer << localsys_file.rdbuf();
+    localsys_file.close();
 	std::string content(buffer.str());
 
 	localsys_doc.parse<0>(&content[0]);
 
 	// Now explore it!
 	rapidxml::xml_node<> * root_node;
-	root_node = systems_doc.first_node("system");
+    root_node = localsys_doc.first_node("system");
+
+    if(!root_node)
+        throw std::runtime_error("Missing <system> root node in "+filename+".");
 
 	// For all cpu groups
 	for (rapidxml::xml_node<> * node = root_node->first_node("cpu");
 		 node;
-		 node->next_sibling()) {
+         node = node->next_sibling("cpu")) {
 
 		std::string curr_mem;
 
@@ -100,7 +109,7 @@ void PLPTranslator::explore_localsys(const std::string &filename) {
 
 		for (rapidxml::xml_node<> * pe = node->first_node("pe");
 		     pe;
-		     pe->next_sibling()) {
+             pe = pe->next_sibling("pe")) {
 
 			if ( ! pe->first_attribute("id")) {
 				throw std::runtime_error("Missing mandatory id argument in <pe>");		
@@ -108,9 +117,9 @@ void PLPTranslator::explore_localsys(const std::string &filename) {
 
 			if ( pe->first_attribute("managed") &&
                  pe->first_attribute("managed")->value() == std::string("false")) {
-				add_pe(HOST, pe->first_attribute("id")->value(), curr_mem);
+                add_pe(HOST, pe->first_attribute("id")->value(), curr_mem);
 			} else {
-				add_pe(MDEV, pe->first_attribute("id")->value(), curr_mem);
+                add_pe(MDEV, pe->first_attribute("id")->value(), curr_mem);
 			}
 		}
 
@@ -119,39 +128,132 @@ void PLPTranslator::explore_localsys(const std::string &filename) {
 }
 
 void PLPTranslator::add_pe(int type, const std::string &pe_id,
-                           const std::string &memory const std::string &quota) {
+                           const std::string &memory) {
 	
+    int pe_id_int;
+    try {
+        pe_id_int = std::stoi(pe_id);
+    } catch(...) {
+        throw std::runtime_error("Invalid id of PE.");
+    }
 
+    int mem_id_int;
+    try {
+        mem_id_int = std::stoi(memory);
+    } catch(...) {
+        throw std::runtime_error("Invalid id of MEM.");
+    }
+
+    if (type==HOST) {
+        host_pes[pe_id_int] = 1;
+        host_mems[mem_id_int] = 1;
+    } else {
+        mdev_pes[pe_id_int] = 1;
+        mdev_mems[mem_id_int] = 1;
+    }
 }
 
 std::string PLPTranslator::get_output() const noexcept {
+
+    // Now I create the string like "1-3,4-9" for cpus and memory
+    std::string host_pes_str  = bitset_to_string(this->host_pes);
+    std::string host_mems_str = bitset_to_string(this->host_mems);
+    std::string mdev_pes_str  = bitset_to_string(this->mdev_pes);
+    std::string mdev_mems_str = bitset_to_string(this->mdev_mems);
+
 	return std::string("") + 
 
-		   "# BarbequeRTRM Root Container"
-		   "group bbque {"
-		   "    perm {"
-           "        task {"
-		   "            uid = " + data.uid  + ";"
-		   "            gid = " + data.guid + ";"
-		   "        }"
-		   "        admin {"
-		   "            uid = " + data.uid  + ";"
-		   "            gid = " + data.guid + ";"
-		   "        }"
-	       "    }"
-
-"# This enables configuring a system so that several independent jobs can share"
-"# common kernel data, such as file system pages, while isolating each job's"
-"# user allocation in its own cpuset.  To do this, construct a large hardwall"
-"# cpuset to hold all the jobs, and construct child cpusets for each individual"
-"# job which are not hardwall cpusets."
-           "    cpuset {"
-		   "        cpuset.cpus = \"" + data.plat_cpus + "\";"
-		   "        cpuset.mems = \"" + data.plat_mems + "\";"
-		   "        cpuset.cpu_exclusive = \"1\";"
-		   "        cpuset.mem_exclusive = \"1\";"
+           "# BarbequeRTRM Root Container\n"
+           "group bbque {\n"
+           "    perm {\n"
+           "        task {\n"
+           "            uid = " + data.uid  + ";\n"
+           "            gid = " + data.guid + ";\n"
+           "        }\n"
+           "        admin {\n"
+           "            uid = " + data.uid  + ";\n"
+           "            gid = " + data.guid + ";\n"
+           "        }\n"
+           "    }\n"
+"\n"
+"# This enables configuring a system so that several independent jobs can share\n"
+"# common kernel data, such as file system pages, while isolating each job's\n"
+"# user allocation in its own cpuset.  To do this, construct a large hardwall\n"
+"# cpuset to hold all the jobs, and construct child cpusets for each individual\n"
+"# job which are not hardwall cpusets.\n"
+           "    cpuset {\n"
+           "        cpuset.cpus = \"" + data.plat_cpus + "\";\n"
+           "        cpuset.mems = \"" + data.plat_mems + "\";\n"
+           "        cpuset.cpu_exclusive = \"1\";\n"
+           "        cpuset.mem_exclusive = \"1\";\n"
+           "    }\n"
+           "}\n"
+           "\n"
+           "# BarbequeRTRM Host Container\n"
+           "group bbque/host {\n"
+           "    perm {\n"
+           "        task {\n"
+           "            uid = " + data.uid  + ";\n"
+           "            gid = " + data.guid + ";\n"
+           "        }\n"
+           "        admin {\n"
+           "            uid = " + data.uid  + ";\n"
+           "            gid = " + data.guid + ";\n"
+           "        }\n"
+           "    }\n"
+           "    cpuset {\n"
+           "        cpuset.cpus = \"" + host_pes_str + "\";\n"
+           "        cpuset.mems = \"" + host_mems_str + "\";\n"
+           "    }\n"
+           "}\n"
+           "\n"
+           "# BarbequeRTRM MDEV Container\n"
+           "group bbque/res {\n"
+           "    perm {\n"
+           "        task {\n"
+           "            uid = " + data.uid  + ";\n"
+           "            gid = " + data.guid + ";\n"
+           "        }\n"
+           "        admin {\n"
+           "            uid = " + data.uid  + ";\n"
+           "            gid = " + data.guid + ";\n"
+           "        }\n"
+           "    }\n"
+           "    cpuset {\n"
+           "        cpuset.cpus = \"" + mdev_pes_str + "\";\n"
+           "        cpuset.mems = \"" + mdev_mems_str + "\";\n"
+           "    }\n"
+           "}\n"
            ;
-}
+} // get_output
 
+std::string PLPTranslator::bitset_to_string(const std::bitset<MAX_ALLOWED_PES> &bs) noexcept {
+    std::string ret_s;
+    bool in_1=false;
+    unsigned int start;
+    for (unsigned int i=0; i <= bs.size(); i++) {
+        if (i!=bs.size() && bs[i]) {
+            if (!in_1) {
+                start=i;
+                in_1 = true;
+            }
+        } else {
+            if (in_1) {
+                if (ret_s.size() > 0) {
+                    ret_s += ",";
+                }
+                if (start == i-1) {
+                    ret_s += std::to_string(start);
+                } else {
+                    ret_s += std::to_string(start) + "-" + std::to_string(i-1);
+                }
+                in_1 = false;
+            }
+        }
+    }
 
-} // bbque::tools
+    return ret_s;
+} // bitset_to_string
+
+} // namespace tools
+} // namespace bbque

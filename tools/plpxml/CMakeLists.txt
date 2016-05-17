@@ -12,6 +12,10 @@ if (CONFIG_BBQUE_PLP_XML)
 	#----- Add "bbque-plp" target application
 	add_executable(bbque-plp ${BBQUE_PLPXML_SRC})
 
+	target_link_libraries(bbque-plp
+        	${Boost_LIBRARIES}
+)
+
 
         install(TARGETS bbque-plp
                 DESTINATION ${BBQUE_PATH_BBQ}

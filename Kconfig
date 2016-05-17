@@ -56,6 +56,7 @@ config BBQUE_LINUX_PROC_LISTENER
 
 choice
 depends on !BBQUE_TEST_PLATFORM_DATA
+depends on BBQUE_PLP_LEGACY
   prompt "Memory locality"
   default BBQUE_MEMLOC_L3
 
