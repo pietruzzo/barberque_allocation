@@ -35,12 +35,12 @@
 /**
  * @brief Default MAX number of CPUs per socket
  */
-#define DEFAULT_MAX_CPUS 16
+#define DEFAULT_MAX_CPUS BBQUE_MAX_R_ID_NUM+1
 
 /**
  * @brief Default MAX number of MEMs node per host
  */
-#define DEFAULT_MAX_MEMS 16
+#define DEFAULT_MAX_MEMS BBQUE_MAX_R_ID_NUM+1
 
 /**
  * @brief The CGroup expected to assigne resources to BBQ
