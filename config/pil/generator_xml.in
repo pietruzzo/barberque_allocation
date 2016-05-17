@@ -7,10 +7,12 @@ BPL_FOLDER="@CONFIG_BOSP_RUNTIME_PATH@/etc/bbque/pil"
 TARGET_SYS="$BPL_FOLDER/`hostname`.xml"
 TARGET_GLOBAL="$BPL_FOLDER/systems.xml"
 
-
 ################################################################################
 # From here below, please, do not change anything!
 ################################################################################
+
+# To kill something at the end, if needed
+declare PID=""
 
 # Used to store checklist results
 declare DIALOG_TEMP_FILE=$TMP_FOLDER/dialog
@@ -21,6 +23,10 @@ declare PARTITION_CACHE_LEVEL="L3Cache"
 
 # Processing elements used to host Linux
 declare HOST_PES=""
+# Processing elements used to run managed applications
+declare MDEV_PES=""
+
+DIALOGRC=/tmp/dialog.rc
 
 ################################################################################
 # FUNCTIONS
@@ -35,6 +41,7 @@ function PopulateDebugLog {
 function CloseGenerator {
 	rm $TMP_FOLDER/* &> /dev/null
 	rmdir $TMP_FOLDER/* &> /dev/null
+	kill -9 $PID &> /dev/null
 	exit
 }
 
@@ -102,27 +109,25 @@ function Setup {
 }
 
 function PrintTopology {
-	echo
-	echo "Barbeque divides resources into 'host' and 'managed' partitions."
-	echo
-	echo -e " * \e[1mHost partition\e[0m    hosts the Operating System"
-	echo -e " * \e[1mManaged partition\e[0m hosts integrated applications"
-	echo
-	echo -e "You must choose which processing elements will act as " \
-			"\e[7mHOST Partition\e[0m."
-	echo
-	echo "Here follows a graphical representation (or textual if not possible)."
-	echo "Take note of the IDs of the chosen processing elements (PUs)."
 
-	lstopo --no-bridges --no-io &>/dev/null &
+dialog --colors \
+--msgbox 'BarbequeRTRM divides resources into `host` and `managed` partitions.
+    * \ZbHost partition\ZB hosts the Operating System
+    * \ZbManaged partition\ZB hosts integrated applications
+
+You must choose which processing elements will act as \ZuHOST Partition\ZU.' \
+15 70; clear
+
 }
 
 function SetHostPartition {
 
-	OPTIONS=$(cat $TMP_FOLDER/pes_list)
-	read -p "Press a key to continue"
+	lstopo --no-bridges --no-io &> /dev/null &
+	PID=$PID" "$!
 
-	dialog --checklist "Select which PUs will be marked as 'host' (spacebar or mouse)" \
+	OPTIONS=$(cat $TMP_FOLDER/pes_list)
+
+	dialog --checklist "Select which PUs will HOST Linux" \
 		20 75 15 $OPTIONS 2> $DIALOG_TEMP_FILE
 	clear
 
@@ -134,13 +139,28 @@ function SetHostPartition {
 	fi
 }
 
+function SetManagedPartition {
+
+	OPTIONS=$(cat $TMP_FOLDER/pes_list)
+
+	dialog --checklist "Select which PUs will be used to run MANAGED applications" \
+		20 75 15 $OPTIONS 2> $DIALOG_TEMP_FILE
+	clear
+
+	MDEV_PES=$(cat $DIALOG_TEMP_FILE)
+
+	if [ "$HOST_PES" == "" ]; then
+		echo "No managed device selected. Aborting."
+		CloseGenerator
+	fi
+}
+
 function XML_WriteHead {
 	echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > $TARGET_SYS
 	echo "<system hostname=\""$HOSTNAME"\" address=\""$MACHINE_IP"\">" >> $TARGET_SYS
-
 }
 
-function XML_PrintTail {
+function XML_WriteTail {
 	echo "    </cpu>" >> $TARGET_SYS
 	cat $TMP_FOLDER/xml_mems >> $TARGET_SYS
 	echo "</system>" >> $TARGET_SYS
@@ -165,6 +185,7 @@ function PrintDebugLog {
 		echo -e "\n"
 	fi
 }
+
 
 function XML_CreateSystems {
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > $TARGET_GLOBAL
@@ -198,9 +219,9 @@ CacheSelection # Cache partition selection
 
 PrintTopology # Show the user the topology, so he chooses a host partition
 SetHostPartition # Make the user choose a host partition
+SetManagedPartition # Make the user choose a host partition
 
-MACHINE_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | \
-	cut -f1  -d'/')
+MACHINE_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
 PopulateDebugLog "Ip of this machine: $MACHINE_IP"
 
 HOSTNAME=$(hostname)
@@ -263,15 +284,25 @@ while read lstopo_entry; do
 			PopulateDebugLog "Found a core. Multiple PUs in this core would mean hyper-threading. ID: $CURRENT_CORE"
 			;;
 		"PU")
-			MARKED="true"
+			PARTITION="none"
 			CURRENT_PE=$(echo $lstopo_entry | grep -o "P#[0-9]\{1,\}" | grep -o "[0-9]\{1,\}")
-			for PE in $HOST_PES; do
+			for PE in `echo $HOST_PES | sed -e 's/"//g'`; do
 				if [ "$PE" == "$CURRENT_PE" ]; then
-					MARKED="false"
+					PARTITION="host"
 				fi
 			done
-			echo "        <pe id=\""$CURRENT_PE"\" core_id=\""$CURRENT_CORE"\" share=\"100\" managed=\""$MARKED"\"/>" >> $TARGET_SYS
-			PopulateDebugLog "Found a Processing Element. ID: $CURRENT_PE, core_id: $CURRENT_CORE, managed: $MARKED"
+			for PE in `echo $MDEV_PES | sed -e 's/"//g'`; do
+				if [ "$PE" == "$CURRENT_PE" ]; then
+					if [ "$PARTITION" == "host" ]; then
+						PARTITION="shared"
+					else
+						PARTITION="mdev"
+					fi
+				fi
+			done
+			[ "$PARTITION" == "none" ] && PARTITION="host" # If not declared, that's host
+			echo "        <pe id=\""$CURRENT_PE"\" core_id=\""$CURRENT_CORE"\" share=\"100\" partition=\""$PARTITION"\"/>" >> $TARGET_SYS
+			PopulateDebugLog "Found a Processing Element. ID: $CURRENT_PE, core_id: $CURRENT_CORE, partition: $PARTITION"
 			;;
 		*)
 			PopulateDebugLog "Unknown Keyword: $KEYWORD"
@@ -280,7 +311,7 @@ while read lstopo_entry; do
 
 done < $TMP_FOLDER/lstopo_description
 
-XML_PrintTail # Write a part of the XML output on a file
+XML_WriteTail # Write a part of the XML output on a file
 
 PrintDebugLog
 
@@ -288,4 +319,3 @@ XML_CreateSystems
 
 #XML_PrintOutput # Print the final output
 CloseGenerator
-
