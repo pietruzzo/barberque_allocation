@@ -137,6 +137,7 @@ target_link_libraries(barbeque
 	bbque_resources
 	bbque_apps
 	${Boost_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
 )
 
 # Linking static plugins
@@ -159,9 +160,6 @@ if (CONFIG_TARGET_ANDROID)
 target_link_libraries(barbeque
 	bbque_android
 )
-else (CONFIG_TARGET_ANDROID)
-target_link_libraries(barbeque
-  pthread)
 endif (CONFIG_TARGET_ANDROID)
 
 # Linking dependencyes for OpenCL support

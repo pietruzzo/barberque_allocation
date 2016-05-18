@@ -181,6 +181,9 @@ if (CONFIG_EXTERNAL_LIBCG)
 	find_package(CGroup REQUIRED)
 endif (CONFIG_EXTERNAL_LIBCG)
 
+# Check for pthread
+find_package (Threads REQUIRED)
+
 # OpenCL support
 set (OPENCL_PLATFORM_AMD    "AMD Accelerated Parallel Processing")
 set (OPENCL_PLATFORM_ARM    "ARM Platform")
