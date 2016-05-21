@@ -20,16 +20,16 @@
 
 #include <bbque/bbque_exc.h>
 #include <netinet/in.h>
+#include <memory>
 #include <vector>
 
+#include <bbque/utils/logging/logger.h>
 #include "command_manager.h"
 #include "process_checker.h"
 
-#define MPIRUN_SAFE_DESTROY(x) if (x!=NULL) { delete x; x=NULL; }
-
-
 using bbque::rtlib::BbqueEXC;
 
+extern std::unique_ptr<bbque::utils::Logger> mpirun_logger;
 
 namespace mpirun {
 
@@ -41,14 +41,15 @@ public:
 			std::string const & name,
 			std::string const & recipe,
 			RTLIB_Services_t *rtlib,
-			std::vector<const char *> &mpirunArguments);
+            const std::vector<const char *> &mpirunArguments);
 
 	~MpiRun();
 
 private:
-	const std::string bacon_external_ip      = "127.0.0.1";
-	const std::string bacon_listening_ip     = "";
-	const unsigned short bacon_external_port = 5858;
+
+    const std::string bbque_external_ip      = "127.0.0.1";
+    const std::string bbque_listening_ip     = "";
+    const unsigned short bbque_external_port = 5858;
 
 	std::vector<const char *> cmd_arguments;
 
@@ -58,15 +59,16 @@ private:
 	struct sockaddr_in serv_addr;
 	struct sockaddr_in client_addr;
 
-	res_list *all_res    = NULL;
-	res_list *avail_res  = NULL;
+    std::unique_ptr<res_list> all_res;
+    std::shared_ptr<res_list> avail_res;
 
 	unsigned int avail_res_n = 0;
 
-	ProcessChecker *pc   = NULL;
-	CommandsManager *cm  = NULL;
+    std::unique_ptr<ProcessChecker>  pc;
+    std::unique_ptr<CommandsManager> cm;
 
 	bool call_mpirun();
+    void clean_mpirun() const noexcept;
 	bool open_socket();
 	bool accept_socket();
 	void clean_sockets();

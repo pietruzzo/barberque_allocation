@@ -22,6 +22,9 @@
 #include <vector>
 #include <bbque/utils/logging/logger.h>
 
+extern std::unique_ptr<bbque::utils::Logger> mpirun_logger;
+
+
 namespace mpirun {
 
 typedef std::vector<std::pair<std::string, int>> res_list;
@@ -34,8 +37,9 @@ public:
 	 * @brief The constructor. It just initializes the object and save the
 	 *        socket passed as argument.
 	 * @param socket the socket of RAS client connected
+     * @param avail_res the list of available resources from bbque
 	 */
-	CommandsManager(int socket) noexcept;
+    CommandsManager(int socket, std::shared_ptr<res_list> avail_res) noexcept;
 
 
 	/**
@@ -61,13 +65,20 @@ public:
 		return this->error;
 	}
 
+    /**
+     * @brief Request to OpenMPI a migration of a daemon
+     * @param The source node with the same node used in allocation
+     * @param The destinatio node with the same node used in allocation
+     */
+    void request_migration(const std::string &src, const std::string &dst);
+
 	/**
 	 * @brief Setter for the list of available resources
 	 *
 	 * You must call this method with valid resources before any call
 	 * to get_and_manage_commands().
 	 */
-	inline void set_available_resources(const res_list *av) noexcept {
+    inline void set_available_resources(std::shared_ptr<const res_list> av) noexcept {
 		this->available_resources = av;
 	}
 
@@ -77,17 +88,18 @@ public:
 	 * @return The list of available resources. If resources are never been
 	 * set NULL is returned.
 	 */
-	inline const res_list *get_available_resources() const noexcept {
+    inline std::shared_ptr<const res_list> get_available_resources() const noexcept {
 		return this->available_resources;
 	}
 
 private:
 
 	bool error = false;
+    bool mig_is_available = false;
+
 	int socket_client;
 
-	const res_list *available_resources = NULL;
-	static std::unique_ptr<bbque::utils::Logger> logger;
+    std::shared_ptr<const res_list> available_resources;
 
 	bool manage_nodes_request() noexcept;
 

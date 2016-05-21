@@ -110,6 +110,10 @@ nodes.addrs = 127.0.0.1      # list of addresses separated by comma
 nodes.slots = 2              # list of slots per address separated by comma
 updatetime.resources = 500   # In milliseconds
 
+# test.mig_source_node =
+# test.mig_destination_node =
+# test.mig_time =
+
 ################################################################################
 # Logger Options
 ################################################################################

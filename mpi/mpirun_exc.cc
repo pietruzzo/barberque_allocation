@@ -16,7 +16,7 @@
  */
 
 #include "mpirun_exc.h"
-
+#include "config.h"
 #include <cstdio>
 #include <bbque/utils/utility.h>
 #include <vector>
@@ -27,42 +27,34 @@
 
 #define MODULE_CONFIG "ompi"
 
-extern std::string config_addresses;
-extern std::string config_slots_per_addr;
-extern int config_updatetime_resources;
-
-
 namespace mpirun {
 
 MpiRun::MpiRun(
 		std::string const & name, std::string const & recipe, RTLIB_Services_t *rtlib,
-		std::vector<const char *> &mpirunArguments) :
+        const std::vector<const char *> &mpirunArguments) :
 	BbqueEXC(name, recipe, rtlib), cmd_arguments(mpirunArguments) {
 
-	logger->Info("bbque-mpirun unique identifier (UID): %u", GetUid());
+    mpirun_logger->Info("bbque-mpirun unique identifier (UID): %u", GetUid());
 }
 
 MpiRun::~MpiRun() {
+    this->clean_mpirun();
 	this->clean_sockets();
-	MPIRUN_SAFE_DESTROY(avail_res);
-	MPIRUN_SAFE_DESTROY(all_res);
-	MPIRUN_SAFE_DESTROY(this->cm);
-	// This should be always == NULL at this point, but just to be sure...
-	MPIRUN_SAFE_DESTROY(this->pc);
 }
 
 RTLIB_ExitCode_t MpiRun::onSetup() {
-	logger->Info("MpiRun::onSetup()");
-	logger->Debug("Config readed: config_addresses=%s config_slots_per_addr=%s",
-			config_addresses.c_str(),
-			config_slots_per_addr.c_str());
+    Config &config = Config::get();
 
-	// Load the bbq configuration
-	auto ex_addresses = MpiRun::string_explode(config_addresses, ',');
-	auto ex_slots     = MpiRun::string_explode(config_slots_per_addr, ',');
+    mpirun_logger->Info("MpiRun::onSetup()");
+    mpirun_logger->Debug("Config readed: config_addresses=%s config_slots_per_addr=%s",
+                           config.get_addresses().c_str(),config.get_slots().c_str());
+
+    // Load the bbq configuration
+    auto ex_addresses = MpiRun::string_explode(config.get_addresses(), ',');
+    auto ex_slots     = MpiRun::string_explode(config.get_slots(), ',');
 
 	// Now we have the addresses and slots, so build the pair list
-	all_res = new res_list();
+    all_res = std::unique_ptr<res_list>(new res_list());
 	for (unsigned int i=0; i<ex_addresses.size(); i++ ) {
 		all_res->push_back(std::pair<std::string, int>(
 				ex_addresses[i],::atoi(ex_slots[i].c_str())
@@ -70,35 +62,34 @@ RTLIB_ExitCode_t MpiRun::onSetup() {
 	}
 
 	if (ex_addresses.size() != ex_slots.size()) {
-		logger->Crit("Configuration error: %i nodes.addrs and %i nodes.slots",
+        mpirun_logger->Crit("Configuration error: %i nodes.addrs and %i nodes.slots",
 				ex_addresses.size(), ex_slots.size());
 		return RTLIB_ERROR;
 	}
-	logger->Debug("Configuration loaded");
+    mpirun_logger->Debug("Configuration loaded");
 
 	if (!this->open_socket())	// Open the socket for MPI communication.
 		return RTLIB_ERROR;		// if the socket fails to bind/listen/etc.
 								// stops execution here.
 
 	// Ok we can call mpirun command now (start another process, not blocking)
-	logger->Debug("Ready to receive incoming connection, starting mpirun...");
+    mpirun_logger->Debug("Ready to receive incoming connection, starting mpirun...");
 	this->call_mpirun();
 
 	// Let's accept the connection from mpirun just started
-	logger->Info("Waiting for `mpirun` (RAS) incoming connection...");
+    mpirun_logger->Info("Waiting for `mpirun` (RAS) incoming connection...");
 	bool status = this->accept_socket();
 
 	// Check mpirun terminates, socket problems, etc...
 	if (!status)
 		return RTLIB_ERROR;
 
-	this->cm = new CommandsManager(this->socket_client);
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t MpiRun::onConfigure(int8_t awm_id) {
 
-	logger->Info("MpiRun::onConfigure(): AWM [%02d]", awm_id);
+    mpirun_logger->Info("MpiRun::onConfigure(): AWM [%02d]", awm_id);
 	// TODO: Get the bit map from BBQ
 
 	// Avail resources is the minimum between awm_id+1 and the
@@ -108,24 +99,45 @@ RTLIB_ExitCode_t MpiRun::onConfigure(int8_t awm_id) {
 
 	// Recreate the subvector of resource available, and update the amount of
 	// available resources
-	MPIRUN_SAFE_DESTROY(avail_res);
-	avail_res = new res_list( all_res->begin(), all_res->begin()+avail_res_n );
-	this->cm->set_available_resources(avail_res);
+    avail_res.reset();
+    avail_res = std::make_shared<res_list>( all_res->begin(), all_res->begin()+avail_res_n );
 
+    if (this->cm != NULL) {
+        // Update available resources to CommandManager
+
+        this->cm->set_available_resources(avail_res);
+    } else {
+        this->cm = std::unique_ptr<CommandsManager>(new CommandsManager(this->socket_client,avail_res));
+    }
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t MpiRun::onRun() {
-	// Do nothing: the command has no real workload
-	usleep(config_updatetime_resources*1000);	// milliseconds -> microseconds
-	return RTLIB_OK;
+    Config &config = Config::get();
+    static int n=0;
+
+    // Do nothing: this application as no particular workload
+    usleep(config.get_updatetime_res()*1000);    // milliseconds -> microseconds
+
+    mpirun_logger->Info("MpiRun::onRun() %d %d",
+        config.get_mig_time(), config.get_updatetime_res()*(n));
+
+    // Mig time for testing purposes
+    if (config.get_mig_time() != 0) {
+        int time_elapsed = config.get_updatetime_res()*(++n)*1000; // In seconds
+        if (time_elapsed == config.get_mig_time() * 1000 ) {
+            mpirun_logger->Info("Sending migrate command");
+            this->cm->request_migration(config.get_mig_source(), config.get_mig_destination());
+        }
+    }
+    return RTLIB_OK;
 }
 
 
 RTLIB_ExitCode_t MpiRun::onMonitor() {
 	RTLIB_WorkingModeParams_t const wmp = WorkingModeParams();
 
-	logger->Info("MpiRun::onMonitor(): AWM [%02d], Cycle [%4d]",
+    mpirun_logger->Info("MpiRun::onMonitor(): AWM [%02d], Cycle [%4d]",
 		wmp.awm_id, Cycles());
 
 	// Now check for MPI requests
@@ -142,7 +154,7 @@ RTLIB_ExitCode_t MpiRun::onMonitor() {
 
 RTLIB_ExitCode_t MpiRun::onRelease() {
 	// TODO
-	logger->Info("MpiRun::onRelease(): exit");
+    mpirun_logger->Info("MpiRun::onRelease(): exit");
 
 	return RTLIB_OK;
 }

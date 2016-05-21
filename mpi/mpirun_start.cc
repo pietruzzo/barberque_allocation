@@ -37,8 +37,8 @@ namespace mpirun {
 
 bool MpiRun::call_mpirun() {
 
-	::setenv("BBQUE_IP",   this->bacon_external_ip.c_str(), 1);
-	::setenv("BBQUE_PORT", std::to_string(bacon_external_port).c_str(), 1);
+    ::setenv("BBQUE_IP",   this->bbque_external_ip.c_str(), 1);
+    ::setenv("BBQUE_PORT", std::to_string(bbque_external_port).c_str(), 1);
 
 	std::string command = std::string("mpirun " );
 	std::string temp;
@@ -51,7 +51,7 @@ bool MpiRun::call_mpirun() {
 	// Launch mpirun in background
 	// command += "&";
 
-	logger->Notice("Forking: %s", command.c_str());
+    mpirun_logger->Notice("Forking: %s", command.c_str());
 	int pid = fork();
 
 	if (pid==0) {
@@ -64,42 +64,51 @@ bool MpiRun::call_mpirun() {
 		::_exit(::system(command.c_str()));
 	} else {
 		// Parent
-		logger->Notice("Forked %i", pid);
+        mpirun_logger->Notice("Forked %i", pid);
 		this->pid_child = pid;
-		pc = new ProcessChecker(this->pid_child, this->socket_listening);
+        pc =  std::unique_ptr<ProcessChecker>(new ProcessChecker(this->pid_child, this->socket_listening));
 
 	}
 
 	return true;
 }
 
+void MpiRun::clean_mpirun() const noexcept {
+    mpirun_logger->Info("Sending SIGTERM to `mpirun`...");
+    kill(this->pid_child, SIGTERM);
+}
+
 bool MpiRun::open_socket() {
 
 	this->socket_listening = ::socket(AF_INET, SOCK_STREAM, 0);
 	serv_addr.sin_family   = AF_INET;
-	serv_addr.sin_port     = htons(this->bacon_external_port);
-	serv_addr.sin_addr.s_addr = bacon_listening_ip == ""
+    serv_addr.sin_port     = htons(this->bbque_external_port);
+    serv_addr.sin_addr.s_addr = bbque_listening_ip == ""
 								? INADDR_ANY
-								: inet_addr(this->bacon_listening_ip.c_str());
+                                : inet_addr(this->bbque_listening_ip.c_str());
+
+    int reuse = 1;
+    if (::setsockopt(this->socket_listening, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0)
+        mpirun_logger->Fatal("setsockopt(SO_REUSEADDR) failed.");
+
+#ifdef SO_REUSEPORT
+    if (::setsockopt(this->socket_listening, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0)
+        mpirun_logger->Fatal("setsockopt(SO_REUSEPORT) failed.");
+#endif
+
 
 	int ret = ::bind(
 			this->socket_listening,	(struct sockaddr *) &serv_addr,	sizeof(serv_addr));
 	if (ret < 0) {
-		logger->Fatal("Bacon unable to bind socket at %s:%i for MPI communication.",
-				bacon_listening_ip.c_str(), this->bacon_external_port);
+        mpirun_logger->Fatal("Mpirun unable to bind socket at %s:%i for MPI communication.",
+                bbque_listening_ip.c_str(), this->bbque_external_port);
 		return false;
 	}
 
-	logger->Info("Socket bound to %s:%d...",
-			bacon_listening_ip.c_str(),	this->bacon_external_port);
+    mpirun_logger->Info("Socket bound to %s:%d...",
+            bbque_listening_ip.c_str(),	this->bbque_external_port);
 
 	return ::listen(this->socket_listening, 1) == 0;	// this is one-one communication0
-}
-
-
-void sig_handler(int signo) {
-  if (signo == SIGINT)
-    printf("received SIGINT\n");
 }
 
 
@@ -111,18 +120,19 @@ bool MpiRun::accept_socket() {
 
 	// Just to check, should not be happens. Let's stop the checker (doesn't
 	// matter what happens)
-	MPIRUN_SAFE_DESTROY(this->pc);
+    this->pc.reset();
+
 	if (this->socket_client < 0 && errno == EINVAL) {
-		logger->Warn("`mpirun` terminates before opening a socket to Bacon.");
+        mpirun_logger->Warn("`mpirun` terminates before opening a socket.");
 		return false;
 	}
 
 	if (this->socket_client < 0) {
-		logger->Fatal("Bacon unable to accept a connection on socket "
+        mpirun_logger->Fatal("Unable to accept a connection on socket "
 				"for MPI communication.");
 		return false;
 	}
-	logger->Info("`mpirun` (RAS) connected.");
+    mpirun_logger->Info("`mpirun` (RAS) connected.");
 
 	return true;
 }

@@ -57,6 +57,7 @@ set(MPIRUN_SRC
 	mpirun_start
 	process_checker
 	command_manager
+	config
 )
 add_executable(bbque-mpirun ${MPIRUN_SRC})
 
