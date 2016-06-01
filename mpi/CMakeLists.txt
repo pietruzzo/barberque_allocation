@@ -13,6 +13,20 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+# Options for build version: DEBUG
+set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wextra -pedantic -DBBQUE_DEBUG")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set (BBQUE_DEBUG ON)
+endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+
+# Options for build version: DESKTOP RELEASE
+set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+
+# Options for build version: EMBEDDED RELEASE
+set (CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG")
+
+
+
 ################################################################################
 # Installation items
 ################################################################################
