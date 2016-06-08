@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bbque/utils/attributes_container.h"
+#include "bbque/utils/extra_data_container.h"
 #include "bbque/utils/utility.h"
 
 #include <iostream>
