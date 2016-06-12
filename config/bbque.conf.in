@@ -69,7 +69,7 @@ temp.critical = 75
 awmvalue.weight      = 20
 reconfig.weight      = 5
 fairness.weight      = 18
-congestion.weight    = 5
+congestio.weight    = 5
 migration.weight     = 5
 
 [SchedPol.Contrib]
