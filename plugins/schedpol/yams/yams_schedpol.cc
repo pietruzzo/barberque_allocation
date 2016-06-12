@@ -666,20 +666,22 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 				br::ResourceIdentifier::TypeStr[next_it->first]);
 			EvalBindings(next_it, dom_end, next_it, pschd_bound);
 		}
+		else {
+			// Enqueue the scheduling entity in the candidate list
+			sched_ul.lock();
+			entities.push_back(pschd_bound);
+			sched_ul.unlock();
+			logger->Info("EvalBindings: [%s] scheduling metrics = %1.4f (entities: %d)",
+				pschd_bound->StrId(),
+				pschd_bound->metrics, entities.size());
 
+		}
 		// Update scheduling entity information
 		pschd_parent = pschd_bound;
+
 	}
 	logger->Debug("EvalBindings: [%s] - DONE -",
 			br::ResourceIdentifier::TypeStr[dom_it->first]);
-
-	// Enqueue the scheduling entity in the candidate list
-	sched_ul.lock();
-	entities.push_back(pschd_parent);
-	sched_ul.unlock();
-	logger->Info("EvalBindings: [%s] scheduling metrics = %1.4f (entities: %d)",
-			pschd_parent->StrId(),
-			pschd_parent->metrics, entities.size());
 
 	return YAMS_SUCCESS;
 }
