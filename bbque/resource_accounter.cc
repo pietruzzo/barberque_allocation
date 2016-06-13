@@ -381,13 +381,13 @@ bool ResourceAccounter::ExistResource(ResourcePathPtr_t ppath) const {
 }
 
 ResourcePathPtr_t const ResourceAccounter::GetPath(
-		std::string const & path_str) const {
+		std::string const & strpath) const {
 	std::map<std::string, ResourcePathPtr_t>::const_iterator rp_it;
 	// Retrieve the resource path object
-	rp_it = r_paths.find(path_str);
+	rp_it = r_paths.find(strpath);
 	if (rp_it == r_paths.end()) {
 		logger->Warn("GetPath: No resource path object for [%s]",
-			path_str.c_str());
+			strpath.c_str());
 		return ResourcePathPtr_t();
 	}
 	return (*rp_it).second;
@@ -704,16 +704,15 @@ br::ResourcePath const & ResourceAccounter::GetPrefixPath() const {
 }
 
 br::ResourcePtr_t ResourceAccounter::RegisterResource(
-		std::string const & path_str,
+		std::string const & strpath,
 		std::string const & units,
 		uint64_t amount) {
-	br::ResourceIdentifier::Type_t type;
 
 	// Build a resource path object (from the string)
-	ResourcePathPtr_t ppath(new br::ResourcePath(path_str));
+	ResourcePathPtr_t ppath = std::make_shared<br::ResourcePath>(strpath);
 	if (!ppath) {
 		logger->Fatal("Register R<%s>: Invalid resource path",
-				path_str.c_str());
+				strpath.c_str());
 		return nullptr;
 	}
 
@@ -722,20 +721,20 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 	if (!pres) {
 		logger->Crit("Register R<%s>: "
 				"Unable to allocate a new resource descriptor",
-				path_str.c_str());
+				strpath.c_str());
 		return nullptr;
 	}
 	pres->SetTotal(br::ConvertValue(amount, units));
-	pres->SetPath(path_str);
+	pres->SetPath(strpath);
 	logger->Debug("Register R<%s>: Total = %llu %s",
-			path_str.c_str(), pres->Total(), units.c_str());
+			strpath.c_str(), pres->Total(), units.c_str());
 
 	// Insert the path in the paths set
-	r_paths.insert(std::pair<std::string, ResourcePathPtr_t> (path_str, ppath));
-	path_max_len = std::max((int) path_max_len, (int) path_str.length());
+	r_paths.emplace(strpath, ppath);
+	path_max_len = std::max((int) path_max_len, (int) strpath.length());
 
 	// Track the number of resources per type
-	type = ppath->Type();
+	br::ResourceIdentifier::Type_t type = ppath->Type();
 	if (r_count.find(type) == r_count.end()) {
 		r_count.insert(std::pair<br::Resource::Type_t, uint16_t>(type, 1));
 		r_types.push_back(type);
@@ -744,8 +743,9 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 		++r_count[type];
 
 	logger->Debug("Register R<%s>: Total = %llu %s DONE (c[%d]=%d)",
-			path_str.c_str(), Total(path_str), units.c_str(),
+			strpath.c_str(), Total(strpath), units.c_str(),
 			type, r_count[type]);
+
 	return pres;
 }
 
