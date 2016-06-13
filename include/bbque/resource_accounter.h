@@ -336,7 +336,7 @@ public:
 	 * RA_ERR_MISS_PATH if the path string is empty. RA_ERR_MEM if the
 	 * resource descriptor cannot be allocated.
 	 */
-	ExitCode_t RegisterResource(
+	br::ResourcePtr_t RegisterResource(
 			std::string const & path, std::string const & units, uint64_t amount);
 
 	/**

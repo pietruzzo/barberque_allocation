@@ -703,7 +703,7 @@ br::ResourcePath const & ResourceAccounter::GetPrefixPath() const {
 	return *(r_prefix_path.get());
 }
 
-ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
+br::ResourcePtr_t ResourceAccounter::RegisterResource(
 		std::string const & path_str,
 		std::string const & units,
 		uint64_t amount) {
@@ -714,7 +714,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
 	if (!ppath) {
 		logger->Fatal("Register R<%s>: Invalid resource path",
 				path_str.c_str());
-		return RA_ERR_MISS_PATH;
+		return nullptr;
 	}
 
 	// Insert a new resource in the tree
@@ -723,7 +723,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
 		logger->Crit("Register R<%s>: "
 				"Unable to allocate a new resource descriptor",
 				path_str.c_str());
-		return RA_ERR_MEM;
+		return nullptr;
 	}
 	pres->SetTotal(br::ConvertValue(amount, units));
 	pres->SetPath(path_str);
@@ -746,7 +746,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::RegisterResource(
 	logger->Debug("Register R<%s>: Total = %llu %s DONE (c[%d]=%d)",
 			path_str.c_str(), Total(path_str), units.c_str(),
 			type, r_count[type]);
-	return RA_SUCCESS;
+	return pres;
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
