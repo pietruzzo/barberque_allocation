@@ -196,18 +196,14 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 		return ExitCode_t::ERR_RSRC_MISSING;
 	}
 
+	// Register each resource to monitor, specifying the number of samples to
+	// consider in the (exponential) mean computation and the output log file
+	// descriptor
 	for (br::ResourcePtr_t rsrc: r_list) {
-			// Number of samples for the exponential mean computation
-			rsrc->EnablePowerProfile(samples_window);
-			// The resource to monitor
-			wm_info.resources.insert(
-					std::pair<br::ResourcePathPtr_t, br::ResourcePtr_t>(
-						ra.GetPath(rsrc->Path()), rsrc));
-			logger->Info("PWR MNTR: Registering [%s]...", rsrc->Path().c_str());
-			// Resource data log file descriptor
-			wm_info.log_fp.insert(
-					std::pair<br::ResourcePathPtr_t, std::ofstream *>(
-						ra.GetPath(rsrc->Path()), new std::ofstream()));
+		rsrc->EnablePowerProfile(samples_window);
+		logger->Info("PWR MNTR: Registering [%s]...", rsrc->Path().c_str());
+		wm_info.resources.emplace(ra.GetPath(rsrc->Path()), rsrc);
+		wm_info.log_fp.emplace(ra.GetPath(rsrc->Path()), new std::ofstream());
 	}
 
 	return ExitCode_t::OK;

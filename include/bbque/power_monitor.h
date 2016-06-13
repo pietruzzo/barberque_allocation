@@ -206,20 +206,27 @@ private:
 	 * monitoring activity
 	 */
 	struct PowerMonitorInfo_t {
+		/*--------- Descriptors ------------------*/
+
 		/** Resources to monitor */
 		std::map<br::ResourcePathPtr_t, br::ResourcePtr_t> resources;
 
-		/** Output file descriptors for data logging */
-		std::map<br::ResourcePathPtr_t, std::ofstream *> log_fp;
-		/** Data log output directory */
-		std::string log_dir;
-		/** Data log enabled */
-		bool log_enabled = false;
-		/** Monitoring status */
+		/*--------- Data logging -----------------*/
 
+		/** Output file descriptors  */
+		std::map<br::ResourcePathPtr_t, std::ofstream *> log_fp;
+		/** Output file directory    */
+		std::string log_dir;
+		/** Enable / disable         */
+		bool log_enabled = false;
+
+		/*--------- Monitoring status -------------*/
+
+		/** Monitoring start/stop            */
 		bool started = false;
 		/** Monitoring period (milliseconds) */
 		uint32_t period_ms;
+
 	} wm_info;
 
 
