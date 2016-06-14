@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cctype>
+#include <string>
 
 #include <sys/prctl.h>
 #include <sys/syscall.h>
