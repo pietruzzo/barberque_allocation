@@ -22,7 +22,10 @@
 #include "bbque/resource_manager.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/utility.h"
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
 #include "bbque/pp/proc_listener.h"
+#endif
 
 #ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
 # warning Using Test Platform Data (TPD)
