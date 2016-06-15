@@ -1,0 +1,13 @@
+
+choice
+  depends on BBQUE_PLP_XML
+  prompt "Default platform loader"
+  default BBQUE_PLOADER_DEFAULT_RXML
+  config BBQUE_PLOADER_DEFAULT_RXML
+    bool "RXML"
+    select BBQUE_PLOADER_RXML
+##NP
+
+endchoice
+
+source barbeque/plugins/ploader/rxml/Kconfig

@@ -1,0 +1,8 @@
+config BBQUE_PLOADER_RXML
+  depends on BBQUE_PLP_XML
+
+  bool "RXML"
+  default y
+  select EXTERNAL_RAPIDXML
+  ---help---
+  Selection of the parser for the XML file of platform description.

@@ -69,6 +69,9 @@
 /** The 'recipes' installation path */
 #define BBQUE_PATH_RECIPES "${BBQUE_PATH_RECIPES}"
 
+/** The 'pils' installation path */
+#define BBQUE_PATH_PILS "${BBQUE_PATH_PILS}"
+
 /** The 'headers' installation path */
 #define BBQUE_PATH_HEADERS "${BBQUE_PATH_HEADERS}"
 

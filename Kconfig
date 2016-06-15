@@ -410,4 +410,10 @@ choice
 
 endchoice
 
+menu "Platform Loader"
+  depends on BBQUE_PLP_XML
+  source "barbeque/plugins/ploader/Kconfig"
+endmenu
+
+
 endmenu # Advanced options
