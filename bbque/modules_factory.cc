@@ -44,6 +44,17 @@ plugins::RPCChannelIF * ModulesFactory::GetRPCChannelModule(
 	return RPCProxy::GetInstance(id);
 }
 
+plugins::PlatformLoaderIF * ModulesFactory::GetPlatformLoaderModule(
+    std::string const & id) {
+
+    // PlatformLoader is just implemented in C++ thus it doesn't
+    // require a real ObjectAdapter
+    void * module = bp::PluginManager::GetInstance().
+                    CreateObject(id);
+
+    return (plugins::PlatformLoaderIF *) module;
+}
+
 plugins::RecipeLoaderIF * ModulesFactory::GetRecipeLoaderModule(
     std::string const & id) {
 

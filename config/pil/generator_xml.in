@@ -189,7 +189,7 @@ function PrintDebugLog {
 
 function XML_CreateSystems {
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > $TARGET_GLOBAL
-        echo "<systems>" >> $TARGET_GLOBAL
+        echo "<systems version=\"1.0\">" >> $TARGET_GLOBAL
         echo "    <include local=\"true\">"`hostname`".xml</include>" >> $TARGET_GLOBAL
         echo "</systems>" >> $TARGET_GLOBAL
 

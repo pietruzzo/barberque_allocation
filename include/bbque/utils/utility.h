@@ -161,4 +161,17 @@ inline bool IsNumber(const std::string & str) {
 	return true;
 }
 
+/**
+ * @brief Compute a string hash, possibly at compile-time. This is
+ *        usually used in switch{} statement that wants a const
+ *        char* arguments.
+ * @param The input string to be hashed
+ * @see http://stackoverflow.com/a/16388610/835146
+ */
+unsigned constexpr ConstHashString(char const *input) {
+    return *input ?
+        static_cast<unsigned int>(*input) + 33 * ConstHashString(input + 1) :
+        5381;
+}
+
 #endif // BBQUE_UTILITY_H_

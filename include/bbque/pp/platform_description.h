@@ -27,6 +27,8 @@ public:
     class ProcessingElement {
     public:
 
+        ProcessingElement() = default;
+
         ProcessingElement(uint16_t id, uint16_t core_id, uint8_t share, PartitionType_t ptype)
             : id(id), core_id(core_id), share(share), ptype(ptype)
         {}
@@ -47,6 +49,15 @@ public:
             this->core_id = core_id;
         }
 
+        inline uint32_t GetQuantity() const {
+            return this->quantity;
+        }
+
+        inline void SetQuantity(uint32_t quantity) {
+            this->quantity = quantity;
+        }
+
+
         inline uint8_t GetShare() const {
             return this->share;
         }
@@ -66,6 +77,7 @@ public:
     private:
         uint16_t id;
         uint16_t core_id;
+        uint32_t quantity;
         uint8_t share;
         PartitionType_t ptype;
 
@@ -74,6 +86,9 @@ public:
     class Memory {
 
     public:
+
+        Memory() = default;
+
     #if BBQUE_PP_ARCH_SUPPORTS_INT64
         Memory(uint16_t id, uint64_t quantity)
             : id(id), quantity(quantity)
@@ -130,7 +145,7 @@ public:
     typedef std::shared_ptr<Memory> MemoryPtr_t;
 
     class GenericCPU {
-
+    public:
         inline const std::string & GetArchitecture() const {
             return this->architecture;
         }
@@ -192,7 +207,7 @@ public:
 
 
     class System {
-
+    public:
         inline bool IsLocal() const {
             return this->local;
         }
@@ -209,11 +224,11 @@ public:
             this->local = local;
         }
 
-        inline void GetHostname(const std::string& hostname) {
+        inline void SetHostname(const std::string& hostname) {
             this->hostname = hostname;
         }
 
-        inline void GetNetAddress(const std::string& net_address) {
+        inline void SetNetAddress(const std::string& net_address) {
             this->net_address = net_address;
         }
 
@@ -227,6 +242,18 @@ public:
 
         inline void AddCPU(const CPU& cpu) {
             this->cpus.push_back(cpu);
+        }
+
+        inline const std::vector<GenericCPU>& GetGPUsAll() const {
+            return this->gpus;
+        }
+
+        inline std::vector<GenericCPU>& GetGPUsAll() {
+            return this->gpus;
+        }
+
+        inline void AddGPU(const GenericCPU& gpu) {
+            this->gpus.push_back(gpu);
         }
 
         inline const std::vector<GenericCPU>& GetAcceleratorsAll() const {
@@ -249,6 +276,15 @@ public:
             return this->memories;
         }
 
+        MemoryPtr_t GetMemoryById(short id) const noexcept {
+            for (auto x : memories) {
+                if ( x->GetId() == id )
+                    return x;
+            }
+
+            return nullptr;
+        }
+
         inline void AddMemory(const MemoryPtr_t& memory) {
             this->memories.push_back(memory);
         }
@@ -260,6 +296,7 @@ public:
         std::string net_address;
 
         std::vector <CPU> cpus;
+        std::vector <GenericCPU> gpus;
         std::vector <GenericCPU> accelerators;
         std::vector <MemoryPtr_t> memories;
     };

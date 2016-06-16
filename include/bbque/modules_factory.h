@@ -21,6 +21,7 @@
 //----- Supported plugin interfaces
 #include "bbque/plugins/test_adapter.h"
 //#include "bbque/plugins/rpc_channel_adapter.h"
+#include "bbque/plugins/platform_loader.h"
 #include "bbque/plugins/recipe_loader.h"
 //----- Supported C++ only plugin interfaces
 #include "bbque/plugins/scheduler_policy.h"
@@ -58,7 +59,13 @@ public:
 	static plugins::RPCChannelIF * GetRPCChannelModule(
 			std::string const & id = RPC_CHANNEL_NAMESPACE);
 
-	/**
+    /**
+     * Get a reference to a module implementing the PlatformLoaderIF interface
+     */
+    static plugins::PlatformLoaderIF  * GetPlatformLoaderModule(
+            std::string const & id = PLATFORM_LOADER_NAMESPACE);
+
+    /**
 	 * Get a reference to a module implementing the RecipeLoaderIF interface
 	 */
 	static plugins::RecipeLoaderIF * GetRecipeLoaderModule(

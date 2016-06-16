@@ -3,7 +3,12 @@
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
 #include "bbque/config.h"
+
 #include <boost/program_options.hpp>
+#include <fstream>
+#include <string>
+
+#define CURRENT_VERSION "1.0"
 
 namespace po = boost::program_options;
 
@@ -24,14 +29,63 @@ po::variables_map xmlploader_opts_value;
 
 RXMLPlatformLoader::RXMLPlatformLoader() : initialized(false)
 {
+    // Get a logger
+    logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+    assert(logger);
 
+    logger->Debug("Built RXML PlatformLoader object @%p", (void*)this);
 }
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
 
-    if (this->initialized)
+    if (this->initialized) {
+        logger->Warn("RXMLPlatformLoader already initialized (I will ignore"
+                        "the replicated loadPlatformInfo() call)");
         return PL_SUCCESS;
+    }
 
+    std::string   path(platforms_dir + "/systems.xml");
+    std::ifstream xml_file(path);
+
+    if (unlikely(!xml_file.good())) {
+        logger->Error("systems.xml file not found, inaccessible or empty.");
+        return PL_NOT_FOUND;
+    }
+
+    std::stringstream buffer;
+    buffer << xml_file.rdbuf();
+    xml_file.close();
+
+    if (unlikely(!buffer.good())) {
+        logger->Error("Reading of systems.xml failed.");
+        return PL_NOT_FOUND;
+    }
+
+    std::string xmlstr(buffer.str());
+
+    try {
+        doc.parse<0>(&xmlstr[0]);    // Note: c++11 guarantees that the memory is
+                                     // sequentially allocated inside the string,
+                                     // so no problem here.
+    } catch(rapidxml::parse_error e) {
+        logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
+        return PL_SYNTAX_ERROR;
+    }
+
+    ExitCode_t error;
+    try {
+        error = ParseDocument();
+    } catch(rapidxml::parse_error e) {
+        logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
+    } catch(std::runtime_error e) {
+        logger->Error("XML not valid: %s.", e.what());
+    }
+
+    if (error != PL_SUCCESS) {
+        // Clean the platform description in case of error
+        this->pd = pp::PlatformDescription();
+        return error;
+    }
 
 
     this->initialized = true;
@@ -110,7 +164,568 @@ bool RXMLPlatformLoader::Configure(PF_ObjectParams * params) {
     return true;
 }
 
+// =======================[ XML releated methods ]=========================
 
+
+rapidxml::xml_node<> * RXMLPlatformLoader::GetFirstChild(rapidxml::xml_node<> * parent, const char* name, bool mandatory) const {
+
+    rapidxml::xml_node<> * child = parent->first_node(name, 0, true);
+
+    if (child == 0) {
+        if (mandatory) {
+            logger->Error("Missing mandatory <%s> tag.", name);
+            throw new PlatformLoaderEXC("Missing mandatory tag.");
+        } else {
+            return nullptr;
+        }
+    }
+
+    return child;
+}
+
+rapidxml::xml_attribute<> * RXMLPlatformLoader::GetFirstAttribute(rapidxml::xml_node<> * tag, const char* name, bool mandatory) const {
+
+    rapidxml::xml_attribute<> * attr= tag->first_attribute(name, 0, true);
+
+    if (attr == 0) {
+        if (mandatory) {
+            logger->Error("Missing argument '%s' in <%s> tag.", name, tag->name());
+            throw new PlatformLoaderEXC("Missing mandatory argument.");
+        } else {
+            return nullptr;
+        }
+    }
+
+    return attr;
+}
+
+
+
+RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
+    // Just for convenience
+    typedef rapidxml::xml_node<>      * node_t;
+    typedef rapidxml::xml_attribute<> * attr_t;
+
+    node_t root    = this->GetFirstChild(&doc,"systems", true);
+    attr_t version = this->GetFirstAttribute(root, "version", true);
+
+    if (strcmp(version->value(), CURRENT_VERSION) != 0) {
+        logger->Error("Version mismatch: my version is " CURRENT_VERSION " but systems.xml"
+                      "has version %s.", version->value());
+        return PL_GENERIC_ERROR;
+    }
+
+    assert(root);
+
+    bool local_found = false;
+    node_t include_sys = this->GetFirstChild(root,"include") ;
+    do {
+        attr_t is_local = this->GetFirstAttribute(root, "local", true);
+        if (strcmp(is_local->value(), "true") || strcmp(is_local->value(), "1")) {
+            if (!local_found) {
+                local_found = true;
+                this->ParseSystemDocument(include_sys->value(), true);
+            } else {
+                logger->Error("More than one local system specified in systems.xml!");
+                return PL_LOGIC_ERROR;
+            }
+        } else {
+            this->ParseSystemDocument(include_sys->value(), false);
+        }
+    } while( (include_sys->next_sibling("include")) );
+
+    if (!local_found) {
+        logger->Error("No local system found in systems.xml.");
+        return PL_LOGIC_ERROR;
+    }
+
+    return PL_SUCCESS;
+}
+
+RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const char* name, bool is_local) {
+    // Just for convenience
+    typedef rapidxml::xml_node<>      * node_t;
+    typedef rapidxml::xml_attribute<> * attr_t;
+
+    logger->Info("Loading %s platform file as %s system.", name, is_local ? "local" : "remote");
+
+    std::string   path(platforms_dir + "/" + name);
+    std::ifstream xml_file(path);
+
+    if (unlikely(!xml_file.good())) {
+        logger->Error("%s file not found, inaccessible or empty.", name);
+        return PL_NOT_FOUND;
+    }
+
+    std::stringstream buffer;
+    buffer << xml_file.rdbuf();
+    xml_file.close();
+
+    if (unlikely(!buffer.good())) {
+        logger->Error("Reading of %s failed.", name);
+        return PL_NOT_FOUND;
+    }
+
+    std::string xmlstr(buffer.str());
+
+    rapidxml::xml_document<> inc_doc;
+    // Not try{}catch{} it, leave it throwing, managed at upper levels
+    inc_doc.parse<0>(&xmlstr[0]);    // Note: c++11 guarantees that the memory is
+                                     // sequentially allocated inside the string,
+                                     // so no problem here.
+
+    node_t root     = this->GetFirstChild(&doc,"system", true);
+
+    // For the root tag, we have two parameters: hostname and address.
+    // The last is mandatory only for remote systems, and ignored for
+    // local ones
+    attr_t hostname = this->GetFirstAttribute(root, "hostname", true);
+    attr_t address  = this->GetFirstAttribute(root, "address", !is_local);
+
+    logger->Debug("Parsing system %s at address %s", hostname->value(), address->value() ? address->value() : "`localhost`");
+
+    pp::PlatformDescription::System sys;
+    sys.SetLocal(is_local);
+    sys.SetHostname(hostname->value());
+    if (address) {
+        sys.SetNetAddress(address->value());
+        if(is_local) {
+            logger->Warn("Address specified in a local system (I will ignore it)");
+        }
+    }
+
+    ///                                                             ///
+    ///                             <memory>                        ///
+    ///                                                             ///
+
+    // Now get all the memories and save them. This should be perfomed before <cpu> and
+    // other tags, due to reference to memories inside them.
+
+    node_t memory_tag = this->GetFirstChild(root,"memory") ;
+    do {
+        pp::PlatformDescription::Memory mem;
+        attr_t id_attr       = this->GetFirstAttribute(memory_tag, "id",       true);
+        attr_t quantity_attr = this->GetFirstAttribute(memory_tag, "quantity", true);
+        attr_t unit_attr     = this->GetFirstAttribute(memory_tag, "unit",     true);
+
+        short        id;
+        int          quantity;
+        int_fast16_t exp;
+
+        /// Read id=""
+        try {
+            // Yes, this conversion is unsafe. However, there will not probably
+            // be over 32767 memories in one machine...
+            id = (short)std::stoi(id_attr->value());
+        } catch(std::invalid_argument e) {
+            logger->Error("ID for <memory> is not a valid integer.");
+            return PL_LOGIC_ERROR;
+        } catch(std::out_of_range e) {
+            logger->Error("ID for <memory> is out-of-range, please change your unit.");
+            return PL_LOGIC_ERROR;
+        }
+
+        /// Read quantity=""
+        try {
+            quantity = std::stoi(quantity_attr->value());
+        } catch(std::invalid_argument e) {
+            logger->Error("Quantity for <memory> is not a valid integer.");
+            return PL_LOGIC_ERROR;
+        } catch(std::out_of_range e) {
+            logger->Error("Quantity for <memory> is out-of-range, please increase your unit.");
+            return PL_LOGIC_ERROR;
+        }
+
+        /// Read unit=""
+        switch(ConstHashString(unit_attr->value())) {
+            case ConstHashString("B"):
+                exp=0;
+            break;
+            case ConstHashString("KB"):
+                exp=10;
+            break;
+            case ConstHashString("MB"):
+                exp=20;
+            break;
+            case ConstHashString("GB"):
+                exp=20;
+            break;
+            case ConstHashString("TB"):
+                exp=40;
+            break;
+            default:
+                logger->Error("Invalid `unit` for <memory>.");
+                return PL_LOGIC_ERROR;
+            break;
+        }
+
+        mem.SetId(id);
+
+#if BBQUE_PP_ARCH_SUPPORTS_INT64
+        mem.SetQuantity(((int64_t)quantity) << exp);
+#else
+        if (exp < 32) {
+            mem.SetQuantityLO(((int32_t)quantity) << exp );
+            mem.SetQuantityHI(((int32_t)quantity) >> (32-exp) );
+        } else {
+            mem.SetQuantityLO(0);
+            mem.SetQuantityHI(((int32_t)quantity) << (exp-32) );
+        }
+#endif
+
+        sys.AddMemory(std::make_shared<pp::PlatformDescription::Memory>(mem));
+    } while( (memory_tag->next_sibling("memory")) );
+
+
+    ///                                                             ///
+    ///                             <cpu>                           ///
+    ///                                                             ///
+
+    node_t cpu_tag = this->GetFirstChild(root,"cpu") ;
+    do {
+        pp::PlatformDescription::CPU cpu;
+        attr_t arch_attr     = this->GetFirstAttribute(cpu_tag, "arch",     true);
+        attr_t id_attr       = this->GetFirstAttribute(cpu_tag, "id",       true);
+        attr_t socket_id_attr= this->GetFirstAttribute(cpu_tag, "socket_id",true);
+        attr_t mem_id_attr   = this->GetFirstAttribute(cpu_tag, "mem_id",   true);
+
+        const char * arch = arch_attr->value();
+        short        id;
+        short        socket_id;
+        short        mem_id;
+
+        /// Read id=""
+        try {
+            // Yes, this conversion is unsafe. However, there will not probably
+            // be over 32767 cpu in one machine...
+            id = (short)std::stoi(id_attr->value());
+        } catch(std::invalid_argument e) {
+            logger->Error("ID for <cpu> is not a valid integer.");
+            return PL_LOGIC_ERROR;
+        } catch(std::out_of_range e) {
+            logger->Error("ID for <cpu> is out-of-range.");
+            return PL_LOGIC_ERROR;
+        }
+
+        /// Read socket_id=""
+        try {
+            // Yes, this conversion is unsafe. However, there will not probably
+            // be over 32767 cpu in one machine...
+            socket_id = (short)std::stoi(socket_id_attr->value());
+        } catch(std::invalid_argument e) {
+            logger->Error("socket_id for <cpu> is not a valid integer.");
+            return PL_LOGIC_ERROR;
+        } catch(std::out_of_range e) {
+            logger->Error("socket_id for <cpu> is out-of-range.");
+            return PL_LOGIC_ERROR;
+        }
+
+        /// Read mem_id=""
+        try {
+            // Yes, this conversion is unsafe. However, there will not probably
+            // be over 32767 memories in one machine...
+            mem_id = (short)std::stoi(mem_id_attr->value());
+        } catch(std::invalid_argument e) {
+            logger->Error("mem_id for <cpu> is not a valid integer.");
+            return PL_LOGIC_ERROR;
+        } catch(std::out_of_range e) {
+            logger->Error("mem_id for <cpu> is out-of-range.");
+            return PL_LOGIC_ERROR;
+        }
+
+        std::shared_ptr<pp::PlatformDescription::Memory>
+                curr_memory = sys.GetMemoryById(mem_id);
+
+        if (curr_memory == nullptr) {
+            logger->Error("<cpu> with memory id %d not found in memories list.", mem_id);
+            return PL_LOGIC_ERROR;
+        }
+
+        cpu.SetArchitecture(arch);
+        cpu.SetId(id);
+        cpu.SetSocketId(socket_id);
+        cpu.SetMemory(curr_memory);
+
+
+        // TODO: extract <info> tag
+
+        ///                                                             ///
+        ///                             <pe>                            ///
+        ///                                                             ///
+        node_t pe_tag = this->GetFirstChild(cpu_tag,"pe");
+        do {
+            pp::PlatformDescription::ProcessingElement pe;
+
+            attr_t id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
+            attr_t core_id_attr  = this->GetFirstAttribute(pe_tag, "core_id",  true);
+            attr_t share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
+            attr_t managed_attr  = this->GetFirstAttribute(pe_tag, "managed",  false);
+
+            int id;
+            short core_id, share;
+
+            /// Read id=""
+            try {
+                id = (short)std::stoi(id_attr->value());
+            } catch(std::invalid_argument e) {
+                logger->Error("id for <pe> is not a valid integer.");
+                return PL_LOGIC_ERROR;
+            } catch(std::out_of_range e) {
+                logger->Error("id for <pe> is out-of-range.");
+                return PL_LOGIC_ERROR;
+            }
+
+            /// Read socket_id=""
+            try {
+                core_id = (short)std::stoi(core_id_attr->value());
+            } catch(std::invalid_argument e) {
+                logger->Error("core_id for <pe> is not a valid integer.");
+                return PL_LOGIC_ERROR;
+            } catch(std::out_of_range e) {
+                logger->Error("core_id for <pe> is out-of-range.");
+                return PL_LOGIC_ERROR;
+            }
+
+            /// Read share=""
+            try {
+                share = (short)std::stoi(share_attr->value());
+            } catch(std::invalid_argument e) {
+                logger->Error("share for <pe> is not a valid integer.");
+                return PL_LOGIC_ERROR;
+            } catch(std::out_of_range e) {
+                logger->Error("share for <pe> is out-of-range.");
+                return PL_LOGIC_ERROR;
+            }
+
+            // Check that share is in the limits
+            if (share < 0 || share > 100) {
+                logger->Error("share for <pe> must be between 0 and 100, but it's %i.", share);
+                return PL_LOGIC_ERROR;
+            }
+
+            // Read managed=""
+            if(managed_attr != nullptr) {
+                switch(ConstHashString(managed_attr->value())) {
+                    case ConstHashString("shared"):
+                        pe.SetPartitionType(pp::PlatformDescription::SHARED);
+                    break;
+                    case ConstHashString("host"):
+                        pe.SetPartitionType(pp::PlatformDescription::HOST);
+                    break;
+                    case ConstHashString("mdev"):
+                        pe.SetPartitionType(pp::PlatformDescription::MDEV);;
+                    break;
+                    default:
+                        logger->Error("'%s' is not a valid value for `managed` attribute.", managed_attr->value());
+                        return PL_LOGIC_ERROR;
+                    break;
+                }
+            } else {
+                // If not specified the default is device-only.
+                pe.SetPartitionType(pp::PlatformDescription::MDEV);
+            }
+
+
+            pe.SetId(id);
+            pe.SetCoreId(core_id);
+            pe.SetShare(share);
+            cpu.AddProcessingElement(pe);
+
+        } while( (pe_tag->next_sibling("pe")) );
+
+        sys.AddCPU(cpu);
+
+    } while( (cpu_tag->next_sibling("cpu")) );
+
+    ///                                                             ///
+    ///                             <gpu>                           ///
+    ///                                                             ///
+
+    node_t gpu_tag = this->GetFirstChild(root,"gpu") ;
+    do {
+        pp::PlatformDescription::GenericCPU gpu;
+        attr_t arch_attr     = this->GetFirstAttribute(gpu_tag, "arch",     true);
+        attr_t id_attr       = this->GetFirstAttribute(gpu_tag, "id",       true);
+
+        const char * arch = arch_attr->value();
+        short        id;
+        /// Read id=""
+        try {
+            // Yes, this conversion is unsafe. However, there will not probably
+            // be over 32767 cpu in one machine...
+            id = (short)std::stoi(id_attr->value());
+        } catch(std::invalid_argument e) {
+            logger->Error("ID for <gpu> is not a valid integer.");
+            return PL_LOGIC_ERROR;
+        } catch(std::out_of_range e) {
+            logger->Error("ID for <gpu> is out-of-range.");
+            return PL_LOGIC_ERROR;
+        }
+
+        gpu.SetArchitecture(arch);
+        gpu.SetId(id);
+
+        // TODO: extract <info> tag
+
+        ///                                                             ///
+        ///                             <pe>                            ///
+        ///                                                             ///
+        node_t pe_tag = this->GetFirstChild(gpu_tag,"pe");
+        do {
+            pp::PlatformDescription::ProcessingElement pe;
+
+            attr_t id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
+            attr_t quantity_attr = this->GetFirstAttribute(pe_tag, "quantity", false);
+            attr_t share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
+
+            int id;
+            short quantity, share;
+
+            /// Read id=""
+            try {
+                id = (short)std::stoi(id_attr->value());
+            } catch(std::invalid_argument e) {
+                logger->Error("id for <pe> is not a valid integer.");
+                return PL_LOGIC_ERROR;
+            } catch(std::out_of_range e) {
+                logger->Error("id for <pe> is out-of-range.");
+                return PL_LOGIC_ERROR;
+            }
+
+            /// Read quantity=""
+            try {
+                quantity = std::stoi(quantity_attr->value());
+            } catch(std::invalid_argument e) {
+                logger->Error("quantity for <pe> is not a valid integer.");
+                return PL_LOGIC_ERROR;
+            } catch(std::out_of_range e) {
+                logger->Error("quantity for <pe> is out-of-range.");
+                return PL_LOGIC_ERROR;
+            }
+
+            /// Read share=""
+            try {
+                share = (short)std::stoi(share_attr->value());
+            } catch(std::invalid_argument e) {
+                logger->Error("share for <pe> is not a valid integer.");
+                return PL_LOGIC_ERROR;
+            } catch(std::out_of_range e) {
+                logger->Error("share for <pe> is out-of-range.");
+                return PL_LOGIC_ERROR;
+            }
+
+            // Check that share is in the limits
+            if (share < 0 || share > 100) {
+                logger->Error("share for <pe> must be between 0 and 100, but it's %i.", share);
+                return PL_LOGIC_ERROR;
+            }
+
+            pe.SetId(id);
+            pe.SetQuantity(quantity);
+            pe.SetShare(share);
+            gpu.AddProcessingElement(pe);
+
+        } while( (pe_tag->next_sibling("pe")) );
+
+        sys.AddGPU(gpu);
+    } while( (gpu_tag->next_sibling("gpu")) );
+
+    ///                                                             ///
+    ///                             <acc>                           ///
+    ///                                                             ///
+
+    node_t acc_tag = this->GetFirstChild(root,"acc") ;
+    do {
+        pp::PlatformDescription::GenericCPU acc;
+        attr_t arch_attr     = this->GetFirstAttribute(acc_tag, "arch",     true);
+        attr_t id_attr       = this->GetFirstAttribute(acc_tag, "id",       true);
+
+        const char * arch = arch_attr->value();
+        short        id;
+        /// Read id=""
+        try {
+            // Yes, this conversion is unsafe. However, there will not probably
+            // be over 32767 cpu in one machine...
+            id = (short)std::stoi(id_attr->value());
+        } catch(std::invalid_argument e) {
+            logger->Error("ID for <acc> is not a valid integer.");
+            return PL_LOGIC_ERROR;
+        } catch(std::out_of_range e) {
+            logger->Error("ID for <acc> is out-of-range.");
+            return PL_LOGIC_ERROR;
+        }
+
+        acc.SetArchitecture(arch);
+        acc.SetId(id);
+
+        // TODO: extract <info> tag
+
+        ///                                                             ///
+        ///                             <pe>                            ///
+        ///                                                             ///
+        node_t pe_tag = this->GetFirstChild(acc_tag,"pe");
+        do {
+            pp::PlatformDescription::ProcessingElement pe;
+
+            attr_t id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
+            attr_t quantity_attr = this->GetFirstAttribute(pe_tag, "quantity", false);
+            attr_t share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
+
+            int id;
+            short quantity, share;
+
+            /// Read id=""
+            try {
+                id = (short)std::stoi(id_attr->value());
+            } catch(std::invalid_argument e) {
+                logger->Error("id for <pe> is not a valid integer.");
+                return PL_LOGIC_ERROR;
+            } catch(std::out_of_range e) {
+                logger->Error("id for <pe> is out-of-range.");
+                return PL_LOGIC_ERROR;
+            }
+
+            /// Read quantity=""
+            try {
+                quantity = std::stoi(quantity_attr->value());
+            } catch(std::invalid_argument e) {
+                logger->Error("quantity for <pe> is not a valid integer.");
+                return PL_LOGIC_ERROR;
+            } catch(std::out_of_range e) {
+                logger->Error("quantity for <pe> is out-of-range.");
+                return PL_LOGIC_ERROR;
+            }
+
+            /// Read share=""
+            try {
+                share = (short)std::stoi(share_attr->value());
+            } catch(std::invalid_argument e) {
+                logger->Error("share for <pe> is not a valid integer.");
+                return PL_LOGIC_ERROR;
+            } catch(std::out_of_range e) {
+                logger->Error("share for <pe> is out-of-range.");
+                return PL_LOGIC_ERROR;
+            }
+
+            // Check that share is in the limits
+            if (share < 0 || share > 100) {
+                logger->Error("share for <pe> must be between 0 and 100, but it's %i.", share);
+                return PL_LOGIC_ERROR;
+            }
+
+            pe.SetId(id);
+            pe.SetQuantity(quantity);
+            pe.SetShare(share);
+            acc.AddProcessingElement(pe);
+
+        } while( (pe_tag->next_sibling("pe")) );
+
+        sys.AddAccelerator(acc);
+    } while( (acc_tag->next_sibling("acc")) );
+
+    pd.AddSystem(sys);
+    return PL_SUCCESS;
+}
 
 
 }   // namespace plugins

@@ -1,10 +1,13 @@
 #ifndef PLATFORMLOADER_H
 #define PLATFORMLOADER_H
 
-#include <stdexcept>
 #include "bbque/plugins/platform_loader.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/plugins/plugin.h"
+
+#include <stdexcept>
+#include <rapidxml/rapidxml.hpp>
+
 
 #define MODULE_NAMESPACE PLATFORM_LOADER_NAMESPACE".rxml"
 #define MODULE_CONFIG PLATFORM_LOADER_CONFIG".rxml"
@@ -17,6 +20,10 @@ class RXMLPlatformLoader : PlatformLoaderIF
 {
 public:
 
+    /**
+     * @brief The runtime_error class for RXMLPlatformLoader errors.
+     *
+     */
     class PlatformLoaderEXC : public std::runtime_error {
     public:
         PlatformLoaderEXC(const char* x) : std::runtime_error(x) { }
@@ -60,6 +67,15 @@ public:
 
 private:
 
+    /**
+     * @brief System logger instance
+     */
+    std::unique_ptr<bu::Logger> logger;
+
+    /**
+     * @brief True when the XML file was parsed and the platform description loaded
+     *        into the object.
+     */
     bool initialized;
 
 
@@ -87,9 +103,17 @@ private:
     static bool Configure(PF_ObjectParams * params);
 
 
-    RXMLPlatformLoader();
-
     pp::PlatformDescription pd;
+    rapidxml::xml_document<> doc;
+
+
+
+    RXMLPlatformLoader();
+    ExitCode_t ParseDocument();
+    ExitCode_t ParseSystemDocument(const char* name, bool is_local);
+
+    rapidxml::xml_node<>      * GetFirstChild    (rapidxml::xml_node<> * parent, const char* name, bool mandatory=false) const;
+    rapidxml::xml_attribute<> * GetFirstAttribute(rapidxml::xml_node<> * tag,    const char* name, bool mandatory=false) const;
 };
 
 
