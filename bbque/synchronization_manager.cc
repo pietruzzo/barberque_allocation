@@ -106,7 +106,7 @@ SynchronizationManager::SynchronizationManager() :
 	ap(ApplicationProxy::GetInstance()),
 	mc(bu::MetricsCollector::GetInstance()),
 	ra(ResourceAccounter::GetInstance()),
-	pp(PlatformProxy::GetInstance()),
+    plm(PlatformManager::GetInstance()),
 	sv(System::GetInstance()),
 	sync_count(0) {
 	std::string sync_policy;
@@ -266,6 +266,7 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 		SM_ADD_SAMPLE(metrics, SM_SYNCP_APP_SYNCLAT, presp->syncLatency);
 
 		syncp_result = policy->CheckLatency(papp, presp->syncLatency);
+        (void)syncp_result;
 		// TODO: check the POLICY required action
 
 error_continue:
@@ -579,7 +580,7 @@ void SynchronizationManager::DoAcquireResources(AppPtr_t papp) {
 
 SynchronizationManager::ExitCode_t
 SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState) {
-	PlatformProxy::ExitCode_t result = PlatformProxy::OK;
+    PlatformManager::ExitCode_t result = PlatformManager::PLATFORM_OK;
 	AppsUidMapIt apps_it;
 	AppPtr_t papp;
 
@@ -598,29 +599,29 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 		if (papp->Disabled()) {
 			logger->Debug("STEP M: release resources of disabled EXC [%s]",
 					papp->StrId());
-			pp.ReclaimResources(papp);
+            plm.ReclaimResources(papp);
 		}
 
 		// TODO: reconfigure resources
 		switch (syncState) {
 		case ApplicationStatusIF::STARTING:
-			result = pp.MapResources(papp,
+            result = plm.MapResources(papp,
 					papp->NextAWM()->GetResourceBinding());
 			break;
 		case ApplicationStatusIF::RECONF:
 		case ApplicationStatusIF::MIGREC:
 		case ApplicationStatusIF::MIGRATE:
-			result = pp.MapResources(papp,
+            result = plm.MapResources(papp,
 					papp->NextAWM()->GetResourceBinding());
 			break;
 		case ApplicationStatusIF::BLOCKED:
-			result = pp.ReclaimResources(papp);
+            result = plm.ReclaimResources(papp);
 			break;
 		default:
 			break;
 		}
 
-		if (result != PlatformProxy::OK) {
+        if (result != PlatformManager::PLATFORM_OK) {
 			logger->Error("STEP M: Cannot synchronize application [%s]",
 					papp->StrId());
 			am.DisableEXC(papp, true);
@@ -634,7 +635,7 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_SYNCPLAT, sm_tmr, syncState);
 	logger->Debug("STEP M: SyncPlatform() DONE");
 
-	if (result == PlatformProxy::OK)
+    if (result == PlatformManager::PLATFORM_OK)
 		return OK;
 
 	return PLATFORM_SYNC_FAILED;

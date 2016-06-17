@@ -73,8 +73,6 @@ class Application: public ApplicationConfIF {
 
 public:
 
-
-
 	/**
 	 * @brief Constructor with parameters name and priority class
 	 * @param name Application name
@@ -234,18 +232,52 @@ public:
 	 *
 	 * Mark the Platform Specific Data as initialized for this application
 	 */
-	void SetPlatformData() {
+    inline void SetPlatformData() {
 		platform_data = true;
 	}
 
 	/**
-	 * @brief Check Platform Specific Data initialization
-	 *
-	 * Return true if this application has already a properly configured
-	 * set of Platform Specific Data.
-	 */
-	bool HasPlatformData() const {
+     * @brief Check Platform Specific Data initialization
+     *
+     * Return true if this application has already a properly configured
+     * set of Platform Specific Data.
+     */
+    inline bool HasPlatformData() const {
 		return platform_data;
+	}
+
+	/** @brief Set a remote application
+	 *
+	 * Mark the application as remote or local
+	 */
+	inline void SetRemote(bool is_remote)
+	{
+		remotely_scheduled = is_remote;
+	}
+
+	/**
+	 * @brief Return true if the application is executing or will be
+	 *        executed remotely, false if not.
+	 */
+	inline bool IsRemote() const {
+		return remotely_scheduled;
+	}
+
+	/**
+	 * @brief Set a remote application
+	 *
+	 * Mark the application as remote or local
+	 */
+	inline void SetLocal(bool is_local) {
+		locally_scheduled = is_local;
+	}
+
+	/**
+	 * @brief Return true if the application is executing or will be
+	 *        executed locally, false if not.
+	 */
+	inline bool IsLocal() const {
+		return locally_scheduled;
 	}
 
 	/**
@@ -514,6 +546,16 @@ private:
 	 * Platform Specifica Data properly initialized
 	 */
 	bool platform_data = false;
+
+	/**
+	 * Remotely scheduled
+	 */
+	bool remotely_scheduled = false;
+
+	/**
+	 * Locally scheduled
+	 */
+	bool locally_scheduled = false;
 
 	/**
 	 * Recipe pointer for the current application instance.

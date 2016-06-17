@@ -47,7 +47,7 @@ typedef std::shared_ptr<Recipe> RecipePtr_t;
 using bbque::app::RecipePtr_t;
 
 // Forward declaration
-class PlatformProxy;
+class PlatformManager;
 
 /**
  * @brief The class provides interfaces for managing the applications lifecycle.
@@ -377,8 +377,8 @@ private:
 	/** Lowest application priority value (maximum integer) */
 	app::AppPrio_t lowest_prio;
 
-	/** The PlatformProxy, used to setup/release platform specific data */
-	PlatformProxy & pp;
+    /** The PlatformManager, used to setup/release platform specific data */
+    PlatformManager & plm;
 
 	/**
 	 * MultiMap of all the applications instances which entered the

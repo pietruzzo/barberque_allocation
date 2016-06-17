@@ -24,7 +24,7 @@
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 
-#include "bbque/platform_proxy.h"
+#include "bbque/platform_manager.h"
 #include "bbque/app/application.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/resource_constraints.h"
@@ -226,7 +226,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 	std::string sys_platform_hw;
 	std::string platform_id;
 	std::string platform_hw;
-	PlatformProxy & pp(PlatformProxy::GetInstance());
+    PlatformManager & plm = PlatformManager::GetInstance();
 	bool id_matched  = false;
 #endif
 
@@ -237,14 +237,14 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 		CheckMandatoryNode(pp_elem, "platform", _xml_elem);
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 		// System platform ID
-		sys_platform_id = pp.GetPlatformID();
+        sys_platform_id = plm.GetPlatformID();
 		if (!sys_platform_id) {
 			logger->Error("Unable to get the system platform ID");
 			assert(sys_platform_id != nullptr);
 			return nullptr;
 		}
 		// Plaform hardware (optional)
-		sys_platform_hw.assign(pp.GetHardwareID());
+        sys_platform_hw.assign(plm.GetHardwareID());
 		logger->Info("Platform: System ID=%s HW=%s",
 				sys_platform_id, sys_platform_hw.c_str());
 

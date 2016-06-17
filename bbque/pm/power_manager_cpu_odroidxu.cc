@@ -48,8 +48,8 @@ ODROID_XU_CPUPowerManager::GetSensorsPrefixPath(
 	if (rp->Type() == br::Resource::MEMORY)
 		filepath = BBQUE_ODROID_SENSORS_DIR_MEM;
 	else if (rp->Type() == br::Resource::PROC_ELEMENT) {
-		PlatformProxy & pp(PlatformProxy::GetInstance());
-		if (pp.isHighPerformance(rp->GetID(br::Resource::PROC_ELEMENT)))
+        PlatformManager & plm(PlatformManager::GetInstance());
+        if (plm.isHighPerformance(rp->GetID(br::Resource::PROC_ELEMENT)))
 			filepath = BBQUE_ODROID_SENSORS_DIR_A15;
 		else
 			filepath = BBQUE_ODROID_SENSORS_DIR_A7;
@@ -90,8 +90,8 @@ ODROID_XU_CPUPowerManager::GetTemperature(
 
 	// Sensors available only for A15 cores
 	int core_id = rp->GetID(br::Resource::PROC_ELEMENT);
-	PlatformProxy & pp(PlatformProxy::GetInstance());
-	if(!pp.isHighPerformance(core_id)) {
+    PlatformManager & plm(PlatformManager::GetInstance());
+    if(!plm.isHighPerformance(core_id)) {
 		return PMResult::ERR_INFO_NOT_SUPPORTED;
 	}
 

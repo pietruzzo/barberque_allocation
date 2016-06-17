@@ -18,392 +18,128 @@
 #ifndef BBQUE_PLATFORM_PROXY_H_
 #define BBQUE_PLATFORM_PROXY_H_
 
-#include <bitset>
-#include <memory>
-
-#include "bbque/config.h"
-#include "bbque/utils/logging/logger.h"
 #include "bbque/app/application.h"
-#include "bbque/resource_accounter.h"
-#include "bbque/cpp11/thread.h"
-#include "bbque/utils/worker.h"
+#include "bbque/modules_factory.h"
+#include "bbque/res/usage.h"
+#include "bbque/res/usage.h"
+#include "bbque/pp/platform_description.h"
 
-#ifdef CONFIG_BBQUE_EM
-#include "bbque/em/event.h"
-#include "bbque/em/event_manager.h"
-#endif
-
-#ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
-# include "bbque/test_platform_data.h"
-#endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
-
-#ifdef CONFIG_BBQUE_PM
-# include "bbque/pm/power_manager.h"
-#endif // CONFIG_BBQUE_PM
+#include <cstdint>
 
 #define PLATFORM_PROXY_NAMESPACE "bq.pp"
 
-
-using bbque::app::AppPtr_t;
-using bbque::res::RViewToken_t;
 using bbque::res::UsagesMapPtr_t;
-using bbque::utils::Worker;
+using bbque::res::RViewToken_t;
+using bbque::app::AppPtr_t;
 
 namespace bbque {
 
 /**
- * @brief The Platform Proxy module
- * @ingroup sec20_pp
+ * @brief The PlatformProxy class is the interface for all
+ *        *PlatformProxy classes. The access to these classes
+ *        is provided by the PlatformManager
  */
-class PlatformProxy : public Worker {
+class PlatformProxy {
 
 public:
 
-	/**
-	 * @brief Exit codes returned by methods of this class
-	 */
-	typedef enum ExitCode {
-		OK = 0,
-		PLATFORM_INIT_FAILED,
-		PLATFORM_ENUMERATION_FAILED,
-		PLATFORM_NODE_PARSING_FAILED,
-		PLATFORM_DATA_NOT_FOUND,
-		PLATFORM_DATA_PARSING_ERROR,
-		PLATFORM_COMM_ERROR,
-		PLATFORM_MAPPING_FAILED,
-		PLATFORM_PWR_MONITOR_ERROR
-	} ExitCode_t;
+    virtual ~PlatformProxy() {}
 
-/**
- * @defgroup group_plt_prx Platform Proxy
- * @{
- *
- * @name Basic Infrastructure and Initialization
- * @{
- * The <tt>PlatformProxy</tt> is the BarbequeRTRM core module in charge to
- * manage the communication with the target platform by means of a
- * platforms-specific abstraction and integration layer.
- *
- * This class provides all the basic services which are required by the core
- * modules in order to:
- * <ul>
- * <li><i>get a platform description:</i> by collecting a description of
- * resources availability and their run-time sate</li>
- * <li><i>control resource partitioning:</i> by binding resources to the
- * assignee applications</li>
- * </ul>
- */
+    /**
+     * @brief Exit codes returned by methods of this class
+     */
+    typedef enum ExitCode {
+        PLATFORM_OK = 0,
+        PLATFORM_GENERIC_ERROR,
+        PLATFORM_INIT_FAILED,
+        PLATFORM_ENUMERATION_FAILED,
+        PLATFORM_NODE_PARSING_FAILED,
+        PLATFORM_DATA_NOT_FOUND,
+        PLATFORM_DATA_PARSING_ERROR,
+        PLATFORM_COMM_ERROR,
+        PLATFORM_MAPPING_FAILED,
+        PLATFORM_PWR_MONITOR_ERROR,
+    } ExitCode_t;
 
-	/**
-	 * @brief Get a reference to the paltform proxy
-	 */
-	static PlatformProxy & GetInstance();
+    /**
+     * @brief Return the Platform specific string identifier
+     */
+    virtual const char* GetPlatformID(int16_t system_id=-1) const = 0;
 
-	/**
-	 * @brief Release all the platform proxy resources
-	 */
-	~PlatformProxy();
+    /**
+     * @brief Return the Hardware identifier string
+     */
+    virtual const char* GetHardwareID(int16_t system_id=-1) const = 0;
+    /**
+     * @brief Platform specific resource setup interface.
+     */
+    virtual ExitCode_t Setup(AppPtr_t papp) = 0;
 
-/**
- * @}
- * @name Platform description
- * @{
- */
+    /**
+     * @brief Platform specific resources enumeration
+     *
+     * The default implementation of this method loads the TPD, is such a
+     * function has been enabled
+     */
+    virtual ExitCode_t LoadPlatformData() = 0;
 
-	/**
-	 * @brief Look-up for a platform description and load it.
-	 *
-	 * A description of all platform resources is looked-up by a call of this
-	 * method which provides also their registration into the ResourceManager
-	 * module.
-	 */
-	ExitCode_t LoadPlatformData();
+    /**
+     * @brief Platform specific resources refresh
+     */
+    virtual ExitCode_t Refresh() = 0;
+    /**
+     * @brief Platform specific resources release interface.
+     */
+    virtual ExitCode_t Release(AppPtr_t papp) = 0;
+
+    /**
+     * @brief Platform specific resource claiming interface.
+     */
+    virtual ExitCode_t ReclaimResources(AppPtr_t papp) = 0;
+
+    /**
+     * @brief Platform specific resource binding interface.
+
+    virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
+            RViewToken_t rvt, bool excl) = 0;*/
+
+    /**
+     * @brief Bind the specified resources to the specified application.
+     *
+     * @param papp The application which resources are assigned
+     * @param pres The resources to be assigned
+     * @param excl If true the specified resources are assigned for exclusive
+     * usage to the application
+     */
+    virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
+            bool excl = true) = 0;
 
 
-	/**
-	 * @breif Return the string ID of the target platform
-	 *
-	 * Each platform is uniquely identifyed by a string identifier. This
-	 * method return a pointer to that string.
-	 *
-	 * @return A poiinter to the platform string identifier
-	 */
-	const char* GetPlatformID() const {
-		assert(platformIdentifier != NULL);
-		return platformIdentifier;
-	};
+    static const pp::PlatformDescription & GetPlatformDescription() noexcept {
 
-	/**
-	 * @brief Return the string ID of the target hardware
-	 *
-	 * Each platform can feature an hardware (string) identifier. This
-	 * method return a pointer to that string.
-	 *
-	 * @return A poiinter to the hardware identifier string
-	 */
-	const char* GetHardwareID() const {
-		assert(hardwareIdentifier != NULL);
-		return hardwareIdentifier;
-	};
+        std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(PLATFORM_PROXY_NAMESPACE);
 
-	/**
-	 * @brief Has the resource been tagged as "high performance"?
-	 *
-	 * Useful for heterogeneous architectures, e.g., ARM big.LITTLE CPUs
-	 *
-	 * @param res_id The integer id of the resource
-	 * @return true for high performance resources (e.g., "big CPU cores")
-	 */
-	bool isHighPerformance(uint16_t res_id) {
-		return _isHighPerformance(res_id);
-	}
 
-/**
- * @}
- * @name Resource state monitoring
- * @{
- */
+        // Check if the plugin is never loaded
+        // in that case load it and parse the
+        // platform configuration
+        if (pli == NULL) {
+            logger->Debug("I'm creating a new instance of PlatformLoader plugin.");
+            pli = ModulesFactory::GetPlatformLoaderModule();
+            if (plugins::PlatformLoaderIF::PL_SUCCESS != pli->loadPlatformInfo()) {
+                logger->Fatal("Unable to load platform information.");
+            } else {
+                logger->Info("Platform information loaded successfully.");
+            }
+        }
 
-#define PP_EVENT_REFRESH  0
-#define PP_EVENT_COUNT    1
-
-	/**
-	 * @brief Notify a platform event related to resources status
-	 *
-	 * If the platform description should change at run-time, e.g.
-	 * resources availability changed, this method should be called to
-	 * notify PlatformProxy about the need to reload the platform
-	 * description.
-	 */
-	virtual void Refresh();
-
-/**
- * @}
- * @name Resource binding
- * @{
- */
-
-	/**
-	 * @brief Release platform data used to manage the specified application
-	 *
-	 * Once an application exit the system, this method should be called to
-	 * properly release all the platform specific data used to manage it at
-	 * run-time.
-	 */
-	ExitCode_t Release(AppPtr_t papp);
-
-	/**
-	 * @brief Release all the resources assigned to the specified application.
-	 *
-	 * @param papp The application which resources are reclaimed
-	 */
-	ExitCode_t ReclaimResources(AppPtr_t papp);
-
-	/**
-	 * @brief Bind the specified resources to the specified application.
-	 *
-	 * @param papp The application which resources are assigned
-	 * @param pres The resources to be assigned
-	 * @param excl If true the specified resources are assigned for exclusive
-	 * usage to the application
-	 */
-	ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
-			bool excl = true);
-
-/**
- * @}
- * @}
- */
+        // Return the just or previous loaded configuration
+        return pli->getPlatformInfo();
+    }
 
 private:
+        static plugins::PlatformLoaderIF* pli;
 
-	/**
-	 * @brief Set true if the PIL has been properly initialized
-	 *
-	 * This is set to true if the Platform Integration Layer (PIL) has
-	 * been properly initialized, thus Barbeque has control on assigned
-	 * resources.
-	 */
-	bool pilInitialized;
-
-	/**
-	 * @brief The set of flags related to pending platform events to handle
-	 */
-	std::bitset<PP_EVENT_COUNT> platformEvents;
-
-	/**
-	 * @brief The platform monitoring thread.
-	 *
-	 * A default implementation is provided for the platform monitoring
-	 * task, which reloadis the platform description each time a new event
-	 * is signaled via the @see UpdatePlatform call.
-	 * A specific platform could overload this method in case a different
-	 * behavior is required.
-	 */
-	virtual void Task();
-
-	/**
-	 * @brief Setup platform data required to manage the specified application
-	 *
-	 * Once a new application enter the system, a set of platform specific
-	 * applications data could be require in order to properly set-up the
-	 * platform for run-time management. This method should be called to
-	 * perpare the groud for run-time platform control.
-	 */
-	ExitCode_t Setup(AppPtr_t papp);
-
-	/**
-	 * @brief Refresh the platform description.
-	 *
-	 * If the platform description should change at run-time, e.g.
-	 * resources availability changed, this method is called to notify the
-	 * ResourceManage to be aware about the new platform status.
-	 *
-	 * A platform specific proxy could customize the behavior of this
-	 * method by overloading the low-level method @see
-	 * _RefreshPlatformData.
-	 *
-	 * @return OK on success.
-	 */
-	ExitCode_t RefreshPlatformData();
-
-protected:
-
-	/**
-	 * @biref Build a new platform proxy
-	 */
-	PlatformProxy();
-
-
-	/**
-	 * @brief The platform specific string identifier
-	 */
-	const char *platformIdentifier;
-
-	/**
-	 * @brief The platform specific string identifier
-	 */
-	const char *hardwareIdentifier;
-
-
-	/**
-	 * @brief Set the PIL as initialized
-	 *
-	 * The Platform Specific (low-level) module is expected to call this
-	 * method if the platform dependent initialization has been completed
-	 * with success.
-	 */
-	void SetPilInitialized() {
-		pilInitialized = true;
-	}
-
-	/**
-	 * @brief Notify the completion of a resources refresh
-	 *
-	 * The Platform Specific (low-level) module is expected to call this
-	 * method once the availability of platform resources has changed and
-	 * the ResourceAccounter module properly notified about variations.
-	 *
-	 * A call to this method will ensure a notification of the
-	 * ResourceManager about availability changes, thus eventually
-	 * triggering a new optimization run.
-	 */
-	ExitCode_t CommitRefresh();
-
-/*******************************************************************************
- *  Platform Specific (low-level) methods
- ******************************************************************************/
-
-	/**
-	 * @brief Return the Platform specific string identifier
-	 */
-	virtual const char* _GetPlatformID() {
-		logger->Debug("PLAT PRX: default _GetPlatformID()");
-		return "it.polimi.bbque.tpd";
-	};
-
-	/**
-	 * @brief Return the Hardware identifier string
-	 */
-	virtual const char* _GetHardwareID() {
-		logger->Debug("PLAT PRX: default _GetHardwareID()");
-		return NULL;
-	};
-
-	/**
-	 * @brief Platform specific check for resources tagged as "high
-	 * performance"
-	 */
-	virtual bool _isHighPerformance(uint16_t res_id) {
-		(void) res_id;
-		return false;
-	}
-
-	/**
-	 * @brief Platform specific resource setup interface.
-	 */
-	virtual ExitCode_t _Setup(AppPtr_t papp) {
-		(void)papp;
-		logger->Debug("PLAT PRX: default _Setup()");
-		return OK;
-	};
-
-	/**
-	 * @brief Platform specific resources enumeration
-	 *
-	 * The default implementation of this method loads the TPD, is such a
-	 * function has been enabled
-	 */
-	virtual ExitCode_t _LoadPlatformData() {
-#ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
-		logger->Debug("PLAT PRX: default _LoadPlatformData()");
-#else // !CONFIG_BBQUE_TEST_PLATFORM_DATA
-		//---------- Loading TEST platform data
-		logger->Debug("PLAT PRX: loading Test Platform Data (TPD)");
-		TestPlatformData &tpd(TestPlatformData::GetInstance());
-		tpd.LoadPlatformData();
-#endif // !CONFIG_BBQUE_TEST_PLATFORM_DATA
-		return OK;
-	};
-
-	/**
-	 * @brief Platform specific resources refresh
-	 */
-	virtual ExitCode_t _RefreshPlatformData() {
-		logger->Debug("PLAT PRX: default _RefreshPlatformData()");
-		return OK;
-	};
-
-	/**
-	 * @brief Platform specific resources release interface.
-	 */
-	virtual ExitCode_t _Release(AppPtr_t papp) {
-		(void)papp;
-		logger->Debug("PLAT PRX: default _Release()");
-		return OK;
-	};
-
-	/**
-	 * @brief Platform specific resource claiming interface.
-	 */
-	virtual ExitCode_t _ReclaimResources(AppPtr_t papp) {
-		(void)papp;
-		logger->Debug("PLAT PRX: default _ReclaimResources()");
-		return OK;
-	};
-
-	/**
-	 * @brief Platform specifi resource binding interface.
-	 */
-	virtual ExitCode_t _MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
-			RViewToken_t rvt, bool excl) {
-		(void)papp;
-		(void)pres;
-		(void)rvt;
-		(void)excl;
-		logger->Debug("PLAT PRX: default _MapResources()");
-		return OK;
-	};
 
 };
 

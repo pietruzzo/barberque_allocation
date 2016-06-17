@@ -23,7 +23,7 @@
 #include <iostream>
 #include <boost/filesystem/operations.hpp>
 
-#include "bbque/platform_proxy.h"
+#include "bbque/platform_manager.h"
 #include "bbque/app/application.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/resource_constraints.h"
@@ -212,7 +212,7 @@ ticpp::Element * XMLRecipeLoader::LoadPlatform(ticpp::Element * _xml_elem) {
 	std::string sys_platform_hw;
 	std::string platform_id;
 	std::string platform_hw;
-	PlatformProxy & pp(PlatformProxy::GetInstance());
+    PlatformManager & plm = PlatformManager::GetInstance();
 	bool platform_matched = false;
 #endif
 
@@ -221,14 +221,14 @@ ticpp::Element * XMLRecipeLoader::LoadPlatform(ticpp::Element * _xml_elem) {
 		pp_elem = _xml_elem->FirstChildElement("platform", true);
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 		// System platform
-		sys_platform_id = pp.GetPlatformID();
+        sys_platform_id = plm.GetPlatformID();
 		if (!sys_platform_id) {
 			logger->Error("Unable to get the system platform ID");
 			assert(sys_platform_id != nullptr);
 			return nullptr;
 		}
 		// Plaform hardware (optional)
-		sys_platform_hw.assign(pp.GetHardwareID());
+        sys_platform_hw.assign(plm.GetHardwareID());
 
 		// Look for the platform section matching the system platform id
 		while (pp_elem && !platform_matched) {

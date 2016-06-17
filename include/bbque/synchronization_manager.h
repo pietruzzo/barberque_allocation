@@ -21,7 +21,7 @@
 #include "bbque/config.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/application_proxy.h"
-#include "bbque/platform_proxy.h"
+#include "bbque/platform_manager.h"
 
 #include "bbque/utils/timer.h"
 #include "bbque/utils/metrics_collector.h"
@@ -108,7 +108,7 @@ private:
 	ApplicationProxy & ap;
 	MetricsCollector & mc;
 	ResourceAccounter & ra;
-	PlatformProxy & pp;
+    PlatformManager & plm;
 	System & sv;
 
 	/**

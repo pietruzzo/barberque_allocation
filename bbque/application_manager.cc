@@ -23,7 +23,7 @@
 #include "bbque/configuration_manager.h"
 #include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
-#include "bbque/platform_proxy.h"
+#include "bbque/platform_manager.h"
 #include "bbque/app/application.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/app/recipe.h"
@@ -71,7 +71,7 @@ ApplicationManager & ApplicationManager::GetInstance() {
 
 ApplicationManager::ApplicationManager() :
 		cm(CommandManager::GetInstance()),
-		pp(PlatformProxy::GetInstance()),
+        plm(PlatformManager::GetInstance()),
 		cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
 
 	// Get a logger
@@ -1075,7 +1075,7 @@ ApplicationManager::AppsRemove(AppPtr_t papp) {
 ApplicationManager::ExitCode_t
 ApplicationManager::CleanupEXC(AppPtr_t papp) {
 	std::unique_lock<std::recursive_mutex> uids_ul(uids_mtx, std::defer_lock);
-	PlatformProxy::ExitCode_t pp_result;
+    PlatformManager::ExitCode_t pp_result;
 	ExitCode_t am_result;
 
 	am_result = StatusRemove(papp);
@@ -1087,8 +1087,8 @@ ApplicationManager::CleanupEXC(AppPtr_t papp) {
 	}
 
 	// Remove platform specific data
-	pp_result = pp.Release(papp);
-	if (pp_result != PlatformProxy::OK) {
+    pp_result = plm.Release(papp);
+    if (pp_result != PlatformManager::PLATFORM_OK) {
 		logger->Error("Cleanup EXC [%s] FAILED "
 				"(Error: platform data cleanup)",
 				papp->StrId());

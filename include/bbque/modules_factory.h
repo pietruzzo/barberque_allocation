@@ -78,7 +78,7 @@ public:
 		std::string const & id = SCHEDULER_POLICY_NAMESPACE);
 
 	/**
-	 * Get a reference to a module implementing the SynchronizationPolicyIF interface
+     * Get a reference to a module implementing the  nchronizationPolicyIF interface
 	 */
 	static plugins::SynchronizationPolicyIF * GetSynchronizationPolicyModule(
 		std::string const & id = SYNCHRONIZATION_POLICY_NAMESPACE);

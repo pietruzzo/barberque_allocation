@@ -142,7 +142,7 @@ ResourceManager::ResourceManager() :
 	pm(PluginManager::GetInstance()),
 	ra(ResourceAccounter::GetInstance()),
 	mc(MetricsCollector::GetInstance()),
-	pp(PlatformProxy::GetInstance()),
+    plm(PlatformManager::GetInstance()),
 	cm(CommandManager::GetInstance()),
 
 #ifdef CONFIG_BBQUE_EM
@@ -211,14 +211,14 @@ ResourceManager::Setup() {
 		logger->Info(" * %s", (*i).first.c_str());
 
 	//---------- Init Platform Integration Layer (PIL)
-	PlatformProxy::ExitCode_t result = pp.LoadPlatformData();
-	if (result != PlatformProxy::OK) {
+    PlatformManager::ExitCode_t result = plm.LoadPlatformData();
+    if (result != PlatformManager::PLATFORM_OK) {
 		logger->Fatal("Platform Integration Layer initialization FAILED!");
 		return SETUP_FAILED;
 	}
 
 	//---------- Start bbque services
-	pp.Start();
+    plm.Start();
 	if (opt_interval)
 		optimize_dfr.SetPeriodic(milliseconds(opt_interval));
 

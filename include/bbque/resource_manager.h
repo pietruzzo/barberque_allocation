@@ -21,7 +21,7 @@
 #include "bbque/config.h"
 #include "bbque/application_manager.h"
 #include "bbque/application_proxy.h"
-#include "bbque/platform_proxy.h"
+#include "bbque/platform_manager.h"
 #include "bbque/platform_services.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/scheduler_manager.h"
@@ -211,9 +211,9 @@ private:
 	MetricsCollector & mc;
 
 	/**
-	 * @brief The Platform Proxy module
+     * @brief The Platform Manager module
 	 */
-	PlatformProxy & pp;
+    PlatformManager & plm;
 
 	/**
 	 * @brief The Commands Manager module

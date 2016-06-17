@@ -20,13 +20,16 @@
 
 #include "bbque/application_manager.h"
 #include "bbque/app/application.h"
-#include "bbque/system.h"
+//#include "bbque/system.h"
 
 #define SYNCHRONIZATION_POLICY_NAMESPACE "bq.ym.sp"
 
 using bbque::app::ApplicationStatusIF;
 
-namespace bbque { namespace plugins {
+namespace bbque {
+    class System;
+
+namespace plugins {
 
 /**
  * @brief A module interface to implement resource scheduler policies.
