@@ -14,10 +14,15 @@ PlatformManager::PlatformManager()
 
 
     // Init the submodules
-    this->lpp = std::unique_ptr<pp::LocalPlatformProxy>();
-    this->rpp = std::unique_ptr<pp::RemotePlatformProxy>();
+    this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(new pp::LocalPlatformProxy());
+    this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(new pp::RemotePlatformProxy());
 
 
+
+    // Register a command dispatcher to handle CGroups reconfiguration
+    CommandManager &cm = CommandManager::GetInstance();
+    cm.RegisterCommand(PLATFORM_MANAGER_NAMESPACE ".refresh", static_cast<CommandHandler*>(this),
+            "Refresh CGroups resources description");
 }
 
 PlatformManager::~PlatformManager()
@@ -297,6 +302,24 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
     }
 
     return PLATFORM_OK;
+}
+
+int PlatformManager::CommandsCb(int argc, char *argv[]) {
+    uint8_t cmd_offset = ::strlen(PLATFORM_MANAGER_NAMESPACE) + 1;
+    (void)argc;
+    (void)argv;
+
+    // Notify all the PlatformProxy to refresh the platform description
+    switch(argv[0][cmd_offset]) {
+    case 'r': // refresh
+        this->Refresh();
+        break;
+    default:
+        logger->Warn("CommandsCb: Command [%s] not supported");
+    }
+
+    return 0;
+
 }
 
 

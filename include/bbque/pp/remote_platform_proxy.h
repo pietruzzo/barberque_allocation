@@ -5,6 +5,8 @@
 #include "bbque/platform_proxy.h"
 #include "bbque/pp/distributed_proxy.h"
 
+#define REMOTE_PLATFORM_PROXY_NAMESPACE "bb.pp.rpp"
+
 namespace bbque {
 namespace pp {
 class RemotePlatformProxy : public PlatformProxy, public DistributedProxy
@@ -38,7 +40,7 @@ public:
     /**
      * @brief Platform specific resources refresh
      */
-    virtual ExitCode_t RefreshPlatformData();
+    virtual ExitCode_t Refresh();
 
     /**
      * @brief Platform specific resources release interface.
@@ -56,6 +58,11 @@ public:
     virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
             bool excl = true) ;
 
+private:
+    /**
+     * @brief The logger used by the worker thread
+     */
+    std::unique_ptr<bu::Logger> logger;
 
 };
 }   // namespace pp

@@ -3,6 +3,10 @@
 
 #include "bbque/platform_proxy.h"
 
+#include <memory>
+#include <vector>
+
+
 namespace bbque {
 namespace pp {
 class LocalPlatformProxy : public PlatformProxy
@@ -36,7 +40,7 @@ public:
     /**
      * @brief Platform specific resources refresh
      */
-    virtual ExitCode_t RefreshPlatformData();
+    virtual ExitCode_t Refresh();
 
     /**
      * @brief Platform specific resources release interface.
@@ -53,6 +57,18 @@ public:
      */
     virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
             bool excl = true) ;
+
+private:
+    /**
+     * @brief The host platform proxy, e.g. linux or android
+     */
+    std::unique_ptr<PlatformProxy> host;
+
+    /**
+     * @brief The list of auxiliary platform proxy, like OpenCL, Adapteva,
+     *        Process Listener, etc.
+     */
+    std::vector<std::unique_ptr<PlatformProxy>> aux;
 
 };
 

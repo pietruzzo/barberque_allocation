@@ -4,7 +4,7 @@
 class DistributedProxy {
 
 protected:
-    DistributedProxy();
+    DistributedProxy() {}
 };
 
 #endif // DISTRIBUTED_PROXY_H

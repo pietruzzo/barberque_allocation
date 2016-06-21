@@ -13,7 +13,7 @@
 
 namespace bbque {
 
-class PlatformManager : public PlatformProxy, public utils::Worker
+class PlatformManager : public PlatformProxy, public utils::Worker, public CommandHandler
 {
 public:
     /**
@@ -121,6 +121,11 @@ private:
      */
     void operator=(PlatformManager const&)  = delete;
 
+
+    /**
+     * @brief The command handler callback function
+     */
+    int CommandsCb(int argc, char *argv[]);
 
 };
 
