@@ -88,6 +88,8 @@ private:
 
     bool cfsQuotaSupported; /**< True if the target system supports CFS quota management */
 
+    bool refreshMode;
+
     int cfs_margin_pct    = 0;  /**< CFS bandwidth enforcement safety margin (default: 0%) */
     int cfs_threshold_pct = 100;/**< CFS bandwidth enforcement threshold (default: 100%)   */
 
@@ -107,9 +109,32 @@ private:
 //-------------------- METHODS
 
     void LoadConfiguration() noexcept;                          /**< Load values from the configuration file */
+    ExitCode_t
+
+    /**
+     * @brief Resources Mapping and Assigment to Applications
+     */
+    GetResourceMapping(AppPtr_t papp,UsagesMapPtr_t pum,
+                       RLinuxBindingsPtr_t prlb,
+                       br::ResID_t node_id,
+                       br::RViewToken_t rvt) noexcept;
+
+    ExitCode_t ParseNode(struct cgroup_file_info &entry) noexcept;
+    ExitCode_t ParseNodeAttributes(struct cgroup_file_info &entry,
+                                   RLinuxBindingsPtr_t prlb) noexcept;
+    ExitCode_t RegisterCluster(RLinuxBindingsPtr_t prlb) noexcept;
+    ExitCode_t RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) noexcept;
+    ExitCode_t RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept;
+    ExitCode_t GetSysMemoryTotal(uint64_t & mem_kb_tot) noexcept;
+
+    // --- CGroup-releated methods
     ExitCode_t InitCGroups() noexcept;                          /**< Load the libcgroup and initialize the internal representation */
     ExitCode_t BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept;    /**< Load the silos */
     ExitCode_t BuildCGroup(CGroupDataPtr_t &pcgd) noexcept;
+    ExitCode_t GetCGroupData(ba::AppPtr_t papp, CGroupDataPtr_t &pcgd) noexcept;
+    ExitCode_t SetupCGroup(CGroupDataPtr_t &pcgd, RLinuxBindingsPtr_t prlb,
+            bool excl = false, bool move = true) noexcept;
+    ExitCode_t BuildAppCG(AppPtr_t papp, CGroupDataPtr_t &pcgd) noexcept;
 };
 
 }   // namespace pp

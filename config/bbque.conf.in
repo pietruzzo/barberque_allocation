@@ -47,11 +47,11 @@ period_ms = 1000
 temp.critical = 75
 
 # CGroups CFS bandwidht enforcement parameters
-[PlatformProxy.CGroups.cfs_bandwidth]
+[LinuxPlatformProxy]
 # The safety margin [%] to add for CFS bandwidth enforcement
-# margin_pct    =   0
+# cfs_bandwidth.margin_pct    =   0
 # The threshold [%] under which we enable CFS bandwidth enforcement
-# threshold_pct = 100
+# cfs_bandwidth.threshold_pct = 100
 
 ################################################################################
 # Scheduler Manager Options

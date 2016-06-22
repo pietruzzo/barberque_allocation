@@ -161,6 +161,12 @@ target_link_libraries(barbeque
 	-Wl,-whole-archive ${BBQUE_RLOADER} -Wl,-no-whole-archive
 )
 
+# Linking static plugins
+set (BBQUE_PLOADER  "bbque_ploader_${BBQUE_PLOADER_DEFAULT}")
+target_link_libraries(barbeque
+	-Wl,-whole-archive ${BBQUE_PLOADER} -Wl,-no-whole-archive
+)
+
 
 # Linking dependencies for Generic-Linux targets
 if (CONFIG_TARGET_LINUX)

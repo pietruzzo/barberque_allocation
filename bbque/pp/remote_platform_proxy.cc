@@ -1,18 +1,6 @@
 #include "bbque/pp/remote_platform_proxy.h"
 #include "bbque/config.h"
 
-#ifdef CONFIG_TARGET_LINUX
-    #include "bbque/pp/linux_platform_proxy.h"
-#elif CONFIG_TARGET_ANDROID
-    #include "bbque/pp/android_platform_proxy.h"
-#else
-    #error RemotePlatformProxy does not know which target to compile.
-#endif
-
-#ifdef CONFIG_BBQUE_OPENCL
-#include "bbque/pp/opencl_platform_proxy.h"
-#endif
-
 namespace bbque {
 namespace pp {
 

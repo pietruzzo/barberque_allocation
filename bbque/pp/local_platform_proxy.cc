@@ -45,7 +45,7 @@ const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const {
  * @brief Return the Hardware identifier string
  */
 const char* LocalPlatformProxy::GetHardwareID(int16_t system_id) const {
-    return this->host->GetPlatformID(system_id);
+    return this->host->GetHardwareID(system_id);
 }
 /**
  * @brief Platform specific resource setup interface.

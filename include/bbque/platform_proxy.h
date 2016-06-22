@@ -19,6 +19,7 @@
 #define BBQUE_PLATFORM_PROXY_H_
 
 #include "bbque/app/application.h"
+#include "bbque/config.h"
 #include "bbque/modules_factory.h"
 #include "bbque/res/usage.h"
 #include "bbque/res/usage.h"
@@ -70,6 +71,7 @@ public:
      * @brief Return the Hardware identifier string
      */
     virtual const char* GetHardwareID(int16_t system_id=-1) const = 0;
+
     /**
      * @brief Platform specific resource setup interface.
      */
@@ -98,12 +100,6 @@ public:
     virtual ExitCode_t ReclaimResources(AppPtr_t papp) = 0;
 
     /**
-     * @brief Platform specific resource binding interface.
-
-    virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
-            RViewToken_t rvt, bool excl) = 0;*/
-
-    /**
      * @brief Bind the specified resources to the specified application.
      *
      * @param papp The application which resources are assigned
@@ -111,23 +107,25 @@ public:
      * @param excl If true the specified resources are assigned for exclusive
      * usage to the application
      */
-    virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
-            bool excl = true) = 0;
+    virtual ExitCode_t MapResources(
+			AppPtr_t papp, UsagesMapPtr_t pres, bool excl = true) = 0;
 
 
-    static const pp::PlatformDescription & GetPlatformDescription() noexcept {
+    static const pp::PlatformDescription & GetPlatformDescription() {
 
         std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(PLATFORM_PROXY_NAMESPACE);
-
 
         // Check if the plugin is never loaded
         // in that case load it and parse the
         // platform configuration
         if (pli == NULL) {
             logger->Debug("I'm creating a new instance of PlatformLoader plugin.");
-            pli = ModulesFactory::GetPlatformLoaderModule();
+            pli = ModulesFactory::GetPlatformLoaderModule(
+                        std::string("bq.pl.") + BBQUE_PLOADER_DEFAULT);
+            assert(pli);
             if (plugins::PlatformLoaderIF::PL_SUCCESS != pli->loadPlatformInfo()) {
                 logger->Fatal("Unable to load platform information.");
+                throw std::runtime_error("PlatformLoaderPlugin pli->loadPlatformInfo() failed.");
             } else {
                 logger->Info("Platform information loaded successfully.");
             }

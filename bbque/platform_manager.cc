@@ -3,6 +3,7 @@
 #include "bbque/pp/remote_platform_proxy.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_utils.h"
+#include "bbque/resource_manager.h"
 
 namespace bbque {
 
@@ -12,12 +13,15 @@ PlatformManager::PlatformManager()
     logger = bu::Logger::GetLogger(PLATFORM_MANAGER_NAMESPACE);
     assert(logger);
 
+    try {
 
-    // Init the submodules
-    this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(new pp::LocalPlatformProxy());
-    this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(new pp::RemotePlatformProxy());
-
-
+        // Init the submodules
+        this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(new pp::LocalPlatformProxy());
+        this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(new pp::RemotePlatformProxy());
+    } catch(const std::runtime_error &r) {
+        logger->Fatal("Unable to setup some PlatformProxy: %s", r.what());
+        return;
+    }
 
     // Register a command dispatcher to handle CGroups reconfiguration
     CommandManager &cm = CommandManager::GetInstance();
@@ -35,6 +39,18 @@ PlatformManager & PlatformManager::GetInstance() {
     return plm;
 }
 
+
+PlatformManager::ExitCode_t PlatformManager::LoadPlatformConfig() {
+    try {
+        (void) this->GetPlatformDescription();
+    } catch(const std::runtime_error &err) {
+        logger->Error("%s",err.what());
+        return PLATFORM_DATA_PARSING_ERROR;
+    }
+
+    return PLATFORM_OK;
+}
+
 void PlatformManager::Task() {
 
     logger->Info("Platform Manager monitoring thread STARTED");
@@ -46,9 +62,38 @@ void PlatformManager::Task() {
 
         // Refresh available resources
         if (platformEvents.test(PLATFORM_MANAGER_EV_REFRESH)) {
+            ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
+            // Set that the platform is NOT ready
+            ra.SetPlatformNotReady();
+
             logger->Info("Platform Manager refresh event propagating to proxies");
-            this->lpp->Refresh();
-            this->rpp->Refresh();
+            ExitCode_t ec;
+
+            ec = this->lpp->Refresh();
+            if (unlikely(ec != PLATFORM_OK)) {
+                logger->Error("Error %i trying to refresh LOCAL platform data", ec);
+                ra.SetPlatformReady();
+                return;
+            }
+            ec = this->rpp->Refresh();
+            if (unlikely(ec != PLATFORM_OK)) {
+                logger->Error("Error %i trying to refresh REMOTE platform data", ec);
+                ra.SetPlatformReady();
+                return;
+            }
+
+            // Ok refresh successully
+
+            // The platform is now ready
+            ra.SetPlatformReady();
+
+            // Reset for next event
+            platformEvents.reset(PLATFORM_MANAGER_EV_REFRESH);
+
+            // Notify a scheduling event to the ResourceManager
+            ResourceManager &rm = ResourceManager::GetInstance();
+            rm.NotifyEvent(ResourceManager::BBQ_PLAT);
         }
     }
 
@@ -123,6 +168,16 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData() {
 
         return ec;
     }
+
+    logger->Info("All PlatformProxy load platform data successfully");
+
+    ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
+    // Set that the platform is ready
+    ra.SetPlatformReady();
+
+    // Dump status of registered resource
+    ra.PrintStatusReport(0, true);
 
     return PLATFORM_OK;
 

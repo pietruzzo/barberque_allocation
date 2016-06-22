@@ -69,6 +69,14 @@ public:
     virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
             bool excl = true) override;
 
+    /**
+     * @brief Load the configuration via the corresponding plugin
+     *        It encapsulate exceptions coming from plugins.
+     * @return PL_SUCCESS in case of successful load, an error
+     *         otherwise.
+     */
+    ExitCode_t LoadPlatformConfig();
+
 private:
 
     /**

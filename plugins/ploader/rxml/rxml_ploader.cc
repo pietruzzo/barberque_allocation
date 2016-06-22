@@ -25,7 +25,9 @@ std::string RXMLPlatformLoader::platforms_dir = "";
 /** Map of options (in the Barbeque config file) for the plugin */
 po::variables_map xmlploader_opts_value;
 
+RXMLPlatformLoader::~RXMLPlatformLoader() {
 
+}
 
 RXMLPlatformLoader::RXMLPlatformLoader() : initialized(false)
 {
@@ -67,18 +69,25 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
         doc.parse<0>(&xmlstr[0]);    // Note: c++11 guarantees that the memory is
                                      // sequentially allocated inside the string,
                                      // so no problem here.
-    } catch(rapidxml::parse_error e) {
+    } catch(const rapidxml::parse_error &e) {
         logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
         return PL_SYNTAX_ERROR;
+    } catch (const std::runtime_error &e) {
+        logger->Error("Generic error: %s.", e.what());
+        return PL_GENERIC_ERROR;
     }
 
-    ExitCode_t error;
+    ExitCode_t error = PL_GENERIC_ERROR;
     try {
         error = ParseDocument();
-    } catch(rapidxml::parse_error e) {
+    } catch(const rapidxml::parse_error &e) {
         logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
-    } catch(std::runtime_error e) {
+    } catch(const PlatformLoaderEXC &e) {
         logger->Error("XML not valid: %s.", e.what());
+    } catch(const std::runtime_error &e) {
+        logger->Error("Generic error: %s.", e.what());
+    } catch(...) {
+        logger->Error("Generic error.");
     }
 
     if (error != PL_SUCCESS) {
@@ -94,7 +103,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
 
 const pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() const {
     if (!this->initialized) {
-        throw new PlatformLoaderEXC("getPlatformInfo() called before initialization.");
+        throw PlatformLoaderEXC("getPlatformInfo() called before initialization.");
     }
 
     return this->pd;
@@ -102,7 +111,7 @@ const pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() const {
 
 pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() {
     if (!this->initialized) {
-        throw new PlatformLoaderEXC("getPlatformInfo() called before initialization.");
+        throw PlatformLoaderEXC("getPlatformInfo() called before initialization.");
     }
 
     return this->pd;
@@ -174,7 +183,7 @@ rapidxml::xml_node<> * RXMLPlatformLoader::GetFirstChild(rapidxml::xml_node<> * 
     if (child == 0) {
         if (mandatory) {
             logger->Error("Missing mandatory <%s> tag.", name);
-            throw new PlatformLoaderEXC("Missing mandatory tag.");
+            throw PlatformLoaderEXC("Missing mandatory tag.");
         } else {
             return nullptr;
         }
@@ -190,7 +199,7 @@ rapidxml::xml_attribute<> * RXMLPlatformLoader::GetFirstAttribute(rapidxml::xml_
     if (attr == 0) {
         if (mandatory) {
             logger->Error("Missing argument '%s' in <%s> tag.", name, tag->name());
-            throw new PlatformLoaderEXC("Missing mandatory argument.");
+            throw PlatformLoaderEXC("Missing mandatory argument.");
         } else {
             return nullptr;
         }
@@ -218,9 +227,9 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
     assert(root);
 
     bool local_found = false;
-    node_t include_sys = this->GetFirstChild(root,"include") ;
-    do {
-        attr_t is_local = this->GetFirstAttribute(root, "local", true);
+    node_t include_sys = this->GetFirstChild(root,"include", true) ;
+    while(include_sys != NULL) {
+        attr_t is_local = this->GetFirstAttribute(include_sys, "local", false);
         if (strcmp(is_local->value(), "true") || strcmp(is_local->value(), "1")) {
             if (!local_found) {
                 local_found = true;
@@ -232,7 +241,8 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
         } else {
             this->ParseSystemDocument(include_sys->value(), false);
         }
-    } while( (include_sys->next_sibling("include")) );
+        include_sys = include_sys->next_sibling("include");
+    }
 
     if (!local_found) {
         logger->Error("No local system found in systems.xml.");
@@ -274,7 +284,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
                                      // sequentially allocated inside the string,
                                      // so no problem here.
 
-    node_t root     = this->GetFirstChild(&doc,"system", true);
+    node_t root     = this->GetFirstChild(&inc_doc, "system", true);
 
     // For the root tag, we have two parameters: hostname and address.
     // The last is mandatory only for remote systems, and ignored for
@@ -301,8 +311,8 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     // Now get all the memories and save them. This should be perfomed before <cpu> and
     // other tags, due to reference to memories inside them.
 
-    node_t memory_tag = this->GetFirstChild(root,"memory") ;
-    do {
+    node_t memory_tag = this->GetFirstChild(root,"mem",true) ;
+    while( memory_tag != NULL ) {
         pp::PlatformDescription::Memory mem;
         attr_t id_attr       = this->GetFirstAttribute(memory_tag, "id",       true);
         attr_t quantity_attr = this->GetFirstAttribute(memory_tag, "quantity", true);
@@ -317,10 +327,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             // Yes, this conversion is unsafe. However, there will not probably
             // be over 32767 memories in one machine...
             id = (short)std::stoi(id_attr->value());
-        } catch(std::invalid_argument e) {
+        } catch(const std::invalid_argument& e) {
             logger->Error("ID for <memory> is not a valid integer.");
             return PL_LOGIC_ERROR;
-        } catch(std::out_of_range e) {
+        } catch(const std::out_of_range& e) {
             logger->Error("ID for <memory> is out-of-range, please change your unit.");
             return PL_LOGIC_ERROR;
         }
@@ -328,10 +338,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
         /// Read quantity=""
         try {
             quantity = std::stoi(quantity_attr->value());
-        } catch(std::invalid_argument e) {
+        } catch(const std::invalid_argument &e) {
             logger->Error("Quantity for <memory> is not a valid integer.");
             return PL_LOGIC_ERROR;
-        } catch(std::out_of_range e) {
+        } catch(const std::out_of_range &e) {
             logger->Error("Quantity for <memory> is out-of-range, please increase your unit.");
             return PL_LOGIC_ERROR;
         }
@@ -374,7 +384,9 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
 #endif
 
         sys.AddMemory(std::make_shared<pp::PlatformDescription::Memory>(mem));
-    } while( (memory_tag->next_sibling("memory")) );
+
+        memory_tag = memory_tag->next_sibling("mem");
+    }
 
 
     ///                                                             ///
@@ -382,7 +394,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     ///                                                             ///
 
     node_t cpu_tag = this->GetFirstChild(root,"cpu") ;
-    do {
+    while( cpu_tag != NULL ) {
         pp::PlatformDescription::CPU cpu;
         attr_t arch_attr     = this->GetFirstAttribute(cpu_tag, "arch",     true);
         attr_t id_attr       = this->GetFirstAttribute(cpu_tag, "id",       true);
@@ -399,10 +411,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             // Yes, this conversion is unsafe. However, there will not probably
             // be over 32767 cpu in one machine...
             id = (short)std::stoi(id_attr->value());
-        } catch(std::invalid_argument e) {
+        } catch(const std::invalid_argument &e) {
             logger->Error("ID for <cpu> is not a valid integer.");
             return PL_LOGIC_ERROR;
-        } catch(std::out_of_range e) {
+        } catch(const std::out_of_range &e) {
             logger->Error("ID for <cpu> is out-of-range.");
             return PL_LOGIC_ERROR;
         }
@@ -412,10 +424,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             // Yes, this conversion is unsafe. However, there will not probably
             // be over 32767 cpu in one machine...
             socket_id = (short)std::stoi(socket_id_attr->value());
-        } catch(std::invalid_argument e) {
+        } catch(const std::invalid_argument &e) {
             logger->Error("socket_id for <cpu> is not a valid integer.");
             return PL_LOGIC_ERROR;
-        } catch(std::out_of_range e) {
+        } catch(const std::out_of_range &e) {
             logger->Error("socket_id for <cpu> is out-of-range.");
             return PL_LOGIC_ERROR;
         }
@@ -425,10 +437,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             // Yes, this conversion is unsafe. However, there will not probably
             // be over 32767 memories in one machine...
             mem_id = (short)std::stoi(mem_id_attr->value());
-        } catch(std::invalid_argument e) {
+        } catch(const std::invalid_argument &e) {
             logger->Error("mem_id for <cpu> is not a valid integer.");
             return PL_LOGIC_ERROR;
-        } catch(std::out_of_range e) {
+        } catch(const std::out_of_range &e) {
             logger->Error("mem_id for <cpu> is out-of-range.");
             return PL_LOGIC_ERROR;
         }
@@ -453,7 +465,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
         ///                             <pe>                            ///
         ///                                                             ///
         node_t pe_tag = this->GetFirstChild(cpu_tag,"pe");
-        do {
+        while (pe_tag != NULL) {
             pp::PlatformDescription::ProcessingElement pe;
 
             attr_t id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
@@ -467,10 +479,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             /// Read id=""
             try {
                 id = (short)std::stoi(id_attr->value());
-            } catch(std::invalid_argument e) {
+            } catch(const std::invalid_argument &e) {
                 logger->Error("id for <pe> is not a valid integer.");
                 return PL_LOGIC_ERROR;
-            } catch(std::out_of_range e) {
+            } catch(const std::out_of_range &e) {
                 logger->Error("id for <pe> is out-of-range.");
                 return PL_LOGIC_ERROR;
             }
@@ -478,10 +490,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             /// Read socket_id=""
             try {
                 core_id = (short)std::stoi(core_id_attr->value());
-            } catch(std::invalid_argument e) {
+            } catch(const std::invalid_argument &e) {
                 logger->Error("core_id for <pe> is not a valid integer.");
                 return PL_LOGIC_ERROR;
-            } catch(std::out_of_range e) {
+            } catch(const std::out_of_range &e) {
                 logger->Error("core_id for <pe> is out-of-range.");
                 return PL_LOGIC_ERROR;
             }
@@ -489,10 +501,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             /// Read share=""
             try {
                 share = (short)std::stoi(share_attr->value());
-            } catch(std::invalid_argument e) {
+            } catch(const std::invalid_argument &e) {
                 logger->Error("share for <pe> is not a valid integer.");
                 return PL_LOGIC_ERROR;
-            } catch(std::out_of_range e) {
+            } catch(const std::out_of_range &e) {
                 logger->Error("share for <pe> is out-of-range.");
                 return PL_LOGIC_ERROR;
             }
@@ -531,18 +543,19 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             pe.SetShare(share);
             cpu.AddProcessingElement(pe);
 
-        } while( (pe_tag->next_sibling("pe")) );
+            pe_tag = pe_tag->next_sibling("pe");
+        }
 
         sys.AddCPU(cpu);
-
-    } while( (cpu_tag->next_sibling("cpu")) );
+        cpu_tag = cpu_tag->next_sibling("cpu");
+    }
 
     ///                                                             ///
     ///                             <gpu>                           ///
     ///                                                             ///
 
     node_t gpu_tag = this->GetFirstChild(root,"gpu") ;
-    do {
+    while (gpu_tag != NULL) {
         pp::PlatformDescription::GenericCPU gpu;
         attr_t arch_attr     = this->GetFirstAttribute(gpu_tag, "arch",     true);
         attr_t id_attr       = this->GetFirstAttribute(gpu_tag, "id",       true);
@@ -554,10 +567,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             // Yes, this conversion is unsafe. However, there will not probably
             // be over 32767 cpu in one machine...
             id = (short)std::stoi(id_attr->value());
-        } catch(std::invalid_argument e) {
+        } catch(const std::invalid_argument &e) {
             logger->Error("ID for <gpu> is not a valid integer.");
             return PL_LOGIC_ERROR;
-        } catch(std::out_of_range e) {
+        } catch(const std::out_of_range &e) {
             logger->Error("ID for <gpu> is out-of-range.");
             return PL_LOGIC_ERROR;
         }
@@ -571,7 +584,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
         ///                             <pe>                            ///
         ///                                                             ///
         node_t pe_tag = this->GetFirstChild(gpu_tag,"pe");
-        do {
+        while(pe_tag != NULL) {
             pp::PlatformDescription::ProcessingElement pe;
 
             attr_t id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
@@ -584,10 +597,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             /// Read id=""
             try {
                 id = (short)std::stoi(id_attr->value());
-            } catch(std::invalid_argument e) {
+            } catch(const std::invalid_argument e) {
                 logger->Error("id for <pe> is not a valid integer.");
                 return PL_LOGIC_ERROR;
-            } catch(std::out_of_range e) {
+            } catch(const std::out_of_range &e) {
                 logger->Error("id for <pe> is out-of-range.");
                 return PL_LOGIC_ERROR;
             }
@@ -595,10 +608,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             /// Read quantity=""
             try {
                 quantity = std::stoi(quantity_attr->value());
-            } catch(std::invalid_argument e) {
+            } catch(const std::invalid_argument &e) {
                 logger->Error("quantity for <pe> is not a valid integer.");
                 return PL_LOGIC_ERROR;
-            } catch(std::out_of_range e) {
+            } catch(const std::out_of_range &e) {
                 logger->Error("quantity for <pe> is out-of-range.");
                 return PL_LOGIC_ERROR;
             }
@@ -606,10 +619,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             /// Read share=""
             try {
                 share = (short)std::stoi(share_attr->value());
-            } catch(std::invalid_argument e) {
+            } catch(const std::invalid_argument &e) {
                 logger->Error("share for <pe> is not a valid integer.");
                 return PL_LOGIC_ERROR;
-            } catch(std::out_of_range e) {
+            } catch(const std::out_of_range &e) {
                 logger->Error("share for <pe> is out-of-range.");
                 return PL_LOGIC_ERROR;
             }
@@ -625,17 +638,19 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             pe.SetShare(share);
             gpu.AddProcessingElement(pe);
 
-        } while( (pe_tag->next_sibling("pe")) );
+            pe_tag = pe_tag->next_sibling("pe");
+        }
 
         sys.AddGPU(gpu);
-    } while( (gpu_tag->next_sibling("gpu")) );
+        gpu_tag = gpu_tag->next_sibling("gpu");
+    }
 
     ///                                                             ///
     ///                             <acc>                           ///
     ///                                                             ///
 
     node_t acc_tag = this->GetFirstChild(root,"acc") ;
-    do {
+    while (acc_tag != NULL) {
         pp::PlatformDescription::GenericCPU acc;
         attr_t arch_attr     = this->GetFirstAttribute(acc_tag, "arch",     true);
         attr_t id_attr       = this->GetFirstAttribute(acc_tag, "id",       true);
@@ -647,10 +662,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             // Yes, this conversion is unsafe. However, there will not probably
             // be over 32767 cpu in one machine...
             id = (short)std::stoi(id_attr->value());
-        } catch(std::invalid_argument e) {
+        } catch(const std::invalid_argument &e) {
             logger->Error("ID for <acc> is not a valid integer.");
             return PL_LOGIC_ERROR;
-        } catch(std::out_of_range e) {
+        } catch(const std::out_of_range &e) {
             logger->Error("ID for <acc> is out-of-range.");
             return PL_LOGIC_ERROR;
         }
@@ -664,7 +679,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
         ///                             <pe>                            ///
         ///                                                             ///
         node_t pe_tag = this->GetFirstChild(acc_tag,"pe");
-        do {
+        while (pe_tag != NULL) {
             pp::PlatformDescription::ProcessingElement pe;
 
             attr_t id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
@@ -677,10 +692,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             /// Read id=""
             try {
                 id = (short)std::stoi(id_attr->value());
-            } catch(std::invalid_argument e) {
+            } catch(const std::invalid_argument &e) {
                 logger->Error("id for <pe> is not a valid integer.");
                 return PL_LOGIC_ERROR;
-            } catch(std::out_of_range e) {
+            } catch(const std::out_of_range &e) {
                 logger->Error("id for <pe> is out-of-range.");
                 return PL_LOGIC_ERROR;
             }
@@ -688,10 +703,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             /// Read quantity=""
             try {
                 quantity = std::stoi(quantity_attr->value());
-            } catch(std::invalid_argument e) {
+            } catch(const std::invalid_argument &e) {
                 logger->Error("quantity for <pe> is not a valid integer.");
                 return PL_LOGIC_ERROR;
-            } catch(std::out_of_range e) {
+            } catch(const std::out_of_range &e) {
                 logger->Error("quantity for <pe> is out-of-range.");
                 return PL_LOGIC_ERROR;
             }
@@ -699,10 +714,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             /// Read share=""
             try {
                 share = (short)std::stoi(share_attr->value());
-            } catch(std::invalid_argument e) {
+            } catch(const std::invalid_argument &e) {
                 logger->Error("share for <pe> is not a valid integer.");
                 return PL_LOGIC_ERROR;
-            } catch(std::out_of_range e) {
+            } catch(const std::out_of_range &e) {
                 logger->Error("share for <pe> is out-of-range.");
                 return PL_LOGIC_ERROR;
             }
@@ -718,10 +733,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
             pe.SetShare(share);
             acc.AddProcessingElement(pe);
 
-        } while( (pe_tag->next_sibling("pe")) );
+            pe_tag = pe_tag->next_sibling("pe");
+        }
 
         sys.AddAccelerator(acc);
-    } while( (acc_tag->next_sibling("acc")) );
+        acc_tag = acc_tag->next_sibling("acc");
+    }
 
     pd.AddSystem(sys);
     return PL_SUCCESS;

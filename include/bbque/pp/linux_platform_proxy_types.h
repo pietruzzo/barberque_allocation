@@ -25,6 +25,25 @@
 #define BBQUE_LINUXPP_CGROUP "bbque"
 
 
+/**
+ * @brief The CGroup expected to define resources clusterization
+ *
+ * Resources assigned to Barbeque can be grouped into clusters, in a NUMA
+ * machine a cluster usually correspond to a "node". The BarbequeRTRM will
+ * consider this clusterization when scheduling applications by trying to keep
+ * each application within a single cluster.
+ */
+#define BBQUE_LINUXPP_RESOURCES BBQUE_LINUXPP_CGROUP"/res"
+
+
+/**
+ * @brief The CGroup expected to define Clusters
+ *
+ * Resources managed by Barbeque are clusterized by grouping available
+ * platform resources into CGroups which name start with this radix.
+ */
+#define BBQUE_LINUXPP_CLUSTER "node"
+
 namespace bbque {
 namespace pp {
 

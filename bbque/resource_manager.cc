@@ -211,7 +211,13 @@ ResourceManager::Setup() {
 		logger->Info(" * %s", (*i).first.c_str());
 
 	//---------- Init Platform Integration Layer (PIL)
-    PlatformManager::ExitCode_t result = plm.LoadPlatformData();
+    PlatformManager::ExitCode_t result = plm.LoadPlatformConfig();
+    if (result != PlatformManager::PLATFORM_OK) {
+        logger->Fatal("Platform Configuration Loader FAILED!");
+        return SETUP_FAILED;
+    }
+
+    result = plm.LoadPlatformData();
     if (result != PlatformManager::PLATFORM_OK) {
 		logger->Fatal("Platform Integration Layer initialization FAILED!");
 		return SETUP_FAILED;
