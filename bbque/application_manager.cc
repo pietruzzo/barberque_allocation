@@ -124,15 +124,36 @@ ApplicationManager::ApplicationManager() :
 			static_cast<CommandHandler*>(this),
 			"Remove an existing EXC Container");
 
+#define CMD_UNREGISTER ".unregister"
+    cm.RegisterCommand(MODULE_NAMESPACE CMD_UNREGISTER,
+            static_cast<CommandHandler*>(this),
+            "Unregister the specified EXC");
+
+
 }
 
 int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 	ResourceManager &rm(ResourceManager::GetInstance());
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
-	uint32_t pid, prio;
+    uint32_t pid, prio, eid;
 	AppPtr_t papp;
 
 	logger->Debug("Processing command [%s]", argv[0] + cmd_offset);
+
+    if (0 == strcmp(argv[0], MODULE_NAMESPACE CMD_UNREGISTER)) {
+        if (argc < 2) {
+            logger->Error("Releasing EXC FAILED: no pid/eid provided in unregister signal.");
+            return -1;
+        }
+
+        logger->Info("Releasing EXC [%s]", argv[1]);
+        pid = atoi(argv[1]);
+        eid = atoi(argv[1]+13);
+
+        CheckEXC(pid, eid);
+
+        return 0;
+    }
 
 	cmd_offset = ::strlen(MODULE_NAMESPACE) + sizeof("recipes_");
 	switch (argv[0][cmd_offset]) {
@@ -150,11 +171,11 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 	case 'a': // Container add
 		  // container_add <name> <pid> <recipe> <prio>
 		if (strcmp(argv[0], MODULE_NAMESPACE CMD_CONTAINER_ADD))
-			goto exit_cmd_not_found;
+            break;
 
 		if (argc < 5) {
 			logger->Error("Missing params for [container_add] command");
-			goto exit_cmd_not_found;
+            break;
 		}
 
 		pid = atoi(argv[2]);
@@ -179,16 +200,16 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 	case 'd': // Container del
 		  // container_del <pid>
 		if (strcmp(argv[0], MODULE_NAMESPACE CMD_CONTAINER_DEL))
-			goto exit_cmd_not_found;
+            break;
 
 		if (argc < 2) {
 			logger->Error("Missing params for [container_del] command");
-			goto exit_cmd_not_found;
+            break;
 		}
 
 		logger->Notice("Removing EXC container...");
 
-		uint32_t pid = atoi(argv[1]);
+        pid = atoi(argv[1]);
 		papp = GetApplication(pid, 0);
 		if (!papp) {
 			logger->Warn("Container EXC for PID [%d] not FOUND", pid);
@@ -203,10 +224,10 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 		rm.NotifyEvent(ResourceManager::EXC_STOP);
 
 		return 0;
-	}
+    }
 
-exit_cmd_not_found:
-	logger->Error("Command [%s] not suppported by this module", argv[0]);
+
+    logger->Error("Command [%s] not supported by this module", argv[0]);
 	return -1;
 
 }
