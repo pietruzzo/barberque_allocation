@@ -145,7 +145,7 @@ protected:
 	 */
 	static std::string conf_file_path;
 
-	Configuration const & configuration;
+	Configuration configuration;
 
 	/**
 	 * \brief Logger ctor
