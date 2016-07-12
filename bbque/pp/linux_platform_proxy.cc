@@ -191,19 +191,6 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres, bool excl) 
     ResourceAccounter &ra = ResourceAccounter::GetInstance();
     RViewToken_t rvt = ra.GetScheduledView();
 
-#ifdef CONFIG_BBQUE_OPENCL
-    // Map resources for OpenCL applications
-    logger->Debug("PLAT LNX: Programming language = %d", papp->Language());
-    if (papp->Language() == RTLIB_LANG_OPENCL) {
-        OpenCLProxy::ExitCode_t ocl_return;
-        ocl_return = oclProxy.MapResources(papp, pum, rvt);
-        if (ocl_return != OpenCLProxy::SUCCESS) {
-            logger->Error("PLAT LNX: OpenCL mapping failed");
-            return PLATFORM_MAPPING_FAILED;
-        }
-    }
-#endif
-
     // FIXME: update once a better SetAttributes support is available
     CGroupDataPtr_t pcgd;
     ExitCode_t result;
@@ -344,11 +331,6 @@ LinuxPlatformProxy::LoadPlatformData() noexcept {
 
     // Release the iterator
     cgroup_walk_tree_end(&node_it);
-
-#ifdef CONFIG_BBQUE_OPENCL
-    // Load OpenCL platforms and devices
-    oclProxy.LoadPlatformData();
-#endif
 
 #ifdef CONFIG_BBQUE_WM
     PowerMonitor & wm(PowerMonitor::GetInstance());
