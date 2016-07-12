@@ -1,5 +1,6 @@
 #include "bbque/config.h"
 
+#include "bbque/power_monitor.h"
 #include "bbque/pp/linux_platform_proxy.h"
 #include "bbque/res/binder.h"
 
