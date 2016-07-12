@@ -148,7 +148,7 @@ LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::Release(AppPtr_t papp) noexcept {
     // Release CGroup plugin data
     // ... thus releasing the corresponding control group
-    papp->ClearAttribute(LINUX_PP_NAMESPACE);
+    papp->ClearPluginData(LINUX_PP_NAMESPACE);
     return PLATFORM_OK;
 }
 
@@ -783,7 +783,7 @@ LinuxPlatformProxy::GetCGroupData(AppPtr_t papp, CGroupDataPtr_t &pcgd) noexcept
 
     // Loop-up for application control group data
     pcgd = std::static_pointer_cast<CGroupData_t>(
-            papp->GetAttribute(LINUX_PP_NAMESPACE, "cgroup")
+            papp->GetPluginData(LINUX_PP_NAMESPACE, "cgroup")
         );
     if (pcgd)
         return PLATFORM_OK;
@@ -796,7 +796,7 @@ LinuxPlatformProxy::GetCGroupData(AppPtr_t papp, CGroupDataPtr_t &pcgd) noexcept
     // Keep track of this control group
     // FIXME check return value otherwise multiple BuildCGroup could be
     // called for the same application
-    papp->SetAttribute(pcgd);
+    papp->SetPluginData(pcgd);
 
     return PLATFORM_OK;
 

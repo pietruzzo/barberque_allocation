@@ -6,7 +6,7 @@
        include linux_platform_proxy.h!
 #endif
 
-#include "bbque/utils/attributes_container.h"
+#include "bbque/utils/extra_data_container.h"
 #include "bbque/app/application.h"
 
 #include <cstdint>
@@ -86,7 +86,7 @@ typedef struct RLinuxBindings {
 
 typedef std::shared_ptr<RLinuxBindings_t> RLinuxBindingsPtr_t;
 
-typedef struct CGroupData : public bbque::utils::AttributesContainer::Attribute {
+typedef struct CGroupData : public bbque::utils::PluginData_t {
     bbque::app::AppPtr_t papp; /** The controlled application */
 #define BBQUE_LINUXPP_CGROUP_PATH_MAX 22 // "bbque/12345:ABCDEF:00";
     char cgpath[BBQUE_LINUXPP_CGROUP_PATH_MAX];
@@ -96,7 +96,7 @@ typedef struct CGroupData : public bbque::utils::AttributesContainer::Attribute 
     struct cgroup_controller *pc_memory;
 
     CGroupData(bbque::app::AppPtr_t pa) :
-        Attribute(LINUX_PP_NAMESPACE, "cgroup"),
+        bu::PluginData_t(LINUX_PP_NAMESPACE, "cgroup"),
         papp(pa), pcg(NULL), pc_cpu(NULL),
         pc_cpuset(NULL), pc_memory(NULL) {
         snprintf(cgpath, BBQUE_LINUXPP_CGROUP_PATH_MAX,
@@ -105,7 +105,7 @@ typedef struct CGroupData : public bbque::utils::AttributesContainer::Attribute 
     }
 
     CGroupData(const char *cgp) :
-        Attribute(LINUX_PP_NAMESPACE, "cgroup"),
+        bu::PluginData_t(LINUX_PP_NAMESPACE, "cgroup"),
         pcg(NULL), pc_cpu(NULL),
         pc_cpuset(NULL), pc_memory(NULL) {
         snprintf(cgpath, BBQUE_LINUXPP_CGROUP_PATH_MAX,
