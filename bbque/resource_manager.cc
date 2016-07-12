@@ -18,13 +18,12 @@
 #include "bbque/resource_manager.h"
 
 #include "bbque/cpp11/chrono.h"
-
+#include "bbque/application_manager.h"
 #include "bbque/configuration_manager.h"
 #include "bbque/power_monitor.h"
 #include "bbque/signals_manager.h"
-#include "bbque/application_manager.h"
-
 #include "bbque/utils/utility.h"
+
 
 #define RESOURCE_MANAGER_NAMESPACE "bq.rm"
 #define MODULE_NAMESPACE RESOURCE_MANAGER_NAMESPACE
@@ -145,11 +144,8 @@ ResourceManager::ResourceManager() :
 	mc(MetricsCollector::GetInstance()),
     plm(PlatformManager::GetInstance()),
 	cm(CommandManager::GetInstance()),
-
 #ifdef CONFIG_BBQUE_EM
-
 	em(EventManager::GetInstance()),
-
 #endif
 
 	optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this)) {
@@ -176,10 +172,8 @@ ResourceManager::ResourceManager() :
 			"Force a new scheduling event");
 
 #ifdef CONFIG_BBQUE_EM
-
 	Event event(true, "rm", "", "barbeque", "__startup", 1);
 	em.InitializeArchive(event);
-
 #endif
 
 }
@@ -231,7 +225,7 @@ ResourceManager::Setup() {
 #endif
 
 	//---------- Start bbque services
-    plm.Start();
+	plm.Start();
 	if (opt_interval)
 		optimize_dfr.SetPeriodic(milliseconds(opt_interval));
 
