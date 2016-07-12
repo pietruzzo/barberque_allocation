@@ -20,6 +20,7 @@
 #include "bbque/cpp11/chrono.h"
 
 #include "bbque/configuration_manager.h"
+#include "bbque/power_monitor.h"
 #include "bbque/signals_manager.h"
 #include "bbque/application_manager.h"
 
@@ -222,6 +223,12 @@ ResourceManager::Setup() {
 		logger->Fatal("Platform Integration Layer initialization FAILED!");
 		return SETUP_FAILED;
 	}
+
+#ifdef CONFIG_BBQUE_WM
+	//----------- Start the Power Monitor
+    PowerMonitor & wm(PowerMonitor::GetInstance());
+    wm.Start();
+#endif
 
 	//---------- Start bbque services
     plm.Start();

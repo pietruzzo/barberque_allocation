@@ -333,10 +333,6 @@ LinuxPlatformProxy::LoadPlatformData() noexcept {
     // Release the iterator
     cgroup_walk_tree_end(&node_it);
 
-#ifdef CONFIG_BBQUE_WM
-    PowerMonitor & wm(PowerMonitor::GetInstance());
-    wm.Start();
-#endif
     return pp_result;
 }
 
