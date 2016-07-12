@@ -109,15 +109,15 @@ private:
 //-------------------- METHODS
 
     void LoadConfiguration() noexcept;                          /**< Load values from the configuration file */
-    ExitCode_t
 
     /**
      * @brief Resources Mapping and Assigment to Applications
      */
-    GetResourceMapping(AppPtr_t papp,UsagesMapPtr_t pum,
-                       RLinuxBindingsPtr_t prlb,
-                       br::ResID_t node_id,
-                       br::RViewToken_t rvt) noexcept;
+    ExitCode_t GetResourceMapping(
+			AppPtr_t papp,UsagesMapPtr_t pum,
+			RLinuxBindingsPtr_t prlb,
+			BBQUE_RID_TYPE node_id,
+			br::RViewToken_t rvt) noexcept;
 
     ExitCode_t ParseNode(struct cgroup_file_info &entry) noexcept;
     ExitCode_t ParseNodeAttributes(struct cgroup_file_info &entry,

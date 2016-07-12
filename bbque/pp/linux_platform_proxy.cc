@@ -216,7 +216,7 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres, bool excl) 
     // Get the set of assigned (bound) computing nodes (e.g., CPUs)
     br::ResourceBitset nodes(
             br::ResourceBinder::GetMask(pres, br::Resource::CPU));
-    br::ResID_t node_id = nodes.FirstSet();
+    BBQUE_RID_TYPE node_id = nodes.FirstSet();
     if (node_id < 0) {
         logger->Fatal("PLAT LNX: Missing binding to nodes/CPUs");
         return PLATFORM_MAPPING_FAILED;
@@ -248,7 +248,7 @@ LinuxPlatformProxy::GetResourceMapping(
         AppPtr_t papp,
         UsagesMapPtr_t pum,
         RLinuxBindingsPtr_t prlb,
-        br::ResID_t node_id,
+        BBQUE_RID_TYPE node_id,
         br::RViewToken_t rvt) noexcept {
     ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
