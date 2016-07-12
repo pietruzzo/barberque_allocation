@@ -45,8 +45,10 @@ namespace po = boost::program_options;
 namespace bbque {
 namespace pp {
 
-LinuxPlatformProxy::LinuxPlatformProxy() : controller("cpuset"),
-    refreshMode(false), cfsQuotaSupported(true)  {
+LinuxPlatformProxy::LinuxPlatformProxy() :
+		controller("cpuset"),
+		cfsQuotaSupported(true),
+		refreshMode(false) {
 
     //---------- Get a logger module
     logger = bu::Logger::GetLogger(LINUX_PP_NAMESPACE);
