@@ -88,11 +88,11 @@ const char* LinuxPlatformProxy::GetHardwareID(int16_t system_id) const noexcept 
 }
 
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(AppPtr_t papp) noexcept {
-
-    RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
-
     ExitCode_t result = PLATFORM_OK;
     CGroupDataPtr_t pcgd;
+
+    RLinuxBindingsPtr_t prlb = std::make_shared<RLinuxBindings_t>(
+			MaxCpusCount, MaxMemsCount);
 
     // Setup a new CGroup data for this application
     result = GetCGroupData(papp, pcgd);
@@ -115,7 +115,6 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(AppPtr_t papp) noexcept
 
     return result;
 }
-
 
 
 void LinuxPlatformProxy::LoadConfiguration() noexcept {
@@ -213,7 +212,8 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres, bool excl) 
     }
 
     // Map resources for each node (e.g., CPU)
-    RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
+    RLinuxBindingsPtr_t prlb = std::make_shared<RLinuxBindings_t>
+			(MaxCpusCount, MaxMemsCount);
     for (; node_id <= nodes.LastSet(); ++node_id) {
         logger->Debug("PLAT LNX: CGroup resource mapping node [%d]", node_id);
         if (!nodes.Test(node_id)) continue;
