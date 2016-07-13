@@ -16,8 +16,7 @@
 namespace bbque {
 namespace pp {
 
-LocalPlatformProxy::LocalPlatformProxy()
-{
+LocalPlatformProxy::LocalPlatformProxy() {
 
 #ifdef CONFIG_TARGET_LINUX
     this->host = std::unique_ptr<LinuxPlatformProxy>(new LinuxPlatformProxy());
@@ -33,23 +32,14 @@ LocalPlatformProxy::LocalPlatformProxy()
     assert(this->host);
 }
 
-
-/**
- * @brief Return the Platform specific string identifier
- */
 const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const {
     return this->host->GetPlatformID(system_id);
 }
 
-/**
- * @brief Return the Hardware identifier string
- */
 const char* LocalPlatformProxy::GetHardwareID(int16_t system_id) const {
     return this->host->GetHardwareID(system_id);
 }
-/**
- * @brief Platform specific resource setup interface.
- */
+
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(AppPtr_t papp) {
     ExitCode_t ec;
 
@@ -68,16 +58,9 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(AppPtr_t papp) {
     }
 
     return PLATFORM_OK;
-
 }
 
 
-/**
- * @brief Platform specific resources enumeration
- *
- * The default implementation of this method loads the TPD, is such a
- * function has been enabled
- */
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::LoadPlatformData() {
     ExitCode_t ec;
 
@@ -97,10 +80,6 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::LoadPlatformData() {
 }
 
 
-
-/**
- * @brief Platform specific resources refresh
- */
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Refresh() {
     ExitCode_t ec;
 
@@ -119,9 +98,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Refresh() {
     return PLATFORM_OK;
 }
 
-/**
- * @brief Platform specific resources release interface.
- */
+
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(AppPtr_t papp){
     ExitCode_t ec;
 
@@ -141,9 +118,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(AppPtr_t papp){
 
 }
 
-/**
- * @brief Platform specific resource claiming interface.
- */
+
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(AppPtr_t papp) {
 
     ExitCode_t ec;
@@ -163,11 +138,11 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(AppPtr_t pap
     return PLATFORM_OK;
 }
 
-/**
- * @brief Platform specific resource binding interface.
- */
-LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
-                                bool excl) {
+
+LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
+		AppPtr_t papp,
+		UsagesMapPtr_t pres,
+		bool excl) {
     ExitCode_t ec;
 
     ec = this->host->MapResources(papp, pres, excl);
