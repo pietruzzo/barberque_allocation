@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include "bbque/configuration_manager.h"
 #include "bbque/command_manager.h"
 #include "bbque/modules_factory.h"
+#include "bbque/platform_proxy.h"
 #include "bbque/app/application.h"
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/identifier.h"
@@ -52,52 +53,83 @@ typedef std::map<br::ResourceIdentifier::Type_t, ResourcePathListPtr_t> Resource
 typedef std::map<int, std::ofstream *> DevFileMap_t;
 typedef std::map<int, ResourcePathPtr_t> DevPathMap_t;
 
-class OpenCLProxy: public Worker, public CommandHandler {
+
+class OpenCLPlatformProxy: public PlatformProxy {
 
 public:
 
-	enum ExitCode_t {
-		SUCCESS,
-		PLATFORM_ERROR,
-		DEVICE_ERROR
-	};
+	static OpenCLPlatformProxy * GetInstance();
 
 	/**
-	 * @brief Constructor
+	 * @brief Destructor
 	 */
-	static OpenCLProxy & GetInstance();
-
-	~OpenCLProxy();
+	virtual ~OpenCLPlatformProxy();
 
 	/**
-	 * @brief Load OpenCL platform data
+	 * @brief Return the Platform specific string identifier
 	 */
-	ExitCode_t LoadPlatformData();
+	const char * GetPlatformID(int16_t system_id = -1) const override final {
+		(void) system_id;
+		return BBQUE_OPENCL_PLATFORM;
+	}
+
+	/**
+	 * @brief Return the Hardware identifier string
+	 */
+	const char * GetHardwareID(int16_t system_id = -1) const override final {
+		(void) system_id;
+		return "opencl";
+	}
+
+	/**
+	 * @brief Platform specific resource setup interface.
+	 */
+	ExitCode_t Setup(AppPtr_t papp) override final;
+
+	/**
+	 * @brief Load OpenCL platform data function
+	 */
+	ExitCode_t LoadPlatformData() override final;
+
+	/**
+	 * @brief OpenCL specific resources refresh function
+	 */
+	ExitCode_t Refresh() override final;
+	/**
+	 * @brief OpenCL specific resources release function
+	 */
+	ExitCode_t Release(AppPtr_t papp) override final;
+
+	/**
+	 * @brief OpenCL specific resource claiming function
+	 */
+	ExitCode_t ReclaimResources(AppPtr_t papp) override final;
 
 	/**
 	 * @brief OpenCL resource assignment mapping
 	 */
-	ExitCode_t MapResources(ba::AppPtr_t papp, br::UsagesMapPtr_t pum, br::RViewToken_t rvt);
+	ExitCode_t MapResources(
+		ba::AppPtr_t papp, br::UsagesMapPtr_t pum, bool excl) override final;
+
+
+	// Class specific member functions
 
 	/**
 	 * @brief Number of OpenCL devices of a given resource type
 	 */
-	uint8_t GetDevicesNum(br::ResourceIdentifier::Type_t r_type);
+	uint8_t GetDevicesNum(br::ResourceIdentifier::Type_t r_type) const;
 
 	/**
 	 * @brief Set of OpenCL device IDs for a given resource type
 	 */
-	VectorUInt8Ptr_t GetDeviceIDs(br::ResourceIdentifier::Type_t r_type);
+	VectorUInt8Ptr_t GetDeviceIDs(br::ResourceIdentifier::Type_t r_type) const;
 
 	/**
 	 * @brief Set of OpenCL device resource path for a given type
 	 */
-	ResourcePathListPtr_t GetDevicePaths(br::ResourceIdentifier::Type_t r_type);
+	ResourcePathListPtr_t GetDevicePaths(br::ResourceIdentifier::Type_t r_type) const;
 
 private:
-
-	/*** Constructor */
-	OpenCLProxy();
 
 	/*** Configuration manager instance */
 	ConfigurationManager & cm;
@@ -109,6 +141,7 @@ private:
 	 * @brief The logger used by the power manager.
 	 */
 	std::unique_ptr<bu::Logger> logger;
+
 
 	/*** Number of platforms */
 	cl_uint num_platforms = 0;
@@ -131,9 +164,17 @@ private:
 	/*** Map with the resource paths of GPUs memory */
 	DevPathMap_t gpu_mem_paths;
 
+
+	/*** Constructor */
+	OpenCLPlatformProxy();
+
 	/** Retrieve the iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
-		br::ResourceIdentifier::Type_t r_type);
+			br::ResourceIdentifier::Type_t r_type);
+
+	/** Retrieve the constant iterator for the vector of device IDs, given a type */
+	ResourceTypeIDMap_t::const_iterator GetDeviceConstIterator(
+			br::ResourceIdentifier::Type_t r_type) const;
 
 #ifdef CONFIG_BBQUE_PM
 
@@ -166,19 +207,6 @@ private:
 	 * @brief Register device resources
 	 */
 	ExitCode_t RegisterDevices();
-
-	/**
-	 * @brief The OpenCL platform monitoring thread
-	 *
-	 * Peridic calls to the platform-specific power management support can
-	 * be done (if enabled)
-	 */
-	void Task();
-
-	/**
-	 * @brief Commands handler
-	 */
-	int CommandsCb(int argc, char *argv[]);
 
 };
 

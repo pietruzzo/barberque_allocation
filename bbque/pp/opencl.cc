@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,12 +33,14 @@ namespace po = boost::program_options;
 
 namespace bbque {
 
-OpenCLProxy & OpenCLProxy::GetInstance() {
-	static OpenCLProxy instance;
+OpenCLPlatformProxy * OpenCLPlatformProxy::GetInstance() {
+	static OpenCLPlatformProxy * instance;
+	if (instance == nullptr)
+		instance = new OpenCLPlatformProxy();
 	return instance;
 }
 
-OpenCLProxy::OpenCLProxy():
+OpenCLPlatformProxy::OpenCLPlatformProxy():
 		cm(ConfigurationManager::GetInstance()),
 #ifndef CONFIG_BBQUE_PM
 		cmm(CommandManager::GetInstance())
@@ -46,20 +48,21 @@ OpenCLProxy::OpenCLProxy():
 		cmm(CommandManager::GetInstance()),
 		pm(PowerManager::GetInstance())
 #endif
- {
+{
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 }
 
-OpenCLProxy::~OpenCLProxy() {
+OpenCLPlatformProxy::~OpenCLPlatformProxy() {
+	logger->Debug("Destroying the OpenCL Platform Proxy...");
 	delete platforms;
 	delete devices;
 	device_ids.clear();
 	device_paths.clear();
 }
 
-OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
+PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData() {
 	cl_int status;
 	char platform_name[128];
 	cl_platform_id platform = nullptr;
@@ -69,15 +72,16 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 	status = clGetPlatformIDs(0, NULL, &num_platforms);
 	if (status != CL_SUCCESS) {
 		logger->Error("PLAT OCL: Platform error %d", status);
-		return PLATFORM_ERROR;
+		return PlatformProxy::PLATFORM_ENUMERATION_FAILED;
 	}
 	logger->Info("PLAT OCL: Number of platform(s) found: %d", num_platforms);
 	platforms = new cl_platform_id[num_platforms];
 	status = clGetPlatformIDs(num_platforms, platforms, NULL);
 
+	logger->Info("PLAT OCL: Looking for platform <%s>", BBQUE_OPENCL_PLATFORM);
 	for (uint8_t i = 0; i < num_platforms; ++i) {
 		status = clGetPlatformInfo(
-			platforms[i], CL_PLATFORM_NAME,	sizeof(platform_name),
+			platforms[i], CL_PLATFORM_NAME, sizeof(platform_name),
 			platform_name, NULL);
 		logger->Info("PLAT OCL: P[%d]: %s", i, platform_name);
 
@@ -92,28 +96,59 @@ OpenCLProxy::ExitCode_t OpenCLProxy::LoadPlatformData() {
 	status = clGetDeviceIDs(platform, dev_type, 0, NULL, &num_devices);
 	if (status != CL_SUCCESS) {
 		logger->Error("PLAT OCL: Device error %d", status);
-		return DEVICE_ERROR;
+		return PlatformProxy::PLATFORM_ENUMERATION_FAILED;
 	}
 	logger->Info("PLAT OCL: Number of device(s) found: %d", num_devices);
 	devices = new cl_device_id[num_devices];
 	status  = clGetDeviceIDs(platform, dev_type, num_devices, devices, NULL);
 
-	// Register into the resource accounter
+	// Register into Resource Accounter and Power Manager
 	RegisterDevices();
 
 	// Power management support
 #ifdef CONFIG_BBQUE_PM
 	PrintGPUPowerInfo();
 #endif
-	return SUCCESS;
+	return PlatformProxy::PLATFORM_OK;
 }
 
-void OpenCLProxy::Task() {
-
+PlatformProxy::ExitCode_t OpenCLPlatformProxy::Setup(AppPtr_t papp) {
+	(void) papp;
+	logger->Warn("PLAT OCL: No setup action implemented");
+	return PlatformProxy::PLATFORM_OK;
 }
+
+PlatformProxy::ExitCode_t OpenCLPlatformProxy::Refresh() {
+
+	return PlatformProxy::PLATFORM_OK;
+}
+
+PlatformProxy::ExitCode_t OpenCLPlatformProxy::Release(AppPtr_t papp) {
+	(void) papp;
+	logger->Warn("PLAT OCL: No release action implemented");
+	return PlatformProxy::PLATFORM_OK;
+}
+
+PlatformProxy::ExitCode_t OpenCLPlatformProxy::ReclaimResources(AppPtr_t papp) {
+	(void) papp;
+	logger->Warn("PLAT OCL: No reclaiming action implemented");
+	return PlatformProxy::PLATFORM_OK;
+}
+
+PlatformProxy::ExitCode_t OpenCLPlatformProxy::MapResources(
+		ba::AppPtr_t papp,
+		br::UsagesMapPtr_t pum,
+		bool excl) {
+	(void) papp;
+	(void) pum;
+	(void) excl;
+	logger->Warn("PLAT OCL: No mapping action implemented");
+	return PlatformProxy::PLATFORM_OK;
+}
+
 
 #ifdef CONFIG_BBQUE_PM
-void OpenCLProxy::PrintGPUPowerInfo() {
+void OpenCLPlatformProxy::PrintGPUPowerInfo() {
 	uint32_t min, max, step, s_min, s_max, ps_count;
 	int  s_step;
 	PowerManager::PMResult pm_result;
@@ -166,9 +201,10 @@ void OpenCLProxy::PrintGPUPowerInfo() {
 #endif // CONFIG_BBQUE_PM
 
 
-VectorUInt8Ptr_t OpenCLProxy::GetDeviceIDs(br::ResourceIdentifier::Type_t r_type) {
-	ResourceTypeIDMap_t::iterator d_it;
-	d_it = GetDeviceIterator(r_type);
+VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(
+		br::ResourceIdentifier::Type_t r_type) const {
+
+	ResourceTypeIDMap_t::const_iterator d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
 		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
 			br::ResourceIdentifier::TypeStr[r_type]);
@@ -178,9 +214,10 @@ VectorUInt8Ptr_t OpenCLProxy::GetDeviceIDs(br::ResourceIdentifier::Type_t r_type
 }
 
 
-uint8_t OpenCLProxy::GetDevicesNum(br::ResourceIdentifier::Type_t r_type) {
-	ResourceTypeIDMap_t::iterator d_it;
-	d_it = GetDeviceIterator(r_type);
+uint8_t OpenCLPlatformProxy::GetDevicesNum(
+		br::ResourceIdentifier::Type_t r_type) const {
+
+	ResourceTypeIDMap_t::const_iterator d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
 		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
 			br::ResourceIdentifier::TypeStr[r_type]);
@@ -189,9 +226,10 @@ uint8_t OpenCLProxy::GetDevicesNum(br::ResourceIdentifier::Type_t r_type) {
 	return d_it->second->size();
 }
 
-ResourcePathListPtr_t OpenCLProxy::GetDevicePaths(br::ResourceIdentifier::Type_t r_type) {
-	ResourceTypePathMap_t::iterator p_it;
-	p_it = device_paths.find(r_type);
+ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
+		br::ResourceIdentifier::Type_t r_type) const {
+
+	ResourceTypePathMap_t::const_iterator p_it(device_paths.find(r_type));
 	if (p_it == device_paths.end()) {
 		logger->Error("PLAT OCL: No OpenCL devices of type  '%s'",
 			br::ResourceIdentifier::TypeStr[r_type]);
@@ -202,7 +240,7 @@ ResourcePathListPtr_t OpenCLProxy::GetDevicePaths(br::ResourceIdentifier::Type_t
 
 
 ResourceTypeIDMap_t::iterator
-OpenCLProxy::GetDeviceIterator(br::ResourceIdentifier::Type_t r_type) {
+OpenCLPlatformProxy::GetDeviceIterator(br::ResourceIdentifier::Type_t r_type) {
 	if (platforms == nullptr) {
 		logger->Error("PLAT OCL: Missing OpenCL platforms");
 		return device_ids.end();
@@ -210,7 +248,18 @@ OpenCLProxy::GetDeviceIterator(br::ResourceIdentifier::Type_t r_type) {
 	return	device_ids.find(r_type);
 }
 
-OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
+ResourceTypeIDMap_t::const_iterator
+OpenCLPlatformProxy::GetDeviceConstIterator(
+		br::ResourceIdentifier::Type_t r_type) const {
+	if (platforms == nullptr) {
+		logger->Error("PLAT OCL: Missing OpenCL platforms");
+		return device_ids.end();
+	}
+	return	device_ids.find(r_type);
+}
+
+
+PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices() {
 	cl_int status;
 	cl_device_type dev_type;
 	char dev_name[64];
@@ -229,7 +278,7 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 				sizeof(dev_type), &dev_type, NULL);
 		if (status != CL_SUCCESS) {
 			logger->Error("PLAT OCL: Device info error %d", status);
-			return DEVICE_ERROR;
+			return PLATFORM_ENUMERATION_FAILED;
 		}
 
 		if (dev_type != CL_DEVICE_TYPE_CPU &&
@@ -265,11 +314,11 @@ OpenCLProxy::ExitCode_t OpenCLProxy::RegisterDevices() {
 			gpu_pe_path);
 	}
 
-	return SUCCESS;
+	return PlatformProxy::PLATFORM_OK;
 }
 
 
-void OpenCLProxy::InsertDeviceID(
+void OpenCLPlatformProxy::InsertDeviceID(
 		br::ResourceIdentifier::Type_t r_type,
 		uint8_t dev_id) {
 	ResourceTypeIDMap_t::iterator d_it;
@@ -298,7 +347,7 @@ void OpenCLProxy::InsertDeviceID(
 	logger->Debug("PLAT OCL: GPU memory registered: %s", gpu_mem_path);
 }
 
-void OpenCLProxy::InsertDevicePath(
+void OpenCLPlatformProxy::InsertDevicePath(
 		br::ResourceIdentifier::Type_t r_type,
 		std::string const & dev_path_str) {
 	ResourceTypePathMap_t::iterator p_it;
@@ -323,26 +372,6 @@ void OpenCLProxy::InsertDevicePath(
 
 	pdev_paths = device_paths[r_type];
 	pdev_paths->push_back(rp);
-}
-
-OpenCLProxy::ExitCode_t OpenCLProxy::MapResources(
-		ba::AppPtr_t papp,
-		br::UsagesMapPtr_t pum,
-		br::RViewToken_t rvt) {
-	(void)papp;
-	(void)pum;
-	(void)rvt;
-	logger->Warn("PLAT OCL: Please map the application");
-
-	return SUCCESS;
-}
-
-int OpenCLProxy::CommandsCb(int argc, char *argv[]) {
-	(void) argc;
-	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
-	char * command_id  = argv[0] + cmd_offset;
-	logger->Error("PLAT OCL: Unknown command [%s]", command_id);
-	return -1;
 }
 
 } // namespace bbque
