@@ -556,7 +556,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
 
     node_t gpu_tag = this->GetFirstChild(root,"gpu") ;
     while (gpu_tag != NULL) {
-        pp::PlatformDescription::GenericCPU gpu;
+        pp::PlatformDescription::MulticoreProcessor gpu;
         attr_t arch_attr     = this->GetFirstAttribute(gpu_tag, "arch",     true);
         attr_t id_attr       = this->GetFirstAttribute(gpu_tag, "id",       true);
 
@@ -651,7 +651,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
 
     node_t acc_tag = this->GetFirstChild(root,"acc") ;
     while (acc_tag != NULL) {
-        pp::PlatformDescription::GenericCPU acc;
+        pp::PlatformDescription::MulticoreProcessor acc;
         attr_t arch_attr     = this->GetFirstAttribute(acc_tag, "arch",     true);
         attr_t id_attr       = this->GetFirstAttribute(acc_tag, "id",       true);
 

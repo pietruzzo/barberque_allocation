@@ -144,7 +144,7 @@ public:
 
     typedef std::shared_ptr<Memory> MemoryPtr_t;
 
-    class GenericCPU {
+    class MulticoreProcessor {
     public:
         inline const std::string & GetArchitecture() const {
             return this->architecture;
@@ -181,7 +181,7 @@ public:
         std::vector<ProcessingElement> pes;
     };
 
-    class CPU : public GenericCPU {
+    class CPU : public MulticoreProcessor {
     public:
         inline uint16_t GetSocketId() const {
             return this->socket_id;
@@ -244,27 +244,27 @@ public:
             this->cpus.push_back(cpu);
         }
 
-        inline const std::vector<GenericCPU>& GetGPUsAll() const {
+        inline const std::vector<MulticoreProcessor>& GetGPUsAll() const {
             return this->gpus;
         }
 
-        inline std::vector<GenericCPU>& GetGPUsAll() {
+        inline std::vector<MulticoreProcessor>& GetGPUsAll() {
             return this->gpus;
         }
 
-        inline void AddGPU(const GenericCPU& gpu) {
+        inline void AddGPU(const MulticoreProcessor& gpu) {
             this->gpus.push_back(gpu);
         }
 
-        inline const std::vector<GenericCPU>& GetAcceleratorsAll() const {
+        inline const std::vector<MulticoreProcessor>& GetAcceleratorsAll() const {
             return this->accelerators;
         }
 
-        inline std::vector<GenericCPU>& GetAcceleratorsAll() {
+        inline std::vector<MulticoreProcessor>& GetAcceleratorsAll() {
             return this->accelerators;
         }
 
-        inline void AddAccelerator(const GenericCPU& accelerator) {
+        inline void AddAccelerator(const MulticoreProcessor& accelerator) {
             this->accelerators.push_back(accelerator);
         }
 
@@ -296,8 +296,8 @@ public:
         std::string net_address;
 
         std::vector <CPU> cpus;
-        std::vector <GenericCPU> gpus;
-        std::vector <GenericCPU> accelerators;
+        std::vector <MulticoreProcessor> gpus;
+        std::vector <MulticoreProcessor> accelerators;
         std::vector <MemoryPtr_t> memories;
     };
 
