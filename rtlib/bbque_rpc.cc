@@ -3158,8 +3158,10 @@ void BbqueRPC::NotifyPreConfigure(
 	}
 	assert(isRegistered(prec) == true);
 #ifdef CONFIG_BBQUE_OPENCL
-	logger->Debug("NotifyPreConfigure - OCL Device: %d", prec->dev_id);
-	OclSetDevice(prec->dev_id, prec->event);
+	pSystemResources_t local_sys(prec->systems[0]);
+	assert(local_sys != nullptr);
+	logger->Debug("NotifyPreConfigure - OCL Device: %d", local_sys->dev_id);
+	OclSetDevice(local_sys->dev_id, prec->event);
 #endif
 }
 
