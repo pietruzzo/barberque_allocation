@@ -26,11 +26,11 @@ LocalPlatformProxy::LocalPlatformProxy()
 #endif
 
 #ifdef CONFIG_BBQUE_OPENCL
-    this->aux.push_back(std::unique_ptr<OpenCLPlatformProxy>(new OpenCLPlatformProxy());
+	this->aux.push_back(
+		std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
 #endif
 
     assert(this->host);
-
 }
 
 
