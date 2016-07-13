@@ -38,11 +38,8 @@ namespace br = bbque::res;
 
 namespace bbque {
 
-ApplicationProxy::ApplicationProxy() : Worker()
-#ifdef CONFIG_BBQUE_OPENCL
-	, oclProxy(OpenCLProxy::GetInstance())
-#endif
-{
+ApplicationProxy::ApplicationProxy():
+		Worker() {
 
 	//---------- Setup Worker
 	Worker::Setup(BBQUE_MODULE_NAME("ap"), APPLICATION_PROXY_NAMESPACE);
@@ -63,7 +60,6 @@ ApplicationProxy::ApplicationProxy() : Worker()
 
 	// Spawn the command dispatching thread
 	Worker::Start();
-
 }
 
 ApplicationProxy::~ApplicationProxy() {
@@ -421,13 +417,15 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 #ifdef CONFIG_BBQUE_OPENCL
 		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(br::Resource::GPU));
 		BBQUE_RID_TYPE r_id = gpu_ids.FirstSet();
+
 		// If no GPU have been bound, the CPU is the OpenCL device assigned
 		if (r_id == R_ID_NONE) {
-			VectorUInt8Ptr_t pdev_ids = oclProxy.GetDeviceIDs(br::Resource::CPU);
+			OpenCLPlatformProxy * ocl_proxy(OpenCLPlatformProxy::GetInstance());
+			VectorUInt8Ptr_t pdev_ids(ocl_proxy->GetDeviceIDs(br::Resource::CPU));
 			r_id  = pdev_ids->at(0);
 		}
 
-		syncp_prechange_msg.dev = r_id;
+		local_sys_msg.dev = r_id;
 		switch(r_id) {
 		case R_ID_NONE:
 			logger->Info("APPs PRX: [%s] NO OpenCL device assigned");

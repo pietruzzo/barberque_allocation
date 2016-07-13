@@ -38,10 +38,6 @@ namespace bu = bbque::utils;
 
 namespace bbque {
 
-#ifdef CONFIG_BBQUE_OPENCL
-class OpenCLProxy;
-#endif
-
 
 /**
  * @brief Interface to access application specific data and functionalities.
@@ -86,11 +82,6 @@ private:
 		// The comand session to handler this command
 		pcmdSn_t pcs;
 	} cmdRsp_t;
-
-
-#ifdef CONFIG_BBQUE_OPENCL
-	OpenCLProxy & oclProxy;
-#endif
 
 public:
 
