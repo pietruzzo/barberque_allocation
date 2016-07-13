@@ -14,7 +14,6 @@ PlatformManager::PlatformManager()
     assert(logger);
 
     try {
-
         // Init the submodules
         this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(new pp::LocalPlatformProxy());
         this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(new pp::RemotePlatformProxy());
@@ -172,11 +171,7 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData() {
     logger->Info("All PlatformProxy load platform data successfully");
 
     ResourceAccounter &ra(ResourceAccounter::GetInstance());
-
-    // Set that the platform is ready
     ra.SetPlatformReady();
-
-    // Dump status of registered resource
     ra.PrintStatusReport(0, true);
 
     return PLATFORM_OK;
@@ -261,7 +256,8 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp) {
 PlatformManager::ExitCode_t PlatformManager::MapResources(
         AppPtr_t papp, UsagesMapPtr_t pres, bool excl) {
 
-    ResourceAccounter &ra = ResourceAccounter::GetInstance();
+	ExitCode_t ec;
+    ResourceAccounter & ra(ResourceAccounter::GetInstance());
     RViewToken_t rvt = ra.GetScheduledView();
     logger->Debug("Mapping resources for app [%s], using view [%d]", papp->StrId(), rvt);
 
@@ -274,25 +270,29 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
     //       subsequently becoms full local (so remove Sys1 and Sys2 from
     //       scheduling, the application DOES NOT change the 'remote' flag.
     //
-    //       This is necessary becausa we have to inform the PlatformProxy
+    //       This is necessary because we have to inform the PlatformProxy
     //       even if they do not still manage the application.
 
     // Get the set of assigned (bound) Systems
     br::ResourceBitset systems(br::ResourceBinder::GetMask(pres, br::Resource::SYSTEM));
+    logger->Debug("Mapping: Resources binding includes %d systems", systems.Count());
 
-    bool is_local =false;
-    bool is_remote=false;
+    bool is_local  = false;
+    bool is_remote = false;
 
     // Check if application is local or remote.
-    for (int i=0; i < systems.Count(); i++) {
-        if (systems.Test(i)) {
-            if (GetPlatformDescription().GetSystemsAll()[i].IsLocal() ) {
-                is_local  = true;
-            } else {
-                is_remote = true;
-            }
-        }
-    }
+	for (int i=0; i < systems.Count(); i++) {
+		if (systems.Test(i)) {
+			logger->Debug("Mapping: Checking system %d...", i);
+			if (GetPlatformDescription().GetSystemsAll()[i].IsLocal() ) {
+				is_local  = true;
+				logger->Debug("Mapping: System %d is local", i);
+			} else {
+				is_remote = true;
+				logger->Debug("Mapping: System %d is remote", i);
+			}
+		}
+	}
 
     // yes, obviously we need at least one type of resource
     assert( is_local || is_remote );
@@ -303,25 +303,28 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
     // If first time scheduled locally, we have to setup it
     if(is_local != papp->IsLocal()) {
-        logger->Debug("Application [%s] is local, call LPP Setup", papp->StrId());
+        logger->Debug("Mapping: Application [%s] is local, call LPP Setup", papp->StrId());
 
-        ExitCode_t ec = lpp->Setup(papp);
+        ec = lpp->Setup(papp);
         if (ec == PLATFORM_OK) {
             papp->SetLocal(true);
         } else {
-            logger->Error("Application [%s] FAILED to setup locally (error code: %i)", papp->StrId(), ec);
+            logger->Error("Mapping: Application [%s] FAILED to setup locally "
+					"(error code: %d)", papp->StrId(), ec);
             return ec;
         }
     }
 
     if(is_remote != papp->IsRemote()) {
-        logger->Debug("Application [%s] is remote, call RPP Setup", papp->StrId());
+        logger->Debug("Mapping: Application [%s] is remote, call RPP Setup",
+				papp->StrId());
 
-        ExitCode_t ec = rpp->Setup(papp);
+        ec = rpp->Setup(papp);
         if (ec == PLATFORM_OK) {
             papp->SetRemote(true);
         } else {
-            logger->Error("Application [%s] FAILED to setup remotely (error code: %i)", papp->StrId(), ec);
+            logger->Error("Mapping: Application [%s] FAILED to setup remotely "
+					"(error code: %d)", papp->StrId(), ec);
             return ec;
         }
     }
@@ -333,14 +336,11 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
     }
 
     // At this time we can actually map the resources
-    ExitCode_t ec;
-
     if (papp->IsLocal()) {
         ec = lpp->MapResources(papp, pres, excl);;
         if (unlikely(ec != PLATFORM_OK)) {
-            logger->Error("Failed to MapResources LOCAL of application [%s]"
-                          "(error code: %i)",
-                          papp->StrId(), ec);
+            logger->Error("Mapping: Failed to MapResources LOCAL of application [%s]"
+                          "(error code: %i)", papp->StrId(), ec);
             return ec;
         }
     }
@@ -349,11 +349,9 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
         ec = rpp->MapResources(papp, pres, excl);
         if (unlikely(ec != PLATFORM_OK)) {
             logger->Error("Failed to MapResources REMOTE of application [%s]"
-                          "(error code: %i)",
-                          papp->StrId(), ec);
+                          "(error code: %i)", papp->StrId(), ec);
             return ec;
         }
-
     }
 
     return PLATFORM_OK;
@@ -374,9 +372,6 @@ int PlatformManager::CommandsCb(int argc, char *argv[]) {
     }
 
     return 0;
-
 }
-
-
 
 } // namespace bbque
