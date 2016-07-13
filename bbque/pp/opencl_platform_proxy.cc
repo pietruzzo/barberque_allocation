@@ -17,7 +17,7 @@
 
 #include <cstring>
 
-#include "bbque/pp/opencl.h"
+#include "bbque/pp/opencl_platform_proxy.h"
 
 #include "bbque/config.h"
 #include "bbque/power_monitor.h"

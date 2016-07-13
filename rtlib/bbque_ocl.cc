@@ -26,7 +26,7 @@
 #include "bbque/rtlib/bbque_ocl.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/logging/logger.h"
-#include "bbque/pp/opencl.h"
+#include "bbque/pp/opencl_platform_proxy.h"
 
 #undef  BBQUE_LOG_MODULE
 #define BBQUE_LOG_MODULE "rtl.ocl"

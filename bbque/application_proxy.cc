@@ -27,7 +27,7 @@
 #include "bbque/cpp11/chrono.h"
 
 #ifdef CONFIG_BBQUE_OPENCL
-#include "bbque/pp/opencl.h"
+#include "bbque/pp/opencl_platform_proxy.h"
 #endif
 
 #define MODULE_NAMESPACE APPLICATION_PROXY_NAMESPACE
