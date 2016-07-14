@@ -22,7 +22,8 @@ LocalPlatformProxy::LocalPlatformProxy() {
     this->host = std::unique_ptr<LinuxPlatformProxy>(
 			LinuxPlatformProxy::GetInstance());
 #elif CONFIG_TARGET_ANDROID
-    this->host = std::unique_ptr<AndroidPlatformProxy>(new AndroidPlatformProxy());
+    this->host = std::unique_ptr<AndroidPlatformProxy>(
+			AndroidPlatformProxy()::GetInstance());
 #endif
 
 #ifdef CONFIG_BBQUE_OPENCL
