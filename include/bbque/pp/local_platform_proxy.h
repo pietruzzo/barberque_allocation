@@ -13,62 +13,62 @@ class LocalPlatformProxy : public PlatformProxy
 {
 public:
 
-    LocalPlatformProxy();
+	LocalPlatformProxy();
 
-    /**
-     * @brief Return the Platform specific string identifier
-     */
-    virtual const char* GetPlatformID(int16_t system_id=-1) const;
+	/**
+	 * @brief Return the Platform specific string identifier
+	 */
+	virtual const char* GetPlatformID(int16_t system_id=-1) const;
 
-    /**
-     * @brief Return the Hardware identifier string
-     */
-    virtual const char* GetHardwareID(int16_t system_id=-1) const;
-    /**
-     * @brief Platform specific resource setup interface.
-     */
-    virtual ExitCode_t Setup(AppPtr_t papp);
+	/**
+	 * @brief Return the Hardware identifier string
+	 */
+	virtual const char* GetHardwareID(int16_t system_id=-1) const;
+	/**
+	 * @brief Platform specific resource setup interface.
+	 */
+	virtual ExitCode_t Setup(AppPtr_t papp);
 
-    /**
-     * @brief Platform specific resources enumeration
-     *
-     * The default implementation of this method loads the TPD, is such a
-     * function has been enabled
-     */
-    virtual ExitCode_t LoadPlatformData();
+	/**
+	 * @brief Platform specific resources enumeration
+	 *
+	 * The default implementation of this method loads the TPD, is such a
+	 * function has been enabled
+	 */
+	virtual ExitCode_t LoadPlatformData();
 
-    /**
-     * @brief Platform specific resources refresh
-     */
-    virtual ExitCode_t Refresh();
+	/**
+	 * @brief Platform specific resources refresh
+	 */
+	virtual ExitCode_t Refresh();
 
-    /**
-     * @brief Platform specific resources release interface.
-     */
-    virtual ExitCode_t Release(AppPtr_t papp);
+	/**
+	 * @brief Platform specific resources release interface.
+	 */
+	virtual ExitCode_t Release(AppPtr_t papp);
 
-    /**
-     * @brief Platform specific resource claiming interface.
-     */
-    virtual ExitCode_t ReclaimResources(AppPtr_t papp);
+	/**
+	 * @brief Platform specific resource claiming interface.
+	 */
+	virtual ExitCode_t ReclaimResources(AppPtr_t papp);
 
-    /**
-     * @brief Platform specific resource binding interface.
-     */
-    virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
-            bool excl = true) ;
+	/**
+	 * @brief Platform specific resource binding interface.
+	 */
+	virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
+	                                bool excl = true) ;
 
 private:
-    /**
-     * @brief The host platform proxy, e.g. linux or android
-     */
-    std::unique_ptr<PlatformProxy> host;
+	/**
+	 * @brief The host platform proxy, e.g. linux or android
+	 */
+	std::unique_ptr<PlatformProxy> host;
 
-    /**
-     * @brief The list of auxiliary platform proxy, like OpenCL, Adapteva,
-     *        Process Listener, etc.
-     */
-    std::vector<std::unique_ptr<PlatformProxy>> aux;
+	/**
+	 * @brief The list of auxiliary platform proxy, like OpenCL, Adapteva,
+	 *        Process Listener, etc.
+	 */
+	std::vector<std::unique_ptr<PlatformProxy>> aux;
 
 };
 

@@ -109,7 +109,7 @@ public:
 	 * @brief OpenCL resource assignment mapping
 	 */
 	ExitCode_t MapResources(
-		ba::AppPtr_t papp, br::UsagesMapPtr_t pum, bool excl) override final;
+	        ba::AppPtr_t papp, br::UsagesMapPtr_t pum, bool excl) override final;
 
 
 	// Class specific member functions
@@ -170,11 +170,11 @@ private:
 
 	/** Retrieve the iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
-			br::ResourceIdentifier::Type_t r_type);
+	        br::ResourceIdentifier::Type_t r_type);
 
 	/** Retrieve the constant iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::const_iterator GetDeviceConstIterator(
-			br::ResourceIdentifier::Type_t r_type) const;
+	        br::ResourceIdentifier::Type_t r_type) const;
 
 #ifdef CONFIG_BBQUE_PM
 
@@ -201,7 +201,7 @@ private:
 	 * @param dev_p_str A resource path referencing a device of the type in the key
 	 */
 	void InsertDevicePath(
-		br::ResourceIdentifier::Type_t r_type, std::string const & dev_rp_str);
+	        br::ResourceIdentifier::Type_t r_type, std::string const & dev_rp_str);
 
 	/**
 	 * @brief Register device resources
