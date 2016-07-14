@@ -1,12 +1,12 @@
 
-if (NOT CONFIG_BBQUE_PLOADER_RXML)
+if (NOT CONFIG_BBQUE_PIL_LOADER_RXML)
 	return(rxml)
-endif(NOT CONFIG_BBQUE_PLOADER_RXML)
+endif(NOT CONFIG_BBQUE_PIL_LOADER_RXML)
 
 # Set the macro for the Platform Manager
-if (CONFIG_BBQUE_PLOADER_DEFAULT_RXML)
-  set (BBQUE_PLOADER_DEFAULT "rxml" CACHE STRING "Setting platform loader name" FORCE)
-endif (CONFIG_BBQUE_PLOADER_DEFAULT_RXML)
+if (CONFIG_BBQUE_PIL_LOADER_DEFAULT_RXML)
+  set (BBQUE_PIL_LOADER_DEFAULT "rxml" CACHE STRING "Setting platform loader name" FORCE)
+endif (CONFIG_BBQUE_PIL_LOADER_DEFAULT_RXML)
 
 # Sources
 set(PLUGIN_RXML_SRC rxml_ploader rxml_plugin)

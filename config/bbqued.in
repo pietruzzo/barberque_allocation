@@ -161,7 +161,7 @@ setup() {
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
 	if [ -z "$PILNAME" ]; then
-		if [ ! -z "@CONFIG_BBQUE_PLP_LEGACY@" ]; then
+		if [ ! -z "@CONFIG_BBQUE_PIL_LEGACY@" ]; then
 			PILNAME=`hostname`.bpl
 		else
 			PILNAME=systems.xml
@@ -217,7 +217,7 @@ setup() {
 	PLAT_MEMS=`cat $BBQUE_CGMOUNT/cpuset.mems`
 
 	if [ ! -f $CGSETUP -o $PILSETUP -nt $CGSETUP ]; then
-		[ ! -z "@CONFIG_BBQUE_PLP_LEGACY@" ] && \
+		[ ! -z "@CONFIG_BBQUE_PIL_LEGACY@" ] && \
                 echo "Compiling PIL Layout [$PILSETUP]..."
 		$BBQUE_PILPARSER \
 				-v BBQUE_PLAT_CPUS="$PLAT_CPUS" \

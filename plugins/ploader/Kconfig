@@ -1,11 +1,11 @@
 
 choice
-  depends on BBQUE_PLP_XML
+  depends on BBQUE_PIL_LOADER
   prompt "Default platform loader"
-  default BBQUE_PLOADER_DEFAULT_RXML
-  config BBQUE_PLOADER_DEFAULT_RXML
+  default BBQUE_PIL_LOADER_DEFAULT_RXML
+  config BBQUE_PIL_LOADER_DEFAULT_RXML
     bool "RXML"
-    select BBQUE_PLOADER_RXML
+    select BBQUE_PIL_LOADER_RXML
 ##NP
 
 endchoice

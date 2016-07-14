@@ -1,6 +1,5 @@
-config BBQUE_PLOADER_RXML
-  depends on BBQUE_PLP_XML
-
+config BBQUE_PIL_LOADER_RXML
+  depends on BBQUE_PIL_LOADER
   bool "RXML"
   default y
   select EXTERNAL_RAPIDXML

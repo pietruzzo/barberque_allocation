@@ -1,4 +1,4 @@
-if (CONFIG_BBQUE_PLP_XML)
+if (CONFIG_BBQUE_PIL_LOADER)
 
 	# Add "barbeque" specific flags
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++0x")
@@ -21,6 +21,6 @@ if (CONFIG_BBQUE_PLP_XML)
                 DESTINATION ${BBQUE_PATH_BBQ}
                 COMPONENT BarbequeTOOLS)
 
-endif (CONFIG_BBQUE_PLP_XML)
+endif (CONFIG_BBQUE_PIL_LOADER)
 
 

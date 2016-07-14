@@ -54,20 +54,20 @@ configure_file (
 )
 
 # Setup BPL generator
-if (CONFIG_BBQUE_PLP_LEGACY)
+if (CONFIG_BBQUE_PIL_LEGACY)
 	configure_file (
 		"${PROJECT_SOURCE_DIR}/config/pil/generator.in"
 		"${PROJECT_BINARY_DIR}/config/pil/bbque-pil-generator"
 		@ONLY
 	)
-endif (CONFIG_BBQUE_PLP_LEGACY)
-if (CONFIG_BBQUE_PLP_XML)
+endif (CONFIG_BBQUE_PIL_LEGACY)
+if (CONFIG_BBQUE_PIL_LOADER)
 	configure_file (
 		"${PROJECT_SOURCE_DIR}/config/pil/generator_xml.in"
 		"${PROJECT_BINARY_DIR}/config/pil/bbque-pil-generator"
 		@ONLY
 	)
-endif (CONFIG_BBQUE_PLP_XML)
+endif (CONFIG_BBQUE_PIL_LOADER)
 
 
 # Setup Template generator
@@ -161,11 +161,12 @@ target_link_libraries(barbeque
 	-Wl,-whole-archive ${BBQUE_RLOADER} -Wl,-no-whole-archive
 )
 
-# Linking static plugins
-set (BBQUE_PLOADER  "bbque_ploader_${BBQUE_PLOADER_DEFAULT}")
-target_link_libraries(barbeque
+if (CONFIG_BBQUE_PIL_LOADER)
+  set (BBQUE_PLOADER  "bbque_ploader_${BBQUE_PIL_LOADER_DEFAULT}")
+  target_link_libraries(barbeque
 	-Wl,-whole-archive ${BBQUE_PLOADER} -Wl,-no-whole-archive
-)
+  )
+endif (CONFIG_BBQUE_PIL_LOADER)
 
 
 # Linking dependencies for Generic-Linux targets

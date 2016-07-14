@@ -5,12 +5,12 @@
 # - have a name starting by "bbque-"
 
 #----- Deploy the PIL Layouts parser and CGroup generator script
-if (CONFIG_BBQUE_PLP_LEGACY)
+if (CONFIG_BBQUE_PIL_LEGACY)
 	install(PROGRAMS bbquePlatformLayoutParser.awk
 		DESTINATION ${BBQUE_PATH_BBQ}
 		COMPONENT BarbequeTOOLS
 		RENAME bbque-plp)
-endif (CONFIG_BBQUE_PLP_LEGACY)
+endif (CONFIG_BBQUE_PIL_LEGACY)
 
 # .:: Accessory Tools to simplify the usage of the BarbequeRTRM
 # These tools must be:

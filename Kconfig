@@ -5,6 +5,28 @@
 
 menu "Platform Setup"
 
+choice
+  prompt "Platform Layout Parser"
+  config BBQUE_PIL_LEGACY
+    bool "Legacy BPL Parser"
+    default y
+    ---help---
+    The old parser for BarbequeRTRM Platform Layout files (under pil directory)
+
+  config BBQUE_PIL_LOADER
+    bool "Platform Loader"
+    ---help---
+    The new platform loader for BarbequeRTRM Platform Layout files, that enable also
+    multi-systems environment.
+
+endchoice
+
+menu "Platform Loader"
+  depends on BBQUE_PIL_LOADER
+  source "barbeque/plugins/ploader/Kconfig"
+endmenu
+
+
 menu "Simulated Mode"
 
 config BBQUE_TEST_PLATFORM_DATA
@@ -56,7 +78,7 @@ config BBQUE_LINUX_PROC_LISTENER
 
 choice
 depends on !BBQUE_TEST_PLATFORM_DATA
-depends on BBQUE_PLP_LEGACY
+depends on BBQUE_PIL_LEGACY
   prompt "Memory locality"
   default BBQUE_MEMLOC_L3
 
@@ -109,6 +131,7 @@ menu "Distributed Systems"
   source "barbeque/mpi/Kconfig"
 
 endmenu # Distributed Systems
+
 
 endmenu # PIL Configuration
 
@@ -395,25 +418,6 @@ config BBQUE_EM
 
   If unsure say no, this will disable all the EM related features.
 
-choice
-  prompt "Barbeque Platform Layout parser"
-  default BBQUE_PLP_LEGACY
-  config BBQUE_PLP_LEGACY
-    bool "Legacy BPL parser"
-    ---help---
-    The old parser for Barbeque Platform Layout files (under pil directory)
-  config BBQUE_PLP_XML
-    bool "XML parser"
-    ---help---
-    The new XML parser for Barbque Platform Layout files, that enable also
-    multi-systems environment.
-
-endchoice
-
-menu "Platform Loader"
-  depends on BBQUE_PLP_XML
-  source "barbeque/plugins/ploader/Kconfig"
-endmenu
 
 
 endmenu # Advanced options
