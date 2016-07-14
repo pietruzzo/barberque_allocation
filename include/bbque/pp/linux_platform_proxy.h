@@ -18,8 +18,9 @@ class LinuxPlatformProxy : public PlatformProxy
 {
 public:
 
-    LinuxPlatformProxy();
-    ~LinuxPlatformProxy();
+	static LinuxPlatformProxy * GetInstance();
+
+    virtual ~LinuxPlatformProxy();
 
     /**
      * @brief Return the Platform specific string identifier
@@ -107,6 +108,8 @@ private:
 
 
 //-------------------- METHODS
+
+    LinuxPlatformProxy();
 
     void LoadConfiguration() noexcept;                          /**< Load values from the configuration file */
 

@@ -19,7 +19,8 @@ namespace pp {
 LocalPlatformProxy::LocalPlatformProxy() {
 
 #ifdef CONFIG_TARGET_LINUX
-    this->host = std::unique_ptr<LinuxPlatformProxy>(new LinuxPlatformProxy());
+    this->host = std::unique_ptr<LinuxPlatformProxy>(
+			LinuxPlatformProxy::GetInstance());
 #elif CONFIG_TARGET_ANDROID
     this->host = std::unique_ptr<AndroidPlatformProxy>(new AndroidPlatformProxy());
 #endif

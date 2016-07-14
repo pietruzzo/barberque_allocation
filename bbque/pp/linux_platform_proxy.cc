@@ -46,6 +46,15 @@ namespace po = boost::program_options;
 namespace bbque {
 namespace pp {
 
+
+LinuxPlatformProxy * LinuxPlatformProxy::GetInstance() {
+	static LinuxPlatformProxy * instance;
+	if (instance == nullptr)
+		instance = new LinuxPlatformProxy();
+	return instance;
+}
+
+
 LinuxPlatformProxy::LinuxPlatformProxy() :
 		controller("cpuset"),
 		cfsQuotaSupported(true),
