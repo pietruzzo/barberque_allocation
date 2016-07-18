@@ -18,7 +18,7 @@ BEGIN {
 	# Dump the ROOT container configuration
 	print  ""
 	printf "# BarbequeRTRM Root Container\n"
-	printf "group bbque {\n"
+	printf "group user.slice {\n"
 	printf "	perm {\n"
 	printf "		task {\n"
 	printf "			uid = %s;\n", BBQUE_UID
@@ -64,7 +64,7 @@ BEGIN {
 	# Dump the HOST container CGroup
 	print  ""
 	printf "# BarbequeRTRM HOST CPUs container [%s]\n", BBQUE_HOST_DESC
-	printf "group bbque/host {\n"
+	printf "group user.slice/host {\n"
 	printf "	perm {\n"
 	printf "		task {\n"
 	printf "			uid = %s;\n", BBQUE_UID
@@ -94,7 +94,7 @@ BEGIN {
 	# Dump the MDEV container CGroup
 	print  ""
 	printf "# BarbequeRTRM MDEV CPUs Container [%s]\n", BBQUE_MDEV_DESC
-	printf "group bbque/res {\n"
+	printf "group user.slice/res {\n"
 	printf "	perm {\n"
 	printf "		task {\n"
 	printf "			uid = %s;\n", BBQUE_UID
@@ -124,7 +124,7 @@ BEGIN {
 
 	# Dump the Managed CPUs device configuration
 	printf "# Managed CPUs Device, NODE %02d\n", NODE_COUNT
-	printf "group bbque/res/node%d {\n", NODE_COUNT
+	printf "group user.slice/res/node%d {\n", NODE_COUNT
 	printf "	perm {\n"
 	printf "		task {\n"
 	printf "			uid = %s;\n", BBQUE_UID

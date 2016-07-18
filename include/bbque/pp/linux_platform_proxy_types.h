@@ -22,7 +22,7 @@ include linux_platform_proxy.h!
  * @note this CGroup should be given both "task" and "admin" permissions to
  * the UID used to run the BarbequeRTRM
  */
-#define BBQUE_LINUXPP_CGROUP "bbque"
+#define BBQUE_LINUXPP_CGROUP "user.slice"
 
 
 /**
@@ -88,7 +88,7 @@ typedef std::shared_ptr<RLinuxBindings_t> RLinuxBindingsPtr_t;
 
 typedef struct CGroupData : public bbque::utils::PluginData_t {
 	bbque::app::AppPtr_t papp; /** The controlled application */
-#define BBQUE_LINUXPP_CGROUP_PATH_MAX 22 // "bbque/12345:ABCDEF:00";
+#define BBQUE_LINUXPP_CGROUP_PATH_MAX 128 // "user.slice/12345:ABCDEF:00";
 	char cgpath[BBQUE_LINUXPP_CGROUP_PATH_MAX];
 	struct cgroup *pcg;
 	struct cgroup_controller *pc_cpu;

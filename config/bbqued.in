@@ -101,7 +101,7 @@ check_controllers() {
 		fi
 
 		# Mount BBQ required hierarchies
-		mount -t cgroup -o cpuset,memory,cpu,cpuacct bbque_cgroups \
+		mount -t cgroup -o cpu,cpuset,cpuacct,memory bbque_cgroups \
 				$BBQUE_CGMOUNT >/dev/null 2>&1
 		if [ $? -ne 0 ]; then
 				echo 'Mounting hierarchies [cpuset,memory,cpu,cpuacct] FAILED'
@@ -124,7 +124,7 @@ ShieldBuild() {
 
 			rotate="${rotate#?}${rotate%???}"
 			printf "[%5d]... %.1s\b\b\b\b\b\b\b\b\b\b\b\b" $P  $rotate;
-			echo $P > $BBQUE_CGMOUNT/bbque/host/cgroup.procs
+			echo $P > $BBQUE_CGMOUNT/user.slice/host/cgroup.procs
 	done
 	echo
 }
@@ -135,7 +135,7 @@ release() {
 	local rotate='|/-\'
 
 	printf "Moving tasks to ROOT ";
-	for P in `cat $BBQUE_CGMOUNT/bbque/host/tasks`; do
+	for P in `cat $BBQUE_CGMOUNT/user.slice/host/tasks`; do
 
 			rotate="${rotate#?}${rotate%???}"
 			printf "[%5d]... %.1s\b\b\b\b\b\b\b\b\b\b\b\b" $P  $rotate;
@@ -240,7 +240,7 @@ setup() {
 
 	echo "Setup Release Agent [$BBQUE_CGAGENT]..."
 	echo "$BBQUE_CGAGENT" > $BBQUE_CGMOUNT/release_agent
-	echo "1" > $BBQUE_CGMOUNT/bbque/notify_on_release
+	echo "1" > $BBQUE_CGMOUNT/user.slice/notify_on_release
 }
 
 start() {
@@ -284,12 +284,13 @@ stop() {
 	fi
 
 	# Cleaning-up CGroup reservations
-	if [ -d $BBQUE_CGMOUNT/bbque ]; then
+	if [ -d $BBQUE_CGMOUNT/user.slice ]; then
 		echo "Releasing CGroups shield..."
 		release
 		sleep 1
 		echo "Releasing BBQ CGroups..."
-		find  $BBQUE_CGMOUNT/bbque -type d -delete
+		find  $BBQUE_CGMOUNT/user.slice/host -type d -delete
+		find  $BBQUE_CGMOUNT/user.slice/res -type d -delete
 	fi
 
 	# Clean-up lock and PID files

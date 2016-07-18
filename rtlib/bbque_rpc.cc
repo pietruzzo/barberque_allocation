@@ -937,16 +937,16 @@ RTLIB_ExitCode_t BbqueRPC::CGroupInit() {
 
 	// If not present, setup the "master" BBQUE CGroup as a clone
 	// of the root CGroup
-	if (bu::CGroups::Exists("/bbque") == false) {
-		logger->Info("Setup [/bbque] master CGroup");
-		bu::CGroups::CloneFromParent("/bbque");
+	if (bu::CGroups::Exists("/user.slice") == false) {
+		logger->Info("Setup [/user.slice] master CGroup");
+		bu::CGroups::CloneFromParent("/user.slice");
 	}
 
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t BbqueRPC::CGroupSetup(pregExCtx_t prec) {
-	char cgpath[] = "/bbque/12345:APPLICATION_NAME";
+	char cgpath[] = "/user.slice/12345:APPLICATION_NAME";
 
 	if (!conf.cgroup.enabled)
 		return RTLIB_OK;
@@ -958,7 +958,7 @@ RTLIB_ExitCode_t BbqueRPC::CGroupSetup(pregExCtx_t prec) {
 	}
 
 	// Setup the application specific CGroup
-	snprintf(cgpath, sizeof(cgpath), "/bbque/%05d:%s", chTrdPid, appName);
+	snprintf(cgpath, sizeof(cgpath), "/user.slice/%05d:%s", chTrdPid, appName);
 	logger->Notice("Setup CGroup [%s]...", cgpath);
 
 	// For the time being, CGroup forcing for UNMANAGED applications is
@@ -1082,11 +1082,10 @@ RTLIB_ExitCode_t BbqueRPC::SetCGroupPath(pregExCtx_t prec) {
 	}
 
 
-	snprintf(buff, 256, "%s/bbque/%05d:%.6s:%02d",
+	snprintf(buff, 256, "%s/user.slice/%05d:%.6s",
 			cgMount,
 			chTrdPid,
-			prec->name.c_str(),
-			prec->exc_id);
+			prec->name.c_str());
 
 	// Check CGroups access
 	struct stat cgstat;

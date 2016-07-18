@@ -154,3 +154,14 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbquePlotPowerTrace.py"
 	RENAME bbque-plotrace)
 
 add_subdirectory(plpxml)
+
+# ------- Deploy the BarbequeRTRM systemd configuration patch applier
+configure_file (
+	"${PROJECT_SOURCE_DIR}/tools/bbqueSystemdSetup.sh"
+	"${PROJECT_BINARY_DIR}/tools/bbqueSystemdSetup.sh"
+	@ONLY
+)
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueSystemdSetup.sh"
+	DESTINATION ${BBQUE_PATH_BBQ}
+	COMPONENT BarbequeUTILS
+	RENAME bbque-systemd-setup)

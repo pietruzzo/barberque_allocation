@@ -241,7 +241,7 @@ std::string PLPTranslator::get_output() const noexcept {
 	return std::string("") +
 
 	       "# BarbequeRTRM Root Container\n"
-	       "group bbque {\n"
+	       "group user.slice {\n"
 	       "    perm {\n"
 	       "        task {\n"
 	       "            uid = " + data.uid  + ";\n"
@@ -267,7 +267,7 @@ std::string PLPTranslator::get_output() const noexcept {
 	       "}\n"
 	       "\n"
 	       "# BarbequeRTRM Host Container\n"
-	       "group bbque/host {\n"
+	       "group user.slice/host {\n"
 	       "    perm {\n"
 	       "        task {\n"
 	       "            uid = " + data.uid  + ";\n"
@@ -285,7 +285,7 @@ std::string PLPTranslator::get_output() const noexcept {
 	       "}\n"
 	       "\n"
 	       "# BarbequeRTRM MDEV Container\n"
-	       "group bbque/res {\n"
+	       "group user.slice/res {\n"
 	       "    perm {\n"
 	       "        task {\n"
 	       "            uid = " + data.uid  + ";\n"
@@ -315,7 +315,7 @@ void PLPTranslator::commit_mdev(const std::string & memory_id) {
 
 	subnodes +=  std::string("") +
 	             "# BarbequeRTRM MDEV Node\n"
-	             "group bbque/res/node"+ std::to_string(++n) +" {\n"
+	             "group user.slice/res/node"+ std::to_string(++n) +" {\n"
 	             "    perm {\n"
 	             "        task {\n"
 	             "            uid = " + data.uid  + ";\n"

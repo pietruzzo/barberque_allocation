@@ -43,9 +43,9 @@ echo -ne "$BOSPSH_RESET$BOSPSH_DEFAULT"
 
 let LINES_TO_FILL=LINES_TO_FILL-6
 
-for APP in \`find $BBQUE_SYSROOT/mnt/cgroup/bbque/ -maxdepth 1 -type d\`; do
+for APP in \`find /sys/fs/cgroup/cpu,cpuset,cpuacct,memory/user.slice/ -maxdepth 1 -type d\`; do
 	NAME=\`basename \$APP\`
-	if [ \$NAME == "bbque" -o \$NAME == "silos" -o \$NAME == "res" -o \$NAME == "host" ]; then
+	if [ \$NAME == "user.slice" -o \$NAME == "silos" -o \$NAME == "res" -o \$NAME == "host" ]; then
 		continue
 	fi
 
@@ -85,7 +85,7 @@ let REMAINING_LINES=TERMINAL_LINES-6
 while [ 1 ]; do
 	echo -ne "\E[0;0H"
 	printf "BOSP Console :: Tasks Monitor %40s\n%74s\n" "\`date +%c\`" ""
-	if [ -d $BBQUE_SYSROOT/mnt/cgroup/bbque ]; then
+	if [ -d /sys/fs/cgroup/cpu,cpuset,cpuacct,memory/user.slice ]; then
 		bosp_dump_tasks \$TERMINAL_LINES
 	else
 		printf "%74s\n%-74s\n%74s\n" "" "     BarbequeRTRM daemon NOT running" ""
@@ -124,9 +124,9 @@ echo -ne "$BOSPSH_RESET$BOSPSH_DEFAULT"
 
 let LINES_TO_FILL=LINES_TO_FILL-6
 
-for TRG in \`find $BBQUE_SYSROOT/mnt/cgroup/bbque/ -maxdepth 1 -type d\`; do
+for TRG in \`find /sys/fs/cgroup/cpu,cpuset,cpuacct,memory/user.slice/ -maxdepth 1 -type d\`; do
 	NAME=\`basename \$TRG\`
-	if [ \$NAME != "bbque" -a \$NAME != "silos" -a \$NAME != "host" -o \$NAME == "res" ]; then
+	if [ \$NAME != "user.slice" -a \$NAME != "silos" -a \$NAME != "host" -o \$NAME == "res" ]; then
 		continue
 	fi
 
@@ -168,7 +168,7 @@ echo -ne "$BOSPSH_RESET$BOSPSH_DEFAULT"
 
 let LINES_TO_FILL=LINES_TO_FILL-6
 
-for TRG in \`find $BBQUE_SYSROOT/mnt/cgroup/bbque/res -maxdepth 1 -type d\`; do
+for TRG in \`find /sys/fs/cgroup/cpu,cpuset,cpuacct,memory/user.slice/res -maxdepth 1 -type d\`; do
 	NAME=\`basename \$TRG\`
 	if [ \$NAME == "res" ]; then
 		continue
@@ -211,7 +211,7 @@ let REMAINING_LINES=TERMINAL_LINES-6
 while [ 1 ]; do
 	echo -ne "\E[0;0H"
 	printf "BOSP Console :: Resources Monitor %40s\n%74s\n" "\`date +%c\`" ""
-	if [ -d $BBQUE_SYSROOT/mnt/cgroup/bbque ]; then
+	if [ -d /sys/fs/cgroup/cpu,cpuset,cpuacct,memory/user.slice ]; then
 		bosp_dump_resources \$TERMINAL_LINES
 	else
 		printf "%74s\n%-74s\n%74s\n" "" "     BarbequeRTRM daemon NOT running" ""
