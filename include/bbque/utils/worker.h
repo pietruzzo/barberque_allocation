@@ -18,6 +18,8 @@
 #ifndef BBQUE_WORKER_H_
 #define BBQUE_WORKER_H_
 
+#include <string>
+
 #include "bbque/cpp11/condition_variable.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/cpp11/thread.h"
@@ -69,7 +71,7 @@ public:
 	 *
 	 * @return 0 on success, -1 otherwise
 	 */
-	int Setup(const char *name, const char *logname);
+	int Setup(std::string const & name, std::string const & logname);
 
 	/**
 	 * @brief Start the worker processing
@@ -109,7 +111,7 @@ protected:
 	/**
 	 * @brief The name of the worker thread
 	 */
-	const char *name;
+	std::string name;
 
 	/**
 	 * @brief Set true to terminate the worker thread

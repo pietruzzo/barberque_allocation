@@ -44,16 +44,16 @@ Worker::Worker() :
 Worker::~Worker() {
 }
 
-int Worker::Setup(const char *name, const char *logname) {
+int Worker::Setup(std::string const & name, std::string const & logname) {
 
 	//---------- Setup the Worker name
 	this->name = name;
 
 	//---------- Get a logger module
-	logger = Logger::GetLogger(logname);
+	logger = Logger::GetLogger(logname.c_str());
 	assert(logger);
 
-	logger->Debug("Worker[%s]: Setup completed", name);
+	logger->Debug("Worker[%s]: Setup completed", name.c_str());
 	return 0;
 
 }
@@ -62,10 +62,10 @@ void Worker::_Task() {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 
 	// Set the module name
-	logger->Debug("Worker[%s]: Initialization...", name);
-	if (prctl(PR_SET_NAME, (long unsigned int)name, 0, 0, 0) != 0) {
+	logger->Debug("Worker[%s]: Initialization...", name.c_str());
+	if (prctl(PR_SET_NAME, (long unsigned int) name.c_str(), 0, 0, 0) != 0) {
 		logger->Error("Worker[%s]: Set name FAILED! (Error: %s)\n",
-				name, strerror(errno));
+				name.c_str(), strerror(errno));
 	}
 
 	// get the thread ID for further management
@@ -74,16 +74,16 @@ void Worker::_Task() {
 
 	// Registering to the ResourceManager
 	ResourceManager::Register(name, (Worker*)this);
-	logger->Info("Worker[%s]: Registered", name);
+	logger->Info("Worker[%s]: Registered", name.c_str());
 	worker_status_ul.unlock();
 
 	// Run the user defined task
 	Task();
-	logger->Info("Worker[%s]: Terminatated", name);
+	logger->Info("Worker[%s]: Terminatated", name.c_str());
 
 	// Unregistering Worker from ResourceManager
 	ResourceManager::Unregister(name);
-	logger->Info("Worker[%s]: Unregistered", name);
+	logger->Info("Worker[%s]: Unregistered", name.c_str());
 
 }
 
@@ -94,7 +94,7 @@ void Worker::Start() {
 	if (logger == NULL)
 		Setup(WORKER_NAMESPACE ".undef", WORKER_NAMESPACE);
 
-	logger->Debug("Worker[%s]: Starting...", name);
+	logger->Debug("Worker[%s]: Starting...", name.c_str());
 
 	// Spawn the Enqueuing thread
 	worker_thd = std::thread(&Worker::_Task, this);
@@ -113,7 +113,7 @@ void Worker::Start() {
 
 void Worker::Notify() {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
-	logger->Debug("Worker[%s]: Notifying...", name);
+	logger->Debug("Worker[%s]: Notifying...", name.c_str());
 	// Notifying for an event
 	worker_status_cv.notify_all();
 }
@@ -123,7 +123,7 @@ void Worker::Terminate() {
 	if (done == true)
 		return;
 
-	logger->Debug("Worker[%s]: Terminating...", name);
+	logger->Debug("Worker[%s]: Terminating...", name.c_str());
 	done = true;
 
 	// Notify worker status
@@ -137,7 +137,7 @@ void Worker::Terminate() {
 
 bool Worker::Wait() {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
-	logger->Debug("Worker[%s]: Waiting...", name);
+	logger->Debug("Worker[%s]: Waiting...", name.c_str());
 	// Waiting for an event
 	worker_status_cv.wait(worker_status_ul);
 	return !done;
