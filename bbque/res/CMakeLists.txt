@@ -6,6 +6,7 @@ include_directories(
 
 # Add sources in the current directory to the target binary
 set (RESOURCES_SRC resources)
+set (RESOURCES_SRC resource_type ${RESOURCES_SRC})
 set (RESOURCES_SRC resource_tree ${RESOURCES_SRC})
 set (RESOURCES_SRC resource_path ${RESOURCES_SRC})
 set (RESOURCES_SRC identifier ${RESOURCES_SRC})

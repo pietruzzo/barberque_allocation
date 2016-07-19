@@ -62,7 +62,8 @@ RandomSchedPol::RandomSchedPol() :
 	br::ResourcePath rp(binding_domain);
 	binding_type = rp.Type();
 	logger->Debug("Binding domain:'%s' Type:%s",
-			binding_domain.c_str(), br::ResourceIdentifier::TypeStr[binding_type]);
+			binding_domain.c_str(),
+			br::GetResourceTypeString(binding_type));
 }
 
 RandomSchedPol::~RandomSchedPol() {
@@ -88,7 +89,7 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 
 	// Check for a valid binding domain count
 	BindingMap_t & bindings(ra.GetBindingOptions());
-	bd_count = bindings[br::Resource::CPU]->count;
+	bd_count = bindings[br::ResourceType::CPU]->count;
 	if (bd_count == 0) {
 		assert(bd_count != 0);
 		return;

@@ -91,8 +91,8 @@ private:
 	std::string binding_domain;
 
 	/** The type of resource for the binding step */
-	br::Resource::Type_t binding_type;
-	
+	br::ResourceType binding_type;
+
 	/**
 	 * @brief Random Number Generator engine used for AWM selection
 	 */
@@ -102,8 +102,8 @@ private:
 	 * @brief   The plugins constructor
 	 * Plugins objects could be build only by using the "create" method.
 	 * Usually the PluginManager acts as object
-	 * @param   
-	 * @return  
+	 * @param
+	 * @return
 	 */
 	RandomSchedPol();
 

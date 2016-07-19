@@ -23,20 +23,7 @@
 #include <string>
 
 #include "bbque/config.h"
-
-#define MAX_R_NAME_LEN       6
-
-#define R_TYPE_SYSTEM        1
-#define R_TYPE_GROUP         2
-#define R_TYPE_CPU           4
-#define R_TYPE_PROC_ELEMENT  8
-#define R_TYPE_MEMORY        16
-#define R_TYPE_ACCELERATOR   32
-#define R_TYPE_INTERCONNECT  64
-#define R_TYPE_IO            128
-
-#define R_ID_ANY            -1
-#define R_ID_NONE           -2
+#include "bbque/res/resource_type.h"
 
 namespace bbque { namespace res {
 
@@ -62,28 +49,6 @@ class ResourceIdentifier {
 public:
 
 	/**
-	 * @enum Type_t
-	 *
-	 * The set of all the possible resource types
-	 */
-	enum Type_t {
-		UNDEFINED = 0,
-		SYSTEM       ,
-		GROUP        ,
-		CPU          ,
-		GPU          ,
-		ACCELERATOR  ,
-		PROC_ELEMENT ,
-		MEMORY       ,
-		NETWORK      ,
-		INTERCONNECT ,
-		IO           ,
-		CUSTOM       ,
-
-		TYPE_COUNT
-	};
-
-	/**
 	 * @enum CResult_t
 	 *
 	 * Results due to a comparison operation
@@ -95,16 +60,13 @@ public:
 		NOT_EQUAL
 	};
 
-	/** Text strings related to each type */
-	static const char * TypeStr[TYPE_COUNT];
-
 	/**
 	 * @brief Constructor
 	 *
 	 * @param type The resource type
 	 * @param id The ID number of the resource
 	 */
-	ResourceIdentifier(Type_t type, BBQUE_RID_TYPE id);
+	ResourceIdentifier(ResourceType type, BBQUE_RID_TYPE id);
 
 	/**
 	 * @brief Operator < overloading
@@ -144,27 +106,16 @@ public:
 	 *
 	 * @return The resource type
 	 */
-	inline Type_t Type() const {
+	inline ResourceType Type() const {
 		return type;
 	}
 
 	/**
 	 * @brief Set the resource type
 	 */
-	inline void SetType(Type_t _type) {
-		type < TYPE_COUNT? type = _type: type = UNDEFINED;
+	inline void SetType(ResourceType _type) {
+		type = _type;
 	}
-
-	/**
-	 * @brief Get the resource type from a text string
-	 *
-	 * @param _str a string object with the resource type in textual form
-	 *
-	 * @return The corresponding Type_t value
-	 */
-	static Type_t TypeFromString(std::string const & _str);
-
-	static const char * StringFromType(Type_t);
 
 	/**
 	 * @brief Compare two resource identifiers
@@ -185,7 +136,7 @@ protected:
 	std::string name;
 
 	/** Type of resource */
-	Type_t type;
+	ResourceType type;
 
 	/** ID of the resource */
 	BBQUE_RID_TYPE id;

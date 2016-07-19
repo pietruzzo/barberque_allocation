@@ -154,7 +154,7 @@ void OpenCLPlatformProxy::PrintGPUPowerInfo() {
 	PowerManager::PMResult pm_result;
 
 	ResourcePathListPtr_t pgpu_paths(
-		GetDevicePaths(br::ResourceIdentifier::GPU));
+		GetDevicePaths(br::ResourceType::GPU));
 	if (pgpu_paths == nullptr) return;
 
 	for (auto gpu_rp: *(pgpu_paths.get())) {
@@ -202,12 +202,12 @@ void OpenCLPlatformProxy::PrintGPUPowerInfo() {
 
 
 VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(
-		br::ResourceIdentifier::Type_t r_type) const {
+		br::ResourceType r_type) const {
 
 	ResourceTypeIDMap_t::const_iterator d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
 		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
-			br::ResourceIdentifier::TypeStr[r_type]);
+			br::GetResourceTypeString(r_type));
 		return nullptr;
 	}
 	return d_it->second;
@@ -215,24 +215,24 @@ VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(
 
 
 uint8_t OpenCLPlatformProxy::GetDevicesNum(
-		br::ResourceIdentifier::Type_t r_type) const {
+		br::ResourceType r_type) const {
 
 	ResourceTypeIDMap_t::const_iterator d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
 		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
-			br::ResourceIdentifier::TypeStr[r_type]);
+			br::GetResourceTypeString(r_type));
 		return 0;
 	}
 	return d_it->second->size();
 }
 
 ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
-		br::ResourceIdentifier::Type_t r_type) const {
+		br::ResourceType r_type) const {
 
 	ResourceTypePathMap_t::const_iterator p_it(device_paths.find(r_type));
 	if (p_it == device_paths.end()) {
 		logger->Error("PLAT OCL: No OpenCL devices of type  '%s'",
-			br::ResourceIdentifier::TypeStr[r_type]);
+			br::GetResourceTypeString(r_type));
 		return nullptr;
 	}
 	return p_it->second;
@@ -240,7 +240,7 @@ ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
 
 
 ResourceTypeIDMap_t::iterator
-OpenCLPlatformProxy::GetDeviceIterator(br::ResourceIdentifier::Type_t r_type) {
+OpenCLPlatformProxy::GetDeviceIterator(br::ResourceType r_type) {
 	if (platforms == nullptr) {
 		logger->Error("PLAT OCL: Missing OpenCL platforms");
 		return device_ids.end();
@@ -250,7 +250,7 @@ OpenCLPlatformProxy::GetDeviceIterator(br::ResourceIdentifier::Type_t r_type) {
 
 ResourceTypeIDMap_t::const_iterator
 OpenCLPlatformProxy::GetDeviceConstIterator(
-		br::ResourceIdentifier::Type_t r_type) const {
+		br::ResourceType r_type) const {
 	if (platforms == nullptr) {
 		logger->Error("PLAT OCL: Missing OpenCL platforms");
 		return device_ids.end();
@@ -264,7 +264,7 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices() {
 	cl_device_type dev_type;
 	char dev_name[64];
 	char gpu_pe_path[]  = "sys0.gpu256.pe256";
-	br::ResourceIdentifier::Type_t r_type = br::ResourceIdentifier::UNDEFINED;
+	br::ResourceType r_type = br::ResourceType::UNDEFINED;
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 #ifdef CONFIG_BBQUE_WM
 	PowerMonitor & wm(PowerMonitor::GetInstance());
@@ -292,25 +292,25 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices() {
 		case CL_DEVICE_TYPE_GPU:
 			snprintf(gpu_pe_path+5, 12, "gpu%hu.pe0", dev_id);
 			ra.RegisterResource(gpu_pe_path, "", 100);
-			r_type = br::ResourceIdentifier::GPU;
+			r_type = br::ResourceType::GPU;
 #ifdef CONFIG_BBQUE_WM
 			wm.Register(ra.GetPath(gpu_pe_path));
 #endif
 			break;
 		case CL_DEVICE_TYPE_CPU:
-			r_type = br::ResourceIdentifier::CPU;
+			r_type = br::ResourceType::CPU;
 			memset(gpu_pe_path, '\0', strlen(gpu_pe_path));
 			break;
 		}
 
 		// Keep track of OpenCL device IDs and resource paths
 		InsertDeviceID(r_type, dev_id);
-		if (r_type == br::ResourceIdentifier::GPU)
+		if (r_type == br::ResourceType::GPU)
 			InsertDevicePath(r_type, gpu_pe_path);
 
 		logger->Info("PLAT OCL: D[%d]: {%s}, type: [%s], path: [%s]",
 			dev_id, dev_name,
-			br::ResourceIdentifier::TypeStr[r_type],
+			br::GetResourceTypeString(r_type),
 			gpu_pe_path);
 	}
 
@@ -319,24 +319,24 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices() {
 
 
 void OpenCLPlatformProxy::InsertDeviceID(
-		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceType r_type,
 		uint8_t dev_id) {
 	ResourceTypeIDMap_t::iterator d_it;
 	VectorUInt8Ptr_t pdev_ids;
 
 	logger->Debug("PLAT OCL: Insert device %d of type %s",
-			dev_id, br::ResourceIdentifier::TypeStr[r_type]);
+			dev_id, br::GetResourceTypeString(r_type));
 	d_it = GetDeviceIterator(r_type);
 	if (d_it == device_ids.end()) {
 		device_ids.insert(
-			std::pair<br::ResourceIdentifier::Type_t, VectorUInt8Ptr_t>
+			std::pair<br::ResourceType, VectorUInt8Ptr_t>
 				(r_type, VectorUInt8Ptr_t(new VectorUInt8_t))
 		);
 	}
 
 	pdev_ids = device_ids[r_type];
 	pdev_ids->push_back(dev_id);
-	if (r_type != br::ResourceIdentifier::GPU)
+	if (r_type != br::ResourceType::GPU)
 		return;
 
 	// Resource path to GPU memory
@@ -348,7 +348,7 @@ void OpenCLPlatformProxy::InsertDeviceID(
 }
 
 void OpenCLPlatformProxy::InsertDevicePath(
-		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceType r_type,
 		std::string const & dev_path_str) {
 	ResourceTypePathMap_t::iterator p_it;
 	ResourcePathListPtr_t pdev_paths;
@@ -358,7 +358,7 @@ void OpenCLPlatformProxy::InsertDevicePath(
 	p_it = device_paths.find(r_type);
 	if (p_it == device_paths.end()) {
 		device_paths.insert(
-			std::pair<br::ResourceIdentifier::Type_t, ResourcePathListPtr_t>
+			std::pair<br::ResourceType, ResourcePathListPtr_t>
 				(r_type, ResourcePathListPtr_t(new ResourcePathList_t))
 		);
 	}

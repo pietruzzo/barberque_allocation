@@ -42,9 +42,10 @@ SCCongestion::SCCongestion(
 		;
 
 	// Congestion penalties
-	for (int i = 1; i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
+	for (int i = 1; i < R_TYPE_COUNT; ++i) {
+		br::ResourceType r_type = static_cast<br::ResourceType>(i);
 		snprintf(conf_str, 50, SC_CONF_BASE_STR"%s.penalty.%s",
-				name, br::ResourceIdentifier::TypeStr[i]);
+				name, br::GetResourceTypeString(r_type));
 
 		opts_desc.add_options()
 			(conf_str,
@@ -57,17 +58,18 @@ SCCongestion::SCCongestion(
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	// Boundaries enforcement (0 <= penalty <= 100)
-	for (int i = 1; i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
+	for (int i = 1; i < R_TYPE_COUNT; ++i) {
+		br::ResourceType r_type = static_cast<br::ResourceType>(i);
 		if (penalties_int[i] > 100) {
 			logger->Warn("penalty.%s out of range [0,100]: "
 					"found %d. Setting to %d",
-					br::ResourceIdentifier::TypeStr[i],
+					br::GetResourceTypeString(r_type),
 					penalties_int[i], SC_CONG_DEFAULT_PENALTY);
 			penalties_int[i] = SC_CONG_DEFAULT_PENALTY;
 		}
 		penalties[i] = static_cast<float>(penalties_int[i]) / 100.0;
 		logger->Debug("penalty.%-3s: %.2f",
-				br::ResourceIdentifier::TypeStr[i], penalties[i]);
+				br::GetResourceTypeString(r_type), penalties[i]);
 	}
 }
 
@@ -112,13 +114,14 @@ SCCongestion::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 					evl_ent.StrId(), r_path->ToString().c_str(),
 					rl.free, pusage->GetAmount());
 			if ((rl.free == 0) &&
-				(r_path->Type() == br::ResourceIdentifier::PROC_ELEMENT))
+				(r_path->Type() == br::ResourceType::PROC_ELEMENT))
 				return SC_RSRC_NO_PE;
 			return SC_RSRC_UNAVL;
 		}
 
 		// Set the last parameters for the index computation
-		SetIndexParameters(rl, penalties[r_path->Type()], params);
+		int r_type_index = static_cast<int>(r_path->Type());
+		SetIndexParameters(rl, penalties[r_type_index], params);
 
 		// Compute the region index
 		ru_index = CLEIndex(rl.sat_lack, rl.free, pusage->GetAmount(), params);

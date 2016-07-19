@@ -133,17 +133,17 @@ PowerManager::~PowerManager() {
 PowerManager::PMResult PowerManager::GetLoad(
 		ResourcePathPtr_t const & rp, uint32_t &perc) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetLoad(rp, perc);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->GetLoad(rp, perc);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetLoad not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -151,17 +151,17 @@ PowerManager::PMResult PowerManager::GetLoad(
 PowerManager::PMResult PowerManager::GetTemperature(
 		ResourcePathPtr_t const & rp, uint32_t &celsius) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetTemperature(rp, celsius);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->GetTemperature(rp, celsius);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetTemperature not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -169,17 +169,17 @@ PowerManager::PMResult PowerManager::GetTemperature(
 PowerManager::PMResult
 PowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetClockFrequency(rp, khz);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->GetClockFrequency(rp, khz);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetClockFrequency not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -190,15 +190,15 @@ PowerManager::GetClockFrequencyInfo(
 		uint32_t &khz_max,
 		uint32_t &khz_step) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetClockFrequencyInfo(rp, khz_min, khz_max, khz_step);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->GetClockFrequencyInfo(rp, khz_min, khz_max, khz_step);
 	default:
 		logger->Warn("(PM) GetClockFrequencyInfo not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
@@ -210,34 +210,34 @@ PowerManager::GetAvailableFrequencies(
 		ResourcePathPtr_t const & rp,
 		std::vector<uint32_t> & freqs) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetAvailableFrequencies(rp, freqs);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->GetAvailableFrequencies(rp, freqs);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetAvailableFrequencies not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->SetClockFrequency(rp, khz);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->SetClockFrequency(rp, khz);
 	default:
 		break;
 	}
 	logger->Warn("(PM) SetClockFrequency not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -247,17 +247,17 @@ PowerManager::SetClockFrequency(
 		ResourcePathPtr_t const & rp,
 		uint32_t min_khz, uint32_t max_khz) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->SetClockFrequency(rp, min_khz, max_khz);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->SetClockFrequency(rp, min_khz, max_khz);
 	default:
 		break;
 	}
 	logger->Warn("(PM) SetClockFrequency not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -265,17 +265,17 @@ PowerManager::SetClockFrequency(
 std::vector<std::string> const &
 PowerManager::GetAvailableFrequencyGovernors(br::ResourcePathPtr_t const & rp) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetAvailableFrequencyGovernors(rp);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->GetAvailableFrequencyGovernors(rp);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetClockFrequencyGovernors not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return cpufreq_governors;
 }
 
@@ -284,17 +284,17 @@ PowerManager::GetClockFrequencyGovernor(
 		br::ResourcePathPtr_t const & rp,
 		std::string & governor) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetClockFrequencyGovernor(rp, governor);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->GetClockFrequencyGovernor(rp, governor);
 	default:
 		break;
 	}
 	logger->Warn("(PM) SetClockFrequencyGovernor not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -303,17 +303,17 @@ PowerManager::SetClockFrequencyGovernor(
 		br::ResourcePathPtr_t const & rp,
 		std::string const & governor) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->SetClockFrequencyGovernor(rp, governor);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->SetClockFrequencyGovernor(rp, governor);
 	default:
 		break;
 	}
 	logger->Warn("(PM) SetClockFrequencyGovernor not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -321,14 +321,14 @@ PowerManager::SetClockFrequencyGovernor(
 PowerManager::PMResult
 PowerManager::GetVoltage(ResourcePathPtr_t const & rp, uint32_t &volt) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetVoltage(rp, volt);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetVoltage not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -339,14 +339,14 @@ PowerManager::GetVoltageInfo(
 		uint32_t &volt_max,
 		uint32_t &volt_step) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetVoltageInfo(rp, volt_min, volt_max, volt_step);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetVoltageInfo not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -357,14 +357,14 @@ PowerManager::GetFanSpeed(
 		FanSpeedType fs_type,
 		uint32_t &value) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetFanSpeed(rp, fs_type, value);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetFanSpeed not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -375,14 +375,14 @@ PowerManager::GetFanSpeedInfo(
 		uint32_t &rpm_max,
 		uint32_t &rpm_step) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetFanSpeedInfo(rp, rpm_min, rpm_max, rpm_step);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetFanSpeedInfo not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -392,28 +392,28 @@ PowerManager::SetFanSpeed(
 		FanSpeedType fs_type,
 		uint32_t value) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->SetFanSpeed(rp, fs_type, value);
 	default:
 		break;
 	}
 	logger->Warn("(PM) SetFanSpeed not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::ResetFanSpeed(ResourcePathPtr_t const & rp) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->ResetFanSpeed(rp);
 	default:
 		break;
 	}
 	logger->Warn("(PM) ResetFanSpeed not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -421,17 +421,17 @@ PowerManager::ResetFanSpeed(ResourcePathPtr_t const & rp) {
 PowerManager::PMResult
 PowerManager::GetPowerUsage(ResourcePathPtr_t const & rp, uint32_t &mwatt) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetPowerUsage(rp, mwatt);
-	case br::ResourceIdentifier::CPU:
+	case br::ResourceType::CPU:
 		if (!cpu) break;
 		return cpu->GetPowerUsage(rp, mwatt);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetPowerUsage not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -441,28 +441,28 @@ PowerManager::GetPowerInfo(
 		uint32_t &mwatt_min,
 		uint32_t &mwatt_max) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetPowerInfo(rp, mwatt_min, mwatt_max);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetPowerInfo not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::GetPowerState(ResourcePathPtr_t const & rp, uint32_t &state) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetPowerState(rp, state);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetPowerState not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -471,28 +471,28 @@ PowerManager::GetPowerStatesInfo(
 	ResourcePathPtr_t const & rp,
 	uint32_t & min, uint32_t & max, int & step) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetPowerStatesInfo(rp, min, max, step);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetPowerStatesInfo not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::SetPowerState(ResourcePathPtr_t const & rp, uint32_t state) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->SetPowerState(rp, state);
 	default:
 		break;
 	}
 	logger->Warn("(PM) SetPowerState not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -500,42 +500,42 @@ PowerManager::SetPowerState(ResourcePathPtr_t const & rp, uint32_t state) {
 PowerManager::PMResult
 PowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, uint32_t &state) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetPerformanceState(rp, state);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetPerformanceState not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, uint32_t &count) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetPerformanceStatesCount(rp, count);
 	default:
 		break;
 	}
 	logger->Warn("(PM) GetPerformanceStatesCount not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
 PowerManager::PMResult
 PowerManager::SetPerformanceState(ResourcePathPtr_t const & rp, uint32_t state) {
 	switch (rp->ParentType(rp->Type())) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->SetPerformanceState(rp, state);
 	default:
 		break;
 	}
 	logger->Warn("(PM) SetPerformanceState not supported for [%s]",
-			br::ResourceIdentifier::TypeStr[rp->ParentType(rp->Type())]);
+			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 	return PMResult::ERR_API_NOT_SUPPORTED;
 }
 
@@ -580,7 +580,7 @@ int PowerManager::FanSpeedSetHandler(
 		return 4;
 	}
 	switch (rp->Type()) {
-	case br::ResourceIdentifier::GPU:
+	case br::ResourceType::GPU:
 		if (!gpu)  {
 			logger->Warn("(PM) No power manager available for GPU(s)");
 			return 4;

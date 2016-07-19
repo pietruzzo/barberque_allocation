@@ -60,7 +60,7 @@ float SchedContribManager::sc_weights_norm[SC_COUNT] = {0};
 uint16_t SchedContribManager::sc_weights[SC_COUNT]   = {0};
 uint16_t
 	SchedContribManager::sc_cfg_params[
-		SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT] = {0};
+		SchedContrib::SC_CONFIG_COUNT * R_TYPE_COUNT] = {0};
 
 
 /*****************************************************************************
@@ -179,7 +179,7 @@ SchedContribPtr_t SchedContribManager::GetContrib(Type_t sc_type) {
 void SchedContribManager::SetViewInfo(System * sv, br::RViewToken_t vtok) {
 	std::map<Type_t, SchedContribPtr_t>::iterator sc_it;
 
-	// For each SchedContrib set the resource view information 
+	// For each SchedContrib set the resource view information
 	for (sc_it = sc_objs_reqs.begin(); sc_it != sc_objs_reqs.end(); ++sc_it) {
 		SchedContribPtr_t & psc(sc_it->second);
 		psc->SetViewInfo(sv, vtok);
@@ -225,7 +225,7 @@ void SchedContribManager::SetWeights(uint16_t new_weights[SC_COUNT]) {
 
 void SchedContribManager::ParseConfiguration() {
 	char weig_opts[SC_COUNT][40];
-	char conf_opts[SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT][40];
+	char conf_opts[SchedContrib::SC_CONFIG_COUNT * R_TYPE_COUNT][40];
 	uint16_t offset;
 
 	// Load the weights of the metrics contributes
@@ -242,12 +242,13 @@ void SchedContribManager::ParseConfiguration() {
 
 	// Global configuration parameters
 	for (int j = 0; j < SchedContrib::SC_CONFIG_COUNT; ++j) {
-		offset = j * br::ResourceIdentifier::TYPE_COUNT;
+		offset = j * R_TYPE_COUNT;
 		// 1. Maximum saturation levels (MSL)
-		for (int i = 1; i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
+		for (int i = 1; i < R_TYPE_COUNT; ++i) {
+			br::ResourceType r_type = static_cast<br::ResourceType>(i);
 			snprintf(conf_opts[i+offset], 30, SC_CONF_BASE_STR"%s.%s",
 					SchedContrib::ConfigParamsStr[j],
-					br::ResourceIdentifier::TypeStr[i]);
+					br::GetResourceTypeString(r_type));
 			opts_desc.add_options()
 				(conf_opts[i+offset],
 				 po::value<uint16_t>
@@ -261,8 +262,8 @@ void SchedContribManager::ParseConfiguration() {
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	// MSL boundaries enforcement (0 <= MSL <= 100)
-	for (int i = 1; i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
-		offset = SchedContrib::SC_MSL * br::ResourceIdentifier::TYPE_COUNT;
+	for (int i = 1; i < R_TYPE_COUNT; ++i) {
+		offset = SchedContrib::SC_MSL * R_TYPE_COUNT;
 		logger->Debug("%s: %d",	conf_opts[i+offset],sc_cfg_params[i+offset]);
 		if (sc_cfg_params[i] > 100) {
 			logger->Warn("'%s' out of range [0,100]: found %d. Setting to %d",

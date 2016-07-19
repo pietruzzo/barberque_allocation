@@ -100,7 +100,7 @@ public:
 		/** Candidate cluster for resource binding */
 		BBQUE_RID_TYPE bind_id;
 		/** Type of resource for the candidate binding */
-		br::ResourceIdentifier::Type_t bind_type;
+		br::ResourceType bind_type;
 		/**
 		 * A number through which reference the current scheduling binding
 		 * in the set stored in the AWM descriptor */
@@ -122,7 +122,7 @@ public:
 			if ((bind_id != R_ID_NONE) && (bind_id != R_ID_ANY))
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B:%s%d}",
 						papp->StrId(), awm_id,
-						br::ResourceIdentifier::TypeStr[bind_type],
+						br::GetResourceTypeString(bind_type),
 						bind_id);
 			else
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B: -}",
@@ -136,7 +136,7 @@ public:
 		}
 
 		/** Set the binding ID to track */
-		inline void SetBindingID(BBQUE_RID_TYPE bid, br::Resource::Type_t btype) {
+		inline void SetBindingID(BBQUE_RID_TYPE bid, br::ResourceType btype) {
 			bind_id = bid;
 			bind_type = btype;
 			_BuildStr();
@@ -147,7 +147,7 @@ public:
 		 * previous one (given the type of resource referenced by the such
 		 * domain)
 		 */
-		inline bool IsMigrating(br::Resource::Type_t r_type) const {
+		inline bool IsMigrating(br::ResourceType r_type) const {
 			return (papp->CurrentAWM() &&
 					!(papp->CurrentAWM()->BindingSet(r_type).Test(bind_id)));
 		}

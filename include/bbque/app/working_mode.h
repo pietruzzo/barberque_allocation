@@ -18,7 +18,7 @@
 #ifndef BBQUE_WORKING_MODE_H_
 #define BBQUE_WORKING_MODE_H_
 
-#include <vector>
+#include <map>
 
 #include "bbque/app/working_mode_conf.h"
 #include "bbque/res/bitset.h"
@@ -287,16 +287,19 @@ public:
 	 * @see WorkingModeConfIF
 	 */
 	size_t BindResource(
-			br::ResourceIdentifier::Type_t r_type,
+			br::ResourceType r_type,
 			BBQUE_RID_TYPE src_ID,
 			BBQUE_RID_TYPE dst_ID,
 			size_t b_refn = 0,
-			br::ResourceIdentifier::Type_t filter_rtype =
-				br::ResourceIdentifier::UNDEFINED,
+			br::ResourceType filter_rtype =
+				br::ResourceType::UNDEFINED,
 			br::ResourceBitset * filter_mask = nullptr);
 
-	std::string BindingStr(	br::ResourceIdentifier::Type_t r_type,
-			BBQUE_RID_TYPE src_ID, BBQUE_RID_TYPE dst_ID, size_t b_refn);
+	std::string BindingStr(
+			br::ResourceType r_type,
+			BBQUE_RID_TYPE src_ID,
+			BBQUE_RID_TYPE dst_ID,
+			size_t b_refn);
 
 
 	/**
@@ -367,17 +370,17 @@ public:
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	br::ResourceBitset BindingSet(br::ResourceIdentifier::Type_t r_type) const;
+	br::ResourceBitset BindingSet(const br::ResourceType & r_type) const;
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	br::ResourceBitset BindingSetPrev(br::ResourceIdentifier::Type_t r_type) const;
+	br::ResourceBitset BindingSetPrev(const br::ResourceType & r_type) const;
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	bool BindingChanged(br::ResourceIdentifier::Type_t r_type) const;
+	bool BindingChanged(const br::ResourceType & r_type) const;
 
 	/**
 	 * @brief Increment the scheduling counter
@@ -450,12 +453,55 @@ public:
 private:
 
 	/**
-	 * @struct BindingInfo
+	 * @class BindingInfo
 	 *
 	 * Store binding information, i.e., on which system resources IDs the
 	 * resource (type) has been bound by the scheduling policy
 	 */
-	struct BindingInfo {
+	class BindingInfo {
+	public:
+		BindingInfo() { changed = false; }
+		virtual ~BindingInfo() {};
+
+		/**
+		 * @brief Set current resource binding set
+		 */
+		inline void SetCurrentSet(br::ResourceBitset const & _curr) {
+			prev = curr;
+			curr = _curr;
+			changed = curr != prev;
+		}
+
+		/**
+		 * @brief Restore the previous resource binding set
+		 */
+		inline void RestorePreviousSet() {
+			curr = prev;
+			changed = false;
+		}
+
+		/**
+		 * @brief Get the current resource binding set
+		 */
+		inline br::ResourceBitset CurrentSet() const {
+			return curr;
+		}
+
+		/**
+		 * @brief Get the previous resource binding set
+		 */
+		inline br::ResourceBitset PreviousSet() const {
+			return prev;
+		}
+
+		/**
+		 * @brief Check if the binding set has changed
+		 */
+		inline bool IsChanged() const {
+			return changed;
+		}
+
+	private:
 		/** Save the previous set of clusters bound */
 		br::ResourceBitset prev;
 		/** The current set of clusters bound */
@@ -564,7 +610,7 @@ private:
 		/**
 		 *Info regarding bindings per resource
 		 */
-		std::vector<BindingInfo> binding_masks;
+		std::map<br::ResourceType, BindingInfo> binding_masks;
 
 	} resources;
 

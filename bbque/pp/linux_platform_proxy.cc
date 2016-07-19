@@ -213,7 +213,7 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres, bool excl) 
 
 	// Get the set of assigned (bound) computing nodes (e.g., CPUs)
 	br::ResourceBitset nodes(
-	        br::ResourceBinder::GetMask(pres, br::Resource::CPU));
+	        br::ResourceBinder::GetMask(pres, br::ResourceType::CPU));
 	BBQUE_RID_TYPE node_id = nodes.FirstSet();
 	if (node_id < 0) {
 		logger->Fatal("PLAT LNX: Missing binding to nodes/CPUs");
@@ -254,8 +254,8 @@ LinuxPlatformProxy::GetResourceMapping(
 	// CPU core set
 	br::ResourceBitset core_ids(
 	        br::ResourceBinder::GetMask(pum,
-	br::Resource::PROC_ELEMENT,
-	br::Resource::CPU, node_id, papp, rvt));
+	br::ResourceType::PROC_ELEMENT,
+	br::ResourceType::CPU, node_id, papp, rvt));
 	if (strlen(prlb->cpus) > 0)
 		strcat(prlb->cpus, ",");
 	strncat(prlb->cpus, + core_ids.ToStringCG().c_str(), 3*MaxCpusCount);
@@ -264,8 +264,8 @@ LinuxPlatformProxy::GetResourceMapping(
 	// Memory nodes
 	br::ResourceBitset mem_ids(
 	        br::ResourceBinder::GetMask(pum,
-	br::Resource::PROC_ELEMENT,
-	br::Resource::MEMORY, node_id, papp, rvt));
+	br::ResourceType::PROC_ELEMENT,
+	br::ResourceType::MEMORY, node_id, papp, rvt));
 	if (mem_ids.Count() == 0)
 		strncpy(prlb->mems, "0", 1);
 	else
@@ -276,7 +276,7 @@ LinuxPlatformProxy::GetResourceMapping(
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 	prlb->amount_cpus += ra.GetUsageAmount(
 	        pum, papp, rvt,
-	        br::Resource::PROC_ELEMENT, br::Resource::CPU, node_id);
+	        br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU, node_id);
 #else
 	prlb->amount_cpus = -1;
 #endif
@@ -287,7 +287,7 @@ LinuxPlatformProxy::GetResourceMapping(
 	prlb->amount_memb = -1;
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	uint64_t memb = ra.GetUsageAmount(
-	        pum, papp, rvt, br::Resource::MEMORY, br::Resource::CPU);
+	        pum, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
 	if (memb > 0)
 		prlb->amount_memb = memb;
 #endif

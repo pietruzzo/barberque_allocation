@@ -157,14 +157,14 @@ int AMDPowerManager::GetAdapterId(br::ResourcePathPtr_t const & rp) const {
 		return -1;
 	}
 
-	it = adapters_map.find(rp->GetID(br::ResourceIdentifier::GPU));
+	it = adapters_map.find(rp->GetID(br::ResourceType::GPU));
 	if (it == adapters_map.end()) {
 		logger->Error("ADL: Missing GPU id=%d",
-			rp->GetID(br::ResourceIdentifier::GPU));
+			rp->GetID(br::ResourceType::GPU));
 		return -2;
 	}
 	logger->Debug("ADL: GPU %d = Adapter %d",
-		rp->GetID(br::ResourceIdentifier::GPU), it->second);
+		rp->GetID(br::ResourceType::GPU), it->second);
 	return it->second;
 }
 
@@ -265,7 +265,7 @@ AMDPowerManager::GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t &cels
 PowerManager::PMResult
 AMDPowerManager::GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t &khz) {
 	PMResult pm_result;
-	br::ResourceIdentifier::Type_t r_type = rp->Type();
+	br::ResourceType r_type = rp->Type();
 	khz = 0;
 
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
@@ -276,9 +276,9 @@ AMDPowerManager::GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t &k
 		return pm_result;
 	}
 
-	if (r_type == br::ResourceIdentifier::PROC_ELEMENT)
+	if (r_type == br::ResourceType::PROC_ELEMENT)
 		khz = activity_map[adapter_id]->iEngineClock * 10;
-	else if (r_type == br::ResourceIdentifier::MEMORY)
+	else if (r_type == br::ResourceType::MEMORY)
 		khz = activity_map[adapter_id]->iMemoryClock * 10;
 	else {
 		logger->Warn("ADL: Invalid resource path [%s]", rp->ToString().c_str());
@@ -296,7 +296,7 @@ AMDPowerManager::GetClockFrequencyInfo(
 		uint32_t &khz_max,
 		uint32_t &khz_step) {
 	khz_min = khz_max = khz_step = 0;
-	br::ResourceIdentifier::Type_t r_type = rp->Type();
+	br::ResourceType r_type = rp->Type();
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 
 	if (!od_ready) {
@@ -304,12 +304,12 @@ AMDPowerManager::GetClockFrequencyInfo(
 		return PMResult::ERR_NOT_INITIALIZED;
 	}
 
-	if (r_type == br::ResourceIdentifier::PROC_ELEMENT) {
+	if (r_type == br::ResourceType::PROC_ELEMENT) {
 		khz_min  = od_params_map[adapter_id].sEngineClock.iMin * 10;
 		khz_max  = od_params_map[adapter_id].sEngineClock.iMax * 10;
 		khz_step = od_params_map[adapter_id].sEngineClock.iStep * 10;
 	}
-	else if (r_type == br::ResourceIdentifier::MEMORY) {
+	else if (r_type == br::ResourceType::MEMORY) {
 		khz_min  = od_params_map[adapter_id].sMemoryClock.iMin * 10;
 		khz_max  = od_params_map[adapter_id].sMemoryClock.iMax * 10;
 		khz_step = od_params_map[adapter_id].sMemoryClock.iStep * 10;
@@ -345,7 +345,7 @@ AMDPowerManager::GetVoltageInfo(
 		uint32_t &mvolt_min,
 		uint32_t &mvolt_max,
 		uint32_t &mvolt_step) {
-	br::ResourceIdentifier::Type_t r_type = rp->Type();
+	br::ResourceType r_type = rp->Type();
 	GET_PLATFORM_ADAPTER_ID(rp, adapter_id);
 
 	if (!od_ready) {
@@ -353,7 +353,7 @@ AMDPowerManager::GetVoltageInfo(
 		return PMResult::ERR_NOT_INITIALIZED;
 	}
 
-	if (r_type != br::ResourceIdentifier::PROC_ELEMENT) {
+	if (r_type != br::ResourceType::PROC_ELEMENT) {
 		logger->Error("ADL: Not a processing resource!");
 		return PMResult::ERR_RSRC_INVALID_PATH;
 	}

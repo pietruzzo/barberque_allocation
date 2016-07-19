@@ -805,10 +805,10 @@ inline void BuildStateStr(AppPtr_t papp, char * state_str) {
 
 
 #define GET_OBJ_RESOURCE(awm, r_type, r_bset) \
-	r_type = br::ResourceIdentifier::GPU; \
+	r_type = br::ResourceType::GPU; \
 	r_bset = awm->BindingSet(r_type); \
 	if (r_bset.Count() == 0) { \
-		r_type = br::ResourceIdentifier::CPU; \
+		r_type = br::ResourceType::CPU; \
 		r_bset = awm->BindingSet(r_type); \
 	}
 
@@ -822,7 +822,7 @@ void ApplicationManager::PrintStatusReport(bool verbose) {
 	char curr_awm_set[15]  = "";
 	char next_awm_set[15]  = "";
 	char curr_awm_name[12] = "";
-	br::ResourceIdentifier::Type_t r_type;
+	br::ResourceType r_type;
 	br::ResourceBitset r_bset;
 
 	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV1);
@@ -844,8 +844,8 @@ void ApplicationManager::PrintStatusReport(bool verbose) {
 			GET_OBJ_RESOURCE(awm, r_type, r_bset);
 			// MIGRATE case => must see previous set of the same AWM
 			if ((awm == next_awm) &&
-				((awm->BindingChanged(br::ResourceIdentifier::GPU)) ||
-					(awm->BindingChanged(br::ResourceIdentifier::CPU)))) {
+				((awm->BindingChanged(br::ResourceType::GPU)) ||
+					(awm->BindingChanged(br::ResourceType::CPU)))) {
 				r_bset = awm->BindingSetPrev(r_type);
 			}
 			else {
@@ -854,7 +854,7 @@ void ApplicationManager::PrintStatusReport(bool verbose) {
 
 			// Binding string
 			snprintf(binding_str, sizeof(binding_str), "%s{%s}",
-					br::ResourceIdentifier::TypeStr[r_type],
+					br::GetResourceTypeString(r_type),
 					r_bset.ToStringCG().c_str());
 			snprintf(curr_awm_set,  sizeof(curr_awm_set), "%02d:%s",
 					awm->Id(), binding_str);
@@ -866,7 +866,7 @@ void ApplicationManager::PrintStatusReport(bool verbose) {
 		if (next_awm) {
 			GET_OBJ_RESOURCE(next_awm, r_type, r_bset);
 			snprintf(binding_str, sizeof(binding_str), "%s{%s}",
-					br::ResourceIdentifier::TypeStr[r_type],
+					br::GetResourceTypeString(r_type),
 					r_bset.ToStringCG().c_str());
 			snprintf(next_awm_set, 12, "%02d:%s", next_awm->Id(), binding_str);
 		}

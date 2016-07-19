@@ -259,8 +259,8 @@ public:
 	 *
 	 * @return The used amount of resource
 	 */
-	virtual uint64_t Used(br::ResourcePtrList_t & rsrc_list, br::RViewToken_t vtok = 0)
-		const = 0;
+	virtual uint64_t Used(
+		br::ResourcePtrList_t & rsrc_list, br::RViewToken_t vtok = 0) const = 0;
 
 	/**
 	 * @brief Count of resources referenced by the given path
@@ -283,7 +283,7 @@ public:
 	 *
 	 * @return How many resources of a type have been registered
 	 */
-	virtual uint16_t CountPerType(br::ResourceIdentifier::Type_t type) const = 0;
+	virtual uint16_t CountPerType(br::ResourceType type) const = 0;
 
 	/**
 	 * @brief The number of resource types
@@ -297,7 +297,7 @@ public:
 	 *
 	 * @return A list filled of resource types
 	 */
-	virtual std::list<br::Resource::Type_t> GetTypesList() const = 0;
+	virtual std::list<br::ResourceType> GetTypesList() const = 0;
 
 	/**
 	 * @brief Get a resource descriptor

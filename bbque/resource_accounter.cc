@@ -105,7 +105,7 @@ void ResourceAccounter::InitBindingOptions() {
 	size_t beg_pos = 0;
 	std::string domains;
 	std::string binding_str;
-	br::Resource::Type_t binding_type;
+	br::ResourceType binding_type;
 
 	// Binding domain resource path
 	po::options_description opts_desc("Resource Accounter parameters");
@@ -130,8 +130,7 @@ void ResourceAccounter::InitBindingOptions() {
 
 		// Binding domain resource type check
 		binding_type = binding_rp->Type();
-		if (binding_type == br::Resource::UNDEFINED ||
-				binding_type == br::Resource::TYPE_COUNT) {
+		if (binding_type == br::ResourceType::UNDEFINED) {
 			logger->Error("Binding: Invalid domain type <%s>",
 					binding_str.c_str());
 			beg_pos = end_pos + 1;
@@ -139,7 +138,7 @@ void ResourceAccounter::InitBindingOptions() {
 		}
 
 #ifndef CONFIG_BBQUE_OPENCL
-		if (binding_type == br::Resource::GPU) {
+		if (binding_type == br::ResourceType::GPU) {
 			logger->Warn("Binding: OpenCL support disabled."
 					" Discarding <GPU> binding type");
 			continue;
@@ -152,7 +151,7 @@ void ResourceAccounter::InitBindingOptions() {
 		binding_options[binding_type]->d_path = binding_rp;
 		logger->Info("Resource binding domain: '%s' Type:<%s>",
 				binding_options[binding_type]->d_path->ToString().c_str(),
-				br::ResourceIdentifier::TypeStr[binding_type]);
+				br::GetResourceTypeString(binding_type));
 
 		// Next binding domain...
 		beg_pos  = end_pos + 1;
@@ -495,8 +494,8 @@ inline uint16_t ResourceAccounter::Count(
 }
 
 inline uint16_t ResourceAccounter::CountPerType(
-		br::ResourceIdentifier::Type_t type) const {
-	std::map<br::Resource::Type_t, uint16_t>::const_iterator it;
+		br::ResourceType type) const {
+	std::map<br::ResourceType, uint16_t>::const_iterator it;
 	it =  r_count.find(type);
 	if (it == r_count.end())
 		return 0;
@@ -545,8 +544,8 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		br::UsagesMapPtr_t const & pum,
 		ba::AppSPtr_t papp,
 		br::RViewToken_t vtok,
-		br::ResourceIdentifier::Type_t r_type,
-		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResourceType r_type,
+		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id) const {
 
 	if (pum == nullptr) {
@@ -564,8 +563,8 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		br::UsagesMap_t const & um,
 		ba::AppSPtr_t papp,
 		br::RViewToken_t vtok,
-		br::ResourceIdentifier::Type_t r_type,
-		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResourceType r_type,
+		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id) const {
 
 	br::UsagesMap_t::const_iterator b_it(um.begin());
@@ -577,8 +576,8 @@ uint64_t ResourceAccounter::GetUsageAmount(
 inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		br::UsagesMap_t::const_iterator & begin,
 		br::UsagesMap_t::const_iterator & end,
-		br::ResourceIdentifier::Type_t r_type,
-		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResourceType r_type,
+		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id,
 		ba::AppSPtr_t papp,
 		br::RViewToken_t vtok) const {
@@ -591,10 +590,10 @@ inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		br::UsagePtr_t const & pusage((*uit).second);
 
 		logger->Debug("GetUsageAmount: type:<%-3s> scope:<%-3s>",
-			br::ResourceIdentifier::TypeStr[r_type],
-			br::ResourceIdentifier::TypeStr[r_scope_type]);
+			br::GetResourceTypeString(r_type),
+			br::GetResourceTypeString(r_scope_type));
 		// Scope resource type
-		if ((r_scope_type != br::Resource::UNDEFINED)
+		if ((r_scope_type != br::ResourceType::UNDEFINED)
 			&& (ppath->GetIdentifier(r_scope_type) == nullptr))
 			continue;
 		for (br::ResourcePtr_t const & rsrc: pusage->GetResourcesList()) {
@@ -610,14 +609,14 @@ inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 		}
 	}
 	logger->Debug("GetUsageAmount: EXC:[%s] R:<%-3s> U:%" PRIu64 "",
-			papp->StrId(), br::ResourceIdentifier::TypeStr[r_type], amount);
+			papp->StrId(), br::GetResourceTypeString(r_type), amount);
 	return amount;
 }
 
 uint64_t ResourceAccounter::GetUsageAmount(
 		br::UsagesMap_t const & um,
-		br::ResourceIdentifier::Type_t r_type,
-		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResourceType r_type,
+		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id) const {
 	uint64_t amount = 0;
 	for (auto & ru_entry: um) {
@@ -625,10 +624,10 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		br::UsagePtr_t const & pusage(ru_entry.second);
 
 		logger->Debug("GetUsageAmount: type:<%-3s> scope:<%-3s>",
-			br::ResourceIdentifier::TypeStr[r_type],
-			br::ResourceIdentifier::TypeStr[r_scope_type]);
+			br::GetResourceTypeString(r_type),
+			br::GetResourceTypeString(r_scope_type));
 		// Scope resource type
-		if ((r_scope_type != br::Resource::UNDEFINED)
+		if ((r_scope_type != br::ResourceType::UNDEFINED)
 			&& (ppath->GetIdentifier(r_scope_type) == nullptr))
 			continue;
 		// Scope resource ID
@@ -734,9 +733,9 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 	path_max_len = std::max((int) path_max_len, (int) strpath.length());
 
 	// Track the number of resources per type
-	br::ResourceIdentifier::Type_t type = ppath->Type();
+	br::ResourceType type = ppath->Type();
 	if (r_count.find(type) == r_count.end()) {
-		r_count.insert(std::pair<br::Resource::Type_t, uint16_t>(type, 1));
+		r_count.insert(std::pair<br::ResourceType, uint16_t>(type, 1));
 		r_types.push_back(type);
 	}
 	else

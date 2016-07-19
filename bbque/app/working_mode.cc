@@ -38,8 +38,6 @@ namespace bbque { namespace app {
 
 WorkingMode::WorkingMode():
 	hidden(false) {
-	resources.binding_masks.resize(
-		static_cast<uint16_t>(br::ResourceIdentifier::TYPE_COUNT));
 	// Set the log string id
 	strncpy(str_id, "", 12);
 }
@@ -57,9 +55,6 @@ WorkingMode::WorkingMode(
 
 	// Value must be positive
 	_value > 0 ? value.recipe = _value : value.recipe = 0;
-
-	// Init the size of the scheduling bindings vector
-	resources.binding_masks.resize(br::ResourceIdentifier::TYPE_COUNT);
 
 	// Set the log string id
 	snprintf(str_id, 22, "{id=%02d, n=%-9s}", id, name.c_str());
@@ -176,11 +171,11 @@ uint64_t WorkingMode::ResourceUsageAmount(
 }
 
 size_t WorkingMode::BindResource(
-		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceType r_type,
 		BBQUE_RID_TYPE src_ID,
 		BBQUE_RID_TYPE dst_ID,
 		size_t b_refn,
-		br::ResourceIdentifier::Type_t filter_rtype,
+		br::ResourceType filter_rtype,
 		br::ResourceBitset * filter_mask) {
 	br::UsagesMap_t * src_pum;
 	uint32_t b_count;
@@ -218,18 +213,18 @@ size_t WorkingMode::BindResource(
 	n_refn = std::hash<std::string>()(BindingStr(r_type, src_ID, dst_ID, b_refn));
 	resources.sched_bindings[n_refn] = bind_pum;
 	logger->Debug("BindResource: %s R{%-3s} refn[%ld] size:%d count:%d",
-			str_id, br::ResourceIdentifier::StringFromType(r_type),
+			str_id, br::GetResourceTypeString(r_type),
 			n_refn, bind_pum->size(), b_count);
 	return n_refn;
 }
 
 std::string WorkingMode::BindingStr(
-		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceType r_type,
 		BBQUE_RID_TYPE src_ID,
 		BBQUE_RID_TYPE dst_ID,
 		size_t b_refn) {
 	char tail_str[40];
-	std::string str(br::ResourceIdentifier::TypeStr[r_type]);
+	std::string str(br::GetResourceTypeString(r_type));
 	snprintf(tail_str, 40, ",%d,%d,%ld", src_ID, dst_ID, b_refn);
 	str.append(tail_str);
 	logger->Debug("BindingStr: %s", str.c_str());
@@ -272,78 +267,81 @@ void WorkingMode::UpdateBindingInfo(
 		br::RViewToken_t vtok,
 		bool update_changed) {
 	br::ResourceBitset new_mask;
-	uint8_t r_type;
 	logger->Debug("UpdateBinding: mask update required (%s)",
 			update_changed ? "Y" : "N");
 
 	// Update the resource binding bitmask (for each type)
-	for (r_type = br::ResourceIdentifier::SYSTEM;
-			r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
-		BindingInfo & bi(resources.binding_masks[r_type]);
-
-		if (r_type == br::ResourceIdentifier::PROC_ELEMENT ||
-			r_type == br::ResourceIdentifier::MEMORY) {
+	for (int r_type_index = 0; r_type_index < R_TYPE_COUNT; ++r_type_index) {
+		br::ResourceType r_type = static_cast<br::ResourceType>(r_type_index);
+		if (r_type == br::ResourceType::PROC_ELEMENT ||
+			r_type == br::ResourceType::MEMORY) {
 			logger->Debug("UpdateBinding: %s R{%-3s} is terminal",
-					str_id, br::ResourceIdentifier::TypeStr[r_type]);
+					str_id, br::GetResourceTypeString(r_type));
 			// 'Deep' get bit-mask in this case
 			new_mask = br::ResourceBinder::GetMask(
 				resources.sched_bindings[resources.sync_refn],
-				static_cast<br::ResourceIdentifier::Type_t>(r_type),
-				br::ResourceIdentifier::CPU,
+				static_cast<br::ResourceType>(r_type),
+				br::ResourceType::CPU,
 				R_ID_ANY, owner, vtok);
 		}
 		else {
 			new_mask = br::ResourceBinder::GetMask(
 				resources.sched_bindings[resources.sync_refn],
-				static_cast<br::ResourceIdentifier::Type_t>(r_type));
+				static_cast<br::ResourceType>(r_type));
 		}
 		logger->Debug("UpdateBinding: %s R{%-3s}: %s",
-				str_id, br::ResourceIdentifier::TypeStr[r_type],
+				str_id, br::GetResourceTypeString(r_type),
 				new_mask.ToStringCG().c_str());
 
-		// Check if the bit-masks have changed only if required
-		if (!update_changed) {
+		// Update current/previous bitset changes only if required
+		if (!update_changed || new_mask.Count() == 0) {
 			logger->Debug("UpdateBinding: %s R{%-3s} mask update skipped",
-				str_id, br::ResourceIdentifier::TypeStr[r_type]);
+				str_id, br::GetResourceTypeString(r_type));
 			continue;
 		}
-
-		// Update previous/current bit-masks
-		if (new_mask.Count() == 0) continue;
-		bi.prev = bi.curr;
-		bi.curr = new_mask;
-
-		// Set the flag if changed and print a log message
-		bi.changed = bi.prev != new_mask;
+		BindingInfo & bi(resources.binding_masks[r_type]);
+		bi.SetCurrentSet(new_mask);
 		logger->Debug("UpdateBinding: %s R{%-3s} changed? (%d)",
-				str_id, br::ResourceIdentifier::TypeStr[r_type],
-				bi.changed);
+				str_id, br::GetResourceTypeString(r_type),
+				bi.IsChanged());
+
 	}
 }
 
 void WorkingMode::ClearResourceBinding() {
-	uint8_t r_type = 0;
 	resources.sync_bindings->clear();
-	for (; r_type < br::ResourceIdentifier::TYPE_COUNT; ++r_type) {
-		resources.binding_masks[r_type].curr =
-			resources.binding_masks[r_type].prev;
+	for (int r_type_index = 0; r_type_index < R_TYPE_COUNT; ++r_type_index) {
+		br::ResourceType r_type = static_cast<br::ResourceType>(r_type_index);
+		resources.binding_masks[r_type].RestorePreviousSet();
 	}
 }
 
-br::ResourceBitset WorkingMode::BindingSet(
-		br::ResourceIdentifier::Type_t r_type) const {
-	BindingInfo const & bi(resources.binding_masks[r_type]);
-	return bi.curr;
+br::ResourceBitset
+WorkingMode::BindingSet(const br::ResourceType & r_type) const {
+	std::map<br::ResourceType, BindingInfo>::const_iterator it(
+		resources.binding_masks.find(r_type));
+	br::ResourceBitset empty_set;
+	if (it == resources.binding_masks.end())
+		return empty_set;
+	return it->second.CurrentSet();
 }
 
-br::ResourceBitset WorkingMode::BindingSetPrev(
-		br::ResourceIdentifier::Type_t r_type) const {
-   return resources.binding_masks[r_type].prev;
+br::ResourceBitset
+WorkingMode::BindingSetPrev(const br::ResourceType & r_type) const {
+	std::map<br::ResourceType, BindingInfo>::const_iterator it(
+		resources.binding_masks.find(r_type));
+	br::ResourceBitset empty_set;
+	if (it == resources.binding_masks.end())
+		return empty_set;
+	return it->second.PreviousSet();
 }
 
-bool WorkingMode::BindingChanged(
-		br::ResourceIdentifier::Type_t r_type) const {
-   return resources.binding_masks[r_type].changed;
+bool WorkingMode::BindingChanged(const br::ResourceType & r_type) const {
+	std::map<br::ResourceType, BindingInfo>::const_iterator it(
+		resources.binding_masks.find(r_type));
+	if (it == resources.binding_masks.end())
+		return false;
+	return it->second.IsChanged();
 }
 
 } // namespace app

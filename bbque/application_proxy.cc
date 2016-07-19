@@ -388,20 +388,20 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 		// CPUs (processors)
 		local_sys_msg.nr_cpus =
-			papp->NextAWM()->BindingSet(br::Resource::CPU).Count();
+			papp->NextAWM()->BindingSet(br::ResourceType::CPU).Count();
 		// Processing elements (number of)
 		local_sys_msg.nr_procs =
-			papp->NextAWM()->BindingSet(br::Resource::PROC_ELEMENT).Count();
+			papp->NextAWM()->BindingSet(br::ResourceType::PROC_ELEMENT).Count();
 		// Processing elements (quota)
 		local_sys_msg.r_proc = ra.GetUsageAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
-			br::ResourceIdentifier::PROC_ELEMENT);
+			br::ResourceType::PROC_ELEMENT);
 		// Memory amount
 		local_sys_msg.r_mem = ra.GetUsageAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
-			br::ResourceIdentifier::MEMORY);
+			br::ResourceType::MEMORY);
 #else
 		logger->Warn("APPs PRX: TPD enabled. No resource assignment enforcing");
 #endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
@@ -415,13 +415,13 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 			ra.GetScheduledView());
 
 #ifdef CONFIG_BBQUE_OPENCL
-		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(br::Resource::GPU));
+		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(br::ResourceType::GPU));
 		BBQUE_RID_TYPE r_id = gpu_ids.FirstSet();
 
 		// If no GPU have been bound, the CPU is the OpenCL device assigned
 		if (r_id == R_ID_NONE) {
 			OpenCLPlatformProxy * ocl_proxy(OpenCLPlatformProxy::GetInstance());
-			VectorUInt8Ptr_t pdev_ids(ocl_proxy->GetDeviceIDs(br::Resource::CPU));
+			VectorUInt8Ptr_t pdev_ids(ocl_proxy->GetDeviceIDs(br::ResourceType::CPU));
 			r_id  = pdev_ids->at(0);
 		}
 

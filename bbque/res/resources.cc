@@ -29,7 +29,7 @@ namespace bbque { namespace res {
  *****************************************************************************/
 
 Resource::Resource(std::string const & res_path, uint64_t tot):
-	br::ResourceIdentifier(UNDEFINED, 0),
+	br::ResourceIdentifier(br::ResourceType::UNDEFINED, 0),
 	total(tot),
 	reserved(0),
 	offline(false) {
@@ -46,7 +46,7 @@ Resource::Resource(std::string const & res_path, uint64_t tot):
 	InitProfilingInfo();
 }
 
-Resource::Resource(br::ResourceIdentifier::Type_t type, BBQUE_RID_TYPE id, uint64_t tot):
+Resource::Resource(br::ResourceType type, BBQUE_RID_TYPE id, uint64_t tot):
 	br::ResourceIdentifier(type, id),
 	total(tot),
 	reserved(0),

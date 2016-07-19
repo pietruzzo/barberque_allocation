@@ -117,7 +117,7 @@ private:
 	typedef std::shared_ptr<DeviceQueueMap_t> DeviceQueueMapPtr_t;
 
 	/** Set of device queues for device type (e.g., CPU, GPU,..) */
-	typedef std::map<br::ResourceIdentifier::Type_t, DeviceQueueMapPtr_t> DeviceTypeQueueMap_t;
+	typedef std::map<br::ResourceType, DeviceQueueMapPtr_t> DeviceTypeQueueMap_t;
 
 
 	/** Configuration manager instance */
@@ -218,7 +218,7 @@ private:
 	 */
 	ExitCode_t Enqueue(
 		SchedEntityPtr_t psched,
-		br::ResourceIdentifier::Type_t dev_type);
+		br::ResourceType dev_type);
 
 	/**
 	 * @brief Compute the metrics used for the ordering of the scheduling
@@ -239,7 +239,7 @@ private:
 	 */
 	DeviceQueuePtr_t SelectDeviceQueue(
 		SchedEntityPtr_t psched,
-		br::ResourceIdentifier::Type_t dev_type);
+		br::ResourceType dev_type);
 
 	/**
 	 * @brief Bind the resource path of the AWM, coming from the recipe

@@ -305,7 +305,7 @@ void YamcaSchedPol::SelectWorkingModes(SchedEntityMap_t & sched_map) {
 		logger->Info("Selecting: [%s] set to AWM{%d} on clusters map [%s]",
 					papp->StrId(),
 					new_awm->Id(),
-					new_awm->BindingSet(br::Resource::CPU).ToString().c_str());
+					new_awm->BindingSet(br::ResourceType::CPU).ToString().c_str());
 	}
 }
 
@@ -503,7 +503,7 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::GetContentionLevel(
 	// Binding of the resources requested by the working mode into the current
 	// cluster. Note: No multi-cluster allocation supported yet!
 	logger->Debug("Contention level: Binding into cluster %d", cl_id);
-	refn = wm->BindResource(br::Resource::CPU, R_ID_ANY, cl_id, cl_id);
+	refn = wm->BindResource(br::ResourceType::CPU, R_ID_ANY, cl_id, cl_id);
 	if (refn == 0)
 		logger->Error("Contention level: {AWM %d} [cluster = %d]"
 				"Incomplete resources binding. %d / %d resources bound.",

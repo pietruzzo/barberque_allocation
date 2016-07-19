@@ -210,7 +210,7 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF::CountPerType()
 	 */
-	inline uint16_t ResourceCountPerType(br::Resource::Type_t type) const {
+	inline uint16_t ResourceCountPerType(br::ResourceType type) const {
 		return ra.CountPerType(type);
 	}
 
@@ -224,7 +224,7 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF::ResourceTypesList()
 	 */
-	inline std::list<br::Resource::Type_t> ResourceTypesList() const {
+	inline std::list<br::ResourceType> ResourceTypesList() const {
 		return ra.GetTypesList();
 	}
 

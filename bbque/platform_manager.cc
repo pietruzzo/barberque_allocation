@@ -274,7 +274,8 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	//       even if they do not still manage the application.
 
 	// Get the set of assigned (bound) Systems
-	br::ResourceBitset systems(br::ResourceBinder::GetMask(pres, br::Resource::SYSTEM));
+	br::ResourceBitset systems(br::ResourceBinder::GetMask(
+			pres, br::ResourceType::SYSTEM));
 	logger->Debug("Mapping: Resources binding includes %d systems", systems.Count());
 
 	bool is_local  = false;

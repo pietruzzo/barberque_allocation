@@ -130,16 +130,16 @@ ClovesSchedPol::ExitCode_t ClovesSchedPol::InitDeviceQueues() {
 	// (i.e., OpenCL device type (CPU, GPU,...))
 	BindingMap_t & bindings(ra.GetBindingOptions());
 	for (auto & bd_entry: bindings) {
-		br::Resource::Type_t  bd_type = bd_entry.first;
+		br::ResourceType  bd_type = bd_entry.first;
 		BindingInfo_t const & bd_info(*(bd_entry.second));
 
 		// Device map
 		DeviceQueueMapPtr_t pdev_queue_map = DeviceQueueMapPtr_t(new DeviceQueueMap_t());
 		queues.insert(
-			std::pair<br::ResourceIdentifier::Type_t, DeviceQueueMapPtr_t>(
+			std::pair<br::ResourceType, DeviceQueueMapPtr_t>(
 				bd_type, pdev_queue_map));
 		logger->Debug("Init: adding queues for device type '%s'",
-			br::ResourceIdentifier::TypeStr[bd_type]);
+			br::GetResourceTypeString(bd_type));
 
 		// Fill the map with device queues
 		CreateDeviceQueues(pdev_queue_map, bd_info);
@@ -233,7 +233,7 @@ ClovesSchedPol::SchedulePriority(ba::AppPrio_t prio) {
 
 ClovesSchedPol::ExitCode_t
 ClovesSchedPol::EnqueueIntoDevice(ba::AppCPtr_t papp) {
-	br::ResourceIdentifier::Type_t dev_type = br::Resource::UNDEFINED;
+	br::ResourceType dev_type = br::ResourceType::UNDEFINED;
 	float highest_xm_time_ratio = -1.0;
 	float xm_time_ratio;
 	uint64_t cpu_qt, gpu_qt;
@@ -274,12 +274,12 @@ ClovesSchedPol::EnqueueIntoDevice(ba::AppCPtr_t papp) {
 		// Set device type
 		gpu_qt = ra.GetUsageAmount(
 				pawm->RecipeResourceUsages(), papp, sched_status_view,
-				br::Resource::PROC_ELEMENT, br::Resource::GPU);
+				br::ResourceType::PROC_ELEMENT, br::ResourceType::GPU);
 		cpu_qt = ra.GetUsageAmount(
 				pawm->RecipeResourceUsages(), papp, sched_status_view,
-				br::Resource::PROC_ELEMENT, br::Resource::CPU);
+				br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU);
 
-		gpu_qt > 0 ? dev_type = br::Resource::GPU: dev_type = br::Resource::CPU;
+		gpu_qt > 0 ? dev_type = br::ResourceType::GPU: dev_type = br::ResourceType::CPU;
 		logger->Debug("EnqueueIntoDevice: [%s %s] requiring processing load: "
 				"GPU: %" PRIu64 ", CPU: %" PRIu64 "",
 				papp->StrId(), pawm->StrId(), gpu_qt, cpu_qt);
@@ -297,7 +297,7 @@ ClovesSchedPol::EnqueueIntoDevice(ba::AppCPtr_t papp) {
 ClovesSchedPol::ExitCode_t
 ClovesSchedPol::Enqueue(
 		SchedEntityPtr_t psched,
-		br::ResourceIdentifier::Type_t dev_type) {
+		br::ResourceType dev_type) {
 	ExitCode_t result;
 
 	// Queue ordering metrics
@@ -313,11 +313,11 @@ ClovesSchedPol::Enqueue(
 	// Resource binding
 	result = BindResources(psched);
 	if (result != OK) return result;
-	if (psched->bind_type == br::ResourceIdentifier::GPU) {
+	if (psched->bind_type == br::ResourceType::GPU) {
 		logger->Debug("Enqueue: %s binding host resources on CPU",
 			psched->StrId());
 		size_t b_refn = psched->pawm->BindResource(
-					br::ResourceIdentifier::CPU,
+					br::ResourceType::CPU,
 					R_ID_ANY, R_ID_NONE,
 					psched->bind_refn);
 		psched->bind_refn = b_refn;
@@ -355,7 +355,7 @@ void ClovesSchedPol::ComputeOrderingMetrics(SchedEntityPtr_t psched) {
 ClovesSchedPol::DeviceQueuePtr_t
 ClovesSchedPol::SelectDeviceQueue(
 		SchedEntityPtr_t psched,
-		br::ResourceIdentifier::Type_t dev_type) {
+		br::ResourceType dev_type) {
 	br::ResourcePathPtr_t curr_path;
 	size_t min_qlen = INT_MAX;
 	size_t curr_qlen;
@@ -381,7 +381,7 @@ ClovesSchedPol::SelectDeviceQueue(
 		if (curr_qlen < min_qlen) {
 			min_qlen  = curr_qlen;
 			curr_path = dq_entry.first;
-			if (dev_type == br::Resource::GPU)
+			if (dev_type == br::ResourceType::GPU)
 				psched->SetBindingID(
 					dq_entry.first->GetID(dev_type), dev_type);
 			else

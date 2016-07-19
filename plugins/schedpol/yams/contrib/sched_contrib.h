@@ -363,7 +363,7 @@ protected:
 private:
 
 	 /** Maximum Saturation Levels per resource */
-	 float msl_params[br::ResourceIdentifier::TYPE_COUNT];
+	 float msl_params[R_TYPE_COUNT];
 
 };
 

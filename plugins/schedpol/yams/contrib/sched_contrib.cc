@@ -54,7 +54,7 @@ SchedContrib::SchedContrib(
 	strncat(logpref, name, 4);
 
 	// Array of Maximum Saturation Levels parameters
-	for (int i = 0; i < br::ResourceIdentifier::TYPE_COUNT; ++i)
+	for (int i = 0; i < R_TYPE_COUNT; ++i)
 		msl_params[i] = static_cast<float> (params[i]) / 100.0;
 
 	// Get a logger instance
@@ -93,7 +93,8 @@ void SchedContrib::GetResourceThresholds(
 	rl.total = sv->ResourceTotal(r_path);
 
 	// Get the max saturation level of this type of resource
-	rl.saturate = rl.total * msl_params[r_path->Type()];
+	int r_type_index = static_cast<int>(r_path->Type());
+	rl.saturate = rl.total * msl_params[r_type_index];
 
 	// Resource availability (scheduling resource state view)
 	rl.free  = sv->ResourceAvailable(r_path, vtok);

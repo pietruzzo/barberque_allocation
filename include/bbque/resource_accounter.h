@@ -76,7 +76,7 @@ typedef struct BindingInfo {
 	/** Base resource path object */
 	br::ResourcePathPtr_t d_path;
 	/** Number of managed resource types */
-	std::list<br::Resource::Type_t> r_types;
+	std::list<br::ResourceType> r_types;
 	/** Resource pointer descriptor list */
 	br::ResourcePtrList_t rsrcs;
 	/** The IDs of all the possible bindings */
@@ -88,8 +88,8 @@ typedef struct BindingInfo {
 } BindingInfo_t;
 
 
-typedef std::pair<br::Resource::Type_t, BindingInfo_t *> BindingPair_t;
-typedef std::map<br::Resource::Type_t, BindingInfo_t *> BindingMap_t;
+typedef std::pair<br::ResourceType, BindingInfo_t *> BindingPair_t;
+typedef std::map<br::ResourceType, BindingInfo_t *> BindingMap_t;
 
 /**
  * @brief Resources Accouter
@@ -184,7 +184,7 @@ public:
 	 */
 	uint16_t Count(br::ResourcePathPtr_t ppath) const;
 
-	uint16_t CountPerType(br::ResourceIdentifier::Type_t type) const;
+	uint16_t CountPerType(br::ResourceType type) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -196,7 +196,7 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	inline std::list<br::Resource::Type_t> GetTypesList() const {
+	inline std::list<br::ResourceType> GetTypesList() const {
 		return r_types;
 	}
 
@@ -247,22 +247,22 @@ public:
 	 * @return The amount of resource usage
 	 */
 	uint64_t GetUsageAmount(
-			br::UsagesMapPtr_t const & pum,
-			ba::AppSPtr_t papp,
-			br::RViewToken_t vtok,
-			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type =
-				br::Resource::UNDEFINED,
-			BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
+	        br::UsagesMapPtr_t const & pum,
+	        ba::AppSPtr_t papp,
+	        br::RViewToken_t vtok,
+	        br::ResourceType r_type,
+	        br::ResourceType r_scope_type =
+	                br::ResourceType::UNDEFINED,
+	        BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
 
 	uint64_t GetUsageAmount(
-			br::UsagesMap_t const & um,
-			ba::AppSPtr_t papp,
-			br::RViewToken_t vtok,
-			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type =
-				br::Resource::UNDEFINED,
-			BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
+	        br::UsagesMap_t const & um,
+	        ba::AppSPtr_t papp,
+	        br::RViewToken_t vtok,
+	        br::ResourceType r_type,
+	        br::ResourceType r_scope_type =
+	                br::ResourceType::UNDEFINED,
+	        BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
 
 	/**
 	 * @brief Get the cumulative amount of resource usage
@@ -278,20 +278,20 @@ public:
 	 * @return The amount of resource usage
 	 */
 	inline uint64_t GetUsageAmount(
-			br::UsagesMapPtr_t const & pum,
-			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type =
-				br::Resource::UNDEFINED,
-			BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const {
+	        br::UsagesMapPtr_t const & pum,
+	        br::ResourceType r_type,
+	        br::ResourceType r_scope_type =
+	                br::ResourceType::UNDEFINED,
+	        BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const {
 		return GetUsageAmount(*(pum.get()), r_type, r_scope_type, r_scope_id);
 	}
 
 	uint64_t GetUsageAmount(
-			br::UsagesMap_t const & um,
-			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type =
-				br::Resource::UNDEFINED,
-			BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
+	        br::UsagesMap_t const & um,
+	        br::ResourceType r_type,
+	        br::ResourceType r_scope_type =
+	                br::ResourceType::UNDEFINED,
+	        BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
 
 	/**
 	 * @brief Show the system resources status
@@ -632,10 +632,10 @@ private:
 	std::map<br::ResourcePathPtr_t, uint64_t> r_sliced;
 
 	/** Counter for the total number of registered resources */
-	std::map<br::Resource::Type_t, uint16_t> r_count;
+	std::map<br::ResourceType, uint16_t> r_count;
 
 	/** List that keeps track of the managed resource types */
-	std::list<br::Resource::Type_t> r_types;
+	std::list<br::ResourceType> r_types;
 
 	/** Resource path (pointer) referencing the prefix */
 	br::ResourcePathPtr_t r_prefix_path;
@@ -794,13 +794,13 @@ private:
 	 * @return The amount of resource usage
 	 */
 	uint64_t GetAmountFromUsagesMap(
-			br::UsagesMap_t::const_iterator & begin,
-			br::UsagesMap_t::const_iterator & end,
-			br::ResourceIdentifier::Type_t r_type,
-			br::ResourceIdentifier::Type_t r_scope_type,
-			BBQUE_RID_TYPE r_scope_id,
-			ba::AppSPtr_t papp,
-			br::RViewToken_t vtok) const;
+	        br::UsagesMap_t::const_iterator & begin,
+	        br::UsagesMap_t::const_iterator & end,
+	        br::ResourceType r_type,
+	        br::ResourceType r_scope_type,
+	        BBQUE_RID_TYPE r_scope_id,
+	        ba::AppSPtr_t papp,
+	        br::RViewToken_t vtok) const;
 
 	/**
 	 * @brief Check the resource availability for a whole set

@@ -161,8 +161,8 @@ public:
 	 *
 	 * @return A bitset data structure
 	 */
-	virtual br::ResourceBitset BindingSet(br::ResourceIdentifier::Type_t r_type)
-		const = 0;
+	virtual br::ResourceBitset BindingSet(
+		const br::ResourceType & r_type) const = 0;
 
 	/**
 	 * @brief Get the bitmap of the clusters previously used.
@@ -173,7 +173,7 @@ public:
 	 * @return A bitset data structure
 	 */
 	virtual br::ResourceBitset BindingSetPrev(
-			br::ResourceIdentifier::Type_t r_type) const = 0;
+		const br::ResourceType & r_type) const = 0;
 
 	/**
 	 * @brief Check if clusters used are changed
@@ -185,7 +185,7 @@ public:
 	 *
 	 * @return True if the AWM use a different map of clusters, false otherwise.
 	 */
-	virtual bool BindingChanged(br::ResourceIdentifier::Type_t r_type) const = 0;
+	virtual bool BindingChanged(const br::ResourceType & r_type) const = 0;
 
 };
 

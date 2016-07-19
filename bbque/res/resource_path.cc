@@ -25,7 +25,7 @@
 namespace bbque { namespace res {
 
 ResourcePath::ResourcePath(std::string const & str_path):
-		global_type(br::ResourceIdentifier::UNDEFINED),
+		global_type(br::ResourceType::UNDEFINED),
 		level_count(0) {
 
 	// Get a logger module
@@ -40,7 +40,7 @@ ResourcePath::ResourcePath(std::string const & str_path):
 }
 
 ResourcePath::ResourcePath(ResourcePath const & r_path):
-		global_type(br::ResourceIdentifier::UNDEFINED),
+		global_type(br::ResourceType::UNDEFINED),
 		level_count(0) {
 	// Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
@@ -129,49 +129,41 @@ void ResourcePath::Clear() {
 	identifiers.clear();
 	types_idx.clear();
 	types_bits.reset();
-	global_type = br::ResourceIdentifier::UNDEFINED;
+	global_type = br::ResourceType::UNDEFINED;
 	level_count = 0;
 }
 
 ResourcePath::ExitCode_t ResourcePath::Append(
 		std::string const & r_name,
 		BBQUE_RID_TYPE r_id) {
-	br::ResourceIdentifier::Type_t r_type;
-
-	// Resolve resource type from name first
-	r_type = br::ResourceIdentifier::TypeFromString(r_name);
-	logger->Debug("Append: S:%s T:%d ID:%d", r_name.c_str(), r_type, r_id);
+	br::ResourceType r_type = br::GetResourceTypeFromString(r_name);
+	int r_type_index = static_cast<int>(r_type);
+	logger->Debug("Append: S:%s T:%d ID:%d", r_name.c_str(), r_type_index, r_id);
 	return Append(r_type, r_id);
 }
 
 ResourcePath::ExitCode_t ResourcePath::Append(
-		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceType r_type,
 		BBQUE_RID_TYPE r_id) {
-	br::ResourceIdentifierPtr_t prid;
-
-	// Resource type checking
-	if (r_type >= br::ResourceIdentifier::TYPE_COUNT) {
-		logger->Error("Append: resource type [%d] unexpected", r_type);
-		return ERR_UNKN_TYPE;
-	}
-
 	// Set the info about resource type
-	if (types_bits.test(r_type)) {
+	int r_type_index = static_cast<int>(r_type);
+	if (types_bits.test(r_type_index)) {
 		logger->Debug("Append: resource type [%d] already in the path", r_type);
 		return ERR_USED_TYPE;
 	}
-	types_bits.set(r_type);
-	types_idx.insert(std::pair<uint16_t, uint8_t>(r_type, level_count));
+	types_bits.set(r_type_index);
+	types_idx.emplace(r_type_index, level_count);
 
 	// Append the new resource identifier (sp) to the list
-	prid = br::ResourceIdentifierPtr_t(new br::ResourceIdentifier(r_type, r_id));
+	br::ResourceIdentifierPtr_t prid =
+		std::make_shared<br::ResourceIdentifier>(r_type, r_id);
 	identifiers.push_back(prid);
 	global_type = r_type;
 
 	// Increase the levels counter
 	++level_count;
 	logger->Debug("Append: R{%s}, @%d, bs:%s",
-			prid->Name().c_str(), types_idx[r_type],
+			prid->Name().c_str(), types_idx[r_type_index],
 			types_bits.to_string().c_str());
 	logger->Debug("Append: SP:'%s', count: %d",
 			this->ToString().c_str(), level_count);
@@ -253,7 +245,7 @@ ResourcePath::ExitCode_t ResourcePath::Concat(
  * Resource identifiers manipulation                              *
  ******************************************************************/
 
-int8_t ResourcePath::GetLevel(br::ResourceIdentifier::Type_t r_type) const {
+int8_t ResourcePath::GetLevel(br::ResourceType r_type) const {
 	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
 	index_it = types_idx.find(static_cast<uint16_t>(r_type));
 	if (index_it == types_idx.end())
@@ -270,7 +262,7 @@ br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 }
 
 br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
-		br::ResourceIdentifier::Type_t r_type) const {
+		br::ResourceType r_type) const {
 
 	// Look for the vector position of the resource identifier by type
 	int8_t level = GetLevel(r_type);
@@ -278,11 +270,11 @@ br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 		return br::ResourceIdentifierPtr_t();
 	// Get the ID from the resource identifier in the vector
 	logger->Debug("GetIdentifier: type %s @pos:%d",
-			br::ResourceIdentifier::TypeStr[r_type], level);
+			br::GetResourceTypeString(r_type), level);
 	return identifiers.at(level);
 }
 
-BBQUE_RID_TYPE ResourcePath::GetID(br::ResourceIdentifier::Type_t r_type) const {
+BBQUE_RID_TYPE ResourcePath::GetID(br::ResourceType r_type) const {
 	br::ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
 	if (!prid)
 		return R_ID_NONE;
@@ -290,7 +282,7 @@ BBQUE_RID_TYPE ResourcePath::GetID(br::ResourceIdentifier::Type_t r_type) const 
 }
 
 ResourcePath::ExitCode_t ResourcePath::ReplaceID(
-		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceType r_type,
 		BBQUE_RID_TYPE src_r_id,
 		BBQUE_RID_TYPE dst_r_id) {
 	br::ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
@@ -314,17 +306,17 @@ ResourcePath::ExitCode_t ResourcePath::ReplaceID(
  * Miscellanea                                                    *
  ******************************************************************/
 
-br::ResourceIdentifier::Type_t ResourcePath::ParentType(
-		br::ResourceIdentifier::Type_t r_type) const {
+br::ResourceType ResourcePath::ParentType(
+		br::ResourceType r_type) const {
 	// Find the index of the given resource type
 	int8_t level = GetLevel(r_type);
 	if (level < 0)
-		return br::ResourceIdentifier::UNDEFINED;
+		return br::ResourceType::UNDEFINED;
 
 	// Retrieve the position of the parent
 	int8_t parent_index = level - 1;
 	if (parent_index < 0)
-		return br::ResourceIdentifier::UNDEFINED;
+		return br::ResourceType::UNDEFINED;
 
 	// Parent type
 	return identifiers.at(parent_index)->Type();

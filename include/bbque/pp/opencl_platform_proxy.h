@@ -48,8 +48,8 @@ typedef std::list<ResourcePathPtr_t> ResourcePathList_t;
 typedef std::shared_ptr<ResourcePathList_t> ResourcePathListPtr_t;
 typedef std::vector<uint8_t> VectorUInt8_t;
 typedef std::shared_ptr<VectorUInt8_t> VectorUInt8Ptr_t;
-typedef std::map<br::ResourceIdentifier::Type_t, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
-typedef std::map<br::ResourceIdentifier::Type_t, ResourcePathListPtr_t> ResourceTypePathMap_t;
+typedef std::map<br::ResourceType, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
+typedef std::map<br::ResourceType, ResourcePathListPtr_t> ResourceTypePathMap_t;
 typedef std::map<int, std::ofstream *> DevFileMap_t;
 typedef std::map<int, ResourcePathPtr_t> DevPathMap_t;
 
@@ -117,17 +117,17 @@ public:
 	/**
 	 * @brief Number of OpenCL devices of a given resource type
 	 */
-	uint8_t GetDevicesNum(br::ResourceIdentifier::Type_t r_type) const;
+	uint8_t GetDevicesNum(br::ResourceType r_type) const;
 
 	/**
 	 * @brief Set of OpenCL device IDs for a given resource type
 	 */
-	VectorUInt8Ptr_t GetDeviceIDs(br::ResourceIdentifier::Type_t r_type) const;
+	VectorUInt8Ptr_t GetDeviceIDs(br::ResourceType r_type) const;
 
 	/**
 	 * @brief Set of OpenCL device resource path for a given type
 	 */
-	ResourcePathListPtr_t GetDevicePaths(br::ResourceIdentifier::Type_t r_type) const;
+	ResourcePathListPtr_t GetDevicePaths(br::ResourceType r_type) const;
 
 private:
 
@@ -170,11 +170,11 @@ private:
 
 	/** Retrieve the iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
-	        br::ResourceIdentifier::Type_t r_type);
+	        br::ResourceType r_type);
 
 	/** Retrieve the constant iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::const_iterator GetDeviceConstIterator(
-	        br::ResourceIdentifier::Type_t r_type) const;
+	        br::ResourceType r_type) const;
 
 #ifdef CONFIG_BBQUE_PM
 
@@ -189,19 +189,19 @@ private:
 	/**
 	 * @brief Append device ID per device type
 	 *
-	 * @param r_type The resource type (usually Resource::CPU or Resource::GPU)
+	 * @param r_type The resource type (usually ResourceType::CPU or ResourceType::GPU)
 	 * @param dev_id The OpenCL device ID
 	 */
-	void InsertDeviceID(br::ResourceIdentifier::Type_t r_type, uint8_t dev_id);
+	void InsertDeviceID(br::ResourceType r_type, uint8_t dev_id);
 
 	/**
 	 * @brief Append resource path per device type
 	 *
-	 * @param r_type The resource type (usually Resource::CPU or Resource::GPU)
+	 * @param r_type The resource type (usually ResourceType::CPU or ResourceType::GPU)
 	 * @param dev_p_str A resource path referencing a device of the type in the key
 	 */
 	void InsertDevicePath(
-	        br::ResourceIdentifier::Type_t r_type, std::string const & dev_rp_str);
+	        br::ResourceType r_type, std::string const & dev_rp_str);
 
 	/**
 	 * @brief Register device resources

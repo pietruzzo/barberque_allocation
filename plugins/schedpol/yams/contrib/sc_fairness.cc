@@ -44,14 +44,17 @@ SCFairness::SCFairness(
 		;
 
 	// Fairness penalties
-	for (int i = br::ResourceIdentifier::GROUP;
-			 i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
+	int r_type_index = static_cast<int>(br::ResourceType::GROUP);
+	int r_type_last  = static_cast<int>(br::ResourceType::CUSTOM);
+	for (; r_type_index <= r_type_last; ++r_type_index) {
+		br::ResourceType r_type = static_cast<br::ResourceType>(r_type_index);
 		snprintf(conf_str, 50, SC_CONF_BASE_STR"%s.penalty.%s",
-				name, br::ResourceIdentifier::TypeStr[i]);
+				name, br::GetResourceTypeString(r_type));
 		opts_desc.add_options()
 			(conf_str,
 			 po::value<uint16_t>
-				(&penalties_int[i])->default_value(SC_FAIR_DEFAULT_PENALTY),
+				(&penalties_int[r_type_index])->default_value(
+					SC_FAIR_DEFAULT_PENALTY),
 			 "Fairness penalty per resource");
 		;
 	}
@@ -59,18 +62,21 @@ SCFairness::SCFairness(
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	// Boundaries enforcement (0 <= penalty <= 100)
-	for (int i = br::ResourceIdentifier::GROUP;
-			 i < br::ResourceIdentifier::TYPE_COUNT; ++i) {
-		if (penalties_int[i] > 100) {
+	r_type_index = static_cast<int>(br::ResourceType::GROUP);
+	r_type_last  = static_cast<int>(br::ResourceType::CUSTOM);
+	for (; r_type_index <= r_type_last; ++r_type_index) {
+		br::ResourceType r_type = static_cast<br::ResourceType>(r_type_index);
+		if (penalties_int[r_type_index] > 100) {
 			logger->Warn("penalty.%s out of range [0,100]: "
 					"found %d. Setting to %d",
-					br::ResourceIdentifier::TypeStr[i],
-					penalties_int[i], SC_FAIR_DEFAULT_PENALTY);
-			penalties_int[i] = SC_FAIR_DEFAULT_PENALTY;
+					br::GetResourceTypeString(r_type),
+					penalties_int[r_type_index],
+					SC_FAIR_DEFAULT_PENALTY);
+			penalties_int[r_type_index] = SC_FAIR_DEFAULT_PENALTY;
 		}
 		logger->Debug("penalty.%-3s: %.2f",
-				br::ResourceIdentifier::TypeStr[i],
-				static_cast<float>(penalties_int[i]) / 100.0);
+				br::GetResourceTypeString(r_type),
+				static_cast<float>(penalties_int[r_type_index]) / 100.0);
 	}
 }
 
@@ -82,7 +88,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 	uint64_t bd_r_avail;
 	AppPrio_t priority;
 	std::vector<BBQUE_RID_TYPE>::iterator ids_it;
-	std::list<br::Resource::Type_t>::iterator type_it;
+	std::list<br::ResourceType>::iterator type_it;
 
 	// Applications/EXC to schedule, given the priority level
 	priority = *(static_cast<AppPrio_t *>(params));
@@ -95,48 +101,52 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 
 	// For each resource type get the availability and the fair partitioning
 	// among the application having the same priority
-	for (br::Resource::Type_t & r_type: r_types) {
+	for (br::ResourceType & r_type: r_types) {
 		snprintf(r_path_str, 20, "%s.%s",
 				bd_info.d_path->ToString().c_str(),
-				br::ResourceIdentifier::TypeStr[r_type]);
+				br::GetResourceTypeString(r_type));
+		int r_type_index = static_cast<int>(r_type);
+
 
 		// Look for the binding domain with the lowest availability
-		r_avail[r_type] = sv->ResourceAvailable(r_path_str, vtok);
-		min_bd_r_avail[r_type] = r_avail[r_type];
-		max_bd_r_avail[r_type] = 0;
+		r_avail[r_type_index] = sv->ResourceAvailable(r_path_str, vtok);
+		min_bd_r_avail[r_type_index] = r_avail[r_type_index];
+		max_bd_r_avail[r_type_index] = 0;
 
 		for (BBQUE_RID_TYPE & bd_id: bd_info.ids) {
 			snprintf(r_path_str, 20, "%s%d.%s",
 					bd_info.d_path->ToString().c_str(),
 					bd_id,
-					br::ResourceIdentifier::TypeStr[r_type]);
+					br::GetResourceTypeString(r_type));
 			bd_r_avail = sv->ResourceAvailable(r_path_str, vtok);
 			logger->Debug("R{%s} availability : % " PRIu64,
 					r_path_str, bd_r_avail);
 
 			// Update (?) the min availability value
-			if (bd_r_avail < min_bd_r_avail[r_type]) {
-				min_bd_r_avail[r_type] = bd_r_avail;
+			if (bd_r_avail < min_bd_r_avail[r_type_index]) {
+				min_bd_r_avail[r_type_index] = bd_r_avail;
 				logger->Debug("R{%s} minAV of %s: %" PRIu64,
 						r_path_str,
-						br::ResourceIdentifier::TypeStr[r_type],
-						min_bd_r_avail[r_type]);
+						br::GetResourceTypeString(r_type),
+						min_bd_r_avail[r_type_index]);
 			}
 
 			// Update (?) the max availability value
-			if (bd_r_avail > max_bd_r_avail[r_type]) {
-				max_bd_r_avail[r_type] = bd_r_avail;
+			if (bd_r_avail > max_bd_r_avail[r_type_index]) {
+				max_bd_r_avail[r_type_index] = bd_r_avail;
 				logger->Debug("R{%s} maxAV of %s: %" PRIu64,
 						r_path_str,
-						br::ResourceIdentifier::TypeStr[r_type],
-						max_bd_r_avail[r_type]);
+						br::GetResourceTypeString(r_type),
+						max_bd_r_avail[r_type_index]);
 			}
 		}
 
 		// System-wide fair partition
-		fair_pt[r_type] = max_bd_r_avail[r_type] / num_apps;
+		fair_pt[r_type_index] = max_bd_r_avail[r_type_index] / num_apps;
 		logger->Debug("R{%s} maxAV: %" PRIu64 " fair partition: %" PRIu64,
-				r_path_str, max_bd_r_avail[r_type], fair_pt[r_type]);
+				r_path_str,
+				max_bd_r_avail[r_type_index],
+				fair_pt[r_type_index]);
 	}
 
 	return SC_SUCCESS;
@@ -161,22 +171,24 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	for (auto const & ru_entry: evl_ent.pawm->RecipeResourceUsages()) {
 		ResourcePathPtr_t const & r_path(ru_entry.first);
 		br::UsagePtr_t    const & pusage(ru_entry.second);
+		int r_type_index = static_cast<int>(r_path->Type());
+
 
 		// Binding domain fraction (resource type related)
 		logger->Debug("%s: R{%s} BD{'%s'} maxAV: %" PRIu64 " fair: %d",
 				evl_ent.StrId(), r_path->ToString().c_str(),
 				bd_info.d_path->ToString().c_str(),
-				max_bd_r_avail[r_path->Type()],
-				fair_pt[r_path->Type()]);
+				max_bd_r_avail[r_type_index],
+				fair_pt[r_type_index]);
 		// Safety check
-		if (fair_pt[r_path->Type()] == 0) {
+		if (fair_pt[r_type_index] == 0) {
 			logger->Warn("%s:  Fair partition is 0!", evl_ent.StrId());
 			return SC_SUCCESS;
 		}
 
 		bd_fract = ceil(
-				max_bd_r_avail[r_path->Type()] /
-					fair_pt[r_path->Type()]);
+				max_bd_r_avail[r_type_index] /
+					fair_pt[r_type_index]);
 		logger->Debug("%s: R{%s} BD{'%s'} fraction: %d",
 				evl_ent.StrId(),
 				r_path->ToString().c_str(),
@@ -185,18 +197,18 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		bd_fract == 0 ? bd_fract = 1 : bd_fract;
 
 		// Binding domain fair partition
-		bd_fair_pt = max_bd_r_avail[r_path->Type()] / bd_fract;
+		bd_fair_pt = max_bd_r_avail[r_type_index] / bd_fract;
 		if (bd_info.count > 1)
-			bd_fair_pt = std::max(min_bd_r_avail[r_path->Type()], bd_fair_pt);
+			bd_fair_pt = std::max(min_bd_r_avail[r_type_index], bd_fair_pt);
 		logger->Debug("%s: R{%s} BD{'%s'} fair partition: %" PRIu64 "",
 				evl_ent.StrId(), r_path->ToString().c_str(),
 				bd_info.d_path->ToString().c_str(), bd_fair_pt);
 
 		// Set last parameters for index computation
-		penalty = static_cast<float>(penalties_int[r_path->Type()]) / 100.0;
+		penalty = static_cast<float>(penalties_int[r_type_index]) / 100.0;
 		SetIndexParameters(
 				bd_fair_pt,
-				max_bd_r_avail[r_path->Type()],
+				max_bd_r_avail[r_type_index],
 				penalty,
 				params);
 

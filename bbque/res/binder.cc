@@ -31,11 +31,11 @@ namespace bbque { namespace res {
 
 uint32_t ResourceBinder::Bind(
 		UsagesMap_t const & src_um,
-		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceType r_type,
 		BBQUE_RID_TYPE src_r_id,
 		BBQUE_RID_TYPE dst_r_id,
 		UsagesMapPtr_t dst_pum,
-		br::ResourceIdentifier::Type_t filter_rtype,
+		br::ResourceType filter_rtype,
 		ResourceBitset * filter_mask) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	UsagesMap_t::const_iterator src_it, src_end;
@@ -43,10 +43,6 @@ uint32_t ResourceBinder::Bind(
 	ResourcePtrList_t r_list;
 	uint32_t count = 0;
 	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
-
-	// Sanity check
-	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
-		return 0;
 
 	// Proceed with the resource binding...
 	for (auto & ru_entry: src_um) {
@@ -75,7 +71,7 @@ uint32_t ResourceBinder::Bind(
 		UsagePtr_t dst_pusage = std::make_shared<Usage>(
 				src_pusage->GetAmount(), src_pusage->GetPolicy());
 		r_list = ra.GetResources(dst_ppath);
-		if ((filter_rtype != br::ResourceIdentifier::UNDEFINED)
+		if ((filter_rtype != br::ResourceType::UNDEFINED)
 				&& (filter_mask != nullptr))
 			dst_pusage->SetResourcesList(r_list, filter_rtype, *filter_mask);
 		else
@@ -89,7 +85,7 @@ uint32_t ResourceBinder::Bind(
 
 inline void SetBit(
 		ResourcePathPtr_t ppath,
-		br::ResourceIdentifier::Type_t r_type,
+		br::ResourceType r_type,
 		ResourceBitset & r_mask) {
 	// Get the ID of the resource type in the path
 	BBQUE_RID_TYPE r_id = ppath->GetID(r_type);
@@ -101,19 +97,15 @@ inline void SetBit(
 
 ResourceBitset ResourceBinder::GetMask(
 		UsagesMapPtr_t pum,
-		br::ResourceIdentifier::Type_t r_type) {
+		br::ResourceType r_type) {
 	return GetMask(*(pum.get()), r_type);
 }
 
 ResourceBitset ResourceBinder::GetMask(
 		br::UsagesMap_t const & um,
-		br::ResourceIdentifier::Type_t r_type) {
+		br::ResourceType r_type) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceBitset r_mask;
-
-	// Sanity check
-	if (r_type >= br::ResourceIdentifier::TYPE_COUNT)
-		return r_mask;
 
 	// Scan the resource usages map
 	for (auto & ru_entry: um) {
@@ -128,24 +120,20 @@ ResourceBitset ResourceBinder::GetMask(
 
 ResourceBitset ResourceBinder::GetMask(
 		UsagesMapPtr_t pum,
-		br::ResourceIdentifier::Type_t r_type,
-		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResourceType r_type,
+		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id,
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
 	UsagesMap_t::iterator pum_it;
 	ResourceBitset r_mask;
-	br::ResourceIdentifier::Type_t found_rsrc_type, found_scope_type;
+	br::ResourceType found_rsrc_type, found_scope_type;
 	BBQUE_RID_TYPE found_scope_id;
 	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 
-	// Sanity check
-	if ((r_type >= br::ResourceIdentifier::TYPE_COUNT)       ||
-		(r_scope_type >= br::ResourceIdentifier::TYPE_COUNT))
-		return r_mask;
 	logger->Debug("GetMask: scope=<%s%d> resource=<%s> view=%d",
-				br::ResourceIdentifier::TypeStr[r_scope_type], r_scope_id,
-				br::ResourceIdentifier::TypeStr[r_type], vtok);
+				br::GetResourceTypeString(r_scope_type), r_scope_id,
+				br::GetResourceTypeString(r_type), vtok);
 
 	// Scan the resource usages map
 	for (auto const & ru_entry: *(pum.get())) {
@@ -163,8 +151,8 @@ ResourceBitset ResourceBinder::GetMask(
 		logger->Debug("GetMask: path=<%s>", ppath->ToString().c_str());
 		if ((found_scope_type != r_scope_type) || (found_rsrc_type != r_type)) {
 			logger->Debug("GetMask: skipping scope=<%s> resource=<%s>",
-					br::ResourceIdentifier::TypeStr[found_scope_type],
-					br::ResourceIdentifier::TypeStr[r_type]);
+					br::GetResourceTypeString(found_scope_type),
+					br::GetResourceTypeString(r_type));
 			continue;
 		}
 		logger->Debug("GetMask: search ID={%2d} found={%2d}",
@@ -176,23 +164,23 @@ ResourceBitset ResourceBinder::GetMask(
 		if ((r_scope_id < 0) || (found_scope_id < 0)
 				|| (found_scope_id == r_scope_id)) {
 			logger->Debug("GetMask: scope <%s> found in resource <%s>!",
-					br::ResourceIdentifier::TypeStr[r_scope_type],
+					br::GetResourceTypeString(r_scope_type),
 					ppath->ToString().c_str());
 			r_mask |= GetMask(pusage->GetResourcesList(),
 					r_type,	r_scope_type, r_scope_id, papp, vtok);
 		}
 	}
 	logger->Debug("GetMask: type <%s> in scope <%s> = {%s}",
-			br::ResourceIdentifier::TypeStr[r_type],
-			br::ResourceIdentifier::TypeStr[r_scope_type],
+			br::GetResourceTypeString(r_type),
+			br::GetResourceTypeString(r_scope_type),
 			r_mask.ToString().c_str());
 	return r_mask;
 }
 
 ResourceBitset ResourceBinder::GetMask(
 		ResourcePtrList_t const & rpl,
-		br::ResourceIdentifier::Type_t r_type,
-		br::ResourceIdentifier::Type_t r_scope_type,
+		br::ResourceType r_type,
+		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id,
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
@@ -201,14 +189,13 @@ ResourceBitset ResourceBinder::GetMask(
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	// Sanity check
-	if ((r_type >= br::ResourceIdentifier::TYPE_COUNT) || (!papp))
-		return r_mask;
+	if (papp == nullptr) return r_mask;
 
 	// Scan the resources list
 	for (ResourcePtr_t const & rsrc: rpl) {
 		if (rsrc->Type() != r_type) {
 			logger->Warn("GetMask: Skipping resource type <%s>",
-					br::ResourceIdentifier::TypeStr[rsrc->Type()]);
+					br::GetResourceTypeString(rsrc->Type()));
 			continue;
 		}
 
@@ -228,12 +215,12 @@ ResourceBitset ResourceBinder::GetMask(
 				&& (r_path->GetID(r_scope_type) == r_scope_id
 					|| r_scope_id == R_ID_ANY)) {
 			logger->Debug("GetMask: ready to set <%s>",
-					br::ResourceIdentifier::TypeStr[r_type]);
+					br::GetResourceTypeString(r_type));
 			SetBit(r_path, r_type, r_mask);
 		}
 	}
 	logger->Debug("GetMask: type <%s> = {%s}",
-			br::ResourceIdentifier::TypeStr[r_type],
+			br::GetResourceTypeString(r_type),
 			r_mask.ToString().c_str());
 	return r_mask;
 }

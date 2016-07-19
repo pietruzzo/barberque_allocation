@@ -172,7 +172,7 @@ public:
 	 * @param id Resource integer ID
 	 * @param tot The total amount of resource
 	 */
-	Resource(ResourceIdentifier::Type_t type, BBQUE_RID_TYPE id, uint64_t tot = 1);
+	Resource(ResourceType type, BBQUE_RID_TYPE id, uint64_t tot = 1);
 
 	/**
 	 * Destructor

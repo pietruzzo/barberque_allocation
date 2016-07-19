@@ -197,7 +197,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitResourceStateView() {
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
-	std::map<br::Resource::Type_t, SchedContribManager *>::iterator scm_it;
+	std::map<br::ResourceType, SchedContribManager *>::iterator scm_it;
 	SchedContribPtr_t sc_recf;
 	BindingMap_t & bindings(ra.GetBindingOptions());
 
@@ -213,7 +213,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 		scm->SetViewInfo(sv, vtok);
 		scm->SetBindingInfo(*(bindings[scm_it->first]));
 		logger->Debug("Init: Scheduling contribution manager for R{%s} ready",
-				br::ResourceIdentifier::TypeStr[scm_it->first]);
+				br::GetResourceTypeString(scm_it->first));
 	}
 
 	return YAMS_SUCCESS;
@@ -222,7 +222,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 void YamsSchedPol::AllocSchedContribManagers() {
 	BindingMap_t & bindings(ra.GetBindingOptions());
 	for (auto & bd_entity: bindings) {
-		br::Resource::Type_t  bd_type = bd_entity.first;
+		br::ResourceType  bd_type = bd_entity.first;
 		BindingInfo_t const & bd_info(*(bd_entity.second));
 
 		// Check the binding count
@@ -233,7 +233,7 @@ void YamsSchedPol::AllocSchedContribManagers() {
 		}
 
 		// SchedContribManager instantiation
-		if (bd_type == br::Resource::GPU) {
+		if (bd_type == br::ResourceType::GPU) {
 			scms.insert(SchedContribPair_t(
 					bd_type,
 					new SchedContribManager(sc_gpu, bd_info, 3)));
@@ -245,7 +245,7 @@ void YamsSchedPol::AllocSchedContribManagers() {
 						sc_types, bd_info, YAMS_SC_COUNT)));
 		}
 		logger->Debug("Scheduling contrib manager of type: %s",
-				br::ResourceIdentifier::TypeStr[bd_type]);
+				br::GetResourceTypeString(bd_type));
 	}
 	logger->Info("Scheduling contrib manager(s): %d", scms.size());
 }
@@ -290,7 +290,7 @@ inline void YamsSchedPol::Clear() {
 	BindingMap_t & bindings(ra.GetBindingOptions());
 
 	// Reset bindings
-	std::map<br::Resource::Type_t, BindingInfo_t *>::iterator bd_it;
+	std::map<br::ResourceType, BindingInfo_t *>::iterator bd_it;
 	for (bd_it = bindings.begin(); bd_it != bindings.end(); ++bd_it) {
 		bd_it->second->full.Reset();
 	}
@@ -299,7 +299,7 @@ inline void YamsSchedPol::Clear() {
 void YamsSchedPol::SchedulePrioQueue(AppPrio_t prio) {
 	bool sched_incomplete;
 	uint8_t naps_count = 0;
-	std::map<br::Resource::Type_t, SchedContribManager *>::iterator scm_it;
+	std::map<br::ResourceType, SchedContribManager *>::iterator scm_it;
 	SchedContribPtr_t sc_fair;
 
 	// Init Fairness contributions
@@ -416,7 +416,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 			logger->Info("COWS: Select BD[%d] (metrics=%2.2f)",
 					cpu_bindings->ids[(*rit).second], (*rit).first);
 			pschd->SetBindingID(
-					cpu_bindings->ids[(*rit).second], br::Resource::CPU);
+					cpu_bindings->ids[(*rit).second], br::ResourceType::CPU);
 			ExitCode_t bd_result = BindResources(pschd, 0);
 			if (bd_result != YAMS_SUCCESS) {
 				logger->Error("COWS: CPU binding failed [%d]",
@@ -459,7 +459,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 		}
 		logger->Notice("Selecting: [%s] on <%s> SCHEDULED metrics = %.4f",
 				pschd->StrId(),
-				br::ResourceIdentifier::TypeStr[pschd->bind_type],
+				br::GetResourceTypeString(pschd->bind_type),
 				pschd->metrics);
 
 		// Set the application value (scheduling metrics)
@@ -506,8 +506,8 @@ void YamsSchedPol::InsertWorkingModes(ba::AppCPtr_t const & papp) {
 
 void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
-	std::map<br::Resource::Type_t, SchedEntityPtr_t> pschd_map;
-	std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator next_it;
+	std::map<br::ResourceType, SchedEntityPtr_t> pschd_map;
+	std::map<br::ResourceType, SchedEntityPtr_t>::iterator next_it;
 	std::vector<BBQUE_RID_TYPE>::reverse_iterator ids_it;
 	float sc_value   = 0.0;
 	uint8_t mlog_len = 0;
@@ -527,10 +527,10 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 	// Aggregate binding-independent scheduling contributions
 	BindingMap_t & bindings(ra.GetBindingOptions());
 	for (auto & bd_entry: bindings) {
-		br::Resource::Type_t  bd_type = bd_entry.first;
+		br::ResourceType  bd_type = bd_entry.first;
 		BindingInfo_t const & bd_info(*(bd_entry.second));
 		logger->Debug("EvalAWM: current resource binding domain: <%s>",
-				br::ResourceIdentifier::TypeStr[bd_type]);
+				br::GetResourceTypeString(bd_type));
 
 		// Skipping empty binding domains
 		if (bd_info.count == 0) {
@@ -573,9 +573,9 @@ void YamsSchedPol::EvalWorkingMode(SchedEntityPtr_t pschd) {
 }
 
 void YamsSchedPol::EvalDomains(
-		std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
-		std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
-		std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator & last_it) {
+		std::map<br::ResourceType, SchedEntityPtr_t>::iterator dom_it,
+		std::map<br::ResourceType, SchedEntityPtr_t>::iterator dom_end,
+		std::map<br::ResourceType, SchedEntityPtr_t>::iterator & last_it) {
 	ExitCode_t result;
 
 	while (1) {
@@ -590,13 +590,13 @@ void YamsSchedPol::EvalDomains(
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
-		std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
-		std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
-		std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator & next_it,
+		std::map<br::ResourceType, SchedEntityPtr_t>::iterator dom_it,
+		std::map<br::ResourceType, SchedEntityPtr_t>::iterator dom_end,
+		std::map<br::ResourceType, SchedEntityPtr_t>::iterator & next_it,
 		SchedEntityPtr_t pschd_parent) {
 	std::unique_lock<std::mutex> sched_ul(sched_mtx, std::defer_lock);
-	std::map<br::Resource::Type_t, BindingInfo_t *>::iterator bd_it;
-	br::Resource::Type_t bd_type(dom_it->first);
+	std::map<br::ResourceType, BindingInfo_t *>::iterator bd_it;
+	br::ResourceType bd_type(dom_it->first);
 	SchedEntityPtr_t pschd_domain(dom_it->second);
 	float  sc_value  = 0.0;
 	float  base_metr = 0.0;
@@ -611,17 +611,17 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 		return YAMS_ERROR;
 	}
 	logger->Debug("EvalBindings: [%s] base (AWM) metrics %1.4f",
-			br::ResourceIdentifier::TypeStr[bd_type],
+			br::GetResourceTypeString(bd_type),
 			pschd_domain->metrics);
 
 	// Check the current AWM has processing resources under the binding
 	// domain type under evaluation
 	uint64_t amount = ra.GetUsageAmount(
 		pschd_domain->pawm->RecipeResourceUsages(),
-		br::ResourceIdentifier::PROC_ELEMENT, bd_type);
+		br::ResourceType::PROC_ELEMENT, bd_type);
 	if (amount == 0) {
 		logger->Debug("EvalBindings: no <%s> processing requests to bind",
-			br::ResourceIdentifier::TypeStr[bd_type]);
+			br::GetResourceTypeString(bd_type));
 		return YAMS_IGNORE;
 	}
 
@@ -636,7 +636,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 	for (BBQUE_RID_TYPE & bd_id: bd_info.ids) {
 		next_it = dom_it;
 		logger->Debug("EvalBindings: <%s> ID = %d",
-			br::ResourceIdentifier::TypeStr[bd_type], bd_id);
+			br::GetResourceTypeString(bd_type), bd_id);
 
 		// Check resource availability
 		if (bd_info.full[bd_id]) {
@@ -652,7 +652,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 		result = GetBoundContrib(pschd_bound, base_refn, sc_value);
 		if (result != YAMS_SUCCESS) {
 			logger->Warn("EvalBindings: <%s> nothing to bind here",
-				br::ResourceIdentifier::TypeStr[bd_type]);
+				br::GetResourceTypeString(bd_type));
 			return YAMS_IGNORE;
 		}
 
@@ -663,7 +663,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 		// Next binding domain? Go recursively
 		if (++next_it != dom_end) {
 			logger->Debug("EvalBindings: next domain is <%s>",
-				br::ResourceIdentifier::TypeStr[next_it->first]);
+				br::GetResourceTypeString(next_it->first));
 			EvalBindings(next_it, dom_end, next_it, pschd_bound);
 		}
 		else {
@@ -681,14 +681,14 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 
 	}
 	logger->Debug("EvalBindings: [%s] - DONE -",
-			br::ResourceIdentifier::TypeStr[dom_it->first]);
+			br::GetResourceTypeString(dom_it->first));
 
 	return YAMS_SUCCESS;
 }
 
 void YamsSchedPol::GetSchedContribValue(
 		SchedEntityPtr_t pschd,
-		br::ResourceIdentifier::Type_t bd_type,
+		br::ResourceType bd_type,
 		SchedContribManager::Type_t sc_type,
 		float & sc_value) {
 	SchedContribManager::ExitCode_t scm_ret;
@@ -727,7 +727,7 @@ void YamsSchedPol::GetSchedContribValue(
 	}
 	YAMS_GET_TIMING(coll_mct_metrics, sc_type, comp_tmr);
 	logger->Debug("SchedContrib: domain <%s>, sc:%d",
-		br::ResourceIdentifier::TypeStr[bd_type], sc_type);
+		br::GetResourceTypeString(bd_type), sc_type);
 }
 
 YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
@@ -740,7 +740,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::GetBoundContrib(
 	char mlog[255];
 
 	BindingMap_t & bindings(ra.GetBindingOptions());
-	br::Resource::Type_t bd_type = pschd_bd->bind_type;
+	br::ResourceType bd_type = pschd_bd->bind_type;
 	logger->Debug("GetBoundContrib: =========== BINDING:<%s%d> ===========",
 			bindings[bd_type]->d_path->ToString().c_str(),
 			pschd_bd->bind_id);
@@ -772,7 +772,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
 		size_t b_refn) {
 	ba::AwmPtr_t & pawm(pschd->pawm);
 	BBQUE_RID_TYPE & bd_id(pschd->bind_id);
-	br::Resource::Type_t & bd_type(pschd->bind_type);
+	br::ResourceType & bd_type(pschd->bind_type);
 	size_t r_refn;
 
 	BindingMap_t & bindings(ra.GetBindingOptions());
@@ -785,7 +785,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::BindResources(
 	// The resource binding should never fail
 	if (r_refn == 0) {
 		logger->Error("BindResources: AWM{%d} on <%s%d> failed",
-			pawm->Id(), br::ResourceIdentifier::TypeStr[bd_type], bd_id);
+			pawm->Id(), br::GetResourceTypeString(bd_type), bd_id);
 		return YAMS_ERROR;
 	}
 
@@ -826,7 +826,7 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 
 void YamsSchedPol::CowsSetup() {
 	BindingMap_t & bindings(ra.GetBindingOptions());
-	cpu_bindings = bindings[br::Resource::CPU];
+	cpu_bindings = bindings[br::ResourceType::CPU];
 
 	// COWS: Vectors and accumulators resizing depending on the total number
 	// of possible bindings for the CPU resource
@@ -986,7 +986,7 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 				cpu_bindings->ids[i], pschd->StrId(), cows_info.bound_mix[i]);
 
 		// Set the binding ID
-		pschd->SetBindingID(cpu_bindings->ids[i], br::Resource::CPU);
+		pschd->SetBindingID(cpu_bindings->ids[i], br::ResourceType::CPU);
 		result = BindResources(pschd, 0);
 		if (result != YAMS_SUCCESS) {
 			logger->Error("COWS: Resource binding failed [%d]", result);
@@ -995,7 +995,7 @@ void YamsSchedPol::CowsBoundMix(SchedEntityPtr_t pschd) {
 		// Get migration contribution
 		value = 0.0;
 		GetSchedContribValue(
-				pschd, br::Resource::CPU, SchedContribManager::MIGRATION, value);
+				pschd, br::ResourceType::CPU, SchedContribManager::MIGRATION, value);
 		cows_info.migr_metrics[i] = value;
 		cows_info.norm_stats[COWS_MIGRA] += value;
 	}
@@ -1233,7 +1233,7 @@ int YamsSchedPol::CommandsCb(int argc, char *argv[]) {
 void YamsSchedPol::ReconfigSchedContribWeights(
 		uint8_t num_weights,
 		char * set_weights[]) {
-	std::map<br::Resource::Type_t, SchedContribManager *>::iterator scm_it;
+	std::map<br::ResourceType, SchedContribManager *>::iterator scm_it;
 	uint16_t * new_weights = nullptr;
 	uint16_t * old_weights = nullptr;
 	logger->Debug("ReconfigSchedContribWeights: %d weights...", num_weights);
@@ -1241,7 +1241,7 @@ void YamsSchedPol::ReconfigSchedContribWeights(
 	for (scm_it = scms.begin(); scm_it != scms.end(); ++scm_it) {
 		SchedContribManager * scm = scm_it->second;
 		logger->Notice("ReconfigSchedContribWeights: BD<%s> %d weights...",
-				br::ResourceIdentifier::TypeStr[scm_it->first],
+				br::GetResourceTypeString(scm_it->first),
 				scm->GetNumMax());
 
 		// Update starting from the old set of weights

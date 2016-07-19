@@ -42,7 +42,7 @@
 
 
 #define GET_PROC_ELEMENT_ID(rp, pe_id) \
-	pe_id = rp->GetID(br::Resource::PROC_ELEMENT);  \
+	pe_id = rp->GetID(br::ResourceType::PROC_ELEMENT);  \
 	if (pe_id < 0) { \
 		logger->Warn("<%s> does not reference valid processing elements", \
 				rp->ToString().c_str()); \
@@ -209,7 +209,7 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 
 	// Extract the single CPU core (PE) id from the resource path
 	// (e.g., "cpu2.pe3", pe_id = 3)
-	BBQUE_RID_TYPE pe_id = rp->GetID(br::ResourceIdentifier::PROC_ELEMENT);
+	BBQUE_RID_TYPE pe_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
 	if (pe_id >= 0) {
 		result = GetLoadCPU(pe_id, perc);
 		if (result != PMResult::OK) return result;
@@ -400,7 +400,7 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 		std::vector<uint32_t> & freqs) {
 
 	// Extracting the selected CPU from the resource path. -1 if error
-	int pe_id = rp->GetID(br::Resource::PROC_ELEMENT);
+	int pe_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
 	if (pe_id < 0)
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 

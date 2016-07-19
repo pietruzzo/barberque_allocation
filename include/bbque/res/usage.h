@@ -179,7 +179,7 @@ public:
 	 */
 	void SetResourcesList(
 			ResourcePtrList_t & r_list,
-			ResourceIdentifier::Type_t filter_rtype,
+			ResourceType filter_rtype,
 			ResourceBitset & filter_mask);
 
 	/**

@@ -282,8 +282,8 @@ private:
 #endif
 
 	/** Manager for the scheduling contributions set */
-	typedef std::pair<br::Resource::Type_t, SchedContribManager *> SchedContribPair_t;
-	std::map<br::Resource::Type_t, SchedContribManager *> scms;
+	typedef std::pair<br::ResourceType, SchedContribManager *> SchedContribPair_t;
+	std::map<br::ResourceType, SchedContribManager *> scms;
 
 	/** Mutex */
 	std::mutex sched_mtx;
@@ -391,7 +391,7 @@ private:
 	 * @param pschd The scheduling entity to evaluate
 	 */
 	void GetSchedContribValue(SchedEntityPtr_t pschd,
-			br::ResourceIdentifier::Type_t bd_type,
+			br::ResourceType bd_type,
 			SchedContribManager::Type_t sc_type,
 			float & sc_value);
 
@@ -414,9 +414,9 @@ private:
 	 * @param pschd_parent SchedEntity_t to fill (in case)
 	 */
 	void EvalDomains(
-			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
-			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
-			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator & last_it);
+			std::map<br::ResourceType, SchedEntityPtr_t>::iterator dom_it,
+			std::map<br::ResourceType, SchedEntityPtr_t>::iterator dom_end,
+			std::map<br::ResourceType, SchedEntityPtr_t>::iterator & last_it);
 
 	/**
 	 * @brief Recursive evaluation of bindings
@@ -430,9 +430,9 @@ private:
 	 * YAMS_SUCCESS otherwise
 	 */
 	ExitCode_t EvalBindings(
-			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_it,
-			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator dom_end,
-			std::map<br::Resource::Type_t, SchedEntityPtr_t>::iterator & next_it,
+			std::map<br::ResourceType, SchedEntityPtr_t>::iterator dom_it,
+			std::map<br::ResourceType, SchedEntityPtr_t>::iterator dom_end,
+			std::map<br::ResourceType, SchedEntityPtr_t>::iterator & next_it,
 			SchedEntityPtr_t pschd_parent);
 
 	/**

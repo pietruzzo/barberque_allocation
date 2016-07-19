@@ -66,25 +66,25 @@ private:
 	 * Fairness penalties per resource type. This stores the values parsed
 	 * from the configuration file.
 	 */
-	uint16_t penalties_int[br::ResourceIdentifier::TYPE_COUNT];
+	uint16_t penalties_int[R_TYPE_COUNT];
 
 	/** Number of applications to schedule */
 	uint16_t num_apps = 0;
 
 	/** List of managed resource types */
-	std::list<br::Resource::Type_t> r_types;
+	std::list<br::ResourceType> r_types;
 
 	/** Resource availabilities */
-	uint64_t r_avail[br::ResourceIdentifier::TYPE_COUNT];
+	uint64_t r_avail[R_TYPE_COUNT];
 
 	/** Lowest BD resources availability */
-	uint64_t min_bd_r_avail[br::ResourceIdentifier::TYPE_COUNT];
+	uint64_t min_bd_r_avail[R_TYPE_COUNT];
 
 	/** Highest BD resources availability */
-	uint64_t max_bd_r_avail[br::ResourceIdentifier::TYPE_COUNT];
+	uint64_t max_bd_r_avail[R_TYPE_COUNT];
 
 	/** Fair partitions */
-	uint64_t fair_pt[br::ResourceIdentifier::TYPE_COUNT];
+	uint64_t fair_pt[R_TYPE_COUNT];
 
 	/**
 	 * @brief Compute the congestion contribute

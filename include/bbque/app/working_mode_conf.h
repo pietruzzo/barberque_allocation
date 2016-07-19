@@ -66,12 +66,12 @@ public:
 	 * about its ID.
 	 */
 	virtual size_t BindResource(
-			br::ResourceIdentifier::Type_t r_type,
+			br::ResourceType r_type,
 			BBQUE_RID_TYPE src_ID,
 			BBQUE_RID_TYPE dst_ID,
 			size_t b_refn = 0,
-			br::ResourceIdentifier::Type_t filter_rtype =
-				br::ResourceIdentifier::UNDEFINED,
+			br::ResourceType filter_rtype =
+				br::ResourceType::UNDEFINED,
 			br::ResourceBitset * filter_mask = nullptr) = 0;
 
 	/**

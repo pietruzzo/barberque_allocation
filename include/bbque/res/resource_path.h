@@ -157,7 +157,7 @@ public:
 	 * @return OK for success, ERR_UNKN_TYPE for unknown resource type,
 	 * ERR_USED_TYPE if the type has been already included in the path
 	 */
-	ExitCode_t Append(ResourceIdentifier::Type_t r_type, BBQUE_RID_TYPE r_id);
+	ExitCode_t Append(ResourceType r_type, BBQUE_RID_TYPE r_id);
 
 	/**
 	 * @brief Append a set of resource identifiers from a string path
@@ -221,9 +221,9 @@ public:
 	 *
 	 * Example: path "sys.cpu.mem" will have global type equal to MEMORY
 	 *
-	 * @return The related @ref ResourceIdentifier::Type_t value
+	 * @return The related @ref ResourceType value
 	 **/
-	inline ResourceIdentifier::Type_t Type() const {
+	inline ResourceType Type() const {
 		return global_type;
 	}
 
@@ -232,11 +232,11 @@ public:
 	 *
 	 * Example: The parent type of 'mem' in "sys.cpu.mem" is 'cpu'
 	 *
-	 * @return The related @ref ResourceIdentifier::Type_t value
+	 * @return The related @ref ResourceType value
 	 **/
-	ResourceIdentifier::Type_t ParentType(
-		br::ResourceIdentifier::Type_t r_type =
-			br::ResourceIdentifier::PROC_ELEMENT) const;
+	ResourceType ParentType(
+		br::ResourceType r_type =
+			br::ResourceType::PROC_ELEMENT) const;
 
 	/** Iterators **/
 
@@ -259,7 +259,7 @@ public:
 	/**
 	 * @brief Get the ID associated to a resource (type) in the path
 	 */
-	BBQUE_RID_TYPE GetID(ResourceIdentifier::Type_t r_type) const;
+	BBQUE_RID_TYPE GetID(ResourceType r_type) const;
 
 	/**
 	 * @brief Replace the ID associated to a resource (type) in the path
@@ -272,7 +272,7 @@ public:
 	 *	ERR_UNKN_TYPE if no valid type has been specified.
 	 */
 	ExitCode_t ReplaceID(
-			ResourceIdentifier::Type_t r_type,
+			ResourceType r_type,
 			BBQUE_RID_TYPE src_r_id,
 			BBQUE_RID_TYPE dst_r_id);
 
@@ -295,7 +295,7 @@ public:
 	 * @return A shared pointer to the resource identifier object
 	 */
 	br::ResourceIdentifierPtr_t GetIdentifier(
-			ResourceIdentifier::Type_t r_type) const;
+			ResourceType r_type) const;
 
 	/**
 	 * @brief The depth level of type in a path
@@ -305,7 +305,7 @@ public:
 	 * @return -1 if the type is not included in the current path, otherwise
 	 * returns the positive integer value related to the depth level
 	 */
-	int8_t GetLevel(br::ResourceIdentifier::Type_t r_type) const;
+	int8_t GetLevel(br::ResourceType r_type) const;
 
 	/**
 	 * @brief Return the number of levels of the path
@@ -340,13 +340,13 @@ private:
 	std::vector<ResourceIdentifierPtr_t> identifiers;
 
 	/** Keep track of the resource types in the path */
-	std::bitset<ResourceIdentifier::TYPE_COUNT> types_bits;
+	std::bitset<R_TYPE_COUNT> types_bits;
 
 	/** Keep track of the position of the resource type in the vector */
 	std::unordered_map<uint16_t, uint8_t> types_idx;
 
 	/** The type of resource referenced by the path. */
-	br::ResourceIdentifier::Type_t global_type;
+	br::ResourceType global_type;
 
 	/** Number of levels counter */
 	uint8_t level_count;

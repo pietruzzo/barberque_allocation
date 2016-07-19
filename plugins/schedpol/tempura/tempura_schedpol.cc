@@ -501,7 +501,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoBinding(
 	BindingMap_t & bindings(ra.GetBindingOptions());
 	for (auto & bd_entry: bindings) {
 		BindingInfo_t const & bd_info(*(bd_entry.second));
-		br::ResourceIdentifier::Type_t bd_type = bd_entry.first;
+		br::ResourceType bd_type = bd_entry.first;
 		// CPU, GPU level binding
 		// Resource path e.g., "sys0.cpu[0..n].XX"
 		if (bd_info.rsrcs.empty()) continue;
@@ -509,7 +509,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoBinding(
 			BBQUE_RID_TYPE bd_id = rsrc->ID();
 			logger->Debug("DoBinding: [%s] binding to %s%d",
 					psched->StrId(),
-					br::ResourceIdentifier::TypeStr[bd_type],
+					br::GetResourceTypeString(bd_type),
 					bd_id);
 
 			ref_n = psched->pawm->BindResource(bd_type, bd_id, bd_id, ref_n);

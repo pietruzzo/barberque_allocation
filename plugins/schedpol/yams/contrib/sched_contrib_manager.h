@@ -205,7 +205,7 @@ private:
 
 	/** Global config parameters for metrics contributes */
 	static uint16_t
-		sc_cfg_params[SchedContrib::SC_CONFIG_COUNT * br::Resource::TYPE_COUNT];
+		sc_cfg_params[SchedContrib::SC_CONFIG_COUNT * R_TYPE_COUNT];
 
 
 	/**

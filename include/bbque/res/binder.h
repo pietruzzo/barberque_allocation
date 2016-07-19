@@ -67,12 +67,12 @@ public:
 	 */
 	static uint32_t Bind(
 			UsagesMap_t const & src_um,
-			ResourceIdentifier::Type_t r_type,
+			ResourceType r_type,
 			BBQUE_RID_TYPE	src_r_id,
 			BBQUE_RID_TYPE dst_r_id,
 			UsagesMapPtr_t dst_pum,
-			ResourceIdentifier::Type_t filter_rtype =
-				ResourceIdentifier::UNDEFINED,
+			ResourceType filter_rtype =
+				ResourceType::UNDEFINED,
 			ResourceBitset * filter_mask = nullptr);
 
 	/**
@@ -84,10 +84,10 @@ public:
 	 * @return A ResourceBitset object tracking all the IDs
 	 */
 	static ResourceBitset GetMask(
-			UsagesMapPtr_t pum, ResourceIdentifier::Type_t r_type);
+			UsagesMapPtr_t pum, ResourceType r_type);
 
 	static ResourceBitset GetMask(
-			UsagesMap_t const & um, ResourceIdentifier::Type_t r_type);
+			UsagesMap_t const & um, ResourceType r_type);
 
 	/**
 	 * @brief Retrieve IDs of a type of resource under a scope
@@ -119,8 +119,8 @@ public:
 	 */
 	static ResourceBitset GetMask(
 			UsagesMapPtr_t pum,
-			ResourceIdentifier::Type_t r_type,
-			ResourceIdentifier::Type_t r_scope_type,
+			ResourceType r_type,
+			ResourceType r_scope_type,
 			BBQUE_RID_TYPE r_scope_id,
 			AppSPtr_t papp = nullptr,
 			RViewToken_t vtok = 0);
@@ -137,8 +137,8 @@ public:
 	 */
 	static ResourceBitset GetMask(
 			ResourcePtrList_t const & rpl,
-			ResourceIdentifier::Type_t r_type,
-			ResourceIdentifier::Type_t r_scope_type,
+			ResourceType r_type,
+			ResourceType r_scope_type,
 			BBQUE_RID_TYPE r_scope_id,
 			AppSPtr_t papp = nullptr,
 			RViewToken_t vtok = 0);
