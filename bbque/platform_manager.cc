@@ -26,6 +26,8 @@ PlatformManager::PlatformManager()
 	CommandManager &cm = CommandManager::GetInstance();
 	cm.RegisterCommand(PLATFORM_MANAGER_NAMESPACE ".refresh", static_cast<CommandHandler*>(this),
 	                   "Refresh CGroups resources description");
+
+	Worker::Setup(BBQUE_MODULE_NAME("plm"), PLATFORM_MANAGER_NAMESPACE);
 }
 
 PlatformManager::~PlatformManager()
