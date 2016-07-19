@@ -1,33 +1,31 @@
-#!/bin/sh
+#!/bin/bash
 
-### BEGIN INIT INFO
-# Provides:          bbqued
-# Required-Start:
-# Required-Stop:
-# Should-Start:
-# Should-Stop:
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: BarbequeRTRM daemon for Run-Time Resource Management
-# Description:       The Barbeque daemon wait for applications needing to
-#                    access accellerator resources and assigne them according
-#                    to resources availability and application requirements.
-### END INIT INFO
+# Bash script to start/stop the BarbequeRTRM daemon.
 
-# Barbeque daemon handler script. Distro-independent script to start/stop
-# daemon. Should be runnable in any distro but won't give any feedback.
-# Avoid bashism since this script runs using /bin/sh, not /bin/bash!
+declare START_TIME=$(date +%s.%3N)
 
-DAEMON_CONF="@CONFIG_BOSP_RUNTIME_PATH@/@BBQUE_PATH_DEFAULTS@/bbqued"
-if [ ! -f $DAEMON_CONF ]; then
-		echo "Daemon configuration [$DAEMON_CONF] not found"
-		exit 1
-fi
+bbqued_info() {
+	echo -ne '\E[33;0m'
+	printf "[%5s] $1\n" $(echo $START_TIME"-"$(date +%s.%3N) | bc)
+	echo -ne '\E[33;0m'
+}
+bbqued_notice() {
+	echo -ne '\E[33;35m'
+	printf "[%5s] $1\n" $(echo $START_TIME"-"$(date +%s.%3N) | bc)
+	echo -ne '\E[33;0m'
+}
+bbqued_error() {
+	echo -ne '\E[33;31m'
+	printf "[%5s] $1\n" $(echo $START_TIME"-"$(date +%s.%3N) | bc)
+	echo -ne '\E[33;0m'
+	exit 1
+}
+
 
 # Source the daemon configuration settings
+DAEMON_CONF="@CONFIG_BOSP_RUNTIME_PATH@/@BBQUE_PATH_DEFAULTS@/bbqued"
+[ ! -f $DAEMON_CONF ] && bbqued_error "Daemon configuration [$DAEMON_CONF] not found"
 . @CONFIG_BOSP_RUNTIME_PATH@/etc/default/bbqued
-
-# Setup actual value (env overriding allowed)
 
 # Daemon Configuration
 BBQUE_BIN="${BBQUE_BIN:-$BIN}"
@@ -36,122 +34,73 @@ BBQUE_BRTF="${BBQUE_BRTF:-$BRTF}"
 BBQUE_PIDFILE="${BBQUE_PIDFILE:-$PIDFILE}"
 BBQUE_LOGFILE="${BBQUE_LOGFILE:-$LOGFILE}"
 BBQUE_LOCKFILE="${BBQUE_LOCKFILE:-$LOCKFILE}"
-
 # PIL Layouts and Tools
 BBQUE_PILSETUPS="${BBQUE_PILSETUPS:-$PILSETUPS}"
 BBQUE_PILLAYOUT="${BBQUE_PILLAYOUT:-$PILLAYOUT}"
 BBQUE_PILPARSER="${BBQUE_PILPARSER:-$PILPARSER}"
-
 # CGroups Configurations and Tools
 BBQUE_CGMOUNT="${BBQUE_CGMOUNT:-$CGMOUNT}"
 BBQUE_CGCONFS="${BBQUE_CGCONFS:-$CGCONFS}"
 BBQUE_CGPARSER="${BBQUE_CGPARSER:-$CGPARSER}"
 BBQUE_CGAGENT="${BBQUE_CGAGENT:-$CGAGENT}"
-
 # PIL generator (in case not specified)
 PIL_GENERATE=$SYSROOT"/sbin/bbque-pil-generator"
 
-# Check root permission
-check_root() {
-		# Make sure only root can run our script
-		if [ "x`id -u`" != "x0" ]; then
-				echo "This script must be run as root\n\n"
-				exit 1
-		fi
-}
-
 # Check mouting status of required controllers
 check_controllers() {
+	# Umount pre-existing unified hierarchies
+	EXISTING_M_POINT=$(mount | grep $BBQUE_CGMOUNT)
+	if [ "$EXISTING_M_POINT" != "" ]; then
+		bbqued_info "Umount pre-existing unified hierarchy"
+		sudo umount $BBQUE_CGMOUNT
+	fi
 
-		# The [cpuset,memory,cpu,cpuacct] controller must be mounted on the same hierarchy
-		DIFFH=`awk '/^cpuset/{PH=$2}
-						/^memory/{MH=$2}
-						/^cpu/{CH=$2}
-						/^cpuacct/{AH=$2}
-						END{
-							if(PH!=MH || PH!=CH || PH!=AH) print 1;
-							else print 0;
-						}' /proc/cgroups`
+	# The [cpuset,memory,cpu,cpuacct] controller must be mounted on the same hierarchy
+	DIFFH=$(awk '{
+                                        switch($1) {
+                                                case "cpu": ch = $2; break;
+                                                case "cpuset": sh = $2; break;
+                                                case "cpuacct": ah = $2; break;
+                                                case "memory": mh = $2; break;}
+                                   } END {
+                                                if (ch != sh || sh != ah || ah != mh) print 1;
+                                                else print 0;
+                                   }' /proc/cgroups)
 
-		# Hierarchies unmounting
-		if [ $DIFFH -ne 0 ]; then
-				echo '[cpuset,memory,cpu,cpuacct] controllers on different hierachies.'
-				echo 'To continue, they have to be placed on the same hierarchy.'
+	# Hierarchies unmounting
+	if [[ $DIFFH != 0 ]]; then
+		bbqued_info '[cpuset,memory,cpu,cpuacct] controllers on different hierachies. Unmounting'
 
-				read -p 'Proceed with the unmounting (Y/n)? ' ANS
-				if [ -z "$ANS" ]; then
-					ANS='y'
-				fi
+		grep cgroup /proc/mounts | cut -d' ' -f2 | \
+		while read C; do
+			[ -d $C ] || continue
+			case "$C" in
+			*cpuset$*|*memory$*|*cpu$*|*cpuacct$*)
+				bbqued_info "Unmounting [$C] controller..."
+				sudo umount $C
+			esac;
+		done
+	fi
 
-				if [ $ANS != 'Y' ] && [ $ANS != 'y' ]; then
-					echo
-					echo 'BarbequeRTRM could not be started without proper CGroups setup'
-					exit 1
-				fi
+	# Mount BBQ required hierarchies
+	mount -t cgroup -o cpu,cpuset,cpuacct,memory bbque_cgroups \
+			$BBQUE_CGMOUNT >/dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		bbqued_error 'Mounting hierarchies [cpuset,memory,cpu,cpuacct] FAILED'
+	fi
 
-				grep cgroup /proc/mounts | cut -d' ' -f2 | \
-				while read C; do
-					[ -d $C ] || continue
-					case "$C" in
-					*cpuset$*|*memory$*|*cpu$*|*cpuacct$*)
-						echo "Unmounting [$C] controller..."
-						sudo umount $C
-					esac;
-				done
-		fi
-
-		# Mount BBQ required hierarchies
-		mount -t cgroup -o cpu,cpuset,cpuacct,memory bbque_cgroups \
-				$BBQUE_CGMOUNT >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
-				echo 'Mounting hierarchies [cpuset,memory,cpu,cpuacct] FAILED'
-				echo 'BarbequeRTRM could not be started without proper CGroups setup'
-				exit 2
-		fi
-
-}
-
-# Build up the Shield my moving all tasks into HOST node
-ShieldBuild() {
-	echo "Moving all (user-space) tasks into HOST node..."
-	local rotate='|/-\'
-
-	printf "Moving tasks to HOST ";
-	for D in `find /proc/ -maxdepth 1 -type d`; do
-			P=`basename $D`
-			# jumping kernel thread which should not be moved
-			readlink $D/exe >/dev/null 2>&1 || continue
-
-			rotate="${rotate#?}${rotate%???}"
-			printf "[%5d]... %.1s\b\b\b\b\b\b\b\b\b\b\b\b" $P  $rotate;
-			echo $P > $BBQUE_CGMOUNT/user.slice/host/cgroup.procs
-	done
-	echo
-}
-
-# Release the HOST shiled by moving back tasks to ROOT node
-release() {
-	echo "Moving all (user-space) tasks back to ROOT node..."
-	local rotate='|/-\'
-
-	printf "Moving tasks to ROOT ";
-	for P in `cat $BBQUE_CGMOUNT/user.slice/host/tasks`; do
-
-			rotate="${rotate#?}${rotate%???}"
-			printf "[%5d]... %.1s\b\b\b\b\b\b\b\b\b\b\b\b" $P  $rotate;
-			echo $P > $BBQUE_CGMOUNT/cgroup.procs
-	done
 }
 
 # Setup CGroups if required
 setup() {
 
 	# Check for required ROOT permissions
-	check_root
+	[[ $(whoami) == "root" ]] || bbqued_error "This script must be run as root"
 	eval `env | grep SUDO_USER`
-	echo "Sudo user: " $SUDO_USER
+	bbqued_notice "Sudo user: $SUDO_USER"
 
 	# Check for runt-time R/W directories
+	bbqued_info "Checking for runt-time R/W directories"
 	if [ ! -d "$BRTRW" ]; then
 		mkdir -p $BRTRW/bbque
 		mkdir -p $BRTRW/lock
@@ -160,6 +109,7 @@ setup() {
 	fi
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
+	bbqued_info "Checking platform description file"
 	if [ -z "$PILNAME" ]; then
 		if [ ! -z "@CONFIG_BBQUE_PIL_LEGACY@" ]; then
 			PILNAME=`hostname`.bpl
@@ -167,16 +117,15 @@ setup() {
 			PILNAME=systems.xml
 		fi
 	fi
-	echo "Checking platform description file: "$PILNAME""
+	bbqued_notice "Host name: $PILNAME"
 
 	if [ ! -f $BBQUE_PILSETUPS/$PILNAME ]; then
 		# Generating the bpl file on the fly, exploiting menuconfig info
-		echo "Generating platform description setup... ["$BBQUE_PILSETUPS/$PILNAME"]"
+		bbqued_info "Generating PIL layout"
 		HIERARCHY_DEPTH=""
 
 		[ -z "@CONFIG_BBQUE_MEMLOC_L3@" ] || HIERARCHY_DEPTH="L3"
 		[ -z "@CONFIG_BBQUE_MEMLOC_L2@" ] || HIERARCHY_DEPTH="L2"
-		[ -z "HIERARCHY_DEPTH" ] && echo "BD hierachy level choice error. Switching to manual mode"
 
 		# Make the generator executable
 		sudo chmod a+x $PIL_GENERATE
@@ -194,21 +143,19 @@ setup() {
 	CGSETUP=$BBQUE_CGCONFS/`hostname`".cgroup"
 
 	# Check if the CGroup hierarcy is already mounted
-	if [ ! -f $BBQUE_CGMOUNT/tasks ]; then
-		echo "Mounting CGroups on [$BBQUE_CGMOUNT]..."
-		mkdir -p $BBQUE_CGMOUNT >/dev/null 2>&1
-		check_controllers
-	fi
+	bbqued_notice "GCroup root: $BBQUE_CGMOUNT"
+	mkdir -p $BBQUE_CGMOUNT >/dev/null 2>&1
+	check_controllers
 
 	# Check for CFS quota support
 	if [ ! -f $BBQUE_CGMOUNT/cpu.cfs_quota_us ]; then
-		echo "Disabling CFS Quota support (Error: not available)"
+		bbqued_info "Disabling CFS Quota support (Error: not available)"
 		CGROUP_FEATURES_CPUQ="N"
 	fi
 
 	# Check for CFS quota support
 	if [ ! -f $BBQUE_CGMOUNT/memory.limit_in_bytes ]; then
-		echo "Disabling Memory controller (Error: not available)"
+		bbqued_info "Disabling Memory controller (Error: not available)"
 		CGROUP_FEATURES_MEMC="N"
 	fi
 
@@ -217,28 +164,36 @@ setup() {
 	PLAT_MEMS=`cat $BBQUE_CGMOUNT/cpuset.mems`
 
 	if [ ! -f $CGSETUP -o $PILSETUP -nt $CGSETUP ]; then
+
 		[ ! -z "@CONFIG_BBQUE_PIL_LEGACY@" ] && \
-                echo "Compiling PIL Layout [$PILSETUP]..."
+			bbqued_info "Compiling PIL Layout [$PILSETUP]..."
+
 		$BBQUE_PILPARSER \
 				-v BBQUE_PLAT_CPUS="$PLAT_CPUS" \
 				-v BBQUE_PLAT_MEMS="$PLAT_MEMS" \
 				-v BBQUE_FEAT_CPUQ="$CGROUP_FEATURES_CPUQ" \
 				-v BBQUE_FEAT_MEMC="$CGROUP_FEATURES_MEMC" \
 				$PILSETUP > $CGSETUP
-                if [ $? -ne 0 ]; then
-                                echo 'Platform Layout Parser FAILED'
-                                echo 'BarbequeRTRM could not be started'
-                                exit 3
-                fi
+		if [ $? -ne 0 ]; then
+			echo 'Platform Layout Parser FAILED'
+			echo 'BarbequeRTRM could not be started'
+			exit 3
+		fi
 	fi
 
-	echo "Loading CGroups configuration [$CGSETUP]..."
+	bbqued_notice "CGroups configuration: $CGSETUP"
 	LD_PRELOAD=$SYSROOT/lib/libcgroup.so $BBQUE_CGPARSER -l $CGSETUP || exit 1
 
-	echo "Setup CGroups shield..."
-	ShieldBuild
+	# Setup CGroups shield
+	bbqued_info "Moving all (user-space) tasks into HOST node"
+	for D in `find /proc/ -maxdepth 1 -type d`; do
+			P=`basename $D`
+			# jumping kernel thread which should not be moved
+			readlink $D/exe >/dev/null 2>&1 || continue
+			echo $P > $BBQUE_CGMOUNT/user.slice/host/cgroup.procs >/dev/null 2>&1
+	done
 
-	echo "Setup Release Agent [$BBQUE_CGAGENT]..."
+	bbqued_notice "Setup Release Agent: $BBQUE_CGAGENT"
 	echo "$BBQUE_CGAGENT" > $BBQUE_CGMOUNT/release_agent
 	echo "1" > $BBQUE_CGMOUNT/user.slice/notify_on_release
 }
@@ -247,14 +202,10 @@ start() {
 	# Start the daemon only if there is not another instance running
 	if [ -f $BBQUE_PIDFILE ]; then
 		PID=`cat $BBQUE_PIDFILE`
-		if [ -d /proc/$PID ]; then
-			echo "Barbeque RTRM daemon already running [PID: $PID]"
-			exit 1
-		fi
+		[ -d /proc/$PID ] && bbqued_error "Barbeque RTRM daemon already running [PID: $PID]"
 	fi
 
 	# Setup CGroups
-	echo "System setup..."
 	setup
 
 	# Ensure the run-time BBQ folder exists and it is world writable
@@ -270,39 +221,36 @@ start() {
 	rm -f $TMPCONF
 
 	# Run the daemon
-	echo "Starting BBQ Daemon..."
-	"$BBQUE_BIN" -c $BBQUE_CONF -d && \
-			echo "Using LOG file [$BBQUE_LOGFILE]"
+	bbqued_notice "LOG file: $BBQUE_LOGFILE"
+	bbqued_info "Starting BBQ Daemon..."
+	"$BBQUE_BIN" -c $BBQUE_CONF -d
 }
 
 stop() {
 	# Stop the daemon only if there is an instance running
 	if [ -f $BBQUE_PIDFILE ]; then
-		echo "Stopping BBQ Daemon..."
 		PID=`cat $BBQUE_PIDFILE`
 		sudo kill -SIGINT $PID #>/dev/null 2>&1
 	fi
 
 	# Cleaning-up CGroup reservations
 	if [ -d $BBQUE_CGMOUNT/user.slice ]; then
-		echo "Releasing CGroups shield..."
-		release
+		bbqued_info "Moving all (user-space) tasks back to ROOT node"
+		for P in `cat $BBQUE_CGMOUNT/user.slice/host/tasks &> /dev/null`; do
+			echo $P > $BBQUE_CGMOUNT/cgroup.procs >/dev/null 2>&1
+		done
 		sleep 1
-		echo "Releasing BBQ CGroups..."
-		find  $BBQUE_CGMOUNT/user.slice/host -type d -delete
-		find  $BBQUE_CGMOUNT/user.slice/res -type d -delete
+		bbqued_info "Removing applications nodes"
+		find  $BBQUE_CGMOUNT/user.slice/* -type d -delete >/dev/null 2>&1
 	fi
 
 	# Clean-up lock and PID files
+	bbqued_info "Removing runtime data"
 	rm -f $BBQUE_PIDFILE $BBQUE_LOCKFILE >/dev/null 2>&1
 
-	exit 0
-}
+	sudo kill -9 $(pidof barbeque) >/dev/null 2>&1
 
-restart() {
-	stop
-	sleep 1
-	start
+	exit 0
 }
 
 case "$1" in
@@ -312,12 +260,6 @@ case "$1" in
 	stop)
 		stop
 		;;
-	restart)
-		restart
-		;;
-	status)
-		# not implemented
-		;;
 	setup)
 		setup
 		;;
@@ -325,9 +267,9 @@ case "$1" in
 		release
 		;;
 	*)
-		echo "Usage: $0 {start|stop|restart}, or {setup|release} for cgroups management only"
-		exit 1
+		bbqued_error "Usage: $0 {start|stop}, or {setup} for cgroups management only"
 		;;
 esac
 
 # vim: set tabstop=4:
+
