@@ -43,6 +43,7 @@
 
 #include <bitset>
 #include <map>
+#include <string>
 
 using bbque::plugins::PluginManager;
 using bbque::utils::MetricsCollector;
@@ -134,14 +135,14 @@ public:
 	 * @param name a string to identify the worker to register
 	 * @param pw a pointer to the worker to be registered
 	 */
-	static void Register(const char *name, Worker *pw);
+	static void Register(std::string const & name, Worker *pw);
 
 	/**
 	 * @brief Unregister a tracked Worker
 	 *
 	 * @param name a string identifying the worker
 	 */
-	static void Unregister(const char *name);
+	static void Unregister(std::string const & name);
 
 
 private:

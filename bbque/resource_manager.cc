@@ -249,15 +249,15 @@ std::map<std::string, Worker*> ResourceManager::workers_map;
 std::mutex ResourceManager::workers_mtx;
 std::condition_variable ResourceManager::workers_cv;
 
-void ResourceManager::Register(const char *name, Worker *pw) {
+void ResourceManager::Register(std::string const & name, Worker *pw) {
 	std::unique_lock<std::mutex> workers_ul(workers_mtx);
-	fprintf(stderr, FI("Registering Worker[%s]...\n"), name);
+	fprintf(stderr, FI("Registering Worker[%s]...\n"), name.c_str());
 	workers_map[name] = pw;
 }
 
-void ResourceManager::Unregister(const char *name) {
+void ResourceManager::Unregister(std::string const & name) {
 	std::unique_lock<std::mutex> workers_ul(workers_mtx);
-	fprintf(stderr, FI("Unregistering Worker[%s]...\n"), name);
+	fprintf(stderr, FI("Unregistering Worker[%s]...\n"), name.c_str());
 	workers_map.erase(name);
 	workers_cv.notify_one();
 }
@@ -411,7 +411,7 @@ void ResourceManager::EvtExcStart() {
 	}
 	timeout = 100 + (100 * papp->Priority());
 	optimize_dfr.Schedule(milliseconds(timeout));
-	
+
 	// Collecing execution metrics
 	RM_GET_TIMING(metrics, RM_EVT_TIME_START, rm_tmr);
 }
