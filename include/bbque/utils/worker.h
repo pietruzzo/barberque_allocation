@@ -19,12 +19,9 @@
 #define BBQUE_WORKER_H_
 
 #include <string>
-
-#include "bbque/cpp11/condition_variable.h"
-#include "bbque/cpp11/mutex.h"
-#include "bbque/cpp11/thread.h"
-#include "bbque/cpp11/mutex.h"
-#include "bbque/cpp11/condition_variable.h"
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 
 #include "bbque/utils/logging/logger.h"
 
