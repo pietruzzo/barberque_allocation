@@ -19,7 +19,13 @@
 
 #define R_TYPE_COUNT        12
 
-namespace bbque { namespace res {
+/** Data-type for the Resource IDs */
+typedef int16_t BBQUE_RID_TYPE;
+
+namespace bbque
+{
+namespace res
+{
 
 /**
  * @class ResourceType

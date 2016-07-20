@@ -32,8 +32,6 @@ namespace res
 
 class ResourceIdentifier;
 
-/** Data-type for the Resource IDs */
-typedef int16_t BBQUE_RID_TYPE;
 /** Shared pointer to a ResourceIdentifier object */
 typedef std::shared_ptr<ResourceIdentifier> ResourceIdentifierPtr_t;
 
