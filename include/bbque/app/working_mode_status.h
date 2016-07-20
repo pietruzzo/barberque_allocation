@@ -33,16 +33,19 @@ namespace bu = bbque::utils;
 namespace bbque {
 
 namespace res {
+
 class Resource;
 class ResourcePath;
 class ResourceBitset;
 typedef size_t RViewToken_t;
 typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
 
-class Usage;
-typedef std::shared_ptr<Usage> UsagePtr_t;
-typedef std::map<ResourcePathPtr_t, UsagePtr_t, CompareSP<ResourcePath> > UsagesMap_t;
-typedef std::shared_ptr<UsagesMap_t> UsagesMapPtr_t;
+class ResourceAssignment;
+
+typedef std::shared_ptr<ResourceAssignment> ResourceAssignmentPtr_t;
+typedef std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath> >
+	ResourceAssignmentMap_t;
+typedef std::shared_ptr<ResourceAssignmentMap_t> ResourceAssignmentMapPtr_t;
 }
 
 namespace app {
@@ -128,20 +131,20 @@ public:
 
 	/**
 	 * @brief Return a map of all the requested resources
-	 * @return A constant reference to the map of resource usages object
+	 * @return A constant reference to the map of resource assignments object
 	 */
-	virtual br::UsagesMap_t const & RecipeResourceUsages() const = 0;
+	virtual br::ResourceAssignmentMap_t const & RecipeResourceUsages() const = 0;
 
 	/**
 	 * @brief How many resources the working mode uses
-	 * @return The number of resource usages
+	 * @return The number of resource assignments
 	 */
 	virtual size_t NumberOfResourceUsages() const = 0;
 
 	/**
-	 * @brief Current resource usages bound with the system resources
+	 * @brief Current resource assignments bound with the system resources
 	 *
-	 * This is the map of resource usages that should be built by the
+	 * This is the map of resource assignments that should be built by the
 	 * scheduling policy. If the method returns a null pointer then the
 	 * resources have been set for being allocated yet.
 	 *
@@ -151,7 +154,7 @@ public:
 	 *
 	 * @return A map of Usage objects
 	 */
-	virtual br::UsagesMapPtr_t GetSchedResourceBinding(size_t b_id = 0) const = 0;
+	virtual br::ResourceAssignmentMapPtr_t GetSchedResourceBinding(size_t b_id = 0) const = 0;
 
 	/**
 	 * @brief Get the bitmap of the clusters currently used.

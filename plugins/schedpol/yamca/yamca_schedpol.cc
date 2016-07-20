@@ -519,36 +519,36 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::GetContentionLevel(
 
 SchedulerPolicyIF::ExitCode_t YamcaSchedPol::ComputeContentionLevel(
 		ba::AppCPtr_t const & papp,
-		br::UsagesMapPtr_t const & rsrc_usages,
+		br::ResourceAssignmentMapPtr_t const & assign_map,
 		float & cont_level) {
 	uint64_t rsrc_avail;
 	uint64_t min_usage;
 	cont_level = 0;
 
 	// Check the availability of the resources requested
-	br::UsagesMap_t::const_iterator usage_it(rsrc_usages->begin());
-	br::UsagesMap_t::const_iterator end_usage(rsrc_usages->end());
+	br::ResourceAssignmentMap_t::const_iterator usage_it(assign_map->begin());
+	br::ResourceAssignmentMap_t::const_iterator end_usage(assign_map->end());
 	while (usage_it != end_usage) {
 		// Current resource
 		ResourcePathPtr_t const & rsrc_path(usage_it->first);
-		br::UsagePtr_t const & pusage(usage_it->second);
+		br::ResourceAssignmentPtr_t const & r_assign(usage_it->second);
 
 		// Query resource availability
-		rsrc_avail = rsrc_acct.Available(pusage->GetResourcesList(),
+		rsrc_avail = rsrc_acct.Available(r_assign->GetResourcesList(),
 				rsrc_view_token, papp);
 		logger->Debug("{%s} availability = %" PRIu64,
 				rsrc_path->ToString().c_str(), rsrc_avail);
 
 		// Is the request satisfiable?
-		if (rsrc_avail < pusage->GetAmount()) {
+		if (rsrc_avail < r_assign->GetAmount()) {
 			logger->Debug("Contention level: [%s] R=%d / A=%d",
 					rsrc_path->ToString().c_str(),
-					pusage->GetAmount(), rsrc_avail);
+					r_assign->GetAmount(), rsrc_avail);
 
 			// Set the availability to a 1/10 of the requested amount of
 			// resource in order to increase dramatically the resulting
 			// contention level
-			rsrc_avail = 0.1 * pusage->GetAmount();
+			rsrc_avail = 0.1 * r_assign->GetAmount();
 		}
 
 		// Get the resource usage of the AWM with the min value
@@ -557,7 +557,7 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::ComputeContentionLevel(
 
 		// Update the contention level (inverse)
 		cont_level +=
-			(((float) pusage->GetAmount()) * min_usage) / (float) rsrc_avail;
+			(((float) r_assign->GetAmount()) * min_usage) / (float) rsrc_avail;
 
 		++usage_it;
 	}

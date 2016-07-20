@@ -32,20 +32,19 @@
 namespace bbque { namespace res {
 
 // Forward declaration
-class Usage;
+class ResourceAssignment;
 class ResourcePath;
 
-typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
 /** Shared pointer to Usage object */
-typedef std::shared_ptr<Usage> UsagePtr_t;
+typedef std::shared_ptr<ResourceAssignment> ResourceAssignmentPtr_t;
 /** Map of Usage descriptors. Key: resource path */
-typedef std::map<ResourcePathPtr_t, UsagePtr_t, CompareSP<ResourcePath> > UsagesMap_t;
+typedef std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath> > ResourceAssignmentMap_t;
 /** Constant pointer to the map of Usage descriptors */
-typedef std::shared_ptr<UsagesMap_t> UsagesMapPtr_t;
+typedef std::shared_ptr<ResourceAssignmentMap_t> ResourceAssignmentMapPtr_t;
 
 
 /**
- * @brief The usages of a resource
+ * @brief How the resource requests are bound into assignments
  *
  * An application working modes defines a set of this resource requests
  * (usages).
@@ -65,7 +64,7 @@ typedef std::shared_ptr<UsagesMap_t> UsagesMapPtr_t;
  * descriptors of the resources "pe (processing elements)" in the cluster
  * assigned by the scheduler/optimizer module.
  */
-class Usage {
+class ResourceAssignment {
 
 friend class bbque::ResourceAccounter;
 
@@ -114,12 +113,12 @@ public:
 	 * @param amount The amount of resource usage
 	 * @param policy The filling policy
 	 */
-	Usage(uint64_t amount, Policy policy = Policy::SEQUENTIAL);
+	ResourceAssignment(uint64_t amount, Policy policy = Policy::SEQUENTIAL);
 
 	/**
 	 * @brief Destructor
 	 */
-	~Usage();
+	~ResourceAssignment();
 
 	/**
 	 * @brief The amount of resource required/assigned to the Application/EXC

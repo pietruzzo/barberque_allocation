@@ -240,12 +240,12 @@ private:
 	 * @brief Compute the resource contention level
 	 *
 	 * @param papp Shared pointer to the application to schedule
-	 * @param rsrc_usages Map of resource usages to bind
+	 * @param assign_map Map of resource assignments to bind
 	 * @param cont_level The contention level value to return
 	 * @return @see ExitCode_t
 	 */
 	ExitCode_t ComputeContentionLevel(ba::AppCPtr_t const & papp,
-			br::UsagesMapPtr_t const & rsrc_usages, float & cont_level);
+			br::ResourceAssignmentMapPtr_t const & assign_map, float & cont_level);
 
 };
 

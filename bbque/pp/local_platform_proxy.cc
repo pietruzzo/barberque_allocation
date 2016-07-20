@@ -143,7 +143,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(AppPtr_t pap
 
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
         AppPtr_t papp,
-        UsagesMapPtr_t pres,
+        ResourceAssignmentMapPtr_t pres,
         bool excl) {
 	ExitCode_t ec;
 

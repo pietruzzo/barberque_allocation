@@ -51,13 +51,13 @@ public:
 	};
 
 	/**
-	 * @brief Bind resource usages to system resources
+	 * @brief Bind resource assignments to system resources
 	 *
-	 * @param src_um The map of resource usages to bind
+	 * @param source_map The map of resource assignments to bind
 	 * @param r_type The type of resource to bind
 	 * @param src_r_id The ID of the resource to bind
 	 * @param dst_r_id The ID of the system resource to which bind
-	 * @param dst_pum A shared pointer to the map of bound resources to fill
+	 * @param out_map A shared pointer to the map of bound resources to fill
 	 *
 	 * @param filter_rtype [optional] Type of resource to filter
 	 * @param filter_mask  [optional] IDs of the resources to include in the output
@@ -66,28 +66,28 @@ public:
 	 * @return The number of resources on which the binding has been performed
 	 */
 	static uint32_t Bind(
-			UsagesMap_t const & src_um,
+			ResourceAssignmentMap_t const & source_map,
 			ResourceType r_type,
-			BBQUE_RID_TYPE	src_r_id,
+			BBQUE_RID_TYPE src_r_id,
 			BBQUE_RID_TYPE dst_r_id,
-			UsagesMapPtr_t dst_pum,
+			ResourceAssignmentMapPtr_t out_map,
 			ResourceType filter_rtype =
 				ResourceType::UNDEFINED,
 			ResourceBitset * filter_mask = nullptr);
 
 	/**
-	 * @brief Retrieve IDs of a type of resource from a UsagesMap_t
+	 * @brief Retrieve IDs of a type of resource from a ResourceAssignmentMap_t
 	 *
-	 * @param pum A shared pointer to the map of resource usages
+	 * @param assign_map A shared pointer to the map of resource assignments
 	 * @param r_type The type of resource to consider
 	 *
 	 * @return A ResourceBitset object tracking all the IDs
 	 */
 	static ResourceBitset GetMask(
-			UsagesMapPtr_t pum, ResourceType r_type);
+			ResourceAssignmentMapPtr_t assign_map, ResourceType r_type);
 
 	static ResourceBitset GetMask(
-			UsagesMap_t const & um, ResourceType r_type);
+			ResourceAssignmentMap_t const & assign_map, ResourceType r_type);
 
 	/**
 	 * @brief Retrieve IDs of a type of resource under a scope
@@ -108,7 +108,7 @@ public:
 	 *
 	 * </tt>
 	 *
-	 * @param pum A shared pointer to the map of resource usages
+	 * @param assign_map A shared pointer to the map of resource assignments
 	 * @param r_type The target type of resource
 	 * @param r_type_scope The type of the scope resource
 	 * @param r_type_id The ID of the scope resource
@@ -118,7 +118,7 @@ public:
 	 * @return A ResourceBitset object tracking all the IDs
 	 */
 	static ResourceBitset GetMask(
-			UsagesMapPtr_t pum,
+			ResourceAssignmentMapPtr_t assign_map,
 			ResourceType r_type,
 			ResourceType r_scope_type,
 			BBQUE_RID_TYPE r_scope_id,
@@ -144,15 +144,16 @@ public:
 			RViewToken_t vtok = 0);
 
 	/**
-	 * @brief Check if two resource usages map are compatible for binding
+	 * @brief Check if two resource assignments map are compatible for binding
 	 *
-	 * @param src_pum A shared pointer to the first map of resource usages
-	 * @param dst_pum A shared pointer to the second map of resource usages
+	 * @param source_map A shared pointer to the first map of resource assignments
+	 * @param out_map A shared pointer to the second map of resource assignments
 	 *
 	 * @return OK if compatible, NOT_COMPATIBLE otherwise
 	 */
 	static ExitCode_t Compatible(
-			UsagesMapPtr_t src_pum, UsagesMapPtr_t dst_pum);
+			ResourceAssignmentMapPtr_t source_map,
+			ResourceAssignmentMapPtr_t out_map);
 
 };
 

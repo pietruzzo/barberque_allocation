@@ -244,6 +244,7 @@ public:
 	 *
 	 * @param rsrc_path Resource path
 	 * @param amount The usage amount
+	 * @param split_policy How to split the amount among the bound resources
 	 *
 	 * @return WM_RSRC_NOT_FOUND if the resource cannot be found in the
 	 * system. WM_RSRC_ERR_NAME if the resource path is not valid (unknown
@@ -253,8 +254,8 @@ public:
 	ExitCode_t AddResourceUsage(
 			std::string const & rsrc_path,
 			uint64_t amount,
-			br::Usage::Policy usage_policy =
-				br::Usage::Policy::SEQUENTIAL);
+			br::ResourceAssignment::Policy split_policy =
+				br::ResourceAssignment::Policy::SEQUENTIAL);
 
 	/**
 	 * @see WorkingModeStatusIF
@@ -264,7 +265,7 @@ public:
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline br::UsagesMap_t const & RecipeResourceUsages() const {
+	inline br::ResourceAssignmentMap_t const & RecipeResourceUsages() const {
 		return resources.requested;
 	}
 
@@ -305,12 +306,12 @@ public:
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	br::UsagesMapPtr_t GetSchedResourceBinding(size_t b_refn) const;
+	br::ResourceAssignmentMapPtr_t GetSchedResourceBinding(size_t b_refn) const;
 
 	/**
 	 * @brief Set the resource binding to schedule
 	 *
-	 * This binds the map of resource usages pointed by "resources.sched_bindings"
+	 * This binds the map of resource assignments pointed by "resources.sched_bindings"
 	 * to the WorkingMode. The map will contain Usage objects
 	 * specifying the the amount of resource requested (value) and a list of
 	 * system resource descriptors to which bind the request.
@@ -326,9 +327,9 @@ public:
 	ExitCode_t SetResourceBinding(br::RViewToken_t vtok, size_t b_refn = 0);
 
 	/**
-	 * @brief Get the map of scheduled resource usages
+	 * @brief Get the map of scheduled resource assignments
 	 *
-	 * This method returns the map of the resource usages built through the
+	 * This method returns the map of the resource assignments built through the
 	 * mandatory resource binding, in charge of the scheduling policy.
 	 *
 	 * It is called by the ResourceAccounter to scroll through the list of
@@ -336,7 +337,7 @@ public:
 	 *
 	 * @return A shared pointer to a map of Usage objects
 	 */
-	inline br::UsagesMapPtr_t GetResourceBinding() const {
+	inline br::ResourceAssignmentMapPtr_t GetResourceBinding() const {
 		return resources.sync_bindings;
 	}
 
@@ -590,18 +591,18 @@ private:
 		/**
 		 * The map of resources usages from the recipe
 		 */
-		br::UsagesMap_t requested;
+		br::ResourceAssignmentMap_t requested;
 		/**
 		 * The temporary map of resource bindings. This is built by the
 		 * BindResource calls
 		 */
-		std::map<size_t, br::UsagesMapPtr_t> sched_bindings;
+		std::map<size_t, br::ResourceAssignmentMapPtr_t> sched_bindings;
 		/**
 		 * The map of the resource bindings allocated for the working mode.
 		 * This is set by SetResourceBinding() as a commit of the
 		 * bindings performed, reasonably by the scheduling policy.
 		 */
-		br::UsagesMapPtr_t sync_bindings;
+		br::ResourceAssignmentMapPtr_t sync_bindings;
 		/**
 		 * Keep track of the reference number of the scheduling binding map to
 		 * synchronize

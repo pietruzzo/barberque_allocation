@@ -137,10 +137,10 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::ReclaimResources(AppPtr_t papp) {
 
 PlatformProxy::ExitCode_t OpenCLPlatformProxy::MapResources(
 		ba::AppPtr_t papp,
-		br::UsagesMapPtr_t pum,
+		br::ResourceAssignmentMapPtr_t assign_map,
 		bool excl) {
 	(void) papp;
-	(void) pum;
+	(void) assign_map;
 	(void) excl;
 	logger->Warn("PLAT OCL: No mapping action implemented");
 	return PlatformProxy::PLATFORM_OK;

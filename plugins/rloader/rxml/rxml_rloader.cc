@@ -321,7 +321,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 	std::string read_attribute;
 
 	try {
-		// For each working mode we need resource usages data and (optionally)
+		// For each working mode we need resource assignments data and (optionally)
 		// plugins specific data
 		awms_elem = _xml_elem->first_node("awms", 0, true);
 		CheckMandatoryNode(awms_elem, "awms", _xml_elem);
@@ -364,7 +364,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
 				logger->Warn("AWM {%d:%s} no configuration time provided",
 						wm_id, wm_name.c_str());
 
-			// Load resource usages of the working mode
+			// Load resource assignments of the working mode
 			resources_elem = awm_elem->first_node("resources", 0, false);
 			CheckMandatoryNode(resources_elem, "resources", awm_elem);
 			result = LoadResources(resources_elem, awm, "");
@@ -588,7 +588,7 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node) {
 	uint32_t value;
 
 	// <constraints> [Optional]
-	// An application can specify bounds for resource usages
+	// An application can specify bounds for resource assignments
 	// over which the execution can yield an unsatisfactory
 	// behavior.
 	// This method loads static constraint assertions.

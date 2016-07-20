@@ -306,7 +306,7 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 	ticpp::Element * awm_elem       = nullptr;
 
 	try {
-		// For each working mode we need resource usages data and (optionally)
+		// For each working mode we need resource assignments data and (optionally)
 		// plugins specific data
 		awms_elem = _xml_elem->FirstChildElement("awms", true);
 		awm_elem  = awms_elem->FirstChildElement("awm",  true);
@@ -343,7 +343,7 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadWorkingModes(
 				logger->Warn("AWM ""%s"" no configuration time provided",
 						wm_name.c_str());
 
-			// Load resource usages of the working mode
+			// Load resource assignments of the working mode
 			resources_elem = awm_elem->FirstChildElement("resources", true);
 			result = LoadResources(resources_elem, awm, "");
 			if (result == __RSRC_FORMAT_ERR)
@@ -555,7 +555,7 @@ void XMLRecipeLoader::LoadConstraints(ticpp::Element * _xml_elem) {
 	uint32_t value;
 
 	// <constraints> [Optional]
-	// An application can specify bounds for resource usages
+	// An application can specify bounds for resource assignments
 	// over which the execution can yield an unsatisfactory
 	// behavior.
 	// This method loads static constraint assertions.

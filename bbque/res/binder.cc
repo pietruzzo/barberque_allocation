@@ -30,55 +30,57 @@ namespace bbque { namespace res {
 
 
 uint32_t ResourceBinder::Bind(
-		UsagesMap_t const & src_um,
+		ResourceAssignmentMap_t const & source_map,
 		br::ResourceType r_type,
 		BBQUE_RID_TYPE src_r_id,
 		BBQUE_RID_TYPE dst_r_id,
-		UsagesMapPtr_t dst_pum,
+		ResourceAssignmentMapPtr_t out_map,
 		br::ResourceType filter_rtype,
 		ResourceBitset * filter_mask) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	UsagesMap_t::const_iterator src_it, src_end;
 	ResourcePath::ExitCode_t rp_result;
-	ResourcePtrList_t r_list;
 	uint32_t count = 0;
 	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 
 	// Proceed with the resource binding...
-	for (auto & ru_entry: src_um) {
-		br::ResourcePathPtr_t const & src_ppath(ru_entry.first);
-		br::UsagePtr_t const      & src_pusage(ru_entry.second);
+	for (auto & ru_entry: source_map) {
+		br::ResourcePathPtr_t const & source_path(ru_entry.first);
+		br::ResourceAssignmentPtr_t const & source_assign(ru_entry.second);
 
 		// Build a new resource path
-		br::ResourcePathPtr_t dst_ppath = std::make_shared<ResourcePath>(
-				src_ppath->ToString());
-		if (dst_ppath->NumLevels() == 0)
+		br::ResourcePathPtr_t out_path =
+			std::make_shared<ResourcePath>(source_path->ToString());
+		if (out_path->NumLevels() == 0)
 			return 0;
 
 		// Replace ID of the given resource type with the bound ID
-		rp_result = dst_ppath->ReplaceID(r_type, src_r_id, dst_r_id);
+		rp_result = out_path->ReplaceID(r_type, src_r_id, dst_r_id);
 		if (rp_result == ResourcePath::OK) {
 			logger->Debug("Bind: <%s> to <%s> done",
-					src_ppath->ToString().c_str(),
-					dst_ppath->ToString().c_str());
+					source_path->ToString().c_str(),
+					out_path->ToString().c_str());
 			++count;
 		}
 		else
 			logger->Debug("Bind: Nothing to do in <%s>",
-					src_ppath->ToString().c_str());
+					source_path->ToString().c_str());
 
-		// Create a new Usage object and set the binding list
-		UsagePtr_t dst_pusage = std::make_shared<Usage>(
-				src_pusage->GetAmount(), src_pusage->GetPolicy());
-		r_list = ra.GetResources(dst_ppath);
+		// Create a new ResourceAssignment object and set the binding list
+		ResourceAssignmentPtr_t out_assign =
+			std::make_shared<ResourceAssignment>(
+				source_assign->GetAmount(),
+				source_assign->GetPolicy());
+
+		ResourcePtrList_t r_bindings = ra.GetResources(out_path);
 		if ((filter_rtype != br::ResourceType::UNDEFINED)
 				&& (filter_mask != nullptr))
-			dst_pusage->SetResourcesList(r_list, filter_rtype, *filter_mask);
+			out_assign->SetResourcesList(
+				r_bindings, filter_rtype, *filter_mask);
 		else
-			dst_pusage->SetResourcesList(r_list);
+			out_assign->SetResourcesList(r_bindings);
 
 		// Insert the resource usage object in the output map
-		dst_pum->emplace(dst_ppath, dst_pusage);
+		out_map->emplace(out_path, out_assign);
 	}
 	return count;
 }
@@ -96,36 +98,36 @@ inline void SetBit(
 }
 
 ResourceBitset ResourceBinder::GetMask(
-		UsagesMapPtr_t pum,
+		ResourceAssignmentMapPtr_t assign_map,
 		br::ResourceType r_type) {
-	return GetMask(*(pum.get()), r_type);
+	return GetMask(*(assign_map.get()), r_type);
 }
 
 ResourceBitset ResourceBinder::GetMask(
-		br::UsagesMap_t const & um,
+		br::ResourceAssignmentMap_t const & assign_map,
 		br::ResourceType r_type) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceBitset r_mask;
 
-	// Scan the resource usages map
-	for (auto & ru_entry: um) {
+	// Scan the resource assignments map
+	for (auto & ru_entry: assign_map) {
 		br::ResourcePathPtr_t const & ppath(ru_entry.first);
-		br::UsagePtr_t const & pusage(ru_entry.second);
+		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
 		SetBit(ppath, r_type, r_mask);
-		for (br::ResourcePtr_t const & rsrc: pusage->GetResourcesList())
+		for (br::ResourcePtr_t const & rsrc: r_assign->GetResourcesList())
 			SetBit(ra.GetPath(rsrc->Path()), r_type, r_mask);
 	}
 	return r_mask;
 }
 
 ResourceBitset ResourceBinder::GetMask(
-		UsagesMapPtr_t pum,
+		ResourceAssignmentMapPtr_t assign_map,
 		br::ResourceType r_type,
 		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id,
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
-	UsagesMap_t::iterator pum_it;
+	ResourceAssignmentMap_t::iterator pum_it;
 	ResourceBitset r_mask;
 	br::ResourceType found_rsrc_type, found_scope_type;
 	BBQUE_RID_TYPE found_scope_id;
@@ -135,10 +137,10 @@ ResourceBitset ResourceBinder::GetMask(
 				br::GetResourceTypeString(r_scope_type), r_scope_id,
 				br::GetResourceTypeString(r_type), vtok);
 
-	// Scan the resource usages map
-	for (auto const & ru_entry: *(pum.get())) {
+	// Scan the resource assignments map
+	for (auto const & ru_entry: *(assign_map.get())) {
 		br::ResourcePathPtr_t const & ppath(ru_entry.first);
-		br::UsagePtr_t const & pusage(ru_entry.second);
+		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
 
 		// From the resource path extract the "scope" type (parent type), its
 		// id number, and the resource type
@@ -166,7 +168,7 @@ ResourceBitset ResourceBinder::GetMask(
 			logger->Debug("GetMask: scope <%s> found in resource <%s>!",
 					br::GetResourceTypeString(r_scope_type),
 					ppath->ToString().c_str());
-			r_mask |= GetMask(pusage->GetResourcesList(),
+			r_mask |= GetMask(r_assign->GetResourcesList(),
 					r_type,	r_scope_type, r_scope_id, papp, vtok);
 		}
 	}
@@ -226,22 +228,22 @@ ResourceBitset ResourceBinder::GetMask(
 }
 
 ResourceBinder::ExitCode_t ResourceBinder::Compatible(
-		UsagesMapPtr_t src_pum,
-		UsagesMapPtr_t dst_pum) {
-	UsagesMap_t::iterator src_it, src_end;
-	UsagesMap_t::iterator dst_it, dst_end;
+		ResourceAssignmentMapPtr_t source_map,
+		ResourceAssignmentMapPtr_t out_map) {
+	ResourceAssignmentMap_t::iterator src_it, src_end;
+	ResourceAssignmentMap_t::iterator dst_it, dst_end;
 
 	// Different size of the maps -> not compatible
-	if (src_pum->size() != dst_pum->size())
+	if (source_map->size() != out_map->size())
 		return NOT_COMPATIBLE;
 
 	// Compare each resource path
-	for (src_it = src_pum->begin(), dst_it = dst_pum->begin();
+	for (src_it = source_map->begin(), dst_it = out_map->begin();
 			src_it != src_end; ++src_it, ++dst_it) {
-		ResourcePathPtr_t const & src_ppath(src_it->first);
-		ResourcePathPtr_t const & dst_ppath(dst_it->first);
+		ResourcePathPtr_t const & source_path(src_it->first);
+		ResourcePathPtr_t const & out_path(dst_it->first);
 		// The path should be equal or have equal types (template)
-		if (src_ppath->Compare(*(dst_ppath.get())) == ResourcePath::NOT_EQUAL) {
+		if (source_path->Compare(*(out_path.get())) == ResourcePath::NOT_EQUAL) {
 			return NOT_COMPATIBLE;
 		}
 	}

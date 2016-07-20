@@ -143,11 +143,11 @@ private:
 	ExitCode_t LoadWorkingModes(rapidxml::xml_node<> * xml_elem);
 
 	/**
-	 * @brief Parse the section containing resource usages data.
+	 * @brief Parse the section containing resource assignments data.
 	 * The method has structured for recursive calls
 	 *
 	 * @param xml_elem The XML element from which start loading
-	 * @param wm The working mode including this resource usages
+	 * @param wm The working mode including this resource assignments
 	 * @param res_path Resource path (i.e. "arch.clusters.mem0")
 	 * expected section tag
 	 */

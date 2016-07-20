@@ -29,7 +29,7 @@
 
 #define PLATFORM_PROXY_NAMESPACE "bq.pp"
 
-using bbque::res::UsagesMapPtr_t;
+using bbque::res::ResourceAssignmentMapPtr_t;
 using bbque::res::RViewToken_t;
 using bbque::app::AppPtr_t;
 
@@ -108,7 +108,7 @@ public:
      * usage to the application
      */
     virtual ExitCode_t MapResources(
-			AppPtr_t papp, UsagesMapPtr_t pres, bool excl = true) = 0;
+			AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
 
 
     static const pp::PlatformDescription & GetPlatformDescription() {

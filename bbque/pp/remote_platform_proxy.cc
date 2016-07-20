@@ -82,7 +82,7 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::ReclaimResources(AppPtr_t p
 /**
  * @brief Platform specific resource binding interface.
  */
-RemotePlatformProxy::ExitCode_t RemotePlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
+RemotePlatformProxy::ExitCode_t RemotePlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
                 bool excl) {
 	(void) papp;
 	(void) pres;

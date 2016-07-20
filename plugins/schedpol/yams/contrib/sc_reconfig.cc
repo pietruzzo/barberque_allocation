@@ -63,13 +63,13 @@ SCReconfig::_Compute(
 
 float SCReconfig::ComputeResourceProportional(
 		SchedulerPolicyIF::EvalEntity_t const & evl_ent) {
-	br::UsagesMap_t::const_iterator usage_it;
+	br::ResourceAssignmentMap_t::const_iterator usage_it;
 	float reconf_cost  = 0.0;
 	uint64_t rsrc_tot;
 
 	// Resource requested by the AWM (from the recipe)
 	for (auto const & ru_entry :evl_ent.pawm->RecipeResourceUsages()) {
-		br::UsagePtr_t const & pusage(ru_entry.second);
+		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
 
 		// Total amount of resource (overall)
 		ResourcePathPtr_t r_path(new br::ResourcePath(
@@ -77,10 +77,10 @@ float SCReconfig::ComputeResourceProportional(
 		rsrc_tot = sv->ResourceTotal(r_path);
 		logger->Debug("%s: {%s} R:%" PRIu64 " T:%" PRIu64 "",
 				evl_ent.StrId(), r_path->ToString().c_str(),
-				pusage->GetAmount(), rsrc_tot);
+				r_assign->GetAmount(), rsrc_tot);
 
 		// Reconfiguration cost
-		reconf_cost += ((float) pusage->GetAmount() / (float) rsrc_tot);
+		reconf_cost += ((float) r_assign->GetAmount() / (float) rsrc_tot);
 	}
 
 	// Contribution value

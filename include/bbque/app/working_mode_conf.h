@@ -40,7 +40,7 @@ class WorkingModeConfIF: public WorkingModeStatusIF {
 public:
 
 	/**
-	 * @brief Bind resource usages to system resources descriptors
+	 * @brief Bind resource assignments to system resources descriptors
 	 *
 	 * Resource paths taken from the recipes use IDs that do not care about
 	 * the real system resource IDs registered by BarbequeRTRM. Thus a binding
@@ -78,7 +78,7 @@ public:
 	 * @brief Clear the resource binding to schedule
 	 *
 	 * The method cancel the current resource binding "to schedule", i.e. the
-	 * map of resource usages before builds through BindResource(), and not
+	 * map of resource assignments before builds through BindResource(), and not
 	 * already set.
 	 */
 	void ClearSchedResourceBinding();

@@ -80,8 +80,8 @@ WorkingMode::~WorkingMode() {
 
 WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 		std::string const & rsrc_path,
-		uint64_t required_amount,
-		br::Usage::Policy usage_policy) {
+		uint64_t amount,
+		br::ResourceAssignment::Policy split_policy) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	br::ResourcePath::ExitCode_t rp_result;
 	ExitCode_t result = WM_SUCCESS;
@@ -110,12 +110,12 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	}
 
 	// Insert a new resource usage object in the map
-	br::UsagePtr_t pusage = std::make_shared<br::Usage>(
-			required_amount, usage_policy);
-	resources.requested.emplace(ppath, pusage);
+	br::ResourceAssignmentPtr_t r_assign =
+		std::make_shared<br::ResourceAssignment>(amount, split_policy);
+	resources.requested.emplace(ppath, r_assign);
 	logger->Debug("AddResourceUsage: %s added {%s}"
 			"\t[usage: %" PRIu64 "] [c=%2d]",
-			str_id, ppath->ToString().c_str(),required_amount,
+			str_id, ppath->ToString().c_str(),amount,
 			resources.requested.size());
 
 	return result;
@@ -123,7 +123,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 
 WorkingMode::ExitCode_t WorkingMode::Validate() {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	br::UsagesMap_t::iterator usage_it, it_end;
+	br::ResourceAssignmentMap_t::iterator usage_it, it_end;
 	uint64_t total_amount;
 
 	// Initialization
@@ -131,11 +131,11 @@ WorkingMode::ExitCode_t WorkingMode::Validate() {
 	it_end   = resources.requested.end();
 	hidden   = false;
 
-	// Map of resource usages requested
+	// Map of resource assignments requested
 	for (; usage_it != it_end; ++usage_it) {
 		// Current resource: path and amount required
 		ResourcePathPtr_t const & rcp_path(usage_it->first);
-		br::UsagePtr_t & rcp_pusage(usage_it->second);
+		br::ResourceAssignmentPtr_t & rcp_pusage(usage_it->second);
 
 		// Check the total amount available. Hide the AWM if the current total
 		// amount available cannot satisfy the amount required.
@@ -156,10 +156,9 @@ WorkingMode::ExitCode_t WorkingMode::Validate() {
 	return WM_SUCCESS;
 }
 
-uint64_t WorkingMode::ResourceUsageAmount(
-		ResourcePathPtr_t ppath) const {
-	br::UsagesMap_t::const_iterator r_it(resources.requested.begin());
-	br::UsagesMap_t::const_iterator r_end(resources.requested.end());
+uint64_t WorkingMode::ResourceUsageAmount(ResourcePathPtr_t ppath) const {
+	br::ResourceAssignmentMap_t::const_iterator r_it(resources.requested.begin());
+	br::ResourceAssignmentMap_t::const_iterator r_end(resources.requested.end());
 
 	for (; r_it != r_end; ++r_it) {
 		ResourcePathPtr_t const & wm_rp(r_it->first);
@@ -177,7 +176,7 @@ size_t WorkingMode::BindResource(
 		size_t b_refn,
 		br::ResourceType filter_rtype,
 		br::ResourceBitset * filter_mask) {
-	br::UsagesMap_t * src_pum;
+	br::ResourceAssignmentMap_t * source_map;
 	uint32_t b_count;
 	size_t n_refn;
 	logger->Debug("BindResource: %s owner is %s", str_id, owner->StrId());
@@ -185,25 +184,26 @@ size_t WorkingMode::BindResource(
 	// First resource binding call
 	if (b_refn == 0) {
 		logger->Debug("BindResource: %s binding resources from recipe", str_id);
-		src_pum = &resources.requested;
+		source_map = &resources.requested;
 	}
 	else {
-		std::map<size_t, br::UsagesMapPtr_t>::iterator pum_it(
+		std::map<size_t, br::ResourceAssignmentMapPtr_t>::iterator pum_it(
 				resources.sched_bindings.find(b_refn));
 		if (pum_it == resources.sched_bindings.end()) {
 			logger->Error("BindResource: %s invalid binding reference [%ld]",
 				str_id, b_refn);
 			return 0;
 		}
-		src_pum = (pum_it->second).get();
+		source_map = (pum_it->second).get();
 	}
 
-	// Allocate a new temporary resource usages map to store the bound
-	// resource usages
-	br::UsagesMapPtr_t bind_pum = std::make_shared<br::UsagesMap_t>();
+	// Allocate a new temporary resource assignments map to store the bound
+	// resource assignments
+	br::ResourceAssignmentMapPtr_t out_map =
+		std::make_shared<br::ResourceAssignmentMap_t>();
 	b_count = br::ResourceBinder::Bind(
-			*src_pum, r_type, src_ID, dst_ID, bind_pum,
-			filter_rtype, filter_mask);
+		*source_map, r_type, src_ID, dst_ID, out_map,
+		filter_rtype, filter_mask);
 	if (b_count == 0) {
 		logger->Warn("BindResource: %s nothing to bind", str_id);
 		return 0;
@@ -211,10 +211,10 @@ size_t WorkingMode::BindResource(
 
 	// Store the resource binding
 	n_refn = std::hash<std::string>()(BindingStr(r_type, src_ID, dst_ID, b_refn));
-	resources.sched_bindings[n_refn] = bind_pum;
+	resources.sched_bindings[n_refn] = out_map;
 	logger->Debug("BindResource: %s R{%-3s} refn[%ld] size:%d count:%d",
 			str_id, br::GetResourceTypeString(r_type),
-			n_refn, bind_pum->size(), b_count);
+			n_refn, out_map->size(), b_count);
 	return n_refn;
 }
 
@@ -231,8 +231,8 @@ std::string WorkingMode::BindingStr(
 	return str;
 }
 
-br::UsagesMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
-	std::map<size_t, br::UsagesMapPtr_t>::const_iterator sched_it;
+br::ResourceAssignmentMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
+	std::map<size_t, br::ResourceAssignmentMapPtr_t>::const_iterator sched_it;
 	sched_it = resources.sched_bindings.find(b_refn);
 	if (sched_it == resources.sched_bindings.end()) {
 		logger->Error("GetSchedResourceBinding: %s invalid reference [%ld]",
@@ -245,7 +245,7 @@ br::UsagesMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
 WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
 		br::RViewToken_t vtok,
 		size_t b_refn) {
-	// Set the new binding / resource usages map
+	// Set the new binding / resource assignments map
 	resources.sync_bindings = GetSchedResourceBinding(b_refn);
 	if (resources.sync_bindings == nullptr) {
 		logger->Error("SetBinding: %s invalid scheduling binding [%ld]",

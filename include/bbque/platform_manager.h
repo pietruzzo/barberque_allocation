@@ -66,7 +66,7 @@ public:
 	 * @param excl If true the specified resources are assigned for exclusive
 	 * usage to the application
 	 */
-	virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
+	virtual ExitCode_t MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 	                                bool excl = true) override;
 
 	/**

@@ -86,7 +86,7 @@ SCCongestion::Init(void * params) {
 SchedContrib::ExitCode_t
 SCCongestion::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
-	br::UsagesMap_t::const_iterator usage_it;
+	br::ResourceAssignmentMap_t::const_iterator usage_it;
 	ResourceThresholds_t rl;
 	CLEParams_t params;
 	float ru_index;
@@ -96,23 +96,23 @@ SCCongestion::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	params.k = 1.0;
 	params.exp.base = expbase;
 
-	// Iterate the whole set of (boud) resource usages
+	// Iterate the whole set of (boud) resource assign_map
 	for (auto const & ru_entry:
 			*((evl_ent.pawm->GetSchedResourceBinding(evl_ent.bind_refn)).get())) {
 		ResourcePathPtr_t const & r_path(ru_entry.first);
-		br::UsagePtr_t    const & pusage(ru_entry.second);
+		br::ResourceAssignmentPtr_t    const & r_assign(ru_entry.second);
 		logger->Debug("%s: {%s}",
 				evl_ent.StrId(), r_path->ToString().c_str());
 
 		// Get the region of the (next) resource usage
-		GetResourceThresholds(r_path, pusage->GetAmount(), evl_ent, rl);
+		GetResourceThresholds(r_path, r_assign->GetAmount(), evl_ent, rl);
 
 		// If there are no free resources the index contribute is equal to 0
-		if (rl.free < pusage->GetAmount()) {
+		if (rl.free < r_assign->GetAmount()) {
 			ctrib = 0;
 			logger->Debug("%s: {%s} U:%" PRIu64 " A:%" PRIu64,
 					evl_ent.StrId(), r_path->ToString().c_str(),
-					rl.free, pusage->GetAmount());
+					rl.free, r_assign->GetAmount());
 			if ((rl.free == 0) &&
 				(r_path->Type() == br::ResourceType::PROC_ELEMENT))
 				return SC_RSRC_NO_PE;
@@ -124,7 +124,7 @@ SCCongestion::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		SetIndexParameters(rl, penalties[r_type_index], params);
 
 		// Compute the region index
-		ru_index = CLEIndex(rl.sat_lack, rl.free, pusage->GetAmount(), params);
+		ru_index = CLEIndex(rl.sat_lack, rl.free, r_assign->GetAmount(), params);
 		logger->Debug("%s: {%s} reconfiguration index = %.4f",
 				evl_ent.StrId(), r_path->ToString().c_str(), ru_index);
 

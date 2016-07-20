@@ -155,7 +155,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 SchedContrib::ExitCode_t
 SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
-	br::UsagesMap_t::const_iterator usage_it;
+	br::ResourceAssignmentMap_t::const_iterator usage_it;
 	CLEParams_t params;
 	float ru_index;
 	float penalty;
@@ -170,7 +170,7 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	// Iterate the whole set of resource usage
 	for (auto const & ru_entry: evl_ent.pawm->RecipeResourceUsages()) {
 		ResourcePathPtr_t const & r_path(ru_entry.first);
-		br::UsagePtr_t    const & pusage(ru_entry.second);
+		br::ResourceAssignmentPtr_t    const & r_assign(ru_entry.second);
 		int r_type_index = static_cast<int>(r_path->Type());
 
 
@@ -215,10 +215,10 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		logger->Debug("%s: R{%s} requested = %" PRIu64,
 				evl_ent.StrId(),
 				r_path->ToString().c_str(),
-				pusage->GetAmount());
+				r_assign->GetAmount());
 
 		// Compute the region index
-		ru_index = CLEIndex(0, bd_fair_pt, pusage->GetAmount(), params);
+		ru_index = CLEIndex(0, bd_fair_pt, r_assign->GetAmount(), params);
 		logger->Debug("%s: R{%s} fairness index = %.4f",
 				evl_ent.StrId(),
 				r_path->ToString().c_str(),

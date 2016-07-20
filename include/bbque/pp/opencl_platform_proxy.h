@@ -109,7 +109,7 @@ public:
 	 * @brief OpenCL resource assignment mapping
 	 */
 	ExitCode_t MapResources(
-	        ba::AppPtr_t papp, br::UsagesMapPtr_t pum, bool excl) override final;
+	        ba::AppPtr_t papp, br::ResourceAssignmentMapPtr_t assign_map, bool excl) override final;
 
 
 	// Class specific member functions

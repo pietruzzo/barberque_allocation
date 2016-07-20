@@ -43,11 +43,11 @@ namespace res {
 class Resource;
 class ResourcePath;
 class ResourceConstraint;
-class Usage;
+class ResourceAssignment;
 typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
-typedef std::shared_ptr<Usage> UsagePtr_t;
-typedef std::map<ResourcePathPtr_t, UsagePtr_t, CompareSP<ResourcePath> > UsagesMap_t;
-typedef std::shared_ptr<UsagesMap_t> UsagesMapPtr_t;
+typedef std::shared_ptr<ResourceAssignment> ResourceAssignmentPtr_t;
+typedef std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath> > ResourceAssignmentMap_t;
+typedef std::shared_ptr<ResourceAssignmentMap_t> ResourceAssignmentMapPtr_t;
 }
 namespace br = bbque::res;
 
@@ -589,7 +589,7 @@ private:
 	/**
 	 * The following map keeps track of the constraints on resources.
 	 * It is used by function UsageOutOfBounds() (see below) to check if a working
-	 * mode includes a resource usages that violates a bounds contained in this
+	 * mode includes a resource assignments that violates a bounds contained in this
 	 * map.
 	 **/
 	ConstrMap_t rsrc_constraints;

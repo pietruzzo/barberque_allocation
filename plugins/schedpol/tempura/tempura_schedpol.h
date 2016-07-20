@@ -156,10 +156,10 @@ private:
 	bw::SystemModelPtr_t pmodel_sys;
 
 	/** Power budgets due to thermal or energy constraints */
-	br::UsagesMap_t power_budgets;
+	br::ResourceAssignmentMap_t power_budgets;
 
 	/** Resource budgets according to the power budgets */
-	br::UsagesMap_t resource_budgets;
+	br::ResourceAssignmentMap_t resource_budgets;
 
 	/** Power-thermal models for each resource to bind  */
 	std::map<br::ResourcePathPtr_t, std::string> model_ids;

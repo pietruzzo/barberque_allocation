@@ -196,7 +196,7 @@ LinuxPlatformProxy::ReclaimResources(AppPtr_t papp) noexcept {
 
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres, bool excl) noexcept {
+LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept {
 	ResourceAccounter &ra = ResourceAccounter::GetInstance();
 	RViewToken_t rvt = ra.GetScheduledView();
 
@@ -245,7 +245,7 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, UsagesMapPtr_t pres, bool excl) 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::GetResourceMapping(
         AppPtr_t papp,
-        UsagesMapPtr_t pum,
+        ResourceAssignmentMapPtr_t assign_map,
         RLinuxBindingsPtr_t prlb,
         BBQUE_RID_TYPE node_id,
         br::RViewToken_t rvt) noexcept {
@@ -253,7 +253,7 @@ LinuxPlatformProxy::GetResourceMapping(
 
 	// CPU core set
 	br::ResourceBitset core_ids(
-	        br::ResourceBinder::GetMask(pum,
+	        br::ResourceBinder::GetMask(assign_map,
 	br::ResourceType::PROC_ELEMENT,
 	br::ResourceType::CPU, node_id, papp, rvt));
 	if (strlen(prlb->cpus) > 0)
@@ -263,7 +263,7 @@ LinuxPlatformProxy::GetResourceMapping(
 
 	// Memory nodes
 	br::ResourceBitset mem_ids(
-	        br::ResourceBinder::GetMask(pum,
+	        br::ResourceBinder::GetMask(assign_map,
 	br::ResourceType::PROC_ELEMENT,
 	br::ResourceType::MEMORY, node_id, papp, rvt));
 	if (mem_ids.Count() == 0)
@@ -275,7 +275,7 @@ LinuxPlatformProxy::GetResourceMapping(
 	// CPU quota
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 	prlb->amount_cpus += ra.GetUsageAmount(
-	        pum, papp, rvt,
+	        assign_map, papp, rvt,
 	        br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU, node_id);
 #else
 	prlb->amount_cpus = -1;
@@ -287,7 +287,7 @@ LinuxPlatformProxy::GetResourceMapping(
 	prlb->amount_memb = -1;
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	uint64_t memb = ra.GetUsageAmount(
-	        pum, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
+	        assign_map, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
 	if (memb > 0)
 		prlb->amount_memb = memb;
 #endif

@@ -540,8 +540,8 @@ Application::ExitCode_t Application::RequestSync(SyncState_t sync) {
 bool
 Application::Reshuffling(AwmPtr_t const & next_awm) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	br::UsagesMapPtr_t pumc = _CurrentAWM()->GetResourceBinding();
-	br::UsagesMapPtr_t puma = next_awm->GetResourceBinding();
+	br::ResourceAssignmentMapPtr_t pumc = _CurrentAWM()->GetResourceBinding();
+	br::ResourceAssignmentMapPtr_t puma = next_awm->GetResourceBinding();
 
 	// NOTE: This method is intended to be called if we already know we
 	// are in a RECONF state.
@@ -1106,19 +1106,19 @@ void Application::FinalizeEnabledWorkingModes() {
 bool Application::UsageOutOfBounds(AwmPtr_t & awm) {
 	ConstrMap_t::iterator rsrc_constr_it;
 	ConstrMap_t::iterator end_rsrc_constr(rsrc_constraints.end());
-	br::UsagesMap_t::const_iterator usage_it(awm->RecipeResourceUsages().begin());
-	br::UsagesMap_t::const_iterator end_usage(awm->RecipeResourceUsages().end());
+	br::ResourceAssignmentMap_t::const_iterator usage_it(awm->RecipeResourceUsages().begin());
+	br::ResourceAssignmentMap_t::const_iterator end_usage(awm->RecipeResourceUsages().end());
 
-	// Check if there are constraints on the resource usages
+	// Check if there are constraints on the resource assignments
 	for (; usage_it != end_usage; ++usage_it) {
 		rsrc_constr_it = rsrc_constraints.find(usage_it->first);
 		if (rsrc_constr_it == end_rsrc_constr)
 			continue;
 
 		// Check if the usage value is out of the constraint bounds
-		br::UsagePtr_t const & pusage(usage_it->second);
-		if ((pusage->GetAmount() < rsrc_constr_it->second->lower) ||
-			(pusage->GetAmount() > rsrc_constr_it->second->upper))
+		br::ResourceAssignmentPtr_t const & r_assign(usage_it->second);
+		if ((r_assign->GetAmount() < rsrc_constr_it->second->lower) ||
+			(r_assign->GetAmount() > rsrc_constr_it->second->upper))
 			return true;
 	}
 
@@ -1229,9 +1229,9 @@ uint64_t Application::GetResourceUsageStat(std::string const & rsrc_path,
 
 	// AWMs (enabled)
 	for (; awm_it != awm_end; ++awm_it) {
-		br::UsagesMap_t const & awm_usages = (*awm_it)->RecipeResourceUsages();
-		br::UsagesMap_t::const_iterator rsrc_it(awm_usages.begin());
-		br::UsagesMap_t::const_iterator rsrc_end(awm_usages.end());
+		br::ResourceAssignmentMap_t const & awm_usages = (*awm_it)->RecipeResourceUsages();
+		br::ResourceAssignmentMap_t::const_iterator rsrc_it(awm_usages.begin());
+		br::ResourceAssignmentMap_t::const_iterator rsrc_end(awm_usages.end());
 
 		// Resources
 		for (; rsrc_it != rsrc_end; ++rsrc_it) {

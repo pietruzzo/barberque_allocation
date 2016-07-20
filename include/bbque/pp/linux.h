@@ -311,7 +311,7 @@ private:
 
 	ExitCode_t _ReclaimResources(ba::AppPtr_t papp);
 
-	ExitCode_t _MapResources(ba::AppPtr_t papp, br::UsagesMapPtr_t pres,
+	ExitCode_t _MapResources(ba::AppPtr_t papp, br::ResourceAssignmentMapPtr_t pres,
 		br::RViewToken_t rvt, bool excl);
 
 /**
@@ -321,7 +321,7 @@ private:
 
 	ExitCode_t GetResourceMapping(
 			ba::AppPtr_t papp,
-			br::UsagesMapPtr_t pum,
+			br::ResourceAssignmentMapPtr_t assign_map,
 			RLinuxBindingsPtr_t prlb,
 			BBQUE_RID_TYPE node_id,
 			br::RViewToken_t rvt);

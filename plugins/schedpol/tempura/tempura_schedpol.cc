@@ -180,8 +180,8 @@ TempuraSchedPol::InitBudgets() {
 			r_path->AppendString("pe");
 			// Budget object (path + budget value)
 			br::ResourcePtrList_t r_list(ra.GetResources(r_path));
-			br::UsagePtr_t pbudget(std::make_shared<br::Usage>(0));
-			br::UsagePtr_t rbudget(std::make_shared<br::Usage>(0));
+			br::ResourceAssignmentPtr_t pbudget(std::make_shared<br::ResourceAssignment>(0));
+			br::ResourceAssignmentPtr_t rbudget(std::make_shared<br::ResourceAssignment>(0));
 			pbudget->SetResourcesList(r_list);
 			rbudget->SetResourcesList(r_list);
 
@@ -265,7 +265,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 
 	for (auto & pb_entry: power_budgets) {
 		br::ResourcePathPtr_t const & r_path(pb_entry.first);
-		br::UsagePtr_t & budget(pb_entry.second);
+		br::ResourceAssignmentPtr_t & budget(pb_entry.second);
 
 		// Power budget (cap)
 	//	bw::ModelPtr_t pmodel(mm.GetModel("ARM Cortex A15"));
@@ -425,7 +425,7 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 	// Resource assignment (from each binding domain)
 	for (auto & rb_entry: resource_budgets) {
 		br::ResourcePathPtr_t const & r_path(rb_entry.first);
-		br::UsagePtr_t & resource_budget(rb_entry.second);
+		br::ResourceAssignmentPtr_t & resource_budget(rb_entry.second);
 		logger->Debug("Assign: [%s] R_budget = % " PRIu64 "",
 				r_path->ToString().c_str(), resource_budget->GetAmount());
 
@@ -443,7 +443,7 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 		if (resource_amount > 0)
 			pawm->AddResourceUsage(
 					r_path->ToString(), resource_amount,
-					br::Usage::Policy::BALANCED);
+					br::ResourceAssignment::Policy::BALANCED);
 	}
 
 	// Enqueue scheduling entity

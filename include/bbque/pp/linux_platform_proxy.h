@@ -64,7 +64,7 @@ public:
 	 * @brief Platform specific resource binding interface.
 	 */
 	ExitCode_t MapResources(
-	        AppPtr_t papp, UsagesMapPtr_t pres, bool excl) noexcept override final;
+	        AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
 
 private:
 //-------------------- CONSTS
@@ -117,7 +117,7 @@ private:
 	 * @brief Resources Mapping and Assigment to Applications
 	 */
 	ExitCode_t GetResourceMapping(
-	        AppPtr_t papp,UsagesMapPtr_t pum,
+	        AppPtr_t papp,ResourceAssignmentMapPtr_t assign_map,
 	        RLinuxBindingsPtr_t prlb,
 	        BBQUE_RID_TYPE node_id,
 	        br::RViewToken_t rvt) noexcept;

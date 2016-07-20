@@ -256,7 +256,7 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp) {
 }
 
 PlatformManager::ExitCode_t PlatformManager::MapResources(
-        AppPtr_t papp, UsagesMapPtr_t pres, bool excl) {
+        AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) {
 
 	ExitCode_t ec;
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());

@@ -55,7 +55,7 @@ public:
 	/**
 	 * @brief Platform specific resource binding interface.
 	 */
-	virtual ExitCode_t MapResources(AppPtr_t papp, UsagesMapPtr_t pres,
+	virtual ExitCode_t MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 	                                bool excl = true) ;
 
 private:

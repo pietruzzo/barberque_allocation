@@ -31,7 +31,7 @@ namespace bbque { namespace res {
  * std::bitset class, plus some facilities to support an efficient access to
  * the information.
  * This is commonly exploited to keep track of the IDs of a specific resource
- * type, from a set of resource usages or resource descriptors.
+ * type, from a set of resource assignments or resource descriptors.
  */
 class ResourceBitset {
 

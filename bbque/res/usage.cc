@@ -20,38 +20,44 @@
 
 namespace bbque { namespace res {
 
-
-Usage::Usage(uint64_t usage_amount, Policy policy):
-	amount(usage_amount),
-	fill_policy(policy) {
+ResourceAssignment::ResourceAssignment(uint64_t amount, Policy policy):
+	amount(amount),
+	fill_policy(policy)
+{
 }
 
-Usage::~Usage() {
+ResourceAssignment::~ResourceAssignment()
+{
 	resources.clear();
 }
 
-uint64_t Usage::GetAmount() {
+uint64_t ResourceAssignment::GetAmount()
+{
 	return amount;
 }
 
-void Usage::SetAmount(uint64_t value) {
+void ResourceAssignment::SetAmount(uint64_t value)
+{
 	amount = value;
 }
 
-ResourcePtrList_t & Usage::GetResourcesList() {
+ResourcePtrList_t & ResourceAssignment::GetResourcesList()
+{
 	return resources;
 }
 
-void Usage::SetResourcesList(ResourcePtrList_t & r_list) {
-	resources         = r_list;
+void ResourceAssignment::SetResourcesList(ResourcePtrList_t & r_list)
+{
+	this->resources  = r_list;
 	first_resource_it = r_list.begin();
 	last_resource_it  = r_list.end();
 }
 
-void Usage::SetResourcesList(
-		ResourcePtrList_t & r_list,
-		br::ResourceType filter_rtype,
-		ResourceBitset & filter_mask) {
+void ResourceAssignment::SetResourcesList(
+        ResourcePtrList_t & r_list,
+        br::ResourceType filter_rtype,
+        ResourceBitset & filter_mask)
+{
 	ResourcePtrListIterator_t r_it;
 
 	if (r_list.empty())
@@ -77,8 +83,9 @@ void Usage::SetResourcesList(
 }
 
 
-ResourcePtr_t Usage::GetFirstResource(
-		ResourcePtrListIterator_t & it) {
+ResourcePtr_t ResourceAssignment::GetFirstResource(
+        ResourcePtrListIterator_t & it)
+{
 	// Check if 'first_resource_it' points to a valid resource descriptor
 	if (first_resource_it == resources.end())
 		return ResourcePtr_t();
@@ -89,8 +96,9 @@ ResourcePtr_t Usage::GetFirstResource(
 	return (*it);
 }
 
-ResourcePtr_t Usage::GetNextResource(
-		ResourcePtrListIterator_t & it) {
+ResourcePtr_t ResourceAssignment::GetNextResource(
+        ResourcePtrListIterator_t & it)
+{
 	do {
 		// Next resource used by the application
 		++it;
@@ -104,10 +112,11 @@ ResourcePtr_t Usage::GetNextResource(
 	return (*it);
 }
 
-Usage::ExitCode_t Usage::TrackFirstResource(
-		AppSPtr_t const & papp,
-		ResourcePtrListIterator_t & first_it,
-		RViewToken_t vtok) {
+ResourceAssignment::ExitCode_t ResourceAssignment::TrackFirstResource(
+        AppSPtr_t const & papp,
+        ResourcePtrListIterator_t & first_it,
+        RViewToken_t vtok)
+{
 	if (!papp)
 		return RU_ERR_NULL_POINTER;
 
@@ -118,10 +127,11 @@ Usage::ExitCode_t Usage::TrackFirstResource(
 	return RU_OK;
 }
 
-Usage::ExitCode_t Usage::TrackLastResource(
-		AppSPtr_t const & papp,
-		ResourcePtrListIterator_t & last_it,
-		RViewToken_t vtok) {
+ResourceAssignment::ExitCode_t ResourceAssignment::TrackLastResource(
+        AppSPtr_t const & papp,
+        ResourcePtrListIterator_t & last_it,
+        RViewToken_t vtok)
+{
 	if (!papp)
 		return RU_ERR_NULL_POINTER;
 
