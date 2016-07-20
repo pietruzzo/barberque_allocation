@@ -127,7 +127,6 @@ ResourceBitset ResourceBinder::GetMask(
 		BBQUE_RID_TYPE r_scope_id,
 		AppSPtr_t papp,
 		RViewToken_t vtok) {
-	ResourceAssignmentMap_t::iterator pum_it;
 	ResourceBitset r_mask;
 	br::ResourceType found_rsrc_type, found_scope_type;
 	BBQUE_RID_TYPE found_scope_id;
