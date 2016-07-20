@@ -21,9 +21,9 @@
 #include <cstdlib>
 #include <cstdint>
 #include <iostream>
+#include <thread>
 
 #include "bbque/modules_factory.h"
-#include "bbque/cpp11/thread.h"
 #include "bbque/res/resource_assignment.h"
 #include "bbque/res/resource_path.h"
 
