@@ -24,7 +24,7 @@
 
 #include "bbque/modules_factory.h"
 #include "bbque/cpp11/thread.h"
-#include "bbque/res/usage.h"
+#include "bbque/res/resource_assignment.h"
 #include "bbque/res/resource_path.h"
 
 /** Metrics (class VALUE) declaration */

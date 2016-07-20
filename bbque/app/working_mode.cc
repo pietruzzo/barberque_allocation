@@ -27,7 +27,7 @@
 #include "bbque/res/resource_path.h"
 #include "bbque/res/identifier.h"
 #include "bbque/res/binder.h"
-#include "bbque/res/usage.h"
+#include "bbque/res/resource_assignment.h"
 #include "bbque/utils/utility.h"
 
 namespace br = bbque::res;

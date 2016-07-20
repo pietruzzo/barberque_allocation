@@ -24,7 +24,7 @@
 #include <string>
 
 #include "bbque/res/identifier.h"
-#include "bbque/res/usage.h"
+#include "bbque/res/resource_assignment.h"
 
 namespace bbque {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,7 @@
 #include "bbque/app/application.h"
 #include "bbque/config.h"
 #include "bbque/modules_factory.h"
-#include "bbque/res/usage.h"
-#include "bbque/res/usage.h"
+#include "bbque/res/resource_assignment.h"
 #include "bbque/pp/platform_description.h"
 
 #include <cstdint>

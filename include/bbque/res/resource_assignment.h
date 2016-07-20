@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_RESOURCE_USAGE_H_
-#define BBQUE_RESOURCE_USAGE_H_
+#ifndef BBQUE_RESOURCE_ASSIGNMENT_H_
+#define BBQUE_RESOURCE_ASSIGNMENT_H_
 
 #include <cstdint>
 #include <cstring>

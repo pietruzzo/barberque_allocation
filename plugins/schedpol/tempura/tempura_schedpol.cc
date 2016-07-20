@@ -28,7 +28,7 @@
 #include "bbque/app/working_mode.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/identifier.h"
-#include "bbque/res/usage.h"
+#include "bbque/res/resource_assignment.h"
 #include "bbque/res/resource_path.h"
 
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME

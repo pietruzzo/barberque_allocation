@@ -32,7 +32,7 @@
 #include "bbque/plugin_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/resource_path.h"
-#include "bbque/res/usage.h"
+#include "bbque/res/resource_assignment.h"
 
 namespace ba = bbque::app;
 namespace br = bbque::res;

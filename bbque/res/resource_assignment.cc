@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bbque/res/usage.h"
+#include "bbque/res/resource_assignment.h"
 #include "bbque/res/resource_path.h"
 
 namespace bbque
