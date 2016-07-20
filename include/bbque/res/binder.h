@@ -55,8 +55,8 @@ public:
 	 *
 	 * @param source_map The map of resource assignments to bind
 	 * @param r_type The type of resource to bind
-	 * @param src_r_id The ID of the resource to bind
-	 * @param dst_r_id The ID of the system resource to which bind
+	 * @param source_id The ID of the resource to bind
+	 * @param out_id The ID of the system resource to which bind
 	 * @param out_map A shared pointer to the map of bound resources to fill
 	 *
 	 * @param filter_rtype [optional] Type of resource to filter
@@ -68,8 +68,8 @@ public:
 	static uint32_t Bind(
 			ResourceAssignmentMap_t const & source_map,
 			ResourceType r_type,
-			BBQUE_RID_TYPE src_r_id,
-			BBQUE_RID_TYPE dst_r_id,
+			BBQUE_RID_TYPE source_id,
+			BBQUE_RID_TYPE out_id,
 			ResourceAssignmentMapPtr_t out_map,
 			ResourceType filter_rtype =
 				ResourceType::UNDEFINED,

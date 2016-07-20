@@ -171,8 +171,8 @@ uint64_t WorkingMode::ResourceUsageAmount(ResourcePathPtr_t ppath) const {
 
 size_t WorkingMode::BindResource(
 		br::ResourceType r_type,
-		BBQUE_RID_TYPE src_ID,
-		BBQUE_RID_TYPE dst_ID,
+		BBQUE_RID_TYPE source_id,
+		BBQUE_RID_TYPE out_id,
 		size_t b_refn,
 		br::ResourceType filter_rtype,
 		br::ResourceBitset * filter_mask) {
@@ -202,7 +202,7 @@ size_t WorkingMode::BindResource(
 	br::ResourceAssignmentMapPtr_t out_map =
 		std::make_shared<br::ResourceAssignmentMap_t>();
 	b_count = br::ResourceBinder::Bind(
-		*source_map, r_type, src_ID, dst_ID, out_map,
+		*source_map, r_type, source_id, out_id, out_map,
 		filter_rtype, filter_mask);
 	if (b_count == 0) {
 		logger->Warn("BindResource: %s nothing to bind", str_id);
@@ -210,7 +210,7 @@ size_t WorkingMode::BindResource(
 	}
 
 	// Store the resource binding
-	n_refn = std::hash<std::string>()(BindingStr(r_type, src_ID, dst_ID, b_refn));
+	n_refn = std::hash<std::string>()(BindingStr(r_type, source_id, out_id, b_refn));
 	resources.sched_bindings[n_refn] = out_map;
 	logger->Debug("BindResource: %s R{%-3s} refn[%ld] size:%d count:%d",
 			str_id, br::GetResourceTypeString(r_type),
@@ -220,12 +220,12 @@ size_t WorkingMode::BindResource(
 
 std::string WorkingMode::BindingStr(
 		br::ResourceType r_type,
-		BBQUE_RID_TYPE src_ID,
-		BBQUE_RID_TYPE dst_ID,
+		BBQUE_RID_TYPE source_id,
+		BBQUE_RID_TYPE out_id,
 		size_t b_refn) {
 	char tail_str[40];
 	std::string str(br::GetResourceTypeString(r_type));
-	snprintf(tail_str, 40, ",%d,%d,%ld", src_ID, dst_ID, b_refn);
+	snprintf(tail_str, 40, ",%d,%d,%ld", source_id, out_id, b_refn);
 	str.append(tail_str);
 	logger->Debug("BindingStr: %s", str.c_str());
 	return str;

@@ -32,8 +32,8 @@ namespace bbque { namespace res {
 uint32_t ResourceBinder::Bind(
 		ResourceAssignmentMap_t const & source_map,
 		br::ResourceType r_type,
-		BBQUE_RID_TYPE src_r_id,
-		BBQUE_RID_TYPE dst_r_id,
+		BBQUE_RID_TYPE source_id,
+		BBQUE_RID_TYPE out_id,
 		ResourceAssignmentMapPtr_t out_map,
 		br::ResourceType filter_rtype,
 		ResourceBitset * filter_mask) {
@@ -54,7 +54,7 @@ uint32_t ResourceBinder::Bind(
 			return 0;
 
 		// Replace ID of the given resource type with the bound ID
-		rp_result = out_path->ReplaceID(r_type, src_r_id, dst_r_id);
+		rp_result = out_path->ReplaceID(r_type, source_id, out_id);
 		if (rp_result == ResourcePath::OK) {
 			logger->Debug("Bind: <%s> to <%s> done",
 					source_path->ToString().c_str(),

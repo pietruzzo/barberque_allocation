@@ -54,8 +54,8 @@ public:
 	 * ID.
 	 *
 	 * @param r_type The type of resource to bind
-	 * @param src_ID Recipe resource name ID
-	 * @param dst_ID System resource name ID
+	 * @param source_id Recipe resource name ID
+	 * @param out_id System resource name ID
 	 * @param b_refn [optional] Reference number of an already started binding
 	 * @param filter_rtype [optional] Second level resource type
 	 * @param filter_mask  [optional] Binding mask for the second level
@@ -67,8 +67,8 @@ public:
 	 */
 	virtual size_t BindResource(
 			br::ResourceType r_type,
-			BBQUE_RID_TYPE src_ID,
-			BBQUE_RID_TYPE dst_ID,
+			BBQUE_RID_TYPE source_id,
+			BBQUE_RID_TYPE out_id,
 			size_t b_refn = 0,
 			br::ResourceType filter_rtype =
 				br::ResourceType::UNDEFINED,

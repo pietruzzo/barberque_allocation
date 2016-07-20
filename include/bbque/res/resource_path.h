@@ -265,16 +265,16 @@ public:
 	 * @brief Replace the ID associated to a resource (type) in the path
 	 *
 	 * @param r_type Resource type of the replacement
-	 * @param src_r_id Source resource ID
-	 * @param dst_r_id Destination resource ID
+	 * @param source_id Source resource ID
+	 * @param out_id Destination resource ID
 	 *
 	 * @return WRN_MISS_ID if no valid ID has been specified.
 	 *	ERR_UNKN_TYPE if no valid type has been specified.
 	 */
 	ExitCode_t ReplaceID(
 			ResourceType r_type,
-			BBQUE_RID_TYPE src_r_id,
-			BBQUE_RID_TYPE dst_r_id);
+			BBQUE_RID_TYPE source_id,
+			BBQUE_RID_TYPE out_id);
 
 
 

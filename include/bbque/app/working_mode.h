@@ -289,8 +289,8 @@ public:
 	 */
 	size_t BindResource(
 			br::ResourceType r_type,
-			BBQUE_RID_TYPE src_ID,
-			BBQUE_RID_TYPE dst_ID,
+			BBQUE_RID_TYPE source_id,
+			BBQUE_RID_TYPE out_id,
 			size_t b_refn = 0,
 			br::ResourceType filter_rtype =
 				br::ResourceType::UNDEFINED,
@@ -298,8 +298,8 @@ public:
 
 	std::string BindingStr(
 			br::ResourceType r_type,
-			BBQUE_RID_TYPE src_ID,
-			BBQUE_RID_TYPE dst_ID,
+			BBQUE_RID_TYPE source_id,
+			BBQUE_RID_TYPE out_id,
 			size_t b_refn);
 
 

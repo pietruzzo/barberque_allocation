@@ -174,31 +174,31 @@ public:
 	 * @brief Replace the ID of a resource in a path
 	 *
 	 * If the given resource name is contained into the resource path,
-	 * substitute its ID with the one specified in dst_ID.
+	 * substitute its ID with the one specified in out_id.
 	 *
 	 * @param curr_rsrc_path The resource path
 	 * @param rsrc_name Name of the resource
-	 * @param src_ID ID to replace
-	 * @param dst_ID New ID number
+	 * @param source_id ID to replace
+	 * @param out_id New ID number
 	 *
 	 * @return The updated resource path
 	 */
 	inline static std::string ReplaceID(
 			std::string const & curr_rsrc_path,
 			std::string const & rsrc_name,
-			BBQUE_RID_TYPE src_ID,
-			BBQUE_RID_TYPE dst_ID) {
+			BBQUE_RID_TYPE source_id,
+			BBQUE_RID_TYPE out_id) {
 
 		// Search the resource name in the current path
 		std::string bind_rsrc_path(curr_rsrc_path);
-		std::string rsrc_name_orig(AppendID(rsrc_name, src_ID));
+		std::string rsrc_name_orig(AppendID(rsrc_name, source_id));
 		size_t start_pos = bind_rsrc_path.find(rsrc_name_orig);
 		if (start_pos == std::string::npos)
 			return bind_rsrc_path;
 
-		// Replace it with the dst_ID-based form
+		// Replace it with the out_id-based form
 		size_t dot_pos = bind_rsrc_path.find(".", start_pos);
-		std::string bind_rsrc_name(AppendID(rsrc_name, dst_ID));
+		std::string bind_rsrc_name(AppendID(rsrc_name, out_id));
 		bind_rsrc_path.replace(start_pos, (dot_pos - start_pos),
 				bind_rsrc_name);
 		return bind_rsrc_path;

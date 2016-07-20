@@ -283,20 +283,20 @@ BBQUE_RID_TYPE ResourcePath::GetID(br::ResourceType r_type) const {
 
 ResourcePath::ExitCode_t ResourcePath::ReplaceID(
 		br::ResourceType r_type,
-		BBQUE_RID_TYPE src_r_id,
-		BBQUE_RID_TYPE dst_r_id) {
+		BBQUE_RID_TYPE source_id,
+		BBQUE_RID_TYPE out_id) {
 	br::ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
 	if (!prid)
 		return ERR_UNKN_TYPE;
 	logger->Debug("ReplaceID: replace %s to ID[%d]",
-			prid->Name().c_str(), dst_r_id);
+			prid->Name().c_str(), out_id);
 
-	if ((src_r_id != R_ID_ANY) && (prid->ID() != src_r_id))
+	if ((source_id != R_ID_ANY) && (prid->ID() != source_id))
 		return WRN_MISS_ID;
 
-	prid->SetID(dst_r_id);
+	prid->SetID(out_id);
 	logger->Debug("ReplaceID: from %d to %d, DONE",
-			src_r_id, prid->ID());
+			source_id, prid->ID());
 
 	return OK;
 }
