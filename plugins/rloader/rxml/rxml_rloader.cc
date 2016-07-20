@@ -445,7 +445,7 @@ uint8_t RXMLRecipeLoader::AppendToWorkingMode(AwmPtr_t & wm,
 	ba::WorkingModeStatusIF::ExitCode_t result;
 	// Add the resource usage to the working mode,
 	// return a "weak load" code if some resources are missing
-	result = wm->AddResourceUsage(_res_path, _res_usage);
+	result = wm->AddResourceRequest(_res_path, _res_usage);
 	if (result == ba::WorkingModeStatusIF::WM_RSRC_NOT_FOUND) {
 		logger->Warn("'%s' recipe: resource '%s' not available",
 				recipe_ptr->Path().c_str(), _res_path.c_str());

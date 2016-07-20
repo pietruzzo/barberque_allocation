@@ -68,7 +68,7 @@ float SCReconfig::ComputeResourceProportional(
 	uint64_t rsrc_tot;
 
 	// Resource requested by the AWM (from the recipe)
-	for (auto const & ru_entry :evl_ent.pawm->RecipeResourceUsages()) {
+	for (auto const & ru_entry :evl_ent.pawm->ResourceRequests()) {
 		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
 
 		// Total amount of resource (overall)

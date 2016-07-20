@@ -78,7 +78,7 @@ WorkingMode::~WorkingMode() {
 	}
 }
 
-WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
+WorkingMode::ExitCode_t WorkingMode::AddResourceRequest(
 		std::string const & rsrc_path,
 		uint64_t amount,
 		br::ResourceAssignment::Policy split_policy) {
@@ -87,9 +87,10 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	ExitCode_t result = WM_SUCCESS;
 
 	// Init the resource path starting from the prefix
-	br::ResourcePathPtr_t ppath(new br::ResourcePath(ra.GetPrefixPath()));
+	br::ResourcePathPtr_t ppath =
+		std::make_shared<br::ResourcePath>(ra.GetPrefixPath());
 	if (!ppath) {
-		logger->Error("AddResourceUsage: %s '%s' invalid prefix path",
+		logger->Error("AddResourceRequest: %s '%s' invalid prefix path",
 				str_id,	ra.GetPrefixPath().ToString().c_str());
 		return WM_RSRC_ERR_TYPE;
 	}
@@ -97,14 +98,14 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	// Build the resource path object
 	rp_result = ppath->Concat(rsrc_path);
 	if (rp_result != br::ResourcePath::OK) {
-		logger->Error("AddResourceUsage: %s '%s' invalid path",
+		logger->Error("AddResourceRequest: %s '%s' invalid path",
 				str_id,	rsrc_path.c_str());
 		return WM_RSRC_ERR_TYPE;
 	}
 
 	// Check the existance of the resource required
 	if (!ra.ExistResource(ppath)) {
-		logger->Warn("AddResourceUsage: %s '%s' not found.",
+		logger->Warn("AddResourceRequest: %s '%s' not found.",
 				str_id, ppath->ToString().c_str());
 		result = WM_RSRC_NOT_FOUND;
 	}
@@ -113,7 +114,7 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceUsage(
 	br::ResourceAssignmentPtr_t r_assign =
 		std::make_shared<br::ResourceAssignment>(amount, split_policy);
 	resources.requested.emplace(ppath, r_assign);
-	logger->Debug("AddResourceUsage: %s added {%s}"
+	logger->Debug("AddResourceRequest: %s added {%s}"
 			"\t[usage: %" PRIu64 "] [c=%2d]",
 			str_id, ppath->ToString().c_str(),amount,
 			resources.requested.size());
@@ -156,7 +157,7 @@ WorkingMode::ExitCode_t WorkingMode::Validate() {
 	return WM_SUCCESS;
 }
 
-uint64_t WorkingMode::ResourceUsageAmount(ResourcePathPtr_t ppath) const {
+uint64_t WorkingMode::RequestedAmount(ResourcePathPtr_t ppath) const {
 	br::ResourceAssignmentMap_t::const_iterator r_it(resources.requested.begin());
 	br::ResourceAssignmentMap_t::const_iterator r_end(resources.requested.end());
 

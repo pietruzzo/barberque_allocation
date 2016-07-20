@@ -416,7 +416,7 @@ uint8_t XMLRecipeLoader::AppendToWorkingMode(AwmPtr_t & wm,
 	ba::WorkingModeStatusIF::ExitCode_t result;
 
 	// Add the resource usage to the working mode
-	result = wm->AddResourceUsage(_res_path, _res_usage);
+	result = wm->AddResourceRequest(_res_path, _res_usage);
 
 	// Resource not found: Signal a weak load (some resources are missing)
 	if (result == ba::WorkingModeStatusIF::WM_RSRC_NOT_FOUND) {

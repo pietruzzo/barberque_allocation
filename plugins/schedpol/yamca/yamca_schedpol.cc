@@ -509,7 +509,7 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::GetContentionLevel(
 				"Incomplete resources binding. %d / %d resources bound.",
 						wm->Id(), cl_id,
 						wm->GetSchedResourceBinding(refn)->size(),
-						wm->RecipeResourceUsages().size());
+						wm->ResourceRequests().size());
 
 	// Contention level
 	return ComputeContentionLevel(
@@ -553,7 +553,7 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::ComputeContentionLevel(
 
 		// Get the resource usage of the AWM with the min value
 		ba::AwmPtr_t wm_min(papp->LowValueAWM());
-		min_usage =wm_min->ResourceUsageAmount(rsrc_path);
+		min_usage =wm_min->RequestedAmount(rsrc_path);
 
 		// Update the contention level (inverse)
 		cont_level +=

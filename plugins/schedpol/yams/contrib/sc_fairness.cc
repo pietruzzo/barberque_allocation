@@ -168,7 +168,7 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	params.exp.base = expbase;
 
 	// Iterate the whole set of resource usage
-	for (auto const & ru_entry: evl_ent.pawm->RecipeResourceUsages()) {
+	for (auto const & ru_entry: evl_ent.pawm->ResourceRequests()) {
 		ResourcePathPtr_t const & r_path(ru_entry.first);
 		br::ResourceAssignmentPtr_t    const & r_assign(ru_entry.second);
 		int r_type_index = static_cast<int>(r_path->Type());

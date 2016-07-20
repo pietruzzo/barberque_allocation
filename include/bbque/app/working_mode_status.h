@@ -127,19 +127,19 @@ public:
 	 * @param r_path Resource path object (shared pointer)
 	 * @return The requested amount
 	 */
-	virtual uint64_t ResourceUsageAmount(br::ResourcePathPtr_t r_path) const = 0;
+	virtual uint64_t RequestedAmount(br::ResourcePathPtr_t r_path) const = 0;
 
 	/**
 	 * @brief Return a map of all the requested resources
 	 * @return A constant reference to the map of resource assignments object
 	 */
-	virtual br::ResourceAssignmentMap_t const & RecipeResourceUsages() const = 0;
+	virtual br::ResourceAssignmentMap_t const & ResourceRequests() const = 0;
 
 	/**
 	 * @brief How many resources the working mode uses
 	 * @return The number of resource assignments
 	 */
-	virtual size_t NumberOfResourceUsages() const = 0;
+	virtual size_t NumberOfResourceRequests() const = 0;
 
 	/**
 	 * @brief Current resource assignments bound with the system resources

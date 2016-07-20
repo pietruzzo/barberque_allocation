@@ -251,7 +251,7 @@ public:
 	 * types have been specified in the resource path string).
 	 * WM_SUCCESS if the request has been correctly added
 	 */
-	ExitCode_t AddResourceUsage(
+	ExitCode_t AddResourceRequest(
 			std::string const & rsrc_path,
 			uint64_t amount,
 			br::ResourceAssignment::Policy split_policy =
@@ -260,23 +260,23 @@ public:
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	uint64_t ResourceUsageAmount(br::ResourcePathPtr_t ppath) const;
+	uint64_t RequestedAmount(br::ResourcePathPtr_t ppath) const;
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline br::ResourceAssignmentMap_t const & RecipeResourceUsages() const {
+	inline br::ResourceAssignmentMap_t const & ResourceRequests() const {
 		return resources.requested;
 	}
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline size_t NumberOfResourceUsages() const {
+	inline size_t NumberOfResourceRequests() const {
 		return resources.requested.size();
 	}
 
-	inline void ClearResourceUsages() {
+	inline void ClearResourceRequests() {
 		resources.requested.clear();
 	}
 

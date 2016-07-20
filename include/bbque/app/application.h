@@ -371,7 +371,7 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	uint64_t GetResourceUsageStat(std::string const & rsrc_path,
+	uint64_t GetResourceRequestStat(std::string const & rsrc_path,
 			ResourceUsageStatType_t ru_stat);
 
 	/**

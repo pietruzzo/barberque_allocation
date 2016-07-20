@@ -393,7 +393,7 @@ public:
 	 * @return The minimum, maximum or average value of a resource usage,
 	 * among all the enabled working modes
 	 */
-	virtual uint64_t GetResourceUsageStat(std::string const & rsrc_path,
+	virtual uint64_t GetResourceRequestStat(std::string const & rsrc_path,
 			ResourceUsageStatType_t ru_stat) = 0;
 
 	/**

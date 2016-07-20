@@ -1106,8 +1106,8 @@ void Application::FinalizeEnabledWorkingModes() {
 bool Application::UsageOutOfBounds(AwmPtr_t & awm) {
 	ConstrMap_t::iterator rsrc_constr_it;
 	ConstrMap_t::iterator end_rsrc_constr(rsrc_constraints.end());
-	br::ResourceAssignmentMap_t::const_iterator usage_it(awm->RecipeResourceUsages().begin());
-	br::ResourceAssignmentMap_t::const_iterator end_usage(awm->RecipeResourceUsages().end());
+	br::ResourceAssignmentMap_t::const_iterator usage_it(awm->ResourceRequests().begin());
+	br::ResourceAssignmentMap_t::const_iterator end_usage(awm->ResourceRequests().end());
 
 	// Check if there are constraints on the resource assignments
 	for (; usage_it != end_usage; ++usage_it) {
@@ -1219,45 +1219,41 @@ Application::ExitCode_t Application::ClearResourceConstraint(
 }
 
 
-uint64_t Application::GetResourceUsageStat(std::string const & rsrc_path,
-		ResourceUsageStatType_t ru_stat) {
-	uint64_t min_usage  = UINT64_MAX;
-	uint64_t max_usage  = 0;
-	uint64_t usages_sum = 0;
-	AwmPtrList_t::iterator awm_it(awms.enabled_list.begin());
-	AwmPtrList_t::iterator awm_end(awms.enabled_list.end());
+uint64_t Application::GetResourceRequestStat(
+		std::string const & rsrc_path,
+		ResourceUsageStatType_t stats_type) {
+	uint64_t min_val  = UINT64_MAX;
+	uint64_t max_val  = 0;
+	uint64_t total = 0;
 
 	// AWMs (enabled)
-	for (; awm_it != awm_end; ++awm_it) {
-		br::ResourceAssignmentMap_t const & awm_usages = (*awm_it)->RecipeResourceUsages();
-		br::ResourceAssignmentMap_t::const_iterator rsrc_it(awm_usages.begin());
-		br::ResourceAssignmentMap_t::const_iterator rsrc_end(awm_usages.end());
-
+	for (auto const & awm: awms.enabled_list) {
 		// Resources
-		for (; rsrc_it != rsrc_end; ++rsrc_it) {
-			ResourcePathPtr_t const & rp((*rsrc_it).first);
-			uint64_t curr_usage = ((*rsrc_it).second)->GetAmount();
+		for (auto const & r_entry: awm->ResourceRequests()) {
+			ResourcePathPtr_t const & curr_path(r_entry.first);
+			uint64_t curr_amount = (r_entry.second)->GetAmount();
 
 			// Is current resource the one required?
-			br::ResourcePath stat_rp(rsrc_path);
-			if (stat_rp.Compare(*(rp.get())) == br::ResourcePath::EQUAL_TYPES)
+			br::ResourcePath key_path(rsrc_path);
+			if (key_path.Compare(*(curr_path.get())) ==
+					br::ResourcePath::NOT_EQUAL)
 				continue;
 
 			// Cumulate the resource usage and update min or max
-			usages_sum += curr_usage;
-			curr_usage < min_usage ? min_usage = curr_usage: min_usage;
-			curr_usage > max_usage ? max_usage = curr_usage: max_usage;
+			total += curr_amount;
+			curr_amount < min_val ? min_val = curr_amount: min_val;
+			curr_amount > max_val ? max_val = curr_amount: max_val;
 		}
 	}
 
 	// Return the resource usage statistics required
-	switch (ru_stat) {
+	switch (stats_type) {
 	case RU_STAT_MIN:
-		return min_usage;
+		return min_val;
 	case RU_STAT_AVG:
-		return usages_sum / awms.enabled_list.size();
+		return total / awms.enabled_list.size();
 	case RU_STAT_MAX:
-		return max_usage;
+		return max_val;
 	};
 
 	return 0;

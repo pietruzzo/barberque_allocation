@@ -376,7 +376,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoResourcePartitioning() {
 	// Running applications
 	papp = sys->GetFirstRunning(app_it);
 	for (; papp; papp = sys->GetNextRunning(app_it)) {
-		papp->CurrentAWM()->ClearResourceUsages();
+		papp->CurrentAWM()->ClearResourceRequests();
 		AssignWorkingMode(papp);
 	}
 
@@ -441,7 +441,7 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 		logger->Info("Assign: [%s] amount of [%s] assigned = %4d",
 				papp->StrId(), r_path->ToString().c_str(), resource_amount);
 		if (resource_amount > 0)
-			pawm->AddResourceUsage(
+			pawm->AddResourceRequest(
 					r_path->ToString(), resource_amount,
 					br::ResourceAssignment::Policy::BALANCED);
 	}
