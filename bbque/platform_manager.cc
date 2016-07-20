@@ -5,7 +5,8 @@
 #include "bbque/res/resource_utils.h"
 #include "bbque/resource_manager.h"
 
-namespace bbque {
+namespace bbque
+{
 
 PlatformManager::PlatformManager()
 {
@@ -15,16 +16,19 @@ PlatformManager::PlatformManager()
 
 	try {
 		// Init the submodules
-		this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(new pp::LocalPlatformProxy());
-		this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(new pp::RemotePlatformProxy());
-	} catch(const std::runtime_error &r) {
+		this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(
+		                    new pp::LocalPlatformProxy());
+		this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(
+		                    new pp::RemotePlatformProxy());
+	} catch(const std::runtime_error & r) {
 		logger->Fatal("Unable to setup some PlatformProxy: %s", r.what());
 		return;
 	}
 
 	// Register a command dispatcher to handle CGroups reconfiguration
-	CommandManager &cm = CommandManager::GetInstance();
-	cm.RegisterCommand(PLATFORM_MANAGER_NAMESPACE ".refresh", static_cast<CommandHandler*>(this),
+	CommandManager & cm = CommandManager::GetInstance();
+	cm.RegisterCommand(PLATFORM_MANAGER_NAMESPACE ".refresh",
+	                   static_cast<CommandHandler *>(this),
 	                   "Refresh CGroups resources description");
 
 	Worker::Setup(BBQUE_MODULE_NAME("plm"), PLATFORM_MANAGER_NAMESPACE);
@@ -35,24 +39,27 @@ PlatformManager::~PlatformManager()
 	// Nothing to do
 }
 
-PlatformManager & PlatformManager::GetInstance() {
+PlatformManager & PlatformManager::GetInstance()
+{
 	static PlatformManager plm; // Guranteed to be destroyed
 	return plm;
 }
 
 
-PlatformManager::ExitCode_t PlatformManager::LoadPlatformConfig() {
+PlatformManager::ExitCode_t PlatformManager::LoadPlatformConfig()
+{
 	try {
 		(void) this->GetPlatformDescription();
-	} catch(const std::runtime_error &err) {
-		logger->Error("%s",err.what());
+	} catch(const std::runtime_error & err) {
+		logger->Error("%s", err.what());
 		return PLATFORM_DATA_PARSING_ERROR;
 	}
 
 	return PLATFORM_OK;
 }
 
-void PlatformManager::Task() {
+void PlatformManager::Task()
+{
 
 	logger->Info("Platform Manager monitoring thread STARTED");
 
@@ -63,7 +70,7 @@ void PlatformManager::Task() {
 
 		// Refresh available resources
 		if (platformEvents.test(PLATFORM_MANAGER_EV_REFRESH)) {
-			ResourceAccounter &ra(ResourceAccounter::GetInstance());
+			ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
 			// Set that the platform is NOT ready
 			ra.SetPlatformNotReady();
@@ -93,7 +100,7 @@ void PlatformManager::Task() {
 			platformEvents.reset(PLATFORM_MANAGER_EV_REFRESH);
 
 			// Notify a scheduling event to the ResourceManager
-			ResourceManager &rm = ResourceManager::GetInstance();
+			ResourceManager & rm = ResourceManager::GetInstance();
 			rm.NotifyEvent(ResourceManager::BBQ_PLAT);
 		}
 	}
@@ -102,7 +109,8 @@ void PlatformManager::Task() {
 
 }
 
-const char* PlatformManager::GetPlatformID(int16_t system_id) const {
+const char * PlatformManager::GetPlatformID(int16_t system_id) const
+{
 	logger->Debug("Request a Platform ID for system %i", system_id);
 
 	assert(system_id >= -1);
@@ -119,7 +127,8 @@ const char* PlatformManager::GetPlatformID(int16_t system_id) const {
 	}
 }
 
-const char* PlatformManager::GetHardwareID(int16_t system_id) const {
+const char * PlatformManager::GetHardwareID(int16_t system_id) const
+{
 	logger->Debug("Request a Hardware ID for system %i", system_id);
 
 	assert(system_id >= -1);
@@ -137,14 +146,16 @@ const char* PlatformManager::GetHardwareID(int16_t system_id) const {
 	}
 }
 
-PlatformManager::ExitCode_t PlatformManager::Setup(AppPtr_t papp) {
+PlatformManager::ExitCode_t PlatformManager::Setup(AppPtr_t papp)
+{
 	logger->Error("Setup called at top-level");
 	// Not implemented at top-level.
 	(void) papp;   // Anti-warning
 	return PLATFORM_GENERIC_ERROR;
 }
 
-PlatformManager::ExitCode_t PlatformManager::LoadPlatformData() {
+PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
+{
 	if(platforms_initialized) {
 		logger->Warn("Double call to LoadPlatformData, ignoring...");
 		return PLATFORM_OK;
@@ -172,7 +183,7 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData() {
 
 	logger->Info("All PlatformProxy load platform data successfully");
 
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	ra.SetPlatformReady();
 	ra.PrintStatusReport(0, true);
 
@@ -180,7 +191,8 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData() {
 
 }
 
-PlatformManager::ExitCode_t PlatformManager::Refresh() {
+PlatformManager::ExitCode_t PlatformManager::Refresh()
+{
 	std::lock_guard<std::mutex> worker_status_ul(worker_status_mtx);
 	// Notify the platform monitoring thread about a new event ot be
 	// processed
@@ -190,7 +202,8 @@ PlatformManager::ExitCode_t PlatformManager::Refresh() {
 	return PLATFORM_OK;
 }
 
-PlatformManager::ExitCode_t PlatformManager::Release(AppPtr_t papp) {
+PlatformManager::ExitCode_t PlatformManager::Release(AppPtr_t papp)
+{
 	assert(papp->HasPlatformData());
 	assert(papp->IsLocal() || papp->IsRemote());
 
@@ -220,7 +233,8 @@ PlatformManager::ExitCode_t PlatformManager::Release(AppPtr_t papp) {
 
 }
 
-PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp) {
+PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp)
+{
 	assert(papp->HasPlatformData());
 	assert(papp->IsLocal() || papp->IsRemote());
 
@@ -256,7 +270,8 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp) {
 }
 
 PlatformManager::ExitCode_t PlatformManager::MapResources(
-        AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) {
+        AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl)
+{
 
 	ExitCode_t ec;
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -277,14 +292,14 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 	// Get the set of assigned (bound) Systems
 	br::ResourceBitset systems(br::ResourceBinder::GetMask(
-			pres, br::ResourceType::SYSTEM));
+	                                   pres, br::ResourceType::SYSTEM));
 	logger->Debug("Mapping: Resources binding includes %d systems", systems.Count());
 
 	bool is_local  = false;
 	bool is_remote = false;
 
 	// Check if application is local or remote.
-	for (int i=0; i < systems.Count(); i++) {
+	for (int i = 0; i < systems.Count(); i++) {
 		if (systems.Test(i)) {
 			logger->Debug("Mapping: Checking system %d...", i);
 			if (GetPlatformDescription().GetSystemsAll()[i].IsLocal() ) {
@@ -360,7 +375,8 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	return PLATFORM_OK;
 }
 
-int PlatformManager::CommandsCb(int argc, char *argv[]) {
+int PlatformManager::CommandsCb(int argc, char * argv[])
+{
 	uint8_t cmd_offset = ::strlen(PLATFORM_MANAGER_NAMESPACE) + 1;
 	(void)argc;
 	(void)argv;

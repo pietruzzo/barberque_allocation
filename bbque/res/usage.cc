@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,10 @@
 #include "bbque/res/usage.h"
 #include "bbque/res/resource_path.h"
 
-namespace bbque { namespace res {
+namespace bbque
+{
+namespace res
+{
 
 ResourceAssignment::ResourceAssignment(uint64_t amount, Policy policy):
 	amount(amount),
@@ -70,7 +73,7 @@ void ResourceAssignment::SetResourcesList(
 
 		// Is there a filter on the resources?
 		if ((filter_rtype == rsrc->Type()) &&
-				(!filter_mask.Test((rsrc->ID()))))
+		    (!filter_mask.Test((rsrc->ID()))))
 			continue;
 
 		// Copy the resource in the list and keep track of the boundary

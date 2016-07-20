@@ -1,7 +1,8 @@
 #include "bbque/platform_proxy.h"
 
-namespace bbque {
+namespace bbque
+{
 
-plugins::PlatformLoaderIF* PlatformProxy::pli = NULL;
+plugins::PlatformLoaderIF * PlatformProxy::pli = NULL;
 
 } //namespace bbque

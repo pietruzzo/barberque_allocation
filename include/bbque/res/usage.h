@@ -29,7 +29,10 @@
 #include "bbque/res/resources.h"
 #include "bbque/utils/utility.h"
 
-namespace bbque { namespace res {
+namespace bbque
+{
+namespace res
+{
 
 // Forward declaration
 class ResourceAssignment;
@@ -74,14 +77,14 @@ public:
 	 * @enum ExitCode_t
 	 */
 	enum ExitCode_t {
-		/** Success */
-		RU_OK = 0,
-		/** Application pointer is null */
-		RU_ERR_NULL_POINTER,
-		/** Application pointer mismatch */
-		RU_ERR_APP_MISMATCH,
-		/** Resource state view token mismatch */
-		RU_ERR_VIEW_MISMATCH
+	        /** Success */
+	        RU_OK = 0,
+	        /** Application pointer is null */
+	        RU_ERR_NULL_POINTER,
+	        /** Application pointer mismatch */
+	        RU_ERR_APP_MISMATCH,
+	        /** Resource state view token mismatch */
+	        RU_ERR_VIEW_MISMATCH
 	};
 
 	/**
@@ -94,17 +97,18 @@ public:
 	 * resource required must be spread over the set of physical resources
 	 * that the Usage object is referencing.
 	 */
-	enum class Policy {
-		/**
-		 * Usage should be distributed over the resource list in a sequential
-		 * manner
-		 */
-		SEQUENTIAL,
-		/**
-		 * Usage should be evenly distributed over all the resources in the
-		 * list
-		 */
-		BALANCED
+	enum class Policy
+	{
+	        /**
+	         * Usage should be distributed over the resource list in a sequential
+	         * manner
+	         */
+	        SEQUENTIAL,
+	        /**
+	         * Usage should be evenly distributed over all the resources in the
+	         * list
+	         */
+	        BALANCED
 	};
 
 	/**
@@ -177,9 +181,9 @@ public:
 	 * resource ID to include in the list
 	 */
 	void SetResourcesList(
-			ResourcePtrList_t & r_list,
-			ResourceType filter_rtype,
-			ResourceBitset & filter_mask);
+	        ResourcePtrList_t & r_list,
+	        ResourceType filter_rtype,
+	        ResourceBitset & filter_mask);
 
 	/**
 	 * @brief Check of the resource binding list is empty
@@ -248,7 +252,7 @@ public:
 	 * application is null.
 	 */
 	ExitCode_t TrackFirstResource(AppSPtr_t const & papp,
-			ResourcePtrListIterator_t & first_it, RViewToken_t vtok);
+	                              ResourcePtrListIterator_t & first_it, RViewToken_t vtok);
 
 	/**
 	 * @brief Track the last resource, from the binding list, granted to the
@@ -271,7 +275,7 @@ public:
 	 * in TrackFirstResource().
 	 */
 	ExitCode_t TrackLastResource(AppSPtr_t const & papp,
-			ResourcePtrListIterator_t & last_it, RViewToken_t vtok);
+	                             ResourcePtrListIterator_t & last_it, RViewToken_t vtok);
 
 private:
 

@@ -263,9 +263,9 @@ LinuxPlatformProxy::GetResourceMapping(
 
 	// Memory nodes
 	br::ResourceBitset mem_ids(
-	        br::ResourceBinder::GetMask(assign_map,
-	br::ResourceType::PROC_ELEMENT,
-	br::ResourceType::MEMORY, node_id, papp, rvt));
+		br::ResourceBinder::GetMask(assign_map,
+		br::ResourceType::PROC_ELEMENT,
+		br::ResourceType::MEMORY, node_id, papp, rvt));
 	if (mem_ids.Count() == 0)
 		strncpy(prlb->mems, "0", 1);
 	else

@@ -103,12 +103,12 @@ public:
 	 * @brief The states of the module
 	 */
 	enum class State {
-		/** Information not ready for query and accounting */
-		NOT_READY,
-		/** Information ready for query and accounting */
-		READY,
-		/** A synchronization step is in progress */
-		SYNC
+	        /** Information not ready for query and accounting */
+	        NOT_READY,
+	        /** Information ready for query and accounting */
+	        READY,
+	        /** A synchronization step is in progress */
+	        SYNC
 	};
 
 	/**
@@ -146,19 +146,19 @@ public:
 	 * @see ResourceAccounterStatusIF
 	 */
 	uint64_t Available(
-			std::string const & path,
-			br::RViewToken_t vtok = 0,
-			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	        std::string const & path,
+	        br::RViewToken_t vtok = 0,
+	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	uint64_t Available(
-			br::ResourcePtrList_t & rsrc_list,
-			br::RViewToken_t vtok = 0,
-			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	        br::ResourcePtrList_t & rsrc_list,
+	        br::RViewToken_t vtok = 0,
+	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	uint64_t Available(
-			br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
-			br::RViewToken_t vtok = 0,
-			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	        br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
+	        br::RViewToken_t vtok = 0,
+	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -168,7 +168,7 @@ public:
 	uint64_t Used(br::ResourcePtrList_t & rsrc_list, br::RViewToken_t vtok = 0) const;
 
 	uint64_t Used(br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
-			br::RViewToken_t vtok = 0) const;
+	              br::RViewToken_t vtok = 0) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -313,7 +313,7 @@ public:
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
 	void PrintAppDetails(
-			br::ResourcePathPtr_t path, br::RViewToken_t vtok, bool verbose) const;
+	        br::ResourcePathPtr_t path, br::RViewToken_t vtok, bool verbose) const;
 
 	/**
 	 * @brief A prefix path for recipe validation
@@ -337,14 +337,14 @@ public:
 	 * resource descriptor cannot be allocated.
 	 */
 	br::ResourcePtr_t RegisterResource(
-			std::string const & path, std::string const & units, uint64_t amount);
+	        std::string const & path, std::string const & units, uint64_t amount);
 
 	/**
 	 * @brief Update availabilies for the specified resource
 	 *
 	 */
 	ExitCode_t UpdateResource(
-			std::string const & path, std::string const & units,uint64_t amount);
+	        std::string const & path, std::string const & units, uint64_t amount);
 
 	/**
 	 * @brief Book e a set of resources
@@ -546,7 +546,7 @@ public:
 	/**
 	 * @see CommandHandler
 	 */
-	int CommandsCb(int argc, char *argv[]);
+	int CommandsCb(int argc, char * argv[]);
 
 	/**
 	 * @brief Handler for the shell command that allows to redefine the total
@@ -576,14 +576,14 @@ private:
 	 * QueryStatus
 	 */
 	enum QueryOption_t {
-		/** Amount of resource available */
-		RA_AVAIL = 0,
-		/** Amount of resource used */
-		RA_USED,
-		/** Total amount of not reserved resource */
-		RA_UNRESERVED,
-		/** Total amount of resource */
-		RA_TOTAL
+	        /** Amount of resource available */
+	        RA_AVAIL = 0,
+	        /** Amount of resource used */
+	        RA_USED,
+	        /** Total amount of not reserved resource */
+	        RA_UNRESERVED,
+	        /** Total amount of resource */
+	        RA_TOTAL
 	};
 
 	/**
@@ -760,8 +760,8 @@ private:
 	 * @return A list of pointers (shared) to resource descriptors
 	 */
 	br::ResourcePtrList_t GetList(
-			br::ResourcePathPtr_t ppath,
-			PathClass_t rpc = EXACT) const;
+	        br::ResourcePathPtr_t ppath,
+	        PathClass_t rpc = EXACT) const;
 
 	/**
 	 * @brief Return a state parameter (availability, resources used, total
@@ -775,9 +775,9 @@ private:
 	 * @return The value of the attribute request
 	 */
 	uint64_t QueryStatus(
-			br::ResourcePtrList_t const & rsrc_list,
-			QueryOption_t q_opt, br::RViewToken_t vtok = 0,
-			ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	        br::ResourcePtrList_t const & rsrc_list,
+	        QueryOption_t q_opt, br::RViewToken_t vtok = 0,
+	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @brief Get the cumulative amount of resource usage, given iterators of
@@ -919,11 +919,11 @@ private:
 	 * @param vtok The token referencing the resource state view
 	 */
 	void SchedResourceBooking(
-			ba::AppSPtr_t const & papp,
-			br::ResourcePtr_t & rsrc,
-			br::RViewToken_t vtok,
-			uint64_t & requested,
-			uint64_t per_rsrc_allocated = 0);
+	        ba::AppSPtr_t const & papp,
+	        br::ResourcePtr_t & rsrc,
+	        br::RViewToken_t vtok,
+	        uint64_t & requested,
+	        uint64_t per_rsrc_allocated = 0);
 
 	/**
 	 * @brief Allocate a quota of resource in the synchronization case
@@ -937,9 +937,9 @@ private:
 	 * @param requested The amount of resource required
 	 */
 	void SyncResourceBooking(
-			ba::AppSPtr_t const & papp,
-			br::ResourcePtr_t & rsrc,
-			uint64_t & requested);
+	        ba::AppSPtr_t const & papp,
+	        br::ResourcePtr_t & rsrc,
+	        uint64_t & requested);
 
 	/**
 	 * @brief Decrement the resource assignments counts

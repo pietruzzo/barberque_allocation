@@ -29,7 +29,11 @@ public:
 
 		ProcessingElement() = default;
 
-		ProcessingElement(uint16_t id, uint16_t core_id, uint8_t share, PartitionType_t ptype)
+		ProcessingElement(
+		        uint16_t id,
+		        uint16_t core_id,
+		        uint8_t share,
+		        PartitionType_t ptype)
 			: id(id), core_id(core_id), share(share), ptype(ptype)
 		{}
 
@@ -162,16 +166,16 @@ public:
 			this->id = id;
 		}
 
-		inline const std::vector<ProcessingElement>& GetProcessingElementsAll() const {
+		inline const std::vector<ProcessingElement> & GetProcessingElementsAll() const {
 			return this->pes;
 		}
 
-		inline std::vector<ProcessingElement>& GetProcessingElementsAll() {
+		inline std::vector<ProcessingElement> & GetProcessingElementsAll() {
 			return this->pes;
 		}
 
 
-		inline void AddProcessingElement(const ProcessingElement& pe) {
+		inline void AddProcessingElement(const ProcessingElement & pe) {
 			this->pes.push_back(pe);
 		}
 
@@ -212,11 +216,11 @@ public:
 			return this->local;
 		}
 
-		inline const std::string& GetHostname() const {
+		inline const std::string & GetHostname() const {
 			return this->hostname;
 		}
 
-		inline const std::string& GetNetAddress() const {
+		inline const std::string & GetNetAddress() const {
 			return this->net_address;
 		}
 
@@ -224,55 +228,55 @@ public:
 			this->local = local;
 		}
 
-		inline void SetHostname(const std::string& hostname) {
+		inline void SetHostname(const std::string & hostname) {
 			this->hostname = hostname;
 		}
 
-		inline void SetNetAddress(const std::string& net_address) {
+		inline void SetNetAddress(const std::string & net_address) {
 			this->net_address = net_address;
 		}
 
-		inline const std::vector<CPU>& GetCPUsAll() const {
+		inline const std::vector<CPU> & GetCPUsAll() const {
 			return this->cpus;
 		}
 
-		inline std::vector<CPU>& GetCPUsAll() {
+		inline std::vector<CPU> & GetCPUsAll() {
 			return this->cpus;
 		}
 
-		inline void AddCPU(const CPU& cpu) {
+		inline void AddCPU(const CPU & cpu) {
 			this->cpus.push_back(cpu);
 		}
 
-		inline const std::vector<MulticoreProcessor>& GetGPUsAll() const {
+		inline const std::vector<MulticoreProcessor> & GetGPUsAll() const {
 			return this->gpus;
 		}
 
-		inline std::vector<MulticoreProcessor>& GetGPUsAll() {
+		inline std::vector<MulticoreProcessor> & GetGPUsAll() {
 			return this->gpus;
 		}
 
-		inline void AddGPU(const MulticoreProcessor& gpu) {
+		inline void AddGPU(const MulticoreProcessor & gpu) {
 			this->gpus.push_back(gpu);
 		}
 
-		inline const std::vector<MulticoreProcessor>& GetAcceleratorsAll() const {
+		inline const std::vector<MulticoreProcessor> & GetAcceleratorsAll() const {
 			return this->accelerators;
 		}
 
-		inline std::vector<MulticoreProcessor>& GetAcceleratorsAll() {
+		inline std::vector<MulticoreProcessor> & GetAcceleratorsAll() {
 			return this->accelerators;
 		}
 
-		inline void AddAccelerator(const MulticoreProcessor& accelerator) {
+		inline void AddAccelerator(const MulticoreProcessor & accelerator) {
 			this->accelerators.push_back(accelerator);
 		}
 
-		inline const std::vector<MemoryPtr_t>& GetMemories() const {
+		inline const std::vector<MemoryPtr_t> & GetMemories() const {
 			return this->memories;
 		}
 
-		inline std::vector<MemoryPtr_t>& GetMemoryAll() {
+		inline std::vector<MemoryPtr_t> & GetMemoryAll() {
 			return this->memories;
 		}
 
@@ -285,7 +289,7 @@ public:
 			return nullptr;
 		}
 
-		inline void AddMemory(const MemoryPtr_t& memory) {
+		inline void AddMemory(const MemoryPtr_t & memory) {
 			this->memories.push_back(memory);
 		}
 
@@ -301,15 +305,15 @@ public:
 		std::vector <MemoryPtr_t> memories;
 	};
 
-	inline const std::vector<System>& GetSystemsAll() const {
+	inline const std::vector<System> & GetSystemsAll() const {
 		return this->systems;
 	}
 
-	inline std::vector<System>& GetSystemsAll() {
+	inline std::vector<System> & GetSystemsAll() {
 		return this->systems;
 	}
 
-	inline void AddSystem(const System& sys) {
+	inline void AddSystem(const System & sys) {
 		this->systems.push_back(sys);
 	}
 

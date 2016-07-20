@@ -183,10 +183,11 @@ public:
 	 *
 	 * @return The updated resource path
 	 */
-	inline static std::string ReplaceID(std::string const & curr_rsrc_path,
-					std::string	const & rsrc_name,
-					BBQUE_RID_TYPE src_ID,
-					BBQUE_RID_TYPE dst_ID) {
+	inline static std::string ReplaceID(
+			std::string const & curr_rsrc_path,
+			std::string const & rsrc_name,
+			BBQUE_RID_TYPE src_ID,
+			BBQUE_RID_TYPE dst_ID) {
 
 		// Search the resource name in the current path
 		std::string bind_rsrc_path(curr_rsrc_path);
@@ -212,8 +213,9 @@ public:
 	 * @return The ID of the resource if it is part of the part.
 	 * R_ID_NONE otherwise.
 	 */
-	inline static BBQUE_RID_TYPE GetID(std::string const & rsrc_path,
-					std::string	const & rsrc_name) {
+	inline static BBQUE_RID_TYPE GetID(
+			std::string const & rsrc_path,
+			std::string const & rsrc_name) {
 		// Find the ID of the resource in the path
 		size_t start_pos = rsrc_path.find(rsrc_name);
 		if (start_pos == std::string::npos)

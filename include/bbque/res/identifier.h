@@ -25,17 +25,17 @@
 #include "bbque/config.h"
 #include "bbque/res/resource_type.h"
 
-namespace bbque { namespace res {
+namespace bbque
+{
+namespace res
+{
 
-
-/* Forward declaration */
 class ResourceIdentifier;
 
 /** Data-type for the Resource IDs */
 typedef int16_t BBQUE_RID_TYPE;
 /** Shared pointer to a ResourceIdentifier object */
 typedef std::shared_ptr<ResourceIdentifier> ResourceIdentifierPtr_t;
-
 
 /**
  * @class ResourceIdentifier
