@@ -246,7 +246,7 @@ public:
 	 *
 	 * @return The amount of resource usage
 	 */
-	uint64_t GetUsageAmount(
+	uint64_t GetAssignedAmount(
 	        br::ResourceAssignmentMapPtr_t const & assign_map,
 	        ba::AppSPtr_t papp,
 	        br::RViewToken_t vtok,
@@ -255,7 +255,7 @@ public:
 	                br::ResourceType::UNDEFINED,
 	        BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
 
-	uint64_t GetUsageAmount(
+	uint64_t GetAssignedAmount(
 	        br::ResourceAssignmentMap_t const & assign_map,
 	        ba::AppSPtr_t papp,
 	        br::RViewToken_t vtok,
@@ -277,16 +277,16 @@ public:
 	 *
 	 * @return The amount of resource usage
 	 */
-	inline uint64_t GetUsageAmount(
+	inline uint64_t GetAssignedAmount(
 	        br::ResourceAssignmentMapPtr_t const & assign_map,
 	        br::ResourceType r_type,
 	        br::ResourceType r_scope_type =
 	                br::ResourceType::UNDEFINED,
 	        BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const {
-		return GetUsageAmount(*(assign_map.get()), r_type, r_scope_type, r_scope_id);
+		return GetAssignedAmount(*(assign_map.get()), r_type, r_scope_type, r_scope_id);
 	}
 
-	uint64_t GetUsageAmount(
+	uint64_t GetAssignedAmount(
 	        br::ResourceAssignmentMap_t const & assign_map,
 	        br::ResourceType r_type,
 	        br::ResourceType r_scope_type =
@@ -778,29 +778,6 @@ private:
 	        br::ResourcePtrList_t const & rsrc_list,
 	        QueryOption_t q_opt, br::RViewToken_t vtok = 0,
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
-
-	/**
-	 * @brief Get the cumulative amount of resource usage, given iterators of
-	 * a UsagesMap.
-	 *
-	 * This is an internal member function called by all the versions of the
-	 * public member function GetUsageAmount().
-	 *
-	 * @param begin UsagesMap begin iterator
-	 * @param end   UsagesMap end iterator
-	 * @param r_type       The type of resource to query
-	 * @param r_scope_type The scope under which consider the resource
-	 *
-	 * @return The amount of resource usage
-	 */
-	uint64_t GetAmountFromUsagesMap(
-	        br::ResourceAssignmentMap_t::const_iterator & begin,
-	        br::ResourceAssignmentMap_t::const_iterator & end,
-	        br::ResourceType r_type,
-	        br::ResourceType r_scope_type,
-	        BBQUE_RID_TYPE r_scope_id,
-	        ba::AppSPtr_t papp,
-	        br::RViewToken_t vtok) const;
 
 	/**
 	 * @brief Check the resource availability for a whole set

@@ -272,10 +272,10 @@ ClovesSchedPol::EnqueueIntoDevice(ba::AppCPtr_t papp) {
 		}
 
 		// Set device type
-		gpu_qt = ra.GetUsageAmount(
+		gpu_qt = ra.GetAssignedAmount(
 				pawm->ResourceRequests(), papp, sched_status_view,
 				br::ResourceType::PROC_ELEMENT, br::ResourceType::GPU);
-		cpu_qt = ra.GetUsageAmount(
+		cpu_qt = ra.GetAssignedAmount(
 				pawm->ResourceRequests(), papp, sched_status_view,
 				br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU);
 

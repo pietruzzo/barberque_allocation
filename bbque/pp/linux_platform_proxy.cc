@@ -274,7 +274,7 @@ LinuxPlatformProxy::GetResourceMapping(
 
 	// CPU quota
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
-	prlb->amount_cpus += ra.GetUsageAmount(
+	prlb->amount_cpus += ra.GetAssignedAmount(
 	        assign_map, papp, rvt,
 	        br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU, node_id);
 #else
@@ -286,7 +286,7 @@ LinuxPlatformProxy::GetResourceMapping(
 	// Memory amount
 	prlb->amount_memb = -1;
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
-	uint64_t memb = ra.GetUsageAmount(
+	uint64_t memb = ra.GetAssignedAmount(
 	        assign_map, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
 	if (memb > 0)
 		prlb->amount_memb = memb;

@@ -616,7 +616,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::EvalBindings(
 
 	// Check the current AWM has processing resources under the binding
 	// domain type under evaluation
-	uint64_t amount = ra.GetUsageAmount(
+	uint64_t amount = ra.GetAssignedAmount(
 		pschd_domain->pawm->ResourceRequests(),
 		br::ResourceType::PROC_ELEMENT, bd_type);
 	if (amount == 0) {

@@ -540,7 +540,7 @@ inline uint64_t ResourceAccounter::QueryStatus(
 	return value;
 }
 
-uint64_t ResourceAccounter::GetUsageAmount(
+uint64_t ResourceAccounter::GetAssignedAmount(
 		br::ResourceAssignmentMapPtr_t const & assign_map,
 		ba::AppSPtr_t papp,
 		br::RViewToken_t vtok,
@@ -549,58 +549,32 @@ uint64_t ResourceAccounter::GetUsageAmount(
 		BBQUE_RID_TYPE r_scope_id) const {
 
 	if (assign_map == nullptr) {
-		logger->Fatal("GetUsageAmount: empty map");
+		logger->Error("GetAssignedAmount: null pointer map");
 		return 0;
 	}
+	logger->Debug("GetAssignedAmount: Getting usage amount from view [%d]", vtok);
 
-	br::ResourceAssignmentMap_t::const_iterator b_it(assign_map->begin());
-	br::ResourceAssignmentMap_t::const_iterator e_it(assign_map->end());
-	return  GetAmountFromUsagesMap(
-			b_it, e_it, r_type, r_scope_type, r_scope_id, papp, vtok);
-}
-
-uint64_t ResourceAccounter::GetUsageAmount(
-		br::ResourceAssignmentMap_t const & assign_map,
-		ba::AppSPtr_t papp,
-		br::RViewToken_t vtok,
-		br::ResourceType r_type,
-		br::ResourceType r_scope_type,
-		BBQUE_RID_TYPE r_scope_id) const {
-
-	br::ResourceAssignmentMap_t::const_iterator b_it(assign_map.begin());
-	br::ResourceAssignmentMap_t::const_iterator e_it(assign_map.end());
-	return  GetAmountFromUsagesMap(
-			b_it, e_it, r_type, r_scope_type, r_scope_id, papp, vtok);
-}
-
-inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
-		br::ResourceAssignmentMap_t::const_iterator & begin,
-		br::ResourceAssignmentMap_t::const_iterator & end,
-		br::ResourceType r_type,
-		br::ResourceType r_scope_type,
-		BBQUE_RID_TYPE r_scope_id,
-		ba::AppSPtr_t papp,
-		br::RViewToken_t vtok) const {
 	uint64_t amount = 0;
-	logger->Debug("GetUsageAmount: Getting usage amount from view [%d]", vtok);
-
-	br::ResourceAssignmentMap_t::const_iterator uit(begin);
-	for ( ; uit != end; ++uit) {
-		br::ResourcePathPtr_t const & ppath((*uit).first);
-		br::ResourceAssignmentPtr_t const & r_assign((*uit).second);
-
-		logger->Debug("GetUsageAmount: type:<%-3s> scope:<%-3s>",
+	for (auto const & r_entry: *(assign_map.get())) {
+		br::ResourcePathPtr_t const & ppath(r_entry.first);
+		br::ResourceAssignmentPtr_t const & r_assign(r_entry.second);
+		logger->Debug("GetAssignedAmount: type:<%-3s> scope:<%-3s>",
 			br::GetResourceTypeString(r_type),
 			br::GetResourceTypeString(r_scope_type));
+
 		// Scope resource type
 		if ((r_scope_type != br::ResourceType::UNDEFINED)
 			&& (ppath->GetIdentifier(r_scope_type) == nullptr))
 			continue;
+
+		// Iterate over the bound resources
 		for (br::ResourcePtr_t const & rsrc: r_assign->GetResourcesList()) {
 			br::ResourcePathPtr_t r_path(GetPath(rsrc->Path()));
-			logger->Debug("GetUsageAmount: path:<%s>", r_path->ToString().c_str());
+			logger->Debug("GetAssignedAmount: path:<%s>",
+				r_path->ToString().c_str());
 			// Scope resource ID
-			if ((r_scope_id >= 0) && (r_scope_id != r_path->GetID(r_scope_type)))
+			if ((r_scope_id >= 0) &&
+				(r_scope_id != r_path->GetID(r_scope_type)))
 				continue;
 			// Resource type
 			if (r_path->Type() != r_type)
@@ -608,22 +582,22 @@ inline uint64_t ResourceAccounter::GetAmountFromUsagesMap(
 			amount += rsrc->ApplicationUsage(papp, vtok);
 		}
 	}
-	logger->Debug("GetUsageAmount: EXC:[%s] R:<%-3s> U:%" PRIu64 "",
+	logger->Debug("GetAssignedAmount: EXC:[%s] R:<%-3s> U:%" PRIu64 "",
 			papp->StrId(), br::GetResourceTypeString(r_type), amount);
 	return amount;
 }
 
-uint64_t ResourceAccounter::GetUsageAmount(
+uint64_t ResourceAccounter::GetAssignedAmount(
 		br::ResourceAssignmentMap_t const & assign_map,
 		br::ResourceType r_type,
 		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id) const {
+
 	uint64_t amount = 0;
 	for (auto & ru_entry: assign_map) {
 		br::ResourcePathPtr_t const & ppath(ru_entry.first);
 		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
-
-		logger->Debug("GetUsageAmount: type:<%-3s> scope:<%-3s>",
+		logger->Debug("GetAssignedAmount: type:<%-3s> scope:<%-3s>",
 			br::GetResourceTypeString(r_type),
 			br::GetResourceTypeString(r_scope_type));
 		// Scope resource type
@@ -635,7 +609,7 @@ uint64_t ResourceAccounter::GetUsageAmount(
 			continue;
 		// Resource type
 		if (ppath->Type() != r_type)
-				continue;
+			continue;
 		amount += r_assign->GetAmount();
 	}
 	return amount;

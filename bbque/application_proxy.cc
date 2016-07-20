@@ -393,12 +393,12 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		local_sys_msg.nr_procs =
 			papp->NextAWM()->BindingSet(br::ResourceType::PROC_ELEMENT).Count();
 		// Processing elements (quota)
-		local_sys_msg.r_proc = ra.GetUsageAmount(
+		local_sys_msg.r_proc = ra.GetAssignedAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
 			br::ResourceType::PROC_ELEMENT);
 		// Memory amount
-		local_sys_msg.r_mem = ra.GetUsageAmount(
+		local_sys_msg.r_mem = ra.GetAssignedAmount(
 			papp->NextAWM()->GetResourceBinding(),
 			papp, ra.GetScheduledView(),
 			br::ResourceType::MEMORY);
