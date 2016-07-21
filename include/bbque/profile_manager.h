@@ -31,9 +31,9 @@ namespace bu = bbque::utils;
 namespace bbque {
 
 /**
- * @brief A class providing profiling support for the BarbequeRTRM
+ * @class ProfileManager
  * @ingroup sec07_pm
- *
+ * @brief A class providing profiling support for the BarbequeRTRM
  */
 class ProfileManager {
 

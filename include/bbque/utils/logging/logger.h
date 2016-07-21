@@ -36,10 +36,11 @@
 namespace bbque { namespace utils {
 
 /**
+ * @class Logger
  * @brief The basic class for each Barbeque component
  *
- * This defines the basic logging services which are provided to each Barbeque
- * components. The object class defines logging and modules name.
+ * This defines the basic logging services which are provided to each
+ * BarbequeRTRM components. The object class defines logging and modules name.
  */
 class Logger {
 

@@ -31,7 +31,9 @@
 namespace bbque { namespace rtlib {
 
 /**
- * @brief Client side of the RPF FIFO channel
+ * @class BbqueRPC_FIFO_Client
+ *
+ * @brief Client side of the RPC FIFO channel
  *
  * Definition of the RPC protocol based on UNIX FIFOs to implement the
  * Barbeque communication channel. This defines the communication protocol in

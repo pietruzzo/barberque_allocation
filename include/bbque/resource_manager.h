@@ -56,6 +56,7 @@ namespace bu = bbque::utils;
 namespace bbque {
 
 /**
+ * @class ResourceManager
  * @brief The class implementing the glue logic of Barbeque
  * @ingroup sec04_rm
  *

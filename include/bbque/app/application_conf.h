@@ -35,6 +35,7 @@ typedef std::shared_ptr<ApplicationConfIF> AppCPtr_t;
 typedef std::shared_ptr<Application> AppPtr_t;
 
 /**
+ * @class ApplicationConfIF
  * @brief Interface to configure application status
  *
  * This defines the interfaces for updating runtime information of the

@@ -27,8 +27,9 @@ namespace br = bbque::res;
 namespace bbque {
 
 /**
- * @brief A unified view on system status
+ * @class System
  *
+ * @details
  * This class provides all the methods necessary to get an aggregated view of
  * the system status, where under "system" we put the set of applications and
  * resources managed by the RTRM.  When instanced, the class get references to

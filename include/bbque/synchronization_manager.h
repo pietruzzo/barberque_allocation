@@ -43,6 +43,7 @@ using bbque::utils::MetricsCollector;
 namespace bbque {
 
 /**
+ * @class SynchronizationManager
  * @brief The class implementing the glue logic for status synchronization.
  *
  * This module provides a unified interface to access application status

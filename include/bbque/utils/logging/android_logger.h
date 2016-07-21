@@ -26,6 +26,7 @@
 namespace bbque { namespace utils {
 
 /**
+ * @class AndroidLogger
  * @brief The basic class for each Barbeque component
  *
  * This defines a Log4CPP based Logger plugin.

@@ -43,6 +43,8 @@ using bbque::CommandHandler;
 namespace bbque { namespace utils {
 
 /**
+ * @class MetricsCollector
+ *
  * @brief Interface to collect statistics on different metrics
  *
  * Metrics allows to account and analyze different system parameters. This is

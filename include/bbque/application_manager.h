@@ -50,6 +50,7 @@ using bbque::app::RecipePtr_t;
 class PlatformManager;
 
 /**
+ * @class ApplicationManager
  * @brief The class provides interfaces for managing the applications lifecycle.
  * @ingroup sec03_am
  *

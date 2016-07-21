@@ -32,8 +32,8 @@ namespace bbque {
 /**
  * @class ARM_CortexA9_CPUPowerManager
  *
- * Provide CPU power management API for Freescale iMX6 boards, by extending @ref
- * PowerManager class.
+ * @brief Provide CPU power management API for Freescale iMX6 boards,
+ * by extending @ref PowerManager class.
  */
 class ARM_CortexA9_CPUPowerManager: public CPUPowerManager {
 

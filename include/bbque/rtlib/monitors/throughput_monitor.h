@@ -26,7 +26,7 @@
 namespace bbque { namespace rtlib { namespace as {
 
 /**
- * @brief A THROUGHPUT monitor
+ * @class ThroughputMonitor
  * @ingroup rtlib_sec04_mon_thgpt
  *
  * @details

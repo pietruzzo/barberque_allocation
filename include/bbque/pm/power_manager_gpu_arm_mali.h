@@ -43,8 +43,9 @@ namespace bbque {
 /**
  * @class ARM_Mali_GPUPowerManager
  *
- * This class provides the abstraction towards the management of the ARM Mali
- * GPUs. The current version support platform including a single GPU device.
+ * @brief This class provides the abstraction towards the management of
+ * the ARM MaliGPUs. The current version support platform including a
+ * single GPU device.
  */
 class ARM_Mali_GPUPowerManager: public PowerManager {
 

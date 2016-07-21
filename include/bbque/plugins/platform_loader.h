@@ -15,6 +15,8 @@ namespace bbque {
 namespace plugins {
 
 /**
+ * @class PlatformLoaderIF
+ *
  * @brief Basic interface for platform information loading.
  *
  * This interface contains only two items, a loader to perform the
@@ -23,7 +25,7 @@ namespace plugins {
  * read-only manner via the getPlatformInfo() method.
  *
  * @note This representation obviously not includes the dynamic
- *       resources like discovered remote barbeque.
+ * resources like discovered remote barbeque.
  */
 class PlatformLoaderIF {
 

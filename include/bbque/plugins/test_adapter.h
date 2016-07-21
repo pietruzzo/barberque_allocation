@@ -25,8 +25,8 @@
 namespace bbque { namespace plugins {
 
 /**
- * @brief A C adapter for a Test
- *
+ * @class TestAdapter
+ * @brief A C adapter for a Test.
  * This class provides a wrapper to adapt C-coded TestIF modules.
  */
 class TestAdapter : public TestIF {

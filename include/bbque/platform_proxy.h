@@ -35,9 +35,9 @@ using bbque::app::AppPtr_t;
 namespace bbque {
 
 /**
- * @brief The PlatformProxy class is the interface for all
- *        *PlatformProxy classes. The access to these classes
- *        is provided by the PlatformManager
+ * @class PlatformProxy
+ * @brief The PlatformProxy class is the interface for all PlatformProxy
+ * classes. The access to these classes is provided by the PlatformManager
  */
 class PlatformProxy {
 

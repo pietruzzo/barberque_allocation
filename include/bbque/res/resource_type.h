@@ -29,6 +29,7 @@ namespace res
 
 /**
  * @class ResourceType
+ *
  * @brief All the manageable resources expected
  */
 enum class ResourceType

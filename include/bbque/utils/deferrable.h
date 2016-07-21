@@ -39,6 +39,8 @@ using bbque::utils::Worker;
 namespace bbque { namespace utils {
 
 /**
+ * @class Deferrable
+ *
  * @brief Deferrable execution of specified functionalities
  *
  * This class provides the basic support to schedule a deferrable execution of

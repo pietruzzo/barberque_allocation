@@ -53,8 +53,9 @@ namespace bbque { namespace plugins {
 #define PDATA_MAX_LEN 	20
 
 /**
- * @brief RXML recipe loader plugin
+ * @class RXMLRecipeLoader
  *
+ * @brief RXML library based recipe loader plugin
  */
 class RXMLRecipeLoader: public RecipeLoaderIF {
 

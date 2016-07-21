@@ -25,8 +25,9 @@
 namespace bbque { namespace plugins {
 
 /**
- * @brief A C adapter for an RPC channel
+ * @class RPCChannelAdapter
  *
+ * @brief A C adapter for an RPC channel.
  * This class provides a wrapper to adapt C-coded RPCChannelIF modules.
  */
 class RPCChannelAdapter : public RPCChannelIF {

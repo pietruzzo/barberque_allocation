@@ -61,6 +61,7 @@ namespace bu = bbque::utils;
 namespace bbque { namespace rtlib {
 
 /**
+ * @class BbqueRPC
  * @brief The class implementing the RTLib plain API
  * @ingroup rtlib_sec03_plain
  *

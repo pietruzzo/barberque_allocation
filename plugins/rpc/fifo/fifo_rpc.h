@@ -36,8 +36,9 @@ namespace bu = bbque::utils;
 namespace bbque { namespace plugins {
 
 /**
+ * @class FifoRPC
  * @brief A FIFO based implementation of the RPCChannelIF interface.
- *
+ * @details
  * This class provide a FIFO based communication channel between the Barbque
  * RTRM and the applications.
  */
@@ -110,8 +111,8 @@ private:
 	 * @brief   The plugins constructor
 	 * Plugins objects could be build only by using the "create" method.
 	 * Usually the PluginManager acts as object
-	 * @param   
-	 * @return  
+	 * @param
+	 * @return
 	 */
 	FifoRPC(std::string const & fifo_dir);
 

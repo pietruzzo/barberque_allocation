@@ -49,6 +49,7 @@ namespace bbque {
  ******************************************************************************/
 
 /**
+ * @struct bbqCommand
  * @brief A descriptor for a registered command
  */
 typedef struct bbqCommand {

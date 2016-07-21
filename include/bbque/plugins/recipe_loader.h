@@ -38,6 +38,8 @@ using bbque::app::Recipe;
 namespace bbque { namespace plugins {
 
 /**
+ * @class RecipeLoaderIF
+ *
  * @brief Basic interface for application recipe loading plugins.
  *
  * This defines the interface for loading recipe files describing applications

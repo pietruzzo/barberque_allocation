@@ -58,9 +58,8 @@ typedef std::shared_ptr<WorkingModeStatusIF> AwmSPtr_t;
 typedef std::shared_ptr<ApplicationStatusIF> AppSPtr_t;
 
 /**
- * @brief Working mode status interface
- *
- * Read-only interface for the WorkingMode runtime status
+ * @class WorkingMode
+ * @brief Read-only interface for the WorkingMode runtime status
  */
 class WorkingModeStatusIF: public bu::ExtraDataContainer {
 

@@ -40,6 +40,7 @@ using bbque::utils::MetricsCollector;
 namespace bbque {
 
 /**
+ * @class SchedulerManager
  * @brief The glue logic for resources scheduling.
  * @ingroup sec05_sm
  *

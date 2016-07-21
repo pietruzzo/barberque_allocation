@@ -32,7 +32,8 @@ namespace bu = bbque::utils;
 namespace bbque {
 
 /**
- * @class The class is an interface towards a battery installed in the system
+ * @class Battery
+ * @brief The class is an interface towards a battery installed in the system
  */
 class Battery  {
 

@@ -75,9 +75,9 @@ typedef std::unordered_map<RViewToken_t, ResourceStatePtr_t> RSHashMap_t;
 
 
 /**
- * @brief The status of a resource
+ * @class ResourceState
  *
- * The class keep track of the status of the resource, from the usage standpoint.
+ * @brief The class keep track of the status of the resource, from the usage standpoint.
  * How many resources are used/available? Which application is using the
  * resource? How much is using it ?
  * This are the basic information we need to track upon resources.
@@ -115,9 +115,10 @@ struct ResourceState {
 
 
 /**
+ * @class Resource
  * @brief A generic resource descriptor
  *
- * Of course the "Resource" is the fundamental entity for BarbequeRTRM.
+ * The "Resource" is the fundamental entity for BarbequeRTRM.
  * To access a resource is a matter of using a "path". A resource path is
  * built recursively, as a sequence of resources name, in a hierarchical
  * form (@see ResourceAccounter, @see ResourceTree).
@@ -186,7 +187,6 @@ public:
 
 	/**
 	 * @brief Set the resource model name
-
 	 * e.g. The model name of a CPU ("Intel i7-2640M")
 	 */
 	inline void SetModel(std::string const & _name) {

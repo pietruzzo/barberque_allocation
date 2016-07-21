@@ -31,7 +31,8 @@ using boost::program_options::variables_map;
 namespace bbque {
 
 /**
- * @brief A (signleton) class to access Barbeque configuration options.
+ * @class ConfigurationManager
+ * @brief Access Barbeque configuration options.
  *
  * This class describe the configuration manager module which provides a set
  * of methods to load run-time configuration parameters from a configuration

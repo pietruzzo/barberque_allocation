@@ -23,6 +23,7 @@
 namespace bbque { namespace plugins {
 
 /**
+ * @class TestIF
  * @brief A module to support testing of other components implementation.
  *
  * This is a common interface for each testing module which can be

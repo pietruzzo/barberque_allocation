@@ -32,6 +32,7 @@ class DynamicLibrary;
 struct ObjectAdapterIF;
 
 /**
+ * @class PluginManager
  * @brief Interface for loading plugin extensions.
  *
  * This plugin framework is based on the reference implementation described

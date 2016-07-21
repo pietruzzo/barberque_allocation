@@ -41,6 +41,7 @@ namespace bbque { namespace plugins {
 typedef std::shared_ptr<SchedContrib> SchedContribPtr_t;
 
 /**
+ * @class SchedContribManager
  * @brief Manager of Scheduling Contributions (once "Metrics")
  */
 class SchedContribManager {

@@ -23,7 +23,8 @@
 namespace bbque { namespace plugins {
 
 /**
- * @brief  A static plugin wrapper class
+ * @class  StaticPlugin
+ * @brief A static plugin wrapper class
  *
  * This class provides a simple mechanism that lets static plugins register
  * their objects automatically with the PluginManager without requiring the

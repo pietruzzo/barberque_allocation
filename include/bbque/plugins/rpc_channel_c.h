@@ -22,9 +22,8 @@
 typedef struct C_RPCChannelHandle_ { char c; } * C_RPCChannelHandle;
 
 /**
- * @brief A C coded RPC Channel
- *
- * A C based object model for RPCChannelIF plugins.
+ * @struct C_RPCChannel_
+ * @brief A C based object model for RPCChannelIF plugins.
  */
 typedef struct C_RPCChannel_ {
 	int    (*Init)(void);

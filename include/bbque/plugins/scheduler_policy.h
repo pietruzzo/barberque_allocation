@@ -36,8 +36,9 @@ namespace br = bbque::res;
 namespace bbque { namespace plugins {
 
 /**
- * @brief A module interface to implement resource scheduler policies.
+ * @class SchedulerPolicyIF
  * @ingroup sec05_sm
+ * @brief A module interface to implement resource scheduler policies.
  *
  * This is an abstract class for interaction between the BarbequeRTRM and
  * a policy for scheduling of available resources.
@@ -164,7 +165,7 @@ public:
 	};
 
 	/**
-	 * @brief Scheduling entity
+	 * @class Scheduling entity
 	 *
 	 * This embodies all the information needed in the "selection" step to require
 	 * a scheduling for an application into a specific AWM, with the resource set

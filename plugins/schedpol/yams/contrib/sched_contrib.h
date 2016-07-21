@@ -35,6 +35,8 @@ namespace bbque { namespace plugins {
 
 
 /**
+ * @class SchedContrib
+ *
  * @brief Base class for the implementation of scheduling metrics contribute
  *
  * The scheduling policy "YaMS" bases its decision on a modular metrics, made

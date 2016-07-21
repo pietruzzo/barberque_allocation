@@ -46,6 +46,7 @@ class BbqueEXC;
 typedef std::shared_ptr<BbqueEXC> pBbqueEXC_t;
 
 /**
+ * @class BbqueEXC
  * @brief The AEM base-class
  * @ingroup rtlib_sec02_aem
  *

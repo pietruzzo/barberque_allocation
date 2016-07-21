@@ -47,6 +47,7 @@ typedef std::shared_ptr<ResourceAssignmentMap_t> ResourceAssignmentMapPtr_t;
 
 
 /**
+ * @class ResourceAssignment
  * @brief How the resource requests are bound into assignments
  *
  * An application working modes defines a set of this resource requests

@@ -23,8 +23,10 @@
 namespace bbque { namespace app {
 
 /**
- * @brief Overheads occourring when switching from a working
- * mode to a destination one.
+ * @class TransitionOverheads
+ *
+ * @brief Overheads occourring when switching from a working mode to a
+ * destination one.
  *
  * When an application switches its working mode (due to Optimizer decision),
  * Barbeque RTRM keep track of the overheads occourred to make the transition.

@@ -23,7 +23,7 @@
 namespace bbque { namespace rtlib { namespace as {
 
 /**
- * @brief A MEMORY monitor
+ * @class MemoryMonitor
  * @ingroup rtlib_sec04_mon_memory
  *
  * @details

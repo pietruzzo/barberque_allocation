@@ -42,7 +42,7 @@ namespace bac = boost::accumulators;
 namespace bbque { namespace rtlib { namespace as {
 
 /**
- * @brief Name of the metric used for goal checking
+ * @class Name of the metric used for goal checking
  */
 enum class DataFunction:uint8_t {
 	Max = 0,

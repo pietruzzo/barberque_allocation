@@ -16,13 +16,16 @@
 namespace bbque {
 namespace plugins {
 
+/**
+ * @class RXMLPlatformLoader
+ * @brief Platform loader based on RXML library
+ */
 class RXMLPlatformLoader : PlatformLoaderIF
 {
 public:
 
     /**
      * @brief The runtime_error class for RXMLPlatformLoader errors.
-     *
      */
     class PlatformLoaderEXC : public std::runtime_error {
     public:

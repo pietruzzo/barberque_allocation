@@ -23,6 +23,8 @@
 namespace bbque {
 
 /**
+ * @class ResourceAccounterConfIF
+ *
  * @brief Resources accounting configuration
  *
  * This virtual class provides the access to a subset of write interface of

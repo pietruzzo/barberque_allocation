@@ -23,6 +23,8 @@
 namespace bbque { namespace rtlib {
 
 /**
+ * @class BbqueRPC_UNMANAGED_Client
+ *
  * @brief Client side of the RPC Umnanaged channel
  *
  * An Unmanaged client is a BBQ client which is completely detached by the

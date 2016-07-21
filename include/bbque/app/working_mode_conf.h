@@ -31,9 +31,10 @@ class WorkingModeConfIF;
 typedef std::shared_ptr<WorkingModeConfIF> AwmCPtr_t;
 
 /**
- * @brief Working Mode configureation interfaace
+ * @class WorkingModeConfIF
  *
- * This is the working mode interface used for runtime information updating
+ * @brief This is the working mode interface used for runtime information
+ * updating
  */
 class WorkingModeConfIF: public WorkingModeStatusIF {
 

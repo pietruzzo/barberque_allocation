@@ -42,9 +42,8 @@ struct PF_ObjectParams;
 namespace bbque { namespace plugins {
 
 /**
- * @brief A Random resource scheduler heuristic
- *
- * A dynamic C++ plugin which implements the "Starvation Avoidance
+ * @class SasbSyncPol
+ * @brief A dynamic C++ plugin which implements the "Starvation Avoidance
  * State Based" (SASB) heuristic for EXCc synchronizaiton.
  */
 class SasbSyncPol : public SynchronizationPolicyIF {
@@ -77,7 +76,7 @@ public:
 	ExitCode_t CheckLatency(AppPtr_t papp, SyncLatency_t latency);
 
 	SyncLatency_t EstimatedSyncTime();
-	
+
 private:
 
 	typedef enum syncState {
@@ -130,8 +129,8 @@ private:
 	 * @brief   The plugins constructor
 	 * Plugins objects could be build only by using the "create" method.
 	 * Usually the PluginManager acts as object
-	 * @param   
-	 * @return  
+	 * @param
+	 * @return
 	 */
 	SasbSyncPol();
 

@@ -36,6 +36,7 @@ namespace po = boost::program_options;
 namespace bbque { namespace utils {
 
 /**
+ * @class Log4CppLogger
  * @brief A Log4CPP based Logger
  */
 class Log4CppLogger : public Logger {

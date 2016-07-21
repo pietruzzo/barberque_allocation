@@ -24,6 +24,7 @@
 namespace bbque {
 
 /**
+ * @class ApplicationManagerConfIF
  * @brief The "Configuration" interface for the ApplicationManager.
  * @ingroup sec03_am
  *

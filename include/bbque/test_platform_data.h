@@ -30,6 +30,8 @@ namespace bu = bbque::utils;
 namespace bbque {
 
 /**
+ * @class TestPlatformData
+ *
  * @brief Testing platform data
  *
  * This class provides a descritpion of platform resoruces suitable for testing

@@ -62,9 +62,9 @@ typedef std::pair<br::ResourcePathPtr_t, ConstrPtr_t> ConstrPair_t;
 
 
 /**
- * @brief Application configuration
+ * @class ApplicationConfIF
  *
- * Such descriptor includes static and dynamic information upon application
+ * @brief Such descriptor includes static and dynamic information upon application
  * execution. It embeds usual information about name, priority, user, PID
  * (could be different from the one given by OS) plus a reference to the
  * recipe object, the list of enabled working modes and resource constraints.

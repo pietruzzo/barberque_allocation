@@ -59,6 +59,7 @@ namespace bbque { namespace plugins {
 #define PDATA_MAX_LEN 	20
 
 /**
+ * @class XMLRecipeLoader
  * @brief Loader for recipes based on XML files
  *
  * The class provides methods for loading and parsing informations of

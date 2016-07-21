@@ -30,8 +30,9 @@ namespace bu = bbque::utils;
 namespace bbque { namespace utils {
 
 /**
+ * @class Worker
  * @brief A BarbequeRTRM worker thread
- *
+ * @details
  * This class provides a bare minimum support to properly initialize and track
  * BarbequeRTRM support threads. A worker is a thread which is started
  * initially and run till the resource manager is stopped. This class provides

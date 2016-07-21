@@ -58,8 +58,9 @@ namespace bbque { namespace res {
 class ResourcePath;
 
 /**
- * @brief A tree-based representation of resources
+ * @class ResourceTree
  *
+ * @brief A tree-based representation of resources
  * The class allow the management of the resource descriptors in a hierachical
  * way. The hierarchy is structured as a tree. The access to the content is
  * based on a namespace-like approach (i.e. sys.cpu0.pe2 ...)

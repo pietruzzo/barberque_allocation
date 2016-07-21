@@ -60,12 +60,14 @@ typedef std::pair<AppUid_t, AppPtr_t> UidsMapEntry_t;
 class AppsUidMapIt;
 
 /**
+ * @typedef AppsUidMapItRetainer_t
  * @brief Retainer list of ILES iterators
  * @see AppsUidMapIt
  */
 typedef std::list<struct AppsUidMapIt*> AppsUidMapItRetainer_t;
 
 /**
+ * @class AppsUidMapIt
  * @brief "In Loop Erase Safe" ILES iterator on an AppsUidMap_t maps
  *
  * This is an iterator wrapper object which is used to implement safe iterations on
@@ -73,7 +75,7 @@ typedef std::list<struct AppsUidMapIt*> AppsUidMapItRetainer_t;
  * is visiting the elements of the same container container.
  * A proper usage of such an ILES interator requires to visit the container
  * elements using a pair of provided functions "GetFirst" and "GetNext".
- * @see GetFirst, GetNext
+ * @see @ref GetFirst, @ref GetNext
  */
 class AppsUidMapIt {
 
@@ -129,15 +131,15 @@ private:
  ******************************************************************************/
 
 /**
- * @brief "Status" interface for ApplicationManager.
+ * @class ApplicationManagerStatusIF
  * @ingroup sec03_am
+  * @brief The status interface for ApplicationManager.
  *
  * This defines the interface of the ApplicationManager component for querying
- * the application runtime information.  Currently we are interested in
+ * the application runtime information. Currently we are interested in
  * getting a specific application descriptor, the lowest priority level
  * managed, and maps of application descriptors, even querying by scheduling
  * status or priority level.
- *
  */
 class ApplicationManagerStatusIF {
 

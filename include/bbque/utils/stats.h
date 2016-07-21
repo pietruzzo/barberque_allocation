@@ -26,6 +26,7 @@ namespace bbque { namespace utils {
 
 
 /**
+ * @class EMA
  * @brief Exponential Moving Average accumulator
  *
  * This class provides a simple accumulator for on-line computation of an

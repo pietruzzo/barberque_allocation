@@ -47,6 +47,8 @@ typedef std::shared_ptr<ApplicationStatusIF> AppSPtr_t;
 namespace ba = bbque::app;
 
 /**
+ * @class ResourceAccounterStatusIF
+ *
  * @brief Resource accounting data
  *
  * This definition provide the read-only status interface for interactions

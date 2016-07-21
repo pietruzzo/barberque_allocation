@@ -26,7 +26,9 @@
 namespace bbque { namespace utils {
 
 /**
- * @brief Get time intervals with microseconds resolution
+ * @class Timer
+ *
+ * @brief Get time intervals with microseconds resolution.
  *
  * This class provides basic service to measure elapsed time with microseconds
  * accuracy.

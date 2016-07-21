@@ -19,7 +19,7 @@
 #define BBQUE_PLATFORM_SERVICES_H_
 
 /**
- * @brief Set of supported platform services.
+ * @class Set of supported platform services.
  *
  * Each platform service could be associated to a corresponding service params
  * data structure defined thereafter. Some values are for internal use only
@@ -112,6 +112,7 @@ namespace bbque {
 
 
 /**
+ * @class PlatformServices
  * @brief Module implemeting supported for offered platform services
  *
  * This class defines the interface to access all the services that the
@@ -143,8 +144,8 @@ public:
 	 * and type, this method dispatch the request to the proper service
 	 * provider.
 	 */
-	static int32_t ServiceDispatcher(PF_PlatformServiceID id,
-			PF_ServiceData & data);
+	static int32_t ServiceDispatcher(
+		PF_PlatformServiceID id, PF_ServiceData & data);
 
 private:
 
@@ -161,8 +162,7 @@ private:
 	 * @param   id		service identifyed
 	 * @return  data 	service data
 	 */
-	bool CheckRequest(PF_PlatformServiceID id,
-		PF_ServiceData & data);
+	bool CheckRequest(PF_PlatformServiceID id, PF_ServiceData & data);
 
 	/**
 	 * @brief The PF_SERVICE_CONF_DATA service provide

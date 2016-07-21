@@ -25,7 +25,7 @@
 namespace bbque { namespace rtlib { namespace as {
 
 /**
- * @brief A TIME data window
+ * @class TimeWindow
  * @ingroup rtlib_sec04_mon_time
  *
  * @details

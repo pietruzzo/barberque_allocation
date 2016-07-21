@@ -40,9 +40,8 @@ struct PF_ObjectParams;
 namespace bbque { namespace plugins {
 
 /**
- * @brief The YaMCA resource scheduler heuristic
- *
- * A dynamic C++ plugin which implements the YaMCA resource scheduler heuristic.
+ * @class YamcaSchedPol
+ * @brief The YaMCA resource scheduler heuristic.
  */
 class YamcaSchedPol: public SchedulerPolicyIF {
 

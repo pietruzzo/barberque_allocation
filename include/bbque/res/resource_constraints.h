@@ -30,7 +30,7 @@ class Resource;
 typedef std::shared_ptr<Resource> ResourcePtr_t;
 
 /**
- * @brief Constraints asserted on resources
+ * @class Constraints asserted on resources
  *
  * This defines resource constraints for the application execution.
  * A constraint assertion could disable some working modes due to an "out of

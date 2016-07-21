@@ -25,7 +25,7 @@
 namespace bbque { namespace rtlib { namespace as {
 
 /**
- * @brief  Operating point class definition
+ * @class  Operating point class definition
  * @ingroup rtlib_sec04_op
  *
  * @details

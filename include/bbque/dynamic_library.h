@@ -23,8 +23,9 @@
 namespace bbque { namespace plugins {
 
 /**
- * @brief A convenience class to manage shared library
+ * @class DynamicLibrary
  *
+ * @brief A convenience class to manage shared library.
  * This class provides a set of basic services to load a shared library
  * and release them when not more needed.
  */

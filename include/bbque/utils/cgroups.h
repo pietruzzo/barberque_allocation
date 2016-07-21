@@ -31,6 +31,7 @@ namespace bu = bbque::utils;
 namespace bbque { namespace utils {
 
 /**
+ * @class CGroups
  * @brief The CGroup Support
  */
 class CGroups {

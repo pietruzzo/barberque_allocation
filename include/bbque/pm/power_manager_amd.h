@@ -72,8 +72,8 @@ namespace bbque {
 /**
  * @class AMDPowerManager
  *
- * Provide power management related API for AMD GPU devices, by extending @ref
- * PowerManager class.
+ * @brief Provide power management related API for AMD GPU devices, by
+ * extending @ref PowerManager class.
  */
 class AMDPowerManager: public PowerManager {
 

@@ -25,7 +25,9 @@
 namespace bbque { namespace plugins {
 
 /**
- * @brief A plugins helper class
+ * @class PluginHelper
+ *
+ * @brief Plugins helper class
  *
  * It is designed to work with plugin object classes that implement the
  * PF_CreateFunc and PF_DestroyFunc mandatory functions as static methods.

@@ -41,9 +41,8 @@ namespace bu = bbque::utils;
 namespace bbque { namespace plugins {
 
 /**
- * @brief The Random resource scheduler heuristic plugin.
- *
- * A dynamic C++ plugin which implements the Random resource
+ * @class RandomSchedPol
+ * @brief A dynamic C++ plugin which implements the Random resource
  * scheduler heuristic.
  */
 class RandomSchedPol : public SchedulerPolicyIF {

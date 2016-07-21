@@ -95,7 +95,9 @@ static const cl_command_type memory_trans_cmds[] = {
 
 
 /**
- * @class Collect events profiling info for an OpenCL command queue
+ * @class RTLIB_OCL_QueueProf
+ *
+ * @brief Collect events profiling info for an OpenCL command queue
  */
 class RTLIB_OCL_QueueProf {
 public:

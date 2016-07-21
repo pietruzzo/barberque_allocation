@@ -32,8 +32,9 @@ namespace bbque {
 namespace plugins {
 
 /**
- * @brief A module interface to implement resource scheduler policies.
+ * @class SynchronizationPolicyIF
  * @ingroup sec06_ym
+ * @brief A module interface to implement resource scheduler policies.
  *
  * This is an abstract class for interaction between the BarbequeRTRM and
  * a policy for synchronizing applications status.

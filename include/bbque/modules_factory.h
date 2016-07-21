@@ -33,6 +33,7 @@
 namespace bbque {
 
 /**
+ * @class ModulesFactory
  * @brief A singleton class to build other Barbeque modules.
  *
  * This class provides a set of factory methods to build other Barbeque
