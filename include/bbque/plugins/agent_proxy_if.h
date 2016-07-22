@@ -1,5 +1,5 @@
-#ifndef BBQUE_REMOTE_PROXY_IF_H
-#define BBQUE_REMOTE_PROXY_IF_H
+#ifndef BBQUE_AGENT_PROXY_IF_H
+#define BBQUE_AGENT_PROXY_IF_H
 
 #include "bbque/plugins/agent_proxy_types.h"
 

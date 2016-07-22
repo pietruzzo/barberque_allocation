@@ -1,6 +1,6 @@
 
-#ifndef BBQUE_REMOTE_PROXY_TYPES_H_
-#define BBQUE_REMOTE_PROXY_TYPES_H_
+#ifndef BBQUE_AGENT_PROXY_TYPES_H_
+#define BBQUE_AGENT_PROXY_TYPES_H_
 
 #include <ctype.h>
 #include <bitset>
