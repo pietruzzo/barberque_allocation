@@ -155,19 +155,6 @@ target_link_libraries(barbeque
 	${CMAKE_THREAD_LIBS_INIT}
 )
 
-# Linking static plugins
-set (BBQUE_RLOADER  "bbque_rloader_${BBQUE_RLOADER_DEFAULT}")
-target_link_libraries(barbeque
-	-Wl,-whole-archive ${BBQUE_RLOADER} -Wl,-no-whole-archive
-)
-
-if (CONFIG_BBQUE_PIL_LOADER)
-  set (BBQUE_PLOADER  "bbque_ploader_${BBQUE_PIL_LOADER_DEFAULT}")
-  target_link_libraries(barbeque
-	-Wl,-whole-archive ${BBQUE_PLOADER} -Wl,-no-whole-archive
-  )
-endif (CONFIG_BBQUE_PIL_LOADER)
-
 
 # Linking dependencies for Generic-Linux targets
 if (CONFIG_TARGET_LINUX)
@@ -205,6 +192,24 @@ target_link_libraries(
 	bbque_em
 )
 endif (CONFIG_BBQUE_EM)
+
+
+# -------------- Static libraries and plugin linking  ------------------
+
+# Recipe Loader
+set (BBQUE_RLOADER  "bbque_rloader_${BBQUE_RLOADER_DEFAULT}")
+target_link_libraries(barbeque
+	-Wl,-whole-archive ${BBQUE_RLOADER} -Wl,-no-whole-archive
+)
+# Platform Loader
+if (CONFIG_BBQUE_PIL_LOADER)
+  set (BBQUE_PLOADER  "bbque_ploader_${BBQUE_PIL_LOADER_DEFAULT}")
+  target_link_libraries(barbeque
+	-Wl,-whole-archive ${BBQUE_PLOADER} -Wl,-no-whole-archive
+  )
+endif (CONFIG_BBQUE_PIL_LOADER)
+
+# ----------------------------------------------------------------------
 
 # Use link path ad RPATH
 set_property(TARGET barbeque PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
