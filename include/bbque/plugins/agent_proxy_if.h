@@ -1,6 +1,9 @@
 #ifndef BBQUE_AGENT_PROXY_IF_H
 #define BBQUE_AGENT_PROXY_IF_H
 
+#define AGENT_PROXY_NAMESPACE "bq.gx"
+#define AGENT_PROXY_CONFIG    "AgentProxy"
+
 #include "bbque/plugins/agent_proxy_types.h"
 
 namespace bbque
