@@ -119,6 +119,8 @@ setup() {
 	fi
 	bbqued_notice "Host name: $PILNAME"
 
+	mkdir -p $BBQUE_PILSETUPS
+
 	if [ ! -f $BBQUE_PILSETUPS/$PILNAME ]; then
 		# Generating the bpl file on the fly, exploiting menuconfig info
 		bbqued_info "Generating PIL layout"
