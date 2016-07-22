@@ -57,7 +57,8 @@ struct ChannelStatus {
  * @struct ApplicationScheduleRequest
  */
 struct ApplicationScheduleRequest {
-	std::string name;
+	int16_t app_id;
+	std::string app_name;
 	int16_t awm_id;
 	struct {
 		std::map<bbque::res::ResourceType, uint64_t> amount;
