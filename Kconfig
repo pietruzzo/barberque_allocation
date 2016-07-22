@@ -126,8 +126,36 @@ depends on !BBQUE_TEST_PLATFORM_DATA
 
 endmenu # Power Management
 
+################################################################################
 
 menu "Distributed Systems"
+
+  config BBQUE_DIST_MODE
+    bool "Distributed Mode"
+    default n
+    ---help---
+    If enabled, it configures the BarbequeRTRM to control a distributed multi-node
+    system.
+
+  choice
+    prompt "Distributed Configuration"
+    depends on BBQUE_DIST_MODE
+
+    config BBQUE_DIST_HIERARCHICAL
+      bool "Hierarchical"
+      ---help---
+      Master/slave configuration. A master instance of the BarbequeRTRM is responsible
+      of driving the decisional process of the instances running on the other system
+      nodes.
+
+    config BBQUE_DIST_FULLY
+      bool "Fully Distributed"
+      ---help
+      No master instance expected. Each instance make autonomous choices, eventually
+      negotiating the workload distribution among the other peer instances running
+      on the other system nodes.
+
+  endchoice
   source "barbeque/mpi/Kconfig"
 
 endmenu # Distributed Systems
