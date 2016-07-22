@@ -209,6 +209,14 @@ if (CONFIG_BBQUE_PIL_LOADER)
   )
 endif (CONFIG_BBQUE_PIL_LOADER)
 
+# Agent Proxy
+if (CONFIG_BBQUE_DIST_MODE)
+  set(BBQUE_AGENT_PROXY_PLUGIN "bbque_agent_proxy_${BBQUE_AGENT_PROXY_DEFAULT}")
+  target_link_libraries(barbeque
+	-Wl,-whole-archive ${BBQUE_AGENT_PROXY_PLUGIN} -Wl,-no-whole-archive
+  )
+endif (CONFIG_BBQUE_DIST_MODE)
+
 # ----------------------------------------------------------------------
 
 # Use link path ad RPATH

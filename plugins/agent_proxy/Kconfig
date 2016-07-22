@@ -1,0 +1,13 @@
+choice
+  prompt "Agent Proxy plugin"
+  depends on BBQUE_DIST_MODE
+
+  config BBQUE_AGENT_PROXY_DEFAULT_GRPC
+    depends on BBQUE_AGENT_PROXY_GRPC
+    bool "gRPC"
+
+##NP
+
+endchoice
+
+source barbeque/plugins/agent_proxy/grpc/Kconfig

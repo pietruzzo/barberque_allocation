@@ -1,0 +1,7 @@
+
+config BBQUE_AGENT_PROXY_GRPC
+  bool "gRPC"
+  ---help---
+  The AgentProxy plugin based on the gRPC library by Google Inc.
+
+

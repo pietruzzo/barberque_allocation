@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package bbque;
+
+service RemoteAgent {
+	rpc GetResourceStatus(ResourceStatusRequest) returns (ResourceStatusReply);
+	rpc GetWorkloadStatus() returns (WorkloadStatusReply);
+	rcp GetChannelStatus() returns (ChannelStatusReply)
+	rpc SetNodeManagementAction(NodeManagementAction) returns (ErrorCode);
+}
+
+// --------------------------
+
+message ErrorCode {
+
+  enum Code {
+    OK  = 0
+    AGENT_UNREACHABLE  = 1,
+    AGENT_DISCONNECTED = 2,
+    REQUEST_REJECTED   = 3,
+  }
+
+  Code value = 1;
+}
+
+// ----------------------------
+
+
+message ResourceStatusRequest {
+  string path  = 1;
+  bool average = 2;
+}
+
+message ResourceStatusReply {
+  uint64 total     = 1;
+  uint64 used      = 2;
+  uint32 degradation  = 3;
+  uint32 temperature  = 4;
+  uint32 power_mw     = 5;
+}
+
+
+message WorkloadStatusReply {
+  uint32 nr_apps    = 1;
+  uint32 nr_running = 2;
+  uint32 nr_ready   = 3;
+}
+
+
+message ChannelStatusReply {
+  bool connected    = 1;
+  uint32 latency_ms = 2;
+}
+
+
+message NodeManagementAction {
+
+  enum Action {
+    JOIN    = 0;
+    DISJOIN = 1;
+    CHECK   = 2;
+  }
+
+  Action value = 1;
+  uint32 partition_num = 2;
+}
+
+
+message ApplicationSchedulingRequest {
+  uint32 app_id   = 1;
+  string app_name = 2;
+  int32  awm_id   = 3;
+}
