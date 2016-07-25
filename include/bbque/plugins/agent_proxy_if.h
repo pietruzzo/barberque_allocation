@@ -29,6 +29,11 @@ public:
 
 	virtual ~AgentProxyIF() {}
 
+
+	virtual void StartServer() = 0;
+
+	virtual void StopServer() = 0;
+
 	virtual void WaitForServerToStop() = 0;
 
 	// ----------------- Query status functions --------------------
