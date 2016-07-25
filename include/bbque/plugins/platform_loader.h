@@ -38,6 +38,8 @@ public:
         //--- Success load
         /** Load completed with success */
         PL_SUCCESS = 0,
+        /** Used when check for a system, in this case the read is successful but the system is not local */
+        PL_SUCCESS_NO_LOCAL,
         /** One or more files not found */
         PL_NOT_FOUND,
         /** Syntax error in file (e.g. XML unclosed tag) */
