@@ -59,6 +59,7 @@ public:
         PLATFORM_COMM_ERROR,
         PLATFORM_MAPPING_FAILED,
         PLATFORM_PWR_MONITOR_ERROR,
+        PLATFORM_AGENT_PROXY_ERROR,
     } ExitCode_t;
 
     /**
