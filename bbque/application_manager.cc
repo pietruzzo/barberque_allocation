@@ -96,7 +96,7 @@ ApplicationManager::ApplicationManager() :
 	//  Get the recipe loader instance
 	std::string rloader_plugin_id(
 			RECIPE_LOADER_NAMESPACE "." BBQUE_RLOADER_DEFAULT);
-	rloader = ModulesFactory::GetRecipeLoaderModule(rloader_plugin_id);
+	rloader = ModulesFactory::GetModule<bp::RecipeLoaderIF>(rloader_plugin_id);
 	if (!rloader) {
 		logger->Fatal("Missing RecipeLoader plugin");
 		assert(rloader);

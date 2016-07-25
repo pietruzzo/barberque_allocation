@@ -113,7 +113,7 @@ SchedulerManager::SchedulerManager() :
 	//---------- Load the required optimization plugin
 	logger->Info("Loading optimization policy [%s%s]...",
 			opt_namespace.c_str(), opt_policy.c_str());
-	policy = ModulesFactory::GetSchedulerPolicyModule(
+	policy = ModulesFactory::GetModule<bp::SchedulerPolicyIF>(
 			opt_namespace + opt_policy);
 	if (!policy) {
 		logger->Fatal("Optimization policy load FAILED "

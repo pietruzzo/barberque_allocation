@@ -134,7 +134,7 @@ SynchronizationManager::SynchronizationManager() :
 	std::string sync_namespace(SYNCHRONIZATION_POLICY_NAMESPACE".");
 	logger->Debug("Loading synchronization policy [%s%s]...",
 			sync_namespace.c_str(), sync_policy.c_str());
-	policy = ModulesFactory::GetSynchronizationPolicyModule(
+	policy = ModulesFactory::GetModule<bp::SynchronizationPolicyIF>(
 			sync_namespace + sync_policy);
 	if (!policy) {
 		logger->Fatal("Synchronization policy load FAILED "

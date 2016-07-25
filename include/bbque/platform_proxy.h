@@ -119,7 +119,7 @@ public:
         // platform configuration
         if (pli == NULL) {
             logger->Debug("I'm creating a new instance of PlatformLoader plugin.");
-            pli = ModulesFactory::GetPlatformLoaderModule(
+            pli = ModulesFactory::GetModule<plugins::PlatformLoaderIF>(
                         std::string("bq.pl.") + BBQUE_PLOADER_DEFAULT);
             assert(pli);
             if (plugins::PlatformLoaderIF::PL_SUCCESS != pli->loadPlatformInfo()) {

@@ -18,6 +18,7 @@
 #ifndef BBQUE_MODULES_FACTORY_H_
 #define BBQUE_MODULES_FACTORY_H_
 
+#include "bbque/plugin_manager.h"
 //----- Supported plugin interfaces
 #include "bbque/plugins/test_adapter.h"
 //#include "bbque/plugins/rpc_channel_adapter.h"
@@ -34,7 +35,7 @@ namespace bbque {
 
 /**
  * @class ModulesFactory
- * @brief A singleton class to build other Barbeque modules.
+ * @brief A singleton class to build other BarbequeRTRM modules.
  *
  * This class provides a set of factory methods to build other Barbeque
  * modules. By design, within Barbeque each component (except core components
@@ -48,6 +49,10 @@ class ModulesFactory {
 
 public:
 
+	template<class T> static T * GetModule(std::string const & id) {
+		return (T*) plugins::PluginManager::GetInstance().CreateObject(id);
+	}
+
 	/**
 	 * Get a reference to a module implementing the TestIF interface
 	 */
@@ -60,29 +65,6 @@ public:
 	static plugins::RPCChannelIF * GetRPCChannelModule(
 			std::string const & id = RPC_CHANNEL_NAMESPACE);
 
-    /**
-     * Get a reference to a module implementing the PlatformLoaderIF interface
-     */
-    static plugins::PlatformLoaderIF  * GetPlatformLoaderModule(
-            std::string const & id = PLATFORM_LOADER_NAMESPACE);
-
-    /**
-	 * Get a reference to a module implementing the RecipeLoaderIF interface
-	 */
-	static plugins::RecipeLoaderIF * GetRecipeLoaderModule(
-			std::string const & id = RECIPE_LOADER_NAMESPACE);
-
-	/**
-	 * Get a reference to a module implementing the SchedulerPolicyIF interface
-	 */
-	static plugins::SchedulerPolicyIF * GetSchedulerPolicyModule(
-		std::string const & id = SCHEDULER_POLICY_NAMESPACE);
-
-	/**
-     * Get a reference to a module implementing the  nchronizationPolicyIF interface
-	 */
-	static plugins::SynchronizationPolicyIF * GetSynchronizationPolicyModule(
-		std::string const & id = SYNCHRONIZATION_POLICY_NAMESPACE);
 private:
 
 	/**

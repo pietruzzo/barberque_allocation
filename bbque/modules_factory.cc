@@ -16,7 +16,6 @@
  */
 
 #include "bbque/modules_factory.h"
-#include "bbque/plugin_manager.h"
 #include "bbque/plugins/object_adapter.h"
 
 namespace bp = bbque::plugins;
@@ -44,48 +43,5 @@ plugins::RPCChannelIF * ModulesFactory::GetRPCChannelModule(
 	return RPCProxy::GetInstance(id);
 }
 
-plugins::PlatformLoaderIF * ModulesFactory::GetPlatformLoaderModule(
-    std::string const & id) {
-
-    // PlatformLoader is just implemented in C++ thus it doesn't
-    // require a real ObjectAdapter
-    void * module = bp::PluginManager::GetInstance().
-                    CreateObject(id);
-
-    return (plugins::PlatformLoaderIF *) module;
-}
-
-plugins::RecipeLoaderIF * ModulesFactory::GetRecipeLoaderModule(
-    std::string const & id) {
-
-	// RecipeLoader is just implemented in C++ thus it doesn't
-	// require a real ObjectAdapter
-	void * module = bp::PluginManager::GetInstance().
-	                CreateObject(id);
-
-	return (plugins::RecipeLoaderIF *) module;
-}
-
-plugins::SchedulerPolicyIF * ModulesFactory::GetSchedulerPolicyModule(
-		std::string const & id) {
-
-	// SchedulerPolicy is just implemented in C++ thus it doesn't
-	// require a real ObjectAdapter
-	void * module = bp::PluginManager::GetInstance().
-						CreateObject(id);
-
-	return (plugins::SchedulerPolicyIF *) module;
-}
-
-plugins::SynchronizationPolicyIF * ModulesFactory::GetSynchronizationPolicyModule(
-		std::string const & id) {
-
-	// SchedulerPolicy is just implemented in C++ thus it doesn't
-	// require a real ObjectAdapter
-	void * module = bp::PluginManager::GetInstance().
-						CreateObject(id);
-
-	return (plugins::SynchronizationPolicyIF *) module;
-}
 } // namespace bbque
 
