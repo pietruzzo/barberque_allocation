@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,13 +22,13 @@
 namespace bp = bbque::plugins;
 
 extern "C"
-int32_t StaticPlugin_AgentProxyGRPC_exitFunc()
+int32_t PF_exitFunc()
 {
 	return 0;
 }
 
 extern "C"
-PF_ExitFunc StaticPlugin_AgentProxyGRP_initPlugin(const PF_PlatformServices * params)
+PF_ExitFunc PF_initPlugin(const PF_PlatformServices * params)
 {
 	int res = 0;
 
@@ -44,9 +44,7 @@ PF_ExitFunc StaticPlugin_AgentProxyGRP_initPlugin(const PF_PlatformServices * pa
 	if (res < 0)
 		return NULL;
 
-
-	return StaticPlugin_AgentProxyGRPC_exitFunc;
+	return PF_exitFunc;
 }
 
-PLUGIN_INIT(StaticPlugin_AgentProxyGRPC_initPlugin);
-
+PLUGIN_INIT(PF_initPlugin);

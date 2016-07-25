@@ -10,9 +10,11 @@ endif (CONFIG_BBQUE_AGENT_PROXY_DEFAULT_GRPC)
 set (BBQUE_AGENT_PROXY_PLUGIN bbque_agent_proxy_grpc)
 set (BBQUE_AGENT_PROXY_PLUGIN_SOURCE_DIR ${PROJECT_SOURCE_DIR}/plugins/agent_proxy/grpc)
 set (BBQUE_AGENT_PROXY_PLUGIN_SOURCE
-  agent_impl agent_client agent_server agent_proxy)
+  agent_impl agent_client agent_server agent_proxy
+  agent_proxy_grpc_plugin)
 
-add_library(${BBQUE_AGENT_PROXY_PLUGIN} ${BBQUE_AGENT_PROXY_PLUGIN_SOURCE})
+add_library(${BBQUE_AGENT_PROXY_PLUGIN} MODULE
+	${BBQUE_AGENT_PROXY_PLUGIN_SOURCE})
 
 # Build the message protocol buffer file and generate the gRPC code
 set(PROTO_DIR proto)
@@ -33,3 +35,7 @@ target_link_libraries(${BBQUE_AGENT_PROXY_PLUGIN}
     pthread
     dl
 )
+
+install(TARGETS ${BBQUE_AGENT_PROXY_PLUGIN} LIBRARY
+	DESTINATION ${BBQUE_PATH_PLUGINS}
+	COMPONENT BarbequeRTRM)

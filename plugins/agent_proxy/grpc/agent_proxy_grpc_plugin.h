@@ -22,7 +22,7 @@
 
 #include "bbque/plugins/plugin.h"
 
-extern "C" int32_t StaticPlugin_AgentProxyGRPC_exitFunc();
-extern "C" PF_ExitFunc StaticPlugin_AgentProxyGRPC_initPlugin(const PF_PlatformServices * params);
+extern "C" int32_t PF_exitFunc();
+extern "C" PF_ExitFunc PF_initPlugin(const PF_PlatformServices * params);
 
 #endif // BBQUE_AGENT_PROXY_GRPC_PLUGIN_H_
