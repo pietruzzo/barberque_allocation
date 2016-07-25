@@ -1,6 +1,7 @@
 #ifndef BBQUE_PLATFORM_DESCRIPTION_H_
 #define BBQUE_PLATFORM_DESCRIPTION_H_
 
+#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -15,6 +16,11 @@
 namespace bbque {
 namespace pp {
 
+/**
+ * @brief The PlatformDescription class
+ *
+ * @warning Non thread safe.
+ */
 class PlatformDescription {
 
 public:
@@ -304,6 +310,19 @@ public:
 		std::vector <MulticoreProcessor> accelerators;
 		std::vector <MemoryPtr_t> memories;
 	};
+
+    inline const System & GetLocalSystem() const {
+        static std::shared_ptr<System> sys(nullptr);
+        if (!sys) {
+            for (auto s : this->GetSystemsAll()) {
+                if (s.IsLocal()) {
+                    sys = std::make_shared<System>(s);
+                }
+            }
+            assert(sys);
+        }
+        return *sys;
+    }
 
 	inline const std::vector<System> & GetSystemsAll() const {
 		return this->systems;
