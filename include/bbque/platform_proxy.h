@@ -115,7 +115,11 @@ public:
     virtual ExitCode_t MapResources(
 			AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
 
-
+#ifndef CONFIG_BBQUE_PIL_LEGACY
+    /**
+     * @brief Return the platform description loaded by the relative pugin.
+     *        This method is not available with legacy parser.
+     */
     static const pp::PlatformDescription & GetPlatformDescription() {
 
         std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(PLATFORM_PROXY_NAMESPACE);
@@ -139,6 +143,7 @@ public:
         // Return the just or previous loaded configuration
         return pli->getPlatformInfo();
     }
+#endif
 
 private:
         static plugins::PlatformLoaderIF* pli;

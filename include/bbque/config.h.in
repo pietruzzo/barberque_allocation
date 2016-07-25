@@ -231,6 +231,9 @@
 /** Build flavor */
 #define BBQUE_BUILD_FLAVOR "${BBQUE_BUILD_FLAVOR}"
 
+/** Legacy platform loader */
+#cmakedefine CONFIG_BBQUE_PIL_LEGACY
+
 /*******************************************************************************
  * BarbequeRTRM Plugins Selection
  ******************************************************************************/
