@@ -70,14 +70,12 @@ bool AgentProxyGRPC::Configure(PF_ObjectParams * params) {
 // =============================================================================
 
 AgentProxyGRPC::AgentProxyGRPC() {
-	AgentProxyGRPC(BBQUE_AGENT_PROXY_PORT_DEFAULT);
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	server_address_port = std::string("0.0.0.0:") + std::to_string(port_number);
+	logger->Info("AgentProxy Server will listen on %s",
+		server_address_port.c_str());
 }
 
-AgentProxyGRPC::AgentProxyGRPC(const std::string & _port) {
-	server_address_port.append(_port);
-	rpc_server = std::unique_ptr<AgentServer>(
-			new AgentServer(server_address_port));
 }
 
 AgentProxyGRPC::~AgentProxyGRPC() {

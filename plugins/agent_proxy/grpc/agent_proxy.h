@@ -14,6 +14,7 @@
 #include <grpc++/security/credentials.h>
 #include <grpc++/support/time.h>
 
+#include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/agent_proxy_if.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/plugins/plugin.h"
@@ -39,8 +40,6 @@ class AgentProxyGRPC: public bbque::plugins::AgentProxyIF
 public:
 
 	AgentProxyGRPC();
-
-	explicit AgentProxyGRPC(const std::string & _port);
 
 	virtual ~AgentProxyGRPC();
 
@@ -98,6 +97,7 @@ private:
 	static uint32_t port_number;
 	std::unique_ptr<AgentServer> rpc_server;
 
+	std::unique_ptr<bu::Logger> logger;
 	std::vector<std::shared_ptr<AgentClient>> rpc_clients;
 
 	// Plugin required
