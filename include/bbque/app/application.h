@@ -377,7 +377,7 @@ public:
 	/**
 	 * @see ApplicationConfIF
 	 */
-	ExitCode_t ScheduleRequest(AwmPtr_t const & awm, br::RViewToken_t vtok,
+	ExitCode_t ScheduleRequest(AwmPtr_t const & awm, br::RViewToken_t status_view,
 			size_t b_refn = 0);
 
 	/**

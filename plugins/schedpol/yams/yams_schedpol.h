@@ -218,10 +218,10 @@ private:
 	System * sv = NULL;
 
 	/** Token for accessing a resources view */
-	br::RViewToken_t vtok = 0;
+	br::RViewToken_t status_view = 0;
 
 	/** A counter used for getting always a new clean resources view */
-	uint32_t vtok_count = 0;
+	uint32_t status_view_count = 0;
 
 	/** List of entities to schedule */
 	SchedEntityList_t entities;

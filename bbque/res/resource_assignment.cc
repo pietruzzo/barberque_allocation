@@ -118,12 +118,12 @@ ResourcePtr_t ResourceAssignment::GetNextResource(
 ResourceAssignment::ExitCode_t ResourceAssignment::TrackFirstResource(
         AppSPtr_t const & papp,
         ResourcePtrListIterator_t & first_it,
-        RViewToken_t vtok)
+        RViewToken_t status_view)
 {
 	if (!papp)
 		return RU_ERR_NULL_POINTER;
 
-	status_view = vtok;
+	status_view = status_view;
 	owner_app   = papp;
 	first_resource_it  = first_it;
 
@@ -133,7 +133,7 @@ ResourceAssignment::ExitCode_t ResourceAssignment::TrackFirstResource(
 ResourceAssignment::ExitCode_t ResourceAssignment::TrackLastResource(
         AppSPtr_t const & papp,
         ResourcePtrListIterator_t & last_it,
-        RViewToken_t vtok)
+        RViewToken_t status_view)
 {
 	if (!papp)
 		return RU_ERR_NULL_POINTER;
@@ -141,7 +141,7 @@ ResourceAssignment::ExitCode_t ResourceAssignment::TrackLastResource(
 	if (!owner_app)
 		return RU_ERR_APP_MISMATCH;
 
-	if (vtok != status_view)
+	if (status_view != status_view)
 		return RU_ERR_VIEW_MISMATCH;
 
 	last_resource_it = last_it;

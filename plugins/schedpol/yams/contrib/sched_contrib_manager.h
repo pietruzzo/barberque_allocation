@@ -145,7 +145,7 @@ public:
 	 * This sets the resource state view of the current scheduling run, and
 	 * reference to the System interface
 	 */
-	void SetViewInfo(System * sv, br::RViewToken_t vtok);
+	void SetViewInfo(System * sv, br::RViewToken_t status_view);
 
 	/**
 	 *@brief Set the binding information

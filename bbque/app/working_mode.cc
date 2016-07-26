@@ -244,7 +244,7 @@ br::ResourceAssignmentMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_ref
 }
 
 WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
-		br::RViewToken_t vtok,
+		br::RViewToken_t status_view,
 		size_t b_refn) {
 	// Set the new binding / resource assignments map
 	resources.sync_bindings = GetSchedResourceBinding(b_refn);
@@ -256,7 +256,7 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
 	resources.sync_refn = b_refn;
 
 	// Update the resource binding bit-masks
-	UpdateBindingInfo(vtok, true);
+	UpdateBindingInfo(status_view, true);
 
 	logger->Debug("SetBinding: %s resource binding [%ld] to allocate",
 			str_id, b_refn);
@@ -265,7 +265,7 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
 
 
 void WorkingMode::UpdateBindingInfo(
-		br::RViewToken_t vtok,
+		br::RViewToken_t status_view,
 		bool update_changed) {
 	br::ResourceBitset new_mask;
 	logger->Debug("UpdateBinding: mask update required (%s)",
@@ -283,7 +283,7 @@ void WorkingMode::UpdateBindingInfo(
 				resources.sched_bindings[resources.sync_refn],
 				static_cast<br::ResourceType>(r_type),
 				br::ResourceType::CPU,
-				R_ID_ANY, owner, vtok);
+				R_ID_ANY, owner, status_view);
 		}
 		else {
 			new_mask = br::ResourceBinder::GetMask(

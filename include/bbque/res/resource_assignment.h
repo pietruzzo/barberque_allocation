@@ -246,14 +246,14 @@ public:
 	 *
 	 * @param papp The Application/EXC requiring the resource
 	 * @param first_it The list iterator of the resource binding to track
-	 * @param vtok The token of the resource state view into which the
+	 * @param status_view The token of the resource state view into which the
 	 * assignment has been performed.
 	 *
 	 * @return RU_OK if success. RU_ERR_NULL_POINTER if the pointer to the
 	 * application is null.
 	 */
 	ExitCode_t TrackFirstResource(AppSPtr_t const & papp,
-	                              ResourcePtrListIterator_t & first_it, RViewToken_t vtok);
+	                              ResourcePtrListIterator_t & first_it, RViewToken_t status_view);
 
 	/**
 	 * @brief Track the last resource, from the binding list, granted to the
@@ -265,7 +265,7 @@ public:
 	 *
 	 * @param papp The Application/EXC requiring the resource
 	 * @param last_it The list iterator of the resource binding to track
-	 * @param vtok The token of the resource state view into which the
+	 * @param status_view The token of the resource state view into which the
 	 * assignment has been performed.
 	 *
 	 * @return RU_OK if success.
@@ -276,7 +276,7 @@ public:
 	 * in TrackFirstResource().
 	 */
 	ExitCode_t TrackLastResource(AppSPtr_t const & papp,
-	                             ResourcePtrListIterator_t & last_it, RViewToken_t vtok);
+	                             ResourcePtrListIterator_t & last_it, RViewToken_t status_view);
 
 private:
 

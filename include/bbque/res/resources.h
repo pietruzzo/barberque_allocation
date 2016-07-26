@@ -235,11 +235,11 @@ public:
 	/**
 	 * @brief Amount of resource used
 	 *
-	 * @param vtok The token referencing the resource view
+	 * @param status_view The token referencing the resource view
 	 *
 	 * @return How much resource has been allocated
 	 */
-	uint64_t Used(RViewToken_t vtok = 0);
+	uint64_t Used(RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Resource availability
@@ -254,33 +254,33 @@ public:
 	 * If the Application is not specified the method returns the amount of
 	 * resource free, i.e. not allocated to any Application/EXC.
 	 *
-	 * @param vtok The token referencing the resource view
+	 * @param status_view The token referencing the resource view
 	 *
 	 * @return How much resource is still available including the amount of
 	 * resource used by the given application
 	 */
-	uint64_t Available(AppSPtr_t papp = AppSPtr_t(), RViewToken_t vtok = 0);
+	uint64_t Available(AppSPtr_t papp = AppSPtr_t(), RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Count of applications using the resource
 	 *
-	 * @param vtok The token referencing the resource view
+	 * @param status_view The token referencing the resource view
 	 * @return Number of applications
 	 */
-	inline uint16_t ApplicationsCount(RViewToken_t vtok = 0) {
+	inline uint16_t ApplicationsCount(RViewToken_t status_view = 0) {
 		AppUseQtyMap_t apps_map;
-		return ApplicationsCount(apps_map, vtok);
+		return ApplicationsCount(apps_map, status_view);
 	}
 
 	/**
 	 * @brief Amount of resource used by the application
 	 *
 	 * @param papp Application (shared pointer) using the resource
-	 * @param vtok The token referencing the resource view
+	 * @param status_view The token referencing the resource view
 	 *
 	 * @return The 'quota' of resource used by the application
 	 */
-	uint64_t ApplicationUsage(AppSPtr_t const & papp, RViewToken_t vtok = 0);
+	uint64_t ApplicationUsage(AppSPtr_t const & papp, RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Get the Uid of the idx-th App/EXC using the resource
@@ -288,14 +288,14 @@ public:
 	 * @param app_uid The Uid of the n-th App/EXC using the resource
 	 * @param amount This is set to the amount of resource used by the App/EXC
 	 * @param idx The n-th App/EXC to find
-	 * @param vtok The token referencing the resource view
+	 * @param status_view The token referencing the resource view
 	 * @return RS_SUCCESS if the App/EXC has been found, RS_NO_APPS otherwise
 	 */
 	ExitCode_t UsedBy(
 			AppUid_t & app_uid,
 			uint64_t & amount,
 			uint8_t idx = 0,
-			RViewToken_t vtok = 0);
+			RViewToken_t status_view = 0);
 
 
 	/**
@@ -563,11 +563,11 @@ private:
 	 *
 	 * @param papp The application requiring the resource
 	 * @param amount How much resource is required
-	 * @param vtok The token referencing the resource view
+	 * @param status_view The token referencing the resource view
 	 * @return The amount of resource acquired if success, 0 otherwise.
 	 */
 	 uint64_t Acquire(AppSPtr_t const & papp, uint64_t amount,
-			 RViewToken_t vtok = 0);
+			 RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Release the resource
@@ -575,22 +575,22 @@ private:
 	 * Release the specific amount of resource used by an application
 	 *
 	 * @param papp The application releasing the resource
-	 * @param vtok The token referencing the resource view
+	 * @param status_view The token referencing the resource view
 	 * @return The amount of resource released
 	 */
-	uint64_t Release(AppSPtr_t const & papp, RViewToken_t vtok = 0);
+	uint64_t Release(AppSPtr_t const & papp, RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Apps/EXCs using the resource
 	 *
 	 * @param apps_map Reference to the map of App/EXC to get
-	 * @param vtok The resource state view token
+	 * @param status_view The resource state view token
 	 *
 	 * @return The number of Apps/EXCs using the resource, and a
 	 * reference to the map
 	 */
 	uint16_t ApplicationsCount(AppUseQtyMap_t & apps_map,
-			RViewToken_t vtok = 0);
+			RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Amount of resource used by the application
@@ -605,10 +605,10 @@ private:
 	/**
 	 * @brief Get the view referenced by the token
 	 *
-	 * @param vtok The resource state view token
+	 * @param status_view The resource state view token
 	 * @return The ResourceState fo the referenced view
 	 */
-	ResourceStatePtr_t GetStateView(RViewToken_t vtok);
+	ResourceStatePtr_t GetStateView(RViewToken_t status_view);
 
 	/**
 	 * @brief Delete a state view
@@ -620,9 +620,9 @@ private:
 	 * Thus, this constraint force the caller to set a new default view, before
 	 * delete the current one.
 	 *
-	 * @param vtok The token of the view to delete
+	 * @param status_view The token of the view to delete
 	 */
-	void DeleteView(RViewToken_t vtok);
+	void DeleteView(RViewToken_t status_view);
 };
 
 

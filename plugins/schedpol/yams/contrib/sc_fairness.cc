@@ -109,7 +109,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 
 
 		// Look for the binding domain with the lowest availability
-		r_avail[r_type_index] = sv->ResourceAvailable(r_path_str, vtok);
+		r_avail[r_type_index] = sv->ResourceAvailable(r_path_str, status_view);
 		min_bd_r_avail[r_type_index] = r_avail[r_type_index];
 		max_bd_r_avail[r_type_index] = 0;
 
@@ -118,7 +118,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 					bd_info.d_path->ToString().c_str(),
 					bd_id,
 					br::GetResourceTypeString(r_type));
-			bd_r_avail = sv->ResourceAvailable(r_path_str, vtok);
+			bd_r_avail = sv->ResourceAvailable(r_path_str, status_view);
 			logger->Debug("R{%s} availability : % " PRIu64,
 					r_path_str, bd_r_avail);
 

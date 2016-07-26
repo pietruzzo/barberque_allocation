@@ -156,18 +156,18 @@ public:
 	 * @see ResourceAccounterStatusIF::Available()
 	 */
 	inline uint64_t ResourceAvailable(std::string const & path,
-			br::RViewToken_t vtok = 0, ba::AppCPtr_t papp = ba::AppCPtr_t()) const {
-		return ra.Available(path, vtok, papp);
+			br::RViewToken_t status_view = 0, ba::AppCPtr_t papp = ba::AppCPtr_t()) const {
+		return ra.Available(path, status_view, papp);
 	}
 
 	inline uint64_t ResourceAvailable(ResourcePathPtr_t ppath,
-			br::RViewToken_t vtok = 0, AppSPtr_t papp = AppSPtr_t()) const {
-		return ra.Available(ppath, ResourceAccounter::UNDEFINED, vtok, papp);
+			br::RViewToken_t status_view = 0, AppSPtr_t papp = AppSPtr_t()) const {
+		return ra.Available(ppath, ResourceAccounter::UNDEFINED, status_view, papp);
 	}
 
 	inline uint64_t ResourceAvailable(br::ResourcePtrList_t & rsrc_list,
-			br::RViewToken_t vtok = 0, ba::AppCPtr_t papp = ba::AppCPtr_t()) const {
-		return ra.Available(rsrc_list, vtok, papp);
+			br::RViewToken_t status_view = 0, ba::AppCPtr_t papp = ba::AppCPtr_t()) const {
+		return ra.Available(rsrc_list, status_view, papp);
 	}
 
 	/**
@@ -189,18 +189,18 @@ public:
 	 * @see ResourceAccounterStatusIF::Used()
 	 */
 	inline uint64_t ResourceUsed(std::string const & path,
-			br::RViewToken_t vtok = 0) const {
-		return ra.Used(path, vtok);
+			br::RViewToken_t status_view = 0) const {
+		return ra.Used(path, status_view);
 	}
 
 	inline uint64_t ResourceUsed(ResourcePathPtr_t ppath,
-			br::RViewToken_t vtok = 0) const {
-		return ra.Used(ppath, ResourceAccounter::UNDEFINED, vtok);
+			br::RViewToken_t status_view = 0) const {
+		return ra.Used(ppath, ResourceAccounter::UNDEFINED, status_view);
 	}
 
 	inline uint64_t ResourceUsed(br::ResourcePtrList_t & rsrc_list,
-			br::RViewToken_t vtok = 0) const {
-		return ra.Used(rsrc_list, vtok);
+			br::RViewToken_t status_view = 0) const {
+		return ra.Used(rsrc_list, status_view);
 	}
 
 	/**

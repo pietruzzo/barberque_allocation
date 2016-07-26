@@ -192,11 +192,11 @@ public:
 	 * @brief Set information for referencing the current state view
 	 *
 	 * @param _sv Pointer to the System instance
-	 * @param _vtok The token of scheduling resource state view
+	 * @param _status_view The token of scheduling resource state view
 	 */
-	inline void SetViewInfo(System * _sv, br::RViewToken_t _vtok) {
+	inline void SetViewInfo(System * _sv, br::RViewToken_t _status_view) {
 		sv   = _sv;
-		vtok = _vtok;
+		status_view = _status_view;
 	}
 
 	/**
@@ -251,7 +251,7 @@ protected:
 	 System * sv = NULL;
 
 	 /** The token of scheduling resource state view */
-	 br::RViewToken_t vtok = 0;
+	 br::RViewToken_t status_view = 0;
 
 	 /**
 	  * The base resource path for the binding step.

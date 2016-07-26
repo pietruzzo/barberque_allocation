@@ -126,7 +126,7 @@ ResourceBitset ResourceBinder::GetMask(
 		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id,
 		AppSPtr_t papp,
-		RViewToken_t vtok) {
+		RViewToken_t status_view) {
 	ResourceBitset r_mask;
 	br::ResourceType found_rsrc_type, found_scope_type;
 	BBQUE_RID_TYPE found_scope_id;
@@ -134,7 +134,7 @@ ResourceBitset ResourceBinder::GetMask(
 
 	logger->Debug("GetMask: scope=<%s%d> resource=<%s> view=%d",
 				br::GetResourceTypeString(r_scope_type), r_scope_id,
-				br::GetResourceTypeString(r_type), vtok);
+				br::GetResourceTypeString(r_type), status_view);
 
 	// Scan the resource assignments map
 	for (auto const & ru_entry: *(assign_map.get())) {
@@ -168,7 +168,7 @@ ResourceBitset ResourceBinder::GetMask(
 					br::GetResourceTypeString(r_scope_type),
 					ppath->ToString().c_str());
 			r_mask |= GetMask(r_assign->GetResourcesList(),
-					r_type,	r_scope_type, r_scope_id, papp, vtok);
+					r_type,	r_scope_type, r_scope_id, papp, status_view);
 		}
 	}
 	logger->Debug("GetMask: type <%s> in scope <%s> = {%s}",
@@ -184,7 +184,7 @@ ResourceBitset ResourceBinder::GetMask(
 		br::ResourceType r_scope_type,
 		BBQUE_RID_TYPE r_scope_id,
 		AppSPtr_t papp,
-		RViewToken_t vtok) {
+		RViewToken_t status_view) {
 	ResourceBitset r_mask;
 	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
@@ -201,7 +201,7 @@ ResourceBitset ResourceBinder::GetMask(
 		}
 
 		// Is the application using it?
-		if (rsrc->ApplicationUsage(papp, vtok) == 0) {
+		if (rsrc->ApplicationUsage(papp, status_view) == 0) {
 			logger->Debug("GetMask: <%s> not used by [%s]. Skipping...",
 					rsrc->Path().c_str(), papp->StrId());
 			continue;

@@ -109,9 +109,9 @@ void Resource::SetOnline() {
 }
 
 
-uint64_t Resource::Used(RViewToken_t vtok) {
+uint64_t Resource::Used(RViewToken_t status_view) {
 	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(vtok));
+	ResourceStatePtr_t view(GetStateView(status_view));
 	if (!view)
 		return 0;
 
@@ -119,7 +119,7 @@ uint64_t Resource::Used(RViewToken_t vtok) {
 	return view->used;
 }
 
-uint64_t Resource::Available(AppSPtr_t papp, RViewToken_t vtok) {
+uint64_t Resource::Available(AppSPtr_t papp, RViewToken_t status_view) {
 	uint64_t total_available = Unreserved();
 	ResourceStatePtr_t view;
 
@@ -128,7 +128,7 @@ uint64_t Resource::Available(AppSPtr_t papp, RViewToken_t vtok) {
 		return 0;
 
 	// Retrieve the state view
-	view = GetStateView(vtok);
+	view = GetStateView(status_view);
 	// If the view is not found, it means that nothing has been allocated.
 	// Thus the availability value to return is the total amount of
 	// resource
@@ -147,12 +147,12 @@ uint64_t Resource::Available(AppSPtr_t papp, RViewToken_t vtok) {
 
 }
 
-uint64_t Resource::ApplicationUsage(AppSPtr_t const & papp, RViewToken_t vtok) {
+uint64_t Resource::ApplicationUsage(AppSPtr_t const & papp, RViewToken_t status_view) {
 	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(vtok));
+	ResourceStatePtr_t view(GetStateView(status_view));
 	if (!view) {
 		DB(fprintf(stderr, FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
-					name.c_str(), vtok));
+					name.c_str(), status_view));
 		return 0;
 	}
 
@@ -163,10 +163,10 @@ uint64_t Resource::ApplicationUsage(AppSPtr_t const & papp, RViewToken_t vtok) {
 Resource::ExitCode_t Resource::UsedBy(AppUid_t & app_uid,
 		uint64_t & amount,
 		uint8_t idx,
-		RViewToken_t vtok) {
+		RViewToken_t status_view) {
 	// Get the map of Apps/EXCs using the resource
 	AppUseQtyMap_t apps_map;
-	size_t mapsize = ApplicationsCount(apps_map, vtok);
+	size_t mapsize = ApplicationsCount(apps_map, status_view);
 	size_t count = 0;
 	app_uid = 0;
 	amount = 0;
@@ -193,12 +193,12 @@ Resource::ExitCode_t Resource::UsedBy(AppUid_t & app_uid,
 }
 
 uint64_t Resource::Acquire(AppSPtr_t const & papp, uint64_t amount,
-		RViewToken_t vtok) {
+		RViewToken_t status_view) {
 	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(vtok));
+	ResourceStatePtr_t view(GetStateView(status_view));
 	if (!view) {
 		view = ResourceStatePtr_t(new ResourceState());
-		state_views[vtok] = view;
+		state_views[status_view] = view;
 	}
 
 	// Try to set the new "used" value
@@ -212,12 +212,12 @@ uint64_t Resource::Acquire(AppSPtr_t const & papp, uint64_t amount,
 	return amount;
 }
 
-uint64_t Resource::Release(AppSPtr_t const & papp, RViewToken_t vtok) {
+uint64_t Resource::Release(AppSPtr_t const & papp, RViewToken_t status_view) {
 	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(vtok));
+	ResourceStatePtr_t view(GetStateView(status_view));
 	if (!view) {
 		DB(fprintf(stderr, FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
-					name.c_str(), vtok));
+					name.c_str(), status_view));
 		return 0;
 	}
 
@@ -238,19 +238,19 @@ uint64_t Resource::Release(AppSPtr_t const & papp, RViewToken_t vtok) {
 	return used_by_app;
 }
 
-void Resource::DeleteView(RViewToken_t vtok) {
+void Resource::DeleteView(RViewToken_t status_view) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	// Avoid to delete the default view
-	if (vtok == ra.GetSystemView())
+	if (status_view == ra.GetSystemView())
 		return;
-	state_views.erase(vtok);
+	state_views.erase(status_view);
 }
 
 uint16_t Resource::ApplicationsCount(
 		AppUseQtyMap_t & apps_map,
-		RViewToken_t vtok) {
+		RViewToken_t status_view) {
 	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(vtok));
+	ResourceStatePtr_t view(GetStateView(status_view));
 	if (!view)
 		return 0;
 
@@ -281,15 +281,15 @@ uint64_t Resource::ApplicationUsage(
 	return app_using_it->second;
 }
 
-ResourceStatePtr_t Resource::GetStateView(RViewToken_t vtok) {
+ResourceStatePtr_t Resource::GetStateView(RViewToken_t status_view) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	// Default view if token = 0
-	if (vtok == 0)
-		vtok = ra.GetSystemView();
+	if (status_view == 0)
+		status_view = ra.GetSystemView();
 
 	// Retrieve the view from hash map otherwise
-	RSHashMap_t::iterator it = state_views.find(vtok);
+	RSHashMap_t::iterator it = state_views.find(status_view);
 	if (it != state_views.end())
 		return it->second;
 

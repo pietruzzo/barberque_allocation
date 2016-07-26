@@ -190,18 +190,18 @@ public:
 	 * (wheter template or specific).
 
 	 * @param path Resource path
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param papp The application interested in the query. This means that if
 	 * the application pointed by 'papp' is using yet the resource, such
 	 * amount is added to the real available quantity.
 	 *
 	 * @return The amount of resource available
 	 */
-	virtual uint64_t Available(std::string const & path, br::RViewToken_t vtok = 0,
+	virtual uint64_t Available(std::string const & path, br::RViewToken_t status_view = 0,
 			ba::AppSPtr_t papp = ba::AppSPtr_t()) const = 0;
 
 	virtual uint64_t Available(br::ResourcePathPtr_t ppath,
-			PathClass_t rpc = EXACT, br::RViewToken_t vtok = 0,
+			PathClass_t rpc = EXACT, br::RViewToken_t status_view = 0,
 			ba::AppSPtr_t papp = ba::AppSPtr_t()) const = 0;
 
 	/**
@@ -217,7 +217,7 @@ public:
 	 *
 	 * @param rsrc_list A list of shared pointer to Resource descriptors (of
 	 * the same type).
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param papp The application interested in the query. This means that if
 	 * the application pointed by 'papp' is using yet the resource, such
 	 * amount is added to the real available quantity.
@@ -225,7 +225,7 @@ public:
 	 * @return The amount of resource available
 	 */
 	virtual uint64_t Available(br::ResourcePtrList_t & rsrc_list,
-			br::RViewToken_t vtok = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const = 0;
+			br::RViewToken_t status_view = 0, ba::AppSPtr_t papp = ba::AppSPtr_t()) const = 0;
 
 	/**
 	 * @brief Amount of resources used
@@ -234,15 +234,15 @@ public:
 	 * (wheter template or specific).
 	 *
 	 * @param path Resource path
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 *
 	 * @return The used amount of resource
 	 */
-	virtual uint64_t Used(std::string const & path, br::RViewToken_t vtok = 0)
+	virtual uint64_t Used(std::string const & path, br::RViewToken_t status_view = 0)
 		const = 0;
 
 	virtual uint64_t Used(br::ResourcePathPtr_t ppath,
-			PathClass_t rpc = EXACT, br::RViewToken_t vtok = 0) const = 0;
+			PathClass_t rpc = EXACT, br::RViewToken_t status_view = 0) const = 0;
 
 	/**
 	 * @brief Amount of resources used
@@ -257,12 +257,12 @@ public:
 	 *
 	 * @param rsrc_list A list of shared pointer to Resource descriptors (of
 	 * the same type).
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 *
 	 * @return The used amount of resource
 	 */
 	virtual uint64_t Used(
-		br::ResourcePtrList_t & rsrc_list, br::RViewToken_t vtok = 0) const = 0;
+		br::ResourcePtrList_t & rsrc_list, br::RViewToken_t status_view = 0) const = 0;
 
 	/**
 	 * @brief Count of resources referenced by the given path

@@ -70,7 +70,7 @@ SchedContrib::Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
 
 	// A valid token for the resource state view is mandatory
-	if (vtok == 0) {
+	if (status_view == 0) {
 		logger->Error("Missing a valid system/state view");
 		return SC_ERR_VIEW;
 	}
@@ -97,7 +97,7 @@ void SchedContrib::GetResourceThresholds(
 	rl.saturate = rl.total * msl_params[r_type_index];
 
 	// Resource availability (scheduling resource state view)
-	rl.free  = sv->ResourceAvailable(r_path, vtok);
+	rl.free  = sv->ResourceAvailable(r_path, status_view);
 	rl.usage = rl.total - rl.free;
 
 	// Amount of resource remaining before reaching the saturation

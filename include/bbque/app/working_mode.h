@@ -324,7 +324,7 @@ public:
 	 *
 	 * @return WM_SUCCESS, or WM_RSRC_MISS_BIND if some bindings are missing
 	 */
-	ExitCode_t SetResourceBinding(br::RViewToken_t vtok, size_t b_refn = 0);
+	ExitCode_t SetResourceBinding(br::RViewToken_t status_view, size_t b_refn = 0);
 
 	/**
 	 * @brief Get the map of scheduled resource assignments
@@ -349,10 +349,10 @@ public:
 	 * performed. Therefore the AWM can update the resource binding masks such
 	 * that they can be correctly retrieved by the PlatformProxy.
 	 *
-	 * @param vtok The resource state view according to which update
+	 * @param status_view The resource state view according to which update
 	 * @param update_changed if true update alse the "changed" flags
 	 */
-	void UpdateBindingInfo(br::RViewToken_t vtok, bool update_changed=false);
+	void UpdateBindingInfo(br::RViewToken_t status_view, bool update_changed=false);
 
 	/**
 	 * @brief Clear the scheduled resource binding

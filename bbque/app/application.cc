@@ -644,7 +644,7 @@ Application::ExitCode_t Application::Unschedule() {
 }
 
 Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
-		br::RViewToken_t vtok, size_t b_refn) {
+		br::RViewToken_t status_view, size_t b_refn) {
 	std::unique_lock<std::recursive_mutex> schedule_ul(schedule.mtx);
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceAccounter::ExitCode_t booking;
@@ -676,7 +676,7 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	}
 
 	// Checking for resources availability
-	booking = ra.BookResources(papp, awm->GetSchedResourceBinding(b_refn), vtok);
+	booking = ra.BookResources(papp, awm->GetSchedResourceBinding(b_refn), status_view);
 
 	// If resources are not available, unschedule
 	if (booking != ResourceAccounter::RA_SUCCESS) {
@@ -686,7 +686,7 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	}
 
 	// Bind the resource set to the working mode
-	awm->SetResourceBinding(vtok, b_refn);
+	awm->SetResourceBinding(status_view, b_refn);
 
 	// Reschedule accordingly to "awm"
 	logger->Debug("Rescheduling [%s] into AWM [%d:%s]...",
@@ -695,7 +695,7 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 
 	// Reschedule failed. Release resources and clear resource binding
 	if (result != APP_SUCCESS) {
-		ra.ReleaseResources(papp, vtok);
+		ra.ReleaseResources(papp, status_view);
 		awm->ClearResourceBinding();
 		return APP_WM_REJECTED;
 	}

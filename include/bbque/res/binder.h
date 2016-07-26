@@ -113,7 +113,7 @@ public:
 	 * @param r_type_scope The type of the scope resource
 	 * @param r_type_id The ID of the scope resource
 	 * @param papp [optional] The application using the resource
-	 * @param vtok [optional] The resource state view to consider
+	 * @param status_view [optional] The resource state view to consider
 	 *
 	 * @return A ResourceBitset object tracking all the IDs
 	 */
@@ -123,7 +123,7 @@ public:
 			ResourceType r_scope_type,
 			BBQUE_RID_TYPE r_scope_id,
 			AppSPtr_t papp = nullptr,
-			RViewToken_t vtok = 0);
+			RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Retrieve IDs of a type of resource from a ResourcePtrList_t
@@ -131,7 +131,7 @@ public:
 	 * @param rpl A list of resource descriptors
 	 * @param r_type The type of resource to consider
 	 * @param papp [optional] The application using the resource
-	 * @param vtok [optional] The resource state view to consider
+	 * @param status_view [optional] The resource state view to consider
 	 *
 	 * @return A ResourceBitset object tracking all the IDs
 	 */
@@ -141,7 +141,7 @@ public:
 			ResourceType r_scope_type,
 			BBQUE_RID_TYPE r_scope_id,
 			AppSPtr_t papp = nullptr,
-			RViewToken_t vtok = 0);
+			RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Check if two resource assignments map are compatible for binding

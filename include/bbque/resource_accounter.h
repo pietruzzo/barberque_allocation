@@ -147,28 +147,28 @@ public:
 	 */
 	uint64_t Available(
 	        std::string const & path,
-	        br::RViewToken_t vtok = 0,
+	        br::RViewToken_t status_view = 0,
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	uint64_t Available(
 	        br::ResourcePtrList_t & rsrc_list,
-	        br::RViewToken_t vtok = 0,
+	        br::RViewToken_t status_view = 0,
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	uint64_t Available(
 	        br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
-	        br::RViewToken_t vtok = 0,
+	        br::RViewToken_t status_view = 0,
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint64_t Used(std::string const & path, br::RViewToken_t vtok = 0) const;
+	uint64_t Used(std::string const & path, br::RViewToken_t status_view = 0) const;
 
-	uint64_t Used(br::ResourcePtrList_t & rsrc_list, br::RViewToken_t vtok = 0) const;
+	uint64_t Used(br::ResourcePtrList_t & rsrc_list, br::RViewToken_t status_view = 0) const;
 
 	uint64_t Used(br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
-	              br::RViewToken_t vtok = 0) const;
+	              br::RViewToken_t status_view = 0) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -239,7 +239,7 @@ public:
 	 *
 	 * @param assign_map A map of Usage pointers
 	 * @param papp The application requiring resource assignments
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param r_type The type of resource to query
 	 * @param r_scope_type The scope under which consider the resource
 	 * @param r_scope_id  [optional] The ID of the resource scope type
@@ -249,7 +249,7 @@ public:
 	uint64_t GetAssignedAmount(
 	        br::ResourceAssignmentMapPtr_t const & assign_map,
 	        ba::AppSPtr_t papp,
-	        br::RViewToken_t vtok,
+	        br::RViewToken_t status_view,
 	        br::ResourceType r_type,
 	        br::ResourceType r_scope_type =
 	                br::ResourceType::UNDEFINED,
@@ -258,7 +258,7 @@ public:
 	uint64_t GetAssignedAmount(
 	        br::ResourceAssignmentMap_t const & assign_map,
 	        ba::AppSPtr_t papp,
-	        br::RViewToken_t vtok,
+	        br::RViewToken_t status_view,
 	        br::ResourceType r_type,
 	        br::ResourceType r_scope_type =
 	                br::ResourceType::UNDEFINED,
@@ -299,21 +299,21 @@ public:
 	 * This is an utility function for debug purpose that print out all the
 	 * resources path and values about usage and total amount.
 	 *
-	 * @param vtok Token of the resources state view
+	 * @param status_view Token of the resources state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
-	void PrintStatusReport(br::RViewToken_t vtok = 0, bool verbose = false) const;
+	void PrintStatusReport(br::RViewToken_t status_view = 0, bool verbose = false) const;
 
 	/**
 	 * @brief Print details about how resource usage is partitioned among
 	 * applications/EXCs
 	 *
 	 * @param path The resource path
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
 	void PrintAppDetails(
-	        br::ResourcePathPtr_t path, br::RViewToken_t vtok, bool verbose) const;
+	        br::ResourcePathPtr_t path, br::RViewToken_t status_view, bool verbose) const;
 
 	/**
 	 * @brief A prefix path for recipe validation
@@ -355,7 +355,7 @@ public:
 	 *
 	 * @param papp The application requiring resource assignments
 	 * @param assign_map Map of Usage objects
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param do_check If true the controls upon set validity and resources
 	 * availability are enabled
 	 *
@@ -370,7 +370,7 @@ public:
 	ExitCode_t BookResources(
 	        ba::AppSPtr_t papp,
 	        br::ResourceAssignmentMapPtr_t const & assign_map,
-	        br::RViewToken_t vtok = 0);
+	        br::RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Release the resources
@@ -381,9 +381,9 @@ public:
 	 * release it all.
 	 *
 	 * @param papp The application holding the resources
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 */
-	void ReleaseResources(ba::AppSPtr_t papp, br::RViewToken_t vtok = 0);
+	void ReleaseResources(ba::AppSPtr_t papp, br::RViewToken_t status_view = 0);
 
 
 	/**
@@ -769,28 +769,28 @@ private:
 	 *
 	 * @param rsrc_list A list of descriptors of resources of the same type
 	 * @param q_opt Resource state attribute requested (@see QueryOption_t)
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param papp The application interested in the query
 	 *
 	 * @return The value of the attribute request
 	 */
 	uint64_t QueryStatus(
 	        br::ResourcePtrList_t const & rsrc_list,
-	        QueryOption_t q_opt, br::RViewToken_t vtok = 0,
+	        QueryOption_t q_opt, br::RViewToken_t status_view = 0,
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
 	 * @brief Check the resource availability for a whole set
 	 *
 	 * @param assign_map A map of Usage objects to check
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param papp The application interested in the query
 	 * @return RA_SUCCESS if all the resources are availables,
 	 * RA_ERR_USAGE_EXC otherwise.
 	 */
 	ExitCode_t CheckAvailability(
 	        br::ResourceAssignmentMapPtr_t const & assign_map,
-	        br::RViewToken_t vtok = 0,
+	        br::RViewToken_t status_view = 0,
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	/**
@@ -801,13 +801,13 @@ private:
 	 * scheduled. Such assertion is valid inside the scope of the resources
 	 * state view referenced by the token.
 	 *
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param apps_assign The map of applications resource assignments to get
 	 * @return RA_SUCCESS if the map is found. RA_ERR_MISS_VIEW if the token
 	 * doesn't match any state view.
 	 */
 	ExitCode_t GetAppAssignmentsByView(
-		br::RViewToken_t vtok, AppAssignmentsMapPtr_t & apps_assign);
+		br::RViewToken_t status_view, AppAssignmentsMapPtr_t & apps_assign);
 
 	/**
 	 * @brief Book e a set of resources (not thread-safe)
@@ -817,7 +817,7 @@ private:
 	 *
 	 * @param papp The application requiring resource assignments
 	 * @param assign_map Map of Usage objects
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param do_check If true the controls upon set validity and resources
 	 * availability are enabled
 	 *
@@ -832,7 +832,7 @@ private:
 	ExitCode_t _BookResources(
 	        ba::AppSPtr_t papp,
 	        br::ResourceAssignmentMapPtr_t const & assign_map,
-	        br::RViewToken_t vtok = 0);
+	        br::RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Increment the resource assignments counts
@@ -842,7 +842,7 @@ private:
 	 *
 	 * @param assign_map Map of next resource assignments
 	 * @param app The application acquiring the resources
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 *
 	 * @return RA_SUCCESS for successful return.
 	 * RA_ERR_MISS_VIEW if the resource state view provided is missing.
@@ -852,7 +852,7 @@ private:
 	ExitCode_t IncBookingCounts(
 	        br::ResourceAssignmentMapPtr_t const & assign_map,
 	        ba::AppSPtr_t const & papp,
-	        br::RViewToken_t vtok = 0);
+	        br::RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Book a single resource
@@ -862,7 +862,7 @@ private:
 	 *
 	 * @param papp The Application/ExC using the resource
 	 * @param r_assign Usage object
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param rsrc_set The set of systems resources in use
 	 *
 	 * @return RA_ERR_USAGE_EXC if the usage required overcome the
@@ -871,7 +871,7 @@ private:
 	ExitCode_t DoResourceBooking(
 	        ba::AppSPtr_t const & papp,
 	        br::ResourceAssignmentPtr_t & r_assign,
-	        br::RViewToken_t vtok,
+	        br::RViewToken_t status_view,
 	        ResourceSetPtr_t & rsrc_set);
 
 	/**
@@ -882,7 +882,7 @@ private:
 	 *
 	 * @see ReleaseResources
 	 */
-	void _ReleaseResources(ba::AppSPtr_t papp, br::RViewToken_t vtok = 0);
+	void _ReleaseResources(ba::AppSPtr_t papp, br::RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Allocate a quota of resource in the scheduling case
@@ -893,12 +893,12 @@ private:
 	 * @param papp The Application/ExC using the resource
 	 * @param rsrc The resource descriptor of the resource binding
 	 * @param requested The amount of resource required
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 */
 	void SchedResourceBooking(
 	        ba::AppSPtr_t const & papp,
 	        br::ResourcePtr_t & rsrc,
-	        br::RViewToken_t vtok,
+	        br::RViewToken_t status_view,
 	        uint64_t & requested,
 	        uint64_t per_rsrc_allocated = 0);
 
@@ -926,12 +926,12 @@ private:
 	 *
 	 * @param assign_map Map of current resource assignments
 	 * @param app The application releasing the resources
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 */
 	void DecBookingCounts(
 	        br::ResourceAssignmentMapPtr_t const & assign_map,
 	        ba::AppSPtr_t const & app,
-	        br::RViewToken_t vtok = 0);
+	        br::RViewToken_t status_view = 0);
 
 	/**
 	 * @brief Unbook a single resource
@@ -941,7 +941,7 @@ private:
 	 *
 	 * @param papp The Application/ExC using the resource
 	 * @param r_assign Usage object
-	 * @param vtok The token referencing the resource state view
+	 * @param status_view The token referencing the resource state view
 	 * @param rsrc_set The set of systems resources in use
 	 *
 	 * @return RA_SUCCESS for successful return.
@@ -952,7 +952,7 @@ private:
 	ExitCode_t UndoResourceBooking(
 	        ba::AppSPtr_t const & papp,
 	        br::ResourceAssignmentPtr_t & r_assign,
-	        br::RViewToken_t vtok,
+	        br::RViewToken_t status_view,
 	        ResourceSetPtr_t & rsrc_set);
 
 	/**
@@ -1003,7 +1003,7 @@ private:
 	 * @param tok The token used as reference to the resources view.
 	 * @return The token referencing the system state view.
 	 */
-	br::RViewToken_t SetView(br::RViewToken_t vtok);
+	br::RViewToken_t SetView(br::RViewToken_t status_view);
 
 };
 

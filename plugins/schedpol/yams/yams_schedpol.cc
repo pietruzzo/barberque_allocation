@@ -123,7 +123,7 @@ YamsSchedPol::YamsSchedPol():
 	assert(logger);
 
 	// Resource view counter
-	vtok_count = 0;
+	status_view_count = 0;
 
 	// Register all the metrics to collect
 	mc.Register(coll_metrics, YAMS_METRICS_COUNT);
@@ -177,21 +177,21 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitResourceStateView() {
 	char token_path[30];
 
 	// Set the resource state view token counter
-	++vtok_count;
+	++status_view_count;
 
 	// Build a string path for the resource state view
-	snprintf(token_path, 30, "%s%d", MODULE_NAMESPACE, vtok_count);
+	snprintf(token_path, 30, "%s%d", MODULE_NAMESPACE, status_view_count);
 	logger->Debug("Init: Lowest application prio : %d",
 			sv->ApplicationLowestPriority());
 
 	// Get a resource state view
 	logger->Debug("Init: Requiring state view token for %s", token_path);
-	ra_result = ra.GetView(token_path, vtok);
+	ra_result = ra.GetView(token_path, status_view);
 	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
 		logger->Fatal("Init: Cannot get a resource state view");
 		return YAMS_ERROR_VIEW;
 	}
-	logger->Debug("Init: Resources state view token = %d", vtok);
+	logger->Debug("Init: Resources state view token = %d", status_view);
 
 	return YAMS_SUCCESS;
 }
@@ -210,7 +210,7 @@ YamsSchedPol::ExitCode_t YamsSchedPol::InitSchedContribManagers() {
 	// Set the view information into the scheduling contribution managers
 	for (scm_it = scms.begin(); scm_it != scms.end(); ++scm_it) {
 		SchedContribManager * scm = scm_it->second;
-		scm->SetViewInfo(sv, vtok);
+		scm->SetViewInfo(sv, status_view);
 		scm->SetBindingInfo(*(bindings[scm_it->first]));
 		logger->Debug("Init: Scheduling contribution manager for R{%s} ready",
 				br::GetResourceTypeString(scm_it->first));
@@ -269,19 +269,19 @@ YamsSchedPol::Schedule(System & sys_if, br::RViewToken_t & rav) {
 		SchedulePrioQueue(prio);
 	}
 	// Set the new resource state view token
-	rav = vtok;
+	rav = status_view;
 
 	// Reset scheduling entities and resource bindings status
 	Clear();
 
 	// Report table
-	ra.PrintStatusReport(vtok);
+	ra.PrintStatusReport(status_view);
 	return SCHED_DONE;
 
 error:
 	logger->Error("Schedule: an error occurred. Interrupted.");
 	Clear();
-	ra.PutView(vtok);
+	ra.PutView(status_view);
 	return SCHED_ERROR;
 }
 
@@ -427,7 +427,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 			// Send the schedule request
 			logger->Debug("Selecting: %s schedule requested", pschd->StrId());
 			app_result = pschd->papp->ScheduleRequest(
-					pschd->pawm, vtok, pschd->bind_refn);
+					pschd->pawm, status_view, pschd->bind_refn);
 			if (app_result == ApplicationStatusIF::APP_WM_ACCEPTED){
 				logger->Info("COWS: scheduling OK");
 				//COWS: Update means and square means values
@@ -443,7 +443,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 #else
 		// Send the schedule request
 		app_result = pschd->papp->ScheduleRequest(
-				pschd->pawm, vtok, pschd->bind_refn);
+				pschd->pawm, status_view, pschd->bind_refn);
 		logger->Debug("Selecting: [%s] schedule requested", pschd->StrId());
 		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
 			logger->Debug("Selecting: [%s] rejected!", pschd->StrId());
