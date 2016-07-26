@@ -21,9 +21,7 @@
 #include "agent_client.h"
 
 #define MODULE_NAMESPACE AGENT_PROXY_NAMESPACE".grpc"
-#define MODULE_CONFIG AGENT_PROXY_CONFIG".grpc"
-
-#define BBQUE_AGENT_PROXY_PORT_DEFAULT  "885"
+#define MODULE_CONFIG AGENT_PROXY_CONFIG
 
 namespace bbque
 {
@@ -97,6 +95,7 @@ private:
 
 	std::string server_address_port = "0.0.0.0:";
 
+	static uint32_t port_number;
 	std::unique_ptr<AgentServer> rpc_server;
 
 	std::vector<std::shared_ptr<AgentClient>> rpc_clients;

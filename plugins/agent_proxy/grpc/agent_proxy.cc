@@ -1,5 +1,9 @@
 #include <iostream>
 
+#include <boost/program_options/options_description.hpp>
+
+#include "bbque/config.h"
+
 #include "agent_proxy.h"
 
 namespace bbque
@@ -8,6 +12,10 @@ namespace plugins
 {
 
 using bbque::agent::ExitCode_t;
+
+boost::program_options::variables_map agent_proxy_opts_value;
+
+uint32_t AgentProxyGRPC::port_number = BBQUE_AGENT_PROXY_PORT_DEFAULT;
 
 // =======================[ Static plugin interface ]=========================
 
@@ -28,24 +36,22 @@ int32_t AgentProxyGRPC::Destroy(void * plugin) {
 }
 
 bool AgentProxyGRPC::Configure(PF_ObjectParams * params) {
-
 	if (configured)
 		return true;
-	/*
-		// Declare the supported options
-		po::options_description xmlrloader_opts_desc("RXML Recipe Loader Options");
-		xmlrloader_opts_desc.add_options()
-			(MODULE_CONFIG".recipe_dir", po::value<std::string>
-			 (&recipe_dir)->default_value(BBQUE_PATH_PREFIX "/" BBQUE_PATH_RECIPES),
-			 "recipes folder")
-		;
-	*/
+
+	// Declare the supported options
+	boost::program_options::options_description
+		agent_proxy_opts_desc("AgentProxy options");
+	agent_proxy_opts_desc.add_options()
+		(MODULE_CONFIG".port", boost::program_options::value<uint32_t>
+		 (&port_number)->default_value(BBQUE_AGENT_PROXY_PORT_DEFAULT),
+		 "Server port number");
 
 	// Get configuration params
 	PF_Service_ConfDataIn data_in;
-//	data_in.opts_desc = &xmlrloader_opts_desc;
+	data_in.opts_desc = &agent_proxy_opts_desc;
 	PF_Service_ConfDataOut data_out;
-//	data_out.opts_value = &xmlrloader_opts_value;
+	data_out.opts_value = &agent_proxy_opts_value;
 
 	PF_ServiceData sd;
 	sd.id = MODULE_NAMESPACE;
@@ -65,6 +71,7 @@ bool AgentProxyGRPC::Configure(PF_ObjectParams * params) {
 
 AgentProxyGRPC::AgentProxyGRPC() {
 	AgentProxyGRPC(BBQUE_AGENT_PROXY_PORT_DEFAULT);
+	server_address_port = std::string("0.0.0.0:") + std::to_string(port_number);
 }
 
 AgentProxyGRPC::AgentProxyGRPC(const std::string & _port) {

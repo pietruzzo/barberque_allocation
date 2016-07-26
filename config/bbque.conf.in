@@ -1,5 +1,5 @@
 ################################################################################
-#			Barbeque Configuration
+#                  BarbequeRTRM Configuration
 #
 # This file define configuration params for each module
 #
@@ -103,6 +103,12 @@ penalty.mem   = 10
 #ggap.threshold_optimize = ${CONFIG_BBQUE_GGAP_THRESHOLD_OPTIMIZE}
 
 ################################################################################
+# AgentProxy Options
+################################################################################
+[AgentProxy]
+#port = ${CONFIG_BBQUE_AGENT_PROXY_PORT_DEFAULT}
+
+################################################################################
 # OpenMPI Options
 ################################################################################
 [ompi]
@@ -128,7 +134,7 @@ updatetime.resources = 500   # In milliseconds
 # Set root category priority and its appender
 # By default all logs are only from level greater than or equal to INFO
 ###
-rootCategory = ERROR, raFile
+rootCategory = DEBUG, raFile
 #rootCategory = ERROR, raConsole
 #rootCategory = ERROR, raSyslog
 #rootCategory = ERROR, raRSyslog
@@ -159,7 +165,7 @@ category.bq.rbind =	NOTICE
 category.bq.df = 	NOTICE
 #category.bq.pp = 	INFO
 #category.bq.pm =	INFO
-#category.bq.wm =	INFO
+category.bq.wm =	INFO
 #category.bq.rpc.fif = 	INFO
 #category.bq.rpc.prx = 	INFO
 #category.bq.sm = 	INFO
