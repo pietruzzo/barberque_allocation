@@ -1,4 +1,3 @@
-#include <iostream>
 
 #include <boost/program_options/options_description.hpp>
 
@@ -104,17 +103,17 @@ std::string AgentProxyGRPC::GetNetAddress(int system_id) const {
 
 std::shared_ptr<AgentClient>
 AgentProxyGRPC::GetAgentClient(int system_id) {
-	std::cout << "[DBG] Retrieving a client..." << std::endl;
 	if(rpc_clients.size() <= system_id) {
-		std::cout << "[DBG] Allocating a client..." << std::endl;
+	logger->Debug("Retrieving a client...");
+		logger->Debug("Allocating a client...");
 		std::string server_address_port = GetNetAddress(system_id);
 		server_address_port.append(":885");
 		std::shared_ptr<AgentClient> client =
 		        std::make_shared<AgentClient>(server_address_port);
 		rpc_clients.push_back(client);
 	}
-	std::cout << "[DBG] vector size: " << rpc_clients.size() << std::endl;
-	std::cout << "[DBG] count: " << rpc_clients.at(system_id).use_count() << std::endl;
+	logger->Debug("Vector size: %d", clients.size());
+	return clients.at(system_id);
 	return rpc_clients.at(system_id);
 }
 
@@ -125,10 +124,10 @@ ExitCode_t AgentProxyGRPC::GetResourceStatus(
 
 	int system_id = GetSystemId(resource_path);
 	std::shared_ptr<AgentClient> client(GetAgentClient(system_id));
-	std::cout << "[DBG] vector size: " << rpc_clients.size() << std::endl;
+	logger->Debug("Vector size: %d", clients.size());
 
 	if(client == nullptr) {
-		std::cerr << "[ERR] Client not ready" << std::endl;
+		logger->Error("Client for <%s> not ready", resource_path.c_str());
 		return agent::ExitCode_t::AGENT_UNREACHABLE;
 	}
 	return client->GetResourceStatus(resource_path, status);
