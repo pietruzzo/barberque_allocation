@@ -387,7 +387,7 @@ ResourcePathPtr_t const ResourceAccounter::GetPath(
 	if (rp_it == r_paths.end()) {
 		logger->Warn("GetPath: No resource path object for [%s]",
 			strpath.c_str());
-		return ResourcePathPtr_t();
+		return std::make_shared<br::ResourcePath>(strpath);
 	}
 	return (*rp_it).second;
 }
