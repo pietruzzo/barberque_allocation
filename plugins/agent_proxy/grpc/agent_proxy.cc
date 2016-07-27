@@ -1,3 +1,7 @@
+#include <grpc++/server.h>
+#include <grpc++/server_builder.h>
+#include <grpc++/server_context.h>
+#include <grpc++/security/server_credentials.h>
 
 #include <boost/program_options/options_description.hpp>
 
@@ -73,19 +77,51 @@ AgentProxyGRPC::AgentProxyGRPC() {
 	server_address_port = std::string("0.0.0.0:") + std::to_string(port_number);
 	logger->Info("AgentProxy Server will listen on %s",
 		server_address_port.c_str());
-}
-
+	Setup("AgentProxyServer", "bq.gx.grpc.server");
 }
 
 AgentProxyGRPC::~AgentProxyGRPC() {
-	rpc_clients.clear();
+	logger->Info("Destroying the AgentProxy module...");
+	clients.clear();
 }
 
+void AgentProxyGRPC::StartServer() {
+	if (server != nullptr) {
+		logger->Warn("Server already started");
+		return;
+	}
+	logger->Info("Starting the server task...");
+	Start();
+}
+
+void AgentProxyGRPC::Task() {
+	logger->Debug("Server task launched");
+	RunServer();
+	logger->Info("Server stopped");
+	Notify();
+}
+
+void AgentProxyGRPC::RunServer() {
+	grpc::ServerBuilder builder;
+	builder.AddListeningPort(
+	        server_address_port, grpc::InsecureServerCredentials());
+	builder.RegisterService(&service);
+	server = builder.BuildAndStart();
+	logger->Notice("Server listening on %s", server_address_port.c_str());
+	server->Wait();
+}
+
+void AgentProxyGRPC::StopServer() {
+	logger->Info("Stopping the server task...");
+	if (server == nullptr) {
+		logger->Warn("Server already stopped");
+		return;
+	}
+	server->Shutdown();
+}
 
 void AgentProxyGRPC::WaitForServerToStop() {
-	if (rpc_server == nullptr)
-		return;
-	rpc_server->WaitToStop();
+	Wait();
 }
 
 

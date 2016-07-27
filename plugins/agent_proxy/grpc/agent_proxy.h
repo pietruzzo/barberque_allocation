@@ -15,11 +15,15 @@
 #include <grpc++/support/time.h>
 
 #include "bbque/utils/logging/logger.h"
+#include "bbque/utils/worker.h"
 #include "bbque/plugins/agent_proxy_if.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/plugins/plugin.h"
-#include "agent_server.h"
+#include "bbque/plugins/agent_proxy_types.h"
+
 #include "agent_client.h"
+#include "agent_impl.h"
+#include "agent_com.grpc.pb.h"
 
 #define MODULE_NAMESPACE AGENT_PROXY_NAMESPACE".grpc"
 #define MODULE_CONFIG AGENT_PROXY_CONFIG
@@ -35,7 +39,7 @@ using bbque::agent::ExitCode_t;
  * @class AgentProxyGRPC
  *
  */
-class AgentProxyGRPC: public bbque::plugins::AgentProxyIF
+class AgentProxyGRPC: public bbque::plugins::AgentProxyIF, public utils::Worker
 {
 public:
 
@@ -48,6 +52,10 @@ public:
 
 	static int32_t Destroy(void *);
 	// ---
+
+	void StartServer();
+
+	void StopServer();
 
 	void WaitForServerToStop();
 
@@ -95,15 +103,26 @@ private:
 	std::string server_address_port = "0.0.0.0:";
 
 	static uint32_t port_number;
-	std::unique_ptr<AgentServer> rpc_server;
 
 	std::unique_ptr<bu::Logger> logger;
 	std::vector<std::shared_ptr<AgentClient>> rpc_clients;
+
+
+	AgentImpl service;
+
+	std::unique_ptr<grpc::Server> server;
+
+	bool server_started = false;
 
 	// Plugin required
 	static bool configured;
 
 	static bool Configure(PF_ObjectParams * params);
+
+
+	void Task();
+
+	void RunServer();
 
 
 	int GetSystemId(std::string const & path) const;
