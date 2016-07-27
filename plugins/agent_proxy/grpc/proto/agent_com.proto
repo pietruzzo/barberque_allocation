@@ -11,7 +11,11 @@ service RemoteAgent {
 
 // --------------------------
 
-message ErrorCode {
+message GenericRequest {
+  uint32 sender_id = 1;
+}
+
+message GenericReply {
 
   enum Code {
     OK  = 0;
@@ -23,12 +27,11 @@ message ErrorCode {
   Code value = 1;
 }
 
-// ----------------------------
-
 
 message ResourceStatusRequest {
-  string path  = 1;
-  bool average = 2;
+  uint32 sender_id = 1;
+  string path  = 2;
+  bool average = 3;
 }
 
 message ResourceStatusReply {
@@ -53,21 +56,22 @@ message ChannelStatusReply {
 }
 
 
-message NodeManagementAction {
+message NodeManagementRequest {
+  uint32 sender_id = 1;
 
   enum Action {
     JOIN    = 0;
     DISJOIN = 1;
     CHECK   = 2;
   }
-
-  Action value = 1;
-  uint32 partition_num = 2;
+  Action value = 2;
+  uint32 partition_num = 3;
 }
 
 
 message ApplicationSchedulingRequest {
-  uint32 app_id   = 1;
-  string app_name = 2;
-  int32  awm_id   = 3;
+  uint32 sender_id = 1;
+  uint32 app_id    = 2;
+  string app_name  = 3;
+  int32  awm_id    = 4;
 }

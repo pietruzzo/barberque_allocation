@@ -32,13 +32,13 @@ grpc::Status AgentImpl::GetResourceStatus(
 
 grpc::Status AgentImpl::SetNodeManagementAction(
         grpc::ServerContext * context,
-        const bbque::NodeManagementAction * action,
-        bbque::ErrorCode * error)
+        const bbque::NodeManagementRequest * action,
+        bbque::GenericReply * error)
 {
 
 	std::cerr << "[DBG] === SetNodeManagementAction ===" << std::endl;
 	std::cout << "[INF] Management action: " << action->value() << std::endl;
-	error->set_value(bbque::ErrorCode::OK);
+	error->set_value(bbque::GenericReply::OK);
 
 	return grpc::Status::OK;
 }

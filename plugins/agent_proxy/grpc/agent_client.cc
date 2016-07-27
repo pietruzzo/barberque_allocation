@@ -69,8 +69,14 @@ ExitCode_t AgentClient::GetResourceStatus(
 	        context.set_deadline(deadline);
 	*/
 	// Do RPC call
+	bbque::ResourceStatusRequest request;
+	request.set_sender_id(sender_id);
 	request.set_path(resource_path);
 	request.set_average(false);
+
+	grpc::Status status;
+	grpc::ClientContext context;
+	bbque::ResourceStatusReply reply;
 	status = service_stub->GetResourceStatus(&context, request, &reply);
 	if (!status.ok()) {
 		std::cerr << "[ERR] " << status.error_message() << std::endl;

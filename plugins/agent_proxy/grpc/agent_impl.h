@@ -23,8 +23,8 @@ public:
 
 	grpc::Status SetNodeManagementAction(
 	        grpc::ServerContext * context,
-	        const bbque::NodeManagementAction * action,
-	        bbque::ErrorCode * error) override;
+	        const bbque::NodeManagementRequest * action,
+	        bbque::GenericReply * error) override;
 };
 
 } // namespace plugins
