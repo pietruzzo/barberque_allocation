@@ -10,8 +10,7 @@ endif (CONFIG_BBQUE_AGENT_PROXY_DEFAULT_GRPC)
 set (BBQUE_AGENT_PROXY_PLUGIN bbque_agent_proxy_grpc)
 set (BBQUE_AGENT_PROXY_PLUGIN_SOURCE_DIR ${PROJECT_SOURCE_DIR}/plugins/agent_proxy/grpc)
 set (BBQUE_AGENT_PROXY_PLUGIN_SOURCE
-  agent_impl agent_client agent_server agent_proxy
-  agent_proxy_grpc_plugin)
+  agent_impl agent_client agent_proxy agent_proxy_grpc_plugin)
 
 add_library(${BBQUE_AGENT_PROXY_PLUGIN} MODULE
 	${BBQUE_AGENT_PROXY_PLUGIN_SOURCE})
