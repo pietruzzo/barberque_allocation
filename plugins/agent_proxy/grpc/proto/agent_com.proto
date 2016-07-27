@@ -14,10 +14,10 @@ service RemoteAgent {
 message ErrorCode {
 
   enum Code {
-    OK  = 0
-    AGENT_UNREACHABLE  = 1,
-    AGENT_DISCONNECTED = 2,
-    REQUEST_REJECTED   = 3,
+    OK  = 0;
+    AGENT_UNREACHABLE  = 1;
+    AGENT_DISCONNECTED = 2;
+    REQUEST_REJECTED   = 3;
   }
 
   Code value = 1;
