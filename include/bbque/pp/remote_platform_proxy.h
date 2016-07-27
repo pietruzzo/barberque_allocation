@@ -4,17 +4,19 @@
 
 #include "bbque/platform_proxy.h"
 #include "bbque/plugins/agent_proxy_if.h"
-#include "bbque/pp/distributed_proxy.h"
 
 #define REMOTE_PLATFORM_PROXY_NAMESPACE "bb.pp.rpp"
 
 namespace bbque {
 namespace pp {
-class RemotePlatformProxy : public PlatformProxy, public DistributedProxy
+
+class RemotePlatformProxy : public PlatformProxy, public bbque::plugins::AgentProxyIF
 {
 public:
 
 	RemotePlatformProxy();
+
+	virtual ~RemotePlatformProxy() {}
 
 	/**
 	 * @brief Return the Platform specific string identifier
@@ -56,8 +58,50 @@ public:
 	/**
 	 * @brief Platform specific resource binding interface.
 	 */
-	virtual ExitCode_t MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
-	                                bool excl = true) ;
+	virtual ExitCode_t MapResources(
+		AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) ;
+
+
+	//--- AgentProxy functions
+
+	void StartServer();
+
+	void StopServer();
+
+	void WaitForServerToStop();
+
+
+	bbque::agent::ExitCode_t GetResourceStatus(
+		std::string const & resource_path, agent::ResourceStatus & status);
+
+
+	bbque::agent::ExitCode_t GetWorkloadStatus(
+		std::string const & system_path, agent::WorkloadStatus & status);
+
+	bbque::agent::ExitCode_t GetWorkloadStatus(
+		int system_id, agent::WorkloadStatus & status);
+
+
+	bbque::agent::ExitCode_t GetChannelStatus(
+		std::string const & system_path, agent::ChannelStatus & status);
+
+	bbque::agent::ExitCode_t GetChannelStatus(
+		int system_id, agent::ChannelStatus & status);
+
+
+	bbque::agent::ExitCode_t SendJoinRequest(std::string const & system_path);
+
+	bbque::agent::ExitCode_t SendJoinRequest(int system_id);
+
+
+	bbque::agent::ExitCode_t SendDisjoinRequest(std::string const & system_path);
+
+	bbque::agent::ExitCode_t SendDisjoinRequest(int system_id);
+
+
+	bbque::agent::ExitCode_t SendScheduleRequest(
+		std::string const & system_path,
+		agent::ApplicationScheduleRequest const & request) ;
 
 private:
 	/**

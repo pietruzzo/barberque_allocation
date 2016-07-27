@@ -84,6 +84,128 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::MapResources(
 	return PLATFORM_OK;
 }
 
+// --- AgentProxy
+
+void RemotePlatformProxy::StartServer() {
+	if (agent_proxy == nullptr) {
+		logger->Error("Server start failed. AgentProxy plugin missing");
+		return;
+	}
+	return agent_proxy->StartServer();
+}
+
+void RemotePlatformProxy::StopServer() {
+	if (agent_proxy == nullptr) {
+		logger->Error("Server stop failed. AgentProxy plugin missing");
+		return;
+	}
+	return agent_proxy->StopServer();
+}
+
+void RemotePlatformProxy::WaitForServerToStop() {
+	if (agent_proxy == nullptr) {
+		logger->Error("Server wait failed. AgentProxy plugin missing");
+		return;
+	}
+	return agent_proxy->WaitForServerToStop();
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::GetResourceStatus(
+		std::string const & resource_path, agent::ResourceStatus & status) {
+	if (agent_proxy == nullptr) {
+		logger->Error("GetResourceStatus failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->GetResourceStatus(resource_path, status);
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::GetWorkloadStatus(
+		std::string const & system_path, agent::WorkloadStatus & status) {
+	if (agent_proxy == nullptr) {
+		logger->Error("GetWorkloadStatus failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->GetWorkloadStatus(system_path, status);
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::GetWorkloadStatus(
+		int system_id, agent::WorkloadStatus & status) {
+	if (agent_proxy == nullptr) {
+		logger->Error("GetWorkloadStatus failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->GetWorkloadStatus(system_id, status);
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::GetChannelStatus(
+		std::string const & system_path, agent::ChannelStatus & status) {
+	if (agent_proxy == nullptr) {
+		logger->Error("GetChannelStatus failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->GetChannelStatus(system_path, status);
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::GetChannelStatus(int system_id, agent::ChannelStatus & status) {
+	if (agent_proxy == nullptr) {
+		logger->Error("GetChannelStatus failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->GetChannelStatus(system_id, status);
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::SendJoinRequest(std::string const & system_path) {
+	if (agent_proxy == nullptr) {
+		logger->Error("SendJoinRequest failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->SendJoinRequest(system_path);
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::SendJoinRequest(int system_id) {
+	if (agent_proxy == nullptr) {
+		logger->Error("SendJoinRequest failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->SendJoinRequest(system_id);
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::SendDisjoinRequest(std::string const & system_path) {
+	if (agent_proxy == nullptr) {
+		logger->Error("SendDisjoinRequest failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->SendDisjoinRequest(system_path);
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::SendDisjoinRequest(int system_id) {
+	if (agent_proxy == nullptr) {
+		logger->Error("SendDisjoinRequest failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->SendDisjoinRequest(system_id);
+}
+
+bbque::agent::ExitCode_t
+RemotePlatformProxy::SendScheduleRequest(
+		std::string const & system_path,
+		agent::ApplicationScheduleRequest const & request) {
+	if (agent_proxy == nullptr) {
+		logger->Error("SendDisjoinRequest failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->SendScheduleRequest(system_path, request);
+}
+
 } // namespace pp
 } // namespace bbque
 
