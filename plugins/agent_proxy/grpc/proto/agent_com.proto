@@ -4,9 +4,9 @@ package bbque;
 
 service RemoteAgent {
 	rpc GetResourceStatus(ResourceStatusRequest) returns (ResourceStatusReply);
-	rpc GetWorkloadStatus() returns (WorkloadStatusReply);
-	rcp GetChannelStatus() returns (ChannelStatusReply)
-	rpc SetNodeManagementAction(NodeManagementAction) returns (ErrorCode);
+	rpc GetWorkloadStatus(GenericRequest) returns (WorkloadStatusReply);
+	rpc GetChannelStatus(GenericRequest) returns (ChannelStatusReply);
+	rpc SetNodeManagementAction(NodeManagementRequest) returns (GenericReply);
 }
 
 // --------------------------
