@@ -25,8 +25,6 @@ public:
 
 	AgentProxyIF() {}
 
-	AgentProxyIF(const std::string & _port);
-
 	virtual ~AgentProxyIF() {}
 
 
