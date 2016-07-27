@@ -1,4 +1,5 @@
 #include "bbque/pp/local_platform_proxy.h"
+#include "bbque/pp/test_platform_proxy.h"
 #include "bbque/config.h"
 
 #ifdef CONFIG_TARGET_LINUX
@@ -18,12 +19,17 @@ namespace pp {
 
 LocalPlatformProxy::LocalPlatformProxy() {
 
-#ifdef CONFIG_TARGET_LINUX
+#ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
+	this->host = std::unique_ptr<TestPlatformProxy>(
+						 TestPlatformProxy::GetInstance());
+#elif defined CONFIG_TARGET_LINUX
 	this->host = std::unique_ptr<LinuxPlatformProxy>(
 	                     LinuxPlatformProxy::GetInstance());
-#elif CONFIG_TARGET_ANDROID
+#elif defined CONFIG_TARGET_ANDROID
 	this->host = std::unique_ptr<AndroidPlatformProxy>(
 	                     AndroidPlatformProxy()::GetInstance());
+#else
+#error "No suitable PlatformProxy for host found."
 #endif
 
 #ifdef CONFIG_BBQUE_OPENCL
