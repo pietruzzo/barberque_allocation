@@ -139,18 +139,17 @@ std::string AgentProxyGRPC::GetNetAddress(int system_id) const {
 
 std::shared_ptr<AgentClient>
 AgentProxyGRPC::GetAgentClient(int system_id) {
-	if(rpc_clients.size() <= system_id) {
 	logger->Debug("Retrieving a client...");
+	if(clients.size() <= system_id) {
 		logger->Debug("Allocating a client...");
 		std::string server_address_port = GetNetAddress(system_id);
 		server_address_port.append(":885");
 		std::shared_ptr<AgentClient> client =
 		        std::make_shared<AgentClient>(server_address_port);
-		rpc_clients.push_back(client);
+		clients.push_back(client);
 	}
 	logger->Debug("Vector size: %d", clients.size());
 	return clients.at(system_id);
-	return rpc_clients.at(system_id);
 }
 
 

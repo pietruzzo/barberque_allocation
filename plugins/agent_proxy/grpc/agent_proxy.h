@@ -105,12 +105,13 @@ private:
 	static uint32_t port_number;
 
 	std::unique_ptr<bu::Logger> logger;
-	std::vector<std::shared_ptr<AgentClient>> rpc_clients;
 
 
 	AgentImpl service;
 
 	std::unique_ptr<grpc::Server> server;
+
+	std::vector<std::shared_ptr<AgentClient>> clients;
 
 	bool server_started = false;
 
