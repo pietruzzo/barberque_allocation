@@ -203,6 +203,7 @@ public:
 		return ra.Used(rsrc_list, status_view);
 	}
 
+
 	/**
 	 * @see ResourceAccounterStatusIF::Count()
 	 */
@@ -227,6 +228,14 @@ public:
 	 */
 	inline std::list<br::ResourceType> ResourceTypesList() const {
 		return ra.GetTypesList();
+	}
+
+	/**
+	 * @see ResourceAccounterStatusIF::GetPath()
+	 */
+	inline br::ResourcePathPtr_t const GetResourcePath(
+			std::string const & path) {
+		return ra.GetPath(path);
 	}
 
 	/**

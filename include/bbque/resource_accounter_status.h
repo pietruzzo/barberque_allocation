@@ -265,6 +265,21 @@ public:
 		br::ResourcePtrList_t & rsrc_list, br::RViewToken_t status_view = 0) const = 0;
 
 	/**
+	 * @brief Get the resource path object related to a string
+	 *
+	 * Given a resource path in char string format, the member function
+	 * returns the related ResourcePath object. The string must be of "EXACT"
+	 * type, meaning that it must reference a single resource
+	 *
+	 * @param path_str Resource path in char string format
+	 *
+	 * @return A shared pointer to a ResourcePath object
+	 */
+	virtual br::ResourcePathPtr_t const GetPath(std::string const & path_str) const = 0;
+
+
+
+	/**
 	 * @brief Count of resources referenced by the given path
 	 *
 	 * Given a resource path (also template) return the number of resources,

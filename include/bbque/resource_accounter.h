@@ -222,15 +222,7 @@ public:
 	bool ExistResource(br::ResourcePathPtr_t ppath) const;
 
 	/**
-	 * @brief Get the resource path object related to a string
-	 *
-	 * Given a resource path in char string format, the member function
-	 * returns the related ResourcePath object. The string must be of "EXACT"
-	 * type, meaning that it must reference a single resource
-	 *
-	 * @param path_str Resource path in char string format
-	 *
-	 * @return A shared pointer to a ResourcePath object
+	 * @see ResourceAccounterStatusIF
 	 */
 	br::ResourcePathPtr_t const GetPath(std::string const & path_str) const;
 
