@@ -1,3 +1,5 @@
+
+#include "bbque/modules_factory.h"
 #include "bbque/pp/remote_platform_proxy.h"
 #include "bbque/config.h"
 
@@ -29,11 +31,29 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::Setup(AppPtr_t papp) {
 }
 
 RemotePlatformProxy::ExitCode_t RemotePlatformProxy::LoadPlatformData() {
-	logger->Error("LoadPlatformData - Not implemented.");
+
+	ExitCode_t ec = LoadAgentProxy();
+	if (ec != PLATFORM_OK) {
+		logger->Error("Cannot start Agent Proxy");
+		return ec;
+	}
+
 	return PLATFORM_OK;
 }
 
+RemotePlatformProxy::ExitCode_t RemotePlatformProxy::LoadAgentProxy() {
+	agent_proxy = std::unique_ptr<bbque::plugins::AgentProxyIF>(
+		ModulesFactory::GetModule<bbque::plugins::AgentProxyIF>(
+			std::string(AGENT_PROXY_NAMESPACE) + ".grpc"));
 
+	if (agent_proxy == nullptr) {
+		logger->Fatal("Agent Proxy plugin loading failed!");
+		return PLATFORM_AGENT_PROXY_ERROR;
+	}
+	logger->Info("Agent Proxy plugin ready");
+
+	return PLATFORM_OK;
+}
 
 RemotePlatformProxy::ExitCode_t RemotePlatformProxy::Refresh() {
 	logger->Error("Refresh - Not implemented.");

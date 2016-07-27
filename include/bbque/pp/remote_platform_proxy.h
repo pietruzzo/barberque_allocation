@@ -3,6 +3,7 @@
 
 
 #include "bbque/platform_proxy.h"
+#include "bbque/plugins/agent_proxy_if.h"
 #include "bbque/pp/distributed_proxy.h"
 
 #define REMOTE_PLATFORM_PROXY_NAMESPACE "bb.pp.rpp"
@@ -63,6 +64,10 @@ private:
 	 * @brief The logger used by the worker thread
 	 */
 	std::unique_ptr<bu::Logger> logger;
+
+	std::unique_ptr<bbque::plugins::AgentProxyIF> agent_proxy;
+
+	ExitCode_t LoadAgentProxy();
 
 };
 }   // namespace pp
