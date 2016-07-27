@@ -1,7 +1,8 @@
 #ifndef BBQUE_PLATFORM_MANAGER_H
 #define BBQUE_PLATFORM_MANAGER_H
 
-#include "bbque/platform_proxy.h"
+#include "bbque/pp/local_platform_proxy.h"
+#include "bbque/pp/remote_platform_proxy.h"
 #include "bbque/utils/worker.h"
 
 #include <memory>
@@ -92,12 +93,12 @@ private:
 	/**
 	 * @brief Pointer to local platform proxy
 	 */
-	std::unique_ptr<PlatformProxy> lpp;
+	std::unique_ptr<pp::LocalPlatformProxy> lpp;
 
 	/**
 	 * @brief Pointer to remote platform proxy
 	 */
-	std::unique_ptr<PlatformProxy> rpp;
+	std::unique_ptr<pp::RemotePlatformProxy> rpp;
 
 	/**
 	 * @brief The set of flags related to pending platform events to handle

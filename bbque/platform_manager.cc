@@ -1,6 +1,4 @@
 #include "bbque/platform_manager.h"
-#include "bbque/pp/local_platform_proxy.h"
-#include "bbque/pp/remote_platform_proxy.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_utils.h"
 #include "bbque/resource_manager.h"
