@@ -1,5 +1,7 @@
 #include "agent_impl.h"
 
+#include "bbque/pm/power_manager.h"
+
 namespace bbque
 {
 namespace plugins
@@ -18,12 +20,30 @@ grpc::Status AgentImpl::GetResourceStatus(
 	}
 
 	// Call ResourceAccounter member functions...
-	int64_t total = 100, used = 20;
+	int64_t total = system.ResourceTotal(request->path());
+	int64_t used  = system.ResourceUsed(request->path());
 	reply->set_total(total);
 	reply->set_used(used);
 
 	// Power information...
-	uint32_t degr_perc = 1, power_mw = 35000, temp = 40;
+	bbque::res::ResourcePtr_t resource(system.GetResource(request->path()));
+	if (resource == nullptr) {
+		logger->Error("Invalid resource path specified");
+		return grpc::Status::CANCELLED;
+	}
+
+	bbque::PowerManager & pm(bbque::PowerManager::GetInstance());
+	bbque::res::ResourcePathPtr_t resource_path(
+		system.GetResourcePath(request->path()));
+	if (resource_path == nullptr) {
+		logger->Error("Invalid resource path specified");
+		return grpc::Status::CANCELLED;
+	}
+
+	uint32_t degr_perc = 100;
+	uint32_t power_mw, temp;
+	pm.GetPowerUsage(resource_path, power_mw);
+	pm.GetTemperature(resource_path, temp);
 	reply->set_degradation(degr_perc);
 	reply->set_power_mw(power_mw);
 	reply->set_temperature(temp);
