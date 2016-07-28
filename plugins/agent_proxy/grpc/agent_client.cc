@@ -48,14 +48,9 @@ bool AgentClient::IsConnected()
 // ---------- Status
 
 ExitCode_t AgentClient::GetResourceStatus(
-        std::string const & resource_path,
-        agent::ResourceStatus & resource_status)
-{
-	bbque::ResourceStatusRequest request;
-	bbque::ResourceStatusReply reply;
-	grpc::ClientContext context;
-	grpc::Status status;
-
+		uint32_t sender_id,
+		std::string const & resource_path,
+		agent::ResourceStatus & resource_status) {
 	// Connect...
 	ExitCode_t exit_code = Connect();
 	if (exit_code != ExitCode_t::OK) {

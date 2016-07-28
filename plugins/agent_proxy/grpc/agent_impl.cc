@@ -8,10 +8,9 @@ namespace plugins
 {
 
 grpc::Status AgentImpl::GetResourceStatus(
-        grpc::ServerContext * context,
-        const bbque::ResourceStatusRequest * request,
-        bbque::ResourceStatusReply * reply)
-{
+		grpc::ServerContext * context,
+		const bbque::ResourceStatusRequest * request,
+		bbque::ResourceStatusReply * reply) {
 
 	logger->Debug("=== GetResourceStatus ===");
 	if (request->path().empty()) {
@@ -52,10 +51,9 @@ grpc::Status AgentImpl::GetResourceStatus(
 }
 
 grpc::Status AgentImpl::SetNodeManagementAction(
-        grpc::ServerContext * context,
-        const bbque::NodeManagementRequest * action,
-        bbque::GenericReply * error)
-{
+		grpc::ServerContext * context,
+		const bbque::NodeManagementRequest * action,
+		bbque::GenericReply * error) {
 
 	logger->Debug(" === SetNodeManagementAction ===");
 	logger->Info("Management action: %d ", action->value());
