@@ -77,7 +77,7 @@ AgentProxyGRPC::AgentProxyGRPC() {
 	server_address_port = std::string("0.0.0.0:") + std::to_string(port_number);
 	logger->Info("AgentProxy Server will listen on %s",
 		server_address_port.c_str());
-	Setup("AgentProxyServer", "bq.gx.grpc.server");
+	Setup("AgentProxyServer", MODULE_NAMESPACE".srv");
 }
 
 AgentProxyGRPC::~AgentProxyGRPC() {
