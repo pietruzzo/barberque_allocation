@@ -14,13 +14,11 @@ PlatformManager::PlatformManager()
 	assert(logger);
 
 	try {
-		// Init the submodules
 		this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(
-							new pp::LocalPlatformProxy());
+				new pp::LocalPlatformProxy());
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
 		this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(
-							new pp::RemotePlatformProxy());
+				new pp::RemotePlatformProxy());
 #endif
 	} catch(const std::runtime_error & r) {
 		logger->Fatal("Unable to setup some PlatformProxy: %s", r.what());
@@ -30,8 +28,8 @@ PlatformManager::PlatformManager()
 	// Register a command dispatcher to handle CGroups reconfiguration
 	CommandManager & cm = CommandManager::GetInstance();
 	cm.RegisterCommand(PLATFORM_MANAGER_NAMESPACE ".refresh",
-						static_cast<CommandHandler *>(this),
-						"Refresh CGroups resources description");
+				static_cast<CommandHandler *>(this),
+				"Refresh CGroups resources description");
 
 	Worker::Setup(BBQUE_MODULE_NAME("plm"), PLATFORM_MANAGER_NAMESPACE);
 }
@@ -82,7 +80,6 @@ void PlatformManager::Task()
 
 			logger->Info("Platform Manager refresh event propagating to proxies");
 			ExitCode_t ec;
-
 			ec = this->lpp->Refresh();
 			if (unlikely(ec != PLATFORM_OK)) {
 				logger->Error("Error %i trying to refresh LOCAL platform data", ec);
@@ -91,7 +88,6 @@ void PlatformManager::Task()
 			}
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
 			ec = this->rpp->Refresh();
 			if (unlikely(ec != PLATFORM_OK)) {
 				logger->Error("Error %i trying to refresh REMOTE platform data", ec);
@@ -103,10 +99,8 @@ void PlatformManager::Task()
 
 			// The platform is now ready
 			ra.SetPlatformReady();
-
 			// Reset for next event
 			platformEvents.reset(PLATFORM_MANAGER_EV_REFRESH);
-
 			// Notify a scheduling event to the ResourceManager
 			ResourceManager & rm = ResourceManager::GetInstance();
 			rm.NotifyEvent(ResourceManager::BBQ_PLAT);
@@ -122,7 +116,6 @@ const char * PlatformManager::GetPlatformID(int16_t system_id) const
 	logger->Debug("Request a Platform ID for system %i", system_id);
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
 	assert(system_id >= -1);
 
 	if (system_id == -1) {
@@ -141,7 +134,6 @@ const char * PlatformManager::GetPlatformID(int16_t system_id) const
 
 	logger->Error("Request a Platform ID from unknown system %i.", system_id);
 	return "";
-
 #else
 	assert(system_id <= 0);  // Sys0 is also valid
 	return lpp->GetPlatformID();
@@ -154,7 +146,6 @@ const char * PlatformManager::GetHardwareID(int16_t system_id) const
 	logger->Debug("Request a Hardware ID for system %i", system_id);
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
 	assert(system_id >= -1);
 
 	if (system_id == -1) {
@@ -170,7 +161,6 @@ const char * PlatformManager::GetHardwareID(int16_t system_id) const
 
 	logger->Error("Request a Hardware ID from unknown system %i.", system_id);
 	return "";
-
 #else
 	assert(system_id <= 0);  // Sys0 is also valid
 	return lpp->GetPlatformID();
@@ -204,8 +194,6 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 	}
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
-
 	logger->Debug("Loading REMOTE platform data...");
 	ec = this->rpp->LoadPlatformData();
 
@@ -214,7 +202,6 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 
 		return ec;
 	}
-
 #endif
 
 	logger->Info("All PlatformProxy load platform data successfully");
@@ -256,8 +243,6 @@ PlatformManager::ExitCode_t PlatformManager::Release(AppPtr_t papp)
 	}
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
-
 	if (papp->IsRemote()) {
 		ec = rpp->Release(papp);
 		if (unlikely(ec != PLATFORM_OK)) {
@@ -267,7 +252,6 @@ PlatformManager::ExitCode_t PlatformManager::Release(AppPtr_t papp)
 			return ec;
 		}
 	}
-
 #endif
 
 	return PLATFORM_OK;
@@ -295,7 +279,6 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp)
 	}
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
 	if (papp->IsRemote()) {
 		ec = rpp->ReclaimResources(papp);
 		if (unlikely(ec != PLATFORM_OK)) {
@@ -343,7 +326,6 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	bool is_remote = false;
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
 	// Check if application is local or remote.
 	for (int i = 0; i < systems.Count(); i++) {
 		if (systems.Test(i)) {
@@ -383,8 +365,6 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	}
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
-
 	if(is_remote != papp->IsRemote()) {
 		logger->Debug("Mapping: Application [%s] is remote, call RPP Setup",
 		              papp->StrId());
@@ -417,8 +397,6 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	}
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-
-
 	if (papp->IsRemote()) {
 		ec = rpp->MapResources(papp, pres, excl);
 		if (unlikely(ec != PLATFORM_OK)) {
@@ -427,7 +405,6 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 			return ec;
 		}
 	}
-
 #endif
 
 	return PLATFORM_OK;

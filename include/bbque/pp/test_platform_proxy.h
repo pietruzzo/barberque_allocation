@@ -7,7 +7,11 @@
 
 namespace bbque {
 namespace pp {
-
+/**
+ * @class TestPlatformProxy
+ *
+ * @brief Platform Proxy for the Simulated mode
+ */
 class TestPlatformProxy : public PlatformProxy
 {
 public:
@@ -54,8 +58,8 @@ public:
 	/**
 	 * @brief Platform specific resource binding interface.
 	 */
-	virtual ExitCode_t MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
-									bool excl = true)  override;
+	virtual ExitCode_t MapResources(
+		AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
 
 private:
 	TestPlatformProxy();

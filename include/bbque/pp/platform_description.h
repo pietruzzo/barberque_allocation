@@ -17,7 +17,10 @@ namespace bbque {
 namespace pp {
 
 /**
- * @brief The PlatformDescription class
+ * @class PlatformDescription
+ *
+ * @brief A PlatformDescription object includes the description of the
+ * underlying platform, provided through the systems.xml file.
  *
  * @warning Non thread safe.
  */

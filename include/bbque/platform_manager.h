@@ -24,19 +24,20 @@ public:
 
 	/**
 	 * @brief Return the Platform specific string identifier
-     * @param system_id It specifies from which system take the
-     *                  platform identifier. If not specified or equal
-     *                  to "-1", the platorm id of the local system is returned.
-     */
+	 * @param system_id It specifies from which system take the
+	 *       platform identifier. If not specified or equal
+	 *       to "-1", the platorm id of the local system is returned.
+	 */
 	virtual const char* GetPlatformID(int16_t system_id=-1) const override;
 
 	/**
 	 * @brief Return the Hardware identifier string
-     * @param system_id It specifies from which system take the
-     *                  platform idenfier. If not specified or equal
-     *                  to "-1", the hw id of the local system is returned.
+	 * @param system_id It specifies from which system take the
+	 *       platform idenfier. If not specified or equal
+	 *       to "-1", the hw id of the local system is returned.
 	 */
 	virtual const char* GetHardwareID(int16_t system_id=-1) const override;
+
 	/**
 	 * @brief Platform specific resource setup interface.
 	 * @warning Not implemented in PlatformManager!
@@ -73,8 +74,8 @@ public:
 	 * @param excl If true the specified resources are assigned for exclusive
 	 * usage to the application
 	 */
-	virtual ExitCode_t MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
-	                                bool excl = true) override;
+	virtual ExitCode_t MapResources(
+		AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
 
 	/**
 	 * @brief Load the configuration via the corresponding plugin
