@@ -36,6 +36,11 @@ RXMLPlatformLoader::RXMLPlatformLoader() : initialized(false)
     assert(logger);
 
     logger->Debug("Built RXML PlatformLoader object @%p", (void*)this);
+
+    // Save the hostname of the current machine for future use.
+    local_hostname[1023] = '\0';
+    gethostname(local_hostname, 1023);
+
 }
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
@@ -229,18 +234,22 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
     bool local_found = false;
     node_t include_sys = this->GetFirstChild(root,"include", true) ;
     while(include_sys != NULL) {
-        attr_t is_local = this->GetFirstAttribute(include_sys, "local", false);
-        if (strcmp(is_local->value(), "true") || strcmp(is_local->value(), "1")) {
-            if (!local_found) {
-                local_found = true;
-                this->ParseSystemDocument(include_sys->value(), true);
-            } else {
-                logger->Error("More than one local system specified in systems.xml!");
-                return PL_LOGIC_ERROR;
-            }
-        } else {
-            this->ParseSystemDocument(include_sys->value(), false);
+        bool curr_local = PL_SUCCESS == this->ParseSystemDocument(include_sys->value());
+
+
+        if (local_found && curr_local) {
+            // That's bad. I found two local systems,
+            // this is not possible.
+            logger->Error("More than one local system found!");
+            return PL_LOGIC_ERROR;
         }
+
+        if (!local_found) {
+            // If the loal is not found yet, check if the current is local
+            local_found = curr_local;
+        }
+
+
         include_sys = include_sys->next_sibling("include");
     }
 
@@ -252,12 +261,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
     return PL_SUCCESS;
 }
 
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const char* name, bool is_local) {
+RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const char* name) {
     // Just for convenience
     typedef rapidxml::xml_node<>      * node_t;
     typedef rapidxml::xml_attribute<> * attr_t;
 
-    logger->Info("Loading %s platform file as %s system.", name, is_local ? "local" : "remote");
+    logger->Info("Loading %s platform file...", name);
 
     std::string   path(platforms_dir + "/" + name);
     std::ifstream xml_file(path);
@@ -290,8 +299,11 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     // The last is mandatory only for remote systems, and ignored for
     // local ones
     attr_t hostname = this->GetFirstAttribute(root, "hostname", true);
-    attr_t address  = this->GetFirstAttribute(root, "address", !is_local);
 
+    bool is_local = 0 == strcmp(local_hostname, hostname->value());
+
+    // The address is mandatory only if the system is remote.
+    attr_t address  = this->GetFirstAttribute(root, "address", !is_local);
     logger->Debug("Parsing system %s at address %s", hostname->value(), address->value() ? address->value() : "`localhost`");
 
     pp::PlatformDescription::System sys;
@@ -741,7 +753,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     }
 
     pd.AddSystem(sys);
-    return PL_SUCCESS;
+    return is_local ? PL_SUCCESS : PL_SUCCESS_NO_LOCAL;
 }
 
 

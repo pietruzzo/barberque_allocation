@@ -109,11 +109,15 @@ private:
     pp::PlatformDescription pd;
     rapidxml::xml_document<> doc;
 
+    /**
+     * @brief The local hostname of this machine.
+     */
+    char local_hostname[1024];
 
 
     RXMLPlatformLoader();
     ExitCode_t ParseDocument();
-    ExitCode_t ParseSystemDocument(const char* name, bool is_local);
+    ExitCode_t ParseSystemDocument(const char* name);
 
     rapidxml::xml_node<>      * GetFirstChild    (rapidxml::xml_node<> * parent, const char* name, bool mandatory=false) const;
     rapidxml::xml_attribute<> * GetFirstAttribute(rapidxml::xml_node<> * tag,    const char* name, bool mandatory=false) const;

@@ -24,11 +24,17 @@ public:
 
 	/**
 	 * @brief Return the Platform specific string identifier
-	 */
+     * @param system_id It specifies from which system take the
+     *                  platform identifier. If not specified or equal
+     *                  to "-1", the platorm id of the local system is returned.
+     */
 	virtual const char* GetPlatformID(int16_t system_id=-1) const override;
 
 	/**
 	 * @brief Return the Hardware identifier string
+     * @param system_id It specifies from which system take the
+     *                  platform idenfier. If not specified or equal
+     *                  to "-1", the hw id of the local system is returned.
 	 */
 	virtual const char* GetHardwareID(int16_t system_id=-1) const override;
 	/**
