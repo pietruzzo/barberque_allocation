@@ -11,9 +11,10 @@ grpc::Status AgentImpl::GetResourceStatus(
         bbque::ResourceStatusReply * reply)
 {
 
-	std::cerr << "[DBG] === GetResourceStatus ===" << std::endl;
+	logger->Debug("=== GetResourceStatus ===");
 	if (request->path().empty()) {
-		std::cerr << "[ERR] Invalid resource path specified" << std::endl;
+		logger->Error("Invalid resource path specified");
+		return grpc::Status::CANCELLED;
 	}
 
 	// Call ResourceAccounter member functions...
@@ -36,8 +37,8 @@ grpc::Status AgentImpl::SetNodeManagementAction(
         bbque::GenericReply * error)
 {
 
-	std::cerr << "[DBG] === SetNodeManagementAction ===" << std::endl;
-	std::cout << "[INF] Management action: " << action->value() << std::endl;
+	logger->Debug(" === SetNodeManagementAction ===");
+	logger->Info("Management action: %d ", action->value());
 	error->set_value(bbque::GenericReply::OK);
 
 	return grpc::Status::OK;

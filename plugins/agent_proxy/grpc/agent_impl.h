@@ -1,6 +1,9 @@
 #ifndef BBQUE_AGENT_PROXY_GRPC_IMPL_H_
 #define BBQUE_AGENT_PROXY_GRPC_IMPL_H_
 
+#include "bbque/plugins/agent_proxy_if.h"
+#include "bbque/utils/logging/logger.h"
+
 #include <grpc/grpc.h>
 #include "agent_com.grpc.pb.h"
 
@@ -13,7 +16,10 @@ class AgentImpl final: public bbque::RemoteAgent::Service
 {
 
 public:
-	explicit AgentImpl() {}
+	explicit AgentImpl():
+		logger(bbque::utils::Logger::GetLogger(AGENT_PROXY_NAMESPACE"grpc.svc")) {
+	}
+
 	virtual ~AgentImpl() {}
 
 	grpc::Status GetResourceStatus(
@@ -25,6 +31,8 @@ public:
 	        grpc::ServerContext * context,
 	        const bbque::NodeManagementRequest * action,
 	        bbque::GenericReply * error) override;
+	std::unique_ptr<bbque::utils::Logger> logger;
+
 };
 
 } // namespace plugins
