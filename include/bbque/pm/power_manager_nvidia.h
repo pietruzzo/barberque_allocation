@@ -22,47 +22,12 @@
 
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/resource_path.h"
-#include "bbque/pm/adl/adl_sdk.h"
+#include "bbque/pm/nvml/nvml.h"
 
 #define NVIDIA_VENDOR     "NVIDIA"
-#define ADL_NAME       "libatiadlxx.so"
-#define ADL_OD_VERSION	5
+#define NVML_NAME       "libnvidia-ml.so"
+#define NVML_OD_VERSION	5
 
-extern "C" {
-
-// Main
-int ADL2_Main_ControlX2_Create (ADL_MAIN_MALLOC_CALLBACK, int, ADL_CONTEXT_HANDLE * , ADLThreadingModel);
-int ADL2_Main_Control_Destroy (ADL_CONTEXT_HANDLE);
-
-// Adapter
-int ADL2_Adapter_Active_Get (ADL_CONTEXT_HANDLE, int, int* );
-//int ADL_Adapter_AdapterInfo_Get ( LPAdapterInfo, int );
-int ADL2_Adapter_Accessibility_Get (ADL_CONTEXT_HANDLE, int, int * );
-int ADL2_Adapter_AdapterInfoX2_Get (ADL_CONTEXT_HANDLE, LPAdapterInfo * );
-int ADL2_Adapter_Clock_Get (int, int* , int* );
-int ADL2_Adapter_NumberOfAdapters_Get (ADL_CONTEXT_HANDLE, int* );
-
-// OverDrive
-int ADL2_Overdrive_Caps (ADL_CONTEXT_HANDLE, int, int * , int *, int *);
-
-// OverDrive 5
-int ADL2_Overdrive5_CurrentActivity_Get (ADL_CONTEXT_HANDLE, int, ADLPMActivity *);
-
-int ADL2_Overdrive5_FanSpeed_Get (ADL_CONTEXT_HANDLE, int,  int, ADLFanSpeedValue *);
-int ADL2_Overdrive5_FanSpeed_Set (ADL_CONTEXT_HANDLE, int,  int, ADLFanSpeedValue *);
-int ADL2_Overdrive5_FanSpeedToDefault_Set (ADL_CONTEXT_HANDLE, int,  int);
-int ADL2_Overdrive5_FanSpeedInfo_Get (ADL_CONTEXT_HANDLE, int, int, ADLFanSpeedInfo *);
-
-int ADL2_Overdrive5_ODParameters_Get (ADL_CONTEXT_HANDLE, int, ADLODParameters *);
-
-int ADL2_Overdrive5_PowerControl_Caps (ADL_CONTEXT_HANDLE, int, int *);
-int ADL2_Overdrive5_PowerControl_Get (ADL_CONTEXT_HANDLE, int, int *, int *);
-int ADL2_Overdrive5_PowerControl_Set (ADL_CONTEXT_HANDLE, int, int);
-int ADL2_Overdrive5_PowerControlInfo_Get (ADL_CONTEXT_HANDLE, int, ADLPowerControlInfo *);
-
-int ADL2_Overdrive5_Temperature_Get (ADL_CONTEXT_HANDLE, int, int, ADLTemperature *);
-
-}
 
 namespace br = bbque::res;
 
@@ -93,8 +58,7 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetTemperature(
-		br::ResourcePathPtr_t const & rp, uint32_t &celsius);
+	PMResult GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t &celsius);
 
 	/**
 	 * @see class PowerManager
@@ -104,11 +68,7 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetClockFrequencyInfo(
-		br::ResourcePathPtr_t const & rp,
-		uint32_t &khz_min,
-		uint32_t &khz_max,
-		uint32_t &khz_step);
+	PMResult GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp, uint32_t &khz_min, uint32_t &khz_max, uint32_t &khz_step);
 
 	/**
 	 * @see class PowerManager
@@ -118,36 +78,22 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	virtual PMResult GetVoltageInfo(
-		br::ResourcePathPtr_t const & rp,
-		uint32_t &mvolt_min,
-		uint32_t &mvolt_max,
-		uint32_t &mvolt_step);
+	virtual PMResult GetVoltageInfo(br::ResourcePathPtr_t const & rp, uint32_t &mvolt_min, uint32_t &mvolt_max,	uint32_t &mvolt_step);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetFanSpeed(
-		br::ResourcePathPtr_t const & rp,
-		FanSpeedType fs_type,
-		uint32_t &value);
+	PMResult GetFanSpeed(br::ResourcePathPtr_t const & rp, FanSpeedType fs_type, uint32_t &value);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetFanSpeedInfo(
-		br::ResourcePathPtr_t const & rp,
-		uint32_t &rpm_min,
-		uint32_t &rpm_max,
-		uint32_t &rpm_step);
+	PMResult GetFanSpeedInfo(br::ResourcePathPtr_t const & rp, uint32_t &rpm_min, uint32_t &rpm_max, uint32_t &rpm_step);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult SetFanSpeed(
-		br::ResourcePathPtr_t const & rp,
-		FanSpeedType fs_type,
-		uint32_t value);
+	PMResult SetFanSpeed(br::ResourcePathPtr_t const & rp, FanSpeedType fs_type,uint32_t value);
 
 	/**
 	 * @see class PowerManager
@@ -162,8 +108,7 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerStatesInfo(
-		br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
+	PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
 
 	/**
 	 * @see class PowerManager
@@ -173,98 +118,83 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceState(
-			br::ResourcePathPtr_t const & rp, uint32_t &state);
+	PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &state);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceStatesCount(
-			br::ResourcePathPtr_t const & rp, uint32_t &count);
+	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count);
 
 private:
 
 	bool initialized = false;
 
-	typedef std::shared_ptr<ADLPMActivity> ActivityPtr_t;
+ 	//typedef std::shared_ptr<NVMLPMActivity> ActivityPtr_t;
 
-	struct ODStatus_t {
-		int supported;
-		int enabled;
-		int version;
-	};
+    struct DeviceInfo {
+    	char name[NVML_DEVICE_NAME_BUFFER_SIZE];
+    	nvmlPciInfo_t pci;
+    	nvmlComputeMode_t compute_mode;
+    };
+    
 
-	/*** ADL context for thread-safety purpose */
-	ADL_CONTEXT_HANDLE  context;
+	/*** NVML context for thread-safety purpose */
+	//NVML_CONTEXT_HANDLE  context;
 
 	/***  Pointer to the NVIDIA Display Library  */
-	void * adlib;
+	void * nvmlib;
 
-	/*** ADL parameters */
-	ADLODParameters adl_od_params;
+	/*** Number of availlable GPU in the system */
+	unsigned int device_count;
 
-	bool od_ready;
+	/*** Mapping BBQ resource id -> NVML device id */
+	std::map<br::ResID_t, nvmlDevice_t> devices_map;
 
-	/*** Pointer to AdapterInfo data structure */
-	LPAdapterInfo adapters_info = NULL;
+	/*** Information retreived for each device */
+	std::map<nvmlDevice_t, DeviceInfo> info_map;
 
-	/*** Number of GPU adapters in the system */
-	int adapters_count;
-
-	/*** Mapping BBQ resource id -> ADL adapter id */
-	std::map<br::ResID_t, int> adapters_map;
-
-	/*** Activity resume for each adapter */
-	std::map<int, ActivityPtr_t> activity_map;
-
-	/*** Power control capabilities */
-	std::map<int, int> power_caps_map;
-
-	/*** NVIDIA Overdrive status and information */
-	std::map<int, ODStatus_t> od_status_map;
-
-	/*** NVIDIA Overdrive status parameters */
-	std::map<int, ADLODParameters> od_params_map;
 
 	/**
-	 * @brief Load adapters information
+	 * @brief Load devices information
 	 */
-	void LoadAdaptersInfo();
+	void LoadDevicesInfo();
 
 	/**
-	 * @brief Get the platform adapter id (returned from ADL)
+	 * @brief Get the platform device id (returned from NVML)
 	 *
 	 * @param rp Resource path of the GPU (including '.pe')
-	 * @return The integer adapter id
+	 * @return The nvmlDevice_t id
 	 */
-	int GetAdapterId(br::ResourcePathPtr_t const & rp) const;
+	int GetDeviceId(br::ResourcePathPtr_t const & rp, nvmlDevice_t &device) const;
 
 	/**
-	 * @brief Get the platform adapter id (returned from ADL)
+	 * @brief Get the platform device id (returned from NVML)
 	 *
 	 * @param rp Resource path of the GPU (including '.pe')
+	 *
+	 * @param device is the variable where will be placed the device ID
 	 *
 	 * @return PMResult::OK if success
 	 */
-	PMResult GetActivity(int adapter_id);
+	PMResult GetActivity(nvmlDevice_t device_id);
 
 	/**
 	 * @brief Get the activity data structure
 	 *
-	 * @param adapter_id The ADL adapter id
+	 * @param device_id The NVML device id
 	 *
 	 * @return A (shared) pointer to the activity data structure
 	 */
-	ActivityPtr_t GetActivityInfo(int adapter_id);
+	//ActivityPtr_t GetActivityInfo(int device_id);
 
 	/**
 	 * @brief Reset fan speed to default value
 	 *
-	 * @param adapter_id The ADL adapter id
+	 * @param device_id The NVML device id
 	 *
 	 * @return PMResult::OK if success
 	 */
-	PMResult _ResetFanSpeed(int adapter_id);
+	PMResult _ResetFanSpeed(nvmlDevice_t device_id);
 
 };
 
