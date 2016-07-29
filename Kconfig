@@ -129,6 +129,7 @@ endmenu # Power Management
 ################################################################################
 
 menu "Distributed Systems"
+  depends on BBQUE_PIL_LOADER
 
   config BBQUE_DIST_MODE
     bool "Distributed Mode"
