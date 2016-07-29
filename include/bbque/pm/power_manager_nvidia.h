@@ -74,12 +74,12 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetVoltage(br::ResourcePathPtr_t const & rp, uint32_t &mvolt);
+	//PMResult GetVoltage(br::ResourcePathPtr_t const & rp, uint32_t &mvolt);
 
 	/**
 	 * @see class PowerManager
 	 */
-	virtual PMResult GetVoltageInfo(br::ResourcePathPtr_t const & rp, uint32_t &mvolt_min, uint32_t &mvolt_max,	uint32_t &mvolt_step);
+	//virtual PMResult GetVoltageInfo(br::ResourcePathPtr_t const & rp, uint32_t &mvolt_min, uint32_t &mvolt_max,	uint32_t &mvolt_step);
 
 	/**
 	 * @see class PowerManager
@@ -89,42 +89,42 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetFanSpeedInfo(br::ResourcePathPtr_t const & rp, uint32_t &rpm_min, uint32_t &rpm_max, uint32_t &rpm_step);
+	//PMResult GetFanSpeedInfo(br::ResourcePathPtr_t const & rp, uint32_t &rpm_min, uint32_t &rpm_max, uint32_t &rpm_step);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult SetFanSpeed(br::ResourcePathPtr_t const & rp, FanSpeedType fs_type,uint32_t value);
+	//PMResult SetFanSpeed(br::ResourcePathPtr_t const & rp, FanSpeedType fs_type,uint32_t value);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult ResetFanSpeed(br::ResourcePathPtr_t const & rp);
+	//PMResult ResetFanSpeed(br::ResourcePathPtr_t const & rp);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t & state);
+	//PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t & state);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
+	//PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state);
+	//PMResult SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &state);
+	//PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &state);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count);
+	//PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count);
 
 private:
 
