@@ -24,8 +24,10 @@ endif (CONFIG_BBQUE_PM_CPU)
 
 # Add NVIDIA GPUs power manager
 if (CONFIG_BBQUE_PM_NVIDIA)
- set (POWER_MANAGER_SRC power_manager_amd ${POWER_MANAGER_SRC})
+ set (POWER_MANAGER_SRC power_manager_nvidia ${POWER_MANAGER_SRC})
  set (POWER_MANAGER_LIBS ${NVML_LIBRARY} ${POWER_MANAGER_LIBS})
+ include_directories(
+	 ${NVML_INCLUDE_DIR})
 endif (CONFIG_BBQUE_PM_NVIDIA)
 
 # Add AMD GPUs power manager

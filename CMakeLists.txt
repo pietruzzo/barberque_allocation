@@ -225,12 +225,19 @@ if (CONFIG_BBQUE_PM_AMD)
 	find_package(ADL REQUIRED)
 endif (CONFIG_BBQUE_PM_AMD)
 
+## NVIDIA Display Library
+if (CONFIG_BBQUE_PM_NVIDIA)
+	set(NVIDIA_ROOT_DIR ${CMAKE_SOURCE_DIR}/include/bbque/pm)
+	find_package(NVML REQUIRED)
+endif (CONFIG_BBQUE_PM_NVIDIA)
+
 # Add compilation dependencies
 include_directories(
 	${Boost_INCLUDE_DIRS}
 	${CGroup_INCLUDE_DIRS}
 	${OPENCL_INCLUDE_DIR}
 	${ADL_INCLUDE_DIR}
+	${NVIDIA_INCLUDE_DIR}
 )
 
 # Add linking dependencies

@@ -20,9 +20,10 @@
 
 #include <map>
 
+#include "nvml.h"
+
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/resource_path.h"
-#include "bbque/pm/nvml/nvml.h"
 
 #define NVIDIA_VENDOR     "NVIDIA"
 #define NVML_NAME       "libnvidia-ml.so"
