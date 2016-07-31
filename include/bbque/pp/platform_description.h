@@ -33,17 +33,13 @@ public:
 	        SHARED
 	} PartitionType_t;
 
-	class ProcessingElement {
+
+	class Resource {
 	public:
+		Resource() {}
 
-		ProcessingElement() = default;
-
-		ProcessingElement(
-		        uint16_t id,
-		        uint16_t core_id,
-		        uint8_t share,
-		        PartitionType_t ptype)
-			: id(id), core_id(core_id), share(share), ptype(ptype)
+		Resource(uint16_t id):
+			id(id)
 		{}
 
 		inline uint16_t GetId() const {
@@ -53,6 +49,23 @@ public:
 		inline void SetId(uint16_t id) {
 			this->id = id;
 		}
+	protected:
+		uint16_t id;
+
+	};
+
+	class ProcessingElement : public Resource {
+	public:
+
+		ProcessingElement() = default;
+
+		ProcessingElement(
+		        uint16_t id,
+		        uint16_t core_id,
+		        uint8_t share,
+		        PartitionType_t ptype)
+			: Resource(id), core_id(core_id), share(share), ptype(ptype)
+		{}
 
 		inline uint16_t GetCoreId() const {
 			return this->core_id;
@@ -88,7 +101,6 @@ public:
 		}
 
 	private:
-		uint16_t id;
 		uint16_t core_id;
 		uint32_t quantity;
 		uint8_t share;
@@ -96,7 +108,7 @@ public:
 
 	};
 
-	class Memory {
+	class Memory : public Resource {
 
 	public:
 
@@ -104,20 +116,14 @@ public:
 
 #if BBQUE_PP_ARCH_SUPPORTS_INT64
 		Memory(uint16_t id, uint64_t quantity)
-			: id(id), quantity(quantity)
+			: Resource(id), quantity(quantity)
 		{}
 #else
 		Memory(uint16_t id, uint32_t quantity_hi, uint32_t quantity_lo)
-			: id(id), quantity_hi(quantity_hi), quantity_lo(quantity_lo)
+			: Resource(id), quantity_hi(quantity_hi), quantity_lo(quantity_lo)
 		{}
 #endif
-		inline uint16_t GetId() const {
-			return this->id;
-		}
 
-		inline void SetId(uint16_t id) {
-			this->id = id;
-		}
 
 #if BBQUE_PP_ARCH_SUPPORTS_INT64
 		inline uint64_t GetQuantity() const {
@@ -146,7 +152,6 @@ public:
 #endif
 
 	private:
-		uint16_t id;
 #if BBQUE_PP_ARCH_SUPPORTS_INT64
 		uint64_t quantity;
 #else
@@ -157,7 +162,7 @@ public:
 
 	typedef std::shared_ptr<Memory> MemoryPtr_t;
 
-	class MulticoreProcessor {
+	class MulticoreProcessor : public Resource {
 	public:
 		inline const std::string & GetArchitecture() const {
 			return this->architecture;
@@ -165,14 +170,6 @@ public:
 
 		inline void SetArchitecture(const std::string & arch) {
 			this->architecture = arch;
-		}
-
-		inline uint16_t GetId() const {
-			return this->id;
-		}
-
-		inline void SetId(uint16_t id) {
-			this->id = id;
 		}
 
 		inline const std::vector<ProcessingElement> & GetProcessingElementsAll() const {
@@ -190,7 +187,6 @@ public:
 
 	private:
 		std::string architecture;
-		uint16_t id;
 		std::vector<ProcessingElement> pes;
 	};
 
@@ -219,7 +215,7 @@ public:
 	};
 
 
-	class System {
+	class System :  public Resource {
 	public:
 		inline bool IsLocal() const {
 			return this->local;
