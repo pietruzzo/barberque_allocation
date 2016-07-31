@@ -74,12 +74,7 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	//PMResult GetVoltage(br::ResourcePathPtr_t const & rp, uint32_t &mvolt);
-
-	/**
-	 * @see class PowerManager
-	 */
-	//virtual PMResult GetVoltageInfo(br::ResourcePathPtr_t const & rp, uint32_t &mvolt_min, uint32_t &mvolt_max,	uint32_t &mvolt_step);
+	PMResult GetAvailableFrequencies(br::ResourcePathPtr_t const & rp, std::vector<uint32_t> & freqs);
 
 	/**
 	 * @see class PowerManager
@@ -89,17 +84,12 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	//PMResult GetFanSpeedInfo(br::ResourcePathPtr_t const & rp, uint32_t &rpm_min, uint32_t &rpm_max, uint32_t &rpm_step);
+	PMResult GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t & mwatt);
 
 	/**
 	 * @see class PowerManager
 	 */
-	//PMResult SetFanSpeed(br::ResourcePathPtr_t const & rp, FanSpeedType fs_type,uint32_t value);
-
-	/**
-	 * @see class PowerManager
-	 */
-	//PMResult ResetFanSpeed(br::ResourcePathPtr_t const & rp);
+	PMResult GetPowerInfo(br::ResourcePathPtr_t const & rp, uint32_t &mwatt_min,uint32_t &mwatt_max);
 
 	/**
 	 * @see class PowerManager
@@ -109,22 +99,17 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	//PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
+	PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
 
 	/**
 	 * @see class PowerManager
 	 */
-	//PMResult SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state);
+	PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &state);
 
 	/**
 	 * @see class PowerManager
 	 */
-	//PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &state);
-
-	/**
-	 * @see class PowerManager
-	 */
-	//PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count);
+	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count);
 
 private:
 
