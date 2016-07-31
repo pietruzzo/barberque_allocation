@@ -99,7 +99,7 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
+	PMResult GetPowerStatesInfo(uint32_t & min, uint32_t & max, int & step);
 
 	/**
 	 * @see class PowerManager
@@ -109,23 +109,19 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count);
+	PMResult GetPerformanceStatesCount(uint32_t &count);
 
 private:
 
 	bool initialized = false;
 
- 	//typedef std::shared_ptr<NVMLPMActivity> ActivityPtr_t;
-
     struct DeviceInfo {
     	char name[NVML_DEVICE_NAME_BUFFER_SIZE];
     	nvmlPciInfo_t pci;
     	nvmlComputeMode_t compute_mode;
+    	unsigned int id_num;
     };
     
-
-	/*** NVML context for thread-safety purpose */
-	//NVML_CONTEXT_HANDLE  context;
 
 	/***  Pointer to the NVIDIA Display Library  */
 	void * nvmlib;
@@ -138,6 +134,7 @@ private:
 
 	/*** Information retreived for each device */
 	std::map<nvmlDevice_t, DeviceInfo> info_map;
+
 
 
 	/**
@@ -162,26 +159,6 @@ private:
 	 *
 	 * @return PMResult::OK if success
 	 */
-	PMResult GetActivity(nvmlDevice_t device_id);
-
-	/**
-	 * @brief Get the activity data structure
-	 *
-	 * @param device_id The NVML device id
-	 *
-	 * @return A (shared) pointer to the activity data structure
-	 */
-	//ActivityPtr_t GetActivityInfo(int device_id);
-
-	/**
-	 * @brief Reset fan speed to default value
-	 *
-	 * @param device_id The NVML device id
-	 *
-	 * @return PMResult::OK if success
-	 */
-	PMResult _ResetFanSpeed(nvmlDevice_t device_id);
-
 };
 
 }
