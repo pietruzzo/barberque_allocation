@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "bbque/res/resource_type.h"
+
 #ifdef UINT64_MAX
 #define BBQUE_PP_ARCH_SUPPORTS_INT64 1
 #else
@@ -38,8 +40,8 @@ public:
 	public:
 		Resource() {}
 
-		Resource(uint16_t id):
-			id(id)
+		Resource(uint16_t id, res::ResourceType type = res::ResourceType::UNDEFINED):
+			id(id), type(type)
 		{}
 
 		inline uint16_t GetId() const {
@@ -49,9 +51,17 @@ public:
 		inline void SetId(uint16_t id) {
 			this->id = id;
 		}
+
+		inline res::ResourceType GetType() const {
+			return this->type;
+		}
+
+		inline void SetType(res::ResourceType type) {
+			this->type = type;
+		}
 	protected:
 		uint16_t id = 0;
-
+		res::ResourceType type = res::ResourceType::UNDEFINED;
 	};
 
 	class ProcessingElement : public Resource {
@@ -64,7 +74,8 @@ public:
 		        uint16_t core_id,
 		        uint8_t share,
 		        PartitionType_t ptype)
-			: Resource(id), core_id(core_id), share(share), ptype(ptype)
+			: Resource(id, res::ResourceType::PROC_ELEMENT),
+			core_id(core_id), share(share), ptype(ptype)
 		{}
 
 		inline uint16_t GetCoreId() const {
@@ -100,19 +111,21 @@ public:
 			this->ptype = ptype;
 		}
 
+		void SetType(res::ResourceType type) = delete;
+
 	private:
 		uint16_t core_id;
 		uint32_t quantity;
 		uint8_t share;
 		PartitionType_t ptype;
-
 	};
+
 
 	class Memory : public Resource {
 
 	public:
 
-		Memory() = default;
+		Memory(uint16_t id = 0): Resource(id, res::ResourceType::MEMORY) {}
 
 #if BBQUE_PP_ARCH_SUPPORTS_INT64
 		Memory(uint16_t id, uint64_t quantity)
@@ -120,7 +133,8 @@ public:
 		{}
 #else
 		Memory(uint16_t id, uint32_t quantity_hi, uint32_t quantity_lo)
-			: Resource(id), quantity_hi(quantity_hi), quantity_lo(quantity_lo)
+			: Resource(id, res::ResourceType::MEMORY),
+			 quantity_hi(quantity_hi), quantity_lo(quantity_lo)
 		{}
 #endif
 
@@ -149,6 +163,8 @@ public:
 			this->quantity_hi = quantity;
 		}
 
+		void SetType(res::ResourceType type) = delete;
+
 #endif
 
 	private:
@@ -158,12 +174,20 @@ public:
 		uint32_t quantity_lo;
 		uint32_t quantity_hi;
 #endif
+
 	};
 
 	typedef std::shared_ptr<Memory> MemoryPtr_t;
 
 	class MulticoreProcessor : public Resource {
 	public:
+
+		MulticoreProcessor(
+				uint16_t id = 0,
+				res::ResourceType type = res::ResourceType::ACCELERATOR):
+			Resource(id, type)
+		{}
+
 		inline const std::string & GetArchitecture() const {
 			return this->architecture;
 		}
@@ -190,8 +214,11 @@ public:
 		std::vector<ProcessingElement> pes;
 	};
 
+
 	class CPU : public MulticoreProcessor {
 	public:
+		CPU(uint16_t id = 0): MulticoreProcessor(id, res::ResourceType::CPU) {}
+
 		inline uint16_t GetSocketId() const {
 			return this->socket_id;
 		}
@@ -208,15 +235,19 @@ public:
 			this->memory = memory;
 		}
 
+		void SetType(res::ResourceType type) = delete;
+
 	private:
 		uint16_t socket_id;
 		std::shared_ptr<Memory> memory;
-
 	};
 
 
 	class System :  public Resource {
 	public:
+
+		System(uint16_t id = 0): Resource(id, res::ResourceType::SYSTEM) {}
+
 		inline bool IsLocal() const {
 			return this->local;
 		}
@@ -261,7 +292,8 @@ public:
 			return this->gpus;
 		}
 
-		inline void AddGPU(const MulticoreProcessor & gpu) {
+		inline void AddGPU(MulticoreProcessor & gpu) {
+			gpu.SetType(res::ResourceType::GPU);
 			this->gpus.push_back(gpu);
 		}
 
@@ -273,7 +305,8 @@ public:
 			return this->accelerators;
 		}
 
-		inline void AddAccelerator(const MulticoreProcessor & accelerator) {
+		inline void AddAccelerator(MulticoreProcessor & accelerator) {
+			accelerator.SetType(res::ResourceType::ACCELERATOR);
 			this->accelerators.push_back(accelerator);
 		}
 
@@ -297,6 +330,8 @@ public:
 		inline void AddMemory(const MemoryPtr_t & memory) {
 			this->memories.push_back(memory);
 		}
+
+		void SetType(res::ResourceType type) = delete;
 
 	private:
 
