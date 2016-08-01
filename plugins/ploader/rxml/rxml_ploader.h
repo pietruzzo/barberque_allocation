@@ -23,6 +23,9 @@ namespace plugins {
 class RXMLPlatformLoader : PlatformLoaderIF
 {
 public:
+    // Just for convenience
+    typedef rapidxml::xml_node<>      * node_ptr;
+    typedef rapidxml::xml_attribute<> * attr_ptr;
 
     /**
      * @brief The runtime_error class for RXMLPlatformLoader errors.
