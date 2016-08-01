@@ -300,6 +300,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     logger->Debug("Parsing system %s at address %s", hostname->value(), address->value() ? address->value() : "`localhost`");
 
     pp::PlatformDescription::System sys;
+    sys.SetId(sys_count++);
     sys.SetLocal(is_local);
     sys.SetHostname(hostname->value());
     if (address) {

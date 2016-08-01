@@ -117,6 +117,11 @@ private:
      */
     char local_hostname[1024];
 
+    /**
+     * @brief Keep track of how many systems (nodes) are included in the
+     * platform description
+     */
+    int sys_count = 0;
 
     RXMLPlatformLoader();
     ExitCode_t ParseDocument();
