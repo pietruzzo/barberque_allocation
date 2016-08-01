@@ -122,6 +122,8 @@ private:
     ExitCode_t ParseDocument();
     ExitCode_t ParseSystemDocument(const char* name);
 
+
+    ExitCode_t ParseMemories(node_ptr root, pp::PlatformDescription::System & sys);
     rapidxml::xml_node<>      * GetFirstChild    (rapidxml::xml_node<> * parent, const char* name, bool mandatory=false) const;
     rapidxml::xml_attribute<> * GetFirstAttribute(rapidxml::xml_node<> * tag,    const char* name, bool mandatory=false) const;
 };

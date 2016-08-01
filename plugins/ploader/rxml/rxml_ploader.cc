@@ -316,90 +316,11 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
         }
     }
 
-    ///                                                             ///
-    ///                             <memory>                        ///
-    ///                                                             ///
-
-    // Now get all the memories and save them. This should be perfomed before <cpu> and
-    // other tags, due to reference to memories inside them.
-
-    node_t memory_tag = this->GetFirstChild(root,"mem",true) ;
-    while( memory_tag != NULL ) {
-        pp::PlatformDescription::Memory mem;
-        attr_t id_attr       = this->GetFirstAttribute(memory_tag, "id",       true);
-        attr_t quantity_attr = this->GetFirstAttribute(memory_tag, "quantity", true);
-        attr_t unit_attr     = this->GetFirstAttribute(memory_tag, "unit",     true);
-
-        short        id;
-        int          quantity;
-        int_fast16_t exp;
-
-        /// Read id=""
-        try {
-            // Yes, this conversion is unsafe. However, there will not probably
-            // be over 32767 memories in one machine...
-            id = (short)std::stoi(id_attr->value());
-        } catch(const std::invalid_argument& e) {
-            logger->Error("ID for <memory> is not a valid integer.");
-            return PL_LOGIC_ERROR;
-        } catch(const std::out_of_range& e) {
-            logger->Error("ID for <memory> is out-of-range, please change your unit.");
-            return PL_LOGIC_ERROR;
-        }
-
-        /// Read quantity=""
-        try {
-            quantity = std::stoi(quantity_attr->value());
-        } catch(const std::invalid_argument &e) {
-            logger->Error("Quantity for <memory> is not a valid integer.");
-            return PL_LOGIC_ERROR;
-        } catch(const std::out_of_range &e) {
-            logger->Error("Quantity for <memory> is out-of-range, please increase your unit.");
-            return PL_LOGIC_ERROR;
-        }
-
-        /// Read unit=""
-        switch(ConstHashString(unit_attr->value())) {
-            case ConstHashString("B"):
-                exp=0;
-            break;
-            case ConstHashString("KB"):
-                exp=10;
-            break;
-            case ConstHashString("MB"):
-                exp=20;
-            break;
-            case ConstHashString("GB"):
-                exp=20;
-            break;
-            case ConstHashString("TB"):
-                exp=40;
-            break;
-            default:
-                logger->Error("Invalid `unit` for <memory>.");
-                return PL_LOGIC_ERROR;
-            break;
-        }
-
-        mem.SetId(id);
-
-#if BBQUE_PP_ARCH_SUPPORTS_INT64
-        mem.SetQuantity(((int64_t)quantity) << exp);
-#else
-        if (exp < 32) {
-            mem.SetQuantityLO(((int32_t)quantity) << exp );
-            mem.SetQuantityHI(((int32_t)quantity) >> (32-exp) );
-        } else {
-            mem.SetQuantityLO(0);
-            mem.SetQuantityHI(((int32_t)quantity) << (exp-32) );
-        }
-#endif
-
-        sys.AddMemory(std::make_shared<pp::PlatformDescription::Memory>(mem));
-
-        memory_tag = memory_tag->next_sibling("mem");
-    }
-
+    ///   <memory>
+    RXMLPlatformLoader::ExitCode_t ec = PL_SUCCESS;
+    ec = ParseMemories(root, sys);
+    if (ec != PL_SUCCESS)
+        return ec;
 
     ///                                                             ///
     ///                             <cpu>                           ///
@@ -754,6 +675,93 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
 
     pd.AddSystem(sys);
     return is_local ? PL_SUCCESS : PL_SUCCESS_NO_LOCAL;
+}
+
+
+
+RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
+		node_ptr root,
+		pp::PlatformDescription::System & sys) {
+    // Now get all the memories and save them. This should be perfomed before <cpu> and
+    // other tags, due to reference to memories inside them.
+    node_ptr memory_tag = this->GetFirstChild(root,"mem",true) ;
+    while( memory_tag != NULL ) {
+        pp::PlatformDescription::Memory mem;
+        attr_ptr id_attr       = this->GetFirstAttribute(memory_tag, "id",       true);
+        attr_ptr quantity_attr = this->GetFirstAttribute(memory_tag, "quantity", true);
+        attr_ptr unit_attr     = this->GetFirstAttribute(memory_tag, "unit",     true);
+
+        short        id;
+        int          quantity;
+        int_fast16_t exp;
+
+        // id=""
+        try {
+            // Yes, this conversion is unsafe. However, there will not probably
+            // be over 32767 memories in one machine...
+            id = (short)std::stoi(id_attr->value());
+        } catch(const std::invalid_argument& e) {
+            logger->Error("ID for <memory> is not a valid integer.");
+            return PL_LOGIC_ERROR;
+        } catch(const std::out_of_range& e) {
+            logger->Error("ID for <memory> is out-of-range, please change your unit.");
+            return PL_LOGIC_ERROR;
+        }
+
+        // quantity=""
+        try {
+            quantity = std::stoi(quantity_attr->value());
+        } catch(const std::invalid_argument &e) {
+            logger->Error("Quantity for <memory> is not a valid integer.");
+            return PL_LOGIC_ERROR;
+        } catch(const std::out_of_range &e) {
+            logger->Error("Quantity for <memory> is out-of-range, please increase your unit.");
+            return PL_LOGIC_ERROR;
+        }
+
+        // unit=""
+        switch(ConstHashString(unit_attr->value())) {
+            case ConstHashString("B"):
+                exp=0;
+            break;
+            case ConstHashString("KB"):
+                exp=10;
+            break;
+            case ConstHashString("MB"):
+                exp=20;
+            break;
+            case ConstHashString("GB"):
+                exp=20;
+            break;
+            case ConstHashString("TB"):
+                exp=40;
+            break;
+            default:
+                logger->Error("Invalid `unit` for <memory>.");
+                return PL_LOGIC_ERROR;
+            break;
+        }
+
+        mem.SetId(id);
+
+#if BBQUE_PP_ARCH_SUPPORTS_INT64
+        mem.SetQuantity(((int64_t)quantity) << exp);
+#else
+        if (exp < 32) {
+            mem.SetQuantityLO(((int32_t)quantity) << exp );
+            mem.SetQuantityHI(((int32_t)quantity) >> (32-exp) );
+        } else {
+            mem.SetQuantityLO(0);
+            mem.SetQuantityHI(((int32_t)quantity) << (exp-32) );
+        }
+#endif
+
+        sys.AddMemory(std::make_shared<pp::PlatformDescription::Memory>(mem));
+
+        memory_tag = memory_tag->next_sibling("mem");
+    }
+
+    return PL_SUCCESS;
 }
 
 
