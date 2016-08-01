@@ -50,7 +50,7 @@ public:
 			this->id = id;
 		}
 	protected:
-		uint16_t id;
+		uint16_t id = 0;
 
 	};
 
