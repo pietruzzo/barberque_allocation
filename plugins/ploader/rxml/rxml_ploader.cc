@@ -216,12 +216,9 @@ rapidxml::xml_attribute<> * RXMLPlatformLoader::GetFirstAttribute(rapidxml::xml_
 
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
-    // Just for convenience
-    typedef rapidxml::xml_node<>      * node_t;
-    typedef rapidxml::xml_attribute<> * attr_t;
 
-    node_t root    = this->GetFirstChild(&doc,"systems", true);
-    attr_t version = this->GetFirstAttribute(root, "version", true);
+    node_ptr root    = this->GetFirstChild(&doc,"systems", true);
+    attr_ptr version = this->GetFirstAttribute(root, "version", true);
 
     if (strcmp(version->value(), CURRENT_VERSION) != 0) {
         logger->Error("Version mismatch: my version is " CURRENT_VERSION " but systems.xml"
@@ -232,7 +229,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
     assert(root);
 
     bool local_found = false;
-    node_t include_sys = this->GetFirstChild(root,"include", true) ;
+    node_ptr include_sys = this->GetFirstChild(root,"include", true) ;
     while(include_sys != NULL) {
         bool curr_local = PL_SUCCESS == this->ParseSystemDocument(include_sys->value());
 
@@ -262,10 +259,6 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
 }
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const char* name) {
-    // Just for convenience
-    typedef rapidxml::xml_node<>      * node_t;
-    typedef rapidxml::xml_attribute<> * attr_t;
-
     logger->Info("Loading %s platform file...", name);
 
     std::string   path(platforms_dir + "/" + name);
@@ -293,17 +286,17 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
                                      // sequentially allocated inside the string,
                                      // so no problem here.
 
-    node_t root     = this->GetFirstChild(&inc_doc, "system", true);
+    node_ptr root     = this->GetFirstChild(&inc_doc, "system", true);
 
     // For the root tag, we have two parameters: hostname and address.
     // The last is mandatory only for remote systems, and ignored for
     // local ones
-    attr_t hostname = this->GetFirstAttribute(root, "hostname", true);
+    attr_ptr hostname = this->GetFirstAttribute(root, "hostname", true);
 
     bool is_local = 0 == strcmp(local_hostname, hostname->value());
 
     // The address is mandatory only if the system is remote.
-    attr_t address  = this->GetFirstAttribute(root, "address", !is_local);
+    attr_ptr address  = this->GetFirstAttribute(root, "address", !is_local);
     logger->Debug("Parsing system %s at address %s", hostname->value(), address->value() ? address->value() : "`localhost`");
 
     pp::PlatformDescription::System sys;
@@ -326,13 +319,13 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     ///                             <cpu>                           ///
     ///                                                             ///
 
-    node_t cpu_tag = this->GetFirstChild(root,"cpu") ;
+    node_ptr cpu_tag = this->GetFirstChild(root,"cpu") ;
     while( cpu_tag != NULL ) {
         pp::PlatformDescription::CPU cpu;
-        attr_t arch_attr     = this->GetFirstAttribute(cpu_tag, "arch",     true);
-        attr_t id_attr       = this->GetFirstAttribute(cpu_tag, "id",       true);
-        attr_t socket_id_attr= this->GetFirstAttribute(cpu_tag, "socket_id",true);
-        attr_t mem_id_attr   = this->GetFirstAttribute(cpu_tag, "mem_id",   true);
+        attr_ptr arch_attr     = this->GetFirstAttribute(cpu_tag, "arch",     true);
+        attr_ptr id_attr       = this->GetFirstAttribute(cpu_tag, "id",       true);
+        attr_ptr socket_id_attr= this->GetFirstAttribute(cpu_tag, "socket_id",true);
+        attr_ptr mem_id_attr   = this->GetFirstAttribute(cpu_tag, "mem_id",   true);
 
         const char * arch = arch_attr->value();
         short        id;
@@ -397,14 +390,14 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
         ///                                                             ///
         ///                             <pe>                            ///
         ///                                                             ///
-        node_t pe_tag = this->GetFirstChild(cpu_tag,"pe");
+        node_ptr pe_tag = this->GetFirstChild(cpu_tag,"pe");
         while (pe_tag != NULL) {
             pp::PlatformDescription::ProcessingElement pe;
 
-            attr_t id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
-            attr_t core_id_attr  = this->GetFirstAttribute(pe_tag, "core_id",  true);
-            attr_t share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
-            attr_t managed_attr  = this->GetFirstAttribute(pe_tag, "managed",  false);
+            attr_ptr id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
+            attr_ptr core_id_attr  = this->GetFirstAttribute(pe_tag, "core_id",  true);
+            attr_ptr share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
+            attr_ptr managed_attr  = this->GetFirstAttribute(pe_tag, "managed",  false);
 
             int id;
             short core_id, share;
@@ -487,11 +480,11 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     ///                             <gpu>                           ///
     ///                                                             ///
 
-    node_t gpu_tag = this->GetFirstChild(root,"gpu") ;
+    node_ptr gpu_tag = this->GetFirstChild(root,"gpu") ;
     while (gpu_tag != NULL) {
         pp::PlatformDescription::MulticoreProcessor gpu;
-        attr_t arch_attr     = this->GetFirstAttribute(gpu_tag, "arch",     true);
-        attr_t id_attr       = this->GetFirstAttribute(gpu_tag, "id",       true);
+        attr_ptr arch_attr     = this->GetFirstAttribute(gpu_tag, "arch",     true);
+        attr_ptr id_attr       = this->GetFirstAttribute(gpu_tag, "id",       true);
 
         const char * arch = arch_attr->value();
         short        id;
@@ -516,13 +509,13 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
         ///                                                             ///
         ///                             <pe>                            ///
         ///                                                             ///
-        node_t pe_tag = this->GetFirstChild(gpu_tag,"pe");
+        node_ptr pe_tag = this->GetFirstChild(gpu_tag,"pe");
         while(pe_tag != NULL) {
             pp::PlatformDescription::ProcessingElement pe;
+            attr_ptr id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
+            attr_ptr quantity_attr = this->GetFirstAttribute(pe_tag, "quantity", false);
+            attr_ptr share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
 
-            attr_t id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
-            attr_t quantity_attr = this->GetFirstAttribute(pe_tag, "quantity", false);
-            attr_t share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
 
             int id;
             short quantity, share;
@@ -582,11 +575,11 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     ///                             <acc>                           ///
     ///                                                             ///
 
-    node_t acc_tag = this->GetFirstChild(root,"acc") ;
+    node_ptr acc_tag = this->GetFirstChild(root,"acc") ;
     while (acc_tag != NULL) {
         pp::PlatformDescription::MulticoreProcessor acc;
-        attr_t arch_attr     = this->GetFirstAttribute(acc_tag, "arch",     true);
-        attr_t id_attr       = this->GetFirstAttribute(acc_tag, "id",       true);
+        attr_ptr arch_attr     = this->GetFirstAttribute(acc_tag, "arch",     true);
+        attr_ptr id_attr       = this->GetFirstAttribute(acc_tag, "id",       true);
 
         const char * arch = arch_attr->value();
         short        id;
@@ -611,13 +604,13 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
         ///                                                             ///
         ///                             <pe>                            ///
         ///                                                             ///
-        node_t pe_tag = this->GetFirstChild(acc_tag,"pe");
+        node_ptr pe_tag = this->GetFirstChild(acc_tag,"pe");
         while (pe_tag != NULL) {
             pp::PlatformDescription::ProcessingElement pe;
 
-            attr_t id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
-            attr_t quantity_attr = this->GetFirstAttribute(pe_tag, "quantity", false);
-            attr_t share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
+            attr_ptr id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
+            attr_ptr quantity_attr = this->GetFirstAttribute(pe_tag, "quantity", false);
+            attr_ptr share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
 
             int id;
             short quantity, share;
