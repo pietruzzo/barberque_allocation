@@ -59,10 +59,27 @@ public:
 		inline void SetType(res::ResourceType type) {
 			this->type = type;
 		}
+
+		inline void SetPrefix(std::string prefix) {
+			this->prefix.assign(prefix + ".");
+		}
+
+		inline std::string const & GetPrefix() const {
+			return this->prefix;
+		}
+
+		inline std::string GetPath() const {
+			return prefix + res::GetResourceTypeString(type) +
+				std::to_string(id);
+		}
+
+
 	protected:
 		uint16_t id = 0;
 		res::ResourceType type = res::ResourceType::UNDEFINED;
+		std::string prefix = "";
 	};
+
 
 	class ProcessingElement : public Resource {
 	public:
@@ -205,7 +222,8 @@ public:
 		}
 
 
-		inline void AddProcessingElement(const ProcessingElement & pe) {
+		inline void AddProcessingElement(ProcessingElement & pe) {
+			pe.SetPrefix(this->GetPath());
 			this->pes.push_back(pe);
 		}
 
@@ -280,7 +298,8 @@ public:
 			return this->cpus;
 		}
 
-		inline void AddCPU(const CPU & cpu) {
+		inline void AddCPU(CPU & cpu) {
+			cpu.SetPrefix(this->GetPath());
 			this->cpus.push_back(cpu);
 		}
 
@@ -294,6 +313,7 @@ public:
 
 		inline void AddGPU(MulticoreProcessor & gpu) {
 			gpu.SetType(res::ResourceType::GPU);
+			gpu.SetPrefix(this->GetPath());
 			this->gpus.push_back(gpu);
 		}
 
@@ -307,6 +327,7 @@ public:
 
 		inline void AddAccelerator(MulticoreProcessor & accelerator) {
 			accelerator.SetType(res::ResourceType::ACCELERATOR);
+			accelerator.SetPrefix(this->GetPath());
 			this->accelerators.push_back(accelerator);
 		}
 
@@ -327,7 +348,8 @@ public:
 			return nullptr;
 		}
 
-		inline void AddMemory(const MemoryPtr_t & memory) {
+		inline void AddMemory(MemoryPtr_t memory) {
+			memory->SetPrefix(this->GetPath());
 			this->memories.push_back(memory);
 		}
 
