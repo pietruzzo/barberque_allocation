@@ -335,6 +335,10 @@ public:
 		this->systems.push_back(sys);
 	}
 
+	inline const System & GetSystem(int id) const {
+		return this->systems.at(id);
+	}
+
 private:
 	std::vector <System> systems;
 
