@@ -124,6 +124,17 @@ private:
 
 
     ExitCode_t ParseMemories(node_ptr root, pp::PlatformDescription::System & sys);
+
+    ExitCode_t ParseCPUs(node_ptr root, pp::PlatformDescription::System & sys);
+
+    ExitCode_t ParseProcessingElement(
+		node_ptr root, pp::PlatformDescription::ProcessingElement & pe);
+
+    ExitCode_t ParseManycores(
+		node_ptr root,
+		pp::PlatformDescription::System & sys,
+		const char * tag_str);
+
     rapidxml::xml_node<>      * GetFirstChild    (rapidxml::xml_node<> * parent, const char* name, bool mandatory=false) const;
     rapidxml::xml_attribute<> * GetFirstAttribute(rapidxml::xml_node<> * tag,    const char* name, bool mandatory=false) const;
 };
