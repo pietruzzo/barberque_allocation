@@ -181,11 +181,11 @@ bool RXMLPlatformLoader::Configure(PF_ObjectParams * params) {
 // =======================[ XML releated methods ]=========================
 
 
-rapidxml::xml_node<> * RXMLPlatformLoader::GetFirstChild(rapidxml::xml_node<> * parent, const char* name, bool mandatory) const {
+RXMLPlatformLoader::node_ptr RXMLPlatformLoader::GetFirstChild(
+		node_ptr parent, const char * name, bool mandatory) const {
 
-    rapidxml::xml_node<> * child = parent->first_node(name, 0, true);
-
-    if (child == 0) {
+    node_ptr child = parent->first_node(name, 0, true);
+    if (child == nullptr) {
         if (mandatory) {
             logger->Error("Missing mandatory <%s> tag.", name);
             throw PlatformLoaderEXC("Missing mandatory tag.");
@@ -197,11 +197,12 @@ rapidxml::xml_node<> * RXMLPlatformLoader::GetFirstChild(rapidxml::xml_node<> * 
     return child;
 }
 
-rapidxml::xml_attribute<> * RXMLPlatformLoader::GetFirstAttribute(rapidxml::xml_node<> * tag, const char* name, bool mandatory) const {
 
-    rapidxml::xml_attribute<> * attr= tag->first_attribute(name, 0, true);
+RXMLPlatformLoader::attr_ptr RXMLPlatformLoader::GetFirstAttribute(
+		node_ptr tag, const char * name, bool mandatory) const {
 
-    if (attr == 0) {
+    attr_ptr attr = tag->first_attribute(name, 0, true);
+    if (attr == nullptr) {
         if (mandatory) {
             logger->Error("Missing argument '%s' in <%s> tag.", name, tag->name());
             throw PlatformLoaderEXC("Missing mandatory argument.");

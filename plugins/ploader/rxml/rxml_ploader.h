@@ -123,8 +123,15 @@ private:
      */
     int sys_count = 0;
 
+    node_ptr GetFirstChild(node_ptr parent, const char* name, bool mandatory=false) const;
+
+    attr_ptr GetFirstAttribute(node_ptr tag, const char* name, bool mandatory=false) const;
+
+
     RXMLPlatformLoader();
+
     ExitCode_t ParseDocument();
+
     ExitCode_t ParseSystemDocument(const char* name);
 
 
@@ -140,8 +147,6 @@ private:
 		pp::PlatformDescription::System & sys,
 		const char * tag_str);
 
-    rapidxml::xml_node<>      * GetFirstChild    (rapidxml::xml_node<> * parent, const char* name, bool mandatory=false) const;
-    rapidxml::xml_attribute<> * GetFirstAttribute(rapidxml::xml_node<> * tag,    const char* name, bool mandatory=false) const;
 };
 
 
