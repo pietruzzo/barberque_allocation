@@ -401,6 +401,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
             break;
         }
 
+        mem.SetPrefix(sys.GetPath());
         mem.SetId(id);
 
 #if BBQUE_PP_ARCH_SUPPORTS_INT64
@@ -488,6 +489,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 		    return PL_LOGIC_ERROR;
 		}
 
+		cpu.SetPrefix(sys.GetPath());
 		cpu.SetArchitecture(arch);
 		cpu.SetId(id);
 		cpu.SetSocketId(socket_id);
@@ -504,6 +506,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 		    if (ec != PL_SUCCESS)
 			return ec;
 
+		    pe.SetPrefix(cpu.GetPath());
 		    cpu.AddProcessingElement(pe);
 		    pe_tag = pe_tag->next_sibling("pe");
 		}
@@ -625,6 +628,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
 		    return PL_LOGIC_ERROR;
 		}
 
+		manycore.SetPrefix(sys.GetPath());
 		manycore.SetArchitecture(arch);
 		manycore.SetId(id);
 
