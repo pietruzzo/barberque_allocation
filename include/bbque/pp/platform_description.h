@@ -227,7 +227,6 @@ public:
 
 
 		inline void AddProcessingElement(ProcessingElement & pe) {
-			pe.SetPrefix(this->GetPath());
 			this->pes.push_back(pe);
 		}
 
@@ -303,7 +302,6 @@ public:
 		}
 
 		inline void AddCPU(CPU & cpu) {
-			cpu.SetPrefix(this->GetPath());
 			this->cpus.push_back(cpu);
 		}
 
@@ -317,7 +315,6 @@ public:
 
 		inline void AddGPU(MulticoreProcessor & gpu) {
 			gpu.SetType(res::ResourceType::GPU);
-			gpu.SetPrefix(this->GetPath());
 			this->gpus.push_back(gpu);
 		}
 
@@ -331,7 +328,6 @@ public:
 
 		inline void AddAccelerator(MulticoreProcessor & accelerator) {
 			accelerator.SetType(res::ResourceType::ACCELERATOR);
-			accelerator.SetPrefix(this->GetPath());
 			this->accelerators.push_back(accelerator);
 		}
 
@@ -353,7 +349,6 @@ public:
 		}
 
 		inline void AddMemory(MemoryPtr_t memory) {
-			memory->SetPrefix(this->GetPath());
 			this->memories.push_back(memory);
 		}
 
