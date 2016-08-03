@@ -84,7 +84,11 @@ public:
 	class ProcessingElement : public Resource {
 	public:
 
-		ProcessingElement() = default;
+		ProcessingElement(
+				uint16_t id = 0,
+				res::ResourceType type = res::ResourceType::PROC_ELEMENT) :
+		Resource(id, type)
+		{}
 
 		ProcessingElement(
 		        uint16_t id,
