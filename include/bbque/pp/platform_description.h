@@ -331,11 +331,11 @@ public:
 			this->accelerators.push_back(accelerator);
 		}
 
-		inline const std::vector<MemoryPtr_t> & GetMemories() const {
+		inline const std::vector<MemoryPtr_t> & GetMemoriesAll() const {
 			return this->memories;
 		}
 
-		inline std::vector<MemoryPtr_t> & GetMemoryAll() {
+		inline std::vector<MemoryPtr_t> & GetMemoriesAll() {
 			return this->memories;
 		}
 
