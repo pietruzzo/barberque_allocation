@@ -9,7 +9,6 @@ choice
   prompt "Platform Layout Parser"
   config BBQUE_PIL_LEGACY
     bool "Legacy BPL Parser"
-    default y
     ---help---
     The old parser for BarbequeRTRM Platform Layout files (under pil directory)
 
@@ -158,7 +157,7 @@ menu "Distributed Systems"
 
   endchoice
 
-  source "barbeque/plugins/agent_proxy/Kconfig
+  source "barbeque/plugins/agent_proxy/Kconfig"
   source "barbeque/mpi/Kconfig"
 
 endmenu # Distributed Systems
