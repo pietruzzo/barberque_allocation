@@ -22,8 +22,11 @@
 
 #include "bbque/configuration_manager.h"
 #include "bbque/resource_accounter.h"
-#include "bbque/utils/logging/logger.h"
+#include "bbque/system.h"
+
+#include "bbque/plugins/scheduler_policy.h"
 #include "bbque/res/resource_path.h"
+#include "bbque/utils/logging/logger.h"
 
 #define SC_CONF_BASE_STR 	SCHEDULER_POLICY_CONFIG".Contrib."
 #define SC_NAME_MAX_LEN 	11

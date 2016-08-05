@@ -24,7 +24,6 @@
 #include "bbque/res/resource_path.h"
 
 namespace ba = bbque::app;
-namespace bp = bbque::plugins;
 namespace br = bbque::res;
 
 namespace bbque { namespace app {

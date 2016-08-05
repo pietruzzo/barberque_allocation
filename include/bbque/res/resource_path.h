@@ -24,13 +24,13 @@
 #include <unordered_map>
 #include <vector>
 
-#include "bbque/modules_factory.h"
 #include "bbque/res/identifier.h"
+#include "bbque/utils/logging/logger.h"
+
 
 #define MAX_NUM_LEVELS    	10
 #define MAX_LEN_RPATH_STR 	(MAX_NUM_LEVELS * MAX_R_NAME_LEN)
 
-namespace bp = bbque::plugins;
 namespace bu = bbque::utils;
 
 namespace bbque { namespace res {
@@ -235,8 +235,8 @@ public:
 	 * @return The related @ref ResourceType value
 	 **/
 	ResourceType ParentType(
-		br::ResourceType r_type =
-			br::ResourceType::PROC_ELEMENT) const;
+		ResourceType r_type =
+			ResourceType::PROC_ELEMENT) const;
 
 	/** Iterators **/
 
@@ -285,7 +285,7 @@ public:
 	 *
 	 * @return A shared pointer to the resource identifier object
 	 */
-	br::ResourceIdentifierPtr_t GetIdentifier(uint8_t depth_level) const;
+	ResourceIdentifierPtr_t GetIdentifier(uint8_t depth_level) const;
 
 	/**
 	 * @brief Retrieve a resource identifier
@@ -294,7 +294,7 @@ public:
 	 *
 	 * @return A shared pointer to the resource identifier object
 	 */
-	br::ResourceIdentifierPtr_t GetIdentifier(
+	ResourceIdentifierPtr_t GetIdentifier(
 			ResourceType r_type) const;
 
 	/**
@@ -305,7 +305,7 @@ public:
 	 * @return -1 if the type is not included in the current path, otherwise
 	 * returns the positive integer value related to the depth level
 	 */
-	int8_t GetLevel(br::ResourceType r_type) const;
+	int8_t GetLevel(ResourceType r_type) const;
 
 	/**
 	 * @brief Return the number of levels of the path
@@ -346,7 +346,7 @@ private:
 	std::unordered_map<uint16_t, uint8_t> types_idx;
 
 	/** The type of resource referenced by the path. */
-	br::ResourceType global_type;
+	ResourceType global_type;
 
 	/** Number of levels counter */
 	uint8_t level_count;

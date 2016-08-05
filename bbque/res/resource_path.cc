@@ -22,10 +22,11 @@
 
 #define MODULE_NAMESPACE "bq.rp"
 
+
 namespace bbque { namespace res {
 
 ResourcePath::ResourcePath(std::string const & str_path):
-		global_type(br::ResourceType::UNDEFINED),
+		global_type(ResourceType::UNDEFINED),
 		level_count(0) {
 
 	// Get a logger module
@@ -40,7 +41,7 @@ ResourcePath::ResourcePath(std::string const & str_path):
 }
 
 ResourcePath::ResourcePath(ResourcePath const & r_path):
-		global_type(br::ResourceType::UNDEFINED),
+		global_type(ResourceType::UNDEFINED),
 		level_count(0) {
 	// Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
@@ -69,8 +70,8 @@ bool ResourcePath::operator< (ResourcePath const & cmp_path) {
 
 	// Per-level comparison of resource identifiers
 	for (; it != identifiers.end(), cmp_it != cmp_path.End(); ++it, ++cmp_it) {
-		br::ResourceIdentifier & rid(*((*it).get()));
-		br::ResourceIdentifier & cmp_rid(*((*cmp_it).get()));
+		ResourceIdentifier & rid(*((*it).get()));
+		ResourceIdentifier & cmp_rid(*((*cmp_it).get()));
 
 		if (rid < cmp_rid)
 			return true;
@@ -93,7 +94,7 @@ bool ResourcePath::IsTemplate() const {
 ResourcePath::CResult_t ResourcePath::Compare(
 		ResourcePath const & cmp_path) const {
 	ResourcePath::ConstIterator it, cmp_it;
-	br::ResourceIdentifierPtr_t prid, pcmp_rid;
+	ResourceIdentifierPtr_t prid, pcmp_rid;
 	CResult_t result;
 
 	// Size checking
@@ -110,9 +111,9 @@ ResourcePath::CResult_t ResourcePath::Compare(
 		prid     = (*it);
 		pcmp_rid = (*cmp_it);
 		// Compare...
-		if (prid->Compare(*(pcmp_rid.get())) == br::ResourceIdentifier::NOT_EQUAL)
+		if (prid->Compare(*(pcmp_rid.get())) == ResourceIdentifier::NOT_EQUAL)
 			return NOT_EQUAL;
-		else if (prid->Compare(*(pcmp_rid.get())) == br::ResourceIdentifier::EQUAL_TYPE)
+		else if (prid->Compare(*(pcmp_rid.get())) == ResourceIdentifier::EQUAL_TYPE)
 			result = EQUAL_TYPES;
 	}
 
@@ -129,21 +130,21 @@ void ResourcePath::Clear() {
 	identifiers.clear();
 	types_idx.clear();
 	types_bits.reset();
-	global_type = br::ResourceType::UNDEFINED;
+	global_type = ResourceType::UNDEFINED;
 	level_count = 0;
 }
 
 ResourcePath::ExitCode_t ResourcePath::Append(
 		std::string const & r_name,
 		BBQUE_RID_TYPE r_id) {
-	br::ResourceType r_type = br::GetResourceTypeFromString(r_name);
+	ResourceType r_type = GetResourceTypeFromString(r_name);
 	int r_type_index = static_cast<int>(r_type);
 	logger->Debug("Append: S:%s T:%d ID:%d", r_name.c_str(), r_type_index, r_id);
 	return Append(r_type, r_id);
 }
 
 ResourcePath::ExitCode_t ResourcePath::Append(
-		br::ResourceType r_type,
+		ResourceType r_type,
 		BBQUE_RID_TYPE r_id) {
 	// Set the info about resource type
 	int r_type_index = static_cast<int>(r_type);
@@ -155,8 +156,8 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 	types_idx.emplace(r_type_index, level_count);
 
 	// Append the new resource identifier (sp) to the list
-	br::ResourceIdentifierPtr_t prid =
-		std::make_shared<br::ResourceIdentifier>(r_type, r_id);
+	ResourceIdentifierPtr_t prid =
+		std::make_shared<ResourceIdentifier>(r_type, r_id);
 	identifiers.push_back(prid);
 	global_type = r_type;
 
@@ -245,7 +246,7 @@ ResourcePath::ExitCode_t ResourcePath::Concat(
  * Resource identifiers manipulation                              *
  ******************************************************************/
 
-int8_t ResourcePath::GetLevel(br::ResourceType r_type) const {
+int8_t ResourcePath::GetLevel(ResourceType r_type) const {
 	std::unordered_map<uint16_t, uint8_t>::const_iterator index_it;
 	index_it = types_idx.find(static_cast<uint16_t>(r_type));
 	if (index_it == types_idx.end())
@@ -254,38 +255,38 @@ int8_t ResourcePath::GetLevel(br::ResourceType r_type) const {
 }
 
 
-br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
+ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 		uint8_t depth_level) const {
 	if (depth_level >= identifiers.size())
-		return br::ResourceIdentifierPtr_t();
+		return ResourceIdentifierPtr_t();
 	return identifiers.at(depth_level);
 }
 
-br::ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
-		br::ResourceType r_type) const {
+ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
+		ResourceType r_type) const {
 
 	// Look for the vector position of the resource identifier by type
 	int8_t level = GetLevel(r_type);
 	if (level < 0)
-		return br::ResourceIdentifierPtr_t();
+		return ResourceIdentifierPtr_t();
 	// Get the ID from the resource identifier in the vector
 	logger->Debug("GetIdentifier: type %s @pos:%d",
-			br::GetResourceTypeString(r_type), level);
+			GetResourceTypeString(r_type), level);
 	return identifiers.at(level);
 }
 
-BBQUE_RID_TYPE ResourcePath::GetID(br::ResourceType r_type) const {
-	br::ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
+BBQUE_RID_TYPE ResourcePath::GetID(ResourceType r_type) const {
+	ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
 	if (!prid)
 		return R_ID_NONE;
 	return prid->ID();
 }
 
 ResourcePath::ExitCode_t ResourcePath::ReplaceID(
-		br::ResourceType r_type,
+		ResourceType r_type,
 		BBQUE_RID_TYPE source_id,
 		BBQUE_RID_TYPE out_id) {
-	br::ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
+	ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
 	if (!prid)
 		return ERR_UNKN_TYPE;
 	logger->Debug("ReplaceID: replace %s to ID[%d]",
@@ -306,17 +307,17 @@ ResourcePath::ExitCode_t ResourcePath::ReplaceID(
  * Miscellanea                                                    *
  ******************************************************************/
 
-br::ResourceType ResourcePath::ParentType(
-		br::ResourceType r_type) const {
+ResourceType ResourcePath::ParentType(
+		ResourceType r_type) const {
 	// Find the index of the given resource type
 	int8_t level = GetLevel(r_type);
 	if (level < 0)
-		return br::ResourceType::UNDEFINED;
+		return ResourceType::UNDEFINED;
 
 	// Retrieve the position of the parent
 	int8_t parent_index = level - 1;
 	if (parent_index < 0)
-		return br::ResourceType::UNDEFINED;
+		return ResourceType::UNDEFINED;
 
 	// Parent type
 	return identifiers.at(parent_index)->Type();
