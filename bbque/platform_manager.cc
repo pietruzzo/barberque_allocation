@@ -203,11 +203,17 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 	}
 #endif
 
-	logger->Info("All PlatformProxy load platform data successfully");
+	logger->Info("All platform data loaded successfully");
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	ra.SetPlatformReady();
 	ra.PrintStatusReport(0, true);
+
+
+#ifdef CONFIG_BBQUE_DIST_MODE
+	logger->Info("Starting the Agent Proxy server...");
+	this->rpp->StartServer();
+#endif
 
 	return PLATFORM_OK;
 
