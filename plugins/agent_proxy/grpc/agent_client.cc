@@ -7,7 +7,8 @@ namespace plugins
 
 using bbque::agent::ExitCode_t;
 
-AgentClient::AgentClient(const std::string & _address_port):
+AgentClient::AgentClient(int local_sys_id, const std::string & _address_port):
+	local_system_id(local_sys_id),
 	server_address_port(_address_port)
 {
 	Connect();
@@ -48,7 +49,6 @@ bool AgentClient::IsConnected()
 // ---------- Status
 
 ExitCode_t AgentClient::GetResourceStatus(
-		uint32_t sender_id,
 		std::string const & resource_path,
 		agent::ResourceStatus & resource_status) {
 	// Connect...
@@ -65,7 +65,7 @@ ExitCode_t AgentClient::GetResourceStatus(
 	*/
 	// Do RPC call
 	bbque::ResourceStatusRequest request;
-	request.set_sender_id(sender_id);
+	request.set_sender_id(local_system_id);
 	request.set_path(resource_path);
 	request.set_average(false);
 

@@ -26,14 +26,13 @@ class AgentClient
 
 public:
 
-	AgentClient(const std::string & _address_port);
+	AgentClient(int local_sys_id, const std::string & _address_port);
 
 	bool IsConnected();
 
 	// ---------- Status
 
 	ExitCode_t GetResourceStatus(
-		uint32_t sender_id,
 	        const std::string & resource_path,
 	        agent::ResourceStatus & resource_status);
 
@@ -53,6 +52,8 @@ public:
 	        agent::ApplicationScheduleRequest const & request);
 
 private:
+
+	int local_system_id;
 
 	std::string server_address_port;
 

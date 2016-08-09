@@ -138,7 +138,7 @@ private:
 
 	std::string GetNetAddress(int system_id) const;
 
-	std::shared_ptr<AgentClient> GetAgentClient(int system_id);
+	std::shared_ptr<AgentClient> GetAgentClient(uint16_t system_id);
 
 };
 

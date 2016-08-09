@@ -156,11 +156,11 @@ std::string AgentProxyGRPC::GetNetAddress(int system_id) const {
 	return "0.0.0.0";
 }
 
-std::shared_ptr<AgentClient> AgentProxyGRPC::GetAgentClient(int system_id) {
+std::shared_ptr<AgentClient> AgentProxyGRPC::GetAgentClient(uint16_t system_id) {
 	logger->Debug("Retrieving a client for system %d", system_id);
 	assert(!systems.empty());
 
-	if (systems.size() <= system_id) {
+	if (system_id >= systems.size()) {
 		logger->Error("System %d not registered", system_id);
 		return nullptr;
 	}
