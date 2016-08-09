@@ -150,11 +150,6 @@ uint16_t AgentProxyGRPC::GetSystemId(const std::string & system_path) const {
 			bbque::res::ResourceType::SYSTEM));
 }
 
-std::string AgentProxyGRPC::GetNetAddress(int system_id) const {
-	(void) system_id;
-	// Extract the sysID from the resource path.
-	return "0.0.0.0";
-}
 
 std::shared_ptr<AgentClient> AgentProxyGRPC::GetAgentClient(uint16_t system_id) {
 	logger->Debug("Retrieving a client for system %d", system_id);

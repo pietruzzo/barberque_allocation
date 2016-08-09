@@ -136,7 +136,6 @@ private:
 
 	uint16_t GetSystemId(std::string const & path) const;
 
-	std::string GetNetAddress(int system_id) const;
 
 	std::shared_ptr<AgentClient> GetAgentClient(uint16_t system_id);
 
