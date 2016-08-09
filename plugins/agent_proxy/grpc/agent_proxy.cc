@@ -6,6 +6,7 @@
 #include <boost/program_options/options_description.hpp>
 
 #include "bbque/config.h"
+#include "bbque/pp/platform_description.h"
 #include "bbque/res/resource_utils.h"
 #include "bbque/res/resource_type.h"
 
@@ -85,6 +86,22 @@ AgentProxyGRPC::AgentProxyGRPC() {
 AgentProxyGRPC::~AgentProxyGRPC() {
 	logger->Info("Destroying the AgentProxy module...");
 	clients.clear();
+	systems.clear();
+}
+
+void AgentProxyGRPC::SetPlatformDescription(
+		bbque::pp::PlatformDescription const * platform) {
+
+	if ((platform == nullptr) || (platform->GetSystemsAll().empty())) {
+		logger->Error("No system descriptors");
+		return;
+	}
+
+	systems = platform->GetSystemsAll();
+	logger->Debug("Systems in the managed platform: %d", systems.size());
+
+	local_sys_id = platform->GetLocalSystem().GetId();
+	logger->Debug("Local system id: %d", local_sys_id);
 }
 
 void AgentProxyGRPC::StartServer() {

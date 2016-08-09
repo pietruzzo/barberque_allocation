@@ -59,6 +59,8 @@ public:
 
 	void WaitForServerToStop();
 
+	void SetPlatformDescription(bbque::pp::PlatformDescription const * platform);
+
 	// ----------------- Query status functions --------------------
 
 	ExitCode_t GetResourceStatus(
@@ -105,6 +107,12 @@ private:
 	static uint32_t port_num;
 
 	std::unique_ptr<bu::Logger> logger;
+
+
+	std::vector<bbque::pp::PlatformDescription::System> systems;
+
+	uint16_t local_sys_id;
+
 
 
 	AgentImpl service;
