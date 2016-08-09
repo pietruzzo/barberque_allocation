@@ -42,6 +42,7 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::LoadPlatformData() {
 }
 
 RemotePlatformProxy::ExitCode_t RemotePlatformProxy::LoadAgentProxy() {
+
 	agent_proxy = std::unique_ptr<bbque::plugins::AgentProxyIF>(
 		ModulesFactory::GetModule<bbque::plugins::AgentProxyIF>(
 			std::string(AGENT_PROXY_NAMESPACE) + ".grpc"));
@@ -50,6 +51,9 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::LoadAgentProxy() {
 		logger->Fatal("Agent Proxy plugin loading failed!");
 		return PLATFORM_AGENT_PROXY_ERROR;
 	}
+
+	logger->Debug("Providing the platform description to Agent Proxy...");
+	agent_proxy->SetPlatformDescription(&GetPlatformDescription());
 	logger->Info("Agent Proxy plugin ready");
 
 	return PLATFORM_OK;
