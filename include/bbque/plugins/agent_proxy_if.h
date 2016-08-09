@@ -4,6 +4,7 @@
 #define AGENT_PROXY_NAMESPACE "bq.gx"
 #define AGENT_PROXY_CONFIG    "AgentProxy"
 
+#include "bbque/pp/platform_description.h"
 #include "bbque/plugins/agent_proxy_types.h"
 
 namespace bbque
@@ -33,6 +34,11 @@ public:
 	virtual void StopServer() = 0;
 
 	virtual void WaitForServerToStop() = 0;
+
+
+	virtual void SetPlatformDescription(bbque::pp::PlatformDescription const * platform) {
+		(void) platform;
+	}
 
 	// ----------------- Query status functions --------------------
 
