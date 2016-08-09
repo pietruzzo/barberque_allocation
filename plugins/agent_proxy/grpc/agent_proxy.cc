@@ -156,18 +156,29 @@ std::string AgentProxyGRPC::GetNetAddress(int system_id) const {
 	return "0.0.0.0";
 }
 
-std::shared_ptr<AgentClient>
-AgentProxyGRPC::GetAgentClient(int system_id) {
-	logger->Debug("Retrieving a client...");
+std::shared_ptr<AgentClient> AgentProxyGRPC::GetAgentClient(int system_id) {
+	logger->Debug("Retrieving a client for system %d", system_id);
+	assert(!systems.empty());
+
+	if (systems.size() <= system_id) {
+		logger->Error("System %d not registered", system_id);
+		return nullptr;
+	}
+
 	if(clients.size() <= system_id) {
-		logger->Debug("Allocating a client...");
-		std::string server_address_port = GetNetAddress(system_id);
-		server_address_port.append(":885");
+		logger->Debug("Creating a client for system %d", system_id);
+		std::string server_address_port(
+			systems.at(system_id).GetNetAddress());
+		server_address_port.append(":" + std::to_string(port_num));
+		logger->Debug("Allocating a client to connect %s",
+			server_address_port.c_str());
+
 		std::shared_ptr<AgentClient> client =
-		        std::make_shared<AgentClient>(server_address_port);
+		        std::make_shared<AgentClient>(
+				local_sys_id, server_address_port);
 		clients.push_back(client);
 	}
-	logger->Debug("Vector size: %d", clients.size());
+	logger->Debug("Client instances: %d", clients.size());
 	return clients.at(system_id);
 }
 
