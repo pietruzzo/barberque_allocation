@@ -183,14 +183,11 @@ ExitCode_t AgentProxyGRPC::GetResourceStatus(
 		agent::ResourceStatus & status) {
 	uint16_t system_id = GetSystemId(resource_path);
 	std::shared_ptr<AgentClient> client(GetAgentClient(system_id));
-	logger->Debug("Vector size: %d", clients.size());
-
 	if(client == nullptr) {
 		logger->Error("Client for <%s> not ready", resource_path.c_str());
 		return agent::ExitCode_t::AGENT_UNREACHABLE;
 	}
 	return client->GetResourceStatus(resource_path, status);
-//    rpc_clients[0]->GetResourceStatus(status);
 }
 
 
