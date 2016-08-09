@@ -20,7 +20,7 @@ using bbque::agent::ExitCode_t;
 
 boost::program_options::variables_map agent_proxy_opts_value;
 
-uint32_t AgentProxyGRPC::port_number = BBQUE_AGENT_PROXY_PORT_DEFAULT;
+uint32_t AgentProxyGRPC::port_num = BBQUE_AGENT_PROXY_PORT_DEFAULT;
 
 // =======================[ Static plugin interface ]=========================
 
@@ -49,7 +49,7 @@ bool AgentProxyGRPC::Configure(PF_ObjectParams * params) {
 		agent_proxy_opts_desc("AgentProxy options");
 	agent_proxy_opts_desc.add_options()
 		(MODULE_CONFIG".port", boost::program_options::value<uint32_t>
-		 (&port_number)->default_value(BBQUE_AGENT_PROXY_PORT_DEFAULT),
+		 (&port_num)->default_value(BBQUE_AGENT_PROXY_PORT_DEFAULT),
 		 "Server port number");
 
 	// Get configuration params
@@ -76,7 +76,7 @@ bool AgentProxyGRPC::Configure(PF_ObjectParams * params) {
 
 AgentProxyGRPC::AgentProxyGRPC() {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
-	server_address_port = std::string("0.0.0.0:") + std::to_string(port_number);
+	server_address_port = std::string("0.0.0.0:") + std::to_string(port_num);
 	logger->Info("AgentProxy Server will listen on %s",
 		server_address_port.c_str());
 	Setup("AgentProxyServer", MODULE_NAMESPACE".srv");

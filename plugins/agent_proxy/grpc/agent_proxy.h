@@ -67,14 +67,14 @@ public:
 
 
 	ExitCode_t GetWorkloadStatus(
-	        std::string const & path, agent::WorkloadStatus & status) override;
+	        std::string const & system_path, agent::WorkloadStatus & status) override;
 
 	ExitCode_t GetWorkloadStatus(
 	        int system_id, agent::WorkloadStatus & status) override;
 
 
 	ExitCode_t GetChannelStatus(
-	        std::string const & path, agent::ChannelStatus & status) override;
+	        std::string const & system_path, agent::ChannelStatus & status) override;
 
 	ExitCode_t GetChannelStatus(
 	        int system_id, agent::ChannelStatus & status) override;
@@ -82,12 +82,12 @@ public:
 
 	// ------------- Multi-agent management functions ------------------
 
-	ExitCode_t SendJoinRequest(std::string const & path) override;
+	ExitCode_t SendJoinRequest(std::string const & system_path) override;
 
 	ExitCode_t SendJoinRequest(int system_id) override;
 
 
-	ExitCode_t SendDisjoinRequest(std::string const & path) override;
+	ExitCode_t SendDisjoinRequest(std::string const & system_path) override;
 
 	ExitCode_t SendDisjoinRequest(int system_id) override;
 
@@ -95,14 +95,14 @@ public:
 	// ----------- Scheduling / Resource allocation functions ----------
 
 	ExitCode_t SendScheduleRequest(
-	        std::string const & path,
+	        std::string const & system_path,
 	        agent::ApplicationScheduleRequest const & request) override;
 
 private:
 
 	std::string server_address_port = "0.0.0.0:";
 
-	static uint32_t port_number;
+	static uint32_t port_num;
 
 	std::unique_ptr<bu::Logger> logger;
 
