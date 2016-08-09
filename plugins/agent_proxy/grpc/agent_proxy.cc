@@ -6,6 +6,8 @@
 #include <boost/program_options/options_description.hpp>
 
 #include "bbque/config.h"
+#include "bbque/res/resource_utils.h"
+#include "bbque/res/resource_type.h"
 
 #include "agent_proxy.h"
 
@@ -125,10 +127,10 @@ void AgentProxyGRPC::WaitForServerToStop() {
 }
 
 
-int AgentProxyGRPC::GetSystemId(const std::string & path) const {
-	(void) path;
-	// Extract the sysID from the resource path.
-	return 0;
+uint16_t AgentProxyGRPC::GetSystemId(const std::string & system_path) const {
+	return bbque::res::ResourcePathUtils::GetID(
+		system_path, bbque::res::GetResourceTypeString(
+			bbque::res::ResourceType::SYSTEM));
 }
 
 std::string AgentProxyGRPC::GetNetAddress(int system_id) const {
@@ -156,8 +158,7 @@ AgentProxyGRPC::GetAgentClient(int system_id) {
 ExitCode_t AgentProxyGRPC::GetResourceStatus(
 		std::string const & resource_path,
 		agent::ResourceStatus & status) {
-
-	int system_id = GetSystemId(resource_path);
+	uint16_t system_id = GetSystemId(resource_path);
 	std::shared_ptr<AgentClient> client(GetAgentClient(system_id));
 	logger->Debug("Vector size: %d", clients.size());
 

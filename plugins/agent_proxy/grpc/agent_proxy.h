@@ -126,7 +126,7 @@ private:
 	void RunServer();
 
 
-	int GetSystemId(std::string const & path) const;
+	uint16_t GetSystemId(std::string const & path) const;
 
 	std::string GetNetAddress(int system_id) const;
 
