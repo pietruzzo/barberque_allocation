@@ -1,6 +1,10 @@
 #include "agent_impl.h"
 
-#include "bbque/pm/power_manager.h"
+#include "bbque/config.h"
+
+#ifdef CONFIG_BBQUE_PM
+  #include "bbque/pm/power_manager.h"
+#endif
 
 namespace bbque
 {
@@ -31,7 +35,6 @@ grpc::Status AgentImpl::GetResourceStatus(
 		return grpc::Status::CANCELLED;
 	}
 
-	bbque::PowerManager & pm(bbque::PowerManager::GetInstance());
 	bbque::res::ResourcePathPtr_t resource_path(
 		system.GetResourcePath(request->path()));
 	if (resource_path == nullptr) {
@@ -40,9 +43,12 @@ grpc::Status AgentImpl::GetResourceStatus(
 	}
 
 	uint32_t degr_perc = 100;
-	uint32_t power_mw, temp;
+	uint32_t power_mw = 0, temp = 0;
+#ifdef CONFIG_BBQUE_PM
+	bbque::PowerManager & pm(bbque::PowerManager::GetInstance());
 	pm.GetPowerUsage(resource_path, power_mw);
 	pm.GetTemperature(resource_path, temp);
+#endif
 	reply->set_degradation(degr_perc);
 	reply->set_power_mw(power_mw);
 	reply->set_temperature(temp);
