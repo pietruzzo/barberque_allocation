@@ -69,6 +69,11 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
+	PMResult SetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t khz);
+
+	/**
+	 * @see class PowerManager
+	 */
 	PMResult GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp, uint32_t &khz_min, uint32_t &khz_max, uint32_t &khz_step);
 
 	/**
@@ -89,6 +94,11 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
+	PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t &state);
+	
+	/**
+	 * @see class PowerManager
+	 */
 	PMResult GetPowerInfo(br::ResourcePathPtr_t const & rp, uint32_t &mwatt_min,uint32_t &mwatt_max);
 
 	/**
@@ -99,7 +109,7 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerStatesInfo(uint32_t & min, uint32_t & max, int & step);
+	PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
 
 	/**
 	 * @see class PowerManager
@@ -109,7 +119,7 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceStatesCount(uint32_t &count);
+	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,uint32_t &count);	
 
 private:
 

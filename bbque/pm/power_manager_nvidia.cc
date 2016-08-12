@@ -317,7 +317,7 @@ NVIDIAPowerManager::GetAvailableFrequencies(br::ResourcePathPtr_t const & rp, st
     result = nvmlDeviceGetClockInfo (device, NVML_CLOCK_MEM , &memoryClockMHz);
     if (NVML_SUCCESS != result)
     { 
-        logger->Warn("NVML: [GPU-%d] Failed to to query the graphic clock: %s", id_num, nvmlErrorString(result));
+        logger->Warn("NVML: [GPU-%d] Failed to to query the graphic clock inside GetAvailableFrequencies: %s", id_num, nvmlErrorString(result));
         return PMResult::ERR_API_INVALID_VALUE;
     }
 
@@ -326,7 +326,7 @@ NVIDIAPowerManager::GetAvailableFrequencies(br::ResourcePathPtr_t const & rp, st
     if (NVML_SUCCESS != result)
     { 
         logger->Warn("NVML: [GPU-%d] Failed to to query the supported graphic clock: %s",id_num, nvmlErrorString(result));
-        freqs[0] = -1;
+        //freqs[0] = -1;
         return PMResult::ERR_API_INVALID_VALUE;
     }
 
@@ -363,6 +363,36 @@ NVIDIAPowerManager::GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t
 
     khz = var;
 	logger->Debug("NVML: [GPU-%d] clock frequency: %d Mhz",id_num, var);
+
+	return PMResult::OK;
+}
+
+PowerManager::PMResult
+NVIDIAPowerManager::SetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t khz) 
+{
+	nvmlReturn_t result;
+	unsigned int memClockMHz;
+	khz = khz * 1000;
+
+	
+	GET_DEVICE_ID(rp, device);
+	//logger->Debug("--- NVML: I am the SetClockFrequency");
+
+	result = nvmlDeviceGetClockInfo (device, NVML_CLOCK_MEM , &memClockMHz);
+    if (NVML_SUCCESS != result)
+    { 
+        logger->Warn("NVML: Failed to to query the memory graphic clock inside method SetClockFrequency: %s",nvmlErrorString(result));
+        return PMResult::ERR_API_INVALID_VALUE;
+    }
+
+	result = nvmlDeviceSetApplicationsClocks(device, memClockMHz, khz);
+    if (NVML_SUCCESS != result)
+    { 
+        logger->Warn("NVML: Failed to to set the graphic clock: %s",nvmlErrorString(result));
+        return PMResult::ERR_API_INVALID_VALUE;
+    }
+
+	logger->Debug("NVML: [GPU-%d] clock setted at frequency: %d Mhz",id_num, khz);
 
 	return PMResult::OK;
 }
@@ -507,10 +537,30 @@ NVIDIAPowerManager::GetPowerInfo(br::ResourcePathPtr_t const & rp, uint32_t &mwa
 }
 
 PowerManager::PMResult
-NVIDIAPowerManager::GetPowerStatesInfo(uint32_t &min, uint32_t &max,	int &step) 
+NVIDIAPowerManager::GetPowerState(br::ResourcePathPtr_t const & rp,uint32_t &state) 
+{
+	nvmlPstates_t pState;
+	nvmlReturn_t result;
+	state = 0;
+	GET_DEVICE_ID(rp, device);
+	//logger->Debug("--- NVML: I am the GetPerformanceState");
+
+    result = nvmlDeviceGetPerformanceState(device, &pState);
+    if (NVML_SUCCESS != result)
+    { 
+        logger->Warn("NVML: [GPU-%d] Failed to to query the power state: %s",id_num, nvmlErrorString(result));
+        return PMResult::ERR_API_INVALID_VALUE;
+    }
+    
+	state = (uint32_t) pState;
+
+	return PMResult::OK;
+}
+
+PowerManager::PMResult
+NVIDIAPowerManager::GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t &min, uint32_t &max, int &step) 
 {
 	//logger->Debug("--- NVML: I am the GetPowerStatesInfo");
-	
 	min = 15;
 	max  = 0;
 	step = 1;
@@ -533,7 +583,7 @@ NVIDIAPowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp,uint32_
     result = nvmlDeviceGetPerformanceState(device, &pState);
     if (NVML_SUCCESS != result)
     { 
-        logger->Warn("NVML: [GPU-%d] Failed to to query the power state: %s",id_num, nvmlErrorString(result));
+        logger->Warn("NVML: [GPU-%d] Failed to to query the performance state: %s",id_num, nvmlErrorString(result));
         return PMResult::ERR_API_INVALID_VALUE;
     }
     
@@ -548,13 +598,15 @@ NVIDIAPowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp,uint32_
 }
 
 PowerManager::PMResult
-NVIDIAPowerManager::GetPerformanceStatesCount(uint32_t &count) 
+NVIDIAPowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count) 
 {
 	//logger->Debug("--- NVML: I am the GetPerformanceStatesCount");
 	count = 15;
 
 	return PMResult::OK;
 }
+
+
 
 } // namespace bbque
 
