@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,12 @@
 	}
 
 
+namespace br = bbque::res;
+
+
+namespace bbque {
+
+
 const char * convertToComputeModeString(nvmlComputeMode_t mode)
 {
 	switch (mode) {
@@ -47,25 +53,6 @@ const char * convertToComputeModeString(nvmlComputeMode_t mode)
 	}
 }
 
-namespace bbque {
-
-
-/**   NVIDIA Display Library */
-
-/*void* __stdcall NVML_Main_Memory_Alloc ( int iSize )
-{
-    void* lpBuffer = malloc ( iSize );
-    return lpBuffer;
-}
-
-void __stdcall NVML_Main_Memory_Free ( void** lpBuffer )
-{
-    if ( NULL != *lpBuffer )
-    {
-        free ( *lpBuffer );
-        *lpBuffer = NULL;
-    }
-}*/
 
 NVIDIAPowerManager::NVIDIAPowerManager()
 {
@@ -77,7 +64,7 @@ void NVIDIAPowerManager::LoadDevicesInfo()
 {
 	nvmlReturn_t result;
 	result = nvmlInit();
-	//logger->Debug("--- NVML: I am the LoadDevicesInfo");
+
 	if (NVML_SUCCESS != result) {
 		logger->Warn("NVML: Control initialization failed [Err:%s]",
 		             nvmlErrorString(result) );
@@ -184,7 +171,6 @@ void NVIDIAPowerManager::LoadDevicesInfo()
 NVIDIAPowerManager::~NVIDIAPowerManager()
 {
 	nvmlReturn_t result;
-	//logger->Debug("--- NVML: I am the NVIDIAPowerManager DESTROYER");
 
 	std::map<br::ResID_t, nvmlDevice_t>::iterator it = devices_map.begin();
 	for (; it != devices_map.end(); ++it) {
@@ -247,7 +233,6 @@ NVIDIAPowerManager::GetLoad(br::ResourcePathPtr_t const & rp, uint32_t & perc)
 	nvmlUtilization_t utilization;
 
 	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the GetLoad");
 
 	result = nvmlDeviceGetUtilizationRates(device, &utilization);
 	if (NVML_SUCCESS != result) {
@@ -271,13 +256,12 @@ NVIDIAPowerManager::GetTemperature(br::ResourcePathPtr_t const & rp,
 	celsius = 0;
 	unsigned int temp;
 
-	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the GetTemperature");
-
 	if (!initialized) {
 		logger->Warn("NVML: Cannot get GPU(s) temperature");
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
+
+	GET_DEVICE_ID(rp, device);
 
 	result = nvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU, &temp);
 	if (NVML_SUCCESS != result) {
@@ -305,10 +289,7 @@ NVIDIAPowerManager::GetAvailableFrequencies(br::ResourcePathPtr_t const & rp,
 	unsigned int clockMhz[numFreq], count = numFreq;
 	std::vector<uint32_t>::iterator it;
 
-
 	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the GetAvailableFrequencies");
-
 
 	result = nvmlDeviceGetClockInfo (device, NVML_CLOCK_MEM , &memoryClockMHz);
 	if (NVML_SUCCESS != result) {
@@ -347,10 +328,7 @@ NVIDIAPowerManager::GetClockFrequency(br::ResourcePathPtr_t const & rp,
 	unsigned int var;
 	khz = 0;
 
-
 	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the GetClockFrequency");
-
 
 	result = nvmlDeviceGetClockInfo (device, NVML_CLOCK_GRAPHICS , &var);
 	if (NVML_SUCCESS != result) {
@@ -373,9 +351,7 @@ NVIDIAPowerManager::SetClockFrequency(br::ResourcePathPtr_t const & rp,
 	unsigned int memClockMHz;
 	khz = khz * 1000;
 
-
 	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the SetClockFrequency");
 
 	result = nvmlDeviceGetClockInfo (device, NVML_CLOCK_MEM , &memClockMHz);
 	if (NVML_SUCCESS != result) {
@@ -408,7 +384,6 @@ NVIDIAPowerManager::GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp,
 
 	GET_DEVICE_ID(rp, device);
 
-	//logger->Debug("NVML: I am the GetClockFrequencyInfo");
 	if (r_type == br::ResourceIdentifier::PROC_ELEMENT) {
 		result = nvmlDeviceGetDefaultApplicationsClock(device, NVML_CLOCK_GRAPHICS,
 		                &var);
@@ -465,7 +440,6 @@ NVIDIAPowerManager::GetFanSpeed(br::ResourcePathPtr_t const & rp,
 	value = 0;
 
 	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the GetFanSpeed");
 
 	// Fan speed type
 	if (fs_type == FanSpeedType::PERCENT) {
@@ -496,8 +470,6 @@ NVIDIAPowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp,
 	unsigned int var;
 
 	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the GetPowerUsage");
-
 
 	result = nvmlDeviceGetPowerUsage (device, &var);
 	if (NVML_SUCCESS != result) {
@@ -520,7 +492,6 @@ NVIDIAPowerManager::GetPowerInfo(br::ResourcePathPtr_t const & rp,
 	unsigned int min, max;
 
 	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the GetPowerInfo");
 
 	result = nvmlDeviceGetPowerManagementLimitConstraints(device, &min, &max);
 	if (NVML_SUCCESS != result) {
@@ -543,7 +514,6 @@ NVIDIAPowerManager::GetPowerState(br::ResourcePathPtr_t const & rp,
 	nvmlReturn_t result;
 	state = 0;
 	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the GetPerformanceState");
 
 	result = nvmlDeviceGetPerformanceState(device, &pState);
 	if (NVML_SUCCESS != result) {
@@ -561,7 +531,6 @@ PowerManager::PMResult
 NVIDIAPowerManager::GetPowerStatesInfo(br::ResourcePathPtr_t const & rp,
                                        uint32_t & min, uint32_t & max, int & step)
 {
-	//logger->Debug("--- NVML: I am the GetPowerStatesInfo");
 	min = 15;
 	max  = 0;
 	step = 1;
@@ -580,7 +549,6 @@ NVIDIAPowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp,
 	nvmlReturn_t result;
 	state = 0;
 	GET_DEVICE_ID(rp, device);
-	//logger->Debug("--- NVML: I am the GetPerformanceState");
 
 	result = nvmlDeviceGetPerformanceState(device, &pState);
 	if (NVML_SUCCESS != result) {
@@ -603,7 +571,6 @@ PowerManager::PMResult
 NVIDIAPowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
                 uint32_t & count)
 {
-	//logger->Debug("--- NVML: I am the GetPerformanceStatesCount");
 	count = 15;
 
 	return PMResult::OK;

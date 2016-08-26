@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Politecnico di Milano
+ * Copyright (C) 2016  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,7 @@
 #include "bbque/res/resource_path.h"
 
 #define NVIDIA_VENDOR     "NVIDIA"
-#define NVML_NAME       "libnvidia-ml.so"
-#define NVML_OD_VERSION	5
+#define NVML_NAME         "libnvidia-ml.so"
 
 
 namespace br = bbque::res;
@@ -38,93 +37,60 @@ namespace bbque {
 /**
  * @class NVIDIAPowerManager
  *
- * Provide power management related API for NVIDIA GPU devices, by extending @ref
- * PowerManager class.
+ * @brief Provide power management related API for NVIDIA GPU devices,
+ * by extending @ref PowerManager class.
  */
 class NVIDIAPowerManager: public PowerManager {
 
 public:
-	/**
-	 * @see class PowerManager
-	 */
+
 	NVIDIAPowerManager();
 
 	~NVIDIAPowerManager();
 
-	/**
-	 * @see class PowerManager
-	 */
+
 	PMResult GetLoad(br::ResourcePathPtr_t const & rp, uint32_t & perc);
 
-	/**
-	 * @see class PowerManager
-	 */
+
 	PMResult GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t & celsius);
 
-	/**
-	 * @see class PowerManager
-	 */
+
 	PMResult GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t & khz);
 
-	/**
-	 * @see class PowerManager
-	 */
+
 	PMResult SetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t khz);
 
-	/**
-	 * @see class PowerManager
-	 */
-	PMResult GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp,
-	                               uint32_t & khz_min, uint32_t & khz_max, uint32_t & khz_step);
 
-	/**
-	 * @see class PowerManager
-	 */
+	PMResult GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp,
+	                               uint32_t & khz_min, uint32_t & khz_max,
+	                               uint32_t & khz_step);
+
+
 	PMResult GetAvailableFrequencies(br::ResourcePathPtr_t const & rp,
 	                                 std::vector<uint32_t> & freqs);
 
-	/**
-	 * @see class PowerManager
-	 */
+
 	PMResult GetFanSpeed(br::ResourcePathPtr_t const & rp, FanSpeedType fs_type,
 	                     uint32_t & value);
 
-	/**
-	 * @see class PowerManager
-	 */
+
 	PMResult GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t & mwatt);
 
-	/**
-	 * @see class PowerManager
-	 */
+
 	PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t & state);
 
-	/**
-	 * @see class PowerManager
-	 */
+
 	PMResult GetPowerInfo(br::ResourcePathPtr_t const & rp, uint32_t & mwatt_min,
 	                      uint32_t & mwatt_max);
 
-	/**
-	 * @see class PowerManager
-	 */
-	//PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t & state);
 
-	/**
-	 * @see class PowerManager
-	 */
 	PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min,
 	                            uint32_t & max, int & step);
 
-	/**
-	 * @see class PowerManager
-	 */
+
 	PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp,
 	                             uint32_t & state);
 
-	/**
-	 * @see class PowerManager
-	 */
 	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
 	                                   uint32_t & count);
 
@@ -153,7 +119,6 @@ private:
 	std::map<nvmlDevice_t, DeviceInfo> info_map;
 
 
-
 	/**
 	 * @brief Load devices information
 	 */
@@ -163,19 +128,11 @@ private:
 	 * @brief Get the platform device id (returned from NVML)
 	 *
 	 * @param rp Resource path of the GPU (including '.pe')
-	 * @return The nvmlDevice_t id
+	 * @param device is the variable where will be placed the device ID
+	 * @return PMResult::OK if success
 	 */
 	int GetDeviceId(br::ResourcePathPtr_t const & rp, nvmlDevice_t & device) const;
 
-	/**
-	 * @brief Get the platform device id (returned from NVML)
-	 *
-	 * @param rp Resource path of the GPU (including '.pe')
-	 *
-	 * @param device is the variable where will be placed the device ID
-	 *
-	 * @return PMResult::OK if success
-	 */
 };
 
 }
