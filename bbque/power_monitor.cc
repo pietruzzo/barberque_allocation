@@ -21,6 +21,7 @@
 
 #include "bbque/power_monitor.h"
 
+#include "bbque/resource_accounter.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/utility.h"
 
