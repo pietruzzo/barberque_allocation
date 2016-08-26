@@ -59,12 +59,12 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t &celsius);
+	PMResult GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t & celsius);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t &khz);
+	PMResult GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t & khz);
 
 	/**
 	 * @see class PowerManager
@@ -74,17 +74,20 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp, uint32_t &khz_min, uint32_t &khz_max, uint32_t &khz_step);
+	PMResult GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp,
+	                               uint32_t & khz_min, uint32_t & khz_max, uint32_t & khz_step);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetAvailableFrequencies(br::ResourcePathPtr_t const & rp, std::vector<uint32_t> & freqs);
+	PMResult GetAvailableFrequencies(br::ResourcePathPtr_t const & rp,
+	                                 std::vector<uint32_t> & freqs);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetFanSpeed(br::ResourcePathPtr_t const & rp, FanSpeedType fs_type, uint32_t &value);
+	PMResult GetFanSpeed(br::ResourcePathPtr_t const & rp, FanSpeedType fs_type,
+	                     uint32_t & value);
 
 	/**
 	 * @see class PowerManager
@@ -94,12 +97,13 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t &state);
-	
+	PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t & state);
+
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerInfo(br::ResourcePathPtr_t const & rp, uint32_t &mwatt_min,uint32_t &mwatt_max);
+	PMResult GetPowerInfo(br::ResourcePathPtr_t const & rp, uint32_t & mwatt_min,
+	                      uint32_t & mwatt_max);
 
 	/**
 	 * @see class PowerManager
@@ -109,29 +113,32 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
+	PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min,
+	                            uint32_t & max, int & step);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &state);
+	PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp,
+	                             uint32_t & state);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,uint32_t &count);	
+	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
+	                                   uint32_t & count);
 
 private:
 
 	bool initialized = false;
 
-    struct DeviceInfo {
-    	char name[NVML_DEVICE_NAME_BUFFER_SIZE];
-    	nvmlPciInfo_t pci;
-    	nvmlComputeMode_t compute_mode;
-    	unsigned int id_num;
-    };
-    
+	struct DeviceInfo {
+		char name[NVML_DEVICE_NAME_BUFFER_SIZE];
+		nvmlPciInfo_t pci;
+		nvmlComputeMode_t compute_mode;
+		unsigned int id_num;
+	};
+
 
 	/***  Pointer to the NVIDIA Display Library  */
 	void * nvmlib;
@@ -158,7 +165,7 @@ private:
 	 * @param rp Resource path of the GPU (including '.pe')
 	 * @return The nvmlDevice_t id
 	 */
-	int GetDeviceId(br::ResourcePathPtr_t const & rp, nvmlDevice_t &device) const;
+	int GetDeviceId(br::ResourcePathPtr_t const & rp, nvmlDevice_t & device) const;
 
 	/**
 	 * @brief Get the platform device id (returned from NVML)
