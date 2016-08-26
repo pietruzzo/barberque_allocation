@@ -527,19 +527,25 @@ NVIDIAPowerManager::GetPowerState(br::ResourcePathPtr_t const & rp,
 	return PMResult::OK;
 }
 
+/* States */
+
+
+#define NVIDIA_GPU_PSTATE_MAX    0
+#define NVIDIA_GPU_PSTATE_MIN   15
+
+
 PowerManager::PMResult
 NVIDIAPowerManager::GetPowerStatesInfo(br::ResourcePathPtr_t const & rp,
                                        uint32_t & min, uint32_t & max, int & step)
 {
-	min = 15;
-	max  = 0;
+	(void) rp;
+	min  = NVIDIA_GPU_PSTATE_MIN;
+	max  = NVIDIA_GPU_PSTATE_MAX;
 	step = 1;
 
 	return PMResult::OK;
 }
 
-
-/* States */
 
 PowerManager::PMResult
 NVIDIAPowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp,
@@ -557,10 +563,11 @@ NVIDIAPowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp,
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
-	logger->Debug("Power state has an interval [0-15]+{32}:");
-	logger->Debug("i)0 for Maximum Performance");
-	logger->Debug("ii) 15 for Minimum Performance");
-	logger->Debug("iii) 32 Unknown performance state");
+	logger->Debug("Power state has an interval [%d-%d]+{32}:",
+		NVIDIA_GPU_PSTATE_MAX, NVIDIA_GPU_PSTATE_MIN);
+	logger->Debug("*) %d for Maximum Performance", NVIDIA_GPU_PSTATE_MAX);
+	logger->Debug("*) %d for Minimum Performance", NVIDIA_GPU_PSTATE_MIN);
+	logger->Debug("*) 32 Unknown performance state");
 	logger->Debug("NVML: [GPU-%d] PerformanceState: %u ", id_num, pState);
 	state = (uint32_t) pState;
 
@@ -571,7 +578,9 @@ PowerManager::PMResult
 NVIDIAPowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
                 uint32_t & count)
 {
-	count = 15;
+	(void) rp;
+
+	count = NVIDIA_GPU_PSTATE_MIN - NVIDIA_GPU_PSTATE_MAX;
 
 	return PMResult::OK;
 }
