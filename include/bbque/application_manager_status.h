@@ -310,17 +310,17 @@ public:
 	/**
 	 * @brief The number of applications in the specified STATE
 	 */
-	uint16_t AppsCount (ApplicationStatusIF::State_t state) const;
+	virtual uint16_t AppsCount (ApplicationStatusIF::State_t state) const = 0;
 
 	/**
 	 * @brief The number of applications in the specified SYNC_STATE
 	 */
-	uint16_t AppsCount (ApplicationStatusIF::SyncState_t state) const;
+	virtual uint16_t AppsCount (ApplicationStatusIF::SyncState_t state) const = 0;
 
 	/**
 	 * @brief The number of applications of the specified language type
 	 */
-	uint16_t AppsCount (RTLIB_ProgrammingLanguage_t lang) const;
+	virtual uint16_t AppsCount (RTLIB_ProgrammingLanguage_t lang) const = 0;
 
 	/**
 	 * @brief One of the highest PRIORITY applications in the the
@@ -330,7 +330,7 @@ public:
 	 * is currently on the specified state, or NULL if not applications
 	 * are on this state.
 	 */
-	AppPtr_t HighestPrio(ApplicationStatusIF::State_t state);
+	virtual AppPtr_t HighestPrio(ApplicationStatusIF::State_t state) = 0;
 
 	/**
 	 * @brief One of the highest PRIORITY applications in the the
@@ -340,7 +340,7 @@ public:
 	 * is currently on the specified state, or NULL if not applications
 	 * are on this state.
 	 */
-	AppPtr_t HighestPrio(ApplicationStatusIF::SyncState_t syncState);
+	virtual AppPtr_t HighestPrio(ApplicationStatusIF::SyncState_t syncState) = 0;
 
 	/**
 	 * @brief Retrieve an application descriptor (shared pointer) by PID and
