@@ -94,7 +94,7 @@ void NVIDIAPowerManager::LoadDevicesInfo()
 		}
 
 		// Devices ID mapping and resouce path
-		devices_map.insert(std::pair<br::ResID_t, nvmlDevice_t>(devices_map.size(),
+		devices_map.insert(std::pair<BBQUE_RID_TYPE, nvmlDevice_t>(devices_map.size(),
 		                   device));
 
 		result = nvmlDeviceGetName(device, device_info.name,
@@ -150,7 +150,7 @@ void NVIDIAPowerManager::LoadDevicesInfo()
 	logger->Notice("NVIDIA: Devices [#=%d] information initialized",
 	               devices_map.size());
 
-	std::map<br::ResID_t, nvmlDevice_t>::iterator it = devices_map.begin();
+	std::map<BBQUE_RID_TYPE, nvmlDevice_t>::iterator it = devices_map.begin();
 	for (; it != devices_map.end(); ++it) {
 		auto it2 = info_map.find(it->second);
 		if (it2 != info_map.end()) {
@@ -172,7 +172,7 @@ NVIDIAPowerManager::~NVIDIAPowerManager()
 {
 	nvmlReturn_t result;
 
-	std::map<br::ResID_t, nvmlDevice_t>::iterator it = devices_map.begin();
+	std::map<BBQUE_RID_TYPE, nvmlDevice_t>::iterator it = devices_map.begin();
 	for (; it != devices_map.end(); ++it) {
 		auto it2 = info_map.find(it->second);
 		if (it2 != info_map.end()) {
@@ -203,22 +203,22 @@ NVIDIAPowerManager::~NVIDIAPowerManager()
 int NVIDIAPowerManager::GetDeviceId(br::ResourcePathPtr_t const & rp,
                                     nvmlDevice_t & device) const
 {
-	std::map<br::ResID_t, nvmlDevice_t>::const_iterator it;
+	std::map<BBQUE_RID_TYPE, nvmlDevice_t>::const_iterator it;
 	std::map<nvmlDevice_t, DeviceInfo>::const_iterator it2;
 	if (rp == nullptr) {
 		logger->Debug("NVML: Null resource path");
 		return -1;
 	}
 
-	it = devices_map.find(rp->GetID(br::ResourceIdentifier::GPU));
+	it = devices_map.find(rp->GetID(br::ResourceType::GPU));
 	it2 = info_map.find(it->second);
 	if (it == devices_map.end()) {
-		logger->Warn("NVML: Missing GPU id=%d", rp->GetID(br::ResourceIdentifier::GPU));
+		logger->Warn("NVML: Missing GPU id=%d", rp->GetID(br::ResourceType::GPU));
 		return -2;
 	}
 	if (it2 == info_map.end()) {
 		logger->Warn("NVML: Missing GPU id=%d information",
-		             rp->GetID(br::ResourceIdentifier::GPU));
+		             rp->GetID(br::ResourceType::GPU));
 		return -2;
 	}
 
@@ -380,11 +380,11 @@ NVIDIAPowerManager::GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp,
 	nvmlReturn_t result;
 	unsigned int var;
 	khz_min = khz_max = khz_step = 0;
-	br::ResourceIdentifier::Type_t r_type = rp->Type();
+	br::ResourceType r_type = rp->Type();
 
 	GET_DEVICE_ID(rp, device);
 
-	if (r_type == br::ResourceIdentifier::PROC_ELEMENT) {
+	if (r_type == br::ResourceType::PROC_ELEMENT) {
 		result = nvmlDeviceGetDefaultApplicationsClock(device, NVML_CLOCK_GRAPHICS,
 		                &var);
 		if (NVML_SUCCESS != result) {
@@ -404,7 +404,7 @@ NVIDIAPowerManager::GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp,
 		khz_step = 1;
 		logger->Debug("NVML: [GPU-%d] Max GPU freq %d Mhz", id_num, khz_max);
 		logger->Debug("NVML: [GPU-%d] Step  freq %d Mhz", id_num, khz_step);
-	} else if (r_type == br::ResourceIdentifier::MEMORY) {
+	} else if (r_type == br::ResourceType::MEMORY) {
 		result = nvmlDeviceGetDefaultApplicationsClock(device, NVML_CLOCK_MEM, &var);
 		if (NVML_SUCCESS != result) {
 			logger->Warn("NVML: [GPU-%d] MEMORY Failed to to query the default memory clock: %s",

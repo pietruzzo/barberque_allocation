@@ -23,6 +23,7 @@
 #include "nvml.h"
 
 #include "bbque/pm/power_manager.h"
+#include "bbque/res/resource_type.h"
 #include "bbque/res/resource_path.h"
 
 #define NVIDIA_VENDOR     "NVIDIA"
@@ -113,7 +114,7 @@ private:
 	unsigned int device_count;
 
 	/*** Mapping BBQ resource id -> NVML device id */
-	std::map<br::ResID_t, nvmlDevice_t> devices_map;
+	std::map<BBQUE_RID_TYPE, nvmlDevice_t> devices_map;
 
 	/*** Information retreived for each device */
 	std::map<nvmlDevice_t, DeviceInfo> info_map;
