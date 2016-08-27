@@ -44,9 +44,8 @@ message ResourceStatusReply {
 
 
 message WorkloadStatusReply {
-  uint32 nr_apps    = 1;
+  uint32 nr_ready   = 1;
   uint32 nr_running = 2;
-  uint32 nr_ready   = 3;
 }
 
 

@@ -41,9 +41,8 @@ struct ResourceStatus {
  * @struct WorkloadStatus
  */
 struct WorkloadStatus {
-	uint32_t nr_apps;
-	uint32_t nr_running;
 	uint32_t nr_ready;
+	uint32_t nr_running;
 };
 
 /**
