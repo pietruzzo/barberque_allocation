@@ -29,6 +29,11 @@ public:
 	        const bbque::ResourceStatusRequest * request,
 	        bbque::ResourceStatusReply * reply) override;
 
+	grpc::Status GetWorkloadStatus(
+		grpc::ServerContext * context,
+		const bbque::GenericRequest * request,
+		bbque::WorkloadStatusReply * reply) override;
+
 	grpc::Status SetNodeManagementAction(
 	        grpc::ServerContext * context,
 	        const bbque::NodeManagementRequest * action,

@@ -56,6 +56,25 @@ grpc::Status AgentImpl::GetResourceStatus(
 	return grpc::Status::OK;
 }
 
+
+grpc::Status AgentImpl::GetWorkloadStatus(
+		grpc::ServerContext * context,
+		const bbque::GenericRequest * request,
+		bbque::WorkloadStatusReply * reply) {
+
+	logger->Debug("WorkloadStatus: Request from system %d", request->sender_id());
+	reply->set_nr_running(system.ApplicationsCount(
+		bbque::app::ApplicationStatusIF::RUNNING));
+	reply->set_nr_ready(system.ApplicationsCount(
+		bbque::app::ApplicationStatusIF::READY));
+
+	return grpc::Status::OK;
+}
+
+	return grpc::Status::OK;
+}
+
+
 grpc::Status AgentImpl::SetNodeManagementAction(
 		grpc::ServerContext * context,
 		const bbque::NodeManagementRequest * action,
