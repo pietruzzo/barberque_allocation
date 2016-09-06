@@ -120,8 +120,35 @@ ExitCode_t AgentClient::GetWorkloadStatus(
 }
 
 ExitCode_t AgentClient::GetChannelStatus(
-        agent::ChannelStatus & channel_status)
-{
+		agent::ChannelStatus & channel_status) {
+
+        timer.start();
+	ExitCode_t exit_code = Connect();
+	if (exit_code != ExitCode_t::OK) {
+		logger->Error("ChannelStatus: Connection failed");
+		timer.stop();
+		return exit_code;
+	}
+
+	bbque::GenericRequest request;
+	request.set_sender_id(local_system_id);
+	grpc::Status status;
+	grpc::ClientContext context;
+	bbque::ChannelStatusReply reply;
+
+	logger->Debug("ChannelStatus: Calling implementation...");
+	status = service_stub->GetChannelStatus(&context, request, &reply);
+	if (!status.ok()) {
+		logger->Error("ChannelStatus: Returned code %d", status.error_code());
+		timer.stop();
+		return ExitCode_t::AGENT_DISCONNECTED;
+	}
+
+	channel_status.connected = reply.connected();
+	timer.stop();
+	channel_status.latency_ms = timer.getElapsedTimeMs();
+	logger->Debug("ChannelStatus: Connected: %d, Latency: %.0f ms",
+		channel_status.connected, channel_status.latency_ms);
 
 	return ExitCode_t::OK;
 }

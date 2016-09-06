@@ -13,6 +13,7 @@
 
 #include "bbque/plugins/agent_proxy_if.h"
 #include "bbque/utils/logging/logger.h"
+#include "bbque/utils/timer.h"
 #include "agent_com.grpc.pb.h"
 
 namespace bbque
@@ -63,6 +64,9 @@ private:
 	std::unique_ptr<bbque::RemoteAgent::Stub> service_stub;
 
 	std::unique_ptr<bbque::utils::Logger> logger;
+
+	bbque::utils::Timer timer;
+
 
 	ExitCode_t Connect();
 };
