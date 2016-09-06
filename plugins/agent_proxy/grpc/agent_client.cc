@@ -58,12 +58,7 @@ ExitCode_t AgentClient::GetResourceStatus(
 		std::cerr << "[ERR] Connection failed" << std::endl;
 		return exit_code;
 	}
-	/*
-	        // Test the timeout
-	        std::chrono::system_clock::time_point deadline =
-	            std::chrono::system_clock::now() + std::chrono::seconds(1);
-	        context.set_deadline(deadline);
-	*/
+
 	// Do RPC call
 	bbque::ResourceStatusRequest request;
 	request.set_sender_id(local_system_id);
@@ -75,7 +70,7 @@ ExitCode_t AgentClient::GetResourceStatus(
 	bbque::ResourceStatusReply reply;
 	status = service_stub->GetResourceStatus(&context, request, &reply);
 	if (!status.ok()) {
-		std::cerr << "[ERR] " << status.error_message() << std::endl;
+		std::cerr << "[ERR] Returned code " << status.error_code() << std::endl;
 		return ExitCode_t::AGENT_DISCONNECTED;
 	}
 

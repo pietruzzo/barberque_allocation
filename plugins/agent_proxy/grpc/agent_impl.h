@@ -19,7 +19,7 @@ class AgentImpl final: public bbque::RemoteAgent::Service
 public:
 	explicit AgentImpl():
 		system(bbque::System::GetInstance()),
-		logger(bbque::utils::Logger::GetLogger(AGENT_PROXY_NAMESPACE"grpc.svc")) {
+		logger(bbque::utils::Logger::GetLogger(AGENT_PROXY_NAMESPACE".grpc.imp")) {
 	}
 
 	virtual ~AgentImpl() {}
