@@ -16,21 +16,22 @@ AgentClient::AgentClient(int local_sys_id, const std::string & _address_port):
 
 ExitCode_t AgentClient::Connect()
 {
-	std::cout << "[INF] Connecting to " << server_address_port << std::endl;
-	if (channel == nullptr) {
-		channel = grpc::CreateChannel(
-		                  server_address_port, grpc::InsecureChannelCredentials());
-		std::cout << "[INF] Channel open" << std::endl;
-	} else {
-		std::cout << "[INF] Channel already open" << std::endl;
+	std::cerr << "[INF] Connecting to " << server_address_port << std::endl;
+	if (channel != nullptr) {
+		std::cerr << "[INF] Channel already open" << std::endl;
+		return agent::ExitCode_t::OK;
 	}
-	// Get the stub
+
+	channel = grpc::CreateChannel(
+			  server_address_port, grpc::InsecureChannelCredentials());
+	std::cerr << "[INF] Channel open" << std::endl;
+
 	service_stub = bbque::RemoteAgent::NewStub(channel);
 	if (service_stub == nullptr) {
 		std::cerr << "[ERR] Channel opening failed" << std::endl;
 		return agent::ExitCode_t::AGENT_UNREACHABLE;
 	}
-	std::cout << "[INF] Stub ready" << std::endl;
+	std::cerr << "[INF] Stub ready" << std::endl;
 
 	return ExitCode_t::OK;
 }
