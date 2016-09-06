@@ -11,7 +11,8 @@
 #include <grpc++/security/credentials.h>
 #include <grpc++/support/time.h>
 
-#include "bbque/plugins/agent_proxy_types.h"
+#include "bbque/plugins/agent_proxy_if.h"
+#include "bbque/utils/logging/logger.h"
 #include "agent_com.grpc.pb.h"
 
 namespace bbque
@@ -60,6 +61,8 @@ private:
 	std::shared_ptr<grpc::Channel> channel;
 
 	std::unique_ptr<bbque::RemoteAgent::Stub> service_stub;
+
+	std::unique_ptr<bbque::utils::Logger> logger;
 
 	ExitCode_t Connect();
 };

@@ -11,27 +11,28 @@ AgentClient::AgentClient(int local_sys_id, const std::string & _address_port):
 	local_system_id(local_sys_id),
 	server_address_port(_address_port)
 {
+	logger = bbque::utils::Logger::GetLogger(AGENT_PROXY_NAMESPACE".grpc.cln");
 	Connect();
 }
 
 ExitCode_t AgentClient::Connect()
 {
-	std::cerr << "[INF] Connecting to " << server_address_port << std::endl;
+	logger->Debug("Connecting to %s...", server_address_port.c_str());
 	if (channel != nullptr) {
-		std::cerr << "[INF] Channel already open" << std::endl;
+		logger->Debug("Channel already open");
 		return agent::ExitCode_t::OK;
 	}
 
 	channel = grpc::CreateChannel(
 			  server_address_port, grpc::InsecureChannelCredentials());
-	std::cerr << "[INF] Channel open" << std::endl;
+	logger->Debug("Channel open");
 
 	service_stub = bbque::RemoteAgent::NewStub(channel);
 	if (service_stub == nullptr) {
-		std::cerr << "[ERR] Channel opening failed" << std::endl;
+		logger->Error("Channel opening failed");
 		return agent::ExitCode_t::AGENT_UNREACHABLE;
 	}
-	std::cerr << "[INF] Stub ready" << std::endl;
+	logger->Debug("Stub ready");
 
 	return ExitCode_t::OK;
 }
@@ -55,7 +56,7 @@ ExitCode_t AgentClient::GetResourceStatus(
 	// Connect...
 	ExitCode_t exit_code = Connect();
 	if (exit_code != ExitCode_t::OK) {
-		std::cerr << "[ERR] Connection failed" << std::endl;
+		logger->Error("ResourceStatus: Connection failed");
 		return exit_code;
 	}
 
@@ -68,9 +69,11 @@ ExitCode_t AgentClient::GetResourceStatus(
 	grpc::Status status;
 	grpc::ClientContext context;
 	bbque::ResourceStatusReply reply;
+
+	logger->Debug("ResourceStatus: Calling implementation...");
 	status = service_stub->GetResourceStatus(&context, request, &reply);
 	if (!status.ok()) {
-		std::cerr << "[ERR] Returned code " << status.error_code() << std::endl;
+		logger->Error("ResourceStatus: Returned code %d", status.error_code());
 		return ExitCode_t::AGENT_DISCONNECTED;
 	}
 
@@ -79,6 +82,9 @@ ExitCode_t AgentClient::GetResourceStatus(
 	resource_status.power_mw    = reply.power_mw();
 	resource_status.temperature = reply.temperature();
 	resource_status.degradation = reply.degradation();
+        logger->Debug("ResourceStatus: T:%3d, U:%3d, PWR:%3d, TEMP:%5d",
+		resource_status.total, resource_status.used,
+		resource_status.power_mw, resource_status.temperature);
 
 	return ExitCode_t::OK;
 }
@@ -88,7 +94,7 @@ ExitCode_t AgentClient::GetWorkloadStatus(
 
 	ExitCode_t exit_code = Connect();
 	if (exit_code != ExitCode_t::OK) {
-		std::cerr << "[ERR] Connection failed" << std::endl;
+		logger->Error("WorkloadStatus: Connection failed");
 		return exit_code;
 	}
 
@@ -98,16 +104,17 @@ ExitCode_t AgentClient::GetWorkloadStatus(
 	grpc::ClientContext context;
 	bbque::WorkloadStatusReply reply;
 
-	std::cerr << "[DBG] Calling GetWorkloadStatus..." << std::endl;
+	logger->Debug("WorkloadStatus: Calling implementation...");
 	status = service_stub->GetWorkloadStatus(&context, request, &reply);
 	if (!status.ok()) {
-		std::cerr << "[ERR] Returned code " << status.error_code() << std::endl;
+		logger->Error("WorkloadStatus: Returned code %d", status.error_code());
 		return ExitCode_t::AGENT_DISCONNECTED;
 	}
 
 	workload_status.nr_ready   = reply.nr_ready();
 	workload_status.nr_running = reply.nr_running();
-	std::cerr << "GetWorkloadStatus..." << workload_status.nr_ready << std::endl;
+	logger->Debug("WorkloadStatus: RUN: %2d, RDY: %2d",
+		workload_status.nr_ready, workload_status.nr_running);
 
 	return ExitCode_t::OK;
 }
