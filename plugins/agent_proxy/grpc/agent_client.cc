@@ -84,8 +84,30 @@ ExitCode_t AgentClient::GetResourceStatus(
 }
 
 ExitCode_t AgentClient::GetWorkloadStatus(
-        agent::WorkloadStatus & workload_status)
-{
+		agent::WorkloadStatus & workload_status) {
+
+	ExitCode_t exit_code = Connect();
+	if (exit_code != ExitCode_t::OK) {
+		std::cerr << "[ERR] Connection failed" << std::endl;
+		return exit_code;
+	}
+
+	bbque::GenericRequest request;
+	request.set_sender_id(local_system_id);
+	grpc::Status status;
+	grpc::ClientContext context;
+	bbque::WorkloadStatusReply reply;
+
+	std::cerr << "[DBG] Calling GetWorkloadStatus..." << std::endl;
+	status = service_stub->GetWorkloadStatus(&context, request, &reply);
+	if (!status.ok()) {
+		std::cerr << "[ERR] Returned code " << status.error_code() << std::endl;
+		return ExitCode_t::AGENT_DISCONNECTED;
+	}
+
+	workload_status.nr_ready   = reply.nr_ready();
+	workload_status.nr_running = reply.nr_running();
+	std::cerr << "GetWorkloadStatus..." << workload_status.nr_ready << std::endl;
 
 	return ExitCode_t::OK;
 }
