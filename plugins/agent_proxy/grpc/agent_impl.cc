@@ -33,9 +33,9 @@ grpc::Status AgentImpl::GetResourceStatus(
 		const bbque::ResourceStatusRequest * request,
 		bbque::ResourceStatusReply * reply) {
 
-	logger->Debug("=== GetResourceStatus ===");
+	logger->Debug("ResourceStatus: Request from system &d", request->sender_id());
 	if (request->path().empty()) {
-		logger->Error("Invalid resource path specified");
+		logger->Error("ResourceStatus: Invalid resource path specified");
 		return grpc::Status::CANCELLED;
 	}
 
@@ -48,14 +48,14 @@ grpc::Status AgentImpl::GetResourceStatus(
 	// Power information...
 	bbque::res::ResourcePtr_t resource(system.GetResource(request->path()));
 	if (resource == nullptr) {
-		logger->Error("Invalid resource path specified");
+		logger->Error("ResourceStatus: Invalid resource path specified");
 		return grpc::Status::CANCELLED;
 	}
 
 	bbque::res::ResourcePathPtr_t resource_path(
 		system.GetResourcePath(request->path()));
 	if (resource_path == nullptr) {
-		logger->Error("Invalid resource path specified");
+		logger->Error("ResourceStatus: Invalid resource path specified");
 		return grpc::Status::CANCELLED;
 	}
 
