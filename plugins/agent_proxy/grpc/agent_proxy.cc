@@ -191,14 +191,16 @@ ExitCode_t AgentProxyGRPC::GetResourceStatus(
 ExitCode_t AgentProxyGRPC::GetWorkloadStatus(
 		std::string const & path,
 		agent::WorkloadStatus & status) {
-	return agent::ExitCode_t::AGENT_UNREACHABLE;
+	return GetWorkloadStatus(GetSystemId(path), status);
 }
 
 ExitCode_t AgentProxyGRPC::GetWorkloadStatus(
 		int system_id,
 		agent::WorkloadStatus & status) {
+	std::shared_ptr<AgentClient> client(GetAgentClient(system_id));
+	if (client)
+		return client->GetWorkloadStatus(status);
 	return agent::ExitCode_t::AGENT_UNREACHABLE;
-
 }
 
 
