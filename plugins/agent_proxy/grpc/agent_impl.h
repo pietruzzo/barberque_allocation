@@ -34,6 +34,11 @@ public:
 		const bbque::GenericRequest * request,
 		bbque::WorkloadStatusReply * reply) override;
 
+	grpc::Status GetChannelStatus(
+		grpc::ServerContext * context,
+		const bbque::GenericRequest * request,
+		bbque::ChannelStatusReply * reply) override;
+
 	grpc::Status SetNodeManagementAction(
 	        grpc::ServerContext * context,
 	        const bbque::NodeManagementRequest * action,

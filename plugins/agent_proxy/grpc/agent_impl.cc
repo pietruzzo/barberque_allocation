@@ -71,6 +71,14 @@ grpc::Status AgentImpl::GetWorkloadStatus(
 	return grpc::Status::OK;
 }
 
+grpc::Status AgentImpl::GetChannelStatus(
+		grpc::ServerContext * context,
+		const bbque::GenericRequest * request,
+		bbque::ChannelStatusReply * reply) {
+
+	logger->Debug("ChannelStatus: Request from system %d", request->sender_id());
+	reply->set_connected(true);
+
 	return grpc::Status::OK;
 }
 
