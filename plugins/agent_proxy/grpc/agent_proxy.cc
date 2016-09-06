@@ -181,13 +181,10 @@ std::shared_ptr<AgentClient> AgentProxyGRPC::GetAgentClient(uint16_t system_id) 
 ExitCode_t AgentProxyGRPC::GetResourceStatus(
 		std::string const & resource_path,
 		agent::ResourceStatus & status) {
-	uint16_t system_id = GetSystemId(resource_path);
-	std::shared_ptr<AgentClient> client(GetAgentClient(system_id));
-	if(client == nullptr) {
-		logger->Error("Client for <%s> not ready", resource_path.c_str());
-		return agent::ExitCode_t::AGENT_UNREACHABLE;
-	}
-	return client->GetResourceStatus(resource_path, status);
+	std::shared_ptr<AgentClient> client(GetAgentClient(GetSystemId(resource_path)));
+	if (client)
+		return client->GetResourceStatus(resource_path, status);
+	return agent::ExitCode_t::AGENT_UNREACHABLE;
 }
 
 
