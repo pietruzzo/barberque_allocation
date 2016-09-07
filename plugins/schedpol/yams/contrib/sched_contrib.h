@@ -21,6 +21,7 @@
 #include <cstring>
 
 #include "bbque/configuration_manager.h"
+#include "bbque/binding_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/system.h"
 

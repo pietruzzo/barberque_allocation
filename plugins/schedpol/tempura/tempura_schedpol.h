@@ -106,6 +106,8 @@ private:
 	/** Resource accounter instance */
 	ResourceAccounter & ra;
 
+	BindingManager & bdm;
+
 	/** P/T model manager */
 	ModelManager & mm;
 

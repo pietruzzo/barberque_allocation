@@ -25,6 +25,7 @@
 #include <queue>
 
 #include "bbque/configuration_manager.h"
+#include "bbque/binding_manager.h"
 #include "bbque/power_monitor.h"
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/scheduler_policy.h"
@@ -120,16 +121,14 @@ private:
 	typedef std::map<br::ResourceType, DeviceQueueMapPtr_t> DeviceTypeQueueMap_t;
 
 
-	/** Configuration manager instance */
 	ConfigurationManager & cm;
 
-	/** Resource accounter instance */
 	ResourceAccounter & ra;
 
-	/** Platform Proxy instance */
+	BindingManager & bdm;
+
 	PowerMonitor & wm;
 
-	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
 	/** System view:

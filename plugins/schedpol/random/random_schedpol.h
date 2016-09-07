@@ -19,6 +19,7 @@
 #define BBQUE_RANDOM_SCHEDPOL_H_
 
 #include "bbque/configuration_manager.h"
+#include "bbque/binding_manager.h"
 #include "bbque/app/application.h"
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/plugins/plugin.h"
@@ -79,6 +80,8 @@ private:
 
 	/** Configuration manager instance */
 	ConfigurationManager & cm;
+
+	BindingManager & bdm;
 
 	/** Token for accessing a resources view */
 	br::RViewToken_t ra_view = 0;

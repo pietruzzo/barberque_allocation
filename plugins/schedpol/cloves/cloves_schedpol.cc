@@ -58,6 +58,7 @@ char const * ClovesSchedPol::Name() {
 ClovesSchedPol::ClovesSchedPol():
 		cm(ConfigurationManager::GetInstance()),
 		ra(ResourceAccounter::GetInstance()),
+		bdm(BindingManager::GetInstance()),
 		wm(PowerMonitor::GetInstance()) {
 	// Logger instance
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
@@ -128,7 +129,7 @@ ClovesSchedPol::ExitCode_t ClovesSchedPol::InitDeviceQueues() {
 
 	// A device queue must be created for each binding domain
 	// (i.e., OpenCL device type (CPU, GPU,...))
-	BindingMap_t & bindings(ra.GetBindingOptions());
+	BindingMap_t & bindings(bdm.GetBindingOptions());
 	for (auto & bd_entry: bindings) {
 		br::ResourceType  bd_type = bd_entry.first;
 		BindingInfo_t const & bd_info(*(bd_entry.second));
@@ -158,7 +159,7 @@ void ClovesSchedPol::CreateDeviceQueues(
 		BindingInfo_t const & bd_info) {
 
 	// [CPU|GPU|..]0..n
-	for (br::ResourcePtr_t const & rsrc: bd_info.rsrcs) {
+	for (br::ResourcePtr_t const & rsrc: bd_info.resources) {
 		DeviceQueuePtr_t pdev_queue = DeviceQueuePtr_t(new DeviceQueue_t());
 
 		br::ResourcePathPtr_t r_path(new br::ResourcePath(rsrc->Path()));
@@ -172,7 +173,7 @@ void ClovesSchedPol::CreateDeviceQueues(
 	}
 
 	logger->Info("Init: added %d device queues for device type %s",
-		pdev_queue_map->size(), bd_info.d_path->ToString().c_str());
+		pdev_queue_map->size(), bd_info.base_path->ToString().c_str());
 }
 
 

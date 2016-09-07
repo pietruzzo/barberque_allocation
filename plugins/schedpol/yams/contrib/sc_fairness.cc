@@ -96,14 +96,15 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 	r_types  = sv->ResourceTypesList();
 	logger->Debug("Priority [%d]:  %d applications", priority, num_apps);
 	logger->Debug("Bindings [%s]:  %d",
-			bd_info.d_path->ToString().c_str(), bd_info.count);
+			bd_info.base_path->ToString().c_str(),
+			bd_info.resources.size());
 	logger->Debug("Resource types: %d", r_types.size());
 
 	// For each resource type get the availability and the fair partitioning
 	// among the application having the same priority
 	for (br::ResourceType & r_type: r_types) {
 		snprintf(r_path_str, 20, "%s.%s",
-				bd_info.d_path->ToString().c_str(),
+				bd_info.base_path->ToString().c_str(),
 				br::GetResourceTypeString(r_type));
 		int r_type_index = static_cast<int>(r_type);
 
@@ -115,7 +116,7 @@ SchedContrib::ExitCode_t SCFairness::Init(void * params) {
 
 		for (BBQUE_RID_TYPE & bd_id: bd_info.ids) {
 			snprintf(r_path_str, 20, "%s%d.%s",
-					bd_info.d_path->ToString().c_str(),
+					bd_info.base_path->ToString().c_str(),
 					bd_id,
 					br::GetResourceTypeString(r_type));
 			bd_r_avail = sv->ResourceAvailable(r_path_str, status_view);
@@ -177,7 +178,7 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		// Binding domain fraction (resource type related)
 		logger->Debug("%s: R{%s} BD{'%s'} maxAV: %" PRIu64 " fair: %d",
 				evl_ent.StrId(), r_path->ToString().c_str(),
-				bd_info.d_path->ToString().c_str(),
+				bd_info.base_path->ToString().c_str(),
 				max_bd_r_avail[r_type_index],
 				fair_pt[r_type_index]);
 		// Safety check
@@ -192,17 +193,17 @@ SCFairness::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		logger->Debug("%s: R{%s} BD{'%s'} fraction: %d",
 				evl_ent.StrId(),
 				r_path->ToString().c_str(),
-				bd_info.d_path->ToString().c_str(),
+				bd_info.base_path->ToString().c_str(),
 				bd_fract);
 		bd_fract == 0 ? bd_fract = 1 : bd_fract;
 
 		// Binding domain fair partition
 		bd_fair_pt = max_bd_r_avail[r_type_index] / bd_fract;
-		if (bd_info.count > 1)
+		if (bd_info.resources.size() > 1)
 			bd_fair_pt = std::max(min_bd_r_avail[r_type_index], bd_fair_pt);
 		logger->Debug("%s: R{%s} BD{'%s'} fair partition: %" PRIu64 "",
 				evl_ent.StrId(), r_path->ToString().c_str(),
-				bd_info.d_path->ToString().c_str(), bd_fair_pt);
+				bd_info.base_path->ToString().c_str(), bd_fair_pt);
 
 		// Set last parameters for index computation
 		penalty = static_cast<float>(penalties_int[r_type_index]) / 100.0;

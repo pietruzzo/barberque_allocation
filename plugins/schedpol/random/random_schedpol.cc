@@ -18,6 +18,7 @@
 #include "random_schedpol.h"
 
 #include "bbque/system.h"
+#include "bbque/binding_manager.h"
 #include "bbque/app/application.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/resource_path.h"
@@ -38,6 +39,7 @@ namespace bbque { namespace plugins {
 
 RandomSchedPol::RandomSchedPol() :
 	cm(ConfigurationManager::GetInstance()),
+	bdm(BindingManager::GetInstance()),
 	dist(0, 100) {
 
 	// Get a logger
@@ -77,7 +79,6 @@ char const * RandomSchedPol::Name() {
 
 void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 	Application::ExitCode_t app_result = Application::APP_SUCCESS;
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ba::AwmPtr_t selected_awm;
 	int8_t selected_awm_id;
 	uint32_t selected_bd;
@@ -88,8 +89,8 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 	assert(papp);
 
 	// Check for a valid binding domain count
-	BindingMap_t & bindings(ra.GetBindingOptions());
-	bd_count = bindings[br::ResourceType::CPU]->count;
+	BindingMap_t & bindings(bdm.GetBindingOptions());
+	bd_count = bindings[br::ResourceType::CPU]->resources.size();
 	if (bd_count == 0) {
 		assert(bd_count != 0);
 		return;

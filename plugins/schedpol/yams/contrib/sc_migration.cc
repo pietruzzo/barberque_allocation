@@ -41,7 +41,7 @@ SCMigration::_Compute(
 		SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
 	br::ResourceBitset r_mask;
-	br::ResourceType r_type = bd_info.d_path->Type();
+	br::ResourceType r_type = bd_info.base_path->Type();
 
 	// Migraton => index := 0
 	if (evl_ent.IsMigrating(r_type)) {

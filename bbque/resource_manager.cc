@@ -140,6 +140,7 @@ ResourceManager::ResourceManager() :
 	ap(ApplicationProxy::GetInstance()),
 	pm(PluginManager::GetInstance()),
 	ra(ResourceAccounter::GetInstance()),
+	bdm(BindingManager::GetInstance()),
 	mc(MetricsCollector::GetInstance()),
     plm(PlatformManager::GetInstance()),
 	cm(CommandManager::GetInstance()),
@@ -213,9 +214,17 @@ ResourceManager::Setup() {
 
     result = plm.LoadPlatformData();
     if (result != PlatformManager::PLATFORM_OK) {
+	result = plm.LoadPlatformData();
+	if (result != PlatformManager::PLATFORM_OK) {
 		logger->Fatal("Platform Integration Layer initialization FAILED!");
 		return SETUP_FAILED;
 	}
+
+	// -------- Binding Manager initialization for the scheduling policy
+        if (bdm.LoadBindingOptions() != BindingManager::OK) {
+		logger->Fatal("Binding Manager initialization FAILED!");
+		return SETUP_FAILED;
+        }
 
 #ifdef CONFIG_BBQUE_WM
 	//----------- Start the Power Monitor

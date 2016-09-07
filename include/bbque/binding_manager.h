@@ -18,14 +18,56 @@
 #ifndef BBQUE_BINDING_MANAGER_H_
 #define BBQUE_BINDING_MANAGER_H_
 
+#include <list>
+#include <map>
+#include <memory>
+#include <vector>
+
+#include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
 
 
 namespace bbque {
 
+/**
+ * @struct BindingInfo
+ * @brief  Binding domain information
+ *
+ * Keep track of the runtime status of the binding domains (e.g., CPU
+ * nodes)
+ */
+typedef struct BindingInfo {
+	/// Base resource path object
+	br::ResourcePathPtr_t base_path;
+	/// Number of managed resource types
+	std::list<br::ResourceType> r_types;
+	/// Resource pointer descriptor list
+	br::ResourcePtrList_t resources;
+	/// The IDs of all the possible bindings
+	std::vector<BBQUE_RID_TYPE> ids;
+	/// Keep track the bindings without available processing elements
+	br::ResourceBitset full;
+} BindingInfo_t;
+
+
+typedef std::map<br::ResourceType, std::shared_ptr<BindingInfo_t>> BindingMap_t;
+
+
+/**
+ * @class BindingManager
+ *
+ * @brief Provides all the information to support the resource binding
+ * process and a set of binding policies
+ */
 class BindingManager {
 
 public:
+
+	enum ExitCode_t {
+		OK,
+		ERR_MISSING_OPTIONS
+	};
+
 
 	static BindingManager & GetInstance();
 
@@ -34,11 +76,41 @@ public:
 		binding_options.clear();
 	}
 
+	/**
+	 * @brief Load the resource binding support information
+	 *
+	 * @note This can be done only when the status is READY
+	 */
+	ExitCode_t LoadBindingOptions();
+
+	/**
+	 * @brief The resource binding information support
+	 *
+	 * @return A reference to a @ref BindingMap_t object
+	 */
+	inline BindingMap_t & GetBindingOptions() {
+		return binding_options;
+	}
+
 private:
 
 	std::unique_ptr<bu::Logger> logger;
 
+	ResourceAccounter & ra;
+
+	/**
+	 * A map object containing all the support information for the
+	 * resource binding performed by the scheduling policy
+	 */
+	BindingMap_t binding_options;
+
+
 	BindingManager();
+
+	/**
+	 * @brief Initialize the resource binding support information
+	 */
+	void InitBindingOptions();
 
 };
 

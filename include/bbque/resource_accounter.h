@@ -67,30 +67,6 @@ class ApplicationManager;
 
 
 /**
- * @brief Binding domain information
- *
- * Keep track of the runtime status of the binding domains (e.g., CPU
- * nodes)
- */
-typedef struct BindingInfo {
-	/** Base resource path object */
-	br::ResourcePathPtr_t d_path;
-	/** Number of managed resource types */
-	std::list<br::ResourceType> r_types;
-	/** Resource pointer descriptor list */
-	br::ResourcePtrList_t rsrcs;
-	/** The IDs of all the possible bindings */
-	std::vector<BBQUE_RID_TYPE> ids;
-	/** Keep track the bindings without available processing elements */
-	br::ResourceBitset full;
-	/** Number of binding domains on the platform	 */
-	uint16_t count;
-} BindingInfo_t;
-
-
-typedef std::pair<br::ResourceType, BindingInfo_t *> BindingPair_t;
-typedef std::map<br::ResourceType, BindingInfo_t *> BindingMap_t;
-
 /**
  * @brief Resources Accouter
  * @ingroup sec07_ra
@@ -426,14 +402,6 @@ public:
 	        br::ResourceAssignmentMapPtr_t const & current_map,
 	        br::ResourceAssignmentMapPtr_t const & next_map);
 
-	/**
-	 * @brief The resource binding information support
-	 *
-	 * @return A reference to a @ref BindingMap_t object
-	 */
-	inline BindingMap_t & GetBindingOptions() {
-		return binding_options;
-	}
 
 	/**
 	 * @see ResourceAccounterConfIF
@@ -635,11 +603,6 @@ private:
 	/** Keep track of the max length between resources path string */
 	uint8_t path_max_len = 0;
 
-	/**
-	 * A map object containing all the support information for the resource
-	 * binding performed by the scheduling policy
-	 */
-	BindingMap_t binding_options;
 
 	/**
 	 * Map containing the pointers to the map of resource assignments specified in
@@ -682,18 +645,6 @@ private:
 	 */
 	ResourceAccounter();
 
-
-	/**
-	 * @brief Initialize the resource binding support information
-	 */
-	void InitBindingOptions();
-
-	/**
-	 * @brief Load the resource binding support information
-	 *
-	 * @note This can be done only when the status is READY
-	 */
-	void LoadBindingOptions();
 
 	/**
 	 * @brief Set the status to READY

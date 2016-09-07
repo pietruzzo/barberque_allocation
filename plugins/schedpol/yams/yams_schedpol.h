@@ -20,6 +20,7 @@
 
 #include <cstdint>
 
+#include "bbque/binding_manager.h"
 #include "bbque/configuration_manager.h"
 #include "bbque/scheduler_manager.h"
 #include "bbque/command_manager.h"
@@ -192,26 +193,21 @@ private:
 	};
 #endif
 
-	/** Shared pointer to a scheduling entity */
 	typedef std::shared_ptr<SchedEntity_t> SchedEntityPtr_t;
 
-	/** List of scheduling entities */
 	typedef std::list<SchedEntityPtr_t> SchedEntityList_t;
 
 
-	/** Configuration manager instance */
 	ConfigurationManager & cm;
 
-	/** Resource accounter instance */
 	ResourceAccounter & ra;
 
-	/** Metric collector instance */
+	BindingManager & bdm;
+
 	bu::MetricsCollector & mc;
 
-	/** Command manager instance */
 	CommandManager &cmm;
 
-	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
 	/** System view instance */

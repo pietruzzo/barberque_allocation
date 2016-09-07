@@ -31,10 +31,10 @@
 #opt_interval = 0
 
 ################################################################################
-# Resource Accounter Options
+# Binding Manager Options
 ################################################################################
-[ResourceAccounter]
-binding.domains = cpu,gpu
+[BindingManager]
+domains = cpu,gpu
 
 ################################################################################
 # PlatformProxy Options

@@ -64,6 +64,7 @@ char const * TempuraSchedPol::Name() {
 TempuraSchedPol::TempuraSchedPol():
 		cm(ConfigurationManager::GetInstance()),
 		ra(ResourceAccounter::GetInstance()),
+		bdm(BindingManager::GetInstance()),
 		mm(bw::ModelManager::GetInstance())
 #ifdef CONFIG_BBQUE_PM_BATTERY
 		,
@@ -169,12 +170,12 @@ SchedulerPolicyIF::ExitCode_t
 TempuraSchedPol::InitBudgets() {
 
 	// Binding type (CPU, GPU,...))
-	BindingMap_t & bindings(ra.GetBindingOptions());
+	BindingMap_t & bindings(bdm.GetBindingOptions());
 	for (auto & bd_entry: bindings) {
 		BindingInfo_t const & bd_info(*(bd_entry.second));
 
 		// Resource path e.g., "sys0.cpu[0..n].XX"
-		for (br::ResourcePtr_t const & rsrc: bd_info.rsrcs) {
+		for (br::ResourcePtr_t const & rsrc: bd_info.resources) {
 			br::ResourcePathPtr_t r_path(
 					std::make_shared<br::ResourcePath>(rsrc->Path()));
 			r_path->AppendString("pe");
@@ -498,14 +499,14 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoBinding(
 	logger->Debug("DoBinding: START");
 	size_t ref_n = 0;
 
-	BindingMap_t & bindings(ra.GetBindingOptions());
+	BindingMap_t & bindings(bdm.GetBindingOptions());
 	for (auto & bd_entry: bindings) {
 		BindingInfo_t const & bd_info(*(bd_entry.second));
 		br::ResourceType bd_type = bd_entry.first;
 		// CPU, GPU level binding
 		// Resource path e.g., "sys0.cpu[0..n].XX"
-		if (bd_info.rsrcs.empty()) continue;
-		for (br::ResourcePtr_t const & rsrc: bd_info.rsrcs) {
+		if (bd_info.resources.empty()) continue;
+		for (br::ResourcePtr_t const & rsrc: bd_info.resources) {
 			BBQUE_RID_TYPE bd_id = rsrc->ID();
 			logger->Debug("DoBinding: [%s] binding to %s%d",
 					psched->StrId(),
