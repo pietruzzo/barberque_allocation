@@ -34,7 +34,6 @@ RXMLPlatformLoader::RXMLPlatformLoader() : initialized(false)
     // Get a logger
     logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
     assert(logger);
-
     logger->Debug("Built RXML PlatformLoader object @%p", (void*)this);
 
     // Save the hostname of the current machine for future use.
@@ -215,7 +214,6 @@ RXMLPlatformLoader::attr_ptr RXMLPlatformLoader::GetFirstAttribute(
 }
 
 
-
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
 
     node_ptr root    = this->GetFirstChild(&doc,"systems", true);
@@ -233,20 +231,16 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
     node_ptr include_sys = this->GetFirstChild(root,"include", true) ;
     while(include_sys != NULL) {
         bool curr_local = PL_SUCCESS == this->ParseSystemDocument(include_sys->value());
-
-
         if (local_found && curr_local) {
-            // That's bad. I found two local systems,
-            // this is not possible.
+            // That's bad. I found two local systems. This is not possible.
             logger->Error("More than one local system found!");
             return PL_LOGIC_ERROR;
         }
 
+	// If the loal is not found yet, check if the current is local
         if (!local_found) {
-            // If the loal is not found yet, check if the current is local
             local_found = curr_local;
         }
-
 
         include_sys = include_sys->next_sibling("include");
     }
@@ -293,12 +287,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     // The last is mandatory only for remote systems, and ignored for
     // local ones
     attr_ptr hostname = this->GetFirstAttribute(root, "hostname", true);
-
     bool is_local = 0 == strcmp(local_hostname, hostname->value());
 
     // The address is mandatory only if the system is remote.
     attr_ptr address  = this->GetFirstAttribute(root, "address", !is_local);
-    logger->Debug("Parsing system %s at address %s", hostname->value(), address->value() ? address->value() : "`localhost`");
+    logger->Debug("Parsing system %s at address %s",
+	hostname->value(), address->value() ? address->value() : "`localhost`");
 
     pp::PlatformDescription::System sys;
     sys.SetId(sys_count++);

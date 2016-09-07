@@ -111,7 +111,11 @@ private:
 
 	LinuxPlatformProxy();
 
-	void LoadConfiguration() noexcept;                          /**< Load values from the configuration file */
+	/**
+	 * @brief Load values from the configuration file
+	 */
+	void LoadConfiguration() noexcept;
+
 
 	/**
 	 * @brief Resources Mapping and Assigment to Applications

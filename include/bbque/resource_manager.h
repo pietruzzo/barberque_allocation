@@ -29,6 +29,7 @@
 #include "bbque/synchronization_manager.h"
 #include "bbque/profile_manager.h"
 #include "bbque/resource_accounter.h"
+
 #include "bbque/command_manager.h"
 
 #ifdef CONFIG_BBQUE_EM
@@ -154,81 +155,50 @@ private:
 	 */
 	bool done;
 
-	/**
-	 * @brief The logger used by the resource manager.
-	 */
 	std::unique_ptr<bu::Logger> logger;
 
 	/**
-	 * Reference to supported platform services class.
+	 * @brief Reference to supported platform services class.
 	 * The platform services are a set of services exported by Barbeque to
 	 * other modules (and plugins). The resource manager ensure an
 	 * initialization of this core module before starting to grill.
 	 */
 	PlatformServices & ps;
 
-	/**
-	 * @brief The Resource Scheduler module
-	 */
-	SchedulerManager & sm;
-
-	/**
-	 * @brief The Synchronization Manager module
-	 */
-	SynchronizationManager & ym;
-
-
-#ifdef CONFIG_BBQUE_SCHED_PROFILING
-	/**
-	 * @brief The Profiling Manager module
-	 */
-	ProfileManager & om;
-#endif
-
-	/**
-	 * @brief The Application Proxy module
-	 */
 	ApplicationManager & am;
 
-	/**
-	 * @brief The Application Proxy module
-	 */
 	ApplicationProxy & ap;
 
 	/**
-	 * Reference to the plugin manager module.
+	 * @brief Reference to the plugin manager module.
 	 * The plugin manager is the required interface to load other modules. The
 	 * resource manager ensure an initialization of this core module before
 	 * starting to grill.
 	 */
 	PluginManager & pm;
 
-	/**
-	 * @brief The Resource Accounter module
-	 */
 	ResourceAccounter & ra;
 
 	BindingManager & bdm;
 
-	/**
-	 * @brief The collection of Barbeque metrics
-	 */
 	MetricsCollector & mc;
 
-	/**
-     * @brief The Platform Manager module
-	 */
-    PlatformManager & plm;
+	PlatformManager & plm;
 
-	/**
-	 * @brief The Commands Manager module
-	 */
 	CommandManager & cm;
 
+	SchedulerManager & sm;
+
+	SynchronizationManager & ym;
+
+
+#ifdef CONFIG_BBQUE_SCHED_PROFILING
+
+	ProfileManager & om;
+#endif
+
 #ifdef CONFIG_BBQUE_EM
-	/**
-	 * @brief The Event Manager module
-	 */
+
 	EventManager & em;
 #endif
 

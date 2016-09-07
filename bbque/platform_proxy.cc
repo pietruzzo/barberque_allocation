@@ -3,6 +3,6 @@
 namespace bbque
 {
 
-plugins::PlatformLoaderIF * PlatformProxy::pli = NULL;
+plugins::PlatformLoaderIF * PlatformProxy::pli = nullptr;
 
 } //namespace bbque

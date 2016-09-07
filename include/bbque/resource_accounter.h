@@ -67,9 +67,11 @@ class ApplicationManager;
 
 
 /**
-/**
- * @brief Resources Accouter
+ * @class ResourceAccounter
  * @ingroup sec07_ra
+ *
+ * @brief Provides functions to register the system resources, and query
+ * their status
  */
 class ResourceAccounter: public ResourceAccounterConfIF, CommandHandler {
 
