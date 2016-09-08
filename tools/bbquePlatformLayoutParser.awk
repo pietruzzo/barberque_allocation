@@ -3,13 +3,14 @@
 BEGIN {
 	# Setup Filter Variables
 	FS = "|";
-	if (!length(BBQUE_UID))  BBQUE_UID="root"
-	if (!length(BBQUE_GID))  BBQUE_GID="root"
+	if (!length(BBQUE_USER)) BBQUE_USER="root"
+	if (!length(BBQUE_UID)) BBQUE_UID="root"
+	if (!length(BBQUE_GID)) BBQUE_GID="root"
 	if (!length(BBQUE_CPUP)) BBQUE_CPUP="100000"
 
 	# Get IDs of target platform CPUs and MEMs
-	if (!length(BBQUE_PLAT_CPUS))  BBQUE_PLAT_CPUS="0"
-	if (!length(BBQUE_PLAT_MEMS))  BBQUE_PLAT_MEMS="0"
+	if (!length(BBQUE_PLAT_CPUS)) BBQUE_PLAT_CPUS="0"
+	if (!length(BBQUE_PLAT_MEMS)) BBQUE_PLAT_MEMS="0"
 
 	# Dump Configuration header
 	print "# BBQUE Managed Linux Platform"
@@ -21,12 +22,12 @@ BEGIN {
 	printf "group user.slice {\n"
 	printf "	perm {\n"
 	printf "		task {\n"
-	printf "			uid = %s;\n", BBQUE_UID
-	printf "			gid = %s;\n", BBQUE_GID
+	printf "			uid = root;\n"
+	printf "			gid = root;\n"
 	printf "		}\n"
 	printf "		admin {\n"
-	printf "			uid = %s;\n", BBQUE_UID
-	printf "			gid = %s;\n", BBQUE_GID
+	printf "			uid = root;\n"
+	printf "			gid = root;\n"
 	printf "		}\n"
 	printf "	}\n"
 	print  ""
@@ -67,12 +68,12 @@ BEGIN {
 	printf "group user.slice/host {\n"
 	printf "	perm {\n"
 	printf "		task {\n"
-	printf "			uid = %s;\n", BBQUE_UID
-	printf "			gid = %s;\n", BBQUE_GID
+	printf "			uid = root;\n"
+	printf "			gid = root;\n"
 	printf "		}\n"
 	printf "		admin {\n"
-	printf "			uid = %s;\n", BBQUE_UID
-	printf "			gid = %s;\n", BBQUE_GID
+	printf "			uid = root;\n"
+	printf "			gid = root;\n"
 	printf "		}\n"
 	printf "	}\n"
 	printf "	cpuset {\n"
@@ -97,12 +98,12 @@ BEGIN {
 	printf "group user.slice/res {\n"
 	printf "	perm {\n"
 	printf "		task {\n"
-	printf "			uid = %s;\n", BBQUE_UID
-	printf "			gid = %s;\n", BBQUE_GID
+	printf "			uid = %s;\n", BBQUE_USER
+	printf "			gid = %s;\n", BBQUE_USER
 	printf "		}\n"
 	printf "		admin {\n"
-	printf "			uid = %s;\n", BBQUE_UID
-	printf "			gid = %s;\n", BBQUE_GID
+	printf "			uid = %s;\n", BBQUE_USER
+	printf "			gid = %s;\n", BBQUE_USER
 	printf "		}\n"
 	printf "	}\n"
 	printf "	cpuset {\n"
@@ -127,12 +128,12 @@ BEGIN {
 	printf "group user.slice/res/node%d {\n", NODE_COUNT
 	printf "	perm {\n"
 	printf "		task {\n"
-	printf "			uid = %s;\n", BBQUE_UID
-	printf "			gid = %s;\n", BBQUE_GID
+	printf "			uid = root;\n"
+	printf "			gid = root;\n"
 	printf "		}\n"
 	printf "		admin {\n"
-	printf "			uid = %s;\n", BBQUE_UID
-	printf "			gid = %s;\n", BBQUE_GID
+	printf "			uid = root;\n"
+	printf "			gid = root;\n"
 	printf "		}\n"
 	printf "	}\n"
 	printf "	cpuset {\n"

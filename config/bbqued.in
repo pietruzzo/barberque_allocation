@@ -171,11 +171,14 @@ setup() {
 			bbqued_info "Compiling PIL Layout [$PILSETUP]..."
 
 		$BBQUE_PILPARSER \
+				-v BBQUE_UID="$SUDO_USER" \
+				-v BBQUE_GID="$SUDO_USER" \
 				-v BBQUE_PLAT_CPUS="$PLAT_CPUS" \
 				-v BBQUE_PLAT_MEMS="$PLAT_MEMS" \
 				-v BBQUE_FEAT_CPUQ="$CGROUP_FEATURES_CPUQ" \
 				-v BBQUE_FEAT_MEMC="$CGROUP_FEATURES_MEMC" \
 				$PILSETUP > $CGSETUP
+
 		if [ $? -ne 0 ]; then
 			echo 'Platform Layout Parser FAILED'
 			echo 'BarbequeRTRM could not be started'
