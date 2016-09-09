@@ -47,10 +47,7 @@ WorkingMode::WorkingMode(
 		std::string const & _name,
 		float _value,
 		AppSPtr_t _owner):
-	id(_id),
-	name(_name),
-	hidden(false) {
-	// Get a logger
+	id(_id), name(_name), hidden(false) {
 	logger = bu::Logger::GetLogger(AWM_NAMESPACE);
 
 	// Value must be positive
@@ -79,7 +76,7 @@ WorkingMode::~WorkingMode() {
 }
 
 WorkingMode::ExitCode_t WorkingMode::AddResourceRequest(
-		std::string const & rsrc_path,
+		std::string const & path_str,
 		uint64_t amount,
 		br::ResourceAssignment::Policy split_policy) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
@@ -87,36 +84,34 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceRequest(
 	ExitCode_t result = WM_SUCCESS;
 
 	// Init the resource path starting from the prefix
-	br::ResourcePathPtr_t ppath =
-		std::make_shared<br::ResourcePath>(ra.GetPrefixPath());
-	if (!ppath) {
+	auto resource_path = std::make_shared<br::ResourcePath>(ra.GetPrefixPath());
+	if (!resource_path) {
 		logger->Error("AddResourceRequest: %s '%s' invalid prefix path",
-				str_id,	ra.GetPrefixPath().ToString().c_str());
+				str_id, ra.GetPrefixPath().ToString().c_str());
 		return WM_RSRC_ERR_TYPE;
 	}
 
 	// Build the resource path object
-	rp_result = ppath->Concat(rsrc_path);
+	rp_result = resource_path->Concat(path_str);
 	if (rp_result != br::ResourcePath::OK) {
 		logger->Error("AddResourceRequest: %s '%s' invalid path",
-				str_id,	rsrc_path.c_str());
+				str_id, path_str.c_str());
 		return WM_RSRC_ERR_TYPE;
 	}
 
 	// Check the existance of the resource required
-	if (!ra.ExistResource(ppath)) {
+	if (!ra.ExistResource(resource_path)) {
 		logger->Warn("AddResourceRequest: %s '%s' not found.",
-				str_id, ppath->ToString().c_str());
+				str_id, resource_path->ToString().c_str());
 		result = WM_RSRC_NOT_FOUND;
 	}
 
 	// Insert a new resource usage object in the map
-	br::ResourceAssignmentPtr_t r_assign =
-		std::make_shared<br::ResourceAssignment>(amount, split_policy);
-	resources.requested.emplace(ppath, r_assign);
+	auto r_assign = std::make_shared<br::ResourceAssignment>(amount, split_policy);
+	resources.requested.emplace(resource_path, r_assign);
 	logger->Debug("AddResourceRequest: %s added {%s}"
 			"\t[usage: %" PRIu64 "] [c=%2d]",
-			str_id, ppath->ToString().c_str(),amount,
+			str_id, resource_path->ToString().c_str(),amount,
 			resources.requested.size());
 
 	return result;
@@ -124,30 +119,26 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceRequest(
 
 WorkingMode::ExitCode_t WorkingMode::Validate() {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	br::ResourceAssignmentMap_t::iterator usage_it, it_end;
 	uint64_t total_amount;
-
-	// Initialization
-	usage_it = resources.requested.begin();
-	it_end   = resources.requested.end();
 	hidden   = false;
 
 	// Map of resource assignments requested
-	for (; usage_it != it_end; ++usage_it) {
+	for (auto & resource_entry: resources.requested) {
 		// Current resource: path and amount required
-		ResourcePathPtr_t const & rcp_path(usage_it->first);
-		br::ResourceAssignmentPtr_t & rcp_pusage(usage_it->second);
+		ResourcePathPtr_t const & path_from_recipe(resource_entry.first);
+		br::ResourceAssignmentPtr_t & request_from_recipe(resource_entry.second);
 
 		// Check the total amount available. Hide the AWM if the current total
 		// amount available cannot satisfy the amount required.
 		// Consider the resource template path, since the requested resource
 		// can be mapped on more than one system/HW resource.
-		total_amount = ra.Total(rcp_path, ResourceAccounter::TEMPLATE);
-		if (total_amount < rcp_pusage->GetAmount()) {
+		total_amount = ra.Total(path_from_recipe, ResourceAccounter::TEMPLATE);
+		if (total_amount < request_from_recipe->GetAmount()) {
 			logger->Warn("%s Validate: %s usage required (%" PRIu64 ") "
-					"exceeds total (%" PRIu64 ")",
-					str_id, rcp_path->ToString().c_str(),
-					rcp_pusage->GetAmount(), total_amount);
+				"exceeds total (%" PRIu64 ")", str_id,
+				path_from_recipe->ToString().c_str(),
+				request_from_recipe->GetAmount(),
+				total_amount);
 			hidden = true;
 			logger->Warn("%s Validate: set to 'hidden'", str_id);
 			return WM_RSRC_USAGE_EXCEEDS;
@@ -157,15 +148,13 @@ WorkingMode::ExitCode_t WorkingMode::Validate() {
 	return WM_SUCCESS;
 }
 
-uint64_t WorkingMode::RequestedAmount(ResourcePathPtr_t ppath) const {
-	br::ResourceAssignmentMap_t::const_iterator r_it(resources.requested.begin());
-	br::ResourceAssignmentMap_t::const_iterator r_end(resources.requested.end());
+uint64_t WorkingMode::RequestedAmount(ResourcePathPtr_t resource_path) const {
 
-	for (; r_it != r_end; ++r_it) {
-		ResourcePathPtr_t const & wm_rp(r_it->first);
-		if (ppath->Compare(*(wm_rp.get())) == br::ResourcePath::NOT_EQUAL)
+	for (auto & resource_entry: resources.requested) {
+		ResourcePathPtr_t const & curr_path(resource_entry.first);
+		if (resource_path->Compare(*(curr_path.get())) == br::ResourcePath::NOT_EQUAL)
 			continue;
-		return r_it->second->GetAmount();
+		return resource_entry.second->GetAmount();
 	}
 	return 0;
 }
@@ -188,20 +177,18 @@ size_t WorkingMode::BindResource(
 		source_map = &resources.requested;
 	}
 	else {
-		std::map<size_t, br::ResourceAssignmentMapPtr_t>::iterator pum_it(
-				resources.sched_bindings.find(b_refn));
-		if (pum_it == resources.sched_bindings.end()) {
+		auto bind_it(resources.sched_bindings.find(b_refn));
+		if (bind_it == resources.sched_bindings.end()) {
 			logger->Error("BindResource: %s invalid binding reference [%ld]",
 				str_id, b_refn);
 			return 0;
 		}
-		source_map = (pum_it->second).get();
+		source_map = (bind_it->second).get();
 	}
 
 	// Allocate a new temporary resource assignments map to store the bound
 	// resource assignments
-	br::ResourceAssignmentMapPtr_t out_map =
-		std::make_shared<br::ResourceAssignmentMap_t>();
+	auto out_map = std::make_shared<br::ResourceAssignmentMap_t>();
 	b_count = br::ResourceBinder::Bind(
 		*source_map, r_type, source_id, out_id, out_map,
 		filter_rtype, filter_mask);
@@ -233,8 +220,7 @@ std::string WorkingMode::BindingStr(
 }
 
 br::ResourceAssignmentMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
-	std::map<size_t, br::ResourceAssignmentMapPtr_t>::const_iterator sched_it;
-	sched_it = resources.sched_bindings.find(b_refn);
+	auto const sched_it = resources.sched_bindings.find(b_refn);
 	if (sched_it == resources.sched_bindings.end()) {
 		logger->Error("GetSchedResourceBinding: %s invalid reference [%ld]",
 				str_id, b_refn);
@@ -257,9 +243,9 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
 
 	// Update the resource binding bit-masks
 	UpdateBindingInfo(status_view, true);
-
 	logger->Debug("SetBinding: %s resource binding [%ld] to allocate",
 			str_id, b_refn);
+
 	return WM_SUCCESS;
 }
 
@@ -319,30 +305,27 @@ void WorkingMode::ClearResourceBinding() {
 
 br::ResourceBitset
 WorkingMode::BindingSet(const br::ResourceType & r_type) const {
-	std::map<br::ResourceType, BindingInfo>::const_iterator it(
-		resources.binding_masks.find(r_type));
+	auto const mask_it(resources.binding_masks.find(r_type));
 	br::ResourceBitset empty_set;
-	if (it == resources.binding_masks.end())
+	if (mask_it == resources.binding_masks.end())
 		return empty_set;
-	return it->second.CurrentSet();
+	return mask_it->second.CurrentSet();
 }
 
 br::ResourceBitset
 WorkingMode::BindingSetPrev(const br::ResourceType & r_type) const {
-	std::map<br::ResourceType, BindingInfo>::const_iterator it(
-		resources.binding_masks.find(r_type));
+	auto const mask_it(resources.binding_masks.find(r_type));
 	br::ResourceBitset empty_set;
-	if (it == resources.binding_masks.end())
+	if (mask_it == resources.binding_masks.end())
 		return empty_set;
-	return it->second.PreviousSet();
+	return mask_it->second.PreviousSet();
 }
 
 bool WorkingMode::BindingChanged(const br::ResourceType & r_type) const {
-	std::map<br::ResourceType, BindingInfo>::const_iterator it(
-		resources.binding_masks.find(r_type));
-	if (it == resources.binding_masks.end())
+	auto const mask_it(resources.binding_masks.find(r_type));
+	if (mask_it == resources.binding_masks.end())
 		return false;
-	return it->second.IsChanged();
+	return mask_it->second.IsChanged();
 }
 
 } // namespace app
