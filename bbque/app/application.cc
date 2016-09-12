@@ -650,27 +650,29 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	ResourceAccounter::ExitCode_t booking;
 	AppSPtr_t papp(awm->Owner());
 	ExitCode_t result;
+	logger->Info("ScheduleRequest: %s request for binding @[%d] view=%ld",
+		papp->StrId(), b_refn, status_view);
 
 	// App is SYNC/BLOCKED for a previously failed scheduling.
 	// Reset state and syncState for this new attempt.
 	if (_Blocking()) {
-		logger->Warn("Schedule request for blocking application");
+		logger->Warn("ScheduleRequest: request for blocking application");
 		SetState(schedule.preSyncState, SYNC_NONE);
 	}
 
-	logger->Debug("Schedule request for [%s] into AWM [%02d:%s]",
+	logger->Debug("ScheduleRequest: request for [%s] into AWM [%02d:%s]",
 			papp->StrId(), awm->Id(), awm->Name().c_str());
 
 	// Get the working mode pointer
 	if (!awm) {
-		logger->Crit("Schedule request for [%s] FAILED "
+		logger->Crit("ScheduleRequest: request for [%s] FAILED "
 				"(Error: AWM not existing)", papp->StrId());
 		assert(awm);
 		return APP_WM_NOT_FOUND;
 	}
 
 	if (_Disabled()) {
-		logger->Debug("Schedule request for [%s] FAILED "
+		logger->Debug("ScheduleRequest: request for [%s] FAILED "
 				"(Error: EXC being disabled)", papp->StrId());
 		return APP_DISABLED;
 	}
@@ -680,7 +682,7 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 
 	// If resources are not available, unschedule
 	if (booking != ResourceAccounter::RA_SUCCESS) {
-		logger->Debug("Unscheduling [%s]...", papp->StrId());
+		logger->Debug("ScheduleRequest: unscheduling [%s]...", papp->StrId());
 		Unschedule();
 		return APP_WM_REJECTED;
 	}
@@ -689,7 +691,7 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	awm->SetResourceBinding(status_view, b_refn);
 
 	// Reschedule accordingly to "awm"
-	logger->Debug("Rescheduling [%s] into AWM [%d:%s]...",
+	logger->Debug("ScheduleRequest: rescheduling [%s] into AWM [%d:%s]...",
 			papp->StrId(), awm->Id(), awm->Name().c_str());
 	result = Reschedule(awm);
 
@@ -736,8 +738,9 @@ Application::ExitCode_t Application::ScheduleCommit() {
 
 	// Ignoring applications disabled during a SYNC
 	if (_Disabled()) {
-		logger->Info("Sync completed (on disabled EXC) [%s, %d:%s]",
-				StrId(), _State(), StateStr(_State()));
+		logger->Info("ScheduleCommit: synchronization completed (on disabled EXC)"
+			" [%s, %d:%s]",
+			StrId(), _State(), StateStr(_State()));
 		return APP_SUCCESS;
 	}
 
@@ -752,7 +755,7 @@ Application::ExitCode_t Application::ScheduleCommit() {
 		// having a value higher than the previous one
 		if (schedule.awm &&
 				(schedule.awm->Value() < schedule.next_awm->Value())) {
-			logger->Debug("Resetting GoalGap (%d%c) on [%s]",
+			logger->Debug("ScheduleCommit: resetting GoalGap (%d%c) on [%s]",
 					ggap_percent, '%', StrId());
 			ggap_percent = 0;
 		}
@@ -769,13 +772,13 @@ Application::ExitCode_t Application::ScheduleCommit() {
 		break;
 
 	default:
-		logger->Crit("Sync for EXC [%s] FAILED"
+		logger->Crit("ScheduleCommit: synchronization failed for EXC [%s]"
 				"(Error: invalid synchronization state)");
 		assert(_SyncState() < Application::SYNC_NONE);
 		return APP_ABORT;
 	}
 
-	logger->Info("Sync completed [%s, %d:%s]",
+	logger->Info("ScheduleCommit: synchronization completed [%s, %d:%s]",
 			StrId(), _State(), StateStr(_State()));
 
 	return APP_SUCCESS;
@@ -798,7 +801,7 @@ void Application::ScheduleAbort() {
 	schedule.awm.reset();
 	schedule.next_awm.reset();
 
-	logger->Info("ScheduleAbort completed ");
+	logger->Info("ScheduleAbort: completed ");
 }
 
 Application::ExitCode_t Application::ScheduleContinue() {
@@ -864,13 +867,13 @@ Application::ExitCode_t Application::SetWorkingModeConstraint(
 		result = AddWorkingModeConstraint(constraint);
 		break;
 	default:
-		logger->Error("SetConstraint (AWMs): Operation not supported");
+		logger->Error("SetConstraint (AWMs): operation not supported");
 		return result;
 	}
 
 	// If there are no changes in the enabled list return
 	if (result == APP_WM_ENAB_UNCHANGED) {
-		logger->Debug("SetConstraint (AWMs): Nothing to change");
+		logger->Debug("SetConstraint (AWMs): nothing to change");
 		return APP_SUCCESS;
 	}
 
@@ -937,7 +940,7 @@ Application::ExitCode_t Application::AddWorkingModeConstraint(
 
 		// Mark the corresponding bit in the enabled map
 		awms.enabled_bset.set(constraint.awm);
-		logger->Debug("SetConstraint (AWMs): Set exact value AWM {%d}",
+		logger->Debug("SetConstraint (AWMs): set exact value AWM {%d}",
 				constraint.awm);
 		return APP_WM_ENAB_CHANGED;
 	}
@@ -960,7 +963,7 @@ void Application::SetWorkingModesLowerBound(RTLIB_Constraint & constraint) {
 
 	// Save the new lower bound
 	awms.low_id = constraint.awm;
-	logger->Debug("SetConstraint (AWMs): Set lower bound AWM {%d}",
+	logger->Debug("SetConstraint (AWMs): set lower bound AWM {%d}",
 			awms.low_id);
 }
 
@@ -979,7 +982,7 @@ void Application::SetWorkingModesUpperBound(RTLIB_Constraint & constraint) {
 
 	// Save the new upper bound
 	awms.upp_id = constraint.awm;
-	logger->Debug("SetConstraint (AWMs): Set upper bound AWM {%d}",
+	logger->Debug("SetConstraint (AWMs): set upper bound AWM {%d}",
 			awms.upp_id);
 }
 
@@ -1015,7 +1018,7 @@ void Application::ClearWorkingModesLowerBound() {
 	for (int i = awms.low_id - 1; i >= 0; --i)
 		awms.enabled_bset.set(i);
 
-	logger->Debug("SetConstraint (AWMs): Cleared lower bound AWM {%d}",
+	logger->Debug("SetConstraint (AWMs): cleared lower bound AWM {%d}",
 			awms.low_id);
 
 	// Reset the lower bound
@@ -1027,7 +1030,7 @@ void Application::ClearWorkingModesUpperBound() {
 	for (int i = awms.upp_id + 1; i <= awms.max_id; ++i)
 		awms.enabled_bset.set(i);
 
-	logger->Debug("SetConstraint (AWMs): Cleared upper bound AWM {%d}",
+	logger->Debug("SetConstraint (AWMs): cleared upper bound AWM {%d}",
 			awms.upp_id);
 
 	// Reset the upperbound
