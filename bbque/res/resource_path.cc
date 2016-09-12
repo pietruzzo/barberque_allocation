@@ -28,8 +28,6 @@ namespace bbque { namespace res {
 ResourcePath::ResourcePath(std::string const & str_path):
 		global_type(ResourceType::UNDEFINED),
 		level_count(0) {
-
-	// Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("RP{%s} object construction", str_path.c_str());
 
@@ -43,7 +41,6 @@ ResourcePath::ResourcePath(std::string const & str_path):
 ResourcePath::ResourcePath(ResourcePath const & r_path):
 		global_type(ResourceType::UNDEFINED),
 		level_count(0) {
-	// Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("RP{%s} object construction", r_path.ToString().c_str());
 	// Copy
@@ -63,62 +60,58 @@ ResourcePath::~ResourcePath() {
  * Check / Comparison                                             *
  ******************************************************************/
 
-bool ResourcePath::operator< (ResourcePath const & cmp_path) {
-	ResourcePath::ConstIterator it, cmp_it;
-	it     = identifiers.begin();
-	cmp_it = cmp_path.Begin();
+bool ResourcePath::operator< (ResourcePath const & comp_path) {
+	auto curr_it = identifiers.begin();
+	auto comp_it = comp_path.Begin();
 
 	// Per-level comparison of resource identifiers
-	for (; it != identifiers.end(), cmp_it != cmp_path.End(); ++it, ++cmp_it) {
-		ResourceIdentifier & rid(*((*it).get()));
-		ResourceIdentifier & cmp_rid(*((*cmp_it).get()));
+	for (; curr_it != identifiers.end(), comp_it != comp_path.End();
+			++curr_it, ++comp_it) {
+		ResourceIdentifier & curr_resource_ident(*(*curr_it));
+		ResourceIdentifier & comp_resource_ident(*(*comp_it));
 
-		if (rid < cmp_rid)
+		if (curr_resource_ident < comp_resource_ident)
 			return true;
 	}
 	return false;
 }
 
 bool ResourcePath::IsTemplate() const {
-	ConstIterator rid_it(identifiers.begin());
-	ConstIterator rid_end(identifiers.end());
 	// A template has all the resources IDs unset
-	for (; rid_it != rid_end; ++rid_it) {
-		if (((*rid_it)->ID() != R_ID_NONE) &&
-			((*rid_it)->ID() != R_ID_ANY))
+	for (auto & curr_resource_ident: identifiers) {
+		if ((curr_resource_ident->ID() != R_ID_NONE) &&
+			(curr_resource_ident->ID() != R_ID_ANY))
 			return false;
 	}
 	return true;
 }
 
 ResourcePath::CResult_t ResourcePath::Compare(
-		ResourcePath const & cmp_path) const {
-	ResourcePath::ConstIterator it, cmp_it;
-	ResourceIdentifierPtr_t prid, pcmp_rid;
-	CResult_t result;
+		ResourcePath const & comp_path) const {
+	CResult_t result = EQUAL;
+	ResourceIdentifierPtr_t curr_resource_ident, comp_resource_ident;
 
-	// Size checking
-	if (identifiers.size() != cmp_path.NumLevels())
+	if (identifiers.size() != comp_path.NumLevels())
 		return NOT_EQUAL;
 
-	// Initialize iterators
-	it     = identifiers.begin();
-	cmp_it = cmp_path.Begin();
-	result = EQUAL;
+	auto curr_it = identifiers.begin();
+	auto comp_it = comp_path.Begin();
 
 	// Per-level comparison of resource identifiers
-	for (; it != identifiers.end(); ++it, ++cmp_it) {
-		prid     = (*it);
-		pcmp_rid = (*cmp_it);
-		// Compare...
-		if (prid->Compare(*(pcmp_rid.get())) == ResourceIdentifier::NOT_EQUAL)
+	for (; curr_it != identifiers.end(); ++curr_it, ++comp_it) {
+		curr_resource_ident = (*curr_it);
+		comp_resource_ident = (*comp_it);
+		if (curr_resource_ident->Compare(
+			*(comp_resource_ident)) == ResourceIdentifier::NOT_EQUAL)
 			return NOT_EQUAL;
-		else if (prid->Compare(*(pcmp_rid.get())) == ResourceIdentifier::EQUAL_TYPE)
+		else if (curr_resource_ident->Compare(
+			*(comp_resource_ident)) == ResourceIdentifier::EQUAL_TYPE)
 			result = EQUAL_TYPES;
 	}
 
 	logger->Debug("Resource identifier comparison: %s EQUAL to %s",
-			prid->Name().c_str(), pcmp_rid->Name().c_str());
+			curr_resource_ident->Name().c_str(),
+			comp_resource_ident->Name().c_str());
 	return result;
 }
 
@@ -156,15 +149,14 @@ ResourcePath::ExitCode_t ResourcePath::Append(
 	types_idx.emplace(r_type_index, level_count);
 
 	// Append the new resource identifier (sp) to the list
-	ResourceIdentifierPtr_t prid =
-		std::make_shared<ResourceIdentifier>(r_type, r_id);
-	identifiers.push_back(prid);
+	auto curr_resource_ident = std::make_shared<ResourceIdentifier>(r_type, r_id);
+	identifiers.push_back(curr_resource_ident);
 	global_type = r_type;
 
 	// Increase the levels counter
 	++level_count;
 	logger->Debug("Append: R{%s}, @%d, bs:%s",
-			prid->Name().c_str(), types_idx[r_type_index],
+			curr_resource_ident->Name().c_str(), types_idx[r_type_index],
 			types_bits.to_string().c_str());
 	logger->Debug("Append: SP:'%s', count: %d",
 			this->ToString().c_str(), level_count);
@@ -199,13 +191,13 @@ ResourcePath::ExitCode_t ResourcePath::AppendString(
 }
 
 ResourcePath::ExitCode_t ResourcePath::Copy(
-		ResourcePath const & rp_src,
+		ResourcePath const & source_path,
 		int num_levels) {
 	ExitCode_t result;
 
 	// Copy per resource identifier
 	Clear();
-	result = Concat(rp_src, num_levels);
+	result = Concat(source_path, num_levels);
 	if (result != OK) {
 		Clear();
 		logger->Error("Copy: failed");
@@ -214,22 +206,22 @@ ResourcePath::ExitCode_t ResourcePath::Copy(
 }
 
 ResourcePath::ExitCode_t ResourcePath::Concat(
-		ResourcePath const & rp_src,
+		ResourcePath const & source_path,
 		int num_levels,
 		bool smart_mode) {
 	ExitCode_t result;
 
 	// Concat or N-concat?
 	if (num_levels == 0)
-		num_levels = rp_src.NumLevels();
+		num_levels = source_path.NumLevels();
 
 	for (int i = 0; i < num_levels; ++i) {
 		result = Append(
-				rp_src.GetIdentifier(i)->Type(),
-				rp_src.GetIdentifier(i)->ID());
+			source_path.GetIdentifier(i)->Type(),
+			source_path.GetIdentifier(i)->ID());
 		if (result != OK && !smart_mode) {
 			logger->Error("Concatenate: Impossible to append '%s'",
-					rp_src.GetIdentifier(i)->Name().c_str());
+				source_path.GetIdentifier(i)->Name().c_str());
 			return result;
 		}
 	}
@@ -276,28 +268,28 @@ ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
 }
 
 BBQUE_RID_TYPE ResourcePath::GetID(ResourceType r_type) const {
-	ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
-	if (!prid)
+	ResourceIdentifierPtr_t curr_resource_ident(GetIdentifier(r_type));
+	if (!curr_resource_ident)
 		return R_ID_NONE;
-	return prid->ID();
+	return curr_resource_ident->ID();
 }
 
 ResourcePath::ExitCode_t ResourcePath::ReplaceID(
 		ResourceType r_type,
 		BBQUE_RID_TYPE source_id,
 		BBQUE_RID_TYPE out_id) {
-	ResourceIdentifierPtr_t prid(GetIdentifier(r_type));
-	if (!prid)
+	ResourceIdentifierPtr_t curr_resource_ident(GetIdentifier(r_type));
+	if (!curr_resource_ident)
 		return ERR_UNKN_TYPE;
 	logger->Debug("ReplaceID: replace %s to ID[%d]",
-			prid->Name().c_str(), out_id);
+			curr_resource_ident->Name().c_str(), out_id);
 
-	if ((source_id != R_ID_ANY) && (prid->ID() != source_id))
+	if ((source_id != R_ID_ANY) && (curr_resource_ident->ID() != source_id))
 		return WRN_MISS_ID;
 
-	prid->SetID(out_id);
+	curr_resource_ident->SetID(out_id);
 	logger->Debug("ReplaceID: from %d to %d, DONE",
-			source_id, prid->ID());
+			source_id, curr_resource_ident->ID());
 
 	return OK;
 }
