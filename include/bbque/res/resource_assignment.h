@@ -51,21 +51,23 @@ typedef std::shared_ptr<ResourceAssignmentMap_t> ResourceAssignmentMapPtr_t;
  * @brief How the resource requests are bound into assignments
  *
  * An application working modes defines a set of this resource requests
- * (usages).
+ * (then assignments).
  *
- * A resource usage descriptor embeds a couple of information:
- * The first is obviously the value of the usage, the amount of resource
- * requested. The second is a list containing all the descriptors (shared
- * pointer) of the resources which to this usage refers. We expect that such
- * list is filled by a method of ResourceAccounter, after that the
- * Scheduler/Optimizer has solved the resource binding.
+ * This class includes a couple of information:
+ *
+ * The first is obviously the amount of requested resource
+ * The second is a list containing all the descriptors (shared
+ * pointer) of the resources which to this request/assignment refers to.
+ * We expect that such list is filled by a method of ResourceAccounter,
+ * after that Scheduler/Optimizer has solved the resource binding.
  *
  * The "resource binding" can be explained as follows: if a Working Mode
- * includes resource requests like "tile.cluster2.pe = 4", the
- * scheduler/optimizer must define a binding between that "cluster2" and the
- * "real" cluster on the platform, to which bind the usage of 4 processing
- * elements. Thus, after that, the list "resources", will contain the
- * descriptors of the resources "pe (processing elements)" in the cluster
+ * includes resource requests like "sys.cpu2.pe = 4", the
+ * scheduler/optimizer must assign 4 processing element under the same CPU (2),
+ * that therefore must be bound to one of the real CPUs available on the
+ * platform.
+ * Thus, after that, the list "resources", will contain the
+ * descriptors of the resources "pe (processing elements)" in the CPU
  * assigned by the scheduler/optimizer module.
  */
 class ResourceAssignment {
@@ -130,19 +132,26 @@ public:
 	 *
 	 * @return The amount of resource
 	 */
-	uint64_t GetAmount();
+	uint64_t GetAmount() {
+		return amount;
+	}
 
 	/**
 	 * @brief Set the amount of resource
 	 */
-	void SetAmount(uint64_t value);
+	void SetAmount(uint64_t value) {
+		amount = value;
+	}
+
 
 	/**
 	 * @brief Get the entire list of resources
 	 *
 	 * @return A reference to the resources list
 	 */
-	ResourcePtrList_t & GetResourcesList();
+	ResourcePtrList_t & GetResourcesList() {
+		return resources;
+	}
 
 	/**
 	 * @brief Set the list of resources
@@ -186,6 +195,11 @@ public:
 	        ResourceType filter_rtype,
 	        ResourceBitset & filter_mask);
 
+	void SetResourcesList(
+	        ResourcePtrList_t & r_list,
+	        ResourceBitset const & filter_mask);
+
+
 	/**
 	 * @brief Check of the resource binding list is empty
 	 *
@@ -213,70 +227,10 @@ public:
 	}
 
 
-	/**
-	 * @brief Get the first resource from the binding list
-	 *
-	 * @param it The list iterator. This is set and hence must be used for
-	 * iteration purposes.
-	 *
-	 * @return The pointer (shared) to the resource descriptor providing a
-	 * first quota (or the whole of it) of the resource usage required.
-	 */
-	ResourcePtr_t GetFirstResource(ResourcePtrListIterator_t & it);
+	inline ResourceBitset & GetMask() {
+		return mask;
+	}
 
-	/**
-	 * @brief Get the last resource from the binding list
-	 *
-	 * @param it The list iterator returned by GetFirstResource() or a
-	 * previous call to GetNextResource().
-	 *
-	 * @return The pointer (shared) to the resource descriptor providing a
-	 * quota of the resource usage required.
-	 */
-	ResourcePtr_t GetNextResource(ResourcePtrListIterator_t & it);
-
-	/**
-	 * @brief Track the first resource, from the binding list, granted to the
-	 * Application/EXC
-	 *
-	 * The binding list tracks the whole set of possible resources to which
-	 * bind the usage request. This method set the first resource granted to
-	 * the Application/EXC, to satisfy part of the usage request, or the whole
-	 * of it.
-	 *
-	 * @param papp The Application/EXC requiring the resource
-	 * @param first_it The list iterator of the resource binding to track
-	 * @param status_view The token of the resource state view into which the
-	 * assignment has been performed.
-	 *
-	 * @return RU_OK if success. RU_ERR_NULL_POINTER if the pointer to the
-	 * application is null.
-	 */
-	ExitCode_t TrackFirstResource(AppSPtr_t const & papp,
-	                              ResourcePtrListIterator_t & first_it, RViewToken_t status_view);
-
-	/**
-	 * @brief Track the last resource, from the binding list, granted to the
-	 * Application/EXC
-	 *
-	 * The binding list tracks the whole set of possible resources to which
-	 * bind the usage request. This method set the last resource granted to
-	 * the Application/EXC, to satisfy the last quota of the usage request.
-	 *
-	 * @param papp The Application/EXC requiring the resource
-	 * @param last_it The list iterator of the resource binding to track
-	 * @param status_view The token of the resource state view into which the
-	 * assignment has been performed.
-	 *
-	 * @return RU_OK if success.
-	 * RU_ERR_NULL_POINTER if the pointer to the application is null.
-	 * RU_ERR_APP_MISMATCH if the application specified differs from the one
-	 * specified in TrackFirstResource().
-	 * RU_ERR_VIEW_MISMATCH if the state view token does not match the one set
-	 * in TrackFirstResource().
-	 */
-	ExitCode_t TrackLastResource(AppSPtr_t const & papp,
-	                             ResourcePtrListIterator_t & last_it, RViewToken_t status_view);
 
 private:
 
@@ -292,11 +246,12 @@ private:
 	 */
 	Policy fill_policy;
 
-	/** List iterator pointing to the first resource used by the App/EXC */
-	ResourcePtrListIterator_t first_resource_it;
+	/**
+	 * A bitmask keeping track of the assigned/requested resources id
+	 * numbers
+	 */
+	ResourceBitset mask;
 
-	/** List iterator pointing to the last resource used by the App/EXC */
-	ResourcePtrListIterator_t last_resource_it;
 
 	/** The application/EXC owning this resource usage */
 	AppSPtr_t owner_app;

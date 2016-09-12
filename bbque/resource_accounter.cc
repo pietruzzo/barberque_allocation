@@ -1292,11 +1292,6 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 
 		// Scheduling: allocate required resource among its bindings
 		SchedResourceBooking(papp, rsrc, status_view, requested, per_rsrc_allocated);
-		if ((requested != r_assign->GetAmount()) && !first_resource) {
-			// Keep track of the first resource granted from the bindings
-			r_assign->TrackFirstResource(papp, it_bind, status_view);
-			first_resource = true;
-		}
 		--num_rsrcs_left;
 	}
 
@@ -1319,37 +1314,17 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 bool ResourceAccounter::IsReshuffling(
 		br::ResourceAssignmentMapPtr_t const & current_map,
 		br::ResourceAssignmentMapPtr_t const & next_map) {
-	br::ResourcePtrListIterator_t presa_it, presc_it;
-	br::ResourceAssignmentMap_t::iterator auit, cuit;
-	br::ResourcePtr_t presa, presc;
-	br::ResourceAssignmentPtr_t pua, puc;
+	auto curr_it = current_map->begin();
+	auto next_it = next_map->begin();
 
-	// Loop on resources
-	for (cuit = current_map->begin(), auit = next_map->begin();
-			cuit != current_map->end() && auit != next_map->end();
-			++cuit, ++auit) {
-		// Get the resource assignments
-		puc = (*cuit).second;
-		pua = (*auit).second;
+	for (; (curr_it != current_map->end()) && (next_it != next_map->end());
+			++curr_it, ++next_it) {
+		auto curr_assign = (*curr_it).second;
+		auto next_assign = (*next_it).second;
 
-		// Loop on bindings
-		presc = puc->GetFirstResource(presc_it);
-		presa = pua->GetFirstResource(presa_it);
-		while (presc && presa) {
-			logger->Debug("Checking: curr [%s:%d] vs next [%s:%d]",
-				presc->Name().c_str(),
-				presc->ApplicationUsage(puc->owner_app, 0),
-				presa->Name().c_str(),
-				presc->ApplicationUsage(puc->owner_app, pua->status_view));
-			// Check for resource binding differences
-			if (presc->ApplicationUsage(puc->owner_app, 0) !=
-					presc->ApplicationUsage(puc->owner_app,	pua->status_view)) {
-				logger->Debug("AWM Shuffling detected");
-				return true;
-			}
-			// Check next resource
-			presc = puc->GetNextResource(presc_it);
-			presa = pua->GetNextResource(presa_it);
+		if (curr_assign->GetMask() != next_assign->GetMask()) {
+			logger->Debug("IsReshuffling: Yes");
+			return true;
 		}
 	}
 
