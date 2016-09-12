@@ -150,7 +150,7 @@ public:
 	bool operator() (
 			const std::shared_ptr<T> & sp1,
 			const std::shared_ptr<T> & sp2) const {
-		return sp1.get() < sp2.get();
+		return *sp1 < *sp2;
 	}
 };
 
