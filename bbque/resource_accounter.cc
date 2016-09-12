@@ -544,10 +544,8 @@ inline ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 
 		// Query the availability of the resources in the list
 		avail = QueryStatus(r_assign->GetResourcesList(), RA_AVAIL, status_view, papp);
-
-		// If the availability is less than the amount required...
 		if (avail < r_assign->GetAmount()) {
-			logger->Debug("Check availability: Exceeding request for <%s>"
+			logger->Debug("Check availability: exceeding request for <%s>"
 					"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "] ",
 					rsrc_path->ToString().c_str(), r_assign->GetAmount(), avail,
 					QueryStatus(r_assign->GetResourcesList(), RA_TOTAL));
@@ -695,95 +693,6 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	SetReady();
 
 	return RA_SUCCESS;
-}
-
-
-inline ResourceAccounter::ExitCode_t ResourceAccounter::_BookResources(
-		ba::AppSPtr_t papp,
-		br::ResourceAssignmentMapPtr_t const & assign_map,
-		br::RViewToken_t status_view) {
-	return IncBookingCounts(assign_map, papp, status_view);
-}
-
-ResourceAccounter::ExitCode_t ResourceAccounter::BookResources(
-		ba::AppSPtr_t papp,
-		br::ResourceAssignmentMapPtr_t const & assign_map,
-		br::RViewToken_t status_view) {
-
-	// Check to avoid null pointer segmentation fault
-	if (!papp) {
-		logger->Fatal("Booking: Null pointer to the application descriptor");
-		return RA_ERR_MISS_APP;
-	}
-
-	// Check that the set of resource assignments is not null
-	if ((!assign_map) || (assign_map->empty())) {
-		logger->Fatal("Booking: Empty resource assignments set");
-		return RA_ERR_MISS_USAGES;
-	}
-
-	// Check resource availability (if this is not a sync session)
-	// TODO refine this check to consider possible corner cases:
-	// 1. scheduler running while in sync
-	// 2. resource availability decrease while in sync
-	if (!Synching()) {
-		if (CheckAvailability(assign_map, status_view) == RA_ERR_USAGE_EXC) {
-			logger->Debug("Booking: Cannot allocate the resource set");
-			return RA_ERR_USAGE_EXC;
-		}
-	}
-
-	// Increment the booking counts and save the reference to the resource set
-	// used by the application
-	return IncBookingCounts(assign_map, papp, status_view);
-}
-
-void ResourceAccounter::ReleaseResources(
-		ba::AppSPtr_t papp,
-		br::RViewToken_t status_view) {
-	std::unique_lock<std::mutex> sync_ul(status_mtx);
-	// Sanity check
-	if (!papp) {
-		logger->Fatal("Release: Null pointer to the application descriptor");
-		return;
-	}
-
-	if (rsrc_per_views.find(status_view) == rsrc_per_views.end()) {
-		logger->Debug("Release: Resource state view already cleared");
-		return;
-	}
-
-	// Decrease resources in the sync view
-	if (status_view == 0 && Synching())
-		_ReleaseResources(papp, sync_ssn.view);
-
-	// Decrease resources in the required view
-	if (status_view != sync_ssn.view)
-		_ReleaseResources(papp, status_view);
-}
-
-void ResourceAccounter::_ReleaseResources(
-		ba::AppSPtr_t papp,
-		br::RViewToken_t status_view) {
-	// Get the map of applications resource assignments related to the state view
-	// referenced by 'status_view'
-	AppAssignmentsMapPtr_t apps_assign;
-	if (GetAppAssignmentsByView(status_view, apps_assign) == RA_ERR_MISS_VIEW) {
-		logger->Fatal("Release: Resource view unavailable");
-		return;
-	}
-
-	// Get the map of resource assignments of the application
-	AppAssignmentsMap_t::iterator usemap_it(apps_assign->find(papp->Uid()));
-	if (usemap_it == apps_assign->end()) {
-		logger->Debug("Release: resource set not assigned");
-		return;
-	}
-
-	// Decrement resources counts and remove the assign_map map
-	DecBookingCounts(usemap_it->second, papp, status_view);
-	apps_assign->erase(papp->Uid());
-	logger->Debug("Release: [%s] resource release terminated", papp->StrId());
 }
 
 
@@ -1035,23 +944,23 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncStart() {
 	// Synchronization has started
 	status = State::SYNC;
 	status_cv.notify_all();
-	logger->Info("SyncMode: Start");
+	logger->Info("SyncMode: start...");
 
 	// Build the path for getting the resource view token
 	++sync_ssn.count;
 	snprintf(tk_path, TOKEN_PATH_MAX_LEN, "%s%d", SYNC_RVIEW_PATH, sync_ssn.count);
-	logger->Debug("SyncMode [%d]: Requiring resource state view for %s",
+	logger->Debug("SyncMode [%d]: requiring resource state view for %s",
 			sync_ssn.count, tk_path);
 
 	// Get a resource state view for the synchronization
 	result = _GetView(tk_path, sync_ssn.view);
 	if (result != RA_SUCCESS) {
-		logger->Fatal("SyncMode [%d]: Cannot get a resource state view",
+		logger->Fatal("SyncMode [%d]: cannot get a resource state view",
 				sync_ssn.count);
 		_SyncAbort();
 		return RA_ERR_SYNC_VIEW;
 	}
-	logger->Debug("SyncMode [%d]: Resource state view token = %d",
+	logger->Debug("SyncMode [%d]: resource state view token = %d",
 			sync_ssn.count, sync_ssn.view);
 
 	// Init the view with the resource accounting of running applications
@@ -1076,7 +985,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit() {
 				papp, papp->CurrentAWM()->GetResourceBinding(),
 				sync_ssn.view);
 		if (result != RA_SUCCESS) {
-			logger->Fatal("SyncInit [%d]: Resource booking failed for %s."
+			logger->Fatal("SyncInit [%d]: resource booking failed for %s."
 					" Aborting sync session...",
 					sync_ssn.count, papp->StrId());
 			_SyncAbort();
@@ -1094,7 +1003,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 
 	// Check that we are in a synchronized session
 	if (!Synching()) {
-		logger->Error("SyncMode [%d]: Session not open", sync_ssn.count);
+		logger->Error("SyncMode [%d]: session not open", sync_ssn.count);
 		return RA_ERR_SYNC_START;
 	}
 
@@ -1133,7 +1042,7 @@ void ResourceAccounter::SyncAbort() {
 void ResourceAccounter::_SyncAbort() {
 	_PutView(sync_ssn.view);
 	SyncFinalize();
-	logger->Error("SyncMode [%d]: Session aborted", sync_ssn.count);
+	logger->Error("SyncMode [%d]: session aborted", sync_ssn.count);
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
@@ -1141,7 +1050,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
 	br::RViewToken_t view;
 
 	if (!Synching()) {
-		logger->Error("SynCommit: Synchronization not active");
+		logger->Error("SynCommit: synchronization not started");
 		return RA_ERR_SYNC_START;
 	}
 
@@ -1149,7 +1058,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
 	view = _SetView(sync_ssn.view);
 	if (view != sync_ssn.view) {
 		logger->Fatal("SyncCommit [%d]: "
-				"Unable to set the new system resource state view",
+				"unable to set the new system resource state view",
 				sync_ssn.count);
 		_SyncAbort();
 		return RA_ERR_SYNC_VIEW;
@@ -1158,7 +1067,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
 	// Release the last scheduled view, by setting it to the system view
 	SetScheduledView(sys_view_token);
 	SyncFinalize();
-	logger->Info("SyncCommit [%d]: Session closed", sync_ssn.count);
+	logger->Info("SyncCommit [%d]: session closed", sync_ssn.count);
 
 	// Log the status report
 	PrintStatusReport();
@@ -1167,7 +1076,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncFinalize() {
 	if (!Synching()) {
-		logger->Error("SyncFinalize: Synchronization not active");
+		logger->Error("SyncFinalize: synchronization not started");
 		return RA_ERR_SYNC_START;
 	}
 
@@ -1188,18 +1097,110 @@ void ResourceAccounter::SyncWait() {
  *                   RESOURCE ACCOUNTING                                *
  ************************************************************************/
 
+ inline ResourceAccounter::ExitCode_t ResourceAccounter::_BookResources(
+		ba::AppSPtr_t papp,
+		br::ResourceAssignmentMapPtr_t const & assign_map,
+		br::RViewToken_t status_view) {
+	return IncBookingCounts(assign_map, papp, status_view);
+}
+
+ResourceAccounter::ExitCode_t ResourceAccounter::BookResources(
+		ba::AppSPtr_t papp,
+		br::ResourceAssignmentMapPtr_t const & assign_map,
+		br::RViewToken_t status_view) {
+	logger->Debug("Booking: assigning resources to [%s]", papp->StrId());
+
+	// Check to avoid null pointer segmentation fault
+	if (!papp) {
+		logger->Fatal("Booking: application descriptor null pointer");
+		return RA_ERR_MISS_APP;
+	}
+
+	// Check that the set of resource assignments is not null
+	if ((!assign_map) || (assign_map->empty())) {
+		logger->Fatal("Booking: empty resource assignments set");
+		return RA_ERR_MISS_USAGES;
+	}
+
+	// Check resource availability (if this is not a sync session)
+	// TODO refine this check to consider possible corner cases:
+	// 1. scheduler running while in sync
+	// 2. resource availability decrease while in sync
+	if (!Synching()) {
+		if (CheckAvailability(assign_map, status_view) == RA_ERR_USAGE_EXC) {
+			logger->Debug("Booking: cannot allocate the assigned resource set");
+			return RA_ERR_USAGE_EXC;
+		}
+	}
+
+	// Increment the booking counts and save the reference to the resource set
+	// used by the application
+	return IncBookingCounts(assign_map, papp, status_view);
+}
+
+void ResourceAccounter::ReleaseResources(
+		ba::AppSPtr_t papp,
+		br::RViewToken_t status_view) {
+	std::unique_lock<std::mutex> sync_ul(status_mtx);
+	// Sanity check
+	if (!papp) {
+		logger->Fatal("Release: application descriptor null pointer");
+		return;
+	}
+
+	if (rsrc_per_views.find(status_view) == rsrc_per_views.end()) {
+		logger->Debug("Release: resource state view already cleared");
+		return;
+	}
+
+	// Decrease resources in the sync view
+	if (status_view == 0 && Synching())
+		_ReleaseResources(papp, sync_ssn.view);
+
+	// Decrease resources in the required view
+	if (status_view != sync_ssn.view)
+		_ReleaseResources(papp, status_view);
+}
+
+void ResourceAccounter::_ReleaseResources(
+		ba::AppSPtr_t papp,
+		br::RViewToken_t status_view) {
+	// Get the map of applications resource assignments related to the state view
+	// referenced by 'status_view'
+	AppAssignmentsMapPtr_t apps_assign;
+	if (GetAppAssignmentsByView(status_view, apps_assign) == RA_ERR_MISS_VIEW) {
+		logger->Fatal("Release: Resource view unavailable");
+		return;
+	}
+
+	// Get the map of resource assignments of the application
+	AppAssignmentsMap_t::iterator usemap_it(apps_assign->find(papp->Uid()));
+	if (usemap_it == apps_assign->end()) {
+		logger->Debug("Release: resource set not assigned");
+		return;
+	}
+
+	// Decrement resources counts and remove the assign_map map
+	DecBookingCounts(usemap_it->second, papp, status_view);
+	apps_assign->erase(papp->Uid());
+	logger->Debug("Release: [%s] resource release terminated", papp->StrId());
+}
+
+
 ResourceAccounter::ExitCode_t
 ResourceAccounter::IncBookingCounts(
 		br::ResourceAssignmentMapPtr_t const & assign_map,
 		ba::AppSPtr_t const & papp,
 		br::RViewToken_t status_view) {
 	ResourceAccounter::ExitCode_t result;
+	logger->Debug("Booking: getting the assigned amount from view [%ld]...",
+		status_view);
 
 	// Get the set of resources referenced in the view
 	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(status_view));
 	assert(rsrc_view != rsrc_per_views.end());
 	if (rsrc_view == rsrc_per_views.end()) {
-		logger->Fatal("Booking: Invalid resource state view token [%ld]", status_view);
+		logger->Fatal("Booking: invalid resource state view token [%ld]", status_view);
 		return RA_ERR_MISS_VIEW;
 	}
 	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
@@ -1208,14 +1209,14 @@ ResourceAccounter::IncBookingCounts(
 	// referenced by 'status_view').
 	AppAssignmentsMapPtr_t apps_assign;
 	if (GetAppAssignmentsByView(status_view, apps_assign) == RA_ERR_MISS_VIEW) {
-		logger->Fatal("Booking: No applications using resource in state view "
+		logger->Fatal("Booking: no applications using resource in state view "
 				"[%ld]", status_view);
 		return RA_ERR_MISS_APP;
 	}
 
 	// Each application can hold just one resource assignments set
-	AppAssignmentsMap_t::iterator usemap_it(apps_assign->find(papp->Uid()));
-	if (usemap_it != apps_assign->end()) {
+	auto app_assign_map_it(apps_assign->find(papp->Uid()));
+	if (app_assign_map_it != apps_assign->end()) {
 		logger->Warn("Booking: [%s] currently using a resource set yet",
 				papp->StrId());
 		return RA_ERR_APP_USAGES;
@@ -1225,7 +1226,7 @@ ResourceAccounter::IncBookingCounts(
 	for (auto & ru_entry: *(assign_map.get())) {
 		br::ResourcePathPtr_t const & rsrc_path(ru_entry.first);
 		br::ResourceAssignmentPtr_t & r_assign(ru_entry.second);
-		logger->Debug("Booking: [%s] requires resource <%s>: [% " PRIu64 "] ",
+		logger->Debug("Booking: [%s] requires resource <%s>: % " PRIu64 " ",
 				papp->StrId(), rsrc_path->ToString().c_str(), r_assign->GetAmount());
 
 		// Do booking for the current resource request
@@ -1260,50 +1261,45 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 		br::ResourceAssignmentPtr_t & r_assign,
 		br::RViewToken_t status_view,
 		ResourceSetPtr_t & rsrc_set) {
-	bool first_resource = false;
-
 	// Amount of resource to book and list of resource descriptors
 	uint64_t requested = r_assign->GetAmount();
-	br::ResourcePtrListIterator_t it_bind(r_assign->GetResourcesList().begin());
-	br::ResourcePtrListIterator_t end_it(r_assign->GetResourcesList().end());
-	size_t num_rsrcs_left = r_assign->GetResourcesList().size();
-	uint64_t per_rsrc_allocated = 0;
+	size_t num_left_resources = r_assign->GetResourcesList().size();
+	logger->Debug("DRBooking: amount % " PRIu64 " to be spread over %d resources",
+		requested, num_left_resources);
+	uint64_t alloc_amount_per_resource = 0;
 
 	// Get the list of the bound resources
-	for (; it_bind != end_it; ++it_bind) {
+	for (auto & resource: r_assign->GetResourcesList()) {
 		// Break if the required resource has been completely allocated
 		if (requested == 0)
 			break;
 		// Add the current resource binding to the set of resources used in
 		// the view referenced by 'status_view'
-		br::ResourcePtr_t & rsrc(*it_bind);
-		rsrc_set->insert(rsrc);
+		rsrc_set->insert(resource);
 
 		// Synchronization: booking according to scheduling decisions
 		if (Synching()) {
-			SyncResourceBooking(papp, rsrc, requested);
+			SyncResourceBooking(papp, resource, requested);
 			continue;
 		}
 
 		// In case of "balanced" filling policy, spread the requested amount
 		// of resource over all the resources of the given binding
 		if (r_assign->GetPolicy() == br::ResourceAssignment::Policy::BALANCED)
-			per_rsrc_allocated = requested / num_rsrcs_left;
+			alloc_amount_per_resource = requested / num_left_resources;
 
 		// Scheduling: allocate required resource among its bindings
-		SchedResourceBooking(papp, rsrc, status_view, requested, per_rsrc_allocated);
-		--num_rsrcs_left;
+		SchedResourceBooking(
+			papp, resource, status_view, requested,
+			alloc_amount_per_resource);
+
+		--num_left_resources;
 	}
 
-	// Keep track of the last resource granted from the bindings (only if we
-	// are in the scheduling case)
-	if (!Synching())
-		r_assign->TrackLastResource(papp, it_bind, status_view);
-
-	// Critical error: The availability of resources mismatches the one
-	// checked in the scheduling phase. This should never happen!
+	// The availability of resources mismatches the one checked in the
+	// scheduling phase. This should never happen!
 	if (requested != 0) {
-		logger->Crit("DRBooking: Resource assignment mismatch");
+		logger->Crit("DRBooking: resource assignment mismatch");
 		assert(requested != 0);
 		return RA_ERR_USAGE_EXC;
 	}
@@ -1336,15 +1332,13 @@ inline void ResourceAccounter::SchedResourceBooking(
 		br::ResourcePtr_t & rsrc,
 		br::RViewToken_t status_view,
 		uint64_t & requested,
-		uint64_t per_rsrc_allocated) {
+		uint64_t alloc_amount_per_resource) {
 	// Check the available amount in the current resource binding
 	uint64_t available = rsrc->Available(papp, status_view);
 
-	// If it is greater than the required amount, acquire the whole
-	// quantity from the current resource binding, otherwise split
-	// it among sibling resource bindings
-	if ((per_rsrc_allocated >0) && (per_rsrc_allocated <= available))
-		requested -= rsrc->Acquire(papp, per_rsrc_allocated, status_view);
+	if ((alloc_amount_per_resource > 0) &&
+			(alloc_amount_per_resource <= available))
+		requested -= rsrc->Acquire(papp, alloc_amount_per_resource, status_view);
 	else if (requested < available)
 		requested -= rsrc->Acquire(papp, requested, status_view);
 	else
@@ -1384,7 +1378,7 @@ void ResourceAccounter::DecBookingCounts(
 	// Get the set of resources referenced in the view
 	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(status_view));
 	if (rsrc_view == rsrc_per_views.end()) {
-		logger->Fatal("DecCount: Invalid resource state view token [%ld]", status_view);
+		logger->Fatal("DecCount: invalid resource state view token [%ld]", status_view);
 		return;
 	}
 	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
