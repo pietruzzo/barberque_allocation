@@ -61,19 +61,32 @@ public:
 	 *
 	 * @param filter_rtype [optional] Type of resource to filter
 	 * @param filter_mask  [optional] IDs of the resources to include in the output
-	 * UsagesMap
-	 *
-	 * @return The number of resources on which the binding has been performed
+	 * ResourceAssignment map
 	 */
-	static uint32_t Bind(
+	static void Bind(
 			ResourceAssignmentMap_t const & source_map,
 			ResourceType r_type,
 			BBQUE_RID_TYPE source_id,
 			BBQUE_RID_TYPE out_id,
 			ResourceAssignmentMapPtr_t out_map,
-			ResourceType filter_rtype =
-				ResourceType::UNDEFINED,
+			ResourceType filter_rtype = ResourceType::UNDEFINED,
 			ResourceBitset * filter_mask = nullptr);
+
+	/**
+	 * @brief Bind resource assignments to system resources
+	 *
+	 * @param source_map The map of resource assignments to bind
+	 * @param resource_path The resource path (mixed or template) to bind
+	 * @param filter_mask The ResourceBitset including the set bits representing
+	 * the id number of the resource descriptors to bind to
+	 * @param out_map A shared pointer to the map of bound resources to return
+	 *
+	 */
+	static void Bind(
+			ResourceAssignmentMap_t const & source_map,
+			ResourcePathPtr_t resource_path,
+			ResourceBitset const & filter_mask,
+			ResourceAssignmentMapPtr_t out_map);
 
 	/**
 	 * @brief Retrieve IDs of a type of resource from a ResourceAssignmentMap_t

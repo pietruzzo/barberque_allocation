@@ -29,7 +29,7 @@ namespace bu = bbque::utils;
 namespace bbque { namespace res {
 
 
-uint32_t ResourceBinder::Bind(
+void ResourceBinder::Bind(
 		ResourceAssignmentMap_t const & source_map,
 		br::ResourceType r_type,
 		BBQUE_RID_TYPE source_id,
@@ -39,7 +39,6 @@ uint32_t ResourceBinder::Bind(
 		ResourceBitset * filter_mask) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourcePath::ExitCode_t rp_result;
-	uint32_t count = 0;
 	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 
 	// Proceed with the resource binding...
@@ -48,10 +47,10 @@ uint32_t ResourceBinder::Bind(
 		br::ResourceAssignmentPtr_t const & source_assign(ru_entry.second);
 
 		// Build a new resource path
-		br::ResourcePathPtr_t out_path =
+		auto out_path =
 			std::make_shared<ResourcePath>(source_path->ToString());
 		if (out_path->NumLevels() == 0)
-			return 0;
+			return;
 
 		// Replace ID of the given resource type with the bound ID
 		rp_result = out_path->ReplaceID(r_type, source_id, out_id);
@@ -59,14 +58,13 @@ uint32_t ResourceBinder::Bind(
 			logger->Debug("Bind: <%s> to <%s> done",
 					source_path->ToString().c_str(),
 					out_path->ToString().c_str());
-			++count;
 		}
 		else
 			logger->Debug("Bind: Nothing to do in <%s>",
 					source_path->ToString().c_str());
 
 		// Create a new ResourceAssignment object and set the binding list
-		ResourceAssignmentPtr_t out_assign =
+		auto out_assign =
 			std::make_shared<ResourceAssignment>(
 				source_assign->GetAmount(),
 				source_assign->GetPolicy());
@@ -82,8 +80,37 @@ uint32_t ResourceBinder::Bind(
 		// Insert the resource usage object in the output map
 		out_map->emplace(out_path, out_assign);
 	}
-	return count;
 }
+
+
+void ResourceBinder::Bind(
+		br::ResourceAssignmentMap_t const & source_map,
+		br::ResourcePathPtr_t resource_path,
+		br::ResourceBitset const & filter_mask,
+		br::ResourceAssignmentMapPtr_t out_map) {
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+
+	auto assign_it = source_map.find(resource_path);
+	if (assign_it == source_map.end()) {
+		logger->Warn("Bind: <%s> missing", resource_path->ToString().c_str());
+		return;
+	}
+
+	auto source_assign = assign_it->second;
+	auto out_assign =
+		std::make_shared<ResourceAssignment>(source_assign->GetAmount());
+	auto r_list = ra.GetResources(resource_path);
+	logger->Debug("Bind: <%s> has %d candidates",
+		resource_path->ToString().c_str(), r_list.size());
+
+	out_assign->SetResourcesList(r_list, filter_mask);
+	logger->Debug("Bind: <%s> binding list size = %d",
+		resource_path->ToString().c_str(),
+		out_assign->GetResourcesList().size());
+	out_map->emplace(resource_path, out_assign);
+}
+
 
 inline void SetBit(
 		ResourcePathPtr_t ppath,
