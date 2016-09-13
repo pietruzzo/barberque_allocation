@@ -91,6 +91,9 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceRequest(
 		return WM_RSRC_ERR_TYPE;
 	}
 
+	// System must have id=0 by default
+	resource_path->ReplaceID(br::ResourceType::SYSTEM, R_ID_ANY, 0);
+
 	// Build the resource path object
 	rp_result = resource_path->Concat(path_str);
 	if (rp_result != br::ResourcePath::OK) {
