@@ -153,7 +153,7 @@ public:
 	 *
 	 * @return A map of Usage objects
 	 */
-	virtual br::ResourceAssignmentMapPtr_t GetSchedResourceBinding(size_t b_id = 0) const = 0;
+	virtual br::ResourceAssignmentMapPtr_t GetSchedResourceBinding(uint32_t b_id = 0) const = 0;
 
 	/**
 	 * @brief Get the bitmap of the clusters currently used.
@@ -163,8 +163,7 @@ public:
 	 *
 	 * @return A bitset data structure
 	 */
-	virtual br::ResourceBitset BindingSet(
-		const br::ResourceType & r_type) const = 0;
+	virtual br::ResourceBitset BindingSet(const br::ResourceType & r_type) const = 0;
 
 	/**
 	 * @brief Get the bitmap of the clusters previously used.
@@ -174,8 +173,7 @@ public:
 	 *
 	 * @return A bitset data structure
 	 */
-	virtual br::ResourceBitset BindingSetPrev(
-		const br::ResourceType & r_type) const = 0;
+	virtual br::ResourceBitset BindingSetPrev(const br::ResourceType & r_type) const = 0;
 
 	/**
 	 * @brief Check if clusters used are changed

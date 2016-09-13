@@ -285,28 +285,70 @@ public:
  *******************************************************************************/
 
 	/**
-	 * @see WorkingModeConfIF
+	 * @brief Bind resource assignments to system resources descriptors
+	 *
+	 * Resource paths taken from the recipes use IDs that do not care about
+	 * the real system resource IDs registered by BarbequeRTRM. Thus a binding
+	 * must be solved in order to make the request of resources satisfiable.
+	 *
+	 * The function member takes the resource type we want to bind (i.e.
+	 * "CPU"), its source ID number (as specified in the recipe), and the
+	 * destination ID related to the system resource to bind. Thus it builds
+	 * a UsagesMap, wherein the ResourcePath objects, featuring the resource
+	 * type specified, have the destination ID number in place of the source
+	 * ID.
+	 *
+	 * @param r_type The type of resource to bind
+	 * @param source_id Recipe resource name ID
+	 * @param out_id System resource name ID
+	 * @param b_refn [optional] Reference number of an already started binding
+	 * @param filter_rtype [optional] Second level resource type
+	 * @param filter_mask  [optional] Binding mask for the second level
+	 * resource type
+	 *
+	 * @return The reference number of the binding performed, for continuing
+	 * with further binding actions
+	 *
+	 * @note Use R_ID_ANY if you want to bind the resource without care
+	 * about its ID.
 	 */
-	size_t BindResource(
+	int32_t BindResource(
 			br::ResourceType r_type,
 			BBQUE_RID_TYPE source_id,
 			BBQUE_RID_TYPE out_id,
-			size_t b_refn = 0,
+			int32_t prev_refn = -1,
 			br::ResourceType filter_rtype =
 				br::ResourceType::UNDEFINED,
 			br::ResourceBitset * filter_mask = nullptr);
 
-	std::string BindingStr(
-			br::ResourceType r_type,
-			BBQUE_RID_TYPE source_id,
-			BBQUE_RID_TYPE out_id,
-			size_t b_refn);
+	/**
+	 * @brief Bind resource assignments to system resources descriptors
+	 *
+	 * @param resource_path The resource path (mixed or template) to bind
+	 * @param filter_mask Binding mask with the resource id numbers
+	 * @param prev_refn  Reference number of an already started binding
+	 *
+	 * @return The reference number of the binding performed, for continuing
+	 * with further binding actions
+	 */
+	int32_t BindResource(
+			br::ResourcePathPtr_t resource_path,
+			br::ResourceBitset const & filter_mask,
+			int32_t prev_refn = -1);
+
+
+	br::ResourceAssignmentMap_t const * GetSourceAndOutBindingMaps(
+			br::ResourceAssignmentMapPtr_t & out_map,
+			int32_t prev_refn);
+
+
+	int32_t StoreBinding(br::ResourceAssignmentMapPtr_t, int32_t prev_refn);
 
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	br::ResourceAssignmentMapPtr_t GetSchedResourceBinding(size_t b_refn) const;
+	br::ResourceAssignmentMapPtr_t GetSchedResourceBinding(uint32_t b_refn) const;
 
 	/**
 	 * @brief Set the resource binding to schedule
@@ -324,7 +366,7 @@ public:
 	 *
 	 * @return WM_SUCCESS, or WM_RSRC_MISS_BIND if some bindings are missing
 	 */
-	ExitCode_t SetResourceBinding(br::RViewToken_t status_view, size_t b_refn = 0);
+	ExitCode_t SetResourceBinding(br::RViewToken_t status_view, uint32_t b_refn = 0);
 
 	/**
 	 * @brief Get the map of scheduled resource assignments
@@ -596,7 +638,7 @@ private:
 		 * The temporary map of resource bindings. This is built by the
 		 * BindResource calls
 		 */
-		std::map<size_t, br::ResourceAssignmentMapPtr_t> sched_bindings;
+		std::vector<br::ResourceAssignmentMapPtr_t> sched_bindings;
 		/**
 		 * The map of the resource bindings allocated for the working mode.
 		 * This is set by SetResourceBinding() as a commit of the

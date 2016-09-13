@@ -162,79 +162,124 @@ uint64_t WorkingMode::RequestedAmount(ResourcePathPtr_t resource_path) const {
 	return 0;
 }
 
-size_t WorkingMode::BindResource(
+int32_t WorkingMode::BindResource(
 		br::ResourceType r_type,
 		BBQUE_RID_TYPE source_id,
 		BBQUE_RID_TYPE out_id,
-		size_t b_refn,
+		int32_t prev_refn,
 		br::ResourceType filter_rtype,
 		br::ResourceBitset * filter_mask) {
-	br::ResourceAssignmentMap_t * source_map;
-	uint32_t b_count;
-	size_t n_refn;
 	logger->Debug("BindResource: %s owner is %s", str_id, owner->StrId());
 
-	// First resource binding call
-	if (b_refn == 0) {
-		logger->Debug("BindResource: %s binding resources from recipe", str_id);
-		source_map = &resources.requested;
+	br::ResourceAssignmentMapPtr_t out_map = nullptr;
+	br::ResourceAssignmentMap_t const * source_map =
+		GetSourceAndOutBindingMaps(out_map, prev_refn);
+	if (!source_map || !out_map) {
+		logger->Error("BindingResource: source map = @%p", source_map);
+		logger->Error("BindingResource: out map = @%p", out_map.get());
+		return -1;
+	}
+
+	br::ResourceBinder::Bind(*source_map, r_type, source_id, out_id, out_map,
+			filter_rtype, filter_mask);
+	if (out_map->empty()) {
+		logger->Warn("BindResource: %s nothing to bind", str_id);
+		return -1;
+	}
+
+	int32_t refn = StoreBinding(out_map, prev_refn);
+	logger->Debug("BindResource: %s R{%-3s} map size = %d [refn = %d]",
+			str_id, br::GetResourceTypeString(r_type),
+			out_map->size(), refn);
+	return refn;
+}
+
+
+int32_t WorkingMode::BindResource(
+		br::ResourcePathPtr_t resource_path,
+		br::ResourceBitset const & filter_mask,
+		int32_t prev_refn) {
+	logger->Debug("BindResource: <%s> to mask='%s'",
+		resource_path->ToString().c_str(), filter_mask.ToString().c_str());
+
+	br::ResourceAssignmentMapPtr_t out_map = nullptr;
+	br::ResourceAssignmentMap_t const * source_map =
+		GetSourceAndOutBindingMaps(out_map, prev_refn);
+	if (!source_map || !out_map) {
+		logger->Error("BindingResource: source map = @%p", source_map);
+		logger->Error("BindingResource: out map = @%p", out_map.get());
+		return -1;
+	}
+
+	br::ResourceBinder::Bind(*source_map, resource_path, filter_mask, out_map);
+	if (out_map->empty()) {
+		logger->Warn("BindResource: nothing to bind");
+		return -1;
+	}
+
+	int32_t refn = StoreBinding(out_map, prev_refn);
+	logger->Debug("BindResource: <%s> map size = %d [prev_refn = %d]",
+			resource_path->ToString().c_str(), out_map->size(), refn);
+	return refn;
+}
+
+
+br::ResourceAssignmentMap_t const * WorkingMode::GetSourceAndOutBindingMaps(
+		br::ResourceAssignmentMapPtr_t & out_map,
+		int32_t prev_refn) {
+
+	if (prev_refn < 0) {
+		logger->Debug("BindResource: first binding");
+		out_map = std::make_shared<br::ResourceAssignmentMap_t>();
+		return &resources.requested;
 	}
 	else {
-		auto bind_it(resources.sched_bindings.find(b_refn));
-		if (bind_it == resources.sched_bindings.end()) {
-			logger->Error("BindResource: %s invalid binding reference [%ld]",
-				str_id, b_refn);
-			return 0;
+		logger->Debug("BindResource: resuming binding @[%d]", prev_refn);
+		out_map = GetSchedResourceBinding(prev_refn);
+		if (!out_map) {
+			logger->Error("BindingResource: wrong reference number [%d]",
+				prev_refn);
+			return nullptr;
 		}
-		source_map = (bind_it->second).get();
+		return out_map.get();
 	}
-
-	// Allocate a new temporary resource assignments map to store the bound
-	// resource assignments
-	auto out_map = std::make_shared<br::ResourceAssignmentMap_t>();
-	b_count = br::ResourceBinder::Bind(
-		*source_map, r_type, source_id, out_id, out_map,
-		filter_rtype, filter_mask);
-	if (b_count == 0) {
-		logger->Warn("BindResource: %s nothing to bind", str_id);
-		return 0;
-	}
-
-	// Store the resource binding
-	n_refn = std::hash<std::string>()(BindingStr(r_type, source_id, out_id, b_refn));
-	resources.sched_bindings[n_refn] = out_map;
-	logger->Debug("BindResource: %s R{%-3s} refn[%ld] size:%d count:%d",
-			str_id, br::GetResourceTypeString(r_type),
-			n_refn, out_map->size(), b_count);
-	return n_refn;
 }
 
-std::string WorkingMode::BindingStr(
-		br::ResourceType r_type,
-		BBQUE_RID_TYPE source_id,
-		BBQUE_RID_TYPE out_id,
-		size_t b_refn) {
-	char tail_str[40];
-	std::string str(br::GetResourceTypeString(r_type));
-	snprintf(tail_str, 40, ",%d,%d,%ld", source_id, out_id, b_refn);
-	str.append(tail_str);
-	logger->Debug("BindingStr: %s", str.c_str());
-	return str;
+
+int32_t WorkingMode::StoreBinding(
+		br::ResourceAssignmentMapPtr_t out_map,
+		int32_t prev_refn) {
+
+	int32_t refn = -1;
+	if (prev_refn < 0) {
+		refn = 0;
+		resources.sched_bindings.push_back(out_map);
+	}
+	else if (prev_refn < (int32_t) resources.sched_bindings.size()) {
+		refn = prev_refn;
+		resources.sched_bindings[refn] = out_map;
+	}
+	else
+		logger->Error("StoreBinding: out of range reference number [%d]",
+			prev_refn);
+	return refn;
 }
 
-br::ResourceAssignmentMapPtr_t WorkingMode::GetSchedResourceBinding(size_t b_refn) const {
-	auto const sched_it = resources.sched_bindings.find(b_refn);
-	if (sched_it == resources.sched_bindings.end()) {
-		logger->Error("GetSchedResourceBinding: %s invalid reference [%ld]",
+
+br::ResourceAssignmentMapPtr_t WorkingMode::GetSchedResourceBinding(uint32_t b_refn) const {
+	if (b_refn >= resources.sched_bindings.size()) {
+		logger->Error("SchedResourceBinding: %s invalid reference [%ld]",
 				str_id, b_refn);
 		return nullptr;
 	}
-	return sched_it->second;
+	logger->Debug("SchedResourceBinding: found binding @[%ld]", b_refn);
+	return resources.sched_bindings[b_refn];
 }
+
 
 WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
 		br::RViewToken_t status_view,
-		size_t b_refn) {
+		uint32_t b_refn) {
 	// Set the new binding / resource assignments map
 	resources.sync_bindings = GetSchedResourceBinding(b_refn);
 	if (resources.sync_bindings == nullptr) {
@@ -242,7 +287,9 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
 				str_id, b_refn);
 		return WM_BIND_FAILED;
 	}
+
 	resources.sync_refn = b_refn;
+	resources.sched_bindings.clear();
 
 	// Update the resource binding bit-masks
 	UpdateBindingInfo(status_view, true);
