@@ -20,7 +20,7 @@
 
 #include <map>
 
-#include "bbque/app/working_mode_conf.h"
+#include "bbque/app/working_mode_status.h"
 #include "bbque/res/bitset.h"
 #include "bbque/res/resource_assignment.h"
 #include "bbque/utils/logging/logger.h"
@@ -42,7 +42,7 @@ namespace bbque { namespace app {
  * An "Application Working Mode" (AWM) is characterized by a set of resource
  * usage requested and a "value", which is a Quality of Service indicator
  */
-class WorkingMode: public WorkingModeConfIF {
+class WorkingMode: public WorkingModeStatusIF {
 
 public:
 
