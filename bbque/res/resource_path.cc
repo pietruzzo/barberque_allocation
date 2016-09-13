@@ -280,7 +280,7 @@ ResourcePath::ExitCode_t ResourcePath::ReplaceID(
 		BBQUE_RID_TYPE out_id) {
 	ResourceIdentifierPtr_t curr_resource_ident(GetIdentifier(r_type));
 	if (!curr_resource_ident)
-		return ERR_UNKN_TYPE;
+		return ERR_MISS_TYPE;
 	logger->Debug("ReplaceID: replace %s to ID[%d]",
 			curr_resource_ident->Name().c_str(), out_id);
 

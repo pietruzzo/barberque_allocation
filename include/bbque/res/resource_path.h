@@ -68,7 +68,7 @@ public:
 	enum ExitCode_t {
 		OK        = 0 ,
 		WRN_MISS_ID   ,
-		ERR_UNKN_TYPE ,
+		ERR_MISS_TYPE ,
 		ERR_USED_TYPE
 	};
 
