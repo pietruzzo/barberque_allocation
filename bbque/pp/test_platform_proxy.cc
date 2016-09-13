@@ -51,12 +51,13 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData() {
 	//                        8
 	// Registering CPUs, per-CPU memory and processing elements (cores)
 	logger->Debug("Registering resources:");
+	uint8_t p = 0;
 	for (uint8_t c = 0; c < cm.TPD_CPUCount(); ++c) {
 		snprintf(resourcePath+8, 8, "%d.mem0", c);
 		logger->Debug("  %s", resourcePath);
 		ra.RegisterResource(resourcePath, "MB", cm.TPD_CPUMem());
 
-		for (uint8_t p = 0; p < cm.TPD_PEsCount(); ++p) {
+		for (; p < cm.TPD_PEsCount() * (c+1); ++p) {
 			snprintf(resourcePath+8, 8, "%d.pe%d", c, p);
 			logger->Debug("  %s", resourcePath);
 			ra.RegisterResource(resourcePath, " ", 100);
