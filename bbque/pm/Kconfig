@@ -41,6 +41,16 @@ config  BBQUE_PM_CPU
   Enable the support for the management of CPU(s) from the power-thermal point
   of view.
 
+config  BBQUE_PM_NVIDIA
+  bool "NVIDIA GPU(s) Power Management"
+  depends on BBQUE_PM
+  depends on BBQUE_OPENCL
+  depends on !TARGET_LINUX_ARM
+  default n
+  ---help---
+  Enable the support for the management of NVIDIA GPU(s) from the power-thermal
+  point of view.
+
 config  BBQUE_PM_AMD
   bool "AMD GPU(s) Power Management"
   depends on BBQUE_PM
