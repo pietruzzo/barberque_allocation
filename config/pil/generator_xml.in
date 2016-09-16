@@ -247,6 +247,10 @@ CURRENT_CPU_ID=-1
 CURRENT_NUMA_NODE=0
 CURRENT_SOCKET=0
 
+# In case cache information is not exposed by the virtual fs
+PARTITION_INFO_FOUND=0
+DEFAULT_CPU_ID=0
+
 XML_WriteHead # Write a part of the XML output on a file
 
 
@@ -301,6 +305,13 @@ while read lstopo_entry; do
 				fi
 			done
 			[ "$PARTITION" == "none" ] && PARTITION="host" # If not declared, that's host
+
+			if [[ $PARTITION_INFO_FOUND == 0 ]] ; then
+				PopulateDebugLog "Unknown Cache level info: single BD fallback."
+				echo "    <cpu arch=\""$ARCH"\" id=\""$DEFAULT_CPU_ID"\" socket_id=\""$CURRENT_SOCKET"\" mem_id=\""$CURRENT_MEMORY_NODE"\">" >> $TARGET_SYS
+				PARTITION_INFO_FOUND=1
+			fi
+
 			echo "        <pe id=\""$CURRENT_PE"\" core_id=\""$CURRENT_CORE"\" share=\"100\" partition=\""$PARTITION"\"/>" >> $TARGET_SYS
 			PopulateDebugLog "Found a Processing Element. ID: $CURRENT_PE, core_id: $CURRENT_CORE, partition: $PARTITION"
 			;;
