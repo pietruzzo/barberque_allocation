@@ -238,23 +238,25 @@ public:
 		ResourceType r_type =
 			ResourceType::PROC_ELEMENT) const;
 
+
 	/** Iterators **/
 
-	ResourcePath::Iterator Begin() {
+	inline ResourcePath::Iterator Begin() {
 		return identifiers.begin();
 	}
 
-	ResourcePath::ConstIterator Begin() const {
+	inline ResourcePath::ConstIterator Begin() const {
 		return identifiers.begin();
 	}
 
-	ResourcePath::Iterator End() {
+	inline ResourcePath::Iterator End() {
 		return identifiers.end();
 	}
 
-	ResourcePath::ConstIterator End() const {
+	inline ResourcePath::ConstIterator End() const {
 		return identifiers.end();
 	}
+
 
 	/**
 	 * @brief Get the ID associated to a resource (type) in the path
