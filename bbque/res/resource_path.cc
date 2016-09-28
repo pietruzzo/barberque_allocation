@@ -247,15 +247,13 @@ int8_t ResourcePath::GetLevel(ResourceType r_type) const {
 }
 
 
-ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
-		uint8_t depth_level) const {
+ResourceIdentifierPtr_t ResourcePath::GetIdentifier(uint8_t depth_level) const {
 	if (depth_level >= identifiers.size())
 		return ResourceIdentifierPtr_t();
 	return identifiers.at(depth_level);
 }
 
-ResourceIdentifierPtr_t ResourcePath::GetIdentifier(
-		ResourceType r_type) const {
+ResourceIdentifierPtr_t ResourcePath::GetIdentifier(ResourceType r_type) const {
 
 	// Look for the vector position of the resource identifier by type
 	int8_t level = GetLevel(r_type);
@@ -299,8 +297,7 @@ ResourcePath::ExitCode_t ResourcePath::ReplaceID(
  * Miscellanea                                                    *
  ******************************************************************/
 
-ResourceType ResourcePath::ParentType(
-		ResourceType r_type) const {
+ResourceType ResourcePath::ParentType(ResourceType r_type) const {
 	// Find the index of the given resource type
 	int8_t level = GetLevel(r_type);
 	if (level < 0)

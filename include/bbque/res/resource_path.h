@@ -294,16 +294,16 @@ public:
 	 *
 	 * @return A shared pointer to the resource identifier object
 	 */
-	ResourceIdentifierPtr_t GetIdentifier(
-			ResourceType r_type) const;
+	ResourceIdentifierPtr_t GetIdentifier(ResourceType r_type) const;
 
 	/**
 	 * @brief The depth level of type in a path
 	 *
 	 * @param r_type The resource type to find in the path
 	 *
-	 * @return -1 if the type is not included in the current path, otherwise
-	 * returns the positive integer value related to the depth level
+	 * @return -1 if the type is not included in the current path,
+	 * otherwise returns the positive integer value related to the
+	 * depth level
 	 */
 	int8_t GetLevel(ResourceType r_type) const;
 
