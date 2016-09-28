@@ -201,12 +201,11 @@ void OpenCLPlatformProxy::PrintGPUPowerInfo() {
 #endif // CONFIG_BBQUE_PM
 
 
-VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(
-		br::ResourceType r_type) const {
+VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(br::ResourceType r_type) const {
 
 	ResourceTypeIDMap_t::const_iterator d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
-		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
+		logger->Error("GetDeviceIDs: No OpenCL devices of type '%s'",
 			br::GetResourceTypeString(r_type));
 		return nullptr;
 	}
@@ -214,12 +213,11 @@ VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(
 }
 
 
-uint8_t OpenCLPlatformProxy::GetDevicesNum(
-		br::ResourceType r_type) const {
+uint8_t OpenCLPlatformProxy::GetDevicesNum(br::ResourceType r_type) const {
 
 	ResourceTypeIDMap_t::const_iterator d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
-		logger->Error("PLAT OCL: No OpenCL devices of type '%s'",
+		logger->Error("GetDevicesNum: No OpenCL devices of type '%s'",
 			br::GetResourceTypeString(r_type));
 		return 0;
 	}
@@ -231,7 +229,7 @@ ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
 
 	ResourceTypePathMap_t::const_iterator p_it(device_paths.find(r_type));
 	if (p_it == device_paths.end()) {
-		logger->Error("PLAT OCL: No OpenCL devices of type  '%s'",
+		logger->Error("GetDevicePaths: No OpenCL devices of type  '%s'",
 			br::GetResourceTypeString(r_type));
 		return nullptr;
 	}
@@ -242,17 +240,16 @@ ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
 ResourceTypeIDMap_t::iterator
 OpenCLPlatformProxy::GetDeviceIterator(br::ResourceType r_type) {
 	if (platforms == nullptr) {
-		logger->Error("PLAT OCL: Missing OpenCL platforms");
+		logger->Error("GetDeviceIterator: Missing OpenCL platforms");
 		return device_ids.end();
 	}
 	return	device_ids.find(r_type);
 }
 
 ResourceTypeIDMap_t::const_iterator
-OpenCLPlatformProxy::GetDeviceConstIterator(
-		br::ResourceType r_type) const {
+OpenCLPlatformProxy::GetDeviceConstIterator(br::ResourceType r_type) const {
 	if (platforms == nullptr) {
-		logger->Error("PLAT OCL: Missing OpenCL platforms");
+		logger->Error("GetDeviceConstIterator: Missing OpenCL platforms");
 		return device_ids.end();
 	}
 	return	device_ids.find(r_type);
