@@ -168,7 +168,7 @@ public:
 	 *
 	 * @return A list of resource descriptors (pointers)
 	 */
-	ResourcePtrList_t findList(ResourcePath & rsrc_path,
+	ResourcePtrList_t find_list(ResourcePath & rsrc_path,
 			uint16_t match_flags = 0) const;
 
 	/**
@@ -221,7 +221,7 @@ private:
 	 *
 	 * @return True if the search have found some matchings.
 	 */
-	bool findNode(ResourceNodePtr_t curr_node,
+	bool find_node(ResourceNodePtr_t curr_node,
 			std::vector<ResourceIdentifierPtr_t>::iterator & rp_it,
 			std::vector<ResourceIdentifierPtr_t>::iterator const & rp_end,
 			uint16_t match_flags,
@@ -235,7 +235,7 @@ private:
 	 *
 	 * @return The child node just created
 	 */
-	ResourceNodePtr_t addChild(ResourceNodePtr_t curr_node, ResourcePtr_t pres);
+	ResourceNodePtr_t add_node(ResourceNodePtr_t curr_node, ResourcePtr_t pres);
 
 	/**
 	 * @brief Recursive method for printing nodes content in a tree-like form
@@ -243,7 +243,7 @@ private:
 	 * @param node Pointer to the starting tree node
 	 * @param depth Node depth
 	 */
-	void print_children(ResourceNodePtr_t node, int depth);
+	void print_children(ResourceNodePtr_t node, int depth) const;
 
 	/**
 	 * @brief Clear a node of the tree

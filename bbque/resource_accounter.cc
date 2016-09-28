@@ -255,7 +255,8 @@ br::ResourcePtr_t ResourceAccounter::GetResource(std::string const & path) const
 
 br::ResourcePtr_t ResourceAccounter::GetResource(ResourcePathPtr_t ppath) const {
 	br::ResourcePtrList_t matchings(
-			resources.findList(*(ppath.get()), RT_MATCH_FIRST | RT_MATCH_MIXED));
+			resources.find_list(
+				*ppath, RT_MATCH_FIRST | RT_MATCH_MIXED));
 	if (matchings.empty())
 		return br::ResourcePtr_t();
 	return matchings.front();
@@ -277,9 +278,9 @@ br::ResourcePtrList_t ResourceAccounter::GetResources(
 	if (ppath->IsTemplate()) {
 		logger->Debug("GetResources: path <%s> is a template",
 				ppath->ToString().c_str());
-		return resources.findList(*(ppath.get()), RT_MATCH_TYPE);
+		return resources.find_list(*(ppath.get()), RT_MATCH_TYPE);
 	}
-	return resources.findList(*(ppath.get()), RT_MATCH_MIXED);
+	return resources.find_list(*ppath, RT_MATCH_MIXED);
 }
 
 
@@ -290,7 +291,7 @@ bool ResourceAccounter::ExistResource(std::string const & path) const {
 
 bool ResourceAccounter::ExistResource(ResourcePathPtr_t ppath) const {
 	br::ResourcePtrList_t matchings(
-		resources.findList(*(ppath.get()), RT_MATCH_TYPE | RT_MATCH_FIRST));
+		resources.find_list(*ppath, RT_MATCH_TYPE | RT_MATCH_FIRST));
 	return !matchings.empty();
 }
 
@@ -423,7 +424,7 @@ br::ResourcePtrList_t ResourceAccounter::GetList(
 		PathClass_t rpc) const {
 	if (rpc == UNDEFINED)
 		return GetResources(ppath);
-	return resources.findList(*(ppath.get()), RTFlags(rpc));
+	return resources.find_list(*ppath, RTFlags(rpc));
 }
 
 
@@ -701,7 +702,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 		uint64_t amount) {
 	br::Resource::ExitCode_t rresult;
 	br::ResourcePtrList_t const & rlist(
-		resources.findList(*(ppath.get()), RT_MATCH_MIXED));
+		resources.find_list(*ppath, RT_MATCH_MIXED));
 	logger->Info("Reserving [%" PRIu64 "] for [%s] resources...",
 			amount, ppath->ToString().c_str());
 
@@ -743,7 +744,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 
 bool  ResourceAccounter::IsOfflineResource(ResourcePathPtr_t ppath) const {
 	br::ResourcePtrList_t rlist;
-	rlist = resources.findList(*(ppath.get()), RT_MATCH_MIXED);
+	rlist = resources.find_list(*ppath, RT_MATCH_MIXED);
 	br::ResourcePtrListIterator_t rit = rlist.begin();
 
 	logger->Debug("Check offline status for resources [%s]...",

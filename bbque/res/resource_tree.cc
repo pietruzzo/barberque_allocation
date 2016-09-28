@@ -41,75 +41,77 @@ ResourceTree::ResourceTree():
 
 	// Initialize the root node
 	std::string root_name("bbque");
-	root = std::make_shared<ResourceNode>(std::make_shared<Resource>(root_name));
+	root = std::make_shared<ResourceNode>(
+		std::make_shared<Resource>(root_name));
 }
 
 ResourcePtrList_t
-ResourceTree::findList(ResourcePath & rsrc_path, uint16_t match_flags) const {
+ResourceTree::find_list(ResourcePath & rsrc_path, uint16_t match_flags) const {
 	ResourcePtrList_t matchings;
-	ResourcePath::Iterator head_path(rsrc_path.Begin());
-	ResourcePath::Iterator const & end_path(rsrc_path.End());
+	auto head_path(rsrc_path.Begin());
+	auto const & end_path(rsrc_path.End());
 
 	// match_flags = "11x" is a not valid configuration
 	if (match_flags & RT_MATCH_TYPE & RT_MATCH_MIXED)
 		match_flags = RT_MATCH_MIXED;
 
-	findNode(root, head_path, end_path, match_flags, matchings);
+	find_node(root, head_path, end_path, match_flags, matchings);
 	return matchings;
 }
 
 ResourcePtr_t & ResourceTree::insert(ResourcePath const & rsrc_path) {
-	ResourceNodePtr_t curr_node;
-	ResourcePath::ConstIterator path_it, path_end;
-	ResourceNodesList_t::iterator tree_it, tree_end;
 
 	// Seeking on the last matching resource path level (tree node)
-	curr_node = root;
-	path_end  = rsrc_path.End();
-	for (path_it = rsrc_path.Begin(); path_it != path_end; ++path_it) {
-		br::ResourceIdentifierPtr_t const & prid(*path_it);
+	ResourceNodePtr_t curr_node = root;
+	for (auto path_it = rsrc_path.Begin();
+			path_it != rsrc_path.End(); ++path_it) {
+		br::ResourceIdentifierPtr_t const & curr_rid(*path_it);
+
 		// No children -> add the first one
 		if (curr_node->children.empty()) {
-			ResourcePtr_t pres(new Resource(prid->Type(), prid->ID()));
-			curr_node = addChild(curr_node, pres);
+			ResourcePtr_t resource_ptr = std::make_shared<Resource>
+				(curr_rid->Type(), curr_rid->ID());
+			curr_node = add_node(curr_node, resource_ptr);
 			curr_node->depth > max_depth ?
 				max_depth = curr_node->depth: max_depth;
 			continue;
 		}
 
 		// Children
-		tree_end = curr_node->children.end();
 		logger->Debug("insert: %s has %d children",
-				curr_node->data->Name().c_str(), curr_node->children.size());
-		for (tree_it = curr_node->children.begin(); tree_it != tree_end;
-				++tree_it) {
-			// Current resource path level matches: go one level down
-			ResourcePtr_t & pres((*tree_it)->data);
-			if (pres->Compare(*(prid.get())) != Resource::EQUAL) {
+				curr_node->data->Name().c_str(),
+				curr_node->children.size());
+
+		// Current resource path level matches: go one level down
+		bool node_exist = false;
+		for (auto tree_node: curr_node->children) {
+			ResourcePtr_t & resource_ptr(tree_node->data);
+			if (resource_ptr->Compare(*curr_rid) != Resource::EQUAL) {
 				logger->Debug("%-4s != %-4s",
-						pres->Name().c_str(),
-						prid->Name().c_str());
+						resource_ptr->Name().c_str(),
+						curr_rid->Name().c_str());
 				continue;
 			}
 			// Matching
-			curr_node = (*tree_it);
+			curr_node  = tree_node;
+			node_exist = true;
 			break;
 		}
 
 		// No matching: add a children node
-		if (tree_it == tree_end) {
-			ResourcePtr_t pres(new Resource(prid->Type(), prid->ID()));
-			curr_node = addChild(curr_node, pres);
+		if (!node_exist) {
+			ResourcePtr_t resource_ptr = std::make_shared<Resource>
+				(curr_rid->Type(), curr_rid->ID());
+			curr_node = add_node(curr_node, resource_ptr);
 		}
 	}
+
 	++count;
 	logger->Debug("insert: count = %d, depth: %d", count, max_depth);
-
-	// Return the new object just created
 	return curr_node->data;
 }
 
-bool ResourceTree::findNode(
+bool ResourceTree::find_node(
 		ResourceNodePtr_t curr_node,
 		ResourcePath::Iterator & path_it,
 		ResourcePath::Iterator const & path_end,
@@ -119,32 +121,29 @@ bool ResourceTree::findNode(
 	bool found;
 
 	// Sanity/end of path checks
-	if ((!curr_node)                  ||
-		(curr_node->children.empty()) ||
-		(path_it == path_end))
+	if ((!curr_node) || (curr_node->children.empty()) || (path_it == path_end))
 		return false;
 
 	// Look for the current resource path level
-	logger->Debug("findNode: %s has %d children",
-			curr_node->data->Name().c_str(),
-			curr_node->children.size());
+	logger->Debug("find_node: %s has %d children",
+			curr_node->data->Name().c_str(), curr_node->children.size());
 	for (auto & tree_node: curr_node->children) {
-		br::ResourcePtr_t & pres(tree_node->data);
-		br::ResourceIdentifierPtr_t & prid(*path_it);
+		auto & resource_ptr(tree_node->data);
+		auto & path_node(*path_it);
 		found = false;
 
-		// Compare the resource identities (type and ID)
-		rresult = pres->Compare(*(prid.get()));
-		logger->Debug("findNode: compare T:%4s to P:%4s = %d [match_flags %d]",
-				pres->Name().c_str(),
-				prid->Name().c_str(),
+		// Compare the resource identities (type and ID) and traverse the
+		// resource tree accordingly
+		rresult = resource_ptr->Compare(*path_node);
+		logger->Debug("find_node: compare T:%4s to P:%4s = %d [match_flags %d]",
+				resource_ptr->Name().c_str(),
+				path_node->Name().c_str(),
 				rresult, match_flags);
 
-		// Traverse the resource tree according to the comparison result
 		if (rresult == Resource::EQUAL_TYPE) {
 			//  Skip if mixed matching required but resource IDs do not match
 			if (match_flags & RT_MATCH_MIXED) {
-				if ((prid->ID() != R_ID_NONE) && (prid->ID() != R_ID_ANY)) {
+				if (path_node->ID() >= 0) {
 					continue;
 				}
 			}
@@ -155,24 +154,21 @@ bool ResourceTree::findNode(
 		}
 
 		// Go deeper in the resource tree (if the not is not a leaf)
-		if (rresult == Resource::EQUAL_TYPE
-				|| rresult == Resource::EQUAL
-				|| rresult == Resource::DONT_CARE) {
+		if (rresult != Resource::NOT_EQUAL) {
 			if (path_it != path_end)
-				findNode(tree_node, ++path_it, path_end, match_flags, matchings);
+				find_node(tree_node, ++path_it, path_end, match_flags, matchings);
 			found = true;
 		}
-
-		if (rresult == Resource::NOT_EQUAL)
+		else
 			continue;
 
 		// End of the resource path, and resource identity matching?
 		// Y: Add the the resource descriptor (from tree) to the matchings list
 		// N: Continue recursively
 		if ((path_it == path_end) && (found)) {
-			matchings.push_back(pres);
-			logger->Debug("findNode: added back %s [%d]",
-					pres->Name().c_str(), matchings.size());
+			matchings.push_back(resource_ptr);
+			logger->Debug("find_node: added back %s [%d]",
+					resource_ptr->Name().c_str(), matchings.size());
 			// Back to a "valid" iterator
 			--path_it;
 		}
@@ -184,56 +180,44 @@ bool ResourceTree::findNode(
 
 	// Back to one level up
 	--path_it;
-	logger->Debug("findNode: back to one level up");
+	logger->Debug("find_node: back to one level up");
 	return !matchings.empty();
 }
 
 ResourceTree::ResourceNodePtr_t
-ResourceTree::addChild(ResourceNodePtr_t curr_node, ResourcePtr_t pres) {
+ResourceTree::add_node(ResourceNodePtr_t curr_node, ResourcePtr_t resource_ptr) {
 	// Set the path string of the new resource
 	std::string path_prefix("");
 	if (curr_node->data)
 		path_prefix = curr_node->data->Name();
-	pres->SetPath(path_prefix + "." + pres->Name());
+	resource_ptr->SetPath(path_prefix + "." + resource_ptr->Name());
 
 	// Create the new resource node
 	ResourceNodePtr_t new_node = std::make_shared<ResourceNode>(
-		pres, curr_node, curr_node->depth+1);
+		resource_ptr, curr_node, curr_node->depth+1);
 
 	// Append it as child of the current node
 	curr_node->children.push_back(new_node);
 	return new_node;
 }
 
-void ResourceTree::print_children(ResourceNodePtr_t _node, int _depth) {
-	// Increase the level of depth
+void ResourceTree::print_children(ResourceNodePtr_t _node, int _depth) const {
 	++_depth;
-
-	// Print all the children
-	ResourceNodesList_t::iterator it(_node->children.begin());
-	ResourceNodesList_t::iterator end(_node->children.end());
-	for (; it != end; ++it) {
-		// Child name
+	for (auto & curr_node: _node->children) {
 		for (int i= 0; i < _depth-1; ++i)
 			logger->Debug("\t");
 
-		logger->Debug("|-------%s", (*it)->data->Name().c_str());
-
-		// Recursive call if there are some children
-		if (!(*it)->children.empty())
-			print_children(*it, _depth);
+		logger->Debug("|-------%s", curr_node->data->Name().c_str());
+		if (!curr_node->children.empty())
+			print_children(curr_node, _depth);
 	}
 }
 
 void ResourceTree::clear_node(ResourceNodePtr_t _node) {
-	ResourceNodesList_t::iterator it(_node->children.begin());
-	ResourceNodesList_t::iterator end(_node->children.end());
-
-	// Recursive clear
-	for (; it != end; ++it) {
-		if (!(*it)->children.empty())
-			clear_node(*it);
-		(*it)->children.clear();
+	for (auto & curr_node: _node->children) {
+		if (!curr_node->children.empty())
+			clear_node(curr_node);
+		curr_node->children.clear();
 	}
 }
 

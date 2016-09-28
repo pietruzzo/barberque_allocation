@@ -696,7 +696,7 @@ private:
 	 * The list is retrieved depending on the resource path class specified.
 	 * If this is "undefined" it will be up to the function to understand the
 	 * class of the resource path, by invoking function member GetResources.
-	 * Otherwise, whenever the path class is given, the ResourceTree findList
+	 * Otherwise, whenever the path class is given, the ResourceTree find_list
 	 * member function is called with the suitable matching flags.
 	 *
 	 * @param ppath The resource path referencing the resources
