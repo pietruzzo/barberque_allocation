@@ -421,8 +421,11 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs) {
 		// If no GPU have been bound, the CPU is the OpenCL device assigned
 		if (r_id == R_ID_NONE) {
 			OpenCLPlatformProxy * ocl_proxy(OpenCLPlatformProxy::GetInstance());
-			VectorUInt8Ptr_t pdev_ids(ocl_proxy->GetDeviceIDs(br::ResourceType::CPU));
-			r_id  = pdev_ids->at(0);
+			auto pdev_ids(ocl_proxy->GetDeviceIDs(br::ResourceType::CPU));
+			if (pdev_ids && !pdev_ids->empty())
+				r_id = pdev_ids->at(0);
+			else
+				r_id = R_ID_NONE;
 		}
 
 		local_sys_msg.dev = r_id;
