@@ -116,9 +116,10 @@ public:
 	 */
 	uint64_t Total(std::string const & path) const;
 
-	uint64_t Total(br::ResourcePtrList_t & rsrc_list) const;
+	uint64_t Total(br::ResourcePtrList_t & resources_list) const;
 
-	uint64_t Total(br::ResourcePathPtr_t ppath,	PathClass_t rpc = EXACT) const;
+	uint64_t Total(
+		br::ResourcePathPtr_t resource_path_ptr, PathClass_t rpc = EXACT) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -129,12 +130,12 @@ public:
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	uint64_t Available(
-	        br::ResourcePtrList_t & rsrc_list,
+	        br::ResourcePtrList_t & resources_list,
 	        br::RViewToken_t status_view = 0,
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
 	uint64_t Available(
-	        br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
+	        br::ResourcePathPtr_t resource_path_ptr, PathClass_t rpc = EXACT,
 	        br::RViewToken_t status_view = 0,
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
@@ -143,24 +144,27 @@ public:
 	 */
 	uint64_t Used(std::string const & path, br::RViewToken_t status_view = 0) const;
 
-	uint64_t Used(br::ResourcePtrList_t & rsrc_list, br::RViewToken_t status_view = 0) const;
+	uint64_t Used(
+		br::ResourcePtrList_t & resources_list, br::RViewToken_t status_view = 0) const;
 
-	uint64_t Used(br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT,
-	              br::RViewToken_t status_view = 0) const;
+	uint64_t Used(
+		br::ResourcePathPtr_t resource_path_ptr,
+		PathClass_t rpc = EXACT,
+		br::RViewToken_t status_view = 0) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
 	uint64_t Unreserved(std::string const & path) const;
 
-	uint64_t Unreserved(br::ResourcePtrList_t & rsrc_list) const;
+	uint64_t Unreserved(br::ResourcePtrList_t & resources_list) const;
 
-	uint64_t Unreserved(br::ResourcePathPtr_t ppath) const;
+	uint64_t Unreserved(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint16_t Count(br::ResourcePathPtr_t ppath) const;
+	uint16_t Count(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	uint16_t CountPerType(br::ResourceType type) const;
 
@@ -183,21 +187,21 @@ public:
 	 */
 	br::ResourcePtr_t GetResource(std::string const & path) const;
 
-	br::ResourcePtr_t GetResource(br::ResourcePathPtr_t ppath) const;
+	br::ResourcePtr_t GetResource(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
 	br::ResourcePtrList_t GetResources(std::string const & path) const;
 
-	br::ResourcePtrList_t GetResources(br::ResourcePathPtr_t ppath) const;
+	br::ResourcePtrList_t GetResources(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
 	bool ExistResource(std::string const & path) const;
 
-	bool ExistResource(br::ResourcePathPtr_t ppath) const;
+	bool ExistResource(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -377,12 +381,12 @@ public:
 	 * @return RA_SUCCESS if the reservation has been completed correctly,
 	 * RA_FAILED otherwise.
 	 */
-	ExitCode_t  ReserveResources(br::ResourcePathPtr_t ppath, uint64_t amount);
+	ExitCode_t  ReserveResources(br::ResourcePathPtr_t resource_path_ptr, uint64_t amount);
 
 	ExitCode_t  ReserveResources(std::string const & path, uint64_t amount);
 
 
-	bool  IsOfflineResource(br::ResourcePathPtr_t ppath) const;
+	bool  IsOfflineResource(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	ExitCode_t  OfflineResources(std::string const & path);
 
@@ -699,20 +703,20 @@ private:
 	 * Otherwise, whenever the path class is given, the ResourceTree find_list
 	 * member function is called with the suitable matching flags.
 	 *
-	 * @param ppath The resource path referencing the resources
+	 * @param resource_path_ptr The resource path referencing the resources
 	 * @param rpc The token referencing the resource state view
 	 *
 	 * @return A list of pointers (shared) to resource descriptors
 	 */
 	br::ResourcePtrList_t GetList(
-	        br::ResourcePathPtr_t ppath,
+	        br::ResourcePathPtr_t resource_path_ptr,
 	        PathClass_t rpc = EXACT) const;
 
 	/**
 	 * @brief Return a state parameter (availability, resources used, total
 	 * amount) for the resource.
 	 *
-	 * @param rsrc_list A list of descriptors of resources of the same type
+	 * @param resources_list A list of descriptors of resources of the same type
 	 * @param q_opt Resource state attribute requested (@see QueryOption_t)
 	 * @param status_view The token referencing the resource state view
 	 * @param papp The application interested in the query
@@ -720,7 +724,7 @@ private:
 	 * @return The value of the attribute request
 	 */
 	uint64_t QueryStatus(
-	        br::ResourcePtrList_t const & rsrc_list,
+	        br::ResourcePtrList_t const & resources_list,
 	        QueryOption_t q_opt, br::RViewToken_t status_view = 0,
 	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
 
