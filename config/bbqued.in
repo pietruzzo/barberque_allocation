@@ -56,19 +56,10 @@ check_controllers() {
 	fi
 
 	# The [cpuset,memory,cpu,cpuacct] controller must be mounted on the same hierarchy
-	DIFFH=$(awk '{
-                                        switch($1) {
-                                                case "cpu": ch = $2; break;
-                                                case "cpuset": sh = $2; break;
-                                                case "cpuacct": ah = $2; break;
-                                                case "memory": mh = $2; break;}
-                                   } END {
-                                                if (ch != sh || sh != ah || ah != mh) print 1;
-                                                else print 0;
-                                   }' /proc/cgroups)
+	DIFF=$(cat /proc/cgroups | grep "cpu\|memory" | cut -f2 | sort -u | wc -l)
 
 	# Hierarchies unmounting
-	if [[ $DIFFH != 0 ]]; then
+	if [[ $DIFFH != 1 ]]; then
 		bbqued_info '[cpuset,memory,cpu,cpuacct] controllers on different hierachies. Unmounting'
 
 		grep cgroup /proc/mounts | cut -d' ' -f2 | \
