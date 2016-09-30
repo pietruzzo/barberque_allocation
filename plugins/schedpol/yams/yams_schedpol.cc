@@ -422,7 +422,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 			logger->Debug("Selecting: %s schedule requested", pschd->StrId());
 			app_result = pschd->papp->ScheduleRequest(
 					pschd->pawm, status_view, pschd->bind_refn);
-			if (app_result == ApplicationStatusIF::APP_WM_ACCEPTED){
+			if (app_result == ApplicationStatusIF::APP_SUCCESS){
 				logger->Info("COWS: scheduling OK");
 				//COWS: Update means and square means values
 				CowsUpdateMeans((*rit).second);
@@ -430,7 +430,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 			}
 		}
 
-		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
+		if (app_result != ApplicationStatusIF::APP_SUCCESS) {
 			logger->Info("All options rejected!", pschd->StrId());
 			continue;
 		}
@@ -439,7 +439,7 @@ bool YamsSchedPol::SelectSchedEntities(uint8_t naps_count) {
 		app_result = pschd->papp->ScheduleRequest(
 				pschd->pawm, status_view, pschd->bind_refn);
 		logger->Debug("Selecting: [%s] schedule requested", pschd->StrId());
-		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
+		if (app_result != ApplicationStatusIF::APP_SUCCESS) {
 			logger->Debug("Selecting: [%s] rejected!", pschd->StrId());
 			continue;
 		}

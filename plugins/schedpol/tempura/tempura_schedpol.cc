@@ -481,7 +481,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoScheduling() {
                         psched->StrId());
 		app_result = psched->papp->ScheduleRequest(
 				psched->pawm, sched_status_view, psched->bind_refn);
-		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
+		if (app_result != ApplicationStatusIF::APP_SUCCESS) {
 			logger->Error("DoScheduling: [%s] failed", psched->StrId());
 			continue;
 		}

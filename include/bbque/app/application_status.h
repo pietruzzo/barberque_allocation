@@ -79,8 +79,6 @@ public:
 		APP_RSRC_NOT_FOUND,
 		/** Constraint not found */
 		APP_CONS_NOT_FOUND,
-		/** The working mode is schedulable */
-		APP_WM_ACCEPTED,
 		/** The working mode is not schedulable */
 		APP_WM_REJECTED,
 		/** The list of enabled working modes has changed */

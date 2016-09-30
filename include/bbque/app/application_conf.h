@@ -61,7 +61,7 @@ public:
 	 * @param bid An optional identifier for the resource binding
 	 *
 	 * @return The method return an exit code representing the decision taken:
-	 * APP_WM_ACCEPTED if the specified working mode can be scheduled for
+	 * APP_SUCCESS if the specified working mode can be scheduled for
 	 * this application, APP_WM_REJECTED if the working mode cannot not be
 	 * scheduled. If the application is currently disabled this call returns
 	 * always APP_DISABLED.

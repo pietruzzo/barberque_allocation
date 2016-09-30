@@ -286,7 +286,7 @@ void YamcaSchedPol::SelectWorkingModes(SchedEntityMap_t & sched_map) {
 		eval_awm->ClearSchedResourceBinding();
 
 		// Debugging messages
-		if (app_result != Application::APP_WM_ACCEPTED) {
+		if (app_result != Application::APP_SUCCESS) {
 			logger->Debug("Selecting: [%s] AWM{%d} rejected ! [ret %d]",
 							papp->StrId(),
 							eval_awm->Id(),

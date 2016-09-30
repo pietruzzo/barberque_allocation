@@ -453,7 +453,7 @@ uint32_t ClovesSchedPol::SendScheduleRequests(DeviceQueue_t & dev_queue) {
 		app_result = psched->papp->ScheduleRequest(
 			psched->pawm, sched_status_view, psched->bind_refn);
 		logger->Debug("Flush: %s schedule requested", psched->StrId());
-		if (app_result != ApplicationStatusIF::APP_WM_ACCEPTED) {
+		if (app_result != ApplicationStatusIF::APP_SUCCESS) {
 			logger->Error("Flush: %s failed scheduling",
 				psched->StrId());
 		}

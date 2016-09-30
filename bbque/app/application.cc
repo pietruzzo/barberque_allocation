@@ -706,7 +706,7 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	schedule.next_awm = awm;
 	awms.curr_inv = false;
 
-	return APP_WM_ACCEPTED;
+	return APP_SUCCESS;
 }
 
 /*******************************************************************************

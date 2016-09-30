@@ -124,7 +124,7 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 
 		// Schedule the selected AWM on the selected binding domain
 		app_result = papp->ScheduleRequest(selected_awm, ra_view, b_refn);
-		if (app_result == ba::ApplicationStatusIF::APP_WM_ACCEPTED) {
+		if (app_result == ba::ApplicationStatusIF::APP_SUCCESS) {
 			logger->Info("Scheduling EXC [%s] on binding domain <%d> done.",
 					papp->StrId(), selected_bd);
 			binding_done = true;
