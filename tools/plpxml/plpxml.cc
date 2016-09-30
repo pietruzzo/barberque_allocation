@@ -53,7 +53,7 @@ void manage_v_arg(std::string arg, plp_data_t* data) {
 	case bhash("BBQUE_UID"):
 		data->uid = content;
 		break;
-	case bhash("BBQUE_GUID"):
+	case bhash("BBQUE_GID"):
 		data->guid = content;
 		break;
 	case bhash("BBQUE_CPUP"):
