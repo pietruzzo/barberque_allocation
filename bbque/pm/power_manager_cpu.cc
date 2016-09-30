@@ -343,6 +343,9 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
 
+	logger->Debug("SetClockFrequency: <%s> (cpu%d) set to %d KHz",
+		rp->ToString().c_str(), pe_id, khz);
+
 	result = bu::IoFs::WriteValueTo<uint32_t>(
 			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
 			"/cpufreq/scaling_setspeed", khz);
@@ -359,6 +362,9 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 	bu::IoFs::ExitCode_t result;
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
+
+	logger->Debug("SetClockFrequency: <%s> (cpu%d) set to range [%d, %d] KHz",
+		rp->ToString().c_str(), pe_id, min_khz, max_khz);
 
 	result = bu::IoFs::WriteValueTo<uint32_t>(
 			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
