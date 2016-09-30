@@ -412,7 +412,7 @@ public:
 	/**
 	 * @see ResourceAccounterConfIF
 	 */
-	ExitCode_t GetView(std::string who_req, br::RViewToken_t & tok);
+	ExitCode_t GetView(std::string const & who_req, br::RViewToken_t & tok);
 
 	/**
 	 * @see ResourceAccounterConfIF
@@ -681,7 +681,7 @@ private:
 	/**
 	 * @brief Thread unsafe version of @ref GetView
 	 */
-	ExitCode_t _GetView(std::string who_req, br::RViewToken_t & tok);
+	ExitCode_t _GetView(std::string const & who_req, br::RViewToken_t & tok);
 
 	/**
 	 * @brief Thread unsafe version of @ref SetView

@@ -806,7 +806,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::OnlineResources(
  ************************************************************************/
 
 ResourceAccounter::ExitCode_t ResourceAccounter::GetView(
-		std::string req_path,
+		std::string const & req_path,
 		br::RViewToken_t & token) {
 	std::unique_lock<std::mutex> status_ul(status_mtx);
 	while (status != State::READY) {
@@ -816,7 +816,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::GetView(
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::_GetView(
-		std::string req_path,
+		std::string const & req_path,
 		br::RViewToken_t & token) {
 	// Null-string check
 	if (req_path.empty()) {
