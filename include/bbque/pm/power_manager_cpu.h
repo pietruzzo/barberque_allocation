@@ -153,6 +153,15 @@ protected:
 		int32_t idle = 0;
 	};
 
+
+	void InitCoreIdMapping();
+
+	void InitTemperatureSensors();
+
+	void InitFrequencyGovernors();
+
+
+
 	void _GetAvailableFrequencies(int cpu_id, std::shared_ptr<std::vector<uint32_t>> v);
 
 	/**

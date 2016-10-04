@@ -56,6 +56,20 @@ namespace bbque {
 
 CPUPowerManager::CPUPowerManager():
 		prefix_sys_cpu(BBQUE_LINUX_SYS_CPU_PREFIX) {
+	InitCoreIdMapping();
+	InitTemperatureSensors();
+	InitFrequencyGovernors();
+}
+
+CPUPowerManager::~CPUPowerManager() {
+	core_ids.clear();
+	core_therms.clear();
+	core_freqs.clear();
+	cpufreq_governors.clear();
+}
+
+
+void CPUPowerManager::InitCoreIdMapping() {
 	bu::IoFs::ExitCode_t result;
 	int cpu_id = 0;
 	int pe_id  = 0;
@@ -100,39 +114,42 @@ CPUPowerManager::CPUPowerManager():
 				cpu_id, pe_id, core_freqs[pe_id]->size());
 		++pe_id;
 	}
+}
 
 
-	// ------------------------------------- Thermal sensors mapping
+void CPUPowerManager::InitTemperatureSensors() {
+	int cpu_id = 0;
 	char str_value[8];
 	int sensor_id = TEMP_SENSOR_FIRST_ID;
-	while (1) {
+	bu::IoFs::ExitCode_t result = bu::IoFs::OK;
+	for ( ; result == bu::IoFs::OK; sensor_id += TEMP_SENSOR_STEP_ID) {
 		std::string therm_file(
 				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
 				"_label");
-		logger->Debug("Reading thermal sensors @ %s ", therm_file.c_str());
-		result = bu::IoFs::ReadValueFrom(therm_file.c_str(), str_value, 8);
+		logger->Debug("Thermal sensors @[%s]", therm_file.c_str());
+		result = bu::IoFs::ReadValueFrom(therm_file, str_value, 8);
 		if (result != bu::IoFs::OK) {
-			logger->Debug("Failed in reading from %s", therm_file.c_str());
+			logger->Debug("Failed while reading '%s'", therm_file.c_str());
 			break;
 		}
 
 		// Look for the label containing the core ID required
 		std::string core_label(str_value);
 		if (core_label.find("Core") != 0)
-			goto next_temp;
+			continue;
 
 		cpu_id = std::stoi(core_label.substr(5));
 		core_therms[cpu_id] = new std::string(
 				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
 				"_input");
-		logger->Info("Thermal sensors on CPU %d @ %s",
-				cpu_id,	core_therms[cpu_id]->c_str());
-	next_temp:
-		sensor_id += TEMP_SENSOR_STEP_ID;
+		logger->Info("Thermal sensors for CPU %d @[%s]",
+				cpu_id, core_therms[cpu_id]->c_str());
 	}
+}
 
 
-	// ---------------------------------------- CPUfreq governors
+void CPUPowerManager::InitFrequencyGovernors() {
+	bu::IoFs::ExitCode_t result;
 	std::string govs;
 	std::string cpufreq_path(prefix_sys_cpu +
 			"0/cpufreq/scaling_available_governors");
@@ -147,13 +164,6 @@ CPUPowerManager::CPUPowerManager():
 				br::ResourcePathUtils::SplitAndPop(govs, " "));
 	for (std::string & g: cpufreq_governors)
 		logger->Info("---> %s", g.c_str());
-}
-
-CPUPowerManager::~CPUPowerManager() {
-	core_ids.clear();
-	core_therms.clear();
-	core_freqs.clear();
-	cpufreq_governors.clear();
 }
 
 
@@ -297,7 +307,7 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 		return result;
 	}
 
-	io_result =	bu::IoFs::ReadIntValueFrom<uint32_t>(
+	io_result = bu::IoFs::ReadIntValueFrom<uint32_t>(
 				core_therms[core_id]->c_str(), celsius);
 	if (io_result != bu::IoFs::OK) {
 		logger->Error("Cannot read current temperature for %s",
