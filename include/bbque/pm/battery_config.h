@@ -25,13 +25,10 @@
 #define BBQUE_BATTERY_SYS_ROOT         "/sys/class/power_supply/"
 #define BBQUE_BATTERY_IF_TECHNOLOGY    "technology"
 
-#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
-  #define BBQUE_BATTERY_IF_CHARGE_FULL   "charge_full"
-  #define BBQUE_BATTERY_IF_CHARGE_MAH    "charge_now"
-#else
-  #define BBQUE_BATTERY_IF_CHARGE_FULL   "energy_full"
-  #define BBQUE_BATTERY_IF_CHARGE_MAH    "energy_now"
-#endif
+#define BBQUE_BATTERY_IF_CHARGE_FULL   "charge_full"
+#define BBQUE_BATTERY_IF_CHARGE_MAH    "charge_now"
+#define BBQUE_BATTERY_IF_ENERGY_FULL   "energy_full"
+#define BBQUE_BATTERY_IF_ENERGY_MAH    "energy_now"
 
 #define BBQUE_BATTERY_IF_CHARGE_PERC   "capacity"
 #define BBQUE_BATTERY_IF_STATUS        "status"

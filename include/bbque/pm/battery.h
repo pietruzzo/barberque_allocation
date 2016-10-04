@@ -157,6 +157,10 @@ private:
 	/*** proc path */
 	std::string status_dir;
 
+	std::string charge_mah_file;
+
+	bool power_now_exists = false;
+
 	/*** File descriptor used for accessing interface files */
 	std::ifstream fd;
 

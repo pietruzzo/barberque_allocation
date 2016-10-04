@@ -70,12 +70,36 @@ Battery::Battery(
 	logger->Debug("Technology: %s", t_str);
 
 	// Full capacity
+	std::string charge_full_file("");
+	if (boost::filesystem::exists(info_dir + BBQUE_BATTERY_IF_CHARGE_FULL))
+		charge_full_file = info_dir + BBQUE_BATTERY_IF_CHARGE_FULL;
+	else if (boost::filesystem::exists(info_dir + BBQUE_BATTERY_IF_ENERGY_FULL))
+		charge_full_file = info_dir + BBQUE_BATTERY_IF_ENERGY_FULL;
+	else
+		logger->Error("Batter: missing input for charge full status");
+	logger->Debug("Battery: reading from %s", charge_full_file.c_str());
+
 	char cf_str[20];
 	memset(cf_str, '\0', sizeof(cf_str));
-	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_CHARGE_FULL,
-			cf_str, sizeof(cf_str)-1);
-	charge_full = std::stol(cf_str) / 1000;
+	bu::IoFs::ReadValueFrom(charge_full_file, cf_str, sizeof(cf_str)-1);
 	logger->Debug("Charge full: %s", cf_str);
+	if (strlen(cf_str) > 0)
+		charge_full = std::stol(cf_str) / 1000;
+
+	// Charge status (mAh) file
+	if (boost::filesystem::exists(info_dir + BBQUE_BATTERY_IF_CHARGE_MAH))
+		charge_mah_file = info_dir + BBQUE_BATTERY_IF_CHARGE_MAH;
+	else if (boost::filesystem::exists(info_dir + BBQUE_BATTERY_IF_ENERGY_MAH))
+		charge_mah_file = info_dir + BBQUE_BATTERY_IF_ENERGY_MAH;
+	else
+		logger->Error("Battery: missing input for status");
+	logger->Debug("Battery: charge level (mAh) file = %s", charge_mah_file.c_str());
+
+	// Power now
+	if (boost::filesystem::exists(info_dir + BBQUE_BATTERY_IF_POWER_NOW)) {
+		power_now_exists = true;
+		logger->Debug("Battery: instant power input available");
+	}
 
 	// Status report
 	ready = true;
@@ -144,8 +168,7 @@ uint8_t Battery::GetChargePerc() {
 unsigned long Battery::GetChargeMAh() {
 	char mah[10];
 
-	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_CHARGE_MAH,
-			mah, sizeof(mah)-1);
+	bu::IoFs::ReadValueFrom(charge_mah_file, mah, sizeof(mah)-1);
 	if (!isdigit(mah[0])) {
 		logger->Error("Not valid charge value");
 		return 0;
@@ -162,21 +185,17 @@ uint32_t Battery::GetVoltage() {
 }
 
 uint32_t Battery::GetPower() {
-#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
-	return (GetDischargingRate() * GetVoltage()) / 1e3;
-#else
-	return GetMilliUInt32From(info_dir + BBQUE_BATTERY_IF_POWER_NOW);
-#endif
+	if (power_now_exists)
+		return GetMilliUInt32From(info_dir + BBQUE_BATTERY_IF_POWER_NOW);
+	else
+		return (GetDischargingRate() * GetVoltage()) / 1e3;
 }
 
 uint32_t Battery::GetDischargingRate() {
 #ifndef CONFIG_BBQUE_PM_NOACPI
 	return ACPI_GetDischargingRate();
 #else
-	uint32_t current = GetMilliUInt32From(info_dir + BBQUE_BATTERY_IF_CURRENT_NOW);
-	if (current == 0)
-		return (GetPower() * 1e3) / GetVoltage();
-	return current;
+	return GetMilliUInt32From(info_dir + BBQUE_BATTERY_IF_CURRENT_NOW);
 #endif
 }
 
