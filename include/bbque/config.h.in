@@ -176,6 +176,9 @@
 /** Enable periodic Power monitoring */
 #cmakedefine CONFIG_BBQUE_WM
 
+/** Specify the HWMon number required by the libsensors */
+#cmakedefine CONFIG_BBQUE_PM_HWMON_NUM ${CONFIG_BBQUE_PM_HWMON_NUM}
+
 /** Enable Power Management support */
 #cmakedefine CONFIG_BBQUE_PM_BATTERY
 

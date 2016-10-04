@@ -25,8 +25,12 @@
 #include "bbque/res/resources.h"
 
 #define BBQUE_LINUX_SYS_CPU_PREFIX   "/sys/devices/system/cpu/cpu"
-#define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/devices/platform/coretemp.0/temp"
 
+#ifndef CONFIG_BBQUE_PM_NOACPI
+  #define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/devices/platform/coretemp.0/temp"
+#else
+  #define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/bus/platform/drivers/coretemp/coretemp.0/hwmon/hwmon"
+#endif
 
 using namespace bbque::res;
 
@@ -134,7 +138,7 @@ protected:
 	std::map<int,int> core_ids;
 
 	/*** Mapping system CPU cores to thermal sensors path */
-	std::map<int, std::string * > core_therms;
+	std::map<int, std::shared_ptr<std::string>> core_therms;
 
 	/*** Available clock frequencies for each processing element (core) */
 	std::map<int, std::shared_ptr<std::vector<uint32_t>> > core_freqs;

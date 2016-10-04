@@ -122,9 +122,14 @@ void CPUPowerManager::InitTemperatureSensors() {
 	char str_value[8];
 	int sensor_id = TEMP_SENSOR_FIRST_ID;
 	bu::IoFs::ExitCode_t result = bu::IoFs::OK;
+
+	std::string prefix_coretemp(BBQUE_LINUX_SYS_CPU_THERMAL);
+#ifdef CONFIG_BBQUE_PM_NOACPI
+	prefix_coretemp += std::to_string(CONFIG_BBQUE_PM_HWMON_NUM) + "/temp";
+#endif
 	for ( ; result == bu::IoFs::OK; sensor_id += TEMP_SENSOR_STEP_ID) {
 		std::string therm_file(
-				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
+				prefix_coretemp + std::to_string(sensor_id) +
 				"_label");
 		logger->Debug("Thermal sensors @[%s]", therm_file.c_str());
 		result = bu::IoFs::ReadValueFrom(therm_file, str_value, 8);
@@ -139,8 +144,8 @@ void CPUPowerManager::InitTemperatureSensors() {
 			continue;
 
 		cpu_id = std::stoi(core_label.substr(5));
-		core_therms[cpu_id] = new std::string(
-				BBQUE_LINUX_SYS_CPU_THERMAL + std::to_string(sensor_id) +
+		core_therms[cpu_id] = std::make_shared<std::string>(
+				prefix_coretemp + std::to_string(sensor_id) +
 				"_input");
 		logger->Info("Thermal sensors for CPU %d @[%s]",
 				cpu_id, core_therms[cpu_id]->c_str());
