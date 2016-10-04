@@ -19,6 +19,9 @@ choice
   config BBQUE_SCHEDPOL_DEFAULT_SCALLOP
     bool "Scallop"
     select BBQUE_SCHEDPOL_SCALLOP
+  config BBQUE_SCHEDPOL_DEFAULT_GRIDBALANCE
+    bool "GridBalance"
+    select BBQUE_SCHEDPOL_GRIDBALANCE
 ##NP
 
 endchoice
@@ -29,3 +32,4 @@ source barbeque/plugins/schedpol/random/Kconfig
 source barbeque/plugins/schedpol/cloves/Kconfig
 source barbeque/plugins/schedpol/tempura/Kconfig
 source barbeque/plugins/schedpol/scallop/Kconfig
+source barbeque/plugins/schedpol/gridbalance/Kconfig
