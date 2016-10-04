@@ -53,13 +53,13 @@ Battery::Battery(
 	logger->Debug("Directory %s found", info_dir.c_str());
 
 
-#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+#ifndef CONFIG_BBQUE_PM_NOACPI
 	status_dir.append("/" + str_id + "/");
 	if (!boost::filesystem::exists(status_dir)) {
 		logger->Error("Missing directory: %s", status_dir.c_str());
 		return;
 	}
-#endif // CONFIG_BBQUE_PM_BATTERY_NOACPI
+#endif // CONFIG_BBQUE_PM_NOACPI
 
 	// Technology string
 	char t_str[12];
@@ -154,7 +154,7 @@ unsigned long Battery::GetChargeMAh() {
 }
 
 uint32_t Battery::GetVoltage() {
-#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+#ifndef CONFIG_BBQUE_PM_NOACPI
 	return ACPI_GetVoltage();
 #else
 	return GetMilliUInt32From(info_dir + BBQUE_BATTERY_IF_VOLTAGE_NOW);
@@ -170,7 +170,7 @@ uint32_t Battery::GetPower() {
 }
 
 uint32_t Battery::GetDischargingRate() {
-#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+#ifndef CONFIG_BBQUE_PM_NOACPI
 	return ACPI_GetDischargingRate();
 #else
 	uint32_t current = GetMilliUInt32From(info_dir + BBQUE_BATTERY_IF_CURRENT_NOW);
@@ -211,7 +211,7 @@ std::string Battery::PrintChargeBar() {
 
 /********************** ACPI dependent code ***************************/
 
-#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+#ifndef CONFIG_BBQUE_PM_NOACPI
 
 uint32_t Battery::ACPI_GetVoltage() {
 	char volt[7];
@@ -239,7 +239,7 @@ uint32_t Battery::ACPI_GetDischargingRate() {
 	return std::stoi(rate);
 }
 
-#endif // CONFIG_BBQUE_PM_BATTERY_NOACPI
+#endif // CONFIG_BBQUE_PM_NOACPI
 
 
 

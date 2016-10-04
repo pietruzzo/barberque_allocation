@@ -11,19 +11,21 @@ config BBQUE_PM
 
   If unsure say no, this will disable all the PM related features.
 
+
+config BBQUE_PM_NOACPI
+  bool "NO ACPI Interface"
+  depends on BBQUE_PM
+  default n
+   ---help---
+  Avoid using the ACPI interfaces. Probably required since kernel 4.x versions.
+
+
 config  BBQUE_PM_BATTERY
   bool "Battery Management"
   depends on BBQUE_PM
   default n
   ---help---
   Enable the interface with the system battery, if available.
-
-config BBQUE_PM_BATTERY_NOACPI
-  bool "NO ACPI Interface"
-  depends on BBQUE_PM_BATTERY
-  default n
-   ---help---
-  Avoid using the ACPI interface to monitor the battery status.
 
 config BBQUE_WM
   bool "Periodic Monitoring"

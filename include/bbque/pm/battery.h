@@ -176,13 +176,13 @@ private:
 	uint32_t GetMilliUInt32From(std::string const & path);
 
 
-#ifndef CONFIG_BBQUE_PM_BATTERY_NOACPI
+#ifndef CONFIG_BBQUE_PM_NOACPI
 
 	uint32_t ACPI_GetVoltage();
 
 	uint32_t ACPI_GetDischargingRate();
 
-#endif // CONFIG_BBQUE_PM_BATTERY_NOACPI
+#endif // CONFIG_BBQUE_PM_NOACPI
 
 };
 
