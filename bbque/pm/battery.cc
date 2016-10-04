@@ -18,7 +18,6 @@
 #include <cassert>
 #include <cctype>
 #include <cstring>
-
 #include <boost/filesystem.hpp>
 
 #include "bbque/pm/battery.h"
@@ -64,6 +63,7 @@ Battery::Battery(
 	// Technology string
 	char t_str[12];
 	memset(t_str, '\0', sizeof(t_str));
+	logger->Debug("Battery: reading from %s", BBQUE_BATTERY_IF_TECHNOLOGY);
 	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_TECHNOLOGY,
 			t_str, sizeof(t_str)-1);
 	technology = t_str;
@@ -180,6 +180,7 @@ uint32_t Battery::GetDischargingRate() {
 #endif
 }
 
+
 unsigned long Battery::GetEstimatedLifetime() {
 	float hours = (float) GetChargeMAh() / (float) GetDischargingRate();
 	logger->Debug("Est. time   : \thours=%.2f (min=%.2f)",
@@ -188,7 +189,7 @@ unsigned long Battery::GetEstimatedLifetime() {
 }
 
 void Battery::LogReportStatus() {
-	logger->Info("Technology  : \t%s", 	    technology.c_str());
+	logger->Info("Technology  : \t%s",      technology.c_str());
 	logger->Info("Full Charge : \t%lu mAh", charge_full);
 	logger->Info("Level       : \t%s",      PrintChargeBar().c_str());
 	logger->Info("Charge      : \t%lu mAh", GetChargeMAh());
