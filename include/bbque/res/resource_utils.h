@@ -22,7 +22,7 @@
 #include <sstream>
 #include <string>
 
-#include "bbque/res/identifier.h"
+#include "bbque/res/resources.h"
 
 #define POW_2_10 0x400
 #define POW_2_20 0x100000
@@ -286,6 +286,28 @@ public:
 	}
 
 };
+
+
+
+inline bool CompareTemperature(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr) {
+	if (r1_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE) <
+		r2_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE))
+		return true;
+	return false;
+}
+
+inline bool CompareMeanDegradation(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr) {
+	if (r1_ptr->MeanDegradationPerc() < r2_ptr->MeanDegradationPerc())
+		return true;
+	return false;
+}
+
+inline bool CompareCurrentDegradation(ResourcePtr_t const &  r1_ptr, ResourcePtr_t const & r2_ptr) {
+	if (r1_ptr->CurrentDegradationPerc() < r2_ptr->CurrentDegradationPerc())
+		return true;
+	return false;
+}
+
 
 } // namespace res
 
