@@ -282,6 +282,7 @@ while read lstopo_entry; do
 			let CURRENT_CPU_ID++
 			echo "    <cpu arch=\""$ARCH"\" id=\""$CURRENT_CPU_ID"\" socket_id=\""$CURRENT_SOCKET"\" mem_id=\""$CURRENT_MEMORY_NODE"\">" >> $TARGET_SYS
 			PopulateDebugLog "Creating a new Barbeque CPU. arch: $ARCH, ID: $CURRENT_CPU_ID, socket_id: $CURRENT_SOCKET, mem_id: $CURRENT_MEMORY_NODE"
+			PARTITION_INFO_FOUND=1
 			;;
 		"Core")
 			CURRENT_CORE=$(echo $lstopo_entry | grep -o "P#[0-9]\{1,\}" | grep -o "[0-9]\{1,\}")
