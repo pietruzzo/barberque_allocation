@@ -278,6 +278,26 @@ protected:
 				sys->ApplicationsCount(prio);
 		return slots;
 	}
+
+	/**
+	 * @brief Execute a function over all the active applications
+	 */
+	inline ExitCode_t ForEachReadyAndRunningDo(
+			std::function<
+				ExitCode_t(bbque::app::AppCPtr_t)> do_func) {
+		AppsUidMapIt app_it;
+		ba::AppCPtr_t app_ptr;
+
+		app_ptr = sys->GetFirstReady(app_it);
+		for (; app_ptr; app_ptr = sys->GetNextReady(app_it)) {
+			do_func(app_ptr);
+		}
+		app_ptr = sys->GetFirstRunning(app_it);
+		for (; app_ptr; app_ptr = sys->GetNextRunning(app_it)) {
+			do_func(app_ptr);
+		}
+		return SCHED_OK;
+	}
 };
 
 } // namespace plugins
