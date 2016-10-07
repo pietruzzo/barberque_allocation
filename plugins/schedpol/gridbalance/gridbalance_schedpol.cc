@@ -17,8 +17,10 @@
 
 #include "gridbalance_schedpol.h"
 
+#include <cmath>
 #include <cstdlib>
 #include <cstdint>
+#include <functional>
 #include <iostream>
 
 #include "bbque/modules_factory.h"
@@ -26,8 +28,11 @@
 
 #include "bbque/app/working_mode.h"
 #include "bbque/res/binder.h"
+#include "bbque/res/resource_utils.h"
 
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
+
+using namespace std::placeholders;
 
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
@@ -111,7 +116,90 @@ void GridBalanceSchedPol::SortProcessingElements() {
 			pe->Path().c_str(),
 			pe->GetPowerInfo(PowerManager::InfoType::TEMPERATURE));
 }
+
+
+SchedulerPolicyIF::ExitCode_t
+GridBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
+	logger->Debug("Assign: [%s] assigning resources...", papp->StrId());
+
+	if (papp->Blocking()) {
+		logger->Info("Assign: [%s] is being blocked", papp->StrId());
+		return SCHED_OK;
+	}
+
+	if (papp->Running())
+		papp->CurrentAWM()->ClearResourceRequests();
+
+	// New AWM
+	ba::AwmPtr_t pawm = papp->CurrentAWM();
+	if (pawm == nullptr)
+		pawm = std::make_shared<ba::WorkingMode>(
+				papp->WorkingModes().size(),"Run-time", 1, papp);
+
+	// Amount of processing resources to assign
+	std::string resource_path_str("sys.cpu.pe");
+	uint64_t resource_slot_size = sys->ResourceTotal(resource_path_str) / slots;
+	uint64_t resource_amount =
+			(sys->ApplicationLowestPriority() - papp->Priority() + 1)
+				* resource_slot_size;
+	logger->Info("Assign: [%s] amount of <%s> assigned = %4d",
+			papp->StrId(), resource_path_str.c_str(), resource_amount);
+
+	if (resource_amount == 0) {
+		logger->Warn("Assign: [%s] will have no resources", papp->StrId());
+		return SCHED_OK;
+	}
+
+	// Assign...
+	pawm->AddResourceRequest(resource_path_str, resource_amount,
+		br::ResourceAssignment::Policy::BALANCED);
+	logger->Debug("Assign: [%s] added resource request [#%d]",
+		papp->StrId(), pawm->NumberOfResourceRequests());
+
+	// Enqueue scheduling entity
+	SchedEntityPtr_t sched_entity = std::make_shared<SchedEntity_t>(
+		papp, pawm, R_ID_ANY, 0);
+	entities.push_back(sched_entity);
+
+	return SCHED_OK;
 }
+
+
+SchedulerPolicyIF::ExitCode_t GridBalanceSchedPol::BindWorkingModesAndSched() {
+
+	bbque::res::ResourcePtrList_t::const_iterator iter = proc_elements.begin();
+	auto proc_path = ra.GetPath("sys.cpu.pe");
+
+	for (auto & sched_entity: entities) {
+		logger->Info("Bind: [%s] binding and scheduling...",
+			sched_entity->papp->StrId());
+		uint64_t req_amount = sched_entity->pawm->RequestedAmount(proc_path);
+		size_t num_procs = ceil(req_amount / 100);
+		logger->Debug("Bind: [%s] <sys.cpu.pe>=%d => num_procs=%d",
+			sched_entity->papp->StrId(), req_amount, num_procs);
+
+		bbque::res::ResourceBitset proc_mask =
+			bbque::res::ResourceBinder::GetMaskInRange(
+				proc_elements, iter, num_procs);
+		logger->Debug("Bind: [%s] <sys.cpu.pe> mask = %s",
+			sched_entity->papp->StrId(), proc_mask.ToString().c_str());
+
+		if ((req_amount % 100 == 0) || ((*iter)->Available() == 0)) {
+			logger->Debug("Bind: increment the iterator");
+			iter++;
+		}
+
+		sched_entity->bind_refn =
+			sched_entity->pawm->BindResource(proc_path, proc_mask);
+
+		sched_entity->papp->ScheduleRequest(
+			sched_entity->pawm, sched_status_view, sched_entity->bind_refn);
+	}
+
+	return SCHED_OK;
+}
+
+
 
 SchedulerPolicyIF::ExitCode_t
 GridBalanceSchedPol::Schedule(
@@ -122,6 +210,14 @@ GridBalanceSchedPol::Schedule(
 	// Class providing query functions for applications and resources
 	sys = &system;
 	Init();
+
+	// Resource (AWM) assignment
+	auto assign_awm = std::bind(&GridBalanceSchedPol::AssignWorkingMode, this, _1);
+	ForEachReadyAndRunningDo(assign_awm);
+
+	// Resource binding and then scheduling
+	BindWorkingModesAndSched();
+	entities.clear();
 
 	// Return the new resource status view according to the new resource
 	// allocation performed

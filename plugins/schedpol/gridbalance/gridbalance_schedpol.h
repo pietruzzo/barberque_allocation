@@ -106,6 +106,12 @@ private:
 
 	void SortProcessingElements();
 
+	// ----- Policy core functions ---- //
+
+	ExitCode_t AssignWorkingMode(bbque::app::AppCPtr_t papp);
+
+	ExitCode_t BindWorkingModesAndSched();
+
 };
 
 } // namespace plugins
