@@ -244,7 +244,7 @@ void ResourceAccounter::PrintAppDetails(
  *             RESOURCE DESCRIPTORS ACCESS                              *
  ************************************************************************/
 
-br::ResourcePtr_t ResourceAccounter::GetResource(std::string const & strpath) const {
+br::ResourcePtr_t ResourceAccounter::GetResource(std::string const & strpath) {
 	// Build a resource path object.
 	// It can be a MIXED path(not inserted in r_paths)
 	ResourcePathPtr_t resource_path_ptr = GetPath(strpath);
@@ -264,8 +264,7 @@ br::ResourcePtr_t ResourceAccounter::GetResource(
 }
 
 
-br::ResourcePtrList_t ResourceAccounter::GetResources(
-		std::string const & strpath) const {
+br::ResourcePtrList_t ResourceAccounter::GetResources(std::string const & strpath) {
 	auto resource_path_ptr = GetPath(strpath);
 	if (!resource_path_ptr)
 		return br::ResourcePtrList_t();
@@ -285,7 +284,7 @@ br::ResourcePtrList_t ResourceAccounter::GetResources(
 }
 
 
-bool ResourceAccounter::ExistResource(std::string const & strpath) const {
+bool ResourceAccounter::ExistResource(std::string const & strpath) {
 	auto resource_path_ptr = GetPath(strpath);
 	return ExistResource(resource_path_ptr);
 }
@@ -296,23 +295,28 @@ bool ResourceAccounter::ExistResource(ResourcePathPtr_t resource_path_ptr) const
 	return !matchings.empty();
 }
 
-ResourcePathPtr_t const ResourceAccounter::GetPath(
-		std::string const & strpath) const {
+ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath) {
 	auto rp_it = r_paths.find(strpath);
 	if (rp_it == r_paths.end()) {
 		logger->Warn("GetPath: No resource path object for [%s]",
 			strpath.c_str());
-		return std::make_shared<br::ResourcePath>(strpath);
+		auto new_path = std::make_shared<br::ResourcePath>(strpath);
+		if (ExistResource(new_path)) {
+			r_paths.emplace(strpath, new_path);
+			return new_path;
+		}
+		else
+			return nullptr;
 	}
 	return (*rp_it).second;
 }
+
 
 /************************************************************************
  *                   QUERY METHODS                                      *
  ************************************************************************/
 
-inline uint64_t ResourceAccounter::Total(
-		std::string const & path) const {
+inline uint64_t ResourceAccounter::Total(std::string const & path) {
 	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_TOTAL, 0);
 }
@@ -334,7 +338,7 @@ inline uint64_t ResourceAccounter::Total(
 
 inline uint64_t ResourceAccounter::Used(
 		std::string const & path,
-		br::RViewToken_t status_view) const {
+		br::RViewToken_t status_view) {
 	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_USED, status_view);
 }
@@ -359,7 +363,7 @@ inline uint64_t ResourceAccounter::Used(
 inline uint64_t ResourceAccounter::Available(
 		std::string const & path,
 		br::RViewToken_t status_view,
-		ba::AppSPtr_t papp) const {
+		ba::AppSPtr_t papp) {
 	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_AVAIL, status_view, papp);
 }
@@ -382,8 +386,7 @@ inline uint64_t ResourceAccounter::Available(
 	return QueryStatus(matchings, RA_AVAIL, status_view, papp);
 }
 
-inline uint64_t ResourceAccounter::Unreserved(
-		std::string const & path) const {
+inline uint64_t ResourceAccounter::Unreserved(std::string const & path) {
 	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_UNRESERVED, 0);
 }
@@ -408,8 +411,7 @@ inline uint16_t ResourceAccounter::Count(
 	return matchings.size();
 }
 
-inline uint16_t ResourceAccounter::CountPerType(
-		br::ResourceType type) const {
+inline uint16_t ResourceAccounter::CountPerType(br::ResourceType type) const {
 	std::map<br::ResourceType, uint16_t>::const_iterator it;
 	it =  r_count.find(type);
 	if (it == r_count.end())
@@ -461,7 +463,7 @@ uint64_t ResourceAccounter::GetAssignedAmount(
 		br::RViewToken_t status_view,
 		br::ResourceType r_type,
 		br::ResourceType r_scope_type,
-		BBQUE_RID_TYPE r_scope_id) const {
+		BBQUE_RID_TYPE r_scope_id) {
 
 	if (assign_map == nullptr) {
 		logger->Error("GetAssignedAmount: null pointer map");

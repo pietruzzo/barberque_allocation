@@ -114,7 +114,7 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint64_t Total(std::string const & path) const;
+	uint64_t Total(std::string const & path);
 
 	uint64_t Total(br::ResourcePtrList_t & resources_list) const;
 
@@ -127,7 +127,7 @@ public:
 	uint64_t Available(
 	        std::string const & path,
 	        br::RViewToken_t status_view = 0,
-	        ba::AppSPtr_t papp = ba::AppSPtr_t()) const;
+	        ba::AppSPtr_t papp = ba::AppSPtr_t());
 
 	uint64_t Available(
 	        br::ResourcePtrList_t & resources_list,
@@ -142,7 +142,7 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint64_t Used(std::string const & path, br::RViewToken_t status_view = 0) const;
+	uint64_t Used(std::string const & path, br::RViewToken_t status_view = 0);
 
 	uint64_t Used(
 		br::ResourcePtrList_t & resources_list, br::RViewToken_t status_view = 0) const;
@@ -155,7 +155,7 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint64_t Unreserved(std::string const & path) const;
+	uint64_t Unreserved(std::string const & path);
 
 	uint64_t Unreserved(br::ResourcePtrList_t & resources_list) const;
 
@@ -185,28 +185,28 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	br::ResourcePtr_t GetResource(std::string const & path) const;
+	br::ResourcePtr_t GetResource(std::string const & path);
 
 	br::ResourcePtr_t GetResource(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	br::ResourcePtrList_t GetResources(std::string const & path) const;
+	br::ResourcePtrList_t GetResources(std::string const & path);
 
 	br::ResourcePtrList_t GetResources(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	bool ExistResource(std::string const & path) const;
+	bool ExistResource(std::string const & path);
 
 	bool ExistResource(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	br::ResourcePathPtr_t const GetPath(std::string const & path_str) const;
+	br::ResourcePathPtr_t const GetPath(std::string const & path_str);
 
 	/**
 	 * @brief Get the cumulative amount of resource usage
@@ -227,7 +227,7 @@ public:
 	        br::ResourceType r_type,
 	        br::ResourceType r_scope_type =
 	                br::ResourceType::UNDEFINED,
-	        BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
+	        BBQUE_RID_TYPE r_scope_id = R_ID_ANY);
 
 	uint64_t GetAssignedAmount(
 	        br::ResourceAssignmentMap_t const & assign_map,
