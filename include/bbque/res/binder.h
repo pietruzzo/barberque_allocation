@@ -156,6 +156,16 @@ public:
 			AppSPtr_t papp = nullptr,
 			RViewToken_t status_view = 0);
 
+	static ResourceBitset GetMaskInRange(
+			ResourcePtrList_t const & resources_list,
+			size_t begin_pos,
+			size_t end_pos);
+
+	static ResourceBitset GetMaskInRange(
+			ResourcePtrList_t const & resources_list,
+			ResourcePtrList_t::const_iterator & iter,
+			size_t _count);
+
 	/**
 	 * @brief Check if two resource assignments map are compatible for binding
 	 *

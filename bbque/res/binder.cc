@@ -253,6 +253,51 @@ ResourceBitset ResourceBinder::GetMask(
 	return r_mask;
 }
 
+
+ResourceBitset ResourceBinder::GetMaskInRange(
+		ResourcePtrList_t const & resources_list,
+		size_t begin_pos,
+		size_t end_pos) {
+	ResourceBitset r_mask;
+	size_t _count = 0;
+	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	for (ResourcePtr_t const & rsrc: resources_list) {
+		if (_count >= begin_pos && _count <= end_pos) {
+			r_mask.Set(rsrc->ID());
+			logger->Debug("GetMaskInRange: current = %s",
+				r_mask.ToString().c_str());
+		}
+		if (_count == end_pos)
+			break;
+		++_count;
+	}
+	return r_mask;
+}
+
+
+ResourceBitset ResourceBinder::GetMaskInRange(
+		ResourcePtrList_t const & resources_list,
+		ResourcePtrList_t::const_iterator & iter,
+		size_t _count) {
+	ResourceBitset r_mask;
+	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	// Rewind
+	if (iter == resources_list.end())
+		iter = resources_list.begin();
+	for (; iter != resources_list.end(); ++iter) {
+		if (_count > 0) {
+			r_mask.Set((*iter)->ID());
+			logger->Debug("GetMaskInRange: current = %s",
+				r_mask.ToString().c_str());
+			--_count;
+		}
+		if (_count == 0)
+			break;
+	}
+	return r_mask;
+}
+
+
 ResourceBinder::ExitCode_t ResourceBinder::Compatible(
 		ResourceAssignmentMapPtr_t source_map,
 		ResourceAssignmentMapPtr_t out_map) {
