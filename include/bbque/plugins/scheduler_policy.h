@@ -207,6 +207,13 @@ public:
 
 	};
 
+	/** Shared pointer to a scheduling entity */
+	typedef std::shared_ptr<SchedEntity_t> SchedEntityPtr_t;
+
+	/** List of scheduling entities */
+	typedef std::list<SchedEntityPtr_t> SchedEntityList_t;
+
+
 	/**
 	 * @brief Default destructor
 	 */
@@ -229,6 +236,27 @@ public:
 	virtual ExitCode_t Schedule(bbque::System & system,
 			bbque::res::RViewToken_t &rvt) = 0;
 
+
+protected:
+
+	/** System view:
+	 *  This points to the class providing the functions to query information
+	 *  about applications and resources
+	 */
+	System * sys;
+
+	/** Reference to the current scheduling status view of the resources */
+	bbque::res::RViewToken_t sched_status_view;
+
+	/** A counter used for getting always a new clean resources view */
+	uint32_t status_view_count = 0;
+
+
+	/** List of scheduling entities  */
+	SchedEntityList_t entities;
+
+	/** An High-Resolution timer */
+	Timer timer;
 };
 
 } // namespace plugins
