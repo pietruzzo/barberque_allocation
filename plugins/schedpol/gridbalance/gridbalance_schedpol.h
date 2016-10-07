@@ -92,8 +92,11 @@ private:
 	std::unique_ptr<bu::Logger> logger;
 
 
+	uint32_t slots;
 
+	bbque::res::ResourcePtrList_t proc_elements;
 
+	// ************************************** //
 
 	GridBalanceSchedPol();
 
@@ -101,6 +104,7 @@ private:
 
 	ExitCode_t Init();
 
+	void SortProcessingElements();
 
 };
 

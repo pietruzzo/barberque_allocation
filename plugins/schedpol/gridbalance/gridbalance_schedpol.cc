@@ -89,6 +89,28 @@ SchedulerPolicyIF::ExitCode_t GridBalanceSchedPol::Init() {
 	}
 	logger->Debug("Init: resources state view token = %ld", sched_status_view);
 
+	// Sort processing elements (by temperature)
+	SortProcessingElements();
+
+	// Compute the number of slots for priority-proportional assignments
+	if (sys->HasApplications(ApplicationStatusIF::READY))
+		slots = GetSlots();
+	logger->Debug("Init: number of assignable slots = %d", slots);
+
+	return SCHED_OK;
+}
+
+
+void GridBalanceSchedPol::SortProcessingElements() {
+	if (proc_elements.empty())
+		proc_elements = sys->GetResources("sys.cpu.pe");
+
+	proc_elements.sort(bbque::res::CompareTemperature);
+	for (auto & pe: proc_elements)
+		logger->Debug("<%s> : %.0f C",
+			pe->Path().c_str(),
+			pe->GetPowerInfo(PowerManager::InfoType::TEMPERATURE));
+}
 }
 
 SchedulerPolicyIF::ExitCode_t
