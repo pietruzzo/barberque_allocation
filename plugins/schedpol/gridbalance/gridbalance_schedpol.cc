@@ -56,43 +56,39 @@ char const * GridBalanceSchedPol::Name() {
 GridBalanceSchedPol::GridBalanceSchedPol():
 		cm(ConfigurationManager::GetInstance()),
 		ra(ResourceAccounter::GetInstance()) {
-
-	// Logger instance
-	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	logger = bu::Logger::GetLogger("bq.sp.gridbal");
 	assert(logger);
 
 	if (logger)
 		logger->Info("gridbalance: Built a new dynamic object[%p]", this);
 	else
 		fprintf(stderr,
-				FI("gridbalance: Built new dynamic object [%p]\n"), (void *)this);
+			FI("gridbalance: Built new dynamic object [%p]\n"), (void *)this);
 }
 
 
 GridBalanceSchedPol::~GridBalanceSchedPol() {
-
+	entities.clear();
 }
 
-GridBalanceSchedPol::ExitCode_t GridBalanceSchedPol::Init() {
-	ResourceAccounterStatusIF::ExitCode_t ra_result;
-	ExitCode_t result = OK;
 
+SchedulerPolicyIF::ExitCode_t GridBalanceSchedPol::Init() {
 	// Build a string path for the resource state view
 	std::string token_path(MODULE_NAMESPACE);
 	++status_view_count;
 	token_path.append(std::to_string(status_view_count));
-
-	// Get a fresh resource status view
-	logger->Debug("Init: Require a new resource state view [%s]",
+	logger->Debug("Init: requiring a new resource state view [%s]",
 		token_path.c_str());
-	ra_result = ra.GetView(token_path, sched_status_view);
-	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
-		logger->Fatal("Init: Cannot get a resource state view");
-		return ERROR_VIEW;
-	}
-	logger->Debug("Init: Resources state view token: %d", sched_status_view);
 
-	return result;
+	// A new resource status view
+	ResourceAccounterStatusIF::ExitCode_t ra_result =
+		ra.GetView(token_path, sched_status_view);
+	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
+		logger->Fatal("Init: cannot get a new resource state view");
+		return SCHED_ERROR_VIEW;
+	}
+	logger->Debug("Init: resources state view token = %ld", sched_status_view);
+
 }
 
 SchedulerPolicyIF::ExitCode_t
@@ -103,6 +99,7 @@ GridBalanceSchedPol::Schedule(
 
 	// Class providing query functions for applications and resources
 	sys = &system;
+	Init();
 
 	// Return the new resource status view according to the new resource
 	// allocation performed

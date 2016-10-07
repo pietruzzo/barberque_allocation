@@ -59,7 +59,7 @@ public:
 	static void * Create(PF_ObjectParams *);
 
 	/**
-	 * @brief Destroy the gridbalance plugin 
+	 * @brief Destroy the gridbalance plugin
 	 */
 	static int32_t Destroy(void *);
 
@@ -85,63 +85,23 @@ public:
 
 private:
 
-	/**
-	 * @brief Specific internal exit code of the class
-	 */
-	enum ExitCode_t {
-		OK,
-		ERROR,
-		ERROR_VIEW
-	};
-
-	/** Shared pointer to a scheduling entity */
-	typedef std::shared_ptr<SchedEntity_t> SchedEntityPtr_t;
-
-	/** List of scheduling entities */
-	typedef std::list<SchedEntityPtr_t> SchedEntityList_t;
-
-
-	/** Configuration manager instance */
 	ConfigurationManager & cm;
 
-	/** Resource accounter instance */
 	ResourceAccounter & ra;
 
-	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
-	/** System view:
-	 *  This points to the class providing the functions to query information
-	 *  about applications and resources
-	 */
-	System * sys;
 
 
-	/** Reference to the current scheduling status view of the resources */
-	RViewToken_t sched_status_view;
-
-	/** A counter used for getting always a new clean resources view */
-	uint32_t status_view_count = 0;
-
-	/** List of scheduling entities  */
-	SchedEntityList_t entities;
 
 
-	/** An High-Resolution timer */
-	Timer timer;
-
-	/**
-	 * @brief Constructor
-	 *
-	 * Plugins objects could be build only by using the "create" method.
-	 * Usually the PluginManager acts as object
-	 */
 	GridBalanceSchedPol();
 
-	/**
-	 * @brief Optional initialization member function
-	 */
+	// ----- Initialization stuff ---- //
+
 	ExitCode_t Init();
+
+
 };
 
 } // namespace plugins
