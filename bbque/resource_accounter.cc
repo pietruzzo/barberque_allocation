@@ -828,7 +828,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_GetView(
 
 	// Token
 	token = std::hash<std::string>()(req_path);
-	logger->Debug("GetView: New resource state view. Token = %d", token);
+	logger->Debug("GetView: new resource state view token = %ld", token);
 
 	// Allocate a new view for the applications resource assignments
 	assign_per_views.emplace(token, std::make_shared<AppAssignmentsMap_t>());
@@ -851,30 +851,29 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_PutView(
 		br::RViewToken_t status_view) {
 	// Do nothing if the token references the system state view
 	if (status_view == sys_view_token) {
-		logger->Warn("PutView: Cannot release the system resources view");
+		logger->Warn("PutView: cannot release the system resources view");
 		return RA_ERR_UNAUTH_VIEW;
 	}
 
 	// Get the resource set using the referenced view
 	ResourceViewsMap_t::iterator rviews_it(rsrc_per_views.find(status_view));
 	if (rviews_it == rsrc_per_views.end()) {
-		logger->Error("PutView: Cannot find resource view token %d", status_view);
+		logger->Error("PutView: cannot find resource view token %ld", status_view);
 		return RA_ERR_MISS_VIEW;
 	}
 
 	// For each resource delete the view
-	ResourceSet_t::iterator rsrc_set_it(rviews_it->second->begin());
-	ResourceSet_t::iterator rsrc_set_end(rviews_it->second->end());
-	for (; rsrc_set_it != rsrc_set_end; ++rsrc_set_it)
-		(*rsrc_set_it)->DeleteView(status_view);
+	for (auto & resource_set: *(rviews_it->second))
+		resource_set->DeleteView(status_view);
 
 	// Remove the map of Apps/EXCs resource assignments and the resource reference
 	// set of this view
 	assign_per_views.erase(status_view);
 	rsrc_per_views.erase(status_view);
 
-	logger->Debug("PutView: view %d cleared", status_view);
-	logger->Debug("PutView: %d resource set and %d assign_map per view currently managed",
+	logger->Debug("PutView: view %ld cleared", status_view);
+	logger->Debug("PutView: %ld resource set and %d assign_map per view "
+			"currently managed",
 			rsrc_per_views.size(), assign_per_views.erase(status_view));
 
 	return RA_SUCCESS;
@@ -893,7 +892,8 @@ br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t status_view) {
 
 	// Do nothing if the token references the system state view
 	if (status_view == sys_view_token) {
-		logger->Debug("SetView: View %d is already the system state!", status_view);
+		logger->Debug("SetView: View %ld is already the system state!",
+			status_view);
 		return sys_view_token;
 	}
 
@@ -901,7 +901,7 @@ br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t status_view) {
 	// usages of this view and point to
 	AppAssignmentsViewsMap_t::iterator assign_view_it(assign_per_views.find(status_view));
 	if (assign_view_it == assign_per_views.end()) {
-		logger->Fatal("SetView: View %d unknown", status_view);
+		logger->Fatal("SetView: View %ld unknown", status_view);
 		return sys_view_token;
 	}
 
@@ -914,9 +914,9 @@ br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t status_view) {
 	// Put the old view
 	_PutView(old_sys_status_view);
 
-	logger->Info("SetView: View %d is the new system state view.",
+	logger->Info("SetView: View %ld is the new system state view.",
 			sys_view_token);
-	logger->Debug("SetView: %d resource set and %d assign_map per view currently managed",
+	logger->Debug("SetView: %ld resource set and %d assign_map per view currently managed",
 			rsrc_per_views.size(), assign_per_views.erase(status_view));
 	return sys_view_token;
 }
@@ -964,7 +964,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncStart() {
 		_SyncAbort();
 		return RA_ERR_SYNC_VIEW;
 	}
-	logger->Debug("SyncMode [%d]: resource state view token = %d",
+	logger->Debug("SyncMode [%d]: resource state view token = %ld",
 			sync_ssn.count, sync_ssn.view);
 
 	// Init the view with the resource accounting of running applications
@@ -1173,7 +1173,7 @@ void ResourceAccounter::_ReleaseResources(
 	// referenced by 'status_view'
 	AppAssignmentsMapPtr_t apps_assign;
 	if (GetAppAssignmentsByView(status_view, apps_assign) == RA_ERR_MISS_VIEW) {
-		logger->Fatal("Release: Resource view unavailable");
+		logger->Fatal("Release: resource view unavailable");
 		return;
 	}
 
@@ -1204,7 +1204,8 @@ ResourceAccounter::IncBookingCounts(
 	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(status_view));
 	assert(rsrc_view != rsrc_per_views.end());
 	if (rsrc_view == rsrc_per_views.end()) {
-		logger->Fatal("Booking: invalid resource state view token [%ld]", status_view);
+		logger->Fatal("Booking: invalid resource state view token [%ld]",
+			status_view);
 		return RA_ERR_MISS_VIEW;
 	}
 	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
@@ -1247,15 +1248,16 @@ ResourceAccounter::IncBookingCounts(
 
 		assert(result == RA_SUCCESS);
 		logger->Info("Booking: R<%s> SUCCESS "
-				"[U:%" PRIu64 " | A:%" PRIu64 " | T:%" PRIu64 "]",
+				"[U:%" PRIu64 " | A:%" PRIu64 " | T:%" PRIu64 "]"
+				" view=[%ld]",
 				rsrc_path->ToString().c_str(), r_assign->GetAmount(),
 				Available(rsrc_path, MIXED, status_view, papp),
-				Total(rsrc_path, MIXED));
+				Total(rsrc_path, MIXED), status_view);
 	}
 
 	apps_assign->emplace(papp->Uid(), assign_map);
-	logger->Debug("Booking: [%s] now holds %d resources",
-			papp->StrId(), assign_map->size());
+	logger->Debug("Booking: [%s] now holds %d resources - view=[%ld]",
+			papp->StrId(), assign_map->size(), status_view);
 
 	return RA_SUCCESS;
 }
@@ -1303,7 +1305,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 	// The availability of resources mismatches the one checked in the
 	// scheduling phase. This should never happen!
 	if (requested != 0) {
-		logger->Crit("DRBooking: resource assignment mismatch");
+		logger->Crit("DRBooking: resource assignment mismatch in view=[%ld]",
+			status_view);
 		assert(requested != 0);
 		return RA_ERR_USAGE_EXC;
 	}
@@ -1367,8 +1370,8 @@ inline void ResourceAccounter::SyncResourceBooking(
 	// Acquire the resource according to the amount assigned by the
 	// scheduler
 	requested -= rsrc->Acquire(papp, sched_usage, sync_ssn.view);
-	logger->Debug("DRBooking (sync): %s acquires %s (%d left)",
-			papp->StrId(), rsrc->Name().c_str(), requested);
+	logger->Debug("DRBooking (sync): %s acquires %s (%d left) in view=[%ld]",
+			papp->StrId(), rsrc->Name().c_str(), requested, sch_view_token);
 }
 
 void ResourceAccounter::DecBookingCounts(
@@ -1376,13 +1379,13 @@ void ResourceAccounter::DecBookingCounts(
 		ba::AppSPtr_t const & papp,
 		br::RViewToken_t status_view) {
 	ExitCode_t ra_result;
-	logger->Debug("DecCount: [%s] holds %d resources",
-			papp->StrId(), assign_map->size());
+	logger->Debug("DecCount: [%s] holds %d resources in view=[%ld]",
+			papp->StrId(), assign_map->size(), status_view);
 
 	// Get the set of resources referenced in the view
 	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(status_view));
 	if (rsrc_view == rsrc_per_views.end()) {
-		logger->Fatal("DecCount: invalid resource state view token [%ld]", status_view);
+		logger->Fatal("DecCount: invalid resource state view: [%ld]", status_view);
 		return;
 	}
 	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
