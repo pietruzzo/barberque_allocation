@@ -257,6 +257,27 @@ protected:
 
 	/** An High-Resolution timer */
 	Timer timer;
+
+	/**
+	 * @brief The number of slots, where a slot is defined as "resource
+	 * amount divider". The idea is to provide a mechanism to assign
+	 * resources to the application in a measure proportional to its
+	 * priority:
+	 *
+	 * resource_slot_size  = resource_total / slots;
+	 * resource_amount = resource_slot_size * (lowest_priority - (app_priority+1))
+	 *
+	 * @param system a reference to the system interfaces for retrieving
+	 * information related to both resources and applications
+	 * @return The number of slots
+	 */
+	inline uint32_t GetSlots() {
+		uint32_t slots = 0;
+		for (AppPrio_t prio = 0; prio <= sys->ApplicationLowestPriority(); prio++)
+			slots += (sys->ApplicationLowestPriority()+1 - prio) *
+				sys->ApplicationsCount(prio);
+		return slots;
+	}
 };
 
 } // namespace plugins
