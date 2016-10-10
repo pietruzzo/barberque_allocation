@@ -217,6 +217,11 @@ public:
 	void Clear();
 
 	/**
+	 * @brief Check if the path includes a given resource type
+	 */
+	bool IncludesType(ResourceType r_type);
+
+	/**
 	 * @brief Get the type of resource referenced by the path
 	 *
 	 * Example: path "sys.cpu.mem" will have global type equal to MEMORY

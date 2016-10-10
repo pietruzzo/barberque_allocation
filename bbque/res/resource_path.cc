@@ -115,6 +115,18 @@ ResourcePath::CResult_t ResourcePath::Compare(
 	return result;
 }
 
+
+bool ResourcePath::IncludesType(ResourceType r_type) {
+	for (auto const & curr_resource_ident: identifiers) {
+		if (curr_resource_ident->Type() == r_type) {
+			logger->Debug("IncludesType: %s = [Y]",
+				GetResourceTypeString(r_type));
+			return true;
+		}
+	}
+	return false;
+}
+
 /******************************************************************
  * Manipulation                                                   *
  ******************************************************************/
