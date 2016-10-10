@@ -83,37 +83,44 @@ WorkingMode::ExitCode_t WorkingMode::AddResourceRequest(
 	br::ResourcePath::ExitCode_t rp_result;
 	ExitCode_t result = WM_SUCCESS;
 
-	// Init the resource path starting from the prefix
-	auto resource_path = std::make_shared<br::ResourcePath>(ra.GetPrefixPath());
-	if (!resource_path) {
-		logger->Error("AddResourceRequest: %s '%s' invalid prefix path",
-				str_id, ra.GetPrefixPath().ToString().c_str());
-		return WM_RSRC_ERR_TYPE;
-	}
-
-	// System must have id=0 by default
-	resource_path->ReplaceID(br::ResourceType::SYSTEM, R_ID_ANY, 0);
-
-	// Build the resource path object
-	rp_result = resource_path->Concat(path_str);
-	if (rp_result != br::ResourcePath::OK) {
-		logger->Error("AddResourceRequest: %s '%s' invalid path",
+	auto resource_path = std::make_shared<br::ResourcePath>(path_str);
+	if (resource_path == nullptr) {
+		logger->Error("AddResourceRequest: %s '%s' invalid path string",
 				str_id, path_str.c_str());
-		return WM_RSRC_ERR_TYPE;
+		return WM_RSRC_NOT_FOUND;
 	}
 
-	// Check the existance of the resource required
-	if (!ra.ExistResource(resource_path)) {
-		logger->Warn("AddResourceRequest: %s '%s' not found.",
-				str_id, resource_path->ToString().c_str());
-		result = WM_RSRC_NOT_FOUND;
+	// Init the resource path starting from the prefix
+	if (!resource_path->IncludesType(br::ResourceType::SYSTEM)) {
+		auto prefix_path = std::make_shared<br::ResourcePath>(ra.GetPrefixPath());
+		if (!prefix_path) {
+			logger->Error("AddResourceRequest: %s '%s' invalid prefix path",
+					str_id, ra.GetPrefixPath().ToString().c_str());
+			return WM_RSRC_ERR_TYPE;
+		}
+
+		// Build the resource path object
+		rp_result = prefix_path->Concat(path_str);
+		if (rp_result != br::ResourcePath::OK) {
+			logger->Error("AddResourceRequest: %s '%s' invalid path construction",
+					str_id, path_str.c_str());
+			return WM_RSRC_ERR_TYPE;
+		}
+
+		// Check the existance of the resource required
+		if (!ra.ExistResource(prefix_path)) {
+			logger->Warn("AddResourceRequest: %s '%s' not found.",
+					str_id, prefix_path->ToString().c_str());
+			result = WM_RSRC_NOT_FOUND;
+		}
+
+		resource_path = prefix_path;
 	}
 
 	// Insert a new resource usage object in the map
 	auto r_assign = std::make_shared<br::ResourceAssignment>(amount, split_policy);
 	resources.requested.emplace(resource_path, r_assign);
-	logger->Debug("AddResourceRequest: %s added {%s}"
-			"\t[usage: %" PRIu64 "] [c=%2d]",
+	logger->Debug("AddResourceRequest: %s added {%s} \t[usage: %" PRIu64 "] [c=%2d]",
 			str_id, resource_path->ToString().c_str(),amount,
 			resources.requested.size());
 
