@@ -146,15 +146,14 @@ protected:
 	/*** SysFS CPU prefix path ***/
 	std::string prefix_sys_cpu;
 
-
 	/**
-	 * Save the information of a single /proc/stat sampling
+	 * @struct LoadInfo
+	 * @brief Save the information of a single /proc/stat sampling
+	 * (processor activity in 'jitters')
 	 */
 	struct LoadInfo {
-		/// Total activity time (jitters)
 		int32_t total = 0;
-		/// Idle time (jitters)
-		int32_t idle = 0;
+		int32_t idle  = 0;
 	};
 
 
