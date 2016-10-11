@@ -165,6 +165,7 @@ protected:
 	void InitFrequencyGovernors();
 
 
+	PMResult GetTemperaturePerCore(int pe_id, uint32_t & celsius);
 
 	void _GetAvailableFrequencies(int cpu_id, std::shared_ptr<std::vector<uint32_t>> v);
 

@@ -291,30 +291,58 @@ PowerManager::PMResult CPUPowerManager::GetLoadCPU(
 
 PowerManager::PMResult CPUPowerManager::GetTemperature(
 		ResourcePathPtr_t const & rp,
-		uint32_t & celsius){
-	PMResult result = PMResult::ERR_INFO_NOT_SUPPORTED;
+		uint32_t & celsius) {
+	PMResult result;
 	celsius = 0;
-	bu::IoFs::ExitCode_t io_result;
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
+
+	// Single CPU core (PE)
+	if (pe_id >= 0) {
+		logger->Debug("GetTemperature: <%s> references to a single core",
+			rp->ToString().c_str());
+		return GetTemperaturePerCore(pe_id, celsius);
+	}
+
+	// Mean over multiple CPU cores
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	ResourcePtrList_t procs_list(ra.GetResources(rp));
+	uint32_t temp_per_core = 0;
+	uint32_t num_cores     = 0;
+	for (auto & proc_ptr: procs_list) {
+		result = GetTemperaturePerCore(proc_ptr->ID(), temp_per_core);
+		if (result == PMResult::OK) {
+			celsius += temp_per_core;
+			++num_cores;
+		}
+	}
+	celsius = celsius / num_cores;
+
+	return PMResult::OK;
+}
+
+
+PowerManager::PMResult
+CPUPowerManager::GetTemperaturePerCore(int pe_id, uint32_t & celsius) {
+	bu::IoFs::ExitCode_t io_result;
+	celsius = 0;
 
 	// We may have the same sensor for more than one processing element, the
 	// sensor is referenced at "core" level
 	int core_id = core_ids[pe_id];
-	if (nullptr == core_therms[core_id]) {
-		logger->Debug("Thermal sensor: not available");
-		return result;
+	if (core_therms[core_id] == nullptr) {
+		logger->Debug("GetTemperature: sensor for <pe%d> not available", pe_id);
+		return PMResult::ERR_INFO_NOT_SUPPORTED;
 	}
 
 	io_result = bu::IoFs::ReadIntValueFrom<uint32_t>(
-				core_therms[core_id]->c_str(), celsius);
+			core_therms[core_id]->c_str(), celsius);
 	if (io_result != bu::IoFs::OK) {
-		logger->Error("Cannot read current temperature for %s",
-				rp->ToString().c_str());
+		logger->Error("GetTemperature: cannot read <pe%d> temperature", pe_id);
 		return PMResult::ERR_SENSORS_ERROR;
 	}
 
-	logger->Debug("Thermal sensor [%s] = %d", rp->ToString().c_str(), celsius);
+	logger->Debug("GetTemperature: <pe%d> = %d C", pe_id, celsius);
 	return PMResult::OK;
 }
 
