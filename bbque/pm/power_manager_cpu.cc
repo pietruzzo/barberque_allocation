@@ -42,13 +42,7 @@
 
 
 #define GET_PROC_ELEMENT_ID(rp, pe_id) \
-	pe_id = rp->GetID(br::ResourceType::PROC_ELEMENT);  \
-	if (pe_id < 0) { \
-		logger->Warn("<%s> does not reference valid processing elements", \
-				rp->ToString().c_str()); \
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;\
-	}
-
+	pe_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
 
 namespace bu = bbque::utils;
 
@@ -336,6 +330,11 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequency(
 	bu::IoFs::ExitCode_t result;
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
+	if (pe_id < 0) {
+		logger->Warn("<%s> does not reference a valid processing element",
+			rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
 
 	// Getting the frequency value
 	result = bu::IoFs::ReadIntValueFrom<uint32_t>(
@@ -357,6 +356,11 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 	bu::IoFs::ExitCode_t result;
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
+	if (pe_id < 0) {
+		logger->Warn("<%s> does not reference a valid processing element",
+			rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
 
 	logger->Debug("SetClockFrequency: <%s> (cpu%d) set to %d KHz",
 		rp->ToString().c_str(), pe_id, khz);
@@ -377,6 +381,11 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 	bu::IoFs::ExitCode_t result;
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
+	if (pe_id < 0) {
+		logger->Warn("<%s> does not reference a valid processing element",
+			rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
 
 	logger->Debug("SetClockFrequency: <%s> (cpu%d) set to range [%d, %d] KHz",
 		rp->ToString().c_str(), pe_id, min_khz, max_khz);
@@ -404,6 +413,11 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
 		uint32_t &khz_step) {
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
+	if (pe_id < 0) {
+		logger->Warn("<%s> does not reference a valid processing element",
+			rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
 
 	// Max and min frequency values
 	auto edges = std::minmax_element(
@@ -479,6 +493,11 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
 		std::string & governor) {
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
+	if (pe_id < 0) {
+		logger->Warn("<%s> does not reference a valid processing element",
+			rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
 
 	return GetClockFrequencyGovernor(pe_id, governor);
 }
@@ -506,6 +525,11 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
 	bu::IoFs::ExitCode_t result;
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
+	if (pe_id < 0) {
+		logger->Warn("<%s> does not reference a valid processing element",
+			rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
 
 	std::string cpufreq_path(prefix_sys_cpu + std::to_string(pe_id) +
 			"/cpufreq/scaling_governor");
