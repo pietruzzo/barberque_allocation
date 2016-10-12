@@ -27,9 +27,6 @@
 #include "bbque/pm/model_manager.h"
 #include "bbque/utils/logging/logger.h"
 
-#define POWER_MANAGER_NAMESPACE "bq.pm"
-
-
 namespace bu = bbque::utils;
 namespace bw = bbque::pm;
 

@@ -19,6 +19,9 @@
 #include "bbque/res/resource_path.h"
 #include "bbque/config.h"
 
+#define MODULE_CONFIG    "PowerManager"
+#define MODULE_NAMESPACE "bq.pm"
+
 #ifdef CONFIG_BBQUE_PM_AMD
 # include "bbque/pm/power_manager_amd.h"
 #endif
@@ -36,8 +39,6 @@
 #endif // CONFIG_TARGET_FREESCALE_IMX6Q
 #endif
 
-
-#define MODULE_NAMESPACE POWER_MANAGER_NAMESPACE
 
 namespace bw = bbque::pm;
 
@@ -81,7 +82,7 @@ PowerManager::PowerManager() {
 	mm = &(bw::ModelManager::GetInstance());
 
 	// Get a logger module
-	logger = bu::Logger::GetLogger(POWER_MANAGER_NAMESPACE);
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 
 	// Block recursion on vendor specific construction
