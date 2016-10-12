@@ -40,10 +40,9 @@ domains = cpu,gpu
 # PlatformProxy Options
 ################################################################################
 [PowerMonitor]
-log.enabled = 0
-log.dir   = /tmp
-period_ms = 1000
-
+log.enabled   = 0
+log.dir       = /tmp
+period_ms     = 1000
 temp.critical = 75
 
 [PowerManager]
