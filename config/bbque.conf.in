@@ -46,6 +46,12 @@ period_ms = 1000
 
 temp.critical = 75
 
+[PowerManager]
+nr_sockets   = 1
+temp.socket0 = /sys/devices/platform/coretemp.0/hwmon/hwmon0
+#temp.socket1 = /sys/devices/platform/coretemp.1/hwmon/hwmon1
+
+
 # CGroups CFS bandwidht enforcement parameters
 [LinuxPlatformProxy]
 # The safety margin [%] to add for CFS bandwidth enforcement
@@ -57,7 +63,7 @@ temp.critical = 75
 # Scheduler Manager Options
 ################################################################################
 [SchedulerManager]
-#policy = yams
+policy = gridbalance
 
 ################################################################################
 # Scheduling Policy
@@ -135,7 +141,7 @@ updatetime.resources = 500   # In milliseconds
 # By default all logs are only from level greater than or equal to INFO
 ###
 rootCategory = DEBUG, raFile
-#rootCategory = ERROR, raConsole
+#rootCategory = DEBUG, raConsole
 #rootCategory = ERROR, raSyslog
 #rootCategory = ERROR, raRSyslog
 ###
@@ -150,26 +156,26 @@ category.bq.om =	NOTICE
 category.bq.cm =	INFO
 #category.bq.tpd = 	INFO
 #category.bq.Test =	INFO
-category.bq.ra =	NOTICE
+#category.bq.ra =	NOTICE
 category.bq.ri = 	NOTICE
-category.bq.rb = 	NOTICE
+#category.bq.rb = 	NOTICE
 category.bq.re = 	NOTICE
 #category.bq.rl = 	INFO
 category.bq.rm = 	NOTICE
 category.bq.rp = 	NOTICE
 category.bq.rt = 	NOTICE
-category.bq.rbind =	NOTICE
+#category.bq.rbind =	NOTICE
 #category.bq.ap = 	INFO
 #category.bq.app = 	INFO
 #category.bq.awm =	INFO
 category.bq.df = 	NOTICE
 #category.bq.pp = 	INFO
 #category.bq.pm =	INFO
-category.bq.wm =	INFO
+#category.bq.wm =	INFO
 #category.bq.rpc.fif = 	INFO
 #category.bq.rpc.prx = 	INFO
 #category.bq.sm = 	INFO
-category.bq.sp = 	NOTICE
+#category.bq.sp = 	NOTICE
 category.bq.sp.sc = 	ERROR
 category.bq.sp.scm = 	ERROR
 #category.bq.ym = 	INFO

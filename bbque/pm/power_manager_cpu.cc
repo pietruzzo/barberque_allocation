@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "bbque/configuration_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/pm/power_manager_cpu.h"
 #include "bbque/res/resource_path.h"
@@ -44,14 +45,48 @@
 #define GET_PROC_ELEMENT_ID(rp, pe_id) \
 	pe_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
 
+
+namespace po = boost::program_options;
 namespace bu = bbque::utils;
 
 namespace bbque {
 
 CPUPowerManager::CPUPowerManager():
 		prefix_sys_cpu(BBQUE_LINUX_SYS_CPU_PREFIX) {
+	ConfigurationManager & cfm(ConfigurationManager::GetInstance());
+
+	// Core ID <--> Processing Element ID mapping
 	InitCoreIdMapping();
-	InitTemperatureSensors();
+
+	// --- Thermal monitoring intialization ---
+	po::variables_map opts_vm;
+	po::options_description opts_desc("PowerManager options");
+	std::string option_line("PowerManager.nr_sockets");
+	// Get the number of sockets
+	int sock_id, nr_sockets;
+	opts_desc.add_options()
+		(option_line.c_str(), po::value<int>(&nr_sockets)->default_value(1));
+	cfm.ParseConfigurationFile(opts_desc, opts_vm);
+	// Get the per-socket thermal monitor directory
+	std::string prefix_coretemp;
+	for(sock_id = 0; sock_id < nr_sockets; ++sock_id) {
+		po::options_description opts_desc("PowerManager socket options");
+		std::string option_line("PowerManager.temp.socket");
+		option_line += std::to_string(sock_id);
+		opts_desc.add_options()
+			(option_line.c_str(),
+			 po::value<std::string>(&prefix_coretemp)->default_value(
+				BBQUE_LINUX_SYS_CPU_THERMAL),
+			 "The directory exporting thermal status information");
+		cfm.ParseConfigurationFile(opts_desc, opts_vm);
+		InitTemperatureSensors(prefix_coretemp + "/temp");
+	}
+
+	if (core_therms.empty()) {
+		logger->Warn("CPUPowerManager: No thermal monitoring available."
+			"Check the configuration file [etc/bbque/bbque.conf]");
+	}
+
 	InitFrequencyGovernors();
 }
 
@@ -111,20 +146,17 @@ void CPUPowerManager::InitCoreIdMapping() {
 }
 
 
-void CPUPowerManager::InitTemperatureSensors() {
+void CPUPowerManager::InitTemperatureSensors(std::string const & prefix_coretemp) {
 	int cpu_id = 0;
 	char str_value[8];
 	int sensor_id = TEMP_SENSOR_FIRST_ID;
 	bu::IoFs::ExitCode_t result = bu::IoFs::OK;
 
-	std::string prefix_coretemp(BBQUE_LINUX_SYS_CPU_THERMAL);
-#ifdef CONFIG_BBQUE_PM_NOACPI
-	prefix_coretemp += std::to_string(CONFIG_BBQUE_PM_HWMON_NUM) + "/temp";
-#endif
 	for ( ; result == bu::IoFs::OK; sensor_id += TEMP_SENSOR_STEP_ID) {
 		std::string therm_file(
 				prefix_coretemp + std::to_string(sensor_id) +
 				"_label");
+
 		logger->Debug("Thermal sensors @[%s]", therm_file.c_str());
 		result = bu::IoFs::ReadValueFrom(therm_file, str_value, 8);
 		if (result != bu::IoFs::OK) {

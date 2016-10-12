@@ -159,7 +159,7 @@ protected:
 
 	void InitCoreIdMapping();
 
-	void InitTemperatureSensors();
+	void InitTemperatureSensors(std::string const & prefix_coretemp);
 
 	void InitFrequencyGovernors();
 

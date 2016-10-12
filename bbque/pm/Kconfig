@@ -43,17 +43,6 @@ config  BBQUE_PM_CPU
   Enable the support for the management of CPU(s) from the power-thermal point
   of view.
 
-config BBQUE_PM_HWMON_NUM
-  int "HWmon Number"
-  depends on BBQUE_PM_CPU
-  default 1
-  ---help---
-  Since lm-sensors 3.0 the sysfs interface exposed by the kernel include a "class"
-  i.e. sub-directory hwmon<num> under which the previous attribute files can be
-  found. This number is system specific.
-  Please check the filesystem path: ""sys/bus/platform/drivers/coretemp/coretemp.0/hwmon/..."
-
-
 
 config  BBQUE_PM_NVIDIA
   bool "NVIDIA GPU(s) Power Management"
