@@ -102,7 +102,7 @@ public:
 
 private:
 
-	std::bitset<BBQUE_MAX_R_ID_NUM> bit_set;
+	std::bitset<BBQUE_MAX_R_ID_NUM+1> bit_set;
 
 	BBQUE_RID_TYPE first_set;
 
