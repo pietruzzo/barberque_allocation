@@ -203,7 +203,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	for (br::ResourcePtr_t rsrc: r_list) {
 		rsrc->EnablePowerProfile(samples_window);
 		logger->Info("PWR MNTR: Registering [%s]...", rsrc->Path().c_str());
-		wm_info.resources.emplace(ra.GetPath(rsrc->Path()), rsrc);
+		wm_info.resources.push_back({ra.GetPath(rsrc->Path()), rsrc});
 		wm_info.log_fp.emplace(ra.GetPath(rsrc->Path()), new std::ofstream());
 	}
 
@@ -253,8 +253,8 @@ PowerMonitor::ExitCode_t PowerMonitor::Sample() {
 
 	// Power status monitoring over all the registered resources
 	for (auto & r_entry: wm_info.resources) {
-		br::ResourcePathPtr_t const & r_path(r_entry.first);
-		br::ResourcePtr_t & rsrc(r_entry.second);
+		br::ResourcePathPtr_t const & r_path(r_entry.path);
+		br::ResourcePtr_t & rsrc(r_entry.resource_ptr);
 
 		std::string log_inst_values("[");
 		std::string log_mean_values("[");

@@ -201,6 +201,12 @@ private:
 	std::bitset<WM_EVENT_COUNT> events;
 
 
+	struct ResourceHandler {
+		br::ResourcePathPtr_t path;
+		br::ResourcePtr_t resource_ptr;
+	};
+
+
 	/**
 	 * @brief Structure to collect support information for the power
 	 * monitoring activity
@@ -209,7 +215,7 @@ private:
 		/*--------- Descriptors ------------------*/
 
 		/** Resources to monitor */
-		std::map<br::ResourcePathPtr_t, br::ResourcePtr_t> resources;
+		std::vector<ResourceHandler> resources;
 
 		/*--------- Data logging -----------------*/
 
