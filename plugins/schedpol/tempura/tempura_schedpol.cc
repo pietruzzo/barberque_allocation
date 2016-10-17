@@ -161,12 +161,12 @@ TempuraSchedPol::InitResourceStateView() {
 	status_view_id.append(std::to_string(++sched_count));
 
 	// Get a fresh resource status view
-	logger->Debug("Init: Require a new resource state view [%s]",
+	logger->Debug("Init: require a new resource state view [%s]",
 		status_view_id.c_str());
 	ra_result = ra.GetView(status_view_id, sched_status_view);
 	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS)
 		return SCHED_ERROR_VIEW;
-	logger->Debug("Init: Resources state view token: %d", sched_status_view);
+	logger->Debug("Init: resources state view token: %d", sched_status_view);
 
 	return result;
 }
@@ -186,7 +186,7 @@ TempuraSchedPol::InitBudgets() {
 			// Add a budget info object
 			br::ResourcePtrList_t r_list(ra.GetResources(r_path));
 			budgets.emplace(r_path, std::make_shared<BudgetInfo>(r_path, r_list));
-			logger->Debug("Init: Budgeting on '%s' [Model: %s]",
+			logger->Debug("Init: budgeting on '%s' [Model: %s]",
 					r_path->ToString().c_str(),
 					budgets[r_path]->model.c_str());
 		}
@@ -209,25 +209,25 @@ TempuraSchedPol::Schedule(
 
 	result = Init();
 	if (result != SCHED_OK) {
-		logger->Fatal("Schedule: Policy initialization failed");
+		logger->Fatal("Schedule: policy initialization failed");
 		goto error;
 	}
 
 	result = ComputeBudgets();
 	if (result != SCHED_OK) {
-		logger->Fatal("Schedule: Budgets cannot be computed");
+		logger->Fatal("Schedule: budgets cannot be computed");
 		goto error;
 	}
 
 	result = DoResourcePartitioning();
 	if (result != SCHED_OK) {
-		logger->Fatal("Schedule: Resource partitioning failed");
+		logger->Fatal("Schedule: resource partitioning failed");
 		goto error;
 	}
 
 	result = DoScheduling();
 	if (result != SCHED_OK) {
-		logger->Fatal("Schedule: Scheduling failed");
+		logger->Fatal("Schedule: scheduling failed");
 		goto error;
 	}
 
