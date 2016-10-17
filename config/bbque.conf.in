@@ -62,7 +62,7 @@ temp.socket0 = /sys/devices/platform/coretemp.0/hwmon/hwmon0
 # Scheduler Manager Options
 ################################################################################
 [SchedulerManager]
-policy = gridbalance
+#policy = tempura
 
 ################################################################################
 # Scheduling Policy
