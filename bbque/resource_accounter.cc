@@ -117,6 +117,14 @@ void ResourceAccounter::SetPlatformNotReady() {
 	status_cv.notify_all();
 }
 
+
+void ResourceAccounter::WaitForPlatformReady() {
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	while (status != State::READY) {
+		status_cv.wait(status_ul);
+	}
+}
+
 inline void ResourceAccounter::SetReady() {
 	status_mtx.lock();
 	status = State::READY;

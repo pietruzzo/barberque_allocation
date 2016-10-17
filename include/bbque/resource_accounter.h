@@ -106,6 +106,8 @@ public:
 	 */
 	void SetPlatformNotReady();
 
+	void WaitForPlatformReady();
+
 	/**
 	 * @brief Destructor
 	 */
