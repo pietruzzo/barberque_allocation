@@ -281,21 +281,29 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 inline uint32_t TempuraSchedPol::GetPowerBudget(
 		br::ResourcePathPtr_t const & r_path,
 		ModelPtr_t pmodel) {
-	PowerManager & pm(PowerManager::GetInstance());
 	uint32_t energy_pwr_budget = 0;
 	uint32_t temp_pwr_budget   = 0;
+	uint32_t curr_power = 0;
+	uint32_t curr_temp  = 0;
+	uint32_t curr_load  = 0;
 
-	// Thermal constraints
-
-	// Resource information
+	// Current status
+#ifdef CONFIG_TARGET_ODROID_XU
 	br::ResourcePtr_t rsrc(ra.GetResource(r_path));
-	if (unlikely(rsrc == nullptr))
-		logger->Fatal("Budget: No resource {}", r_path->ToString().c_str());
-	else {
-		logger->Info("Budget: [%s] T_crit=[%3d]C, T_curr=[%3.0f]C, P=[%5.0f]mW",
-				rsrc->Path().c_str(), crit_temp,
-				rsrc->GetPowerInfo(PowerManager::InfoType::TEMPERATURE),
-				rsrc->GetPowerInfo(PowerManager::InfoType::POWER));
+	curr_temp = rsrc->GetPowerInfo(
+		PowerManager::InfoType::TEMPERATURE, br::Resource::MEAN)
+	curr_load = rsrc->GetPowerInfo(
+		PowerManager::InfoType::LOAD, br::Resource::MEAN);
+	curr_power = rsrc->GetPowerInfo(PowerManager::InfoType::POWER)
+#else
+	PowerManager & pm(PowerManager::GetInstance());
+	pm.GetTemperature(r_path, curr_temp);
+	pm.GetLoad(r_path, curr_load);
+#endif
+	logger->Debug("Temperature: <%s> T_crit=[%d]  T_curr=[%3d]",
+		r_path->ToString().c_str(), crit_temp, curr_temp);
+	logger->Debug("Load       : <%s> R_budget=%d  L_curr=[%3d]",
+		r_path->ToString().c_str(), budgets[r_path]->curr, curr_load);
 
 	}
 	// Power budget from thermal constraints
@@ -306,7 +314,8 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 				r_path->ToString().c_str(), temp_pwr_budget);
 		return temp_pwr_budget;
 	}
-	// Energy constraints
+
+	// Power budget from energy constraints
 #ifdef CONFIG_BBQUE_PM_BATTERY
 	if (pbatt && (pbatt->IsDischarging() || pbatt->GetChargePerc() < 100)) {
 		logger->Debug("Budget: System battery full charged and power plugged");
@@ -315,7 +324,8 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	}
 #endif
 	logger->Debug("Budget: <%s> P(T)=[%d]mW, P(E)=[%d]mW",
-			rsrc->Path().c_str(), temp_pwr_budget, energy_pwr_budget);
+			r_path->ToString().c_str(),
+			temp_pwr_budget, energy_pwr_budget);
 
 	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);
 }
