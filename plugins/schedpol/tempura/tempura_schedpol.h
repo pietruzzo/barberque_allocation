@@ -123,6 +123,7 @@ private:
 
 	uint32_t slots;
 
+	uint32_t crit_temp = 0;
 
 	/** System power budget */
 	int32_t sys_power_budget = 0;

@@ -123,6 +123,10 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 		logger->Debug("Init: slots for partitioning = %ld", slots);
 	}
 
+	// Thermal threshold
+	if (crit_temp == 0)
+		crit_temp = wm.GetThermalThreshold(WM_TEMP_CRITICAL_ID) * 1e3;
+
 	// System power budget
 	sys_power_budget = wm.GetSysPowerBudget();
 	if (sys_power_budget > 0) {
@@ -282,9 +286,6 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	uint32_t temp_pwr_budget   = 0;
 
 	// Thermal constraints
-	PowerMonitor & wm(PowerMonitor::GetInstance());
-	uint32_t crit_temp = wm.GetThermalThreshold(0);
-	temp_pwr_budget = pmodel->GetPowerFromTemperature(crit_temp*1e3);
 
 	// Resource information
 	br::ResourcePtr_t rsrc(ra.GetResource(r_path));
@@ -302,6 +303,8 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 //		logger->Debug("[%s] cpufreq governor: %s",
 //				rsrc->Path().c_str(), cpu_gov.c_str());
 	}
+	// Power budget from thermal constraints
+	temp_pwr_budget = pmodel->GetPowerFromTemperature(crit_temp*1e3);
 
 	if (tot_resource_power_budget < 1) {
 		logger->Debug("Budget: <%s> P(T)=[%d]mW, P(E)=[-]",
