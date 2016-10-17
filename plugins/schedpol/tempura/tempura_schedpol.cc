@@ -34,6 +34,7 @@
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
 #define BBQUE_TEMPURA_LITTLECPU_FIXED_BUDGET  50
+#define BBQUE_TEMPURA_CPU_LOAD_MARGIN         10
 
 namespace br = bbque::res;
 namespace bu = bbque::utils;
@@ -302,12 +303,26 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 #endif
 	logger->Debug("Temperature: <%s> T_crit=[%d]  T_curr=[%3d]",
 		r_path->ToString().c_str(), crit_temp, curr_temp);
-	logger->Debug("Load       : <%s> R_budget=%d  L_curr=[%3d]",
+	logger->Debug("Load       : <%s> prev_budget=%d  L_curr=[%3d]",
 		r_path->ToString().c_str(), budgets[r_path]->curr, curr_load);
 
+	// Thermal threshold correction
+	uint32_t new_crit_temp = crit_temp;
+	if ((sched_count > 0) &&
+			(std::abs(budgets[r_path]->curr - curr_load) <
+				BBQUE_TEMPURA_CPU_LOAD_MARGIN)) {
+		new_crit_temp += (crit_temp - curr_temp);
+		logger->Notice("Temperature: <%s> corrected to T_crit=[%3d]C",
+			r_path->ToString().c_str(), new_crit_temp);
 	}
+	logger->Debug("Budget: <%s> T_crit=[%3d]C, T_curr=[%3d]C, P=[%5.0f]mW",
+			r_path->ToString().c_str(),
+			new_crit_temp, curr_temp, curr_power);
+
 	// Power budget from thermal constraints
-	temp_pwr_budget = pmodel->GetPowerFromTemperature(crit_temp*1e3);
+	if (new_crit_temp < 1e3)
+		new_crit_temp *= 1e3;
+	temp_pwr_budget = pmodel->GetPowerFromTemperature(new_crit_temp);
 
 	if (tot_resource_power_budget < 1) {
 		logger->Debug("Budget: <%s> P(T)=[%d]mW, P(E)=[-]",
