@@ -105,6 +105,7 @@ void ResourceAccounter::SetPlatformReady() {
 		status_cv.wait(status_ul);
 	}
 	status = State::READY;
+	status_cv.notify_all();
 }
 
 void ResourceAccounter::SetPlatformNotReady() {
@@ -113,6 +114,7 @@ void ResourceAccounter::SetPlatformNotReady() {
 		status_cv.wait(status_ul);
 	}
 	status = State::NOT_READY;
+	status_cv.notify_all();
 }
 
 inline void ResourceAccounter::SetReady() {
