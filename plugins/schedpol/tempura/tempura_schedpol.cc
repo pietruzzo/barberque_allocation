@@ -151,6 +151,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 	return result;
 }
 
+
 inline SchedulerPolicyIF::ExitCode_t
 TempuraSchedPol::InitResourceStateView() {
 	ResourceAccounterStatusIF::ExitCode_t ra_result;
@@ -189,12 +190,29 @@ TempuraSchedPol::InitBudgets() {
 			logger->Debug("Init: budgeting on '%s' [Model: %s]",
 					r_path->ToString().c_str(),
 					budgets[r_path]->model.c_str());
+
+			// CPU frequency setting
+			InitCPUFreqGovernor(r_path);
+			logger->Debug("Init: CPU frequency governor set [%s]",
+				cpufreq_gov.c_str());
 		}
 	}
 
 	return SCHED_OK;
 }
 
+
+void TempuraSchedPol::InitCPUFreqGovernor(br::ResourcePathPtr_t r_path) {
+	PowerManager & pm(PowerManager::GetInstance());
+	for (auto & rsrc: budgets[r_path]->r_list) {
+		br::ResourcePathPtr_t r_path_exact(ra.GetPath(rsrc->Path()));
+		pm.SetClockFrequencyGovernor(r_path_exact, cpufreq_gov);
+//		std::string cpu_gov;
+//		pm.GetClockFrequencyGovernor(r_path_exact, cpu_gov);
+//		logger->Debug("<%s> cpufreq governor: %s",
+//				r_path_exact->ToString().c_str(), cpu_gov.c_str());
+	}
+}
 
 /*************************************************************
  * Resource allocation
@@ -278,12 +296,7 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 				rsrc->Path().c_str(), crit_temp,
 				rsrc->GetPowerInfo(PowerManager::InfoType::TEMPERATURE),
 				rsrc->GetPowerInfo(PowerManager::InfoType::POWER));
-		pm.SetClockFrequencyGovernor(ra.GetPath(rsrc->Path()), cpufreq_gov);
 
-//		std::string cpu_gov;
-//		pm.GetClockFrequencyGovernor(ra.GetPath(rsrc->Path()), cpu_gov);
-//		logger->Debug("[%s] cpufreq governor: %s",
-//				rsrc->Path().c_str(), cpu_gov.c_str());
 	}
 	// Power budget from thermal constraints
 	temp_pwr_budget = pmodel->GetPowerFromTemperature(crit_temp*1e3);

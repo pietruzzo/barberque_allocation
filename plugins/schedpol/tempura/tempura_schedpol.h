@@ -158,7 +158,6 @@ private:
 	std::string cpufreq_gov = BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR;
 
 
-
 	/** An High-Resolution timer */
 	Timer timer;
 
@@ -186,7 +185,9 @@ private:
 	ExitCode_t InitBudgets();
 
 	/**
+	 * @brief CPU frequency governors setting
 	 */
+	void InitCPUFreqGovernor(br::ResourcePathPtr_t r_pat);
 
 	/**
 	 * @brief Compute power and resource budgets
