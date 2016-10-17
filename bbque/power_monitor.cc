@@ -128,7 +128,8 @@ void PowerMonitor::Init() {
 }
 
 PowerMonitor::~PowerMonitor() {
-
+	Stop();
+	Worker::Terminate();
 }
 
 void PowerMonitor::Task() {
