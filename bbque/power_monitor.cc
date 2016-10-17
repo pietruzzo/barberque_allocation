@@ -245,6 +245,7 @@ void PowerMonitor::Stop() {
 
 	logger->Info("PWR MNTR: Stopping...");
 	events.reset(WM_EVENT_UPDATE);
+	worker_status_cv.notify_all();
 }
 
 
