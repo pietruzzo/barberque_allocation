@@ -131,17 +131,28 @@ private:
 	/** Resource power consumption derived from the system power budget */
 	uint32_t tot_resource_power_budget = 0;
 
+
 	/** Power-thermal model for the entire system  */
 	bw::SystemModelPtr_t pmodel_sys;
 
-	/** Power budgets due to thermal or energy constraints */
-	br::ResourceAssignmentMap_t power_budgets;
 
-	/** Resource budgets according to the power budgets */
-	br::ResourceAssignmentMap_t resource_budgets;
+	class BudgetInfo {
+	public:
+		BudgetInfo(br::ResourcePathPtr_t _path, br::ResourcePtrList_t _resources):
+			r_path(_path), r_list(_resources) {
+				if (!r_list.empty())
+					model = r_list.front()->Model();
+			}
+		br::ResourcePathPtr_t r_path;
+		br::ResourcePtrList_t r_list;
+		std::string model;
+		uint32_t prev;
+		uint32_t curr;
+		uint32_t power;
+	};
 
-	/** Power-thermal models for each resource to bind  */
-	std::map<br::ResourcePathPtr_t, std::string> model_ids;
+	std::map<br::ResourcePathPtr_t, std::shared_ptr<BudgetInfo>> budgets;
+
 
 	/** Default CPU frequency governor that the policy set */
 	std::string cpufreq_gov = BBQUE_PM_DEFAULT_CPUFREQ_GOVERNOR;

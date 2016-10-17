@@ -95,9 +95,7 @@ TempuraSchedPol::TempuraSchedPol():
 
 
 TempuraSchedPol::~TempuraSchedPol() {
-	power_budgets.clear();
-	resource_budgets.clear();
-	model_ids.clear();
+	budgets.clear();
 	entities.clear();
 }
 
@@ -139,16 +137,15 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 				cpufreq_gov.c_str());
 	}
 
-	// Power budgets data structures
-	if (!power_budgets.empty()) {
-		logger->Debug("Init: Power budgets already initialized");
-		return SCHED_OK;
-	}
-
-	result = InitBudgets();
-	if (result != SCHED_OK) {
-		logger->Fatal("Init: Power budgets initialization failed");
-		return result;
+	// Resource budgets (power and resource amounts)
+	if (!budgets.empty())
+		logger->Debug("Init: power budgets already initialized");
+	else {
+		result = InitBudgets();
+		if (result != SCHED_OK) {
+			logger->Fatal("Init: power budgets initialization failed");
+			return result;
+		}
 	}
 
 	return result;
@@ -185,24 +182,13 @@ TempuraSchedPol::InitBudgets() {
 		for (br::ResourcePtr_t const & rsrc: bd_info.resources) {
 			br::ResourcePathPtr_t r_path(ra.GetPath(rsrc->Path()));
 			r_path->AppendString("pe");
-			// Budget object (path + budget value)
-			br::ResourcePtrList_t r_list(ra.GetResources(r_path));
-			br::ResourceAssignmentPtr_t pbudget(std::make_shared<br::ResourceAssignment>(0));
-			br::ResourceAssignmentPtr_t rbudget(std::make_shared<br::ResourceAssignment>(0));
-			pbudget->SetResourcesList(r_list);
-			rbudget->SetResourcesList(r_list);
 
-			// Add to the power budgets map
-			power_budgets.emplace(r_path, pbudget);
-			// Add to the resource budgets map
-			resource_budgets.emplace(r_path, rbudget);
-			// Add into models identifiers map
-			std::string model_id;
-			if (!r_list.empty())
-				model_id = r_list.front()->Model();
-			model_ids.emplace(r_path, model_id);
+			// Add a budget info object
+			br::ResourcePtrList_t r_list(ra.GetResources(r_path));
+			budgets.emplace(r_path, std::make_shared<BudgetInfo>(r_path, r_list));
 			logger->Debug("Init: Budgeting on '%s' [Model: %s]",
-					r_path->ToString().c_str(), model_id.c_str());
+					r_path->ToString().c_str(),
+					budgets[r_path]->model.c_str());
 		}
 	}
 
@@ -258,21 +244,17 @@ error:
 
 SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 
-	for (auto & pb_entry: power_budgets) {
-		br::ResourcePathPtr_t const & r_path(pb_entry.first);
-		br::ResourceAssignmentPtr_t & budget(pb_entry.second);
-
-		// Power budget (cap)
+	for (auto & entry: budgets) {
+		br::ResourcePathPtr_t const  & r_path(entry.first);
+		std::shared_ptr<BudgetInfo> & budget(entry.second);
 	//	bw::ModelPtr_t pmodel(mm.GetModel("ARM Cortex A15"));
-		bw::ModelPtr_t pmodel(mm.GetModel(model_ids[r_path]));
+		bw::ModelPtr_t pmodel(mm.GetModel(budgets[r_path]->model));
 		logger->Debug("Budget: <%s> using power-thermal model '%s'",
 				r_path->ToString().c_str(), pmodel->GetID().c_str());
-		uint32_t p_budget = GetPowerBudget(r_path, pmodel);
-		budget->SetAmount(p_budget);
 
-		// Resource budget
-		uint64_t r_budget = GetResourceBudget(r_path, pmodel);
-		resource_budgets[r_path]->SetAmount(r_budget);
+		budget->power = GetPowerBudget(r_path, pmodel);
+		budget->prev  = budget->curr;
+		budget->curr  = GetResourceBudget(r_path, pmodel);
 	}
 
 	return SCHED_OK;
@@ -340,21 +322,19 @@ inline int64_t TempuraSchedPol::GetResourceBudget(
 	}
 	else {
 		resource_budget = pmodel->GetResourceFromPower(
-				power_budgets[r_path]->GetAmount(),
+				budgets[r_path]->power,
 				resource_total);
 	}
 #else
 	resource_budget = pmodel->GetResourceFromPower(
-			power_budgets[r_path]->GetAmount(),
-			resource_total);
+			budgets[r_path]->power, resource_total);
 #endif
 
-	resource_budget = std::min<uint32_t>(resource_budget, resource_total);
+	budgets[r_path]->curr = std::min<uint32_t>(resource_budget, resource_total);
 	logger->Debug("Budget: <%s> P=[%4llu]mW, R=[%lu]",
 			r_path->ToString().c_str(),
-			power_budgets[r_path]->GetAmount(),
-			resource_budget);
-	return resource_budget;
+			budgets[r_path]->power, budgets[r_path]->curr);
+	return budgets[r_path]->curr;
 }
 
 SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoResourcePartitioning() {
@@ -417,14 +397,14 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 	}
 
 	// Resource assignment (from each binding domain)
-	for (auto & rb_entry: resource_budgets) {
-		br::ResourcePathPtr_t const & r_path(rb_entry.first);
-		br::ResourceAssignmentPtr_t & resource_budget(rb_entry.second);
-				r_path->ToString().c_str(), resource_budget->GetAmount());
+	for (auto & entry: budgets) {
+		br::ResourcePathPtr_t const  & r_path(entry.first);
+		std::shared_ptr<BudgetInfo> & budget(entry.second);
 		logger->Debug("Assign: <%s> R_budget = % " PRIu64 "",
+				r_path->ToString().c_str(), budget->curr);
 
 		// Slots to allocate for this resource binding domain
-		resource_slot  = resource_budget->GetAmount() / slots;
+		resource_slot  = budget->curr / slots;
 		logger->Debug("Assign: [%s] rslots of [%s] assigned = %4d",
 				papp->StrId(), r_path->ToString().c_str(), resource_slot);
 
