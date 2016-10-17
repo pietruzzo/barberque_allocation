@@ -113,7 +113,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 	// Resource state view
 	result = InitResourceStateView();
 	if (result != SCHED_OK) {
-		logger->Fatal("Init: Cannot get a resource state view");
+		logger->Fatal("Init: cannot get a resource state view");
 		return result;
 	}
 
@@ -127,7 +127,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 		tot_resource_power_budget =
 			pmodel_sys->GetResourcePowerFromSystem(
 					sys_power_budget, cpufreq_gov);
-		logger->Debug("Init: Power budget [System: %d mW] => "
+		logger->Debug("Init: power budget [System: %d mW] => "
 				"[Resource: %d mW] freqgov: %s",
 				sys_power_budget, tot_resource_power_budget,
 				cpufreq_gov.c_str());
@@ -154,10 +154,12 @@ TempuraSchedPol::InitResourceStateView() {
 	ExitCode_t result = SCHED_OK;
 
 	// Build a string path for the resource state view
-	snprintf(status_view_id, 30, "%s%d", MODULE_NAMESPACE, ++sched_count);;
+	std::string status_view_id(MODULE_NAMESPACE);
+	status_view_id.append(std::to_string(++sched_count));
 
 	// Get a fresh resource status view
-	logger->Debug("Init: Require a new resource state view [%s]", status_view_id);
+	logger->Debug("Init: Require a new resource state view [%s]",
+		status_view_id.c_str());
 	ra_result = ra.GetView(status_view_id, sched_status_view);
 	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS)
 		return SCHED_ERROR_VIEW;
@@ -168,7 +170,6 @@ TempuraSchedPol::InitResourceStateView() {
 
 SchedulerPolicyIF::ExitCode_t
 TempuraSchedPol::InitBudgets() {
-
 	// Binding type (CPU, GPU,...))
 	BindingMap_t & bindings(bdm.GetBindingOptions());
 	for (auto & bd_entry: bindings) {
@@ -176,8 +177,7 @@ TempuraSchedPol::InitBudgets() {
 
 		// Resource path e.g., "sys0.cpu[0..n].XX"
 		for (br::ResourcePtr_t const & rsrc: bd_info.resources) {
-			br::ResourcePathPtr_t r_path(
-					std::make_shared<br::ResourcePath>(rsrc->Path()));
+			br::ResourcePathPtr_t r_path(ra.GetPath(rsrc->Path()));
 			r_path->AppendString("pe");
 			// Budget object (path + budget value)
 			br::ResourcePtrList_t r_list(ra.GetResources(r_path));
@@ -271,7 +271,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 		// Power budget (cap)
 	//	bw::ModelPtr_t pmodel(mm.GetModel("ARM Cortex A15"));
 		bw::ModelPtr_t pmodel(mm.GetModel(model_ids[r_path]));
-		logger->Debug("Budget: [%s] using power-thermal model '%s'",
+		logger->Debug("Budget: <%s> using power-thermal model '%s'",
 				r_path->ToString().c_str(), pmodel->GetID().c_str());
 		uint32_t p_budget = GetPowerBudget(r_path, pmodel);
 		budget->SetAmount(p_budget);
@@ -314,8 +314,8 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	}
 
 	if (tot_resource_power_budget < 1) {
-		logger->Debug("Budget: [%s] P(T)=[%d]mW, P(E)=[-]",
-				rsrc->Path().c_str(), temp_pwr_budget);
+		logger->Debug("Budget: <%s> P(T)=[%d]mW, P(E)=[-]",
+				r_path->ToString().c_str(), temp_pwr_budget);
 		return temp_pwr_budget;
 	}
 	// Energy constraints
@@ -326,7 +326,7 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 			pmodel->GetPowerFromSystemBudget(tot_resource_power_budget);
 	}
 #endif
-	logger->Debug("Budget: [%s] P(T)=[%d]mW, P(E)=[%d]mW",
+	logger->Debug("Budget: <%s> P(T)=[%d]mW, P(E)=[%d]mW",
 			rsrc->Path().c_str(), temp_pwr_budget, energy_pwr_budget);
 
 	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);
@@ -357,7 +357,7 @@ inline int64_t TempuraSchedPol::GetResourceBudget(
 #endif
 
 	resource_budget = std::min<uint32_t>(resource_budget, resource_total);
-	logger->Debug("Budget: [%s] P=[%4llu]mW, R=[%lu]",
+	logger->Debug("Budget: <%s> P=[%4llu]mW, R=[%lu]",
 			r_path->ToString().c_str(),
 			power_budgets[r_path]->GetAmount(),
 			resource_budget);
@@ -427,8 +427,8 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 	for (auto & rb_entry: resource_budgets) {
 		br::ResourcePathPtr_t const & r_path(rb_entry.first);
 		br::ResourceAssignmentPtr_t & resource_budget(rb_entry.second);
-		logger->Debug("Assign: [%s] R_budget = % " PRIu64 "",
 				r_path->ToString().c_str(), resource_budget->GetAmount());
+		logger->Debug("Assign: <%s> R_budget = % " PRIu64 "",
 
 		// Slots to allocate for this resource binding domain
 		resource_slot  = resource_budget->GetAmount() / slots;
