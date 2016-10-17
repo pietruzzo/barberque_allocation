@@ -487,7 +487,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoScheduling() {
 SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoBinding(
 		SchedEntityPtr_t psched) {
 	logger->Debug("DoBinding: START");
-	size_t ref_n = 0;
+	size_t ref_n = -1;
 
 	BindingMap_t & bindings(bdm.GetBindingOptions());
 	for (auto & bd_entry: bindings) {
