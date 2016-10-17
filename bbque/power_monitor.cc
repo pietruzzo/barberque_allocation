@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -87,6 +88,11 @@ PowerMonitor::PowerMonitor():
 		 po::value<uint32_t>(&temp[WM_TEMP_CRITICAL_ID])->default_value(90),
 		 "Default status of the data logging");
 	po::variables_map opts_vm;
+
+	opts_desc.add_options()
+		(MODULE_CONFIG ".nr_threads",
+		 po::value<uint16_t>(&nr_threads)->default_value(1),
+		 "Number of monitoring threads");
 	cfm.ParseConfigurationFile(opts_desc, opts_vm);
 
 #define CMD_WM_DATALOG "datalog"
@@ -109,7 +115,6 @@ PowerMonitor::PowerMonitor():
 	//---------- Setup Worker
 	Worker::Setup(BBQUE_MODULE_NAME("wm"), POWER_MONITOR_NAMESPACE);
 	Worker::Start();
-
 }
 
 void PowerMonitor::Init() {
@@ -133,25 +138,50 @@ PowerMonitor::~PowerMonitor() {
 }
 
 void PowerMonitor::Task() {
-	while (1) {
-		if (events.none()) {
-			logger->Info("No events to process");
-			Wait();
-		}
+	logger->Debug("Monitor: waiting for platform to be ready...");
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	ra.WaitForPlatformReady();
+	std::vector<std::thread> samplers(nr_threads);
 
-		// Monitor the power thermal status
-		if (events.test(WM_EVENT_UPDATE)) {
-			Sample();
-			std::this_thread::sleep_for(
-					std::chrono::milliseconds(wm_info.period_ms));
-#ifdef CONFIG_BBQUE_PM_BATTERY
-			if (pbatt == nullptr) continue;
-			logger->Debug("PWR MNT: Battery power = %.2f W",
-					(((float) pbatt->GetPower()) / 1e3));
-#endif // CONFIG_BBQUE_PM_BATTERY
-		}
+	uint16_t nr_resources_to_monitor = wm_info.resources.size();
+	uint16_t nr_resources_left = 0;
+	if (nr_resources_to_monitor > nr_threads) {
+		nr_resources_to_monitor /= nr_threads;
+		nr_resources_left = wm_info.resources.size() % nr_threads;
 	}
+	else
+		nr_threads = 1;
+	logger->Debug("Monitor: nr_threads=%d nr_resources_to_monitor=%d",
+		nr_threads, nr_resources_to_monitor);
+
+	uint16_t nt = 0;
+	for (; nt < nr_threads; ++nt) {
+		logger->Debug("Starting monitoring thread %d...", nt);
+		samplers.push_back(std::thread(
+			&PowerMonitor::SampleResourcesStatus, this,
+			nt * nr_resources_to_monitor,
+			nt + nr_resources_to_monitor));
+	}
+	// The number of resources is not divisible by the number of threads...
+	// --> spawn one more thread
+	if (nr_resources_left > 0) {
+		logger->Debug("Starting monitoring thread %d [extra]...", nr_threads);
+		samplers.push_back(std::thread(
+			&PowerMonitor::SampleResourcesStatus, this,
+			nr_threads * nr_resources_to_monitor,
+			nr_resources_left));
+	}
+
+#ifdef CONFIG_BBQUE_PM_BATTERY
+#ifdef BBQUE_DEBUG
+	samplers.push_back(std::thread(&PowerMonitor::SampleBatteryStatus, this));
+#endif // BBQUE_DEBUG
+#endif // CONFIG_BBQUE_PM_BATTERY
+	while(!done)
+		Wait();
+	std::for_each(samplers.begin(), samplers.end(), std::mem_fn(&std::thread::join));
 }
+
 
 int PowerMonitor::CommandsCb(int argc, char *argv[]) {
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
@@ -232,7 +262,7 @@ void PowerMonitor::Start(uint32_t period_ms) {
 
 	logger->Info("PWR MNTR: Starting (T = %d ms)...", wm_info.period_ms);
 	events.set(WM_EVENT_UPDATE);
-	worker_status_cv.notify_one();
+	worker_status_cv.notify_all();
 }
 
 
@@ -249,66 +279,94 @@ void PowerMonitor::Stop() {
 }
 
 
-PowerMonitor::ExitCode_t PowerMonitor::Sample() {
+void PowerMonitor::SampleBatteryStatus() {
+	if (pbatt == nullptr) return;
+	while (!done) {
+		if (events.none())
+			Wait();
+		if (events.test(WM_EVENT_UPDATE))
+			logger->Debug("PWR MNT: Battery power = %d mW", pbatt->GetPower());
+		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
+	}
+}
+
+void  PowerMonitor::SampleResourcesStatus(
+		uint16_t first_resource_index,
+		uint16_t nr_resources_to_monitor) {
 	PowerManager::SamplesArray_t samples;
 	PowerManager::InfoType info_type;
 
-	// Power status monitoring over all the registered resources
-	for (auto & r_entry: wm_info.resources) {
-		br::ResourcePathPtr_t const & r_path(r_entry.path);
-		br::ResourcePtr_t & rsrc(r_entry.resource_ptr);
+	while (!done) {
+		if (events.none()) {
+			logger->Debug("PWR MNTR: No events to process [first=%d]",
+				first_resource_index);
+			Wait();
+		}
+		if (!events.test(WM_EVENT_UPDATE))
+			continue;
 
-		std::string log_inst_values("[");
-		std::string log_mean_values("[");
-		std::string log_file_values;
-		log_inst_values += rsrc->Path() + "] (I): ";
-		log_mean_values += rsrc->Path() + "] (M): ";
-		uint info_idx   = 0;
-		uint info_count = 0;
+		logger->Debug("PWR MNTR: resource@[%d] nr_resources=%d",
+			first_resource_index, nr_resources_to_monitor);
 
-		for (; info_idx < PowerManager::InfoTypeIndex.size() &&
-				info_count < rsrc->GetPowerInfoEnabledCount();
-					++info_idx, ++info_count) {
-			// Check if the power profile information has been required
-			info_type = PowerManager::InfoTypeIndex[info_idx];
-			if (rsrc->GetPowerInfoSamplesWindowSize(info_type) <= 0)
-				continue;
+		// Power status monitoring over all the registered resources
+		uint16_t i = first_resource_index;
+		for (; i < nr_resources_to_monitor; ++i) {
+			br::ResourcePathPtr_t const & r_path(wm_info.resources[i].path);
+			br::ResourcePtr_t & rsrc(wm_info.resources[i].resource_ptr);
 
-			// Call power manager get function and update the resource
-			// descriptor power profile information
-			if (PowerMonitorGet[info_idx] == nullptr) {
-				logger->Warn("Power monitoring for %s not available",
+			std::string log_inst_values("[");
+			std::string log_mean_values("[");
+			std::string log_file_values;
+			log_inst_values += rsrc->Path() + "] (I): ";
+			log_mean_values += rsrc->Path() + "] (M): ";
+			uint info_idx   = 0;
+			uint info_count = 0;
+
+			for (; info_idx < PowerManager::InfoTypeIndex.size() &&
+					info_count < rsrc->GetPowerInfoEnabledCount();
+						++info_idx, ++info_count) {
+				// Check if the power profile information has been required
+				info_type = PowerManager::InfoTypeIndex[info_idx];
+				if (rsrc->GetPowerInfoSamplesWindowSize(info_type) <= 0)
+					continue;
+
+				// Call power manager get function and update the resource
+				// descriptor power profile information
+				if (PowerMonitorGet[info_idx] == nullptr) {
+					logger->Warn("Power monitoring for %s not available",
 						PowerManager::InfoTypeStr[info_idx]);
-				continue;
+					continue;
+				}
+				(pm.*(PMfunc) PowerMonitorGet[info_idx])(r_path, samples[info_idx]);
+				rsrc->UpdatePowerInfo(info_type, samples[info_idx]);
+
+				// Log messages
+				std::stringstream ss_i;
+				ss_i
+					<< std::setprecision(0)       << std::fixed
+					<< std::setw(str_w[info_idx]) << std::left
+					<< rsrc->GetPowerInfo(info_type, br::Resource::INSTANT);
+				log_inst_values += ss_i.str() + " ";
+				log_file_values += ss_i.str() + " ";
+
+				std::stringstream ss_m;
+				ss_m
+					<< std::setprecision(str_p[info_idx]) << std::fixed
+					<< std::setw(str_w[info_idx])         << std::left
+					<< rsrc->GetPowerInfo(info_type, br::Resource::MEAN);
+				log_mean_values += ss_m.str() + " ";
+
 			}
-			(pm.*(PMfunc) PowerMonitorGet[info_idx])(r_path, samples[info_idx]);
-			rsrc->UpdatePowerInfo(info_type, samples[info_idx]);
 
-			// Log messages
-			std::stringstream ss_i;
-			ss_i
-				<< std::setprecision(0)       << std::fixed
-				<< std::setw(str_w[info_idx]) << std::left
-				<< rsrc->GetPowerInfo(info_type, br::Resource::INSTANT);
-			log_inst_values += ss_i.str() + " ";
-			log_file_values += ss_i.str() + " ";
-
-			std::stringstream ss_m;
-			ss_m
-				<< std::setprecision(str_p[info_idx]) << std::fixed
-				<< std::setw(str_w[info_idx])         << std::left
-				<< rsrc->GetPowerInfo(info_type, br::Resource::MEAN);
-			log_mean_values += ss_m.str() + " ";
+			logger->Debug("PWR MNTR: Sampling [%s] ", log_inst_values.c_str());
+			logger->Debug("PWR MNTR: Sampling [%s] ", log_mean_values.c_str());
+			if (wm_info.log_enabled) {
+				DataLogWrite(r_path, log_file_values);
+			}
 		}
-
-		logger->Debug("PWR MNTR: Sampling [%s] ", log_inst_values.c_str());
-		logger->Debug("PWR MNTR: Sampling [%s] ", log_mean_values.c_str());
-		if (wm_info.log_enabled) {
-			DataLogWrite(r_path, log_file_values);
-		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
 	}
-
-	return ExitCode_t::OK;
+	logger->Notice("PWR MNTR: Terminating monitor thread");
 }
 
 /*******************************************************************

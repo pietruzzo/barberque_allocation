@@ -44,6 +44,7 @@ log.enabled   = 0
 log.dir       = /tmp
 period_ms     = 1000
 temp.critical = 75
+nr_threads    = 2
 
 [PowerManager]
 nr_sockets   = 1

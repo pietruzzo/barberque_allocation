@@ -232,12 +232,13 @@ private:
 		bool started = false;
 		/** Monitoring period (milliseconds) */
 		uint32_t period_ms;
-
 	} wm_info;
 
 
 #define WM_TEMP_CRITICAL_ID  0
 #define WM_TEMP_WARNING_ID   1
+
+	uint16_t nr_threads = 1;
 
 	/*** Thermal thresholds  */
 	uint32_t temp[2] = {80, 100};
@@ -269,7 +270,10 @@ private:
 	/**
 	 * @brief Sample the power-thermal status information
 	 */
-	ExitCode_t Sample();
+	void SampleResourcesStatus(uint16_t first, uint16_t count);
+
+
+	void SampleBatteryStatus();
 
 	/**
 	 * @brief Periodic task
