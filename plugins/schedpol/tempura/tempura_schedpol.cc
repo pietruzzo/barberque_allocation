@@ -118,8 +118,10 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 	}
 
 	// Application slots
-	if (sys->HasApplications(ApplicationStatusIF::READY))
-		InitSlots();
+	if (sys->HasApplications(ApplicationStatusIF::READY)) {
+		slots = GetSlots();
+		logger->Debug("Init: slots for partitioning = %ld", slots);
+	}
 
 	// System power budget
 	sys_power_budget = wm.GetSysPowerBudget();
@@ -203,18 +205,6 @@ TempuraSchedPol::InitBudgets() {
 	return SCHED_OK;
 }
 
-inline SchedulerPolicyIF::ExitCode_t
-TempuraSchedPol::InitSlots() {
-	slots = 0;
-	for (AppPrio_t p = 0; p <= sys->ApplicationLowestPriority(); p++) {
-		slots += (sys->ApplicationLowestPriority()+1 - p) * sys->ApplicationsCount(p);
-		logger->Debug("Init: Slots for prio %d [c=%d] = %d",
-				p, sys->ApplicationsCount(p), slots);
-	}
-	logger->Debug("Init: Slots for partitioning = %d", slots);
-
-	return SCHED_OK;
-}
 
 /*************************************************************
  * Resource allocation

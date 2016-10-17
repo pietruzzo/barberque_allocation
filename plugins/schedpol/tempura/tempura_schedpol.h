@@ -93,12 +93,6 @@ public:
 
 private:
 
-	/** Shared pointer to a scheduling entity */
-	typedef std::shared_ptr<SchedEntity_t> SchedEntityPtr_t;
-
-	/** List of scheduling entities */
-	typedef std::list<SchedEntityPtr_t> SchedEntityList_t;
-
 
 	/** Configuration manager instance */
 	ConfigurationManager & cm;
@@ -122,30 +116,12 @@ private:
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
-	/** System view:
-	 *  This points to the class providing the functions to query information
-	 *  about applications and resources
-	 */
-	System * sys;
-
-
-	/** Reference to the current scheduling status view of the resources */
-	RViewToken_t sched_status_view;
-
-	/** Scheduler counter */
-	uint32_t sched_count = 0;
 
 	/** String for requiring new resource status views */
-	char status_view_id[30];
 
-	/** A counter used for getting always a new clean resources view */
-	uint32_t status_view_count = 0;
+	uint32_t sched_count = 0;
 
-	/** List of scheduling entities  */
-	SchedEntityList_t entities;
-
-	/** Allocatable resource slots */
-	uint32_t slots ;
+	uint32_t slots;
 
 
 	/** System power budget */
@@ -198,13 +174,7 @@ private:
 	ExitCode_t InitBudgets();
 
 	/**
-	 * @brief Initialize the slots to allocate
-	 *
-	 * The slot is a resource unity of allocation. The idea is that a resource
-	 * budget can be seen as a number slots. The slots assigned to each
-	 * application are proportional to its priority
 	 */
-	ExitCode_t InitSlots();
 
 	/**
 	 * @brief Compute power and resource budgets
