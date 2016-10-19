@@ -287,6 +287,7 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	uint32_t curr_power = 0;
 	uint32_t curr_temp  = 0;
 	uint32_t curr_load  = 0;
+	logger->Debug("PowerBudget: resource path=<%s>", r_path->ToString().c_str());
 
 	// Current status
 #ifdef CONFIG_TARGET_ODROID_XU
@@ -301,9 +302,9 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	pm.GetTemperature(r_path, curr_temp);
 	pm.GetLoad(r_path, curr_load);
 #endif
-	logger->Debug("Temperature: <%s> T_crit=[%d]  T_curr=[%3d]",
+	logger->Debug("PowerBudget: <%s> TEMP_crit=[%d]  TEMP_curr=[%3d]",
 		r_path->ToString().c_str(), crit_temp, curr_temp);
-	logger->Debug("Load       : <%s> prev_budget=%d  L_curr=[%3d]",
+	logger->Debug("PowerBudget: <%s> prev_budget=%d  LOAD_curr=[%3d]",
 		r_path->ToString().c_str(), budgets[r_path]->curr, curr_load);
 
 	// Thermal threshold correction
@@ -312,10 +313,11 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 			(std::abs(budgets[r_path]->curr - curr_load) <
 				BBQUE_TEMPURA_CPU_LOAD_MARGIN)) {
 		new_crit_temp += (crit_temp - curr_temp);
-		logger->Notice("Temperature: <%s> corrected to T_crit=[%3d]C",
+		logger->Debug("PowerBudget: <%s> critical temperature corrected"
+			" to T_crit=[%3d]C",
 			r_path->ToString().c_str(), new_crit_temp);
 	}
-	logger->Debug("Budget: <%s> T_crit=[%3d]C, T_curr=[%3d]C, P=[%5.0f]mW",
+	logger->Debug("PowerBudget: <%s> T_crit=[%3d]C, T_curr=[%3d]C, P=[%5.0f]mW",
 			r_path->ToString().c_str(),
 			new_crit_temp, curr_temp, curr_power);
 
@@ -325,7 +327,7 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	temp_pwr_budget = pmodel->GetPowerFromTemperature(new_crit_temp);
 
 	if (tot_resource_power_budget < 1) {
-		logger->Debug("Budget: <%s> P(T)=[%d]mW, P(E)=[-]",
+		logger->Debug("PowerBudget: <%s> P(T)=[%d]mW, P(E)=[-]",
 				r_path->ToString().c_str(), temp_pwr_budget);
 		return temp_pwr_budget;
 	}
