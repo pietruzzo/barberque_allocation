@@ -340,7 +340,7 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	ResourcePtrList_t procs_list(ra.GetResources(rp));
 	uint32_t temp_per_core = 0;
-	uint32_t num_cores     = 0;
+	uint32_t num_cores     = 1;
 	for (auto & proc_ptr: procs_list) {
 		result = GetTemperaturePerCore(proc_ptr->ID(), temp_per_core);
 		if (result == PMResult::OK) {
