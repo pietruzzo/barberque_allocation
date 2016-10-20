@@ -1,6 +1,7 @@
 #ifndef BBQUE_LINUX_PLATFORM_PROXY_H
 #define BBQUE_LINUX_PLATFORM_PROXY_H
 
+#include "bbque/config.h"
 #include "bbque/platform_proxy.h"
 #include "bbque/utils/logging/logger.h"
 
@@ -66,6 +67,9 @@ public:
 	ExitCode_t MapResources(
 	        AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
 
+
+	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
+
 private:
 //-------------------- CONSTS
 	/**
@@ -106,10 +110,25 @@ private:
 	 */
 	CGroupDataPtr_t psilos;
 
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+	/**
+	 * @brief ARM big.LITTLE support: type of each CPU core
+	 *
+	 * If true, indicates that the related CPU cores is an
+	 * high-performance one.
+	 */
+	std::array<bool, BBQUE_TARGET_CPU_CORES_NUM> high_perf_cores = { {false} };
+
+	void InitCoresType();
+#endif
+
 
 //-------------------- METHODS
 
 	LinuxPlatformProxy();
+
+
+	void InitPowerInfo(const char * resourcePath, BBQUE_RID_TYPE core_id);
 
 	/**
 	 * @brief Load values from the configuration file

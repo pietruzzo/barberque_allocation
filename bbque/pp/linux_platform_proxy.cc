@@ -3,6 +3,7 @@
 #include "bbque/power_monitor.h"
 #include "bbque/pp/linux_platform_proxy.h"
 #include "bbque/res/binder.h"
+#include "bbque/res/resource_path.h"
 
 #include <boost/program_options.hpp>
 #include <fstream>
@@ -76,7 +77,6 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 	}
 
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
-	// Initialize the set of ARM "big" cores
 	InitCoresType();
 #endif
 
@@ -85,6 +85,62 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 LinuxPlatformProxy::~LinuxPlatformProxy() {
 
 }
+
+
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+
+void LinuxPlatformProxy::InitCoresType() {
+	std::stringstream ss;
+	ss.str(BBQUE_BIG_LITTLE_HP);
+	std::string first_core_str, last_core_str;
+
+	size_t sep_pos = ss.str().find_first_of("-", 0);
+	first_core_str = ss.str().substr(0, sep_pos);
+	uint16_t first, last;
+	if (!first_core_str.empty()) {
+		first = std::stoi(first_core_str);
+		logger->Debug("InitCoresType: first big core: %d", first);
+		last_core_str = ss.str().substr(++sep_pos, std::string::npos);
+		last = std::stoi(last_core_str);
+		logger->Debug("InitCoresType: last big core: %d", last);
+	}
+
+	BBQUE_RID_TYPE core_id;
+	for (core_id = first; core_id <= last; ++core_id) {
+		logger->Debug("InitCoresType: %d is high-performance", core_id);
+		high_perf_cores[core_id] = true;
+	}
+/*
+	while (std::getline(ss, core_str, ',')) {
+
+
+	}
+*/
+}
+
+#endif
+
+
+bool LinuxPlatformProxy::IsHighPerformance(
+		bbque::res::ResourcePathPtr_t const & path) const {
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+
+	BBQUE_RID_TYPE core_id =
+		path->GetID(bbque::res::ResourceType::PROC_ELEMENT);
+	if (core_id >= 0 && core_id <= BBQUE_TARGET_CPU_CORES_NUM) {
+		logger->Debug("IsHighPerformance: <%s> = %d",
+				path->ToString().c_str(), high_perf_cores[core_id]);
+		return high_perf_cores[core_id];
+	}
+	logger->Error("IsHighPerformance: cannot find process element ID in <%s>",
+			path->ToString().c_str());
+#else
+	(void) path;
+#endif
+	return false;
+}
+
+
 
 const char* LinuxPlatformProxy::GetPlatformID(int16_t system_id) const noexcept {
 	(void) system_id;
@@ -435,8 +491,7 @@ LinuxPlatformProxy::RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) noexcept {
 		snprintf(resourcePath+8, 11, "%hu.mem%d",
 		prlb->node_id, first_mem_id);
 		logger->Debug("PLAT LNX: %s [%s]...",
-		refreshMode ? "Refreshing" : "Registering",
-		resourcePath);
+		refreshMode ? "Refreshing" : "Registering", resourcePath);
 		if (refreshMode)
 			ra.UpdateResource(resourcePath, "", limit_in_bytes);
 		else
@@ -489,8 +544,8 @@ LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	char resourcePath[] = "sys0.cpu256.pe256";
-	unsigned short first_cpu_id;
-	unsigned short last_cpu_id;
+	BBQUE_RID_TYPE first_cpu_id;
+	BBQUE_RID_TYPE last_cpu_id;
 	const char *p = prlb->cpus;
 	uint32_t cpu_quota = 100;
 
@@ -518,34 +573,19 @@ LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 		cpu_quota = 0;
 	}
 
-
 #endif
 
 	while (*p) {
 
 		// Get a CPU id, and register the corresponding resource path
 		sscanf(p, "%hu", &first_cpu_id);
-		snprintf(resourcePath+8, 10, "%hu.pe%d",
-		prlb->node_id, first_cpu_id);
-		logger->Debug("PLAT LNX: Registering [%s]...",
-		resourcePath);
+		snprintf(resourcePath+8, 10, "%hu.pe%d", prlb->node_id, first_cpu_id);
+		logger->Debug("PLAT LNX: Registering [%s]...", resourcePath);
 		if (refreshMode)
 			ra.UpdateResource(resourcePath, "", cpu_quota);
 		else {
 			ra.RegisterResource(resourcePath, "", cpu_quota);
-#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
-			br::ResourcePtr_t rsrc(ra.GetResource(resourcePath));
-			if (highPerfCores[first_cpu_id])
-				rsrc->SetModel("ARM Cortex A15");
-			else
-				rsrc->SetModel("ARM Cortex A7");
-			logger->Info("PLAT LNX: [%s] CPU model = %s",
-			rsrc->Path().c_str(), rsrc->Model().c_str());
-#endif
-#ifdef CONFIG_BBQUE_WM
-			PowerMonitor & wm(PowerMonitor::GetInstance());
-			wm.Register(resourcePath);
-#endif
+			InitPowerInfo(resourcePath, first_cpu_id);
 		}
 
 		// Look-up for next CPU id
@@ -576,10 +616,7 @@ LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 				ra.UpdateResource(resourcePath, "", cpu_quota);
 			else {
 				ra.RegisterResource(resourcePath, "", cpu_quota);
-#ifdef CONFIG_BBQUE_WM
-				PowerMonitor & wm(PowerMonitor::GetInstance());
-				wm.Register(resourcePath);
-#endif
+				InitPowerInfo(resourcePath, first_cpu_id);
 			}
 		}
 
@@ -593,6 +630,31 @@ LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 	}
 
 	return PLATFORM_OK;
+}
+
+
+void LinuxPlatformProxy::InitPowerInfo(
+		const char * resourcePath,
+		BBQUE_RID_TYPE core_id) {
+
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	br::ResourcePtr_t rsrc(ra.GetResource(resourcePath));
+	if (high_perf_cores[core_id])
+		rsrc->SetModel("ARM Cortex A15");
+	else
+		rsrc->SetModel("ARM Cortex A7");
+	logger->Info("PLAT LNX: [%s] CPU model = %s",
+	rsrc->Path().c_str(), rsrc->Model().c_str());
+#else
+	(void) resourcePath;
+	(void) core_id;
+#endif
+#ifdef CONFIG_BBQUE_WM
+	PowerMonitor & wm(PowerMonitor::GetInstance());
+	wm.Register(resourcePath);
+#endif
+
 }
 
 LinuxPlatformProxy::ExitCode_t
