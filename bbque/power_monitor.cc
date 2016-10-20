@@ -279,6 +279,8 @@ void PowerMonitor::Stop() {
 }
 
 
+#ifdef CONFIG_BBQUE_PM_BATTERY
+
 void PowerMonitor::SampleBatteryStatus() {
 	if (pbatt == nullptr) return;
 	while (!done) {
@@ -289,6 +291,8 @@ void PowerMonitor::SampleBatteryStatus() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
 	}
 }
+#endif // CONFIG_BBQUE_PM_BATTERY
+
 
 void  PowerMonitor::SampleResourcesStatus(
 		uint16_t first_resource_index,

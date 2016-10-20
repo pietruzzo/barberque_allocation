@@ -272,8 +272,9 @@ private:
 	 */
 	void SampleResourcesStatus(uint16_t first, uint16_t count);
 
-
+#ifdef CONFIG_BBQUE_PM_BATTERY
 	void SampleBatteryStatus();
+#endif
 
 	/**
 	 * @brief Periodic task
