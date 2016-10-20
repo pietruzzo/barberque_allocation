@@ -87,6 +87,17 @@ public:
 	 */
 	ExitCode_t LoadPlatformConfig();
 
+	inline PlatformProxy const & GetLocalPlatformProxy() {
+		return *lpp;
+	}
+
+#ifdef CONFIG_BBQUE_DIST_MODE
+	inline PlatformProxy const & GetRemotePlatformProxy() {
+		return *rpp;
+	}
+#endif
+
+
 private:
 
 	/**
