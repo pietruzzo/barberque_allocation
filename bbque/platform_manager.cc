@@ -432,6 +432,12 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	return PLATFORM_OK;
 }
 
+
+bool PlatformManager::IsHighPerformance(
+		bbque::res::ResourcePathPtr_t const & path) const {
+	return false;
+}
+
 int PlatformManager::CommandsCb(int argc, char * argv[])
 {
 	uint8_t cmd_offset = ::strlen(PLATFORM_MANAGER_NAMESPACE) + 1;

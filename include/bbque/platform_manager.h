@@ -77,6 +77,8 @@ public:
 	virtual ExitCode_t MapResources(
 		AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
 
+	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
+
 	/**
 	 * @brief Load the configuration via the corresponding plugin
 	 *        It encapsulate exceptions coming from plugins.

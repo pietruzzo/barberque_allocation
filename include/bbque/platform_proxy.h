@@ -117,6 +117,11 @@ public:
     virtual ExitCode_t MapResources(
 			AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
 
+
+	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path)
+		const = 0;
+
+
 #ifndef CONFIG_BBQUE_PIL_LEGACY
     /**
      * @brief Return the platform description loaded by the relative pugin.

@@ -58,6 +58,8 @@ public:
 	virtual ExitCode_t MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 	                                bool excl = true) ;
 
+	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
+
 private:
 	/**
 	 * @brief The host platform proxy, e.g. linux or android

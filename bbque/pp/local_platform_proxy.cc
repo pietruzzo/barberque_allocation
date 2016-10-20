@@ -1,6 +1,7 @@
 #include "bbque/pp/local_platform_proxy.h"
 #include "bbque/pp/test_platform_proxy.h"
 #include "bbque/config.h"
+#include "bbque/res/resource_path.h"
 
 #ifdef CONFIG_TARGET_LINUX
 #include "bbque/pp/linux_platform_proxy.h"
@@ -167,6 +168,15 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
 
 	return PLATFORM_OK;
 }
+
+
+bool LocalPlatformProxy::IsHighPerformance(
+		bbque::res::ResourcePathPtr_t const & path) const {
+	if (path->GetID(bbque::res::ResourceType::CPU) >= 0)
+		return this->host->IsHighPerformance(path);
+	return false;
+}
+
 
 } // namespace pp
 } // namespace bbque

@@ -88,6 +88,12 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::MapResources(
 	return PLATFORM_OK;
 }
 
+
+bool RemotePlatformProxyManager::IsHighPerformance(
+		bbque::res::ResourcePathPtr_t const & path) const {
+	return false;
+}
+
 // --- AgentProxy
 
 void RemotePlatformProxy::StartServer() {
