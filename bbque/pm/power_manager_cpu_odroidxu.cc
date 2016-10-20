@@ -18,6 +18,7 @@
 #include <cstring>
 
 #include "bbque/pm/power_manager_cpu_odroidxu.h"
+#include "bbque/platform_manager.h"
 #include "bbque/platform_proxy.h"
 #include "bbque/utils/iofs.h"
 
@@ -49,7 +50,8 @@ ODROID_XU_CPUPowerManager::GetSensorsPrefixPath(
 		filepath = BBQUE_ODROID_SENSORS_DIR_MEM;
 	else if (rp->Type() == br::ResourceType::PROC_ELEMENT) {
         PlatformManager & plm(PlatformManager::GetInstance());
-        if (plm.isHighPerformance(rp->GetID(br::ResourceType::PROC_ELEMENT)))
+		PlatformProxy const & local_pp(plm.GetLocalPlatformProxy());
+        if (local_pp.IsHighPerformance(rp))
 			filepath = BBQUE_ODROID_SENSORS_DIR_A15;
 		else
 			filepath = BBQUE_ODROID_SENSORS_DIR_A7;
@@ -89,22 +91,26 @@ ODROID_XU_CPUPowerManager::GetTemperature(
 	celsius = 0;
 
 	// Sensors available only for A15 cores
-	int core_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
-    PlatformManager & plm(PlatformManager::GetInstance());
-    if(!plm.isHighPerformance(core_id)) {
+	PlatformManager & plm(PlatformManager::GetInstance());
+	PlatformProxy const & local_pp(plm.GetLocalPlatformProxy());
+	if (!local_pp.IsHighPerformance(rp)) {
+		logger->Warn("GetTemperature: <%s> is not a big core",
+				rp->ToString().c_str());
 		return PMResult::ERR_INFO_NOT_SUPPORTED;
 	}
 
-
 	// Get the offset in the TMU file
+	int core_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
 	int offset  = BBQUE_ODROID_SENSORS_OFFSET_A15_0 +
 			BBQUE_ODROID_SENSORS_OFFSET_SHIFT *
 			(core_id - 4);
+
 	// Get the temperature
 	result = bu::IoFs::ReadValueFromWithOffset(
-			BBQUE_ODROID_SENSORS_TEMP,
-			value, 6, offset);
+			BBQUE_ODROID_SENSORS_TEMP, value, 6, offset);
 	if (result != bu::IoFs::OK) {
+		logger->Error("GetTemperature: <%s> sensor read failed",
+				rp->ToString().c_str());
 		return PMResult::ERR_SENSORS_ERROR;
 	}
 	celsius = std::stoi(value) / 1000;
