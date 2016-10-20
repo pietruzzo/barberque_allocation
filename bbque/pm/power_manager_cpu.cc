@@ -79,7 +79,9 @@ CPUPowerManager::CPUPowerManager():
 				BBQUE_LINUX_SYS_CPU_THERMAL),
 			 "The directory exporting thermal status information");
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
+#ifndef CONFIG_TARGET_ODROID_XU
 		InitTemperatureSensors(prefix_coretemp + "/temp");
+#endif
 	}
 
 	if (core_therms.empty()) {
