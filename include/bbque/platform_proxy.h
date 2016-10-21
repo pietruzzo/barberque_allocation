@@ -43,109 +43,116 @@ class PlatformProxy {
 
 public:
 
-    virtual ~PlatformProxy() {}
+	virtual ~PlatformProxy() {}
 
-    /**
-     * @brief Exit codes returned by methods of this class
-     */
-    typedef enum ExitCode {
-        PLATFORM_OK = 0,
-        PLATFORM_GENERIC_ERROR,
-        PLATFORM_INIT_FAILED,
-        PLATFORM_ENUMERATION_FAILED,
-        PLATFORM_LOADING_FAILED,
-        PLATFORM_NODE_PARSING_FAILED,
-        PLATFORM_DATA_NOT_FOUND,
-        PLATFORM_DATA_PARSING_ERROR,
-        PLATFORM_COMM_ERROR,
-        PLATFORM_MAPPING_FAILED,
-        PLATFORM_PWR_MONITOR_ERROR,
-        PLATFORM_AGENT_PROXY_ERROR,
-    } ExitCode_t;
+	/**
+	 * @brief Exit codes returned by methods of this class
+	 */
+	typedef enum ExitCode {
+		PLATFORM_OK = 0,
+		PLATFORM_GENERIC_ERROR,
+		PLATFORM_INIT_FAILED,
+		PLATFORM_ENUMERATION_FAILED,
+		PLATFORM_LOADING_FAILED,
+		PLATFORM_NODE_PARSING_FAILED,
+		PLATFORM_DATA_NOT_FOUND,
+		PLATFORM_DATA_PARSING_ERROR,
+		PLATFORM_COMM_ERROR,
+		PLATFORM_MAPPING_FAILED,
+		PLATFORM_PWR_MONITOR_ERROR,
+		PLATFORM_AGENT_PROXY_ERROR,
+	} ExitCode_t;
 
-    /**
-     * @brief Return the Platform specific string identifier
-     * @param system_id It specifies from which system take the
-     *                  platform identifier. If not specified or equal
-     *                  to "-1", the platorm id of the local system is returned.
-     */
-    virtual const char* GetPlatformID(int16_t system_id=-1) const = 0;
+	/**
+	 * @brief Return the Platform specific string identifier
+	 * @param system_id It specifies from which system take the
+	 *                  platform identifier. If not specified or equal
+	 *                  to "-1", the platorm id of the local system is returned.
+	 */
+	virtual const char* GetPlatformID(int16_t system_id=-1) const = 0;
 
-    /**
-     * @brief Return the Hardware identifier string
-     * @param system_id It specifies from which system take the
-     *                  hardware identifier. If not specified or equal
-     *                  to "-1", the hw id of the local system is returned.
-     */
-    virtual const char* GetHardwareID(int16_t system_id=-1) const = 0;
+	/**
+	 * @brief Return the Hardware identifier string
+	 * @param system_id It specifies from which system take the
+	 *                  hardware identifier. If not specified or equal
+	 *                  to "-1", the hw id of the local system is returned.
+	 */
+	virtual const char* GetHardwareID(int16_t system_id=-1) const = 0;
 
-    /**
-     * @brief Platform specific resource setup interface.
-     */
-    virtual ExitCode_t Setup(AppPtr_t papp) = 0;
+	/**
+	 * @brief Platform specific resource setup interface.
+	 */
+	virtual ExitCode_t Setup(AppPtr_t papp) = 0;
 
-    /**
-     * @brief Platform specific resources enumeration
-     *
-     * The default implementation of this method loads the TPD, is such a
-     * function has been enabled
-     */
-    virtual ExitCode_t LoadPlatformData() = 0;
+	/**
+	 * @brief Platform specific resources enumeration
+	 *
+	 * The default implementation of this method loads the TPD, is such a
+	 * function has been enabled
+	 */
+	virtual ExitCode_t LoadPlatformData() = 0;
 
-    /**
-     * @brief Platform specific resources refresh
-     */
-    virtual ExitCode_t Refresh() = 0;
-    /**
-     * @brief Platform specific resources release interface.
-     */
-    virtual ExitCode_t Release(AppPtr_t papp) = 0;
+	/**
+	 * @brief Platform specific resources refresh
+	 */
+	virtual ExitCode_t Refresh() = 0;
 
-    /**
-     * @brief Platform specific resource claiming interface.
-     */
-    virtual ExitCode_t ReclaimResources(AppPtr_t papp) = 0;
+	/**
+	 * @brief Platform specific resources release interface.
+	 */
+	virtual ExitCode_t Release(AppPtr_t papp) = 0;
 
-    /**
-     * @brief Bind the specified resources to the specified application.
-     *
-     * @param papp The application which resources are assigned
-     * @param pres The resources to be assigned
-     * @param excl If true the specified resources are assigned for exclusive
-     * usage to the application
-     */
-    virtual ExitCode_t MapResources(
+	/**
+	 * @brief Platform specific resource claiming interface.
+	 */
+	virtual ExitCode_t ReclaimResources(AppPtr_t papp) = 0;
+
+	/**
+	 * @brief Bind the specified resources to the specified application.
+	 *
+	 * @param papp The application which resources are assigned
+	 * @param pres The resources to be assigned
+	 * @param excl If true the specified resources are assigned for exclusive
+	 * usage to the application
+	 */
+	virtual ExitCode_t MapResources(
 			AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
 
-
-	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path)
-		const = 0;
+	/**
+	 * @brief Check if a resource is flagged as "high-performance".
+	 * This is useful in case of heterogeneous architecture as
+	 * ARM big.LITTLE CPUs.
+	 *
+	 * @param path Path to the resource
+	 * @return true or false
+	 */
+	virtual bool IsHighPerformance(
+			bbque::res::ResourcePathPtr_t const & path) const = 0;
 
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
-    /**
-     * @brief Return the platform description loaded by the relative pugin.
-     *        This method is not available with legacy parser.
-     */
-    static const pp::PlatformDescription & GetPlatformDescription() {
+	/**
+	* @brief Return the platform description loaded by the relative pugin.
+	*        This method is not available with legacy parser.
+	*/
+	static const pp::PlatformDescription & GetPlatformDescription() {
 
-        std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(PLATFORM_PROXY_NAMESPACE);
+	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(PLATFORM_PROXY_NAMESPACE);
 
-        // Check if the plugin is never loaded
-        // in that case load it and parse the
+        // Check if the plugin is never loaded. In that case load it and parse the
         // platform configuration
-        if (pli == NULL) {
-            logger->Debug("I'm creating a new instance of PlatformLoader plugin.");
-            pli = ModulesFactory::GetModule<plugins::PlatformLoaderIF>(
-                        std::string("bq.pl.") + BBQUE_PLOADER_DEFAULT);
-            assert(pli);
-            if (plugins::PlatformLoaderIF::PL_SUCCESS != pli->loadPlatformInfo()) {
-                logger->Fatal("Unable to load platform information.");
-                throw std::runtime_error("PlatformLoaderPlugin pli->loadPlatformInfo() failed.");
-            } else {
-                logger->Info("Platform information loaded successfully.");
-            }
-        }
+	if (pli == NULL) {
+		logger->Debug("I'm creating a new instance of PlatformLoader plugin.");
+		pli = ModulesFactory::GetModule<plugins::PlatformLoaderIF>(
+			std::string("bq.pl.") + BBQUE_PLOADER_DEFAULT);
+		assert(pli);
+		if (plugins::PlatformLoaderIF::PL_SUCCESS != pli->loadPlatformInfo()) {
+			logger->Fatal("Unable to load platform information.");
+		throw std::runtime_error("PlatformLoaderPlugin pli->loadPlatformInfo() failed.");
+		} else {
+			logger->Info("Platform information loaded successfully.");
+		}
+	}
 
         // Return the just or previous loaded configuration
         return pli->getPlatformInfo();
@@ -154,8 +161,6 @@ public:
 
 private:
         static plugins::PlatformLoaderIF* pli;
-
-
 };
 
 } // namespace bbque
