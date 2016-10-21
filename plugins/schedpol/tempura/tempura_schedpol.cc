@@ -293,10 +293,10 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 #ifdef CONFIG_TARGET_ODROID_XU
 	br::ResourcePtr_t rsrc(ra.GetResource(r_path));
 	curr_temp = rsrc->GetPowerInfo(
-		PowerManager::InfoType::TEMPERATURE, br::Resource::MEAN)
+		PowerManager::InfoType::TEMPERATURE, br::Resource::MEAN);
 	curr_load = rsrc->GetPowerInfo(
 		PowerManager::InfoType::LOAD, br::Resource::MEAN);
-	curr_power = rsrc->GetPowerInfo(PowerManager::InfoType::POWER)
+	curr_power = rsrc->GetPowerInfo(PowerManager::InfoType::POWER);
 #else
 	PowerManager & pm(PowerManager::GetInstance());
 	pm.GetTemperature(r_path, curr_temp);
