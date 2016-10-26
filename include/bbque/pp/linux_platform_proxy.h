@@ -122,6 +122,8 @@ private:
 	void InitCoresType();
 #endif
 
+	std::string memory_ids_all;
+
 
 //-------------------- METHODS
 
