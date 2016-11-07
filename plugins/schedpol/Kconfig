@@ -1,4 +1,58 @@
 
+menu "Advanced Options"
+
+config BBQUE_SP_PARALLEL
+  bool "Policy Parallel Execution"
+  default y
+  ---help---
+  If selected enable the multi-threaded/parallel execution of the scheduling policy.
+  This in case of policy implementation supporting sequential and parallel
+  execution flow. It can be useful to disable this option for debug purpose.
+
+  Select this option if you plan to run the BarbequeRTRM daemon on a multi-core
+  host machine.
+
+config BBQUE_RM_OPT_EXC_START_DEFER_MS
+  int "Wait time (ms) before policy activation, on application start"
+  default 50
+  ---help---
+  Some milliseconds after an application starts, barbeque triggers
+  an optimization
+
+config BBQUE_RM_OPT_EXC_STOP_DEFER_MS
+  int "Wait time (ms) before policy activation, on application termination"
+  default 50
+  ---help---
+  Some milliseconds after an application terminates, barbeque triggers
+  an optimization
+
+config BBQUE_RM_OPT_REQUEST_DEFER_MS
+  int "Wait time (ms) before policy activation, on application request"
+  default 50
+  ---help---
+  When an application asks barbeque for a new resource allocation,
+  barbeque waits some milliseconds in order to aggregate requests from
+  other apps as well (if any).
+
+
+#config BBQUE_SP_COWS_BINDING
+#  bool "Co-scheduling Workloads (COWS) binding"
+#  depends on !BBQUE_OPENCL
+#  default n
+#  ---help---
+#  Enable this option only if the recipes feature information about some
+#  performance counters based statistics. and the scheduling policy implements
+#  the support to exploit such information. This potentially leads to a more
+#  effective binding (i.e. selection of the resource domain of the AWM) in order
+#  to establish whether it is better to co-schedule applications on the same
+#  resource binding domain (e.g., CPU node) or spread them among different
+#  domains.
+#
+#  If unsure, say N
+#
+endmenu #Advanced Options
+
+
 choice
   prompt "Default scheduling policy"
   config BBQUE_SCHEDPOL_DEFAULT_YAMS
