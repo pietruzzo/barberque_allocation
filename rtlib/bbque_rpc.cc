@@ -1406,11 +1406,13 @@ RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(
 	for (int id = 0; id < vector_size; id ++)
 		ids_vector[id] = -1;
 
-    int ids_number = std::min(vector_size,
-		    (int) exc->cg_current_allocation.cpu_affinity_mask.size());
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+    int ids_number = std::min(
+			vector_size, (int) exc->cg_current_allocation.cpu_affinity_mask.size());
 
     for (int id = 0; id < ids_number; id ++)
-	ids_vector[id] = exc->cg_current_allocation.cpu_affinity_mask[id];
+		ids_vector[id] = exc->cg_current_allocation.cpu_affinity_mask[id];
+#endif
 
     return RTLIB_OK;
 }
