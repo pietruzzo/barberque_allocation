@@ -1398,13 +1398,13 @@ RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(
     pRegisteredEXC_t exc = getRegistered(exc_handler);
 
     if (! exc) {
-	logger->Error("Getting resources for EXC [%p] FAILED "
+		logger->Error("Getting resources for EXC [%p] FAILED "
 					  "(Error: EXC not registered)", (void *) exc_handler);
-	return RTLIB_EXC_NOT_REGISTERED;
-    }
+		return RTLIB_EXC_NOT_REGISTERED;
+	}
 
-    for (int id = 0; id < vector_size; id ++)
-        ids_vector[id] = -1;
+	for (int id = 0; id < vector_size; id ++)
+		ids_vector[id] = -1;
 
     int ids_number = std::min(vector_size,
 		    (int) exc->cg_current_allocation.cpu_affinity_mask.size());
