@@ -341,7 +341,8 @@ uint8_t YamsSchedPol::OrderSchedEntities(AppPrio_t prio) {
 		InsertWorkingModes(papp);
 
 		// Keep track of NAPped Applications/EXC
-		if (papp->GetGoalGap())
+		ba::RuntimeProfiling_t rt_prof(papp->GetRuntimeProfile());
+		if (rt_prof.ggap_percent != 0)
 			++naps_count;
 	}
 
@@ -801,8 +802,10 @@ bool YamsSchedPol::CompareEntities(SchedEntityPtr_t & se1,
 		return true;
 
 	// Apps asserting a NAP should be considered first
-	gg1 = se1->papp->GetGoalGap();
-	gg2 = se2->papp->GetGoalGap();
+	ba::RuntimeProfiling_t prof1(se1->papp->GetRuntimeProfile());
+	ba::RuntimeProfiling_t prof2(se2->papp->GetRuntimeProfile());
+	gg1 = prof1.ggap_percent;
+	gg2 = prof2.ggap_percent;
 	if ((gg1 > 0) && (gg1 >= gg2))
 		return true;
 	if ((gg2 > 0) && (gg2 >= gg1))

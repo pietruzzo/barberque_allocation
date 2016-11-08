@@ -71,11 +71,12 @@ SchedContrib::ExitCode_t
 SCValue::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 		float & ctrib) {
 	ba::AwmPtr_t const & curr_awm(evl_ent.papp->CurrentAWM());
+	ba::RuntimeProfiling_t rt_prof(evl_ent.papp->GetRuntimeProfile());
 
 	// Initialize the index contribute to the AWM static value
 	logger->Debug("%s: Static value = %.2f ",
 			evl_ent.StrId(), evl_ent.pawm->Value());
-	if (!curr_awm || (evl_ent.papp->GetGoalGap() == 0)) {
+	if (!curr_awm || (rt_prof.ggap_percent == 0)) {
 		ctrib = evl_ent.pawm->Value();
 		return SC_SUCCESS;
 	}
@@ -85,7 +86,7 @@ SCValue::_Compute(SchedulerPolicyIF::EvalEntity_t const & evl_ent,
 	// Compute an "ideal" AWM value, scaling the current AWM by the value of
 	// the Goal-Gap.
 	float weight;
-	float goal_gap_perc = static_cast<float>(evl_ent.papp->GetGoalGap()) / 100.0;
+	float goal_gap_perc = static_cast<float>(rt_prof.ggap_percent) / 100.0;
 	float ideal_value = curr_awm->Value() / (1 + goal_gap_perc);
 
 	logger->Info("%s: Gap=%.2f, currV=%.2f, evalV=%2f, idealV=%.2f, dV=%.2f",
