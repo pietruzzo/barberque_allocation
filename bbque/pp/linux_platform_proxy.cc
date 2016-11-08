@@ -631,8 +631,8 @@ LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 	while (*p) {
 
 		// Get a CPU id, and register the corresponding resource path
-		sscanf(p, "%d", &first_cpu_id);
-		snprintf(resourcePath+8, 10, "%d.pe%d", prlb->node_id, first_cpu_id);
+		sscanf(p, "%hu", &first_cpu_id);
+		snprintf(resourcePath+8, 10, "%hu.pe%d", prlb->node_id, first_cpu_id);
 		logger->Debug("PLAT LNX: Registering [%s]...", resourcePath);
 		if (refreshMode)
 			ra.UpdateResource(resourcePath, "", cpu_quota);
@@ -656,10 +656,10 @@ LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 		// Otherwise: we have stopped on a "-"
 
 		// Get last CPU of this range
-		sscanf(++p, "%d", &last_cpu_id);
+		sscanf(++p, "%hu", &last_cpu_id);
 		// Register all the other CPUs of this range
 		while (++first_cpu_id <= last_cpu_id) {
-			snprintf(resourcePath+8, 10, "%d.pe%d",
+			snprintf(resourcePath+8, 10, "%hu.pe%d",
 			         prlb->node_id, first_cpu_id);
 			logger->Debug("PLAT LNX: %s [%s]...",
 			              refreshMode ? "Refreshing" : "Registering",
