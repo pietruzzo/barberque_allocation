@@ -165,14 +165,14 @@ void ResourceAccounter::PrintStatusReport(
 
 	// Print the head of the report table
 	if (verbose) {
-		logger->Notice("Report on state view: %d", status_view);
+		logger->Notice("Report on state view: %ld", status_view);
 		logger->Notice(RP_DIV1);
 		logger->Notice(RP_HEAD);
 		logger->Notice(RP_DIV2);
 	}
 	else {
 		DB(
-		logger->Debug("Report on state view: %d", status_view);
+		logger->Debug("Report on state view: %ld", status_view);
 		logger->Debug(RP_DIV1);
 		logger->Debug(RP_HEAD);
 		logger->Debug(RP_DIV2);
@@ -1253,7 +1253,7 @@ ResourceAccounter::IncBookingCounts(
 				Available(rsrc_path, MIXED, status_view, papp),
 				Total(rsrc_path, MIXED));
 			// Print the report table of the resource assignments
-			PrintStatusReport();
+			PrintStatusReport(status_view);
 		}
 
 		assert(result == RA_SUCCESS);
@@ -1310,6 +1310,9 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 			alloc_amount_per_resource);
 
 		--num_left_resources;
+
+		logger->Debug("<%s> requested=%d num_left=%d",
+				resource->Path().c_str(), requested, num_left_resources);
 	}
 
 	// The availability of resources mismatches the one checked in the
@@ -1352,6 +1355,13 @@ inline void ResourceAccounter::SchedResourceBooking(
 		uint64_t alloc_amount_per_resource) {
 	// Check the available amount in the current resource binding
 	uint64_t available = rsrc->Available(papp, status_view);
+	logger->Debug("DRBooking (sched): [%s] request for <%s> [view=%ld] ",
+			papp->StrId(), rsrc->Path().c_str(), status_view);
+
+	logger->Debug("DRBooking (sched): [%s] request for <%s> "
+			"requested=%d alloca=%d available=%d",
+			papp->StrId(), rsrc->Path().c_str(), requested,
+			alloc_amount_per_resource, available);
 
 	if ((alloc_amount_per_resource > 0) &&
 			(alloc_amount_per_resource <= available))
@@ -1360,9 +1370,6 @@ inline void ResourceAccounter::SchedResourceBooking(
 		requested -= rsrc->Acquire(papp, requested, status_view);
 	else
 		requested -= rsrc->Acquire(papp, available, status_view);
-
-	logger->Debug("DRBooking (sched): [%s] scheduled to use {%s}",
-			papp->StrId(), rsrc->Name().c_str());
 }
 
 inline void ResourceAccounter::SyncResourceBooking(
