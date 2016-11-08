@@ -343,10 +343,11 @@ public:
 	 *
 	 * @return the numeric UID idenfitying this EXC
 	 */
-	inline AppUid_t GetUniqueID() const
-	{
+	inline AppUid_t GetUniqueID() const {
 		return exc_unique_id;
 	};
+
+	#define GetUid GetUniqueID
 
 	/**
 	 * @brief Get the amount of resource assigned by the BarbequeRTRM
