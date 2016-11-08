@@ -613,7 +613,7 @@ LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 	if (prlb->amount_cpup) {
 		cpu_quota = (prlb->amount_cpuq * 100) / prlb->amount_cpup;
 		logger->Debug("Configuring CPUs of node [%d] with CPU quota of [%lu]%",
-		prlb->node_id, cpu_quota);
+				prlb->node_id, cpu_quota);
 	}
 
 	// Because of CGroups interface, we cannot assign an empty CPU quota.
@@ -621,8 +621,7 @@ LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 	// un-useful on a real configuration, we assume a CPU being offline
 	// when a CPU quota <= 1% is required.
 	if (cpu_quota <= 1) {
-		logger->Warn("Quota < 1%, Offlining CPUs of node [%d]...",
-		prlb->node_id);
+		logger->Warn("Quota < 1%, Offlining CPUs of node [%d]...", prlb->node_id);
 		cpu_quota = 0;
 	}
 
@@ -633,10 +632,14 @@ LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 		// Get a CPU id, and register the corresponding resource path
 		sscanf(p, "%hu", &first_cpu_id);
 		snprintf(resourcePath+8, 10, "%hu.pe%d", prlb->node_id, first_cpu_id);
-		logger->Debug("PLAT LNX: Registering [%s]...", resourcePath);
-		if (refreshMode)
+		if (refreshMode) {
+			logger->Debug("PLAT LNX: Updating <%s>... (cpu_quota=%d)",
+					resourcePath, cpu_quota);
 			ra.UpdateResource(resourcePath, "", cpu_quota);
+		}
 		else {
+			logger->Debug("PLAT LNX: Registering <%s>... (cpu_quota=%d)",
+					resourcePath, cpu_quota);
 			ra.RegisterResource(resourcePath, "", cpu_quota);
 			InitPowerInfo(resourcePath, first_cpu_id);
 		}
@@ -665,9 +668,14 @@ LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
 			              refreshMode ? "Refreshing" : "Registering",
 			              resourcePath);
 
-			if (refreshMode)
+			if (refreshMode) {
+				logger->Debug("PLAT LNX: Updating <%s>... (cpu_quota=%d)",
+						resourcePath, cpu_quota);
 				ra.UpdateResource(resourcePath, "", cpu_quota);
+			}
 			else {
+				logger->Debug("PLAT LNX: Registering <%s>... (cpu_quota=%d)",
+						resourcePath, cpu_quota);
 				ra.RegisterResource(resourcePath, "", cpu_quota);
 				InitPowerInfo(resourcePath, first_cpu_id);
 			}
