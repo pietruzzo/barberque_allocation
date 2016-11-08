@@ -11,3 +11,4 @@ config/templates/*.bz2
 config/templates/*.bsx
 config/templates/cpp/.cproject
 config/templates/cpp/.project
+nbproject/
