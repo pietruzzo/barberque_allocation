@@ -287,7 +287,7 @@ public:
 
 };
 
-
+#ifdef CONFIG_BBQUE_PM
 
 inline bool CompareTemperature(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr) {
 	if (r1_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE) <
@@ -295,6 +295,8 @@ inline bool CompareTemperature(ResourcePtr_t const & r1_ptr, ResourcePtr_t const
 		return true;
 	return false;
 }
+
+#endif
 
 inline bool CompareMeanDegradation(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr) {
 	if (r1_ptr->MeanDegradationPerc() < r2_ptr->MeanDegradationPerc())
