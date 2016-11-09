@@ -1042,7 +1042,7 @@ void BbqueRPC::DumpStats(pRegisteredEXC_t exc, bool verbose)
 
 	// Dump OpenCL profiling info for each AWM
 	if (rtlib_configuration.profile.opencl.enabled)
-		OclDumawm_stats(exc);
+		OclDumpStats(exc);
 
 #endif //CONFIG_BBQUE_OPENCL
 
@@ -3013,7 +3013,7 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr,
 #define OCL_STATS_BAR_ADDR \
 "#===================================================================================================================================================================##\n"
 
-void BbqueRPC::OclDumawm_stats(pRegisteredEXC_t exc)
+void BbqueRPC::OclDumpStats(pRegisteredEXC_t exc)
 {
 	AwmStatsMap_t::iterator it;
 	pAwmStats_t awm_stats;
