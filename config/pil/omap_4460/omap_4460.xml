@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system hostname="pandaboard" address="10.0.0.11">
+    <cpu arch="armv7l" id="0" socket_id="0" mem_id="0">
+        <pe id="0" core_id="0" share="100" partition="shared"/>
+        <pe id="1" core_id="1" share="100" partition="mdev"/>
+    </cpu>
+    <mem id="0" quantity="1019892" unit="KB"/>
+</system>
