@@ -101,14 +101,9 @@ setup() {
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
 	bbqued_info "Checking platform description file"
-	if [ -z "$PILNAME" ]; then
-		if [ ! -z "@CONFIG_BBQUE_PIL_LEGACY@" ]; then
-			PILNAME=`hostname`.bpl
-		else
-			PILNAME=systems.xml
-		fi
-	fi
-	bbqued_notice "Host name: $PILNAME"
+	PILNAME=systems.xml
+	bbqued_notice "Platform description: $PILNAME"
+	bbqued_notice "Host name: `hostname`"
 
 	mkdir -p $BBQUE_PILSETUPS
 
