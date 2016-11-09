@@ -774,7 +774,6 @@ protected:
 	void OclClearStats();
 	void OclCollectStats(
 		int8_t current_awm_id, OclEventsStatsMap_t & ocl_events_map);
-	void OclPrintStats(pAwmStats_t awm_stats);
 	void OclPrintCmdStats(QueueProfPtr_t, cl_command_queue);
 	void OclPrintAddrStats(QueueProfPtr_t, cl_command_queue);
 	void OclDumpStats(pRegisteredEXC_t exc);
