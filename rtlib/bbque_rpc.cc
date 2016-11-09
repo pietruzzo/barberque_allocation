@@ -3027,9 +3027,9 @@ void BbqueRPC::OclDumpStats(pRegisteredEXC_t exc)
 	pAwmStats_t awm_stats;
 	int8_t current_awm_id;
 	// Print RTLib stats for each AWM
-	it = exc->awm_statistics.begin();
+	it = exc->awm_stats.begin();
 
-	for ( ; it != exc->awm_statistics.end(); ++ it) {
+	for ( ; it != exc->awm_stats.end(); ++ it) {
 		current_awm_id = (*it).first;
 		awm_stats = (*it).second;
 		std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
@@ -3586,7 +3586,7 @@ void BbqueRPC::NotifyPostMonitor(RTLIB_EXCHandler_t exc_handler)
 void BbqueRPC::OclGetRuntimeProfile(
 	pRegisteredEXC_t exc, uint32_t & exec_time, uint32_t & mem_time)
 {
-	pAwmStats_t awm_stats = exc->pAwmStats;
+	pAwmStats_t awm_stats = exc->current_awm_stats;
 	CmdProf_t::const_iterator cmd_it;
 	static uint32_t cum_exec_time_prev;
 	static uint32_t cum_mem_time_prev;
