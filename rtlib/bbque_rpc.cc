@@ -2206,11 +2206,11 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 			? exc->cg_budget.cpuset_cpus_isolation
 			: exc->cg_budget.cpuset_cpus_global;
 
-                exc->cg_current_allocation.cpu_affinity_mask = 
+                exc->cg_current_allocation.cpu_affinity_mask =
                         (exc->cg_current_allocation.cpu_budget <= exc->cg_budget.cpu_budget_isolation)
 			? exc->cg_budget.cpu_isolation_ids
 			: exc->cg_budget.cpu_global_ids;
-                
+
 		logger->Debug("Applying CGroup configuration: CPU %.2f/%.2f",
 			100.0f * exc->cg_current_allocation.cpu_budget,
 			100.0f * exc->cg_budget.cpu_budget_shared);
@@ -2900,12 +2900,10 @@ void BbqueRPC::OclClearStats()
 	rtlib_ocl_prof_clean();
 }
 
-void BbqueRPC::OclCollectStats(
-	int8_t current_awm_id,
-	OclEventsStatsMap_t & ocl_events_map)
+void BbqueRPC::OclCollectStats(int8_t current_awm_id, OclEventsStatsMap_t & ocl_events_map)
 {
-	rtlib_ocl_prof_run(current_awm_id, ocl_events_map,
-					   rtlib_configuration.profile.opencl.level);
+	rtlib_ocl_prof_run(
+		current_awm_id, ocl_events_map, rtlib_configuration.profile.opencl.level);
 }
 
 void BbqueRPC::OclPrintStats(pAwmStats_t awm_stats)
@@ -2913,7 +2911,7 @@ void BbqueRPC::OclPrintStats(pAwmStats_t awm_stats)
 	std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
 
 	for (it_cq = awm_stats->ocl_events_map.begin();
-		 it_cq != awm_stats->ocl_events_map.end(); it_cq ++) {
+			it_cq != awm_stats->ocl_events_map.end(); it_cq ++) {
 		QueueProfPtr_t stPtr = it_cq->second;
 		OclPrintCmdStats(stPtr, it_cq->first);
 
@@ -2924,15 +2922,14 @@ void BbqueRPC::OclPrintStats(pAwmStats_t awm_stats)
 	}
 }
 
-void BbqueRPC::OclPrintCmdStats(QueueProfPtr_t stPtr,
-								cl_command_queue cmd_queue)
+void BbqueRPC::OclPrintCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue)
 {
 	std::map<cl_command_type, AccArray_t>::iterator it_ct;
 	char q_buff[100], s_buff[100], x_buff[100];
 	std::string q_str, s_str, x_str;
 
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end();
-		 it_ct ++) {
+			it_ct++) {
 		snprintf(q_buff, 100, "%p_%s_queue",
 				 (void *) cmd_queue, ocl_cmd_str[it_ct->first].c_str());
 		q_str.assign(q_buff);
@@ -2960,8 +2957,10 @@ void BbqueRPC::OclPrintCmdStats(QueueProfPtr_t stPtr,
 	}
 }
 
-void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr,
-								 cl_command_queue cmd_queue)
+	}
+}
+
+void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue)
 {
 	std::map<void *, AccArray_t>::iterator it_ct;
 	char q_buff[100], s_buff[100], x_buff[100];
@@ -2969,7 +2968,7 @@ void BbqueRPC::OclPrintAddrStats(QueueProfPtr_t stPtr,
 	std::string q_str, s_str, x_str;
 
 	for (it_ct = stPtr->addr_prof.begin(); it_ct != stPtr->addr_prof.end();
-		 it_ct ++) {
+			it_ct ++) {
 		cmd_type = rtlib_ocl_get_command_type(it_ct->first);
 		snprintf(q_buff, 100, "%p_%s_%p_queue",
 				 (void *) cmd_queue, ocl_cmd_str[cmd_type].c_str(), it_ct->first);
@@ -3052,14 +3051,13 @@ void BbqueRPC::OclDumpStats(pRegisteredEXC_t exc)
 	fprintf(output_file, "\n\n");
 }
 
-void BbqueRPC::OclDumpCmdStats(QueueProfPtr_t stPtr,
-							   cl_command_queue cmd_queue)
+void BbqueRPC::OclDumpCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue)
 {
 	std::map<cl_command_type, AccArray_t>::iterator it_ct;
 	double_t otot = 0, vtot_q = 0, vtot_s = 0, vtot_e = 0;
 
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end();
-		 it_ct ++) {
+			it_ct ++) {
 		vtot_q += SUM(QUEUED);
 		vtot_s += SUM(SUBMIT);
 		vtot_e += SUM(EXEC);
@@ -3084,8 +3082,7 @@ void BbqueRPC::OclDumpCmdStats(QueueProfPtr_t stPtr,
 	fprintf(output_file, OCL_STATS_BAR);
 }
 
-void BbqueRPC::OclDumpAddrStats(QueueProfPtr_t stPtr,
-								cl_command_queue cmd_queue)
+void BbqueRPC::OclDumpAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue)
 {
 	std::map<void *, AccArray_t>::iterator it_ct;
 	cl_command_type cmd_type;

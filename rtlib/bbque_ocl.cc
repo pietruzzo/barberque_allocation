@@ -1688,7 +1688,7 @@ void rtlib_ocl_prof_run(
 	std::map<void *, cl_event>::iterator it_ev;
 
 	for (it_cq = ocl_queues_prof.begin();
-	it_cq != ocl_queues_prof.end(); it_cq ++) {
+			it_cq != ocl_queues_prof.end(); it_cq ++) {
 		cl_command_queue cq = it_cq->first;
 		clFinish(cq);
 		// Resume previously stored statistics
@@ -1782,12 +1782,12 @@ void acc_address_stats(
 }
 
 void dump_command_prof_info(
-			    int8_t awm_id,
-			    cl_command_type cmd_type,
-			    double queued_time,
-			    double submit_time,
-			    double exec_time,
-			    void * addr)
+		    int8_t awm_id,
+		    cl_command_type cmd_type,
+		    double queued_time,
+		    double submit_time,
+		    double exec_time,
+		    void * addr)
 {
 	FILE * dump_file;
 	char buffer [100];

@@ -283,8 +283,9 @@ public:
 	 * developer from the burden of explicitely sending a goal-gap at each
 	 * iteration.
 	 */
-	RTLIB_ExitCode_t SetCPSGoal(RTLIB_EXCHandler_t exc_handler,
-								float cps_min, float cps_max);
+	RTLIB_ExitCode_t SetCPSGoal(
+		RTLIB_EXCHandler_t exc_handler,
+		float cps_min, float cps_max);
 
 
 	void ResetRuntimeProfileStats(RTLIB_EXCHandler_t exc_handler);
@@ -292,8 +293,9 @@ public:
 	/**
 	 * @brief Set the required Jobs Per Second goal (JPS)
 	 */
-	RTLIB_ExitCode_t SetJPSGoal(RTLIB_EXCHandler_t exc_handler,
-								float jps_min, float jps_max, int jpc);
+	RTLIB_ExitCode_t SetJPSGoal(
+		RTLIB_EXCHandler_t exc_handler,
+		float jps_min, float jps_max, int jpc);
 
 	/**
 	 * @brief Updates Jobs Per Cycle value (JPC), which is used to compute JPS
@@ -312,7 +314,7 @@ public:
 		RTLIB_EXCHandler_t exc_handler, uint32_t max_cycle_time_us)
 	{
 		return SetCPS(exc_handler,
-					  static_cast<float>(US_IN_A_SECOND) / max_cycle_time_us);
+			static_cast<float>(US_IN_A_SECOND) / max_cycle_time_us);
 	}
 
 	/*******************************************************************************
@@ -770,8 +772,8 @@ protected:
 #ifdef CONFIG_BBQUE_OPENCL
 	void OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status);
 	void OclClearStats();
-	void OclCollectStats(int8_t current_awm_id,
-						 OclEventsStatsMap_t & ocl_events_map);
+	void OclCollectStats(
+		int8_t current_awm_id, OclEventsStatsMap_t & ocl_events_map);
 	void OclPrintStats(pAwmStats_t awm_stats);
 	void OclPrintCmdStats(QueueProfPtr_t, cl_command_queue);
 	void OclPrintAddrStats(QueueProfPtr_t, cl_command_queue);
