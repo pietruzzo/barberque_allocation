@@ -147,6 +147,11 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::MapResources(
 }
 
 
+bool OpenCLPlatformProxy::IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const {
+	return true;
+}
+
+
 #ifdef CONFIG_BBQUE_PM
 void OpenCLPlatformProxy::PrintGPUPowerInfo() {
 	uint32_t min, max, step, s_min, s_max, ps_count;

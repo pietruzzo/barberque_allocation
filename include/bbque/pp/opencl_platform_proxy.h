@@ -112,6 +112,9 @@ public:
 	        ba::AppPtr_t papp, br::ResourceAssignmentMapPtr_t assign_map, bool excl) override final;
 
 
+	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
+
+
 	// Class specific member functions
 
 	/**
