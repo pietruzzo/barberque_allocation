@@ -270,6 +270,8 @@ public:
 		RTLIB_Constraint_t * constraints,
 		uint8_t count);
 
+	#define SetConstraints SetAWMConstraints
+
 	/**
 	 * @brief Clear all constraints on AWM selection
 	 *
