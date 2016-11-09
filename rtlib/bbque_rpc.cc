@@ -1246,10 +1246,12 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 		wm->systems[i].cpu_bandwidth = allocation->cpu_bandwidth;
 		wm->systems[i].mem_bandwidth  = allocation->mem_bandwidth;
 #ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 		wm->res_allocation[i].gpu_bandwidth  = allocation->gpu_bandwidth;
 		wm->res_allocation[i].accelerator_bandwidth  =
 			allocation->accelerator_bandwidth;
 #endif
+#endif // CONFIG_BBQUE_OPENCL
 		i ++;
 	}
 
@@ -1310,9 +1312,11 @@ waiting_done:
 		wm->systems[i].cpu_bandwidth = resource_assignment->cpu_bandwidth;
 		wm->systems[i].mem_bandwidth  = resource_assignment->mem_bandwidth;
 #ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 		wm->res_allocation[i].gpu_bandwidth  = resource_assignment->gpu_bandwidth;
 		wm->res_allocation[i].accelerator_bandwidth  =
 			resource_assignment->accelerator_bandwidth;
+#endif
 #endif
 	}
 
@@ -1371,7 +1375,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 		r_amount = wm->systems[0].mem_bandwidth;
 		break;
 #ifdef CONFIG_BBQUE_OPENCL
-
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	case GPU:
 		r_amount = wm->res_allocation[0].gpu_bandwidth;
 		break;
@@ -1379,6 +1383,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 	case ACCELERATOR:
 		r_amount = wm->res_allocation[0].accelerator_bandwidth;
 		break;
+#endif
 #endif // CONFIG_BBQUE_OPENCL
 
 	default:
@@ -1471,7 +1476,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 
 		break;
 #ifdef CONFIG_BBQUE_OPENCL
-
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	case GPU:
 		for (int i = 0; i < n_to_copy; i ++)
 			sys_array[i] = wm->res_allocation[i].gpu_bandwidth;
@@ -1483,6 +1488,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 			sys_array[i] = wm->res_allocation[i].accelerator_bandwidth;
 
 		break;
+#endif
 #endif // CONFIG_BBQUE_OPENCL
 
 	default:
@@ -1748,10 +1754,12 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 			tmp->cpu_bandwidth = systems[i].r_proc;
 			tmp->mem_bandwidth  = systems[i].r_mem;
 #ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 			tmp->gpu_bandwidth  = res_allocation[i].gpu_bandwidth;
 			tmp->accelerator_bandwidth  = res_allocation[i].accelerator_bandwidth;
 			tmp->ocl_device_id = res_allocation[i].dev;
 #endif
+#endif // CONFIG_BBQUE_OPENCL
 			exc->resource_assignment[i] = tmp;
 		}
 
