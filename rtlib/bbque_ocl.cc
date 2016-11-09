@@ -1792,7 +1792,7 @@ void dump_command_prof_info(
 	FILE * dump_file;
 	char buffer [100];
 	snprintf(buffer, 100, OCL_PROF_FMT, OCL_PROF_OUTDIR,
-		rtlib_services.Utils.GetChUid(), awm_id,
+		rtlib_services.Utils.GetUniqueID_String(), awm_id,
 		ocl_cmd_str[cmd_type].c_str());
 	dump_file = fopen(buffer, "a");
 
