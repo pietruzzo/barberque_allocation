@@ -52,6 +52,16 @@ menu "Linux Resource Management"
 menu "Linux Control Groups"
 depends on !BBQUE_TEST_PLATFORM_DATA
 
+config BBQUE_LINUX_CG_SYSTEMD
+  bool "Mount CGroups in systemd directory"
+  default y
+  depends on TARGET_LINUX
+  depends on !BBQUE_TEST_PLATFORM_DATA
+  ---help---
+  Mount Control Groups into the /sys/fs/cgroup/cpu,cpuset,cpuacct,memory
+  directory.
+
+
 config BBQUE_LINUX_CG_MEMORY
   bool "Memory controller"
   default n

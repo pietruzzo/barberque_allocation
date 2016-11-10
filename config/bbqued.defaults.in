@@ -44,7 +44,7 @@ CGCONFS='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_VAR}'
 CGPARSER='${CONFIG_BOSP_RUNTIME_PATH}/sbin/cgconfigparser'
 #
 # The mountpoint of the BBQ CGroup hierarchy
-CGMOUNT='/sys/fs/cgroup/cpu,cpuset,cpuacct,memory'
+CGMOUNT='${BBQUE_CGMOUNT_DIR}'
 #
 # The BBQ CGroups Release Agent
 CGAGENT='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_BBQ}/bbque-release-agent'

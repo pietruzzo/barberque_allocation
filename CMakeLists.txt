@@ -60,6 +60,13 @@ endif ("${CONFIG_BOSP_RUNTIME_RWPATH}" STREQUAL "")
 SET(CMAKE_INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+# Barbeque CGroups path
+if(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
+	set (BBQUE_CGMOUNT_DIR "/sys/fs/cgroup/cpu,cpuset,cpuacct,memory")
+else(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
+	set (BBQUE_CGMOUNT_DIR "${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PIL_CGROUP_MOUNT}")
+endif(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
+
 ################################################################################
 # Common initialization settings
 ################################################################################
