@@ -520,7 +520,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 	attr_ptr id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
 	attr_ptr core_id_attr  = this->GetFirstAttribute(pe_tag, "core_id",  true);
 	attr_ptr share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
-	attr_ptr managed_attr  = this->GetFirstAttribute(pe_tag, "managed",  false);
+	attr_ptr partition_attr  = this->GetFirstAttribute(pe_tag, "partition",  false);
 
 	int id;
 	short core_id, share;
@@ -564,9 +564,9 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 		return PL_LOGIC_ERROR;
 	}
 
-	// managed=""
-	if(managed_attr != nullptr) {
-		switch(ConstHashString(managed_attr->value())) {
+	// partition=""
+	if(partition_attr != nullptr) {
+		switch(ConstHashString(partition_attr->value())) {
 		case ConstHashString("shared"):
 			pe.SetPartitionType(pp::PlatformDescription::SHARED);
 			break;
@@ -577,8 +577,8 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 			pe.SetPartitionType(pp::PlatformDescription::MDEV);;
 			break;
 		default:
-			logger->Error("'%s' is not a valid value for `managed` attribute.",
-				managed_attr->value());
+			logger->Error("'%s' is not a valid value for `partition` attribute.",
+				partition_attr->value());
 			return PL_LOGIC_ERROR;
 			break;
 		}

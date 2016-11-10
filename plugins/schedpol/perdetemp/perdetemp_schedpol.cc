@@ -317,7 +317,7 @@ void PerdetempSchedPol::PopulateBindingDomainInfo() {
 		// is "sys.cpuN". Processing element M of CPU N would be
 		// "sys.cpuN.peM". The list of proc elements in CPU N is
 		// extracted through the regular expression "sys.CPUN.pe"
-		std::string path("sys.cpu" + std::to_string(cpu->ID()) + ".pe");
+		std::string path("sys0.cpu" + std::to_string(cpu->ID()) + ".pe");
 		br::ResourcePtrList_t pes_list = res_accounter.GetResources(path);
 
 		// Sanity check: The current CPU must contain at least a PE

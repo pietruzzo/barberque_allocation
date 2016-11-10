@@ -164,7 +164,7 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(AppPtr_t papp) noexcept
 	result = GetCGroupData(papp, pcgd);
 	if (result != PLATFORM_OK) {
 		logger->Error("PLAT LNX: [%s] CGroup initialization FAILED "
-		"(Error: CGroupData setup)");
+		"(Error: CGroupData setup)", papp->StrId());
 		return result;
 	}
 
@@ -175,7 +175,7 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(AppPtr_t papp) noexcept
 	result = this->ReclaimResources(papp);
 	if (result != PLATFORM_OK) {
 		logger->Error("PLAT LNX: [%s] CGroup initialization FAILED "
-		"(Error: failed moving app into silos)");
+		"(Error: failed moving app into silos)", papp->StrId());
 		return result;
 	}
 
@@ -292,7 +292,12 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 		}
 
 		// Configure the CGroup based on resource bindings
-		SetupCGroup(pcgd, prlb, excl, true);
+		result = SetupCGroup(pcgd, prlb, excl, true);
+		if (result != PLATFORM_OK) {
+			logger->Error("PLAT LNX: Set CGroups FAILED");
+			return PLATFORM_MAPPING_FAILED;
+		}
+
 	}
 	logger->Debug("PLAT LNX: CGroup resource mapping DONE!");
 
@@ -435,6 +440,8 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 		return PLATFORM_LOADING_FAILED;
 	}
 	
+	this->memory_ids_all = "";
+
 	for (const auto sys : pd->GetSystemsAll()) {
 		for (const auto cpu : sys.GetCPUsAll()) {
 			ExitCode_t result = this->RegisterCPU(cpu);
@@ -442,6 +449,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 				logger->Fatal("Register CPU %d failed", cpu.GetId());
 				return result;
 			}
+			this->InitPowerInfo(cpu.GetPath().c_str(), cpu.GetId());
 		}
 
 		for (const auto mem : sys.GetMemoriesAll()) {
@@ -450,8 +458,15 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 				logger->Fatal("Register MEM %d failed", mem->GetId());
 				return result;
 			}
+
+			// Build the default string for the CGroups
+			if (sys.IsLocal()) {
+				this->memory_ids_all += std::to_string(mem->GetId()) + ',';
+			}
 		}
 	}
+
+	this->memory_ids_all.pop_back();
 
 	return PLATFORM_OK;
 }
@@ -778,13 +793,19 @@ LinuxPlatformProxy::SetupCGroup(
 	 **********************************************************************/
 
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
+	assert(prlb->amount_memb >= -1);
+
 	char quota[] = "9223372036854775807";
 	// Set the assigned MEMORY amount
-	sprintf(quota, "%lu", prlb->amount_memb);
+	if (prlb->amount_memb > 0)
+		sprintf(quota, "%lu", prlb->amount_memb);
+	else
+		sprintf(quota, "-1");
+
 	cgroup_set_value_string(pcgd->pc_memory, BBQUE_LINUXPP_MEMB_PARAM, quota);
 
-	logger->Debug("PLAT LNX: Setup MEMORY for [%s]: {bytes_limit [%lu]}",
-		pcgd->papp->StrId(), prlb->amount_memb);
+	logger->Debug("PLAT LNX: Setup MEMORY for [%s]: {bytes_limit [%s]}",
+		pcgd->papp->StrId(), quota);
 #endif
 
 	/**********************************************************************
@@ -803,48 +824,55 @@ LinuxPlatformProxy::SetupCGroup(
 
 	char const *cfs_c = std::to_string(cfs_quota_us).c_str();
 
-	if (unlikely(!cfsQuotaSupported))
-		goto jump_quota_management;
+	char *buff = NULL;
 
-	// Set the default CPU bandwidth period
-	cgroup_set_value_string(pcgd->pc_cpu, BBQUE_LINUXPP_CPUP_PARAM, cfs_c);
+	bool cfsQuotaSupported, quota_enforcing = true;
+	cfsQuotaSupported = 0 == cgroup_get_value_string(pcgd->pc_cpu,BBQUE_LINUXPP_CPUQ_PARAM,
+				&buff);
 
-	// Set the assigned CPU bandwidth amount
-	// NOTE: if a quota is NOT assigned we have amount_cpus="0", but this
-	// is not acceptable by the CFS controller, which requires a negative
-	// number to remove any constraint.
-	assert(cpus_quota == -1);
-	if (!prlb->amount_cpus)
-		goto quota_enforcing_disabled;
 
-	// CFS quota to enforced is
-	// assigned + (margin * #PEs)
-	cpus_quota = prlb->amount_cpus;
-	cpus_quota += ((cpus_quota / 100) + 1) * cfs_margin_pct;
-	if ((cpus_quota % 100) > cfs_threshold_pct) {
-		logger->Warn("CFS (quota+margin) %d > %d threshold, enforcing disabled",
-		cpus_quota, cfs_threshold_pct);
-		goto quota_enforcing_disabled;
+	if (likely(cfsQuotaSupported)) {
+
+		// Set the default CPU bandwidth period
+		cgroup_set_value_string(pcgd->pc_cpu, BBQUE_LINUXPP_CPUP_PARAM, cfs_c);
+
+		// Set the assigned CPU bandwidth amount
+		// NOTE: if a quota is NOT assigned we have amount_cpus="0", but this
+		// is not acceptable by the CFS controller, which requires a negative
+		// number to remove any constraint.
+		assert(cpus_quota == -1);
+		if (!prlb->amount_cpus) {
+			quota_enforcing = false;
+		}
+
+		// CFS quota to enforced is
+		// assigned + (margin * #PEs)
+		cpus_quota = prlb->amount_cpus;
+		cpus_quota += ((cpus_quota / 100) + 1) * cfs_margin_pct;
+		if ((cpus_quota % 100) > cfs_threshold_pct) {
+			logger->Warn("CFS (quota+margin) %d > %d threshold, enforcing disabled",
+			cpus_quota, cfs_threshold_pct);
+			quota_enforcing = false;
+		}
+
+		if (quota_enforcing) {
+
+			cpus_quota = (cfs_quota_us / 100) *	prlb->amount_cpus;
+			cgroup_set_value_int64(pcgd->pc_cpu, BBQUE_LINUXPP_CPUQ_PARAM, cpus_quota);
+
+			logger->Debug("PLAT LNX: Setup CPU for [%s]: "
+					"{period [%s], quota [%lu]",
+					pcgd->papp->StrId(),
+					cfs_c,
+					cpus_quota);
+		} else { 
+
+			logger->Debug("PLAT LNX: Setup CPU for [%s]: "
+					"{period [%s], quota [-]}",
+					pcgd->papp->StrId(),
+					cfs_c);
+		}
 	}
-
-	cpus_quota = (cfs_quota_us / 100) *	prlb->amount_cpus;
-	cgroup_set_value_int64(pcgd->pc_cpu, BBQUE_LINUXPP_CPUQ_PARAM, cpus_quota);
-
-	logger->Debug("PLAT LNX: Setup CPU for [%s]: "
-			"{period [%s], quota [%lu]",
-			pcgd->papp->StrId(),
-			cfs_c,
-			cpus_quota);
-
-quota_enforcing_disabled:
-
-	logger->Debug("PLAT LNX: Setup CPU for [%s]: "
-			"{period [%s], quota [-]}",
-			pcgd->papp->StrId(),
-			cfs_c);
-
-jump_quota_management:
-	// Here we jump, if CFS Quota management is not enabled on the target
 
 #endif
 
@@ -897,193 +925,6 @@ LinuxPlatformProxy::BuildAppCG(AppPtr_t papp, CGroupDataPtr_t &pcgd) noexcept {
 	// Build new CGroup data for the specified application
 	pcgd = CGroupDataPtr_t(new CGroupData_t(papp));
 	return BuildCGroup(pcgd);
-}
-
-LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::ParseNodeAttributes(
-		struct cgroup_file_info &entry,
-		RLinuxBindingsPtr_t prlb) noexcept {
-
-	char group_name[] = BBQUE_LINUXPP_RESOURCES "/" BBQUE_LINUXPP_CLUSTER "123";
-	struct cgroup_controller *cg_controller = NULL;
-	struct cgroup *bbq_node = NULL;
-	ExitCode_t pp_result = PLATFORM_OK;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
-	char *buff = NULL;
-#endif
-	int cg_result;
-
-	// Read "cpuset" attributes from kernel
-	logger->Debug("PLAT LNX: Loading kernel info for [%s]...", entry.path);
-
-
-	// Initialize the CGroup variable
-	sscanf(entry.path + STRLEN(BBQUE_LINUXPP_CLUSTER), "%hu", &prlb->node_id);
-	snprintf(group_name +
-		STRLEN(BBQUE_LINUXPP_RESOURCES) +   // e.g. "bbque/res"
-		STRLEN(BBQUE_LINUXPP_CLUSTER) + 1,  // e.g. "/" + "node"
-		4, "%d", prlb->node_id);
-	bbq_node = cgroup_new_cgroup(group_name);
-	if (bbq_node == NULL) {
-		logger->Error("PLAT LNX: Parsing resources FAILED! "
-		"(Error: cannot create [%s] group)", entry.path);
-		pp_result = PLATFORM_NODE_PARSING_FAILED;
-		goto parsing_failed;
-	}
-
-	// Update the CGroup variable with kernel info
-	cg_result = cgroup_get_cgroup(bbq_node);
-	if (cg_result != 0) {
-		logger->Error("PLAT LNX: Reading kernel info FAILED! "
-		"(Error: %d, %s)", cg_result, cgroup_strerror(cg_result));
-		pp_result = PLATFORM_NODE_PARSING_FAILED;
-		goto parsing_failed;
-	}
-
-	/**********************************************************************
-	 *    CPUSET Controller
-	 **********************************************************************/
-
-	// Get "cpuset" controller info
-	cg_controller = cgroup_get_controller(bbq_node, "cpuset");
-	if (cg_controller == NULL) {
-		logger->Error("PLAT LNX: Getting controller FAILED! "
-		"(Error: Cannot find controller \"cpuset\" "
-		"in group [%s])", entry.path);
-		pp_result = PLATFORM_NODE_PARSING_FAILED;
-		goto parsing_failed;
-	}
-
-	// Getting the value for the "cpuset.cpus" attribute
-	cg_result = cgroup_get_value_string(
-		cg_controller, BBQUE_LINUXPP_CPUS_PARAM, &(prlb->cpus));
-	core_ids_all.assign(prlb->cpus);
-	if (cg_result) {
-		logger->Error("PLAT LNX: Getting CPUs attribute FAILED! "
-		"(Error: 'cpuset.cpus' not configured or not readable)");
-		pp_result = PLATFORM_NODE_PARSING_FAILED;
-		goto parsing_failed;
-	}
-	logger->Debug("PLAT LNX: CPU cores to manage: %s", core_ids_all.c_str());
-
-	// Getting the value for the "cpuset.mems" attribute
-	cg_result = cgroup_get_value_string(
-		cg_controller, BBQUE_LINUXPP_MEMN_PARAM, &(prlb->mems));
-	memory_ids_all.assign(prlb->mems);
-	if (cg_result) {
-		logger->Error("PLAT LNX: Getting MEMs attribute FAILED! "
-			"(Error: 'cpuset.mems' not configured or not readable)");
-		pp_result = PLATFORM_NODE_PARSING_FAILED;
-		goto parsing_failed;
-	}
-	logger->Debug("PLAT LNX: Memory nodes to manage: %s", memory_ids_all.c_str());
-
-	/**********************************************************************
-	 *    MEMORY Controller
-	 **********************************************************************/
-
-#ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
-	// Get "memory" controller info
-	cg_controller = cgroup_get_controller(bbq_node, "memory");
-	if (cg_controller == NULL) {
-		logger->Error("PLAT LNX: Getting controller FAILED! "
-			"(Error: Cannot find controller \"memory\" "
-			"in group [%s])", entry.path);
-		pp_result = PLATFORM_NODE_PARSING_FAILED;
-		goto parsing_failed;
-	}
-
-	// Getting the value for the "memory.limit_in_bytes" attribute
-	cg_result = cgroup_get_value_string(
-		cg_controller, BBQUE_LINUXPP_MEMB_PARAM, &(prlb->memb));
-	if (cg_result) {
-		logger->Error("PLAT LNX: Getting MEMORY attribute FAILED! "
-			"(Error: 'memory.limit_in_bytes' not configured "
-			"or not readable)");
-		pp_result = PLATFORM_NODE_PARSING_FAILED;
-		goto parsing_failed;
-	}
-#endif
-
-	/**********************************************************************
-	 *    CPU Quota Controller
-	 **********************************************************************/
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
-
-	if (unlikely(!cfsQuotaSupported))
-		goto jump_quota_parsing;
-
-	// Get "cpu" controller info
-	cg_controller = cgroup_get_controller(bbq_node, "cpu");
-	if (cg_controller == NULL) {
-		logger->Error("PLAT LNX: Getting controller FAILED! "
-			"(Error: Cannot find controller \"cpu\" "
-			"in group [%s])", entry.path);
-		pp_result = PLATFORM_NODE_PARSING_FAILED;
-		goto parsing_failed;
-	}
-
-	// Getting the value for the "cpu.cfs_quota_us" attribute
-	cg_result = cgroup_get_value_string(cg_controller,
-	BBQUE_LINUXPP_CPUQ_PARAM, &buff);
-	if (cg_result) {
-		logger->Error("PLAT LNX: Getting CPU attributes FAILED! "
-			"(Error: 'cpu.cfs_quota_us' not configured "
-			"or not readable)");
-		logger->Warn("PLAT LNX: Disabling CPU Quota management");
-
-		// Disable CFS quota management
-		cfsQuotaSupported = false;
-
-		goto jump_quota_parsing;
-	}
-
-	// Check if a quota has been assigned (otherwise a "-1" is expected)
-	if (buff[0] != '-') {
-
-		// Save the "quota" value
-		errno = 0;
-		prlb->amount_cpuq = strtoul(buff, NULL, 10);
-		if (errno != 0) {
-			logger->Error("PLAT LNX: Getting CPU attributes FAILED! "
-				"(Error: 'cpu.cfs_quota_us' convertion)");
-			pp_result = PLATFORM_NODE_PARSING_FAILED;
-			goto parsing_failed;
-		}
-
-		// Getting the value for the "cpu.cfs_period_us" attribute
-		cg_result = cgroup_get_value_string(cg_controller,
-		                                    BBQUE_LINUXPP_CPUP_PARAM,
-		                                    &buff);
-		if (cg_result) {
-			logger->Error("PLAT LNX: Getting CPU attributes FAILED! "
-			              "(Error: 'cpu.cfs_period_us' not configured "
-			              "or not readable)");
-			pp_result = PLATFORM_NODE_PARSING_FAILED;
-			goto parsing_failed;
-		}
-
-		// Save the "period" value
-		errno = 0;
-		prlb->amount_cpup = strtoul(buff, NULL, 10);
-		if (errno != 0) {
-			logger->Error("PLAT LNX: Getting CPU attributes FAILED! "
-			              "(Error: 'cpu.cfs_period_us' convertion)");
-			pp_result = PLATFORM_NODE_PARSING_FAILED;
-			goto parsing_failed;
-		}
-
-	}
-
-jump_quota_parsing:
-	// Here we jump, if CFS Quota management is not enabled on the target
-
-#endif
-
-parsing_failed:
-	cgroup_free (&bbq_node);
-	return pp_result;
 }
 
 

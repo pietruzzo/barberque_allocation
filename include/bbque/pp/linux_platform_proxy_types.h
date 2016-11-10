@@ -62,7 +62,7 @@ typedef struct RLinuxBindings {
 	/** The percentage of CPUs time assigned */
 	uint_fast16_t amount_cpus = 0;
 	/** The bytes amount of Socket MEMORY assigned */
-	uint_fast64_t amount_memb = 0;
+	int_fast64_t amount_memb = 0;
 	/** The CPU time quota assigned */
 	uint_fast32_t amount_cpuq = 0;
 	/** The CPU time period considered for quota assignement */
@@ -71,10 +71,14 @@ typedef struct RLinuxBindings {
 		// 3 chars are required for each CPU/MEM resource if formatted
 		// with syntax: "nn,". This allows for up-to 99 resources per
 		// cluster
-		if (MaxCpusCount)
+		if (MaxCpusCount) {
 			cpus = new char[3*MaxCpusCount]();
-		if (MaxMemsCount)
+			cpus[0] = 0;
+		}
+		if (MaxMemsCount) {
 			mems = new char[3*MaxMemsCount]();
+			mems[0] = 0; 
+		}
 	}
 	~RLinuxBindings() {
 		delete [] cpus;
