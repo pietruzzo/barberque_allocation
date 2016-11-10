@@ -412,7 +412,7 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Refresh() noexcept {
 	return LoadPlatformData();
 }
 
-LinuxPlatformProxy::ExitCode_t
+/*LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::LoadPlatformData() noexcept {
 	struct cgroup *bbq_resources = NULL;
 	struct cgroup_file_info entry;
@@ -452,7 +452,102 @@ LinuxPlatformProxy::LoadPlatformData() noexcept {
 	cgroup_walk_tree_end(&node_it);
 
 	return pp_result;
+}*/
+
+LinuxPlatformProxy::ExitCode_t
+LinuxPlatformProxy::LoadPlatformData() noexcept {
+	
+	logger->Info("Loading platform data...");
+
+	return this->ScanPlatformDescription();
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+LinuxPlatformProxy::ExitCode_t
+LinuxPlatformProxy::ScanPlatformDescription() noexcept {
+	const PlatformDescription *pd;
+
+	try {
+		pd = &this->GetPlatformDescription();
+	}
+	catch(const std::runtime_error& e) {
+		UNUSED(e);
+		logger->Fatal("Unable to get the PlatformDescription object");
+		return PLATFORM_LOADING_FAILED;
+	}
+	
+	for (const auto sys : pd->GetSystemsAll()) {
+		for (const auto cpu : sys.GetCPUsAll()) {
+			ExitCode_t result = this->RegisterCPU(cpu);
+			if (PLATFORM_OK != result) {
+				logger->Fatal("Register CPU %d failed", cpu.GetId());
+				return result;
+			}
+		}
+
+		for (const auto mem : sys.GetMemoriesAll()) {
+			ExitCode_t result = this->RegisterMEM(*mem);
+			if (PLATFORM_OK != result) {
+				logger->Fatal("Register MEM %d failed", mem->GetId());
+				return result;
+			}
+		}
+	}
+
+	return PLATFORM_OK;
+}
+
+
+LinuxPlatformProxy::ExitCode_t
+LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) noexcept {
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
+	for (const auto pe : cpu.GetProcessingElementsAll()) {
+		auto pe_type = pe.GetPartitionType();
+		if (PlatformDescription::MDEV == pe_type || 
+			PlatformDescription::SHARED == pe_type) {
+		
+			const std::string resource_path = pe.GetPath();
+			const int share = pe.GetShare();
+
+			if (refreshMode) {
+				ra.UpdateResource(resource_path, "", share);
+			}
+			else {
+				ra.RegisterResource(resource_path, "", share);
+			}
+
+		}
+	}
+
+	return PLATFORM_OK;
+}
+
+LinuxPlatformProxy::ExitCode_t
+LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) noexcept {
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
+	std::string resource_path = mem.GetPath();
+	const int q_bytes = mem.GetQuantity();
+
+	if (refreshMode) {
+		ra.UpdateResource(resource_path, "", q_bytes);
+	}
+	else {
+		ra.RegisterResource(resource_path, "", q_bytes);
+	}
+
+	return PLATFORM_OK;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::ParseNode(struct cgroup_file_info &entry) noexcept {

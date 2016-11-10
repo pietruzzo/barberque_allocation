@@ -11,6 +11,7 @@
 // constants define
 #include "bbque/pp/linux_platform_proxy_types.h"
 
+#include <bitset>
 
 namespace bbque {
 namespace pp {
@@ -70,6 +71,7 @@ public:
 
 	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
 
+
 private:
 //-------------------- CONSTS
 	/**
@@ -126,7 +128,6 @@ private:
 
 	std::string memory_ids_all;
 
-
 //-------------------- METHODS
 
 	LinuxPlatformProxy();
@@ -156,6 +157,10 @@ private:
 	ExitCode_t RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) noexcept;
 	ExitCode_t RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept;
 	ExitCode_t GetSysMemoryTotal(uint64_t & mem_kb_tot) noexcept;
+
+	ExitCode_t ScanPlatformDescription() noexcept;
+	ExitCode_t RegisterCPU(const PlatformDescription::CPU &cpu) noexcept;
+	ExitCode_t RegisterMEM(const PlatformDescription::Memory &mem) noexcept;
 
 	// --- CGroup-releated methods
 	ExitCode_t InitCGroups() noexcept;                          /**< Load the libcgroup and initialize the internal representation */

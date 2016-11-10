@@ -127,6 +127,9 @@
 /** Optimize branch prediction for "untaken" */
 #define unlikely(x)     __builtin_expect((x),0)
 
+/** Silence the unused variable warning for a specific variable*/
+#define UNUSED(x) (void)(x);
+
 #ifndef CONFIG_TARGET_ANDROID
 /** Return the PID of the calling process/thread */
 inline pid_t gettid() {
