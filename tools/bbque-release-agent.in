@@ -9,13 +9,15 @@
 BBQUE_SYSROOT="${BBQUE_SYSROOT:-$SYSROOT}"
 
 # Parse EXC ID form input
-# e.g. /bbque/16286:exc_00:00`
-EXCID=${*#/bbque/}
+# e.g. /user.slice/silos
+SILOS=${*#/user.slice/}
 
 # EXC exiting from the silos should not be notified
 # Indeed, these are applications just started which
 # are going to be moved into their own CGroup
-[ $EXCID == "silos" ] && exit 0
+[ $SILOS == "silos" ] && exit 0
+
+EXCID=${*#/user.slice/res/}
 
 # Release the notified EXC
 echo "bq.am.unregister $EXCID" > $BBQUE_SYSROOT/var/bbque/bbque_cmds
