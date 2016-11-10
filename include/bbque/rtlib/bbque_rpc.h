@@ -569,8 +569,8 @@ protected:
 		/** CPS performance monitoring/control */
 		// [ms] at the last cycle start time
 		double 	 cycle_start_time_ms         = 0.0;
-		// [Hz] the expected cycle time
-		float  	 cps_expected                = 0.0;
+		// [Hz] the minimum cycle time in milliseconds
+		float  	 cycle_time_enforced_ms      = 0.0;
 		// [Hz] the minimum required CPS
 		float  	 cps_goal_min                = 0.0;
 		// [Hz] the maximum required CPS

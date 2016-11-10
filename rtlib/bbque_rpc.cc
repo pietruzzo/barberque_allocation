@@ -3061,14 +3061,14 @@ RTLIB_ExitCode_t BbqueRPC::SetCPS(
 	assert(isRegistered(exc) == true);
 	// Keep track of the maximum required CPS
 	exc->cps_max_allowed = cps;
-	exc->cps_expected = 0;
+	exc->cycle_time_enforced_ms = 0.0f;
 
-	if (cps != 0) {
-		exc->cps_expected = static_cast<float> (1e3) / exc->cps_max_allowed;
+	if (exc->cps_max_allowed != 0.0f) {
+		exc->cycle_time_enforced_ms = static_cast<float> (1e3) / exc->cps_max_allowed;
 	}
 
-	logger->Notice("Set cycle-rate @ %.3f[Hz] (%.3f[ms])",
-				   exc->cps_max_allowed, exc->cps_expected);
+	logger->Notice("Set max cycle-rate @ %.3f[Hz] (min %.3f[ms])",
+				   exc->cps_max_allowed, exc->cycle_time_enforced_ms);
 	return RTLIB_OK;
 }
 
@@ -3142,13 +3142,13 @@ void BbqueRPC::ForceCPS(pRegisteredEXC_t exc)
 	tnow = bbque_tmr.getElapsedTimeMs();
 	logger->Debug("TP: %.4f, TN: %.4f", exc->cycle_start_time_ms, tnow);
 	cycle_time = tnow - exc->cycle_start_time_ms;
-	delay_ms = exc->cps_expected - cycle_time;
+	delay_ms = exc->cycle_time_enforced_ms - cycle_time;
 
 	// Enforce CPS if needed
-	if (cycle_time < exc->cps_expected) {
+	if (delay_ms > 0.0f) {
 		sleep_us = 1e3 * static_cast<uint32_t> (delay_ms);
 		logger->Debug("Cycle Time: %3.3f[ms], ET: %3.3f[ms], Sleep time %u [us]",
-					  cycle_time, exc->cps_expected, sleep_us);
+					  cycle_time, exc->cycle_time_enforced_ms, sleep_us);
 		exc->cps_enforcing_sleep_time_ms = delay_ms;
 		usleep(sleep_us);
 	}
@@ -3329,7 +3329,7 @@ void BbqueRPC::NotifyPostConfigure(
 	logger->Debug("<=== NotifyConfigure");
 
 	// CPS Enforcing initialization
-	if ((exc->cps_expected != 0) || (exc->cycle_start_time_ms == 0))
+	if ((exc->cycle_time_enforced_ms != 0) || (exc->cycle_start_time_ms == 0))
 		exc->cycle_start_time_ms = bbque_tmr.getElapsedTimeMs();
 
 	// Resetting Runtime Statistics counters
@@ -3470,7 +3470,7 @@ void BbqueRPC::NotifyPostMonitor(RTLIB_EXCHandler_t exc_handler)
 	UpdateMonitorStatistics(exc);
 
 	// CPS Enforcing
-	if (exc->cps_expected != 0)
+	if (exc->cycle_time_enforced_ms != 0.0f)
 		ForceCPS(exc);
 
 	if (rtlib_configuration.unmanaged.enabled)
