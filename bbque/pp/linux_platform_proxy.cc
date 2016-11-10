@@ -406,53 +406,12 @@ LinuxPlatformProxy::GetResourceMapping(
 	return PLATFORM_OK;
 }
 
+
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Refresh() noexcept {
 	logger->Notice("Refreshing CGroups resources description...");
 	refreshMode = true;
-	return LoadPlatformData();
+	return this->ScanPlatformDescription();
 }
-
-/*LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::LoadPlatformData() noexcept {
-	struct cgroup *bbq_resources = NULL;
-	struct cgroup_file_info entry;
-	ExitCode_t pp_result = PLATFORM_OK;
-	void *node_it = NULL;
-	int cg_result;
-	int level;
-
-	logger->Info("PLAT LNX: CGROUP based resources enumeration...");
-
-	// Lookup for a "bbque/res" cgroup
-	bbq_resources = cgroup_new_cgroup(BBQUE_LINUXPP_RESOURCES);
-	cg_result = cgroup_get_cgroup(bbq_resources);
-	if (cg_result) {
-		logger->Error("PLAT LNX: [" BBQUE_LINUXPP_RESOURCES "] lookup FAILED! "
-		"(Error: No resources assignment)");
-		return PLATFORM_ENUMERATION_FAILED;
-	}
-
-	// Scan  subfolders to map "clusters"
-	cg_result = cgroup_walk_tree_begin("cpuset", BBQUE_LINUXPP_RESOURCES,
-	1, &node_it, &entry, &level);
-	if ((cg_result != 0) || (node_it == NULL)) {
-		logger->Error("PLAT LNX: [" BBQUE_LINUXPP_RESOURCES "] lookup FAILED! "
-		"(Error: No resources assignment)");
-		return PLATFORM_ENUMERATION_FAILED;
-	}
-
-	// Scan all "nodeN" assignment
-	while (!cg_result && (pp_result == PLATFORM_OK)) {
-		// That's fine here, since we want also to skip the root group [bbq_resources]
-		cg_result = cgroup_walk_tree_next(1, &node_it, &entry, level);
-		pp_result = ParseNode(entry);
-	}
-
-	// Release the iterator
-	cgroup_walk_tree_end(&node_it);
-
-	return pp_result;
-}*/
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::LoadPlatformData() noexcept {
@@ -461,10 +420,6 @@ LinuxPlatformProxy::LoadPlatformData() noexcept {
 
 	return this->ScanPlatformDescription();
 }
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 LinuxPlatformProxy::ExitCode_t
@@ -531,8 +486,9 @@ LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) noexcept {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
+
 	std::string resource_path = mem.GetPath();
-	const int q_bytes = mem.GetQuantity();
+	const auto q_bytes = mem.GetQuantity();
 
 	if (refreshMode) {
 		ra.UpdateResource(resource_path, "", q_bytes);
@@ -543,251 +499,6 @@ LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) noexcept
 
 	return PLATFORM_OK;
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::ParseNode(struct cgroup_file_info &entry) noexcept {
-	RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(0,0));
-	ExitCode_t pp_result = PLATFORM_OK;
-
-	// Jump all entries deeper than first-level subdirs
-	if (entry.depth > 1)
-		return PLATFORM_OK;
-
-	// Skip parsing of all NON directory, if not required to parse an attribute
-	if (entry.type != CGROUP_FILE_TYPE_DIR)
-		return PLATFORM_OK;
-
-	logger->Info("PLAT LNX: scanning [%d:%s]...",
-	entry.depth, entry.full_path);
-
-	// Consistency check for required folder names
-	if (strncmp(BBQUE_LINUXPP_CLUSTER, entry.path,
-	STRLEN(BBQUE_LINUXPP_CLUSTER))) {
-		logger->Warn("PLAT LNX: Resources enumeration, "
-		"ignoring unexpected CGroup [%s]",
-		entry.full_path);
-		return PLATFORM_OK;
-	}
-
-	pp_result = ParseNodeAttributes(entry, prlb);
-	if (pp_result != PLATFORM_OK)
-		return pp_result;
-
-	// Scan "cpus" and "mems" attributes for each cluster
-	logger->Debug("PLAT LNX: Setup resources from [%s]...",
-	entry.full_path);
-
-	// Register CPUs for this Node
-	pp_result = RegisterCluster(prlb);
-	return pp_result;
-
-}
-
-LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterCluster(RLinuxBindingsPtr_t prlb) noexcept {
-	ExitCode_t pp_result = PLATFORM_OK;
-
-	logger->Debug("PLAT LNX: %s resources for Node [%d], "
-	"CPUs [%s], MEMs [%s]",
-	refreshMode ? "Check" : "Setup",
-	prlb->node_id, prlb->cpus, prlb->mems);
-
-	// The CPUs are generally represented with a syntax like this:
-	// 1-3,4,5-7
-	pp_result = RegisterClusterCPUs(prlb);
-	if (pp_result != PLATFORM_OK)
-		return pp_result;
-
-	// The MEMORY amount is represented in Bytes
-	pp_result = RegisterClusterMEMs(prlb);
-	if (pp_result != PLATFORM_OK)
-		return pp_result;
-
-	return pp_result;
-}
-
-LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) noexcept {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	char resourcePath[] = "sys0.cpu256.mem256";
-	unsigned short first_mem_id;
-	unsigned short last_mem_id;
-	const char *p = prlb->mems;
-	uint64_t limit_in_bytes;
-
-#ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
-	limit_in_bytes = atol(prlb->memb);
-#else
-	GetSysMemoryTotal(limit_in_bytes);
-	limit_in_bytes *= 1024;
-#endif
-
-	// NOTE: The Memory limit in bytes is used to assign the SAME quota to
-	// each memory node within the same cluster. This is not the intended
-	// behavior of the limit_in_bytes, but simplifies a lot the
-	// configuration and should be just enough for our purposes.
-
-	while (*p) {
-
-		// Get a Memory NODE id, and register the corresponding resource path
-		sscanf(p, "%hu", &first_mem_id);
-		snprintf(resourcePath+8, 11, "%hu.mem%d",
-		prlb->node_id, first_mem_id);
-		logger->Debug("PLAT LNX: %s [%s]...",
-		refreshMode ? "Refreshing" : "Registering", resourcePath);
-		if (refreshMode)
-			ra.UpdateResource(resourcePath, "", limit_in_bytes);
-		else
-			ra.RegisterResource(resourcePath, "", limit_in_bytes);
-
-		// Look-up for next NODE id
-		while (*p && (*p != ',') && (*p != '-')) {
-			++p;
-		}
-
-		if (!*p)
-			return PLATFORM_OK;
-
-		if (*p == ',') {
-			++p;
-			continue;
-		}
-		// Otherwise: we have stopped on a "-"
-
-		// Get last Memory NODE id of this range
-		sscanf(++p, "%hu", &last_mem_id);
-		// Register all the other Memory NODEs of this range
-		while (++first_mem_id <= last_mem_id) {
-			snprintf(resourcePath+8, 11, "%hu.mem%d",
-			         prlb->node_id, first_mem_id);
-			logger->Debug("PLAT LNX: %s [%s]...",
-			              refreshMode ? "Refreshing" : "Registering",
-			              resourcePath);
-
-			if (refreshMode)
-				ra.UpdateResource(resourcePath, "", limit_in_bytes);
-			else
-				ra.RegisterResource(resourcePath, "", limit_in_bytes);
-		}
-
-		// Look-up for next CPU id
-		while (*p && (*p != ',')) {
-			++p;
-		}
-
-		if (*p == ',')
-			++p;
-	}
-
-	return PLATFORM_OK;
-}
-
-
-LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	char resourcePath[] = "sys0.cpu256.pe256";
-	BBQUE_RID_TYPE first_cpu_id;
-	BBQUE_RID_TYPE last_cpu_id;
-	const char *p = prlb->cpus;
-	uint32_t cpu_quota = 100;
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
-
-	// NOTE: The CPU bandwidth is used to assign the SAME quota to each
-	// processor within the same node/cluster. This is not the intended
-	// behavior of the cfs_quota_us, but simplifies a lot the
-	// configuration and should be just enough for our purposes.
-	// Thus, each CPU will receive a % of CPU time defined by:
-	//   QUOTA = CPU_QUOTA * 100 / CPU_PERIOD
-	if (prlb->amount_cpup) {
-		cpu_quota = (prlb->amount_cpuq * 100) / prlb->amount_cpup;
-		logger->Debug("Configuring CPUs of node [%d] with CPU quota of [%lu]%",
-				prlb->node_id, cpu_quota);
-	}
-
-	// Because of CGroups interface, we cannot assign an empty CPU quota.
-	// The minimum allowed value is 1%, since this value is also quite
-	// un-useful on a real configuration, we assume a CPU being offline
-	// when a CPU quota <= 1% is required.
-	if (cpu_quota <= 1) {
-		logger->Warn("Quota < 1%, Offlining CPUs of node [%d]...", prlb->node_id);
-		cpu_quota = 0;
-	}
-
-#endif
-
-	while (*p) {
-
-		// Get a CPU id, and register the corresponding resource path
-		sscanf(p, "%hu", &first_cpu_id);
-		snprintf(resourcePath+8, 10, "%hu.pe%d", prlb->node_id, first_cpu_id);
-		if (refreshMode) {
-			logger->Debug("PLAT LNX: Updating <%s>... (cpu_quota=%d)",
-					resourcePath, cpu_quota);
-			ra.UpdateResource(resourcePath, "", cpu_quota);
-		}
-		else {
-			logger->Debug("PLAT LNX: Registering <%s>... (cpu_quota=%d)",
-					resourcePath, cpu_quota);
-			ra.RegisterResource(resourcePath, "", cpu_quota);
-			InitPowerInfo(resourcePath, first_cpu_id);
-		}
-
-		// Look-up for next CPU id
-		while (*p && (*p != ',') && (*p != '-')) {
-			++p;
-		}
-
-		if (!*p)
-			return PLATFORM_OK;
-
-		if (*p == ',') {
-			++p;
-			continue;
-		}
-		// Otherwise: we have stopped on a "-"
-
-		// Get last CPU of this range
-		sscanf(++p, "%hu", &last_cpu_id);
-		// Register all the other CPUs of this range
-		while (++first_cpu_id <= last_cpu_id) {
-			snprintf(resourcePath+8, 10, "%hu.pe%d",
-			         prlb->node_id, first_cpu_id);
-			logger->Debug("PLAT LNX: %s [%s]...",
-			              refreshMode ? "Refreshing" : "Registering",
-			              resourcePath);
-
-			if (refreshMode) {
-				logger->Debug("PLAT LNX: Updating <%s>... (cpu_quota=%d)",
-						resourcePath, cpu_quota);
-				ra.UpdateResource(resourcePath, "", cpu_quota);
-			}
-			else {
-				logger->Debug("PLAT LNX: Registering <%s>... (cpu_quota=%d)",
-						resourcePath, cpu_quota);
-				ra.RegisterResource(resourcePath, "", cpu_quota);
-				InitPowerInfo(resourcePath, first_cpu_id);
-			}
-		}
-
-		// Look-up for next CPU id
-		while (*p && (*p != ',')) {
-			++p;
-		}
-
-		if (*p == ',')
-			++p;
-	}
-
-	return PLATFORM_OK;
-}
-
 
 void LinuxPlatformProxy::InitPowerInfo(
 		const char * resourcePath,
