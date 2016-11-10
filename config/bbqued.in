@@ -6,17 +6,17 @@ declare START_TIME=$(date +%s.%3N)
 
 bbqued_info() {
 	echo -ne '\E[33;0m'
-	printf "[%5s] $1\n" $(echo $START_TIME"-"$(date +%s.%3N) | bc)
+	printf "[%5s] $1\n" $(echo $(date +%s.%3N)"-"$START_TIME | bc)
 	echo -ne '\E[33;0m'
 }
 bbqued_notice() {
 	echo -ne '\E[33;35m'
-	printf "[%5s] $1\n" $(echo $START_TIME"-"$(date +%s.%3N) | bc)
+	printf "[%5s] $1\n" $(echo $(date +%s.%3N)"-"$START_TIME | bc)
 	echo -ne '\E[33;0m'
 }
 bbqued_error() {
 	echo -ne '\E[33;31m'
-	printf "[%5s] $1\n" $(echo $START_TIME"-"$(date +%s.%3N) | bc)
+	printf "[%5s] $1\n" $(echo $(date +%s.%3N)"-"$START_TIME | bc)
 	echo -ne '\E[33;0m'
 	exit 1
 }
