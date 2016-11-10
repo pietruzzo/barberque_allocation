@@ -214,7 +214,7 @@ static RTLIB_ExitCode_t rtlib_jps_goal_update(
 
 static RTLIB_ExitCode_t rtlib_cps_set_ctime_us(
 		RTLIB_EXCHandler_t exc_handler, uint32_t us) {
-	return rpc->SetMaximumCycleTimeUs(exc_handler, us);
+	return rpc->SetMinimumCycleTimeUs(exc_handler, us);
 }
 
 /*******************************************************************************

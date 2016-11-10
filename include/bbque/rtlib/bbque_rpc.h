@@ -310,7 +310,7 @@ public:
 	 * delay will be inserted by the RTLib in order to get the specified
 	 * duration.
 	 */
-	RTLIB_ExitCode_t SetMaximumCycleTimeUs(
+	RTLIB_ExitCode_t SetMinimumCycleTimeUs(
 		RTLIB_EXCHandler_t exc_handler, uint32_t max_cycle_time_us)
 	{
 		return SetCPS(exc_handler,
