@@ -284,12 +284,12 @@ public:
 	 * @brief Print details about how resource usage is partitioned among
 	 * applications/EXCs
 	 *
-	 * @param path The resource path
+	 * @param resource_ptr The resource description pointer
 	 * @param status_view The token referencing the resource state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
 	void PrintAppDetails(
-	        br::ResourcePathPtr_t path, br::RViewToken_t status_view, bool verbose) const;
+	        br::ResourcePtr_t resource_ptr, br::RViewToken_t status_view, bool verbose) const;
 
 	/**
 	 * @brief A prefix path for recipe validation
@@ -593,6 +593,8 @@ private:
 
 	/** The resource paths registered (strings and objects) */
 	std::map<std::string, br::ResourcePathPtr_t> r_paths;
+
+	std::set<br::ResourcePtr_t> resource_set;
 
 	/** Resources that can be allocated in 'slice', i.e. the assigned amount
 	 * is distributed over all the resources referenced by the mixed/template

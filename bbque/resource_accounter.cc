@@ -180,33 +180,31 @@ void ResourceAccounter::PrintStatusReport(
 	}
 
 	// For each resource get the used amount
-	for (auto const & path_entry: r_paths) {
-		ResourcePathPtr_t const & resource_path_ptr(path_entry.second);
-		rsrc_used = Used(resource_path_ptr, EXACT, status_view);
-
-		// Build the resource text row
+	for (auto & resource_ptr: resource_set) {
 		uint8_t len = 0;
 		char online = 'I';
-		if (IsOfflineResource(resource_path_ptr))
-			online = 'O';
+		if (resource_ptr->IsOffline())
+			online  = 'O';
+
 		len += sprintf(rsrc_text_row + len, "| %-27s %c : %11s | ",
-				resource_path_ptr->ToString().c_str(), online,
-				PrettyFormat(rsrc_used));
+				resource_ptr->Path().c_str(), online,
+				PrettyFormat(resource_ptr->Used(status_view)));
 		len += sprintf(rsrc_text_row + len, "%11s | ",
-				PrettyFormat(Unreserved(resource_path_ptr)));
+				PrettyFormat(resource_ptr->Unreserved()));
 		len += sprintf(rsrc_text_row + len, "%11s |",
-				PrettyFormat(Total(resource_path_ptr)));
+				PrettyFormat(resource_ptr->Total()));
 		PRINT_NOTICE_IF_VERBOSE(verbose, rsrc_text_row);
 
 		// Print details about how usage is partitioned among applications
-		if (rsrc_used > 0)
-			PrintAppDetails(resource_path_ptr, status_view, verbose);
+		if (resource_ptr->Used(status_view)> 0)
+			PrintAppDetails(resource_ptr, status_view, verbose);
 	}
+
 	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV1);
 }
 
 void ResourceAccounter::PrintAppDetails(
-		ResourcePathPtr_t resource_path_ptr,
+		br::ResourcePtr_t resource_ptr,
 		br::RViewToken_t status_view,
 		bool verbose) const {
 	br::Resource::ExitCode_t res_result;
@@ -218,13 +216,13 @@ void ResourceAccounter::PrintAppDetails(
 	char app_text_row[] = "|     12345:exc_01:01,P01,AWM01 : 1234.123e+1 |             |             |";
 
 	// Get the resource descriptor
-	br::ResourcePtr_t rsrc(GetResource(resource_path_ptr));
-	if (!rsrc || rsrc->ApplicationsCount(status_view) == 0)
+	if (!resource_ptr || resource_ptr->ApplicationsCount(status_view) == 0)
 		return;
 
 	do {
 		// How much does the application/EXC use?
-		res_result = rsrc->UsedBy(app_uid, rsrc_amount, app_index, status_view);
+		res_result = resource_ptr->UsedBy(
+				app_uid, rsrc_amount, app_index, status_view);
 		if (res_result != br::Resource::RS_SUCCESS)
 			break;
 
@@ -630,6 +628,7 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 			strpath.c_str(), resource_ptr->Total(), units.c_str());
 
 	// Insert the path in the paths set
+	resource_set.emplace(resource_ptr);
 	r_paths.emplace(strpath, resource_path_ptr);
 	path_max_len = std::max((int) path_max_len, (int) strpath.length());
 
