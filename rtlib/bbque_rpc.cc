@@ -2137,7 +2137,7 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 		float current_cps;
 		bool  bad_allocation = false;
 
-		if (exc->cps_goal_min == exc->cps_goal_max) {
+		if (exc->cps_goal_min > 0.0f && exc->cps_goal_max == 0.0f) {
 			// There isn't a max CPS goal
 			target_cps = exc->cps_goal_min;
 			current_cps = cps_min;
