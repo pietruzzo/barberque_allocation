@@ -835,11 +835,7 @@ RTLIB_ExitCode_t BbqueRPC::CGroupDelete(pRegisteredEXC_t exc)
 	}
 
 	// Delete EXC specific CGroup
-	if (bu::CGroups::Delete(exc->cgroup_path.c_str()) !=
-		bu::CGroups::CGResult::OK) {
-		logger->Error("CGroup delete [%s] FAILED", exc->cgroup_path.c_str());
-		return RTLIB_ERROR;
-	}
+	bu::CGroups::Delete(exc->cgroup_path.c_str());
 
 	// Mark this CGroup as removed
 	exc->cgroup_path.clear();

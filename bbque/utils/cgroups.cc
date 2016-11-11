@@ -341,12 +341,9 @@ CGroups::CGResult CGroups::Delete(const char *cgroup_path) {
 	}
 
 	// Delete the kernel cgroup
-	if (cgroup_delete_cgroup(cgroup_handler, 1) != 0) {
-		logger->Error("CGroup [%s] delete FAILED", cgroup_path);
-		return CGResult::DELETE_FAILED;
-	}
-
+	cgroup_delete_cgroup(cgroup_handler, 0);
 	cgroup_free(&cgroup_handler);
+
 	return CGResult::OK;
 }
 
