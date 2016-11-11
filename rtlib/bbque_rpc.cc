@@ -3423,7 +3423,7 @@ void BbqueRPC::NotifyPostRun(
 	logger->Debug("Post-Run: Stop computing CPU quota");
 
 	if (UpdateCPUBandwidthStats(exc) != RTLIB_OK)
-		logger->Error("PostRun: could not compute current CPU bandwidth");
+		logger->Debug("PostRun: could not compute current CPU bandwidth");
 
 #ifdef CONFIG_BBQUE_OPENCL
 
