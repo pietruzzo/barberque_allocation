@@ -181,7 +181,7 @@ setup() {
 			# jumping kernel thread which should not be moved
 			RES=$(readlink -v /proc/$D/exe 2>/dev/null)
 			if [ "$RES" != "" ]; then
-				echo "$D" > $BBQUE_CGMOUNT/user.slice/host/cgroup.procs
+				echo "$D" > $BBQUE_CGMOUNT/user.slice/host/cgroup.procs 2> /dev/null
 			fi
 	done
 
@@ -229,7 +229,7 @@ stop() {
 	if [ -d $BBQUE_CGMOUNT/user.slice ]; then
 		bbqued_info "Moving all (user-space) tasks back to ROOT node"
 		for P in `cat $BBQUE_CGMOUNT/user.slice/host/cgroup.procs`; do
-			echo $P > $BBQUE_CGMOUNT/cgroup.procs
+			echo $P > $BBQUE_CGMOUNT/cgroup.procs 2> /dev/null
 		done
 		sleep 1
 		bbqued_info "Removing applications nodes"
