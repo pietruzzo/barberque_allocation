@@ -93,8 +93,6 @@ private:
 	 */
 	const char *controller;
 
-	bool cfsQuotaSupported; /**< True if the target system supports CFS quota management */
-
 	bool refreshMode;
 
 	int cfs_margin_pct    = 0;  /**< CFS bandwidth enforcement safety margin (default: 0%) */
@@ -124,8 +122,6 @@ private:
 	void InitCoresType();
 #endif
 
-	std::string core_ids_all;
-
 	std::string memory_ids_all;
 
 //-------------------- METHODS
@@ -150,13 +146,6 @@ private:
 	        BBQUE_RID_TYPE node_id,
 	        br::RViewToken_t rvt) noexcept;
 
-	ExitCode_t ParseNode(struct cgroup_file_info &entry) noexcept;
-	ExitCode_t ParseNodeAttributes(struct cgroup_file_info &entry,
-	                               RLinuxBindingsPtr_t prlb) noexcept;
-	ExitCode_t RegisterCluster(RLinuxBindingsPtr_t prlb) noexcept;
-	ExitCode_t RegisterClusterMEMs(RLinuxBindingsPtr_t prlb) noexcept;
-	ExitCode_t RegisterClusterCPUs(RLinuxBindingsPtr_t prlb) noexcept;
-	ExitCode_t GetSysMemoryTotal(uint64_t & mem_kb_tot) noexcept;
 
 	ExitCode_t ScanPlatformDescription() noexcept;
 	ExitCode_t RegisterCPU(const PlatformDescription::CPU &cpu) noexcept;

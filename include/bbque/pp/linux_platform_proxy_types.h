@@ -99,6 +99,9 @@ typedef struct CGroupData : public bbque::utils::PluginData_t {
 	struct cgroup_controller *pc_cpuset;
 	struct cgroup_controller *pc_memory;
 
+	bool cfs_quota_available = false; /**< True if the target system supports 
+										   CFS quota management */
+
 	CGroupData(bbque::app::AppPtr_t pa) :
 		bu::PluginData_t(LINUX_PP_NAMESPACE, "cgroup"),
 		papp(pa), pcg(NULL), pc_cpu(NULL),
