@@ -448,7 +448,6 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 				logger->Fatal("Register CPU %d failed", cpu.GetId());
 				return result;
 			}
-			this->InitPowerInfo(cpu.GetPath().c_str(), cpu.GetId());
 		}
 
 		for (const auto mem : sys.GetMemoriesAll()) {
@@ -488,6 +487,7 @@ LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) noexcept {
 			}
 			else {
 				ra.RegisterResource(resource_path, "", share);
+				InitPowerInfo(resource_path.c_str(), pe.GetId());
 			}
 
 		}
