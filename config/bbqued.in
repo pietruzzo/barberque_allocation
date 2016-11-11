@@ -237,8 +237,10 @@ stop() {
 	fi
 
 	# Clean-up lock and PID files
-	bbqued_info "Removing runtime data"
-	rm -f $BBQUE_PIDFILE $BBQUE_LOCKFILE >/dev/null 2>&1
+	if [ -f $BBQUE_PIDFILE ] || [ -f $BBQUE_LOCKFILE ]; then
+		bbqued_info "Removing runtime data"
+		rm -f $BBQUE_PIDFILE $BBQUE_LOCKFILE >/dev/null 2>&1
+	fi
 
 	sudo kill -9 $(pidof barbeque) >/dev/null 2>&1
 
