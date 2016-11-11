@@ -28,7 +28,7 @@
 #include "bbque/scheduler_manager.h"
 #include <algorithm>
 
-#define SCHEDULER_POLICY_NAME "steaks"
+#define SCHEDULER_POLICY_NAME "perdetemp"
 #define MIN_CPU_PER_APPLICATION 5
 #define PERDETEMP_GGAP_MAX 300
 #define PERDETEMP_GGAP_MIN -PERDETEMP_GGAP_MAX
