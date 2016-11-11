@@ -226,7 +226,7 @@ stop() {
 	fi
 
 	# Cleaning-up CGroup reservations
-	if [ -d $BBQUE_CGMOUNT/user.slice ]; then
+	if [ -d $BBQUE_CGMOUNT/user.slice/host ]; then
 		bbqued_info "Moving all (user-space) tasks back to ROOT node"
 		for P in `cat $BBQUE_CGMOUNT/user.slice/host/cgroup.procs`; do
 			echo $P > $BBQUE_CGMOUNT/cgroup.procs 2> /dev/null
