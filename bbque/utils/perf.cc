@@ -145,7 +145,7 @@ int Perf::ReadCounter(int fd, void *buf, size_t n) {
 		if (ret <= 0)
 			return ret;
 		n -= ret;
-		buf += ret;
+		buf = (char*)buf + ret;
 	}
 	return bytes;
 }

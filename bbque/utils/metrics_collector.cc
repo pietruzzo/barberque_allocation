@@ -442,19 +442,17 @@ MetricsCollector::DumpCountSM(CounterMetric *m, uint8_t idx) {
 	// By default use main metrics description
 	if ((m->sm_desc == NULL) || (m->sm_desc[0] == NULL)) {
 		snprintf(_desc, 64, "%s [%02d]", m->desc, idx);
-		goto dump_count_sm;
+	} else {
+		// Use the last valid provided description
+		for (i = 0; m->sm_desc[i] && (i < idx); ++i) {}
+		// This is needed to handle the special case of just one
+		// submetric description provided
+		if (i < idx || !m->sm_desc[i]) --i;
+
+		// Setup the sub-metric description
+		snprintf(_desc, 64, "%s [%02d]", m->sm_desc[i], idx);
+
 	}
-
-	// Use the last valid provided description
-	for (i = 0; m->sm_desc[i] && (i < idx); ++i) {}
-	// This is needed to handle the special case of just one
-	// submetric description provided
-	if (i < idx || !m->sm_desc[i]) --i;
-
-	// Setup the sub-metric description
-	snprintf(_desc, 64, "%s [%02d]", m->sm_desc[i], idx);
-
-dump_count_sm:
 	// Dump sub-metric
 	logger->Notice(
 		" %-20s | %9 " PRIu64 " : %s",
@@ -491,19 +489,19 @@ MetricsCollector::DumpValueSM(ValueMetric *m, uint8_t idx,
 	// By default use main metrics description
 	if ((m->sm_desc == NULL) || (m->sm_desc[0] == NULL)) {
 		snprintf(ms.desc, 64, "%s [%02d]", m->desc, idx);
-		goto dump_value_sm;
+
+	} else {
+
+		// Use the last valid provided description
+		for (i = 0; m->sm_desc[i] && (i < idx); ++i) {}
+		// This is needed to handle the special case of just one
+		// submetric description provided
+		if (i < idx || !m->sm_desc[i]) --i;
+
+		// Setup the sub-metric description
+		snprintf(ms.desc, 64, "%s [%02d]", m->sm_desc[i], idx);
 	}
 
-	// Use the last valid provided description
-	for (i = 0; m->sm_desc[i] && (i < idx); ++i) {}
-	// This is needed to handle the special case of just one
-	// submetric description provided
-	if (i < idx || !m->sm_desc[i]) --i;
-
-	// Setup the sub-metric description
-	snprintf(ms.desc, 64, "%s [%02d]", m->sm_desc[i], idx);
-
-dump_value_sm:
 	// Dump sub-metric
 	logger->Notice(
 		" %-20s | %9" PRIu64 " | %9" PRIu64 " | %9" PRIu64 " : %s",
@@ -550,19 +548,18 @@ MetricsCollector::DumpSampleSM(SamplesMetric *m, uint8_t idx,
 	// By default use main metrics description
 	if ((m->sm_desc == NULL) || (m->sm_desc[0] == NULL)) {
 		snprintf(ms.desc, 64, "%s [%02d]", m->desc, idx);
-		goto dump_samples_sm;
+	} else {
+
+		// Use the last valid provided description
+		for (i = 0; m->sm_desc[i] && (i < idx); ++i) {}
+		// This is needed to handle the special case of just one
+		// submetric description provided
+		if (i < idx || !m->sm_desc[i]) --i;
+
+		// Setup the sub-metric description
+		snprintf(ms.desc, 64, "%s [%02d]", m->sm_desc[i], idx);
 	}
 
-	// Use the last valid provided description
-	for (i = 0; m->sm_desc[i] && (i < idx); ++i) {}
-	// This is needed to handle the special case of just one
-	// submetric description provided
-	if (i < idx || !m->sm_desc[i]) --i;
-
-	// Setup the sub-metric description
-	snprintf(ms.desc, 64, "%s [%02d]", m->sm_desc[i], idx);
-
-dump_samples_sm:
 	// Dump sub-metric
 	logger->Notice(
 			" %-20s | %9.3f | %9.3f | %9.3f | %9.3f :   %s",
@@ -613,19 +610,18 @@ MetricsCollector::DumpPeriodSM(PeriodMetric *m, uint8_t idx,
 	// By default use main metrics description
 	if ((m->sm_desc == NULL) || (m->sm_desc[0] == NULL)) {
 		snprintf(ms.desc, 64, "%s [%02d]", m->desc, idx);
-		goto dump_period_sm;
+	} else {
+
+		// Use the last valid provided description
+		for (i = 0; m->sm_desc[i] && (i < idx); ++i) {}
+		// This is needed to handle the special case of just one
+		// submetric description provided
+		if (i < idx || !m->sm_desc[i]) --i;
+
+		// Setup the sub-metric description
+		snprintf(ms.desc, 64, "%s [%02d]", m->sm_desc[i], idx);
+
 	}
-
-	// Use the last valid provided description
-	for (i = 0; m->sm_desc[i] && (i < idx); ++i) {}
-	// This is needed to handle the special case of just one
-	// submetric description provided
-	if (i < idx || !m->sm_desc[i]) --i;
-
-	// Setup the sub-metric description
-	snprintf(ms.desc, 64, "%s [%02d]", m->sm_desc[i], idx);
-
-dump_period_sm:
 	// Dump sub-metric
 	logger->Notice(
 			" %-20s | %10.3f %10.3f | %10.3f %10.3f | %10.3f %10.3f |    %10.3f %10.3f :   %s",

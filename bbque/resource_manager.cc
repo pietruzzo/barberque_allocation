@@ -340,33 +340,31 @@ void ResourceManager::Optimize() {
 	if (!am.HasApplications(Application::SYNC)) {
 		logger->Debug("NO EXC in SYNC state, synchronization not required");
 		RM_COUNT_EVENT(metrics, RM_SCHED_EMPTY);
-		goto sched_profile;
+	} else {
+		// Account for a new synchronizaiton activation
+		RM_COUNT_EVENT(metrics, RM_SYNCH_TOTAL);
+		RM_GET_PERIOD(metrics, RM_SYNCH_PERIOD, period);
+		if (period)
+			logger->Notice("Schedule Run-time: %9.3f[ms]", period);
+
+		//--- Synchronization
+		logger->Info(LNSYNB);
+		optimization_tmr.start();
+		syncResult = ym.SyncSchedule();
+		optimization_tmr.stop();
+		if (syncResult != SynchronizationManager::OK) {
+			logger->Warn(LNSYNF);
+			RM_COUNT_EVENT(metrics, RM_SYNCH_FAILED);
+			// FIXME here we should implement some counter-meaure to
+			// ensure consistency
+			return;
+		}
+		logger->Info(LNSYNE);
+		ra.PrintStatusReport(0, true);
+		am.PrintStatusReport(true);
+		logger->Notice("Sync Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
+
 	}
-
-	// Account for a new synchronizaiton activation
-	RM_COUNT_EVENT(metrics, RM_SYNCH_TOTAL);
-	RM_GET_PERIOD(metrics, RM_SYNCH_PERIOD, period);
-	if (period)
-		logger->Notice("Schedule Run-time: %9.3f[ms]", period);
-
-	//--- Synchronization
-	logger->Info(LNSYNB);
-	optimization_tmr.start();
-	syncResult = ym.SyncSchedule();
-	optimization_tmr.stop();
-	if (syncResult != SynchronizationManager::OK) {
-		logger->Warn(LNSYNF);
-		RM_COUNT_EVENT(metrics, RM_SYNCH_FAILED);
-		// FIXME here we should implement some counter-meaure to
-		// ensure consistency
-		return;
-	}
-	logger->Info(LNSYNE);
-	ra.PrintStatusReport(0, true);
-	am.PrintStatusReport(true);
-	logger->Notice("Sync Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
-
-sched_profile:
 
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
 	//--- Profiling
