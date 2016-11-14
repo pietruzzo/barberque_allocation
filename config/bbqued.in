@@ -59,7 +59,7 @@ check_controllers() {
 	DIFF=$(cat /proc/cgroups | grep "cpu\|memory" | cut -f2 | sort -u | wc -l)
 
 	# Hierarchies unmounting
-	if [[ $DIFFH != 1 ]]; then
+	if [[ $DIFF != 1 ]]; then
 		bbqued_info '[cpuset,memory,cpu,cpuacct] controllers on different hierachies. Unmounting'
 
 		grep cgroup /proc/mounts | cut -d' ' -f2 | \
