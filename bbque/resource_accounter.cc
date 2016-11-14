@@ -161,7 +161,6 @@ void ResourceAccounter::PrintStatusReport(
 		br::RViewToken_t status_view, bool verbose) const {
 	//                        +--------- 22 ------------+     +-- 11 ---+   +-- 11 ---+   +-- 11 ---+
 	char rsrc_text_row[] = "| sys0.cpu0.mem0              I : 1234.123e+1 | 1234.123e+1 | 1234.123e+1 |";
-	uint64_t rsrc_used = 0;
 
 	// Print the head of the report table
 	if (verbose) {

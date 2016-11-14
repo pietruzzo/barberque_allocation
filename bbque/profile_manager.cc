@@ -96,23 +96,23 @@ ProfileManager::ProfileScheduleClass(uint16_t prio) {
 	// Profiling ACTIVE applications
 	papp = am.GetFirst(prio, app_it);
 	while (papp) {
-		if (!papp->Active())
-			goto loop_continue;
-		++actives_count;
+		if (papp->Active()) {
+			++actives_count;
 
-		//logger->Debug("Prio[%d], accounting [%s] as ACTIVE",
-		//		prio, papp->StrId(), papp->Value());
+			//logger->Debug("Prio[%d], accounting [%s] as ACTIVE",
+			//		prio, papp->StrId(), papp->Value());
 
-		// Stats are computed just on RUNNING applications
-		if (papp->State() != ApplicationStatusIF::RUNNING)
-			goto loop_continue;
-		++running_count;
+			// Stats are computed just on RUNNING applications
+			if (papp->State() == ApplicationStatusIF::RUNNING) {
+				++running_count;
 
-		//logger->Debug("Prio[%d], adding [%s] to stats, value [%.4f]",
-		//		prio, papp->StrId(), papp->Value());
-		appValueStats(papp->Value());
-		awmValueStats(papp->CurrentAWM()->Value());
-loop_continue:
+				//logger->Debug("Prio[%d], adding [%s] to stats, value [%.4f]",
+				//		prio, papp->StrId(), papp->Value());
+				appValueStats(papp->Value());
+				awmValueStats(papp->CurrentAWM()->Value());
+			}
+		}
+
 		papp = am.GetNext(prio, app_it);
 	}
 

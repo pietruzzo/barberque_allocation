@@ -469,7 +469,6 @@ SynchronizationManager::Sync_DoChange(ApplicationStatusIF::SyncState_t syncState
 SynchronizationManager::ExitCode_t
 SynchronizationManager::Sync_PostChange(ApplicationStatusIF::SyncState_t syncState) {
 	ApplicationProxy::pPostChangeRsp_t presp;
-	RTLIB_ExitCode_t result;
 	AppsUidMapIt apps_it;
 	AppPtr_t papp;
 	uint8_t excs = 0;
@@ -483,22 +482,20 @@ SynchronizationManager::Sync_PostChange(ApplicationStatusIF::SyncState_t syncSta
 		if (!policy->DoSync(papp))
 			continue;
 
-		if (Reshuffling(papp) ||
-			papp->IsContainer())
-			goto commit;
+		if (! (Reshuffling(papp) || papp->IsContainer()) ) {
 
-		logger->Info("STEP 4: postChange() ===> [%s]", papp->StrId());
+			logger->Info("STEP 4: postChange() ===> [%s]", papp->StrId());
 
-		// Jumping meanwhile disabled applications
-		if (papp->Disabled()) {
-			logger->Debug("STEP 4: ignoring disabled EXC [%s]",
-					papp->StrId());
-			continue;
+			// Jumping meanwhile disabled applications
+			if (papp->Disabled()) {
+				logger->Debug("STEP 4: ignoring disabled EXC [%s]",
+						papp->StrId());
+				continue;
+			}
+
+			logger->Info("STEP 4: <--------- OK -- [%s]", papp->StrId());
 		}
 
-		logger->Info("STEP 4: <--------- OK -- [%s]", papp->StrId());
-
-	commit:
 		// Disregarding commit for EXC disabled meanwhile
 		if (papp->Disabled())
 			continue;
