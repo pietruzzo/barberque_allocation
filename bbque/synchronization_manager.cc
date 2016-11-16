@@ -223,7 +223,7 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 		presp = (*resp_it).second;
 #endif
 
-Sync_PreChange_Collecting_EXC(papp, presp);
+Sync_PreChange_Check_EXC_Response(papp, presp);
 
 // Pre-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
@@ -247,7 +247,7 @@ Sync_PreChange_Collecting_EXC(papp, presp);
 	return OK;
 }
 
-void SynchronizationManager::Sync_PreChange_Collecting_EXC(AppPtr_t papp,
+void SynchronizationManager::Sync_PreChange_Check_EXC_Response(AppPtr_t papp,
 								ApplicationProxy::pPreChangeRsp_t presp) const {
 
 	RTLIB_ExitCode_t result;
@@ -356,7 +356,7 @@ SynchronizationManager::Sync_SyncChange(
 		presp = (*resp_it).second;
 #endif
 
-	Sync_SyncChange_Collecting_EXC(papp, presp);
+	Sync_SyncChange_Check_EXC_Response(papp, presp);
 
 // Sync-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
@@ -377,7 +377,7 @@ SynchronizationManager::Sync_SyncChange(
 	return OK;
 }
 
-void SynchronizationManager::Sync_SyncChange_Collecting_EXC(AppPtr_t papp,
+void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(AppPtr_t papp,
 								ApplicationProxy::pSyncChangeRsp_t presp) const {
 	RTLIB_ExitCode_t result;
 

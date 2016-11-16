@@ -202,13 +202,13 @@ private:
 	/**
 	 * @brief Collects result from EXCs during PreChange
 	 */
-	void Sync_PreChange_Collecting_EXC(AppPtr_t papp, 
+	void Sync_PreChange_Check_EXC_Response(AppPtr_t papp, 
                                  ApplicationProxy::pPreChangeRsp_t presp) const;
 
 	/**
 	 * @brief Collects result from EXCs during SyncChange
 	 */
-	void Sync_SyncChange_Collecting_EXC(AppPtr_t papp, 
+	void Sync_SyncChange_Check_EXC_Response(AppPtr_t papp, 
                                  ApplicationProxy::pSyncChangeRsp_t presp) const;
 };
 
