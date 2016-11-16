@@ -385,18 +385,17 @@ int CommandManager::DoNextCommand() {
 	if (result <= 0) {
 		if (result != EINTR)
 			logger->Error("CMD MNGR: fifo read error");
-		goto read_error_exit;
+		
+	} else {
+
+		// Removing trailing "\n"
+		if (cmd_buff[result-1] == '\n')
+			cmd_buff[result-1] = 0;
+
+		// Parsing command
+		logger->Debug("CMD MNGR: parsing command [%s]", cmd_buff);
+		ParseCommand(cmd_buff);
 	}
-
-	// Removing trailing "\n"
-	if (cmd_buff[result-1] == '\n')
-		cmd_buff[result-1] = 0;
-
-	// Parsing command
-	logger->Debug("CMD MNGR: parsing command [%s]", cmd_buff);
-	ParseCommand(cmd_buff);
-
-read_error_exit:
 
 	free(cmd_buff);
 	return result;

@@ -43,24 +43,21 @@ DynamicLibrary * DynamicLibrary::Load(const std::string & name,
 
 	if (name.empty()) {
 		errorString = "Empty path";
-		goto err_load;
+	} else {
+		handle = ::dlopen(name.c_str(), RTLD_NOW);
+		if (!handle) {
+			std::string dlErrorString;
+			const char *zErrorString = ::dlerror();
+			if (zErrorString)
+				errorString = zErrorString;
+			else
+				errorString = std::string("Undef");
+		} else {
+			// SUCCESS!
+			return new DynamicLibrary(handle);
+		}	
 	}
 
-	handle = ::dlopen(name.c_str(), RTLD_NOW);
-	if (!handle) {
-		std::string dlErrorString;
-		const char *zErrorString = ::dlerror();
-		if (zErrorString)
-			errorString = zErrorString;
-		else
-			errorString = std::string("Undef");
-
-		goto err_load;
-	}
-
-	return new DynamicLibrary(handle);
-
-err_load:
 	fprintf(stderr, FE("FAILED loading [%s], Error:\n%s\n"),
 			name.c_str(), errorString.c_str());
 	return NULL;

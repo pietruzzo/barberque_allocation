@@ -1002,15 +1002,10 @@ ApplicationProxy::SyncP_PostChange(pcmdSn_t pcs, pPostChangeRsp_t presp) {
 
 	// Send the Command
 	presp->result = SyncP_PostChangeSend(pcs);
-	if (presp->result != RTLIB_OK)
-		goto exit_error;
-
-	// Get back the response
-	presp->result = SyncP_PostChangeRecv(pcs, presp);
-	if (presp->result != RTLIB_OK)
-		goto exit_error;
-
-exit_error:
+	if (presp->result == RTLIB_OK) {
+		// Get back the response
+		presp->result = SyncP_PostChangeRecv(pcs, presp);
+	}
 
 	// Releasing the command session
 	ReleaseCommandSession(pcs);

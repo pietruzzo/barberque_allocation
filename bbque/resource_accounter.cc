@@ -1507,23 +1507,23 @@ int ResourceAccounter::ResourceDegradationHandler(int argc, char * argv[]) {
 	// Parsing the "<resource> <degradation_value>" pairs
 	while (argc) {
 		br::ResourcePtr_t rsrc(GetResource(argv[idx]));
-		if (rsrc == nullptr) {
+
+		if (rsrc != nullptr) {
+			if (IsNumber(argv[idx+1])) {
+				rsrc->UpdateDegradationPerc(atoi(argv[idx+1]));
+				logger->Warn("Resource degradation: <%s> = %2d%% [mean=%.2f]",
+					argv[idx],
+					rsrc->CurrentDegradationPerc(),
+					rsrc->MeanDegradationPerc());
+			} else {
+				logger->Error("Resource degradation: <%s> not a valid value",
+					argv[idx+1]);
+			}
+		} else {
 			logger->Error("Resource degradation: <%s> not a valid resource",
 				argv[idx]);
-			goto next_arg;
 		}
 
-		if (IsNumber(argv[idx+1])) {
-			rsrc->UpdateDegradationPerc(atoi(argv[idx+1]));
-			logger->Warn("Resource degradation: <%s> = %2d%% [mean=%.2f]",
-				argv[idx],
-				rsrc->CurrentDegradationPerc(),
-				rsrc->MeanDegradationPerc());
-		}
-		else
-			logger->Error("Resource degradation: <%s> not a valid value",
-				argv[idx+1]);
-next_arg:
 		idx  += 2;
 		argc -= 2;
 	}

@@ -167,10 +167,7 @@ int main(int argc, char *argv[]) {
 		bb::ResourceManager::GetInstance().Go();
 	if (result != bb::ResourceManager::ExitCode_t::OK) {
 		exit_code = EXIT_FAILURE;
-		goto bbq_exit;
 	}
-
-bbq_exit:
 
 	// Cleaning-up the grill
 

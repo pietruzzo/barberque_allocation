@@ -558,10 +558,14 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 
 	logger->Debug("Processing command [%s]", argv[0] + cmd_offset);
 
+	bool exit_cmd_not_found = false;
+
 	switch (argv[0][cmd_offset]) {
 	case 'e':
-		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_EXC))
-			goto exit_cmd_not_found;
+		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_EXC)) {
+			exit_cmd_not_found = true;
+			break;
+		}
 
 		logger->Notice("");
 		logger->Notice("");
@@ -572,8 +576,10 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		break;
 
 	case 'q':
-		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_QUEUES))
-			goto exit_cmd_not_found;
+		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_QUEUES)) {
+			exit_cmd_not_found = true;
+			break;
+		}
 
 		logger->Info("");
 		logger->Info("==========[ Status Queues ]============"
@@ -583,8 +589,10 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		break;
 
 	case 'r':
-		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_RESOURCES))
-			goto exit_cmd_not_found;
+		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_RESOURCES)) {
+			exit_cmd_not_found = true;
+			break;
+		}
 
 		logger->Notice("");
 		logger->Notice("");
@@ -595,8 +603,10 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		break;
 
 	case 's':
-		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_SYNC))
-			goto exit_cmd_not_found;
+		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_SYNC)) {
+			exit_cmd_not_found = true;
+			break;
+		}
 
 		logger->Info("");
 		logger->Info("");
@@ -615,9 +625,10 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		break;
 	}
 
-	return 0;
+	if ( ! exit_cmd_not_found ) {
+		return 0;
+	}
 
-exit_cmd_not_found:
 	logger->Error("Command [%s] not suppported by this moduel", argv[0]);
 	return -1;
 }

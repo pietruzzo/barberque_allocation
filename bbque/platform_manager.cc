@@ -436,6 +436,7 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 bool PlatformManager::IsHighPerformance(
 		bbque::res::ResourcePathPtr_t const & path) const {
+	UNUSED(path);
 	return false;
 }
 

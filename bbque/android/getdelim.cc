@@ -50,16 +50,18 @@ getdelim (char **lineptr, size_t *n, int delimiter, FILE *fp) {
 
 	flockfile (fp);
 
+	bool error = false;
+
 	if (*lineptr == NULL || *n == 0) {
 		*n = 120;
 		*lineptr = (char *) malloc (*n);
 		if (*lineptr == NULL) {
 			result = -1;
-			goto unlock_return;
+			error = true;
 		}
 	}
 
-	for (;;) {
+	for (; ! error ;) {
 		int i;
 
 		i = getc (fp);
@@ -81,13 +83,15 @@ getdelim (char **lineptr, size_t *n, int delimiter, FILE *fp) {
 
 			if (cur_len + 1 >= needed){
 				result = -1;
-				goto unlock_return;
+				error = true;
+				break;
 			}
 
 			new_lineptr = (char *) realloc (*lineptr, needed);
 			if (new_lineptr == NULL) {
 				result = -1;
-				goto unlock_return;
+				error = true;
+				break;
 			}
 
 			*lineptr = new_lineptr;
@@ -101,10 +105,11 @@ getdelim (char **lineptr, size_t *n, int delimiter, FILE *fp) {
 			break;
 	}
 
-	(*lineptr)[cur_len] = '\0';
-	result = cur_len ? cur_len : result;
+	if (! error) {
+		(*lineptr)[cur_len] = '\0';
+		result = cur_len ? cur_len : result;
+	}
 
-unlock_return:
 	funlockfile (fp);
 	return result;
 

@@ -32,6 +32,8 @@
 #include <pwd.h>
 #include <grp.h>
 
+#include <stdexcept>
+
 /* A global variable to signal if we are running as a daemon */
 unsigned char daemonized = 0;
 
@@ -201,23 +203,21 @@ int daemonize(const char *name, const char *uid,
 		return -4;
 	}
 
-	/* Redirect standard files to /dev/null */
-	sfd = freopen("/dev/null", "r", stdin);
-	if (!sfd) goto exit_streams;
-	sfd = freopen("/dev/null", "w", stdout);
-	if (!sfd) goto exit_streams;
-	sfd = freopen("/dev/null", "w", stderr);
-	if (!sfd) goto exit_streams;
-
-	goto go_streams;
-
-exit_streams:
-	syslog(LOG_ERR, "unable to redirect standard streams on /dev/null "
-			"(Error: %d, %s)",
-			errno, strerror(errno) );
-	return -5;
-
-go_streams:
+	try {
+		/* Redirect standard files to /dev/null */
+		sfd = freopen("/dev/null", "r", stdin);
+		if (!sfd) throw std::runtime_error("stdin:r");
+		sfd = freopen("/dev/null", "w", stdout);
+		if (!sfd) throw std::runtime_error("stdout:w");
+		sfd = freopen("/dev/null", "w", stderr);
+		if (!sfd) throw std::runtime_error("stderr:w");
+	}
+	catch(std::runtime_error &ex) {
+		syslog(LOG_ERR, "unable to redirect standard streams on /dev/null [%s] "
+				"(Error: %d, %s)",
+				ex.what(), errno, strerror(errno) );
+		return -5;
+	}
 
 	/* Trap signals that we expect to recieve */
 	signal(SIGCHLD, child_handler);
