@@ -166,7 +166,6 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 	typedef std::map<AppPtr_t, ApplicationProxy::pPreChangeRsp_t> RspMap_t;
 	typedef std::pair<AppPtr_t, ApplicationProxy::pPreChangeRsp_t> RspMapEntry_t;
 
-	SynchronizationPolicyIF::ExitCode_t syncp_result;
 	ApplicationProxy::pPreChangeRsp_t presp;
 	RspMap_t::iterator resp_it;
 	RTLIB_ExitCode_t result;
@@ -224,52 +223,7 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 		presp = (*resp_it).second;
 #endif
 
-		// Jumping meanwhile disabled applications
-		if (papp->Disabled()) {
-			logger->Debug("STEP 1: ignoring disabled EXC [%s]",
-					papp->StrId());
-			goto error_continue;
-		}
-
-// Pre-Change completion (just if asynchronous)
-#ifdef CONFIG_BBQUE_YP_SASB_ASYNC
-		logger->Debug("STEP 1: .... (wait) .... [%s]", papp->StrId());
-		result = ap.SyncP_PreChange_GetResult(presp);
-#endif
-
-		if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
-			logger->Warn("STEP 1: <---- TIMEOUT -- [%s]",
-					papp->StrId());
-			// Disabling not responding applications
-			am.DisableEXC(papp, true);
-			goto error_continue;
-		}
-
-		if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
-			logger->Warn("STEP 1: <------ WERROR -- [%s]",
-					papp->StrId());
-			am.DisableEXC(papp, true);
-			goto error_continue;
-		}
-
-		if (result != RTLIB_OK) {
-			logger->Warn("STEP 1: <----- FAILED -- [%s]", papp->StrId());
-			// FIXME This case should be handled
-			assert(false);
-		}
-
-		logger->Info("STEP 1: <--------- OK -- [%s]", papp->StrId());
-		logger->Info("STEP 1: [%s] declared syncLatency %d[ms]",
-				papp->StrId(), presp->syncLatency);
-
-		// Collect stats on declared sync latency
-		SM_ADD_SAMPLE(metrics, SM_SYNCP_APP_SYNCLAT, presp->syncLatency);
-
-		syncp_result = policy->CheckLatency(papp, presp->syncLatency);
-        (void)syncp_result;
-		// TODO: check the POLICY required action
-
-error_continue:
+Sync_PreChange_Collecting_EXC(papp, presp);
 
 // Pre-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
@@ -291,6 +245,58 @@ error_continue:
 		return NO_EXC_IN_SYNC;
 
 	return OK;
+}
+
+void SynchronizationManager::Sync_PreChange_Collecting_EXC(AppPtr_t papp,
+								ApplicationProxy::pPreChangeRsp_t presp) const {
+
+	RTLIB_ExitCode_t result;
+	SynchronizationPolicyIF::ExitCode_t syncp_result;
+
+	// Jumping meanwhile disabled applications
+	if (papp->Disabled()) {
+		logger->Debug("STEP 1: ignoring disabled EXC [%s]",
+				papp->StrId());
+		return;
+	}
+
+// Pre-Change completion (just if asynchronous)
+#ifdef CONFIG_BBQUE_YP_SASB_ASYNC
+	logger->Debug("STEP 1: .... (wait) .... [%s]", papp->StrId());
+	result = ap.SyncP_PreChange_GetResult(presp);
+#endif
+
+	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
+		logger->Warn("STEP 1: <---- TIMEOUT -- [%s]",
+				papp->StrId());
+		// Disabling not responding applications
+		am.DisableEXC(papp, true);
+		return;
+	}
+
+	if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
+		logger->Warn("STEP 1: <------ WERROR -- [%s]",
+				papp->StrId());
+		am.DisableEXC(papp, true);
+		return;
+	}
+
+	if (result != RTLIB_OK) {
+		logger->Warn("STEP 1: <----- FAILED -- [%s]", papp->StrId());
+		// FIXME This case should be handled
+		assert(false);
+	}
+
+	logger->Info("STEP 1: <--------- OK -- [%s]", papp->StrId());
+	logger->Info("STEP 1: [%s] declared syncLatency %d[ms]",
+			papp->StrId(), presp->syncLatency);
+
+	// Collect stats on declared sync latency
+	SM_ADD_SAMPLE(metrics, SM_SYNCP_APP_SYNCLAT, presp->syncLatency);
+
+	syncp_result = policy->CheckLatency(papp, presp->syncLatency);
+    UNUSED(syncp_result); // TODO: check the POLICY required action
+
 }
 
 SynchronizationManager::ExitCode_t
@@ -349,58 +355,8 @@ SynchronizationManager::Sync_SyncChange(
 		papp  = (*resp_it).first;
 		presp = (*resp_it).second;
 #endif
-		// Jumping meanwhile disabled applications
-		if (papp->Disabled()) {
-			logger->Debug("STEP 2: ignoring disabled EXC [%s]",
-					papp->StrId());
-			goto error_continue;
-		}
 
-// Sync-Change completion (just if asynchronous)
-#ifdef CONFIG_BBQUE_YP_SASB_ASYNC
-		logger->Debug("STEP 2: .... (wait) .... [%s]", papp->StrId());
-		result = ap.SyncP_SyncChange_GetResult(presp);
-#endif
-
-		if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
-			logger->Warn("STEP 2: <---- TIMEOUT -- [%s]",
-					papp->StrId());
-			// Disabling not responding applications
-			am.DisableEXC(papp, true);
-			// Accounting for syncpoints missed
-			SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
-			goto error_continue;
-		}
-
-		if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
-			logger->Warn("STEP 1: <------ WERROR -- [%s]",
-					papp->StrId());
-			// Disabling not responding applications
-			am.DisableEXC(papp, true);
-			// Accounting for syncpoints missed
-			SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
-			goto error_continue;
-		}
-
-
-		if (result != RTLIB_OK) {
-			logger->Warn("STEP 2: <----- FAILED -- [%s]", papp->StrId());
-			// TODO Here the synchronization policy should be queryed to
-			// decide if the synchronization latency is compliant with the
-			// RTRM optimization goals.
-			//
-			DB(logger->Warn("TODO: Check sync policy for sync miss reaction"));
-
-			// FIXME This case should be handled
-			assert(false);
-		}
-
-		// Accounting for syncpoints missed
-		SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_HIT);
-
-		logger->Info("STEP 2: <--------- OK -- [%s]", papp->StrId());
-
-error_continue:
+	Sync_SyncChange_Collecting_EXC(papp, presp);
 
 // Sync-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
@@ -419,6 +375,63 @@ error_continue:
 	logger->Debug("STEP 2: syncChange() DONE");
 
 	return OK;
+}
+
+void SynchronizationManager::Sync_SyncChange_Collecting_EXC(AppPtr_t papp,
+								ApplicationProxy::pSyncChangeRsp_t presp) const {
+	RTLIB_ExitCode_t result;
+
+	// Jumping meanwhile disabled applications
+	if (papp->Disabled()) {
+		logger->Debug("STEP 2: ignoring disabled EXC [%s]",
+				papp->StrId());
+		return;
+	}
+
+// Sync-Change completion (just if asynchronous)
+#ifdef CONFIG_BBQUE_YP_SASB_ASYNC
+	logger->Debug("STEP 2: .... (wait) .... [%s]", papp->StrId());
+	result = ap.SyncP_SyncChange_GetResult(presp);
+#endif
+
+	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
+		logger->Warn("STEP 2: <---- TIMEOUT -- [%s]",
+				papp->StrId());
+		// Disabling not responding applications
+		am.DisableEXC(papp, true);
+		// Accounting for syncpoints missed
+		SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
+		return;
+	}
+
+	if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
+		logger->Warn("STEP 1: <------ WERROR -- [%s]",
+				papp->StrId());
+		// Disabling not responding applications
+		am.DisableEXC(papp, true);
+		// Accounting for syncpoints missed
+		SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
+		return;
+	}
+
+
+	if (result != RTLIB_OK) {
+		logger->Warn("STEP 2: <----- FAILED -- [%s]", papp->StrId());
+		// TODO Here the synchronization policy should be queryed to
+		// decide if the synchronization latency is compliant with the
+		// RTRM optimization goals.
+		//
+		DB(logger->Warn("TODO: Check sync policy for sync miss reaction"));
+
+		// FIXME This case should be handled
+		assert(false);
+	}
+
+	// Accounting for syncpoints missed
+	SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_HIT);
+
+	logger->Info("STEP 2: <--------- OK -- [%s]", papp->StrId());
+
 }
 
 SynchronizationManager::ExitCode_t
