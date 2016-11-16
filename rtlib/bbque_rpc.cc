@@ -86,7 +86,7 @@ BbqueRPC * BbqueRPC::GetInstance()
 	if (rtlib_configuration.unmanaged.enabled) {
 		logger->Warn("Running in UNMANAGED MODE");
 		instance = new BbqueRPC_UNMANAGED_Client();
-		goto channel_done;
+		return instance;
 	}
 
 #endif
@@ -96,9 +96,7 @@ BbqueRPC * BbqueRPC::GetInstance()
 #else
 #error RPC Channel NOT defined
 #endif // CONFIG_BBQUE_RPC_FIFO
-	// Compilation warning fix
-	goto channel_done;
-channel_done:
+
 	return instance;
 }
 
@@ -835,7 +833,11 @@ RTLIB_ExitCode_t BbqueRPC::CGroupDelete(pRegisteredEXC_t exc)
 	}
 
 	// Delete EXC specific CGroup
-	bu::CGroups::Delete(exc->cgroup_path.c_str());
+	if (bu::CGroups::Delete(exc->cgroup_path.c_str()) !=
+		bu::CGroups::CGResult::OK) {
+		logger->Error("CGroup delete [%s] FAILED", exc->cgroup_path.c_str());
+		return RTLIB_ERROR;
+	}
 
 	// Mark this CGroup as removed
 	exc->cgroup_path.clear();
@@ -844,8 +846,6 @@ RTLIB_ExitCode_t BbqueRPC::CGroupDelete(pRegisteredEXC_t exc)
 
 RTLIB_ExitCode_t BbqueRPC::CGroupCreate(pRegisteredEXC_t exc, int pid)
 {
-	UNUSED(pid);
-
 	if (! rtlib_configuration.cgroup_support.enabled)
 		return RTLIB_OK;
 
@@ -955,8 +955,6 @@ RTLIB_ExitCode_t BbqueRPC::CGroupCommitAllocation(pRegisteredEXC_t exc)
 		cgsetup.cpu.cfs_period_us.c_str());
 
 	bu::CGroups::WriteCgroup(cgroup_path, cgsetup, channel_thread_pid);
-#else
-	UNUSED(exc);
 #endif // CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	return RTLIB_OK;
 }
@@ -1267,33 +1265,32 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 	std::unique_lock<std::mutex> exc_u_lock(exc->exc_mutex);
 
 	// Shortcut in case the AWM has been already assigned
-	if (isAwmAssigned(exc))
-		goto waiting_done;
+	if (!isAwmAssigned(exc)) {
 
-	// Notify we are going to be suspended waiting for an AWM
-	setAwmWaiting(exc);
-	// TIMER: Start BLOCKED
-	exc->execution_timer.start();
+		// Notify we are going to be suspended waiting for an AWM
+		setAwmWaiting(exc);
+		// TIMER: Start BLOCKED
+		exc->execution_timer.start();
 
-	// Wait for the EXC being un-BLOCKED
-	if (isBlocked(exc))
-		while (isBlocked(exc))
-			exc->exc_condition_variable.wait(exc_u_lock);
-	else
+		// Wait for the EXC being un-BLOCKED
+		if (isBlocked(exc))
+			while (isBlocked(exc))
+				exc->exc_condition_variable.wait(exc_u_lock);
+		else
 
-		// Wait for the EXC being assigned an AWM
-		while (isEnabled(exc) && ! isAwmAssigned(exc) && ! isBlocked(exc))
-			exc->exc_condition_variable.wait(exc_u_lock);
+			// Wait for the EXC being assigned an AWM
+			while (isEnabled(exc) && ! isAwmAssigned(exc) && ! isBlocked(exc))
+				exc->exc_condition_variable.wait(exc_u_lock);
 
-	clearAwmWaiting(exc);
-	// TIMER: Get BLOCKED
-	exc->blocked_time_ms += exc->execution_timer.getElapsedTimeMs();
+		clearAwmWaiting(exc);
+		// TIMER: Get BLOCKED
+		exc->blocked_time_ms += exc->execution_timer.getElapsedTimeMs();
 
-	// Update start latency
-	if (unlikely(exc->starting_time_ms == 0))
-		exc->starting_time_ms = exc->blocked_time_ms;
+		// Update start latency
+		if (unlikely(exc->starting_time_ms == 0))
+			exc->starting_time_ms = exc->blocked_time_ms;
+	}
 
-waiting_done:
 	// TIMER: Sart RECONF
 	exc->execution_timer.start();
 	setAwmValid(exc);
@@ -1399,7 +1396,6 @@ RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(
 		const RTLIB_WorkingModeParams_t * wm,
 		int32_t * ids_vector,
                 int vector_size) {
-	UNUSED(wm);
 
     pRegisteredEXC_t exc = getRegistered(exc_handler);
 
@@ -1570,74 +1566,82 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 #ifdef CONFIG_BBQUE_RTLIB_UNMANAGED_SUPPORT
 
-	if (! rtlib_configuration.unmanaged.enabled)
-		goto do_gwm;
+	if (rtlib_configuration.unmanaged.enabled) {
 
-	// Configuration already done
-	if (isAwmValid(exc)) {
-		result = GetAssignedWorkingMode(exc, working_mode_params);
-		assert(result == RTLIB_OK);
-		setSyncDone(exc);
-		return RTLIB_OK;
-	}
+		// Configuration already done
+		if (isAwmValid(exc)) {
+			result = GetAssignedWorkingMode(exc, working_mode_params);
+			assert(result == RTLIB_OK);
+			setSyncDone(exc);
+			return RTLIB_OK;
+		}
 
-	// Configure unmanaged EXC in AWM0
-	exc->event = RTLIB_EXC_GWM_START;
-	exc->current_awm_id = rtlib_configuration.unmanaged.awm_id;
-	setAwmValid(exc);
-	setAwmAssigned(exc);
-	WaitForWorkingMode(exc, working_mode_params);
-	goto do_reconf;
-do_gwm:
+		// Configure unmanaged EXC in AWM0
+		exc->event = RTLIB_EXC_GWM_START;
+		exc->current_awm_id = rtlib_configuration.unmanaged.awm_id;
+		setAwmValid(exc);
+		setAwmAssigned(exc);
+		WaitForWorkingMode(exc, working_mode_params);
+	} else {
+
 #endif
-	// Checking if a valid AWM has been assigned
-	logger->Debug("Looking for assigned AWM...");
-	result = GetAssignedWorkingMode(exc, working_mode_params);
+		// Checking if a valid AWM has been assigned
+		logger->Debug("Looking for assigned AWM...");
+		result = GetAssignedWorkingMode(exc, working_mode_params);
 
-	if (result == RTLIB_OK) {
-		setSyncDone(exc);
-		// Notify about synchronization completed
-		exc->exc_condition_variable.notify_one();
-		return RTLIB_OK;
-	}
+		if (result == RTLIB_OK) {
+			setSyncDone(exc);
+			// Notify about synchronization completed
+			exc->exc_condition_variable.notify_one();
+			return RTLIB_OK;
+		}
 
-	// Checking if the EXC has been blocked
-	if (result == RTLIB_EXC_GWM_BLOCKED) {
-		setSyncDone(exc);
-		// Notify about synchronization completed
-		exc->exc_condition_variable.notify_one();
-	}
+		// Checking if the EXC has been blocked
+		if (result == RTLIB_EXC_GWM_BLOCKED) {
+			setSyncDone(exc);
+			// Notify about synchronization completed
+			exc->exc_condition_variable.notify_one();
+		}
 
-	// Exit if the EXC has been disabled
-	if (! isEnabled(exc))
-		return RTLIB_EXC_GWM_FAILED;
+		// Exit if the EXC has been disabled
+		if (! isEnabled(exc))
+			return RTLIB_EXC_GWM_FAILED;
 
-	if (! isSyncMode(exc) && (result == RTLIB_EXC_GWM_FAILED)) {
-		logger->Debug("AWM not assigned, sending schedule request to RTRM...");
-		// Calling the low-level start
-		result = _ScheduleRequest(exc);
+		if (! isSyncMode(exc) && (result == RTLIB_EXC_GWM_FAILED)) {
+			logger->Debug("AWM not assigned, sending schedule request to RTRM...");
+			// Calling the low-level start
+			result = _ScheduleRequest(exc);
 
-		if (result != RTLIB_OK)
-			goto exit_gwm_failed;
-	}
-	else {
-		// At this point, the EXC should be either in Synchronization Mode
-		// or Blocked, and thus it should wait for an EXC being
-		// assigned by the RTRM
-		assert((result == RTLIB_EXC_SYNC_MODE) ||
-			   (result == RTLIB_EXC_GWM_BLOCKED));
-	}
+			if (result != RTLIB_OK) {
+				logger->Error("Execution context [%s] ScheduleRequest FAILED "
+							  "(Error %d: %s)", exc->name.c_str(), result,
+							  RTLIB_ErrorStr(result));
+				return RTLIB_EXC_GWM_FAILED;
+			}
 
-	logger->Debug("Waiting for assigned AWM...");
-	// Waiting for an AWM being assigned
-	result = WaitForWorkingMode(exc, working_mode_params);
+		}
+		else {
+			// At this point, the EXC should be either in Synchronization Mode
+			// or Blocked, and thus it should wait for an EXC being
+			// assigned by the RTRM
+			assert((result == RTLIB_EXC_SYNC_MODE) ||
+				   (result == RTLIB_EXC_GWM_BLOCKED));
+		}
 
-	if (result != RTLIB_OK)
-		goto exit_gwm_failed;
+		logger->Debug("Waiting for assigned AWM...");
+		// Waiting for an AWM being assigned
+		result = WaitForWorkingMode(exc, working_mode_params);
 
-	// Compilation warning fix
-	goto do_reconf;
-do_reconf:
+		if (result != RTLIB_OK) {
+			logger->Error("Execution context [%s] WaitForWorkingMode FAILED "
+						  "(Error %d: %s)", exc->name.c_str(), result,
+						  RTLIB_ErrorStr(result));
+			return RTLIB_EXC_GWM_FAILED;
+		}
+
+#ifdef CONFIG_BBQUE_RTLIB_UNMANAGED_SUPPORT
+	} // else
+#endif
 
 	// Exit if the EXC has been disabled
 	if (! isEnabled(exc))
@@ -1670,10 +1674,6 @@ do_reconf:
 	}
 
 	return exc->event;
-exit_gwm_failed:
-	logger->Error("Execution context [%s] GWM FAILED (Error %d: %s)",
-				  exc->name.c_str(), result, RTLIB_ErrorStr(result));
-	return RTLIB_EXC_GWM_FAILED;
 }
 
 uint32_t BbqueRPC::GetSyncLatency(pRegisteredEXC_t exc)
@@ -3424,7 +3424,7 @@ void BbqueRPC::NotifyPostRun(
 	logger->Debug("Post-Run: Stop computing CPU quota");
 
 	if (UpdateCPUBandwidthStats(exc) != RTLIB_OK)
-		logger->Debug("PostRun: could not compute current CPU bandwidth");
+		logger->Error("PostRun: could not compute current CPU bandwidth");
 
 #ifdef CONFIG_BBQUE_OPENCL
 

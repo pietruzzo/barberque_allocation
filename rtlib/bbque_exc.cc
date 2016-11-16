@@ -578,35 +578,34 @@ void BbqueEXC::ControlLoop()
 	WaitEXCInitCompletion();
 
 	// Setup the EXC
-	if (Setup() != RTLIB_OK) {
+	if (Setup() == RTLIB_OK) {
+
+		// Start monitoring performance counters
+		rtlib->Utils.MonitorPerfCounters(exc_handler);
+
+		// Endless loop
+		while (! exc_status.has_finished_processing) {
+			// Check if EXC is temporarily disabled
+			WaitEnabling();
+
+			if (! exc_status.has_finished_processing) {
+				// Check for changes in resource allocation
+				if (CheckConfigure() != RTLIB_OK)
+					continue;
+
+				// Run the workload
+				if (Run() != RTLIB_OK)
+					continue;
+
+				// Monitor Quality-of-Services
+				if (Monitor() != RTLIB_OK)
+					continue;
+			}
+		}
+	} else {
 		logger->Error("Setup EXC [%s] FAILED!", exc_name.c_str());
-		goto exit_setup;
 	}
 
-	// Start monitoring performance counters
-	rtlib->Utils.MonitorPerfCounters(exc_handler);
-
-	// Endless loop
-	while (! exc_status.has_finished_processing) {
-		// Check if EXC is temporarily disabled
-		WaitEnabling();
-
-		if (! exc_status.has_finished_processing) {
-			// Check for changes in resource allocation
-			if (CheckConfigure() != RTLIB_OK)
-				continue;
-
-			// Run the workload
-			if (Run() != RTLIB_OK)
-				continue;
-
-			// Monitor Quality-of-Services
-			if (Monitor() != RTLIB_OK)
-				continue;
-		}
-	};
-
-exit_setup:
 	// Disable the EXC (thus notifying waiters)
 	Disable();
 

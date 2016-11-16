@@ -302,8 +302,8 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup()
 	if (error) {
 		logger->Error("FAILED creating application FIFO [%s]",
 			app_fifo_path.c_str());
-		result = RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
-		goto err_create;
+		::close(server_fifo_fd);
+		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
 
 	logger->Debug("Opening R/W...");
@@ -315,24 +315,20 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup()
 	if (client_fifo_fd < 0) {
 		logger->Error("FAILED opening application FIFO [%s]",
 			app_fifo_path.c_str());
-		result = RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
-		goto err_open;
+		::unlink(app_fifo_path.c_str());
+		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
 
 	// Ensuring the FIFO is R/W to everyone
 	if (fchmod(client_fifo_fd, S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH)) {
 		logger->Error("FAILED setting permissions on RPC FIFO [%s] (Error %d: %s)",
 			app_fifo_path.c_str(), errno, strerror(errno));
-		result = RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
-		goto err_open;
+		::unlink(app_fifo_path.c_str());
+		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
 
 	return RTLIB_OK;
-err_open:
-	::unlink(app_fifo_path.c_str());
-err_create:
-	::close(server_fifo_fd);
-	return result;
+
 }
 
 RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(
