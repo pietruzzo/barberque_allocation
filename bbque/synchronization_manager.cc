@@ -250,7 +250,6 @@ Sync_PreChange_Check_EXC_Response(papp, presp);
 void SynchronizationManager::Sync_PreChange_Check_EXC_Response(AppPtr_t papp,
 								ApplicationProxy::pPreChangeRsp_t presp) const {
 
-	RTLIB_ExitCode_t result;
 	SynchronizationPolicyIF::ExitCode_t syncp_result;
 
 	// Jumping meanwhile disabled applications
@@ -262,9 +261,10 @@ void SynchronizationManager::Sync_PreChange_Check_EXC_Response(AppPtr_t papp,
 
 // Pre-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
+	RTLIB_ExitCode_t result;
 	logger->Debug("STEP 1: .... (wait) .... [%s]", papp->StrId());
 	result = ap.SyncP_PreChange_GetResult(presp);
-#endif
+
 
 	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
 		logger->Warn("STEP 1: <---- TIMEOUT -- [%s]",
@@ -286,6 +286,8 @@ void SynchronizationManager::Sync_PreChange_Check_EXC_Response(AppPtr_t papp,
 		// FIXME This case should be handled
 		assert(false);
 	}
+
+#endif
 
 	logger->Info("STEP 1: <--------- OK -- [%s]", papp->StrId());
 	logger->Info("STEP 1: [%s] declared syncLatency %d[ms]",
@@ -379,7 +381,6 @@ SynchronizationManager::Sync_SyncChange(
 
 void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(AppPtr_t papp,
 								ApplicationProxy::pSyncChangeRsp_t presp) const {
-	RTLIB_ExitCode_t result;
 
 	// Jumping meanwhile disabled applications
 	if (papp->Disabled()) {
@@ -390,9 +391,11 @@ void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(AppPtr_t papp,
 
 // Sync-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
+	RTLIB_ExitCode_t result;
+
 	logger->Debug("STEP 2: .... (wait) .... [%s]", papp->StrId());
 	result = ap.SyncP_SyncChange_GetResult(presp);
-#endif
+
 
 	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
 		logger->Warn("STEP 2: <---- TIMEOUT -- [%s]",
@@ -426,7 +429,7 @@ void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(AppPtr_t papp,
 		// FIXME This case should be handled
 		assert(false);
 	}
-
+#endif
 	// Accounting for syncpoints missed
 	SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_HIT);
 
