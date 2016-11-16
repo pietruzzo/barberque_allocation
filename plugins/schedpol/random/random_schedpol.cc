@@ -117,25 +117,23 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 		logger->Debug("Scheduling EXC [%s] on binding domain <%d of %d>",
 				papp->StrId(), selected_bd, bd_count);
 		b_refn = selected_awm->BindResource(binding_type, R_ID_ANY, selected_bd);
-		if (b_refn == 0) {
-			logger->Error("Resource binding for EXC [%s] FAILED", papp->StrId());
-			goto error_handling;
-		}
 
-		// Schedule the selected AWM on the selected binding domain
-		app_result = papp->ScheduleRequest(selected_awm, ra_view, b_refn);
-		if (app_result == ba::ApplicationStatusIF::APP_SUCCESS) {
-			logger->Info("Scheduling EXC [%s] on binding domain <%d> done.",
-					papp->StrId(), selected_bd);
-			binding_done = true;
-			continue;
-		}
-error_handling:
+		if (b_refn != 0) {
+			// Schedule the selected AWM on the selected binding domain
+			app_result = papp->ScheduleRequest(selected_awm, ra_view, b_refn);
+			if (app_result == ba::ApplicationStatusIF::APP_SUCCESS) {
+				logger->Info("Scheduling EXC [%s] on binding domain <%d> done.",
+						papp->StrId(), selected_bd);
+				binding_done = true;
+				continue;
+			}
+		} else {
 		logger->Warn("Resource binding for EXC [%s] on <%d> FAILED "
 				"(attempt %d of %d)",
 				papp->StrId(), selected_bd, nr_attempts, NR_ATTEMPTS_MAX);
 		if (++nr_attempts >= NR_ATTEMPTS_MAX)
 			return;
+		}
 	}
 }
 

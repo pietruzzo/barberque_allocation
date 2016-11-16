@@ -137,81 +137,86 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 	// Recipe object
 	recipe_ptr = _recipe;
 
-	// Plugin needs a logger
-	if (!logger) {
-		fprintf(stderr, FE("Error: Plugin 'XMLRecipeLoader' needs a logger\n"));
-		result = RL_ABORTED;
-		goto error;
-	}
-
 	try {
-		// Load the recipe parsing an XML file
-		std::string path(recipe_dir + "/" + _recipe_name + ".recipe");
-		std::ifstream xml_file(path);
-		std::stringstream buffer;
-		buffer << xml_file.rdbuf();
-		xml_file.close();
-		std::string xml_content(buffer.str());
-
-		doc.parse<0>(&xml_content[0]);
-
-		// <BarbequeRTRM> - Recipe root tag
-		root_node = doc.first_node();
-		CheckMandatoryNode(root_node, "application", root_node);
-
-		// Recipe version control
-		bbq_attribute = root_node->first_attribute("recipe_version", 0, true);
-		version_id = bbq_attribute->value();
-		logger->Debug("Recipe version = %s", version_id.c_str());
-		sscanf(version_id.c_str(), "%d.%d", &maj, &min);
-		if (maj < RECIPE_MAJOR_VERSION ||
-				(maj >= RECIPE_MAJOR_VERSION && min < RECIPE_MINOR_VERSION)) {
-			logger->Error("Recipe version mismatch (REQUIRED %d.%d). "
-				"Found %d.%d", RECIPE_MAJOR_VERSION, RECIPE_MINOR_VERSION,
-				maj, min);
-			result = RL_VERSION_MISMATCH;
-			goto error;
+		// Plugin needs a logger
+		if (!logger) {
+			fprintf(stderr, FE("Error: Plugin 'XMLRecipeLoader' needs a logger\n"));
+			result = RL_ABORTED;
+			throw std::runtime_error("");	// No info if logger not loaded
 		}
 
-		// <application>
-		app_node = root_node->first_node("application", 0, true);
-		CheckMandatoryNode(app_node, "application", root_node);
-		app_attribute = app_node->first_attribute("priority", 0, true);
+		try {
+			// Load the recipe parsing an XML file
+			std::string path(recipe_dir + "/" + _recipe_name + ".recipe");
+			std::ifstream xml_file(path);
+			std::stringstream buffer;
+			buffer << xml_file.rdbuf();
+			xml_file.close();
+			std::string xml_content(buffer.str());
 
-		//setting the priority of the app
-		std::string priority_str(app_attribute->value());
-		priority = (uint8_t) atoi(priority_str.c_str());
-		recipe_ptr->SetPriority(priority);
+			doc.parse<0>(&xml_content[0]);
 
-		// Load the proper platform section
-		pp_node = LoadPlatform(app_node);
-		if (!pp_node) {
-			result = RL_PLATFORM_MISMATCH;
-			goto error;
+			// <BarbequeRTRM> - Recipe root tag
+			root_node = doc.first_node();
+			CheckMandatoryNode(root_node, "application", root_node);
+
+			// Recipe version control
+			bbq_attribute = root_node->first_attribute("recipe_version", 0, true);
+			version_id = bbq_attribute->value();
+			logger->Debug("Recipe version = %s", version_id.c_str());
+			sscanf(version_id.c_str(), "%d.%d", &maj, &min);
+			if (maj < RECIPE_MAJOR_VERSION ||
+					(maj >= RECIPE_MAJOR_VERSION && min < RECIPE_MINOR_VERSION)) {
+				logger->Error("Recipe version mismatch (REQUIRED %d.%d). "
+					"Found %d.%d", RECIPE_MAJOR_VERSION, RECIPE_MINOR_VERSION,
+					maj, min);
+				result = RL_VERSION_MISMATCH;
+				throw std::runtime_error("Recipe version mismatch");
+			}
+
+			// <application>
+			app_node = root_node->first_node("application", 0, true);
+			CheckMandatoryNode(app_node, "application", root_node);
+			app_attribute = app_node->first_attribute("priority", 0, true);
+
+			//setting the priority of the app
+			std::string priority_str(app_attribute->value());
+			priority = (uint8_t) atoi(priority_str.c_str());
+			recipe_ptr->SetPriority(priority);
+
+			// Load the proper platform section
+			pp_node = LoadPlatform(app_node);
+			if (!pp_node) {
+				result = RL_PLATFORM_MISMATCH;
+				throw std::runtime_error("LoadPlatform failed.");
+			}
+
+			// Application Working Modes
+			result = LoadWorkingModes(pp_node);
+			if (result != RL_SUCCESS){
+				throw std::runtime_error("LoadWorkingModes failed.");
+			}
+
+			// "Static" constraints and plugins specific data
+			LoadConstraints(pp_node);
+			LoadPluginsData<ba::RecipePtr_t>(recipe_ptr, pp_node);
+
+		} catch(rapidxml::parse_error ex){
+			logger->Error(ex.what());
+			result = RL_ABORTED;
+			throw std::runtime_error("XML parsing failed.");
 		}
-
-		// Application Working Modes
-		result = LoadWorkingModes(pp_node);
-		if (result != RL_SUCCESS){
-			goto error;
+	} // external try
+	catch(std::runtime_error &ex) {
+		if (logger) {
+			logger->Crit(ex.what());
 		}
-
-		// "Static" constraints and plugins specific data
-		LoadConstraints(pp_node);
-		LoadPluginsData<ba::RecipePtr_t>(recipe_ptr, pp_node);
-
-	} catch(rapidxml::parse_error ex){
-		logger->Error(ex.what());
-		result = RL_ABORTED;
-		goto error;
+		doc.clear();
+		recipe_ptr = ba::RecipePtr_t();
+		return result;
 	}
 
 	// Regular exit
-	return result;
-
-error:
-	doc.clear();
-	recipe_ptr = ba::RecipePtr_t();
 	return result;
 }
 

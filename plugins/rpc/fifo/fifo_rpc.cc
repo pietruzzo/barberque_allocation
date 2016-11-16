@@ -28,6 +28,7 @@
 #endif
 #include <fcntl.h>
 #include <csignal>
+#include <stdexcept>
 
 namespace bl = bbque::rtlib;
 namespace fs = boost::filesystem;
@@ -212,6 +213,8 @@ ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
 	// Save header into new buffer
 	::memcpy(fifo_buff_ptr, &hdr, FIFO_PKT_SIZE(header));
 
+	bool error = false;
+
 	// Recover the payload start pointer
 	switch (hdr.rpc_msg_type) {
 	case bl::RPC_APP_PAIR:
@@ -219,8 +222,10 @@ ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
 		result = ::read(rpc_fifo_fd,
 			&(((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->rpc_fifo),
 			hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
-		if (unlikely(result == -1))
-			goto exit_read_failed;
+		if (unlikely(result == -1)) {
+			error = true;
+			break;
+		}
 
 		msg = (rpc_msg_ptr_t)&(((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl);
 		logger->Debug("FIFO RPC: Rx FIFO_HDR [sze: %hd, off: %hd, typ: %hd] "
@@ -237,8 +242,10 @@ ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
 		result = ::read(rpc_fifo_fd,
 			&(((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl),
 			hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
-		if (unlikely(result == -1))
-			goto exit_read_failed;
+		if (unlikely(result == -1)) {
+			error = true;
+			break;
+		}
 
 		msg = &(((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl);
 		logger->Debug("FIFO RPC: Rx FIFO_HDR [sze: %hd, off: %hd, typ: %hd] "
@@ -251,27 +258,21 @@ ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
 			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.exc_id
 		     );
 	}
+
+	if (error) {
+		logger->Error("FIFO RPC: read RPC message FAILED (Error %d: %s)",
+				errno, strerror(errno));
+
+		free(fifo_buff_ptr);
+		msg = NULL;
+
+		return -errno;
+	}
+
 	// Recovery the payload size to be returned
 	bytes = hdr.fifo_msg_size - hdr.rpc_msg_offset;
 
-	//logger->Debug("Rx Buffer FIFO_HDR [@%p] RPC_HDR [@%p] => Offset: %hd",
-	//		fifo_buff_ptr, msg,
-	//		(size_t)msg-(size_t)fifo_buff_ptr);
-
-	// HEXDUMP the received buffer
-	//RPC_FIFO_HEX_DUMP_BUFFER(fifo_buff_ptr, hdr.fifo_msg_size);
-
 	return bytes;
-
-exit_read_failed:
-
-	logger->Error("FIFO RPC: read RPC message FAILED (Error %d: %s)",
-			errno, strerror(errno));
-
-	free(fifo_buff_ptr);
-	msg = NULL;
-
-	return -errno;
 }
 
 RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
@@ -297,41 +298,47 @@ RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
 	fifo_path /= "/";
 	fifo_path /= hdr->rpc_fifo;
 
-	// The application should build the channel, this could be used as
-	// an additional handshaking protocol and API versioning verification
-	logger->Debug("FIFO RPC: checking for application FIFO [%s]...",
-			fifo_path.string().c_str());
-	if (!fs::exists(fifo_path, ec)) {
-		logger->Error("FIFO RPC: apps FIFO NOT FOUND [%s]...",
+	try {
+		// The application should build the channel, this could be used as
+		// an additional handshaking protocol and API versioning verification
+		logger->Debug("FIFO RPC: checking for application FIFO [%s]...",
 				fifo_path.string().c_str());
-		goto err_open;
+		if (!fs::exists(fifo_path, ec)) {
+			throw std::runtime_error("FIFO RPC: apps FIFO NOT FOUND");
+		}
+
+		// Ensuring we have a pipe
+		if (fs::status(fifo_path, ec).type() != fs::fifo_file) {
+			throw std::runtime_error("FIFO RPC: apps FIFO not valid");
+		}
+
+		// Opening the application side pipe WRITE only
+		logger->Debug("FIFO RPC: opening (WR only)...");
+		fd = ::open(fifo_path.string().c_str(), O_WRONLY);
+		if (fd < 0) {
+			logger->Error("FAILED opening application RPC FIFO [%s] (Error %d: %s)",
+						fifo_path.string().c_str(), errno, strerror(errno));
+			fd = 0;
+			// Debugging: abort on too many files open
+			assert(errno!=EMFILE);
+			throw std::runtime_error("FAILED opening application RPC FIFO");
+		}
+
+		// Build a new set of plugins data
+		pd = (fifo_data_t*)::malloc(sizeof(fifo_data_t));
+		if (!pd) {
+			::close(fd);
+			throw std::runtime_error("FIFO RPC: get plugin data (malloc) FAILED");
+		}
+
+	} // try
+	catch(std::runtime_error &ex) {
+		logger->Error("Error trying to get plugin data RPC FIFO [%s]",
+                      fifo_path.string().c_str());
+		logger->Error(ex.what());
+		return plugin_data_t();
 	}
 
-	// Ensuring we have a pipe
-	if (fs::status(fifo_path, ec).type() != fs::fifo_file) {
-		logger->Error("FIFO RPC: apps FIFO not valid [%s]",
-				fifo_path.string().c_str());
-		goto err_open;
-	}
-
-	// Opening the application side pipe WRITE only
-	logger->Debug("FIFO RPC: opening (WR only)...");
-	fd = ::open(fifo_path.string().c_str(), O_WRONLY);
-	if (fd < 0) {
-		logger->Error("FAILED opening application RPC FIFO [%s] (Error %d: %s)",
-					fifo_path.string().c_str(), errno, strerror(errno));
-		fd = 0;
-		// Debugging: abort on too many files open
-		assert(errno!=EMFILE);
-		goto err_open;
-	}
-
-	// Build a new set of plugins data
-	pd = (fifo_data_t*)::malloc(sizeof(fifo_data_t));
-	if (!pd) {
-		logger->Error("FIFO RPC: get plugin data (malloc) FAILED");
-		goto err_malloc;
-	}
 
 	::strncpy(pd->app_fifo_filename, hdr->rpc_fifo, BBQUE_FIFO_NAME_LENGTH);
 	pd->app_fifo_fd = fd;
@@ -340,11 +347,6 @@ RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
 			pd->app_fifo_fd, hdr->rpc_fifo);
 
 	return plugin_data_t(pd);
-
-err_malloc:
-	::close(fd);
-err_open:
-	return plugin_data_t();
 
 }
 

@@ -22,6 +22,7 @@
 #include <cassert>
 #include <iostream>
 #include <boost/filesystem/operations.hpp>
+#include <stdexcept>
 
 #include "bbque/platform_manager.h"
 #include "bbque/app/application.h"
@@ -137,69 +138,75 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadRecipe(
 	// Recipe object
 	recipe_ptr = _recipe;
 
-	// Plugin needs a logger
-	if (!logger) {
-		fprintf(stderr, FE("Error: Plugin 'XMLRecipeLoader' needs a logger\n"));
-		result = RL_ABORTED;
-		goto error;
-	}
-
 	try {
+		// Plugin needs a logger
+		if (!logger) {
+			fprintf(stderr, FE("Error: Plugin 'XMLRecipeLoader' needs a logger\n"));
+			result = RL_ABORTED;
+			throw std::runtime_error("");	// No info if logger not loaded
+		}
+
+		try {
 		// Load the recipe parsing an XML file
-		std::string path(recipe_dir + "/" + _recipe_name + ".recipe");
-		doc.LoadFile(path.c_str());
+			std::string path(recipe_dir + "/" + _recipe_name + ".recipe");
+			doc.LoadFile(path.c_str());
 
-		// <BarbequeRTRM> - Recipe root tag
-		root_node = doc.FirstChild();
-		root_node = root_node->NextSibling("BarbequeRTRM", true);
+			// <BarbequeRTRM> - Recipe root tag
+			root_node = doc.FirstChild();
+			root_node = root_node->NextSibling("BarbequeRTRM", true);
 
-		// Recipe version control
-		bbq_elem = root_node->ToElement();
-		bbq_elem->GetAttribute("recipe_version", &version_id);
-		logger->Debug("Recipe version = %s", version_id.c_str());
-		sscanf(version_id.c_str(), "%d.%d", &maj, &min);
-		if (maj < RECIPE_MAJOR_VERSION ||
-				(maj >= RECIPE_MAJOR_VERSION && min < RECIPE_MINOR_VERSION)) {
-			logger->Error("Recipe version mismatch (REQUIRED %d.%d). "
-					"Found %d.%d", RECIPE_MAJOR_VERSION, RECIPE_MINOR_VERSION,
-					maj, min);
-			result = RL_VERSION_MISMATCH;
-			goto error;
+			// Recipe version control
+			bbq_elem = root_node->ToElement();
+			bbq_elem->GetAttribute("recipe_version", &version_id);
+			logger->Debug("Recipe version = %s", version_id.c_str());
+			sscanf(version_id.c_str(), "%d.%d", &maj, &min);
+			if (maj < RECIPE_MAJOR_VERSION ||
+					(maj >= RECIPE_MAJOR_VERSION && min < RECIPE_MINOR_VERSION)) {
+				logger->Error("Recipe version mismatch (REQUIRED %d.%d). "
+						"Found %d.%d", RECIPE_MAJOR_VERSION, RECIPE_MINOR_VERSION,
+						maj, min);
+				result = RL_VERSION_MISMATCH;
+				throw std::runtime_error("Recipe version mismatch");
+			}
+
+			// <application>
+			app_elem = root_node->FirstChildElement("application", true);
+			app_elem->GetAttribute("priority", &prio, false);
+			recipe_ptr->SetPriority(prio);
+
+			// Load the proper platform section
+			pp_elem = LoadPlatform(app_elem);
+			if (!pp_elem) {
+				result = RL_PLATFORM_MISMATCH;
+				throw std::runtime_error("LoadPlatform failed.");
+			}
+
+			// Application Working Modes
+			result = LoadWorkingModes(pp_elem);
+			if (result != RL_SUCCESS)
+				throw std::runtime_error("LoadWorkingModes failed.");
+
+			// "Static" constraints and plugins specific data
+			LoadConstraints(pp_elem);
+			LoadPluginsData<ba::RecipePtr_t>(recipe_ptr, pp_elem);
+
+		} catch(ticpp::Exception &ex) {
+			logger->Error(ex.what());
+			result = RL_ABORTED;
+			throw std::runtime_error("XML parsing failed.");
 		}
-
-		// <application>
-		app_elem = root_node->FirstChildElement("application", true);
-		app_elem->GetAttribute("priority", &prio, false);
-		recipe_ptr->SetPriority(prio);
-
-		// Load the proper platform section
-		pp_elem = LoadPlatform(app_elem);
-		if (!pp_elem) {
-			result = RL_PLATFORM_MISMATCH;
-			goto error;
+	} // external try
+	catch(std::runtime_error &ex) {
+		if (logger) {
+			logger->Crit(ex.what());
 		}
-
-		// Application Working Modes
-		result = LoadWorkingModes(pp_elem);
-		if (result != RL_SUCCESS)
-			goto error;
-
-		// "Static" constraints and plugins specific data
-		LoadConstraints(pp_elem);
-		LoadPluginsData<ba::RecipePtr_t>(recipe_ptr, pp_elem);
-
-	} catch(ticpp::Exception &ex) {
-		logger->Error(ex.what());
-		result = RL_ABORTED;
-		goto error;
+	
+		doc.Clear();
+		recipe_ptr = ba::RecipePtr_t();
+		return result;
 	}
 
 	// Regular exit
-	return result;
-
-error:
-	doc.Clear();
-	recipe_ptr = ba::RecipePtr_t();
 	return result;
 }
 

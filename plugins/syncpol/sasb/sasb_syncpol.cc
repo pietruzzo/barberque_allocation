@@ -207,40 +207,44 @@ ApplicationStatusIF::SyncState_t SasbSyncPol::GetApplicationsQueue(
 	// thus a new SyncP is going to start
 	max_latency = 0;
 
+	bool do_sync = false;
+
 	syncState = ApplicationStatusIF::SYNC_NONE;
-	for( ; status<=STEP40; ++status) {
+	for( ; status<=STEP40 && !do_sync; ++status) {
 		switch(status) {
 		case STEP10:
 			syncState = step1(sv);
 			if (syncState != ApplicationStatusIF::SYNC_NONE)
-				goto do_sync;
+				do_sync = true;
 			continue;
 		case STEP21:
 		case STEP22:
 		case STEP23:
 			syncState = step2(sv);
 			if (syncState != ApplicationStatusIF::SYNC_NONE)
-				goto do_sync;
+				do_sync = true;
 			continue;
 		case STEP31:
 		case STEP32:
 		case STEP33:
 			syncState = step3(sv);
 			if (syncState != ApplicationStatusIF::SYNC_NONE)
-				goto do_sync;
+				do_sync = true;
+
 			continue;
 		case STEP40:
 			syncState = step4(sv);
 			if (syncState != ApplicationStatusIF::SYNC_NONE)
-				goto do_sync;
+				do_sync = true;
 			continue;
 		};
 	}
 
-	servedSyncState = ApplicationStatusIF::SYNC_NONE;
-	return servedSyncState;
+	if (! do_sync) {
+		servedSyncState = ApplicationStatusIF::SYNC_NONE;
+		return servedSyncState;
+	}
 
-do_sync:
 	servedSyncState = syncState;
 	SM_START_TIMER(sm_tmr);
 	return syncState;
