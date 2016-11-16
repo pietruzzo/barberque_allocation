@@ -24,6 +24,7 @@
 #include "bbque/app/application.h"
 #include "bbque/utils/cgroups.h"
 #include "bbque/utils/logging/console_logger.h"
+#include "bbque/utils/utility.h"
 
 #include <cstdio>
 #include <cmath>
@@ -846,7 +847,7 @@ RTLIB_ExitCode_t BbqueRPC::CGroupDelete(pRegisteredEXC_t exc)
 
 RTLIB_ExitCode_t BbqueRPC::CGroupCreate(pRegisteredEXC_t exc, int pid)
 {
-	UNNUSED(pid);
+	UNUSED(pid);
 
 	if (! rtlib_configuration.cgroup_support.enabled)
 		return RTLIB_OK;
