@@ -846,6 +846,8 @@ RTLIB_ExitCode_t BbqueRPC::CGroupDelete(pRegisteredEXC_t exc)
 
 RTLIB_ExitCode_t BbqueRPC::CGroupCreate(pRegisteredEXC_t exc, int pid)
 {
+	UNNUSED(pid);
+
 	if (! rtlib_configuration.cgroup_support.enabled)
 		return RTLIB_OK;
 
@@ -955,6 +957,8 @@ RTLIB_ExitCode_t BbqueRPC::CGroupCommitAllocation(pRegisteredEXC_t exc)
 		cgsetup.cpu.cfs_period_us.c_str());
 
 	bu::CGroups::WriteCgroup(cgroup_path, cgsetup, channel_thread_pid);
+#else
+	UNUSED(exc);
 #endif // CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	return RTLIB_OK;
 }
@@ -1396,6 +1400,8 @@ RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(
 		const RTLIB_WorkingModeParams_t * wm,
 		int32_t * ids_vector,
                 int vector_size) {
+
+	UNUSED(wm);
 
     pRegisteredEXC_t exc = getRegistered(exc_handler);
 

@@ -280,7 +280,6 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelPair(const char * name)
 
 RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup()
 {
-	RTLIB_ExitCode_t result = RTLIB_OK;
 	int error;
 	logger->Debug("Initializing channel");
 	// Opening server FIFO
