@@ -469,7 +469,9 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 		}
 	}
 
-	this->memory_ids_all.pop_back();
+	// Build the default string for the CGroups
+	if (!this->memory_ids_all.empty())
+		this->memory_ids_all.pop_back();
 	logger->Debug("Memory nodes list = {%s}", memory_ids_all.c_str());
 
 	return PLATFORM_OK;
