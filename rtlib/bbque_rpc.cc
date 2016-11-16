@@ -834,11 +834,7 @@ RTLIB_ExitCode_t BbqueRPC::CGroupDelete(pRegisteredEXC_t exc)
 	}
 
 	// Delete EXC specific CGroup
-	if (bu::CGroups::Delete(exc->cgroup_path.c_str()) !=
-		bu::CGroups::CGResult::OK) {
-		logger->Error("CGroup delete [%s] FAILED", exc->cgroup_path.c_str());
-		return RTLIB_ERROR;
-	}
+	bu::CGroups::Delete(exc->cgroup_path.c_str());
 
 	// Mark this CGroup as removed
 	exc->cgroup_path.clear();
@@ -1401,7 +1397,6 @@ RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(
 		const RTLIB_WorkingModeParams_t * wm,
 		int32_t * ids_vector,
                 int vector_size) {
-
 	UNUSED(wm);
 
     pRegisteredEXC_t exc = getRegistered(exc_handler);
@@ -3431,7 +3426,7 @@ void BbqueRPC::NotifyPostRun(
 	logger->Debug("Post-Run: Stop computing CPU quota");
 
 	if (UpdateCPUBandwidthStats(exc) != RTLIB_OK)
-		logger->Error("PostRun: could not compute current CPU bandwidth");
+		logger->Debug("PostRun: could not compute current CPU bandwidth");
 
 #ifdef CONFIG_BBQUE_OPENCL
 
