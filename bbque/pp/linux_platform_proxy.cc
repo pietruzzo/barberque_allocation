@@ -442,6 +442,8 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 	this->memory_ids_all = "";
 
 	for (const auto sys : pd->GetSystemsAll()) {
+		logger->Debug("[%s@%s] Scanning the CPUs...",
+				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {
 			ExitCode_t result = this->RegisterCPU(cpu);
 			if (unlikely(PLATFORM_OK != result)) {
@@ -449,7 +451,8 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 				return result;
 			}
 		}
-
+		logger->Debug("[%s@%s] Scanning the memories...",
+				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto mem : sys.GetMemoriesAll()) {
 			ExitCode_t result = this->RegisterMEM(*mem);
 			if (unlikely(PLATFORM_OK != result)) {
@@ -457,14 +460,17 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 				return result;
 			}
 
-			// Build the default string for the CGroups
 			if (sys.IsLocal()) {
+				logger->Debug("[%s@%s] is local",
+						sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+
 				this->memory_ids_all += std::to_string(mem->GetId()) + ',';
 			}
 		}
 	}
 
 	this->memory_ids_all.pop_back();
+	logger->Debug("Memory nodes list = {%s}", memory_ids_all.c_str());
 
 	return PLATFORM_OK;
 }
@@ -481,6 +487,7 @@ LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) noexcept {
 		
 			const std::string resource_path = pe.GetPath();
 			const int share = pe.GetShare();
+			logger->Debug("Registration of <%s>: %d", resource_path.c_str(), share);
 
 			if (refreshMode) {
 				ra.UpdateResource(resource_path, "", share);
@@ -489,7 +496,6 @@ LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) noexcept {
 				ra.RegisterResource(resource_path, "", share);
 				InitPowerInfo(resource_path.c_str(), pe.GetId());
 			}
-
 		}
 	}
 
@@ -500,9 +506,10 @@ LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) noexcept {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
-
 	std::string resource_path = mem.GetPath();
 	const auto q_bytes = mem.GetQuantity();
+	logger->Debug("Registration of <%s>: %d Kb",
+			resource_path.c_str(), q_bytes);
 
 	if (refreshMode) {
 		ra.UpdateResource(resource_path, "", q_bytes);
@@ -510,6 +517,8 @@ LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) noexcept
 	else {
 		ra.RegisterResource(resource_path, "", q_bytes);
 	}
+	logger->Debug("Registration of <%s> successfully performed",
+			resource_path.c_str());
 
 	return PLATFORM_OK;
 }
