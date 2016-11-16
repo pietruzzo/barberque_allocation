@@ -31,150 +31,150 @@ RXMLPlatformLoader::~RXMLPlatformLoader() {
 
 RXMLPlatformLoader::RXMLPlatformLoader() : initialized(false)
 {
-    // Get a logger
-    logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
-    assert(logger);
-    logger->Debug("Built RXML PlatformLoader object @%p", (void*)this);
+	// Get a logger
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
+	assert(logger);
+	logger->Debug("Built RXML PlatformLoader object @%p", (void*)this);
 
-    // Save the hostname of the current machine for future use.
-    local_hostname[1023] = '\0';
-    gethostname(local_hostname, 1023);
+	// Save the hostname of the current machine for future use.
+	local_hostname[1023] = '\0';
+	gethostname(local_hostname, 1023);
 
 }
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
 
-    if (this->initialized) {
-        logger->Warn("RXMLPlatformLoader already initialized (I will ignore"
-                        "the replicated loadPlatformInfo() call)");
-        return PL_SUCCESS;
-    }
+	if (this->initialized) {
+		logger->Warn("RXMLPlatformLoader already initialized (I will ignore"
+						"the replicated loadPlatformInfo() call)");
+		return PL_SUCCESS;
+	}
 
-    std::string   path(platforms_dir + "/systems.xml");
-    std::ifstream xml_file(path);
+	std::string   path(platforms_dir + "/systems.xml");
+	std::ifstream xml_file(path);
 
-    if (unlikely(!xml_file.good())) {
-        logger->Error("systems.xml file not found, inaccessible or empty.");
-        return PL_NOT_FOUND;
-    }
+	if (unlikely(!xml_file.good())) {
+		logger->Error("systems.xml file not found, inaccessible or empty.");
+		return PL_NOT_FOUND;
+	}
 
-    std::stringstream buffer;
-    buffer << xml_file.rdbuf();
-    xml_file.close();
+	std::stringstream buffer;
+	buffer << xml_file.rdbuf();
+	xml_file.close();
 
-    if (unlikely(!buffer.good())) {
-        logger->Error("Reading of systems.xml failed.");
-        return PL_NOT_FOUND;
-    }
+	if (unlikely(!buffer.good())) {
+		logger->Error("Reading of systems.xml failed.");
+		return PL_NOT_FOUND;
+	}
 
-    std::string xmlstr(buffer.str());
+	std::string xmlstr(buffer.str());
 
-    try {
-        doc.parse<0>(&xmlstr[0]);    // Note: c++11 guarantees that the memory is
-                                     // sequentially allocated inside the string,
-                                     // so no problem here.
-    } catch(const rapidxml::parse_error &e) {
-        logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
-        return PL_SYNTAX_ERROR;
-    } catch (const std::runtime_error &e) {
-        logger->Error("Generic error: %s.", e.what());
-        return PL_GENERIC_ERROR;
-    }
+	try {
+		doc.parse<0>(&xmlstr[0]);   // Note: c++11 guarantees that the memory is
+					    // sequentially allocated inside the string,
+					    // so no problem here.
+	} catch(const rapidxml::parse_error &e) {
+		logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
+		return PL_SYNTAX_ERROR;
+	} catch (const std::runtime_error &e) {
+		logger->Error("Generic error: %s.", e.what());
+		return PL_GENERIC_ERROR;
+	}
 
-    ExitCode_t error = PL_GENERIC_ERROR;
-    try {
-        error = ParseDocument();
-    } catch(const rapidxml::parse_error &e) {
-        logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
-    } catch(const PlatformLoaderEXC &e) {
-        logger->Error("XML not valid: %s.", e.what());
-    } catch(const std::runtime_error &e) {
-        logger->Error("Generic error: %s.", e.what());
-    } catch(...) {
-        logger->Error("Generic error.");
-    }
+	ExitCode_t error = PL_GENERIC_ERROR;
+	try {
+		error = ParseDocument();
+	} catch(const rapidxml::parse_error &e) {
+		logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
+	} catch(const PlatformLoaderEXC &e) {
+		logger->Error("XML not valid: %s.", e.what());
+	} catch(const std::runtime_error &e) {
+		logger->Error("Generic error: %s.", e.what());
+	} catch(...) {
+		logger->Error("Generic error.");
+	}
 
-    if (error != PL_SUCCESS) {
-        // Clean the platform description in case of error
-        this->pd = pp::PlatformDescription();
-        return error;
-    }
+	if (error != PL_SUCCESS) {
+		// Clean the platform description in case of error
+		this->pd = pp::PlatformDescription();
+		return error;
+	}
 
 
-    this->initialized = true;
-    return PL_SUCCESS;
+	this->initialized = true;
+	return PL_SUCCESS;
 }
 
 const pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() const {
-    if (!this->initialized) {
-        throw PlatformLoaderEXC("getPlatformInfo() called before initialization.");
-    }
+	if (!this->initialized) {
+		throw PlatformLoaderEXC("getPlatformInfo() called before initialization.");
+	}
 
-    return this->pd;
+	return this->pd;
 }
 
 pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() {
-    if (!this->initialized) {
-        throw PlatformLoaderEXC("getPlatformInfo() called before initialization.");
-    }
+	if (!this->initialized) {
+		throw PlatformLoaderEXC("getPlatformInfo() called before initialization.");
+	}
 
-    return this->pd;
+	return this->pd;
 }
 
 // =======================[ Static plugin interface ]=========================
 
 void * RXMLPlatformLoader::Create(PF_ObjectParams *params) {
-    if (!Configure(params))
-        return nullptr;
+	if (!Configure(params))
+		return nullptr;
 
-    return new RXMLPlatformLoader();
+	return new RXMLPlatformLoader();
 }
 
 int32_t RXMLPlatformLoader::Destroy(void *plugin) {
-    if (!plugin)
-        return -1;
-    delete (RXMLPlatformLoader *)plugin;
-    return 0;
+	if (!plugin)
+		return -1;
+	delete (RXMLPlatformLoader *)plugin;
+	return 0;
 }
 
 bool RXMLPlatformLoader::Configure(PF_ObjectParams * params) {
 
-    if (configured)
-        return true;
+	if (configured)
+		return true;
 
-    // Declare the supported options
-    po::options_description xmlploader_opts_desc("RXML Platform Loader Options");
-    xmlploader_opts_desc.add_options()
-        (MODULE_CONFIG".platform_dir", po::value<std::string>
-         (&platforms_dir)->default_value(BBQUE_PATH_PREFIX "/" BBQUE_PATH_PILS),
-         "platform folder")
-    ;
+	// Declare the supported options
+	po::options_description xmlploader_opts_desc("RXML Platform Loader Options");
+	xmlploader_opts_desc.add_options()
+		(MODULE_CONFIG".platform_dir", po::value<std::string>
+		 (&platforms_dir)->default_value(BBQUE_PATH_PREFIX "/" BBQUE_PATH_PILS),
+		 "platform folder")
+	;
 
-    // Get configuration params
-    PF_Service_ConfDataIn data_in;
-    data_in.opts_desc = &xmlploader_opts_desc;
-    PF_Service_ConfDataOut data_out;
-    data_out.opts_value = &xmlploader_opts_value;
+	// Get configuration params
+	PF_Service_ConfDataIn data_in;
+	data_in.opts_desc = &xmlploader_opts_desc;
+	PF_Service_ConfDataOut data_out;
+	data_out.opts_value = &xmlploader_opts_value;
 
-    PF_ServiceData sd;
-    sd.id = MODULE_NAMESPACE;
-    sd.request = &data_in;
-    sd.response = &data_out;
+	PF_ServiceData sd;
+	sd.id = MODULE_NAMESPACE;
+	sd.request = &data_in;
+	sd.response = &data_out;
 
-    int32_t response =
-        params->platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
+	int32_t response =
+		params->platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
 
-    if (response!=PF_SERVICE_DONE)
-        return false;
+	if (response!=PF_SERVICE_DONE)
+		return false;
 
-    if (daemonized)
-        syslog(LOG_INFO, "Using RXMLPlatformLoader platform folder [%s]",
-                platforms_dir.c_str());
-    else
-        fprintf(stdout, FI("Using RXMLPlatformLoader platform folder [%s]\n"),
-                platforms_dir.c_str());
+	if (daemonized)
+		syslog(LOG_INFO, "Using RXMLPlatformLoader platform folder [%s]",
+				platforms_dir.c_str());
+	else
+		fprintf(stdout, FI("Using RXMLPlatformLoader platform folder [%s]\n"),
+				platforms_dir.c_str());
 
-    return true;
+	return true;
 }
 
 // =======================[ XML releated methods ]=========================
@@ -183,55 +183,55 @@ bool RXMLPlatformLoader::Configure(PF_ObjectParams * params) {
 RXMLPlatformLoader::node_ptr RXMLPlatformLoader::GetFirstChild(
 		node_ptr parent, const char * name, bool mandatory) const {
 
-    node_ptr child = parent->first_node(name, 0, true);
-    if (child == nullptr) {
-        if (mandatory) {
-            logger->Error("Missing mandatory <%s> tag.", name);
-            throw PlatformLoaderEXC("Missing mandatory tag.");
-        } else {
-            return nullptr;
-        }
-    }
+	node_ptr child = parent->first_node(name, 0, true);
+	if (child == nullptr) {
+		if (mandatory) {
+			logger->Error("Missing mandatory <%s> tag.", name);
+			throw PlatformLoaderEXC("Missing mandatory tag.");
+		} else {
+			return nullptr;
+		}
+	}
 
-    return child;
+	return child;
 }
 
 
 RXMLPlatformLoader::attr_ptr RXMLPlatformLoader::GetFirstAttribute(
 		node_ptr tag, const char * name, bool mandatory) const {
 
-    attr_ptr attr = tag->first_attribute(name, 0, true);
-    if (attr == nullptr) {
-        if (mandatory) {
-            logger->Error("Missing argument '%s' in <%s> tag.", name, tag->name());
-            throw PlatformLoaderEXC("Missing mandatory argument.");
-        } else {
-            return nullptr;
-        }
-    }
+	attr_ptr attr = tag->first_attribute(name, 0, true);
+	if (attr == nullptr) {
+		if (mandatory) {
+			logger->Error("Missing argument '%s' in <%s> tag.", name, tag->name());
+			throw PlatformLoaderEXC("Missing mandatory argument.");
+		} else {
+			return nullptr;
+		}
+	}
 
-    return attr;
+	return attr;
 }
 
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
 
-    node_ptr root    = this->GetFirstChild(&doc,"systems", true);
-    attr_ptr version = this->GetFirstAttribute(root, "version", true);
+	node_ptr root    = this->GetFirstChild(&doc,"systems", true);
+	attr_ptr version = this->GetFirstAttribute(root, "version", true);
 
-    if (strcmp(version->value(), CURRENT_VERSION) != 0) {
-        logger->Error("Version mismatch: my version is " CURRENT_VERSION " but systems.xml"
-                      "has version %s.", version->value());
-        return PL_GENERIC_ERROR;
-    }
+	if (strcmp(version->value(), CURRENT_VERSION) != 0) {
+		logger->Error("Version mismatch: my version is " CURRENT_VERSION " but systems.xml"
+					  "has version %s.", version->value());
+		return PL_GENERIC_ERROR;
+	}
 
-    assert(root);
+	assert(root);
 
 	std::string is_local_str;
-    bool local_found = false;
-    node_ptr include_sys = this->GetFirstChild(root,"include", true) ;
+	bool local_found = false;
+	node_ptr include_sys = this->GetFirstChild(root,"include", true) ;
 
-    while(include_sys != NULL) {
+	while(include_sys != NULL) {
 		logger->Debug("Parsing system description from '%s'...", include_sys->value());
 
 		// Check if it is the local system
@@ -239,104 +239,105 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
 		is_local_str.assign(local_attr->value());
 		bool is_local = 0 == is_local_str.compare("true");
 
-        if (local_found && is_local) {
-            // That's bad. I found two local systems. This is not possible.
-            logger->Error("More than one local system found!");
-            return PL_LOGIC_ERROR;
-        }
+		if (local_found && is_local) {
+			// That's bad. I found two local systems. This is not possible.
+			logger->Error("More than one local system found!");
+			return PL_LOGIC_ERROR;
+		}
 
 		// If the local is not found yet, check if the current is local
-        if (!local_found) {
-            local_found = is_local;
-        }
+		if (!local_found) {
+			local_found = is_local;
+		}
 
-        this->ParseSystemDocument(include_sys->value(), is_local);
-        include_sys = include_sys->next_sibling("include");
-    }
+		this->ParseSystemDocument(include_sys->value(), is_local);
+		include_sys = include_sys->next_sibling("include");
+	}
 
-    if (!local_found) {
-        logger->Error("No local system found in systems.xml.");
-        return PL_LOGIC_ERROR;
-    }
+	if (!local_found) {
+		logger->Error("No local system found in systems.xml.");
+		return PL_LOGIC_ERROR;
+	}
 
-    return PL_SUCCESS;
+	return PL_SUCCESS;
 }
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 		const char* name,
 		bool is_local) {
+	logger->Info("Loading '%s' platform file...", name);
 
-    std::string   path(platforms_dir + "/" + name);
-    std::ifstream xml_file(path);
+	std::string   path(platforms_dir + "/" + name);
+	std::ifstream xml_file(path);
 
-    if (unlikely(!xml_file.good())) {
-        logger->Error("%s file not found, inaccessible or empty.", name);
-        return PL_NOT_FOUND;
-    }
+	if (unlikely(!xml_file.good())) {
+		logger->Error("'%s' file not found, inaccessible or empty.", name);
+		return PL_NOT_FOUND;
+	}
 
-    std::stringstream buffer;
-    buffer << xml_file.rdbuf();
-    xml_file.close();
+	std::stringstream buffer;
+	buffer << xml_file.rdbuf();
+	xml_file.close();
 
-    if (unlikely(!buffer.good())) {
-        logger->Error("Reading of %s failed.", name);
-        return PL_NOT_FOUND;
-    }
+	if (unlikely(!buffer.good())) {
+		logger->Error("Reading of %s failed.", name);
+		return PL_NOT_FOUND;
+	}
 
-    std::string xmlstr(buffer.str());
+	std::string xmlstr(buffer.str());
 
-    rapidxml::xml_document<> inc_doc;
-    // Not try{}catch{} it, leave it throwing, managed at upper levels
-    inc_doc.parse<0>(&xmlstr[0]);    // Note: c++11 guarantees that the memory is
-                                     // sequentially allocated inside the string,
-                                     // so no problem here.
+	rapidxml::xml_document<> inc_doc;
+	// Not try{}catch{} it, leave it throwing, managed at upper levels
+	inc_doc.parse<0>(&xmlstr[0]);    // Note: c++11 guarantees that the memory is
+					 // sequentially allocated inside the string,
+					 // so no problem here.
 
-    node_ptr root     = this->GetFirstChild(&inc_doc, "system", true);
+	node_ptr root     = this->GetFirstChild(&inc_doc, "system", true);
 
-    // For the root tag, we have two parameters: hostname and address.
-    // The last is mandatory only for remote systems, and ignored for
-    // local ones
-    attr_ptr hostname = this->GetFirstAttribute(root, "hostname", true);
+	// For the root tag, we have two parameters: hostname and address.
+	// The last is mandatory only for remote systems, and ignored for
+	// local ones
+	attr_ptr hostname = this->GetFirstAttribute(root, "hostname", true);
 
-    // The address is mandatory only if the system is remote.
-    attr_ptr address  = this->GetFirstAttribute(root, "address", !is_local);
-    logger->Debug("Parsing system %s at address %s",
-	hostname->value(), address->value() ? address->value() : "`localhost`");
+	// The address is mandatory only if the system is remote.
+	attr_ptr address  = this->GetFirstAttribute(root, "address", !is_local);
+	logger->Debug("Parsing system %s at address %s",
+			hostname->value(), address->value() ? address->value() : "`localhost`");
 
-    pp::PlatformDescription::System sys;
-    sys.SetId(sys_count++);
-    sys.SetLocal(is_local);
-    sys.SetHostname(hostname->value());
-    if (address) {
-        sys.SetNetAddress(address->value());
-        if(is_local) {
-            logger->Warn("Address specified in a local system (I will ignore it)");
-        }
-    }
+	pp::PlatformDescription::System sys;
+	sys.SetId(sys_count++);
+	sys.SetLocal(is_local);
+	sys.SetHostname(hostname->value());
+	if (address) {
+		sys.SetNetAddress(address->value());
+		if(is_local) {
+			logger->Warn("Address specified in a local system (I will ignore it)");
+		}
+	}
 
-    ///   <memory>
-    RXMLPlatformLoader::ExitCode_t ec = PL_SUCCESS;
-    ec = ParseMemories(root, sys);
-    if (ec != PL_SUCCESS)
-        return ec;
+	///   <memory>
+	RXMLPlatformLoader::ExitCode_t ec = PL_SUCCESS;
+	ec = ParseMemories(root, sys);
+	if (ec != PL_SUCCESS)
+		return ec;
 
-    ///   <cpu>
-    ec = ParseCPUs(root, sys);
-    if (ec != PL_SUCCESS)
-        return ec;
+	///   <cpu>
+	ec = ParseCPUs(root, sys);
+	if (ec != PL_SUCCESS)
+		return ec;
 
-    ///   <gpu>
-    ec = ParseManycores(root, sys, "gpu");
-    if (ec != PL_SUCCESS)
-        return ec;
+	///   <gpu>
+	ec = ParseManycores(root, sys, "gpu");
+	if (ec != PL_SUCCESS)
+		return ec;
 
-    ///   <acc>
-    ec = ParseManycores(root, sys, "acc");
-    if (ec != PL_SUCCESS)
-        return ec;
+	///   <acc>
+	ec = ParseManycores(root, sys, "acc");
+	if (ec != PL_SUCCESS)
+		return ec;
 
-    pd.AddSystem(sys);
-    return is_local ? PL_SUCCESS : PL_SUCCESS_NO_LOCAL;
+	pd.AddSystem(sys);
+	return is_local ? PL_SUCCESS : PL_SUCCESS_NO_LOCAL;
 }
 
 
@@ -344,87 +345,87 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
 		node_ptr root,
 		pp::PlatformDescription::System & sys) {
-    // Now get all the memories and save them. This should be perfomed before <cpu> and
-    // other tags, due to reference to memories inside them.
-    node_ptr memory_tag = this->GetFirstChild(root,"mem",true) ;
-    while( memory_tag != NULL ) {
-        pp::PlatformDescription::Memory mem;
-        attr_ptr id_attr       = this->GetFirstAttribute(memory_tag, "id",       true);
-        attr_ptr quantity_attr = this->GetFirstAttribute(memory_tag, "quantity", true);
-        attr_ptr unit_attr     = this->GetFirstAttribute(memory_tag, "unit",     true);
+	// Now get all the memories and save them. This should be perfomed before <cpu> and
+	// other tags, due to reference to memories inside them.
+	node_ptr memory_tag = this->GetFirstChild(root,"mem",true) ;
+	while( memory_tag != NULL ) {
+		pp::PlatformDescription::Memory mem;
+		attr_ptr id_attr       = this->GetFirstAttribute(memory_tag, "id",       true);
+		attr_ptr quantity_attr = this->GetFirstAttribute(memory_tag, "quantity", true);
+		attr_ptr unit_attr     = this->GetFirstAttribute(memory_tag, "unit",     true);
 
-        short        id;
-        int          quantity;
-        int_fast16_t exp;
+		short        id;
+		int          quantity;
+		int_fast16_t exp;
 
-        // id=""
-        try {
-            // Yes, this conversion is unsafe. However, there will not probably
-            // be over 32767 memories in one machine...
-            id = (short)std::stoi(id_attr->value());
-        } catch(const std::invalid_argument& e) {
-            logger->Error("ID for <memory> is not a valid integer.");
-            return PL_LOGIC_ERROR;
-        } catch(const std::out_of_range& e) {
-            logger->Error("ID for <memory> is out-of-range, please change your unit.");
-            return PL_LOGIC_ERROR;
-        }
+		// id=""
+		try {
+			// Yes, this conversion is unsafe. However, there will not probably
+			// be over 32767 memories in one machine...
+			id = (short)std::stoi(id_attr->value());
+		} catch(const std::invalid_argument& e) {
+			logger->Error("ID for <memory> is not a valid integer.");
+			return PL_LOGIC_ERROR;
+		} catch(const std::out_of_range& e) {
+			logger->Error("ID for <memory> is out-of-range, please change your unit.");
+			return PL_LOGIC_ERROR;
+		}
 
-        // quantity=""
-        try {
-            quantity = std::stoi(quantity_attr->value());
-        } catch(const std::invalid_argument &e) {
-            logger->Error("Quantity for <memory> is not a valid integer.");
-            return PL_LOGIC_ERROR;
-        } catch(const std::out_of_range &e) {
-            logger->Error("Quantity for <memory> is out-of-range, please increase your unit.");
-            return PL_LOGIC_ERROR;
-        }
+		// quantity=""
+		try {
+			quantity = std::stoi(quantity_attr->value());
+		} catch(const std::invalid_argument &e) {
+			logger->Error("Quantity for <memory> is not a valid integer.");
+			return PL_LOGIC_ERROR;
+		} catch(const std::out_of_range &e) {
+			logger->Error("Quantity for <memory> is out-of-range, please increase your unit.");
+			return PL_LOGIC_ERROR;
+		}
 
-        // unit=""
-        switch(ConstHashString(unit_attr->value())) {
-            case ConstHashString("B"):
-                exp=0;
-            break;
-            case ConstHashString("KB"):
-                exp=10;
-            break;
-            case ConstHashString("MB"):
-                exp=20;
-            break;
-            case ConstHashString("GB"):
-                exp=20;
-            break;
-            case ConstHashString("TB"):
-                exp=40;
-            break;
-            default:
-                logger->Error("Invalid `unit` for <memory>.");
-                return PL_LOGIC_ERROR;
-            break;
-        }
+		// unit=""
+		switch(ConstHashString(unit_attr->value())) {
+			case ConstHashString("B"):
+				exp=0;
+			break;
+			case ConstHashString("KB"):
+				exp=10;
+			break;
+			case ConstHashString("MB"):
+				exp=20;
+			break;
+			case ConstHashString("GB"):
+				exp=20;
+			break;
+			case ConstHashString("TB"):
+				exp=40;
+			break;
+			default:
+				logger->Error("Invalid `unit` for <memory>.");
+				return PL_LOGIC_ERROR;
+			break;
+		}
 
-        mem.SetPrefix(sys.GetPath());
-        mem.SetId(id);
+		mem.SetPrefix(sys.GetPath());
+		mem.SetId(id);
 
 #if BBQUE_PP_ARCH_SUPPORTS_INT64
-        mem.SetQuantity(((int64_t)quantity) << exp);
+		mem.SetQuantity(((int64_t)quantity) << exp);
 #else
-        if (exp < 32) {
-            mem.SetQuantityLO(((int32_t)quantity) << exp );
-            mem.SetQuantityHI(((int32_t)quantity) >> (32-exp) );
-        } else {
-            mem.SetQuantityLO(0);
-            mem.SetQuantityHI(((int32_t)quantity) << (exp-32) );
-        }
+		if (exp < 32) {
+			mem.SetQuantityLO(((int32_t)quantity) << exp );
+			mem.SetQuantityHI(((int32_t)quantity) >> (32-exp) );
+		} else {
+			mem.SetQuantityLO(0);
+			mem.SetQuantityHI(((int32_t)quantity) << (exp-32) );
+		}
 #endif
 
-        sys.AddMemory(std::make_shared<pp::PlatformDescription::Memory>(mem));
+		sys.AddMemory(std::make_shared<pp::PlatformDescription::Memory>(mem));
 
-        memory_tag = memory_tag->next_sibling("mem");
-    }
+		memory_tag = memory_tag->next_sibling("mem");
+	}
 
-    return PL_SUCCESS;
+	return PL_SUCCESS;
 }
 
 
@@ -447,9 +448,9 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 
 		/// Read id=""
 		try {
-		    // Yes, this conversion is unsafe. However, there will not probably
-		    // be over 32767 cpu in one machine...
-		    id = (short)std::stoi(id_attr->value());
+			// Yes, this conversion is unsafe. However, there will not probably
+			// be over 32767 cpu in one machine...
+			id = (short)std::stoi(id_attr->value());
 		} catch(const std::invalid_argument &e) {
 			logger->Error("ID for <cpu> is not a valid integer.");
 			return PL_LOGIC_ERROR;
@@ -473,23 +474,23 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 
 		// mem_id=""
 		try {
-		    // Yes, this conversion is unsafe. However, there will not probably
-		    // be over 32767 memories in one machine...
-		    mem_id = (short)std::stoi(mem_id_attr->value());
+			// Yes, this conversion is unsafe. However, there will not probably
+			// be over 32767 memories in one machine...
+			mem_id = (short)std::stoi(mem_id_attr->value());
 		} catch(const std::invalid_argument &e) {
-		    logger->Error("mem_id for <cpu> is not a valid integer.");
-		    return PL_LOGIC_ERROR;
+			logger->Error("mem_id for <cpu> is not a valid integer.");
+			return PL_LOGIC_ERROR;
 		} catch(const std::out_of_range &e) {
-		    logger->Error("mem_id for <cpu> is out-of-range.");
-		    return PL_LOGIC_ERROR;
+			logger->Error("mem_id for <cpu> is out-of-range.");
+			return PL_LOGIC_ERROR;
 		}
 
 		std::shared_ptr<pp::PlatformDescription::Memory>
 			curr_memory = sys.GetMemoryById(mem_id);
 
 		if (curr_memory == nullptr) {
-		    logger->Error("<cpu> with memory id %d not found in memories list.", mem_id);
-		    return PL_LOGIC_ERROR;
+			logger->Error("<cpu> with memory id %d not found in memories list.", mem_id);
+			return PL_LOGIC_ERROR;
 		}
 
 		cpu.SetPrefix(sys.GetPath());
@@ -504,14 +505,14 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 		///      <pe>
 		node_ptr pe_tag = this->GetFirstChild(cpu_tag,"pe");
 		while (pe_tag != NULL) {
-		    pp::PlatformDescription::ProcessingElement pe;
-		    ExitCode_t ec = ParseProcessingElement(pe_tag, pe);
-		    if (ec != PL_SUCCESS)
+			pp::PlatformDescription::ProcessingElement pe;
+			ExitCode_t ec = ParseProcessingElement(pe_tag, pe);
+			if (ec != PL_SUCCESS)
 			return ec;
 
-		    pe.SetPrefix(cpu.GetPath());
-		    cpu.AddProcessingElement(pe);
-		    pe_tag = pe_tag->next_sibling("pe");
+			pe.SetPrefix(cpu.GetPath());
+			cpu.AddProcessingElement(pe);
+			pe_tag = pe_tag->next_sibling("pe");
 		}
 
 		sys.AddCPU(cpu);
@@ -620,15 +621,15 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
 
 		// id=""
 		try {
-		    // Yes, this conversion is unsafe. However, there will not probably
-		    // be over 32767 cpu in one machine...
-		    id = (short)std::stoi(id_attr->value());
+			// Yes, this conversion is unsafe. However, there will not probably
+			// be over 32767 cpu in one machine...
+			id = (short)std::stoi(id_attr->value());
 		} catch(const std::invalid_argument &e) {
-		    logger->Error("ID for <%s> is not a valid integer.", tag_str);
-		    return PL_LOGIC_ERROR;
+			logger->Error("ID for <%s> is not a valid integer.", tag_str);
+			return PL_LOGIC_ERROR;
 		} catch(const std::out_of_range &e) {
-		    logger->Error("ID for <%s> is out-of-range.", tag_str);
-		    return PL_LOGIC_ERROR;
+			logger->Error("ID for <%s> is out-of-range.", tag_str);
+			return PL_LOGIC_ERROR;
 		}
 
 		manycore.SetPrefix(sys.GetPath());
@@ -640,13 +641,13 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
 		///        <pe>
 		node_ptr pe_tag = this->GetFirstChild(tag, "pe");
 		while(pe_tag != NULL) {
-		    pp::PlatformDescription::ProcessingElement pe;
-		    ExitCode_t ec = ParseProcessingElement(pe_tag, pe);
-		    if (ec != PL_SUCCESS)
+			pp::PlatformDescription::ProcessingElement pe;
+			ExitCode_t ec = ParseProcessingElement(pe_tag, pe);
+			if (ec != PL_SUCCESS)
 			return ec;
 
-		    manycore.AddProcessingElement(pe);
-		    pe_tag = pe_tag->next_sibling("pe");
+			manycore.AddProcessingElement(pe);
+			pe_tag = pe_tag->next_sibling("pe");
 		}
 
 		if (strncmp(tag_str, "gpu", 3) == 0)
