@@ -227,21 +227,30 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
 
     assert(root);
 
+	std::string is_local_str;
     bool local_found = false;
     node_ptr include_sys = this->GetFirstChild(root,"include", true) ;
+
     while(include_sys != NULL) {
-        bool curr_local = PL_SUCCESS == this->ParseSystemDocument(include_sys->value());
-        if (local_found && curr_local) {
+		logger->Debug("Parsing system description from '%s'...", include_sys->value());
+
+		// Check if it is the local system
+		attr_ptr local_attr = this->GetFirstAttribute(include_sys, "local", true);
+		is_local_str.assign(local_attr->value());
+		bool is_local = 0 == is_local_str.compare("true");
+
+        if (local_found && is_local) {
             // That's bad. I found two local systems. This is not possible.
             logger->Error("More than one local system found!");
             return PL_LOGIC_ERROR;
         }
 
-	// If the loal is not found yet, check if the current is local
+		// If the local is not found yet, check if the current is local
         if (!local_found) {
-            local_found = curr_local;
+            local_found = is_local;
         }
 
+        this->ParseSystemDocument(include_sys->value(), is_local);
         include_sys = include_sys->next_sibling("include");
     }
 
@@ -253,8 +262,9 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
     return PL_SUCCESS;
 }
 
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const char* name) {
-    logger->Info("Loading %s platform file...", name);
+RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
+		const char* name,
+		bool is_local) {
 
     std::string   path(platforms_dir + "/" + name);
     std::ifstream xml_file(path);
@@ -287,7 +297,6 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(const cha
     // The last is mandatory only for remote systems, and ignored for
     // local ones
     attr_ptr hostname = this->GetFirstAttribute(root, "hostname", true);
-    bool is_local = 0 == strcmp(local_hostname, hostname->value());
 
     // The address is mandatory only if the system is remote.
     attr_ptr address  = this->GetFirstAttribute(root, "address", !is_local);

@@ -132,7 +132,7 @@ private:
 
     ExitCode_t ParseDocument();
 
-    ExitCode_t ParseSystemDocument(const char* name);
+    ExitCode_t ParseSystemDocument(const char* name, bool is_local);
 
 
     ExitCode_t ParseMemories(node_ptr root, pp::PlatformDescription::System & sys);
