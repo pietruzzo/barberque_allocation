@@ -245,6 +245,15 @@ ApplicationStatusIF::SyncState_t SasbSyncPol::GetApplicationsQueue(
 		return servedSyncState;
 	}
 
+	if (status <= STEP40) {
+		// We have to go back to one status,
+		// since we have exited with
+		// syncState != ApplicationStatusIF::SYNC_NONE
+		// and the status variable was incremented one
+		// time more than correct
+		status--;
+	}
+
 	servedSyncState = syncState;
 	SM_START_TIMER(sm_tmr);
 	return syncState;
