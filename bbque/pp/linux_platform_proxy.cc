@@ -828,18 +828,8 @@ LinuxPlatformProxy::SetupCGroup(
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 
-	app::RuntimeProfiling_t runtime_profile =
-			pcgd->papp->GetRuntimeProfile();
-
-	uint32_t cfs_quota_us = std::min(
-			1000 * runtime_profile.ctime_ms, BBQUE_LINUXPP_CPUP_MAX);
-	if (cfs_quota_us == 0)
-		cfs_quota_us = BBQUE_LINUXPP_CPUP_DEFAULT;
-
-	char const *cfs_c = std::to_string(cfs_quota_us).c_str();
-
-
-
+	uint32_t cfs_period_us = BBQUE_LINUXPP_CPUP_MAX;
+	char const *cfs_c = std::to_string(cfs_period_us).c_str();
 
 	if (likely(pcgd->cfs_quota_available)) {
 		bool quota_enforcing = true;
@@ -867,7 +857,7 @@ LinuxPlatformProxy::SetupCGroup(
 
 		if (quota_enforcing) {
 
-			cpus_quota = (cfs_quota_us / 100) *	prlb->amount_cpus;
+			cpus_quota = (cfs_period_us / 100) *	prlb->amount_cpus;
 			cgroup_set_value_int64(pcgd->pc_cpu, BBQUE_LINUXPP_CPUQ_PARAM, cpus_quota);
 
 			logger->Debug("PLAT LNX: Setup CPU for [%s]: "

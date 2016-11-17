@@ -63,10 +63,7 @@ typedef struct RLinuxBindings {
 	uint_fast16_t amount_cpus = 0;
 	/** The bytes amount of Socket MEMORY assigned */
 	int_fast64_t amount_memb = 0;
-	/** The CPU time quota assigned */
-	uint_fast32_t amount_cpuq = 0;
-	/** The CPU time period considered for quota assignement */
-	uint_fast32_t amount_cpup = 0;
+
 	RLinuxBindings(const uint_fast8_t MaxCpusCount, const uint_fast8_t MaxMemsCount) {
 		// 3 chars are required for each CPU/MEM resource if formatted
 		// with syntax: "nn,". This allows for up-to 99 resources per
