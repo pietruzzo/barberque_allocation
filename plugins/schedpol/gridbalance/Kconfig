@@ -1,5 +1,5 @@
 config BBQUE_SCHEDPOL_GRIDBALANCE
   bool "GridBalance"
-  default n
+  default y
   ---help---
   Description...

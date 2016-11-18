@@ -74,8 +74,8 @@ choice
     bool "Scallop"
     select BBQUE_SCHEDPOL_SCALLOP
   config BBQUE_SCHEDPOL_DEFAULT_GRIDBALANCE
+    depends on BBQUE_SCHEDPOL_GRIDBALANCE
     bool "GridBalance"
-    select BBQUE_SCHEDPOL_GRIDBALANCE
   config BBQUE_SCHEDPOL_DEFAULT_PERDETEMP
     depends on BBQUE_SCHEDPOL_PERDETEMP
     bool "Perdetemp"
