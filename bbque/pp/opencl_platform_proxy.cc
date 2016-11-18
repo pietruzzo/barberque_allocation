@@ -147,7 +147,9 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::MapResources(
 }
 
 
-bool OpenCLPlatformProxy::IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const {
+bool OpenCLPlatformProxy::IsHighPerformance(
+		bbque::res::ResourcePathPtr_t const & path) const {
+	UNUSED(path)
 	return true;
 }
 
