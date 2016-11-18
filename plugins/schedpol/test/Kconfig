@@ -1,0 +1,9 @@
+config BBQUE_SCHEDPOL_TEST
+  bool "Test"
+  default n
+  ---help---
+  This is a policy for testing purpose. This means that the framework
+  developer can directly put the hands inside to change internal function
+  calls arguments in order to test the correct behaviour of the BarbequeRTRM
+  internals involved.
+
