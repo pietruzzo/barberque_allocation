@@ -1,7 +1,5 @@
 config BBQUE_SCHEDPOL_GRIDBALANCE
   bool "GridBalance"
   default n
-  select BBQUE_PM
-  select BBQUE_PM_CPU
   ---help---
   Description...

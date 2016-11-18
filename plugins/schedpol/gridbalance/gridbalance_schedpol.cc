@@ -30,6 +30,10 @@
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_utils.h"
 
+#ifdef CONFIG_BBQUE_PM_CPU
+#include "bbque/pm/power_manager.h"
+#endif
+
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
 using namespace std::placeholders;
@@ -94,8 +98,14 @@ SchedulerPolicyIF::ExitCode_t GridBalanceSchedPol::Init() {
 	}
 	logger->Debug("Init: resources state view token = %ld", sched_status_view);
 
+	// Keep track of all the available CPU processing elements (cores)
+	if (proc_elements.empty())
+		proc_elements = sys->GetResources("sys.cpu.pe");
+
+#ifdef CONFIG_BBQUE_PM_CPU
 	// Sort processing elements (by temperature)
 	SortProcessingElements();
+#endif
 
 	// Compute the number of slots for priority-proportional assignments
 	if (sys->HasApplications(ApplicationStatusIF::READY))
@@ -105,17 +115,23 @@ SchedulerPolicyIF::ExitCode_t GridBalanceSchedPol::Init() {
 	return SCHED_OK;
 }
 
+#ifdef CONFIG_BBQUE_PM_CPU
 
 void GridBalanceSchedPol::SortProcessingElements() {
-	if (proc_elements.empty())
-		proc_elements = sys->GetResources("sys.cpu.pe");
 
 	proc_elements.sort(bbque::res::CompareTemperature);
 	for (auto & pe: proc_elements)
 		logger->Debug("<%s> : %.0f C",
 			pe->Path().c_str(),
 			pe->GetPowerInfo(PowerManager::InfoType::TEMPERATURE));
+
+	uint32_t temp_mean;
+	PowerManager & pm(PowerManager::GetInstance());
+	pm.GetTemperature(ra.GetPath("sys.cpu.pe"), temp_mean);
+	logger->Debug("Init: <sys.cpu.pe> mean temperature = %d", temp_mean);
 }
+
+#endif // CONFIG_BBQUE_PM_CPU
 
 
 SchedulerPolicyIF::ExitCode_t
