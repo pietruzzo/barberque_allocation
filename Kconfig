@@ -7,16 +7,17 @@ menu "Platform Setup"
 
 choice
   prompt "Platform Layout Parser"
-  config BBQUE_PIL_LEGACY
-    bool "Legacy BPL Parser"
-    ---help---
-    The old parser for BarbequeRTRM Platform Layout files (under pil directory)
 
   config BBQUE_PIL_LOADER
     bool "Platform Loader"
     ---help---
     The new platform loader for BarbequeRTRM Platform Layout files, that enable also
     multi-systems environment.
+
+  config BBQUE_PIL_LEGACY
+    bool "Legacy BPL Parser"
+    ---help---
+    The old parser for BarbequeRTRM Platform Layout files (under pil directory)
 
 endchoice
 
@@ -86,6 +87,7 @@ endmenu # Linux Control Groups
 
 config BBQUE_LINUX_PROC_LISTENER
   bool "Linux Process Listener"
+  default n
   ---help---
   Enables BarbequeRTRM to monitor the status of other processes running
   on the machine.
@@ -188,7 +190,7 @@ endmenu # PIL Configuration
 # Policies
 ################################################################################
 
-menu "Optimization Policy"
+menu "Resource Allocation Policies"
   source "barbeque/plugins/schedpol/Kconfig"
 endmenu
 
@@ -215,7 +217,6 @@ choice
     bool "FIFO based"
     ---help---
     Use the FIFO based RPC channel
-
 endchoice
 
 config BBQUE_RPC_TIMEOUT
@@ -370,7 +371,7 @@ config BBQUE_APP_PRIO_LEVELS
 
 config BBQUE_RESOURCE_MAX_NUM
   int "Number of Resources per Type"
-  default 16
+  default 32
   ---help---
   The maximum number of resources per resource type.
 
@@ -409,7 +410,6 @@ config BBQUE_EM
   The events archive can be then plotted by using the Event Viewer tool.
 
   If unsure say no, this will disable all the EM related features.
-
 
 
 endmenu # Advanced options
