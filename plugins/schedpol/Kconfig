@@ -81,7 +81,6 @@ choice
     bool "Perdetemp"
   config BBQUE_SCHEDPOL_DEFAULT_TEST
     bool "Test"
-    select BBQUE_SCHEDPOL_TEST
     depends on BBQUE_SCHEDPOL_TEST
 ##NP
 
