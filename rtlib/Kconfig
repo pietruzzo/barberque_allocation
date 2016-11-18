@@ -1,0 +1,134 @@
+choice
+  prompt "RPC Channel"
+
+  config BBQUE_RPC_FIFO
+    bool "FIFO based"
+    ---help---
+    Use the FIFO based RPC channel
+endchoice
+
+config BBQUE_RPC_TIMEOUT
+  int "RPC Channel Timeout"
+  default 5000
+  ---help---
+  The amount of time (in seconds) after which a not responding application
+  must be considered disabled.
+
+config BBQUE_RTLIB_PERF_SUPPORT
+  bool "Performance Counters Profiling Support"
+  depends on TARGET_LINUX
+  default y
+  ---help---
+  Build the Run-Time Library (RTLib) with support for Performance Counters.
+  These counters allows an application, which has been integrated with the
+  RTLib, to collect transparently a set of profiling information related
+  to the run-time execution.
+
+  This option is useful to port easily the RTLib on platforms not supporting
+  performance counters, such as some Android devices with older kernels.
+
+config BBQUE_RTLIB_CGROUPS_SUPPORT
+  bool "CGroups Profiling Support"
+  depends on TARGET_LINUX
+  depends on !BBQUE_TEST_PLATFORM_DATA
+  default n if BBQUE_TEST_PLATFORM_DATA
+  default y
+  ---help---
+  Build the Run-Time Library (RTLib) with support for CGroups.
+  This framework allows an application, which has been integrated with the
+  RTLib, to collect transparently a set of profiling information related
+  to the run-time execution.
+
+  This option is useful to port easily the RTLib on platforms not supporting
+  or using CGroups for run-time resources management, such as some Android
+  devices.
+
+config BBQUE_RTLIB_UNMANAGED_SUPPORT
+  bool "Unmanaged Applications Support"
+  depends on TARGET_LINUX
+  default y
+  ---help---
+  Build the Run-Time Library (RTLib) with support for UNMANAGED applications.
+
+  An application running in UNMANAGED mode is not controlled by the BarbequRTRM and
+  its automatically configured by the RTLib to run in AWM 0 (by default).
+  Once this support is enabled, an application could be executed un UNMANAGED mode
+  by setting the "U" flag in the BBQUE_RTLIB_OPTS environment variable.
+  Such flag could be followed by the ID of the AWM the application should be configured
+  to run into, for example:
+    BBQUE_RTLIB_OPTS="U3"
+  will run the application in AWM 3.
+
+  This option is useful to run applications without BarbequeRTRM control, for example to
+  easily support Design Space Exploration (DSE) or the initial development stages of
+  a new application.
+
+  Say NO to this option if unsure.
+
+menu "Performance API Configuration"
+
+config BBQUE_RTLIB_RTPROF_REARM_TIME_MS
+  int "Runtime Profiles Forwarding Rearm Time [ms]"
+  default 1000
+  ---help---
+  Each time the Runtime Library forwards a runtime profile to the BarbequeRTRM,
+  the forwarding is inhibited to avoid high forwarding rates. By changing
+  this option, the inhibition time can be changed. Note that the value is
+  expressed in milliseconds.
+
+config BBQUE_RTLIB_RTPROF_WAIT_FOR_SYNC_MS
+  int "Runtime Profiles Forwarding Wait For Sync Time [ms]"
+  default 5000
+  ---help---
+  Each time the Runtime Library forwards a runtime profile to the BarbequeRTRM,
+  the forwarding is inhibited until the BarbequeRTRM modifies the resource allocation.
+  If the BarbequeRTRM does not change the allocation for a certain period of time,
+  the Runtime Library become once again able to forward runtime profiles.
+
+endmenu # Performance
+
+comment "Advanced Options"
+
+config BBQUE_YM_SYNC_FORCE
+  bool "Synchronization Point forcing"
+  default n
+  ---help---
+  Enable the Sync Point forcing via Synchronization Manager and RTLib.
+
+  By selecting this option, the Synchronization Manager (YM) enforce EXCs
+  reconfiguration to be aligned with the synchronization latency defined by
+  applications being reconfigured.
+  The synchronization latency is the time delay required by an application to
+  be in a synchronization point, i.e. complete the current run and being ready
+  to start a new one.
+
+  In general this option could be keept disabled, since it is mandatory just
+  on few specific platforms and programming paradigms combinations.
+  Specifically, it should be explicitly enabled just when a resource
+  contention treat could be expected on a specific target platform or
+  programming paradigm.
+
+  NOTE: disabling Sync Point Enforcing is corrently not completely safe and
+        could lead to a reconfiguration miss for some applications.
+        Use this feature at your own risk.
+
+  If unsure, select N
+
+config BBQUE_YP_SASB_ASYNC
+  bool "Parallel Re-configurations"
+  default n if TARGET_ANDROID
+  default y
+  ---help---
+  Build the SASM policy with support for asynchronous protocol calls.
+
+  By selecting this option, the synchronization protocol is executed with
+  asynchronous calls which means that the interaction with applications to be
+  re-configured is parallelized, i.e. each protocol requets is managed by a
+  dedicated thread and all them runs in parallel.
+
+  Select this option if you plan to run the BarbequeRTRM daemon on a multi-core
+  host machine and with a average high number of concurrent applications.
+
+  If unsure, select Y. Select N for Android targets.
+
+
