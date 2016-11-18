@@ -2,4 +2,11 @@ config BBQUE_SCHEDPOL_GRIDBALANCE
   bool "GridBalance"
   default y
   ---help---
-  Description...
+  This simple policy assigns an amount of CPU quota / number of CPU cores to
+  the active applications which is proportional to the application priority level.
+  This means that priority 0 applications will receive a CPU partition bigger
+  than application featuring lower priority values.
+  If the CPU Power Management support has been enabled, the policy will also consider
+  the temperature of the cores, in order to perform a mapping that could balance
+  the thermal profile.
+

@@ -4,4 +4,11 @@ config BBQUE_SCHEDPOL_TEMPURA
   select BBQUE_PM
   select BBQUE_PM_CPU
   ---help---
-  Description...
+  The policy sets an upper bound of CPU quota, given a temperature constraint
+  (maximum CPU temperature allowed) and optionally and energy budget constraint.
+  The latter is derived from the need of guaranteeing that, while battery-powered,
+  the system will stay on for a target amount of time.
+
+  The CPU upper bound then is partitioned among the active applications in a way
+  proportional to the priority level.
+ 
