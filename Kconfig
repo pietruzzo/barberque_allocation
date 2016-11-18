@@ -195,14 +195,6 @@ menu "Resource Allocation Policies"
 endmenu
 
 
-################################################################################
-# Recipe loader
-################################################################################
-
-menu "Recipe Loader"
-  source "barbeque/plugins/rloader/Kconfig"
-endmenu
-
 
 ################################################################################
 # RTLib
@@ -226,6 +218,10 @@ config BBQUE_BUILD_DEBUG
 
   This will produce a version of both the daemon and the RTLib with much more
   logging messages and debug symbols, which is suitable for debugging purposes.
+
+menu "Recipe Loader"
+  source "barbeque/plugins/rloader/Kconfig"
+endmenu
 
 config BBQUE_APP_PRIO_LEVELS
   int "Number of Priority Levels"
