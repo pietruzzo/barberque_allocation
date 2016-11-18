@@ -132,7 +132,7 @@ PowerManager::~PowerManager() {
 
 
 PowerManager::PMResult PowerManager::GetLoad(
-		ResourcePathPtr_t const & rp, uint32_t &perc) {
+		br::ResourcePathPtr_t const & rp, uint32_t &perc) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -150,7 +150,7 @@ PowerManager::PMResult PowerManager::GetLoad(
 
 
 PowerManager::PMResult PowerManager::GetTemperature(
-		ResourcePathPtr_t const & rp, uint32_t &celsius) {
+		br::ResourcePathPtr_t const & rp, uint32_t &celsius) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -168,7 +168,7 @@ PowerManager::PMResult PowerManager::GetTemperature(
 
 
 PowerManager::PMResult
-PowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) {
+PowerManager::GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t &khz) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -186,7 +186,7 @@ PowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) {
 
 PowerManager::PMResult
 PowerManager::GetClockFrequencyInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &khz_min,
 		uint32_t &khz_max,
 		uint32_t &khz_step) {
@@ -208,7 +208,7 @@ PowerManager::GetClockFrequencyInfo(
 
 PowerManager::PMResult
 PowerManager::GetAvailableFrequencies(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		std::vector<uint32_t> & freqs) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
@@ -226,7 +226,7 @@ PowerManager::GetAvailableFrequencies(
 }
 
 PowerManager::PMResult
-PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
+PowerManager::SetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t khz) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -245,7 +245,7 @@ PowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz) {
 
 PowerManager::PMResult
 PowerManager::SetClockFrequency(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t min_khz, uint32_t max_khz) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
@@ -320,7 +320,7 @@ PowerManager::SetClockFrequencyGovernor(
 
 
 PowerManager::PMResult
-PowerManager::GetVoltage(ResourcePathPtr_t const & rp, uint32_t &volt) {
+PowerManager::GetVoltage(br::ResourcePathPtr_t const & rp, uint32_t &volt) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -335,7 +335,7 @@ PowerManager::GetVoltage(ResourcePathPtr_t const & rp, uint32_t &volt) {
 
 PowerManager::PMResult
 PowerManager::GetVoltageInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &volt_min,
 		uint32_t &volt_max,
 		uint32_t &volt_step) {
@@ -354,7 +354,7 @@ PowerManager::GetVoltageInfo(
 
 PowerManager::PMResult
 PowerManager::GetFanSpeed(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t &value) {
 	switch (rp->ParentType(rp->Type())) {
@@ -371,7 +371,7 @@ PowerManager::GetFanSpeed(
 
 PowerManager::PMResult
 PowerManager::GetFanSpeedInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &rpm_min,
 		uint32_t &rpm_max,
 		uint32_t &rpm_step) {
@@ -389,7 +389,7 @@ PowerManager::GetFanSpeedInfo(
 
 PowerManager::PMResult
 PowerManager::SetFanSpeed(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t value) {
 	switch (rp->ParentType(rp->Type())) {
@@ -405,7 +405,7 @@ PowerManager::SetFanSpeed(
 }
 
 PowerManager::PMResult
-PowerManager::ResetFanSpeed(ResourcePathPtr_t const & rp) {
+PowerManager::ResetFanSpeed(br::ResourcePathPtr_t const & rp) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -420,7 +420,7 @@ PowerManager::ResetFanSpeed(ResourcePathPtr_t const & rp) {
 
 
 PowerManager::PMResult
-PowerManager::GetPowerUsage(ResourcePathPtr_t const & rp, uint32_t &mwatt) {
+PowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t &mwatt) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -438,7 +438,7 @@ PowerManager::GetPowerUsage(ResourcePathPtr_t const & rp, uint32_t &mwatt) {
 
 PowerManager::PMResult
 PowerManager::GetPowerInfo(
-		ResourcePathPtr_t const & rp,
+		br::ResourcePathPtr_t const & rp,
 		uint32_t &mwatt_min,
 		uint32_t &mwatt_max) {
 	switch (rp->ParentType(rp->Type())) {
@@ -454,7 +454,7 @@ PowerManager::GetPowerInfo(
 }
 
 PowerManager::PMResult
-PowerManager::GetPowerState(ResourcePathPtr_t const & rp, uint32_t &state) {
+PowerManager::GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t &state) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -469,7 +469,7 @@ PowerManager::GetPowerState(ResourcePathPtr_t const & rp, uint32_t &state) {
 
 PowerManager::PMResult
 PowerManager::GetPowerStatesInfo(
-	ResourcePathPtr_t const & rp,
+	br::ResourcePathPtr_t const & rp,
 	uint32_t & min, uint32_t & max, int & step) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
@@ -484,7 +484,7 @@ PowerManager::GetPowerStatesInfo(
 }
 
 PowerManager::PMResult
-PowerManager::SetPowerState(ResourcePathPtr_t const & rp, uint32_t state) {
+PowerManager::SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -499,7 +499,7 @@ PowerManager::SetPowerState(ResourcePathPtr_t const & rp, uint32_t state) {
 
 
 PowerManager::PMResult
-PowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, uint32_t &state) {
+PowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &state) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -513,7 +513,7 @@ PowerManager::GetPerformanceState(ResourcePathPtr_t const & rp, uint32_t &state)
 }
 
 PowerManager::PMResult
-PowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, uint32_t &count) {
+PowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
@@ -527,7 +527,9 @@ PowerManager::GetPerformanceStatesCount(ResourcePathPtr_t const & rp, uint32_t &
 }
 
 PowerManager::PMResult
-PowerManager::SetPerformanceState(ResourcePathPtr_t const & rp, uint32_t state) {
+PowerManager::SetPerformanceState(
+		br::ResourcePathPtr_t const & rp,
+		uint32_t state) {
 	switch (rp->ParentType(rp->Type())) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
