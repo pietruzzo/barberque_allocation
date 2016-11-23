@@ -5,24 +5,24 @@
 
 menu "Platform Setup"
 
-choice
-  prompt "Platform Layout Parser"
-
-  config BBQUE_PIL_LOADER
-    bool "Platform Loader"
-    ---help---
-    The new platform loader for BarbequeRTRM Platform Layout files, that enable also
-    multi-systems environment.
-
-  config BBQUE_PIL_LEGACY
-    bool "Legacy BPL Parser"
-    ---help---
-    The old parser for BarbequeRTRM Platform Layout files (under pil directory)
-
-endchoice
-
 menu "Platform Loader"
-  depends on BBQUE_PIL_LOADER
+
+  choice
+    prompt "Layout Parser"
+
+    config BBQUE_PIL_LOADER
+      bool "Platform Loader"
+      ---help---
+      The new platform loader for BarbequeRTRM Platform Layout files, that enable also
+      multi-systems environment.
+
+    config BBQUE_PIL_LEGACY
+      bool "Legacy BPL Parser"
+      ---help---
+      The old parser for BarbequeRTRM Platform Layout files (under pil directory)
+  endchoice
+
+ # depends on BBQUE_PIL_LOADER
   source "barbeque/plugins/ploader/Kconfig"
 endmenu
 
