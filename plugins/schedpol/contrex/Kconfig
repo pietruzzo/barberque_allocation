@@ -2,4 +2,11 @@ config BBQUE_SCHEDPOL_CONTREX
   bool "Contrex"
   default n
   ---help---
-  Description...
+  This policy is for mixed-criticaly embedded systems, featuring
+  a multi-core CPU.
+  The policy labels the prio=0 applications has 'critical', while all the
+  other priority levels are considered 'non-critical'.
+  The available CPU quota is distributed among the applications reserving
+  for each critical one 1 core (100% quota) at most. The remaining quota
+  is then evenly distributed among non-critical applications.
+

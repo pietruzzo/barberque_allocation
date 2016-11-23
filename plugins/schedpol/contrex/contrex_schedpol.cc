@@ -153,8 +153,7 @@ inline uint32_t ContrexSchedPol::ScheduleCritical()
 	uint32_t proc_quota = 0;
 
 	if ((((proc_total / 100) <= nr_critical) &&
-		((proc_total % 100) == 0)) ||
-			(nr_non_critical == 0))
+		((proc_total % 100) == 0)) || (nr_non_critical == 0))
 		proc_quota = proc_total / nr_critical;
 	else
 		proc_quota = 100;
@@ -202,7 +201,6 @@ inline uint32_t ContrexSchedPol::SchedulePriority(
 }
 
 
-
 SchedulerPolicyIF::ExitCode_t ContrexSchedPol::ScheduleApplication(
 		bbque::app::AppCPtr_t papp,
 		uint32_t proc_quota)
@@ -227,30 +225,12 @@ SchedulerPolicyIF::ExitCode_t ContrexSchedPol::ScheduleApplication(
 	ref_num = pawm->BindResource(br::ResourceType::CPU, R_ID_ANY, 1, ref_num);
 	auto resource_path = std::make_shared<bbque::res::ResourcePath>("sys0.cpu1.pe");
 
-/*
-	br::ResourceBitset pes;
-	pes.Set(7);
-
-	ref_num = pawm->BindResource(resource_path, pes, ref_num);
-	logger->Info("Reference number for binding: %d", ref_num);
-
-	pes.Set(11);
-	ref_num = pawm->BindResource(resource_path, pes, ref_num);
-	logger->Info("Reference number for binding: %d", ref_num);
-*/
 	bbque::app::Application::ExitCode_t app_result =
 		papp->ScheduleRequest(pawm, sched_status_view, ref_num);
 	if (app_result != bbque::app::Application::APP_SUCCESS) {
 		logger->Error("Schedule: scheduling of [%s] failed", papp->StrId());
 		return SCHED_ERROR;
 	}
-
-	/*
-	// Enqueue scheduling entity
-	SchedEntityPtr_t psched = std::make_shared<SchedEntity_t>(
-			papp, pawm, R_ID_ANY, 0);
-	entities.push_back(psched);
-	*/
 
 	return SCHED_OK;
 }
