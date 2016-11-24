@@ -6,10 +6,10 @@ if (NOT CONFIG_BBQUE_SCHEDPOL_CONTREX)
 endif(NOT CONFIG_BBQUE_SCHEDPOL_CONTREX)
 
 # Set the macro for the scheduling policy loading
-if (CONFIG_SCHEDPOL_DEFAULT_CONTREX)
+if (CONFIG_BBQUE_SCHEDPOL_DEFAULT_CONTREX)
   set (BBQUE_SCHEDPOL_DEFAULT "contrex" CACHE STRING
 	  "Setting scheduling policy name" FORCE)
-endif (CONFIG_SCHEDPOL_DEFAULT_CONTREX)
+endif (CONFIG_BBQUE_SCHEDPOL_DEFAULT_CONTREX)
 
 set(PLUGIN_CONTREX_SRC contrex_schedpol contrex_plugin)
 

@@ -6,10 +6,10 @@ if (NOT CONFIG_BBQUE_SCHEDPOL_CLOVES)
 endif(NOT CONFIG_BBQUE_SCHEDPOL_CLOVES)
 
 # Set the macro for the scheduling policy loading
-if (CONFIG_SCHEDPOL_DEFAULT_CLOVES)
+if (CONFIG_BBQUE_SCHEDPOL_DEFAULT_CLOVES)
   set (BBQUE_SCHEDPOL_DEFAULT "cloves" CACHE STRING
 	  "Setting scheduling policy name" FORCE)
-endif (CONFIG_SCHEDPOL_DEFAULT_CLOVES)
+endif (CONFIG_BBQUE_SCHEDPOL_DEFAULT_CLOVES)
 
 set(PLUGIN_CLOVES_SRC cloves_schedpol cloves_plugin)
 

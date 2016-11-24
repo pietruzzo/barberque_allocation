@@ -6,10 +6,10 @@ if (NOT CONFIG_BBQUE_SCHEDPOL_TEMPURA)
 endif(NOT CONFIG_BBQUE_SCHEDPOL_TEMPURA)
 
 # Set the macro for the scheduling policy loading
-if (CONFIG_SCHEDPOL_DEFAULT_TEMPURA)
+if (CONFIG_BBQUE_SCHEDPOL_DEFAULT_TEMPURA)
   set (BBQUE_SCHEDPOL_DEFAULT "tempura" CACHE STRING
 	  "Setting scheduling policy name" FORCE)
-endif (CONFIG_SCHEDPOL_DEFAULT_TEMPURA)
+endif (CONFIG_BBQUE_SCHEDPOL_DEFAULT_TEMPURA)
 
 set(PLUGIN_TEMPURA_SRC tempura_schedpol tempura_plugin)
 
