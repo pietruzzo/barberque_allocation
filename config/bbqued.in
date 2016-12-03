@@ -156,9 +156,11 @@ setup() {
 		[ ! -z "@CONFIG_BBQUE_PIL_LEGACY@" ] && \
 			bbqued_info "Compiling PIL Layout [$PILSETUP]..."
 
+		SUDO_USER_GROUP=`id -Gn $SUDO_USER | cut -d' ' -f1`
+
 		$BBQUE_PILPARSER \
 				-v BBQUE_UID="$SUDO_USER" \
-				-v BBQUE_GID="$SUDO_USER" \
+				-v BBQUE_GID="$SUDO_USER_GROUP" \
 				-v BBQUE_PLAT_CPUS="$PLAT_CPUS" \
 				-v BBQUE_PLAT_MEMS="$PLAT_MEMS" \
 				-v BBQUE_FEAT_CPUQ="$CGROUP_FEATURES_CPUQ" \
