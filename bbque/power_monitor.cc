@@ -144,32 +144,35 @@ void PowerMonitor::Task() {
 	std::vector<std::thread> samplers(nr_threads);
 
 	uint16_t nr_resources_to_monitor = wm_info.resources.size();
+	uint16_t nr_resources_per_thread = nr_resources_to_monitor;
 	uint16_t nr_resources_left = 0;
 	if (nr_resources_to_monitor > nr_threads) {
-		nr_resources_to_monitor /= nr_threads;
-		nr_resources_left = wm_info.resources.size() % nr_threads;
+		nr_resources_per_thread = nr_resources_to_monitor / nr_threads;
+		nr_resources_left = nr_resources_to_monitor % nr_threads;
 	}
 	else
 		nr_threads = 1;
 	logger->Debug("Monitor: nr_threads=%d nr_resources_to_monitor=%d",
 		nr_threads, nr_resources_to_monitor);
 
-	uint16_t nt = 0;
+	uint16_t nt = 0, last_resource_id = 0;
 	for (; nt < nr_threads; ++nt) {
-		logger->Debug("Starting monitoring thread %d...", nt);
+		logger->Debug("Monitor: starting thread %d...", nt);
+		last_resource_id += nr_resources_per_thread;
 		samplers.push_back(std::thread(
 			&PowerMonitor::SampleResourcesStatus, this,
-			nt * nr_resources_to_monitor,
-			nt + nr_resources_to_monitor));
+			nt * nr_resources_per_thread,
+			last_resource_id));
+
 	}
 	// The number of resources is not divisible by the number of threads...
 	// --> spawn one more thread
 	if (nr_resources_left > 0) {
-		logger->Debug("Starting monitoring thread %d [extra]...", nr_threads);
+		logger->Debug("Monitor: starting thread %d [extra]...", nr_threads);
 		samplers.push_back(std::thread(
 			&PowerMonitor::SampleResourcesStatus, this,
-			nr_threads * nr_resources_to_monitor,
-			nr_resources_left));
+			nr_threads * nr_resources_per_thread,
+			nr_resources_to_monitor));
 	}
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
@@ -296,25 +299,29 @@ void PowerMonitor::SampleBatteryStatus() {
 
 void  PowerMonitor::SampleResourcesStatus(
 		uint16_t first_resource_index,
-		uint16_t nr_resources_to_monitor) {
+		uint16_t last_resource_index) {
 	PowerManager::SamplesArray_t samples;
 	PowerManager::InfoType info_type;
+	uint16_t thd_id = 0;
+	if (last_resource_index != first_resource_index)
+		thd_id = first_resource_index / (last_resource_index - first_resource_index);
+	else
+		thd_id = first_resource_index;
+	logger->Debug("[T%d] monitoring resources in range [%d, %d)",
+		thd_id, first_resource_index, last_resource_index);
 
 	while (!done) {
 		if (events.none()) {
-			logger->Debug("PWR MNTR: No events to process [first=%d]",
+			logger->Debug("T{%d} no events to process",
 				first_resource_index);
 			Wait();
 		}
 		if (!events.test(WM_EVENT_UPDATE))
 			continue;
 
-		logger->Debug("PWR MNTR: resource@[%d] nr_resources=%d",
-			first_resource_index, nr_resources_to_monitor);
-
 		// Power status monitoring over all the registered resources
 		uint16_t i = first_resource_index;
-		for (; i < nr_resources_to_monitor; ++i) {
+		for (; i < last_resource_index; ++i) {
 			br::ResourcePathPtr_t const & r_path(wm_info.resources[i].path);
 			br::ResourcePtr_t & rsrc(wm_info.resources[i].resource_ptr);
 
@@ -326,19 +333,25 @@ void  PowerMonitor::SampleResourcesStatus(
 			uint info_idx   = 0;
 			uint info_count = 0;
 
+			logger->Debug("[T%d] monitoring <%s>",
+				thd_id, r_path->ToString().c_str());
+
 			for (; info_idx < PowerManager::InfoTypeIndex.size() &&
 					info_count < rsrc->GetPowerInfoEnabledCount();
 						++info_idx, ++info_count) {
 				// Check if the power profile information has been required
 				info_type = PowerManager::InfoTypeIndex[info_idx];
-				if (rsrc->GetPowerInfoSamplesWindowSize(info_type) <= 0)
+				if (rsrc->GetPowerInfoSamplesWindowSize(info_type) <= 0) {
+					logger->Warn("[T%d] power profile not enabled for %d",
+						thd_id, rsrc->Path());
 					continue;
+				}
 
 				// Call power manager get function and update the resource
 				// descriptor power profile information
 				if (PowerMonitorGet[info_idx] == nullptr) {
-					logger->Warn("Power monitoring for %s not available",
-						PowerManager::InfoTypeStr[info_idx]);
+					logger->Warn("[T%d] power monitoring for %s not available",
+						thd_id, PowerManager::InfoTypeStr[info_idx]);
 					continue;
 				}
 				(pm.*(PMfunc) PowerMonitorGet[info_idx])(r_path, samples[info_idx]);
@@ -362,15 +375,17 @@ void  PowerMonitor::SampleResourcesStatus(
 
 			}
 
-			logger->Debug("PWR MNTR: Sampling [%s] ", log_inst_values.c_str());
-			logger->Debug("PWR MNTR: Sampling [%s] ", log_mean_values.c_str());
+			logger->Debug("[T%d] sampling <%s> ",
+				thd_id, log_inst_values.c_str());
+			logger->Debug("[T%d] sampling <%s> ",
+				thd_id, log_mean_values.c_str());
 			if (wm_info.log_enabled) {
 				DataLogWrite(r_path, log_file_values);
 			}
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
 	}
-	logger->Notice("PWR MNTR: Terminating monitor thread");
+	logger->Notice("[T%d] terminating monitor thread", thd_id);
 }
 
 /*******************************************************************

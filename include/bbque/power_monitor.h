@@ -269,8 +269,12 @@ private:
 
 	/**
 	 * @brief Sample the power-thermal status information
+	 *
+	 * @param first_resource_index First resource to monitor (from reg. index)
+	 * @param last_resource_index Last resource to monitor (from reg. array)
 	 */
-	void SampleResourcesStatus(uint16_t first, uint16_t count);
+	void SampleResourcesStatus(
+		uint16_t first_resource_index, uint16_t last_resource_index);
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
 	void SampleBatteryStatus();
