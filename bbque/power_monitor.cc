@@ -189,12 +189,12 @@ void PowerMonitor::Task() {
 int PowerMonitor::CommandsCb(int argc, char *argv[]) {
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
 	char * command_id  = argv[0] + cmd_offset;
-	logger->Info("PWR MNTR: Processing command [%s]", command_id);
+	logger->Info("Processing command [%s]", command_id);
 
 	// Data logging control
 	if (!strncmp(CMD_WM_DATALOG, command_id, strlen(CMD_WM_DATALOG))) {
 		if (argc != 2) {
-			logger->Error("PWR MNTR: Command [%s] missing action [start/stop/clear]",
+			logger->Error("Command [%s] missing action [start/stop/clear]",
 					command_id);
 			return 1;
 		}
@@ -214,7 +214,7 @@ int PowerMonitor::CommandsCb(int argc, char *argv[]) {
 			return SystemLifetimeCmdHandler(argv[1], "");
 	}
 #endif
-	logger->Error("PWR MNTR: Command unknown [%s]", command_id);
+	logger->Error("Command unknown [%s]", command_id);
 	return -1;
 }
 
@@ -227,7 +227,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	// Register all the resources referenced by the path specified
 	br::ResourcePtrList_t r_list(ra.GetResources(rp));
 	if (r_list.empty()) {
-		logger->Warn("PWR MNTR: No resources to monitor [%s]", rp->ToString().c_str());
+		logger->Warn("No resources to monitor <%s>", rp->ToString().c_str());
 		return ExitCode_t::ERR_RSRC_MISSING;
 	}
 
@@ -236,7 +236,8 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	// descriptor
 	for (br::ResourcePtr_t rsrc: r_list) {
 		rsrc->EnablePowerProfile(samples_window);
-		logger->Info("PWR MNTR: Registering [%s]...", rsrc->Path().c_str());
+		logger->Info("Registering <%s> for power monitoring...",
+			rsrc->Path().c_str());
 		wm_info.resources.push_back({ra.GetPath(rsrc->Path()), rsrc});
 		wm_info.log_fp.emplace(ra.GetPath(rsrc->Path()), new std::ofstream());
 	}
@@ -258,12 +259,12 @@ void PowerMonitor::Start(uint32_t period_ms) {
 		wm_info.period_ms = period_ms;
 
 	if (wm_info.started) {
-		logger->Warn("PWR MNTR: Already started (T = %d ms)...",
+		logger->Warn("Power logging already started (T = %d ms)...",
 			wm_info.period_ms);
 		return;
 	}
 
-	logger->Info("PWR MNTR: Starting (T = %d ms)...", wm_info.period_ms);
+	logger->Info("Starting power logging (T = %d ms)...", wm_info.period_ms);
 	events.set(WM_EVENT_UPDATE);
 	worker_status_cv.notify_all();
 }
@@ -272,11 +273,11 @@ void PowerMonitor::Start(uint32_t period_ms) {
 void PowerMonitor::Stop() {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	if (!wm_info.started) {
-		logger->Warn("PWR MNTR: Already stopped");
+		logger->Warn("Power logging already stopped");
 		return;
 	}
 
-	logger->Info("PWR MNTR: Stopping...");
+	logger->Info("Stopping power logging...");
 	events.reset(WM_EVENT_UPDATE);
 	worker_status_cv.notify_all();
 }
@@ -290,7 +291,7 @@ void PowerMonitor::SampleBatteryStatus() {
 		if (events.none())
 			Wait();
 		if (events.test(WM_EVENT_UPDATE))
-			logger->Debug("PWR MNT: Battery power = %d mW", pbatt->GetPower());
+			logger->Debug("[Tbatt] Battery power = %d mW", pbatt->GetPower());
 		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
 	}
 }
@@ -401,20 +402,20 @@ void PowerMonitor::DataLogWrite(
 	std::string file_path(wm_info.log_dir + "/");
 	file_path.append(rp->ToString());
 	file_path.append(".dat");
-	logger->Debug("PWR MNTR: Log file [%s]: %s",
+	logger->Debug("Writing to file [%s]: %s",
 		file_path.c_str(), data_line.c_str());
 
 	// Open file
 	wm_info.log_fp[rp]->open(file_path, om);
 	if (!wm_info.log_fp[rp]->is_open()) {
-		logger->Warn("PWR MNTR: Log file not open");
+		logger->Warn("Log file not open");
 		return;
 	}
 
 	// Write data line
 	*wm_info.log_fp[rp] << data_line << std::endl;
 	if (wm_info.log_fp[rp]->fail()) {
-		logger->Error("PWR MNTR: Log file write failed [F:%d, B:%d]",
+		logger->Error("Log file write failed [F:%d, B:%d]",
 			wm_info.log_fp[rp]->fail(),
 			wm_info.log_fp[rp]->bad());
 		*wm_info.log_fp[rp] << "Error";
