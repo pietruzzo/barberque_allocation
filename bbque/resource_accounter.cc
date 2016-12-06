@@ -554,8 +554,10 @@ inline ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 
 		// Query the availability of the resources in the list
 		avail = QueryStatus(r_assign->GetResourcesList(), RA_AVAIL, status_view, papp);
+		logger->Debug("CheckAvailability: <%s> mapped to %d resources",
+			rsrc_path->ToString().c_str(), r_assign->GetResourcesList().size());
 		if (avail < r_assign->GetAmount()) {
-			logger->Debug("CheckAvailability: exceeding request for <%s>"
+			logger->Debug("CheckAvailability: <%s> exceeding request"
 					"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "] ",
 					rsrc_path->ToString().c_str(),
 					r_assign->GetAmount(), avail,
