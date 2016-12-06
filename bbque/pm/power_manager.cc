@@ -491,6 +491,7 @@ PowerManager::SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state) {
 	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->SetPowerState(rp, state);
+
 	default:
 		break;
 	}
@@ -506,6 +507,9 @@ PowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &st
 	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetPerformanceState(rp, state);
+	case br::ResourceType::CPU:
+		if (!cpu) break;
+		return cpu->GetPerformanceState(rp, state);
 	default:
 		break;
 	}
@@ -520,6 +524,9 @@ PowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32
 	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->GetPerformanceStatesCount(rp, count);
+	case br::ResourceType::CPU:
+		if (!cpu) break;
+		return cpu->GetPerformanceStatesCount(rp, count);
 	default:
 		break;
 	}
@@ -536,6 +543,9 @@ PowerManager::SetPerformanceState(
 	case br::ResourceType::GPU:
 		if (!gpu) break;
 		return gpu->SetPerformanceState(rp, state);
+	case br::ResourceType::CPU:
+		if (!cpu) break;
+		return cpu->SetPerformanceState(rp, state);
 	default:
 		break;
 	}
