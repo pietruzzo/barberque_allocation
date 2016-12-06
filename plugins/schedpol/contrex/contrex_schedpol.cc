@@ -219,7 +219,8 @@ inline uint32_t ContrexSchedPol::SchedulePriority(
 	for (; papp; papp = sys->GetNextWithPrio(prio, app_it)) {
 		logger->Debug("Scheduling [%s] with <sys.cpu.pe>: %d",
 			papp->StrId(), proc_quota);
-		ScheduleApplication(papp, proc_quota);
+		if (ScheduleApplication(papp, proc_quota) != SCHED_OK)
+			continue;
 		proc_left = proc_left - proc_quota;
 	}
 	logger->Debug("SchedulePriority [%d]: <sys.cpu.pe>: %d left",
