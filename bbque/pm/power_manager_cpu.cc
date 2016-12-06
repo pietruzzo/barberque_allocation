@@ -21,6 +21,7 @@
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/iofs.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <boost/filesystem.hpp>
@@ -554,15 +555,23 @@ void CPUPowerManager::_GetAvailableFrequencies(
 	logger->Debug("<...pe%d> frequencies: %s", pe_id, cpu_available_freqs.c_str());
 
 	// Fill the vector with the integer frequency values
+	std::list<uint32_t> cpu_freqs_unsrt;
 	while (cpu_available_freqs.size() > 1) {
 		std::string freq(
 			br::ResourcePathUtils::SplitAndPop(cpu_available_freqs, " "));
 		try {
 			uint32_t freq_value = std::stoi(freq);
-			cpu_freqs->push_back(freq_value);
+			cpu_freqs_unsrt.push_back(freq_value);
+
+
 		}
 		catch (std::invalid_argument & ia) {}
 	}
+
+	// Sort the list of frequency in ascending order
+	cpu_freqs_unsrt.sort();
+	for(auto f: cpu_freqs_unsrt)
+		cpu_freqs->push_back(f);
 }
 
 
