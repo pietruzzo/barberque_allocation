@@ -132,6 +132,7 @@ private:
 
 	uint32_t nr_running;
 
+	std::vector<br::ResourcePathPtr_t> pe_paths;
 
 	/**
 	 * @brief Constructor
@@ -146,7 +147,12 @@ private:
 	 */
 	ExitCode_t Init();
 
-	void SetPowerConfiguration();
+	void InitProcessorsPath();
+
+	void InitPowerConfiguration(std::string const & governor);
+
+	void SetPowerConfiguration(uint32_t pstate);
+
 
 	uint32_t ScheduleCritical();
 

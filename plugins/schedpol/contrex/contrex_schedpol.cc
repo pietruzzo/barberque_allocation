@@ -99,9 +99,37 @@ ContrexSchedPol::ExitCode_t ContrexSchedPol::Init() {
 	logger->Info("Init: applications: READY=%d, RUNNING=%d",
 		nr_ready, nr_running);
 
+	// Initialize all the CPUs governor
+	if (pe_paths.empty())
+		InitPowerConfiguration("userspace");
+
 	return result;
 }
 
+
+void ContrexSchedPol::InitProcessorsPath()
+{
+	br::ResourcePathPtr_t r_path;
+	br::ResourcePtrList_t r_list(ra.GetResources("sys.cpu.pe"));
+	for (auto & resource_ptr: r_list) {
+		r_path = ra.GetPath(resource_ptr->Path());
+		if (r_path != nullptr) {
+			logger->Debug("Got the resource path object for %s ",
+				resource_ptr->Path().c_str());
+			pe_paths.push_back(r_path);
+		}
+	}
+}
+
+void ContrexSchedPol::InitPowerConfiguration(std::string const & cpufreq_gov)
+{
+	InitProcessorsPath();
+	PowerManager & pm(PowerManager::GetInstance());
+	for (auto & pe_path: pe_paths) {
+		logger->Debug("SetPowerConfig: setting governor: %s", cpufreq_gov.c_str());
+		pm.SetClockFrequencyGovernor(pe_path, cpufreq_gov);
+	}
+}
 
 
 SchedulerPolicyIF::ExitCode_t
@@ -116,7 +144,7 @@ ContrexSchedPol::Schedule(
 
 	Init();
 
-	SetPowerConfiguration();
+	SetPowerConfiguration(0);
 
 	uint32_t proc_left = proc_total, proc_quota = 0;
 
@@ -136,15 +164,13 @@ ContrexSchedPol::Schedule(
 	return result;
 }
 
-void ContrexSchedPol::SetPowerConfiguration()
+void ContrexSchedPol::SetPowerConfiguration(uint32_t perf_state)
 {
-	uint32_t cpu_freq = 700000;
-	logger->Debug("Schedule: CPU frequency setting: %d KHz", cpu_freq);
 	PowerManager & pm(PowerManager::GetInstance());
-	pm.SetClockFrequencyGovernor(ra.GetPath("sys0.cpu1.pe0"), "userspace");
-	pm.SetClockFrequency(ra.GetPath("sys0.cpu1.pe0"), cpu_freq);
-	pm.SetClockFrequencyGovernor(ra.GetPath("sys0.cpu1.pe1"), "userspace");
-	pm.SetClockFrequency(ra.GetPath("sys0.cpu1.pe1"), cpu_freq);
+	for (auto & pe_path: pe_paths) {
+		logger->Debug("SetPowerConfig: setting pstate: %d", perf_state);
+		pm.SetPerformanceState(pe_path, perf_state);
+	}
 }
 
 
