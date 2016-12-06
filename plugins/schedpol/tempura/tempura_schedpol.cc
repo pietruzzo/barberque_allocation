@@ -326,8 +326,8 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	// Power budget from thermal constraints
 	if (new_crit_temp < 1e3)
 		new_crit_temp *= 1e3;
-	temp_pwr_budget = pmodel->GetPowerFromTemperature(new_crit_temp);
 
+	temp_pwr_budget = pmodel->GetPowerFromTemperature(new_crit_temp, cpufreq_gov);
 	if (tot_resource_power_budget < 1) {
 		logger->Debug("PowerBudget: <%s> P(T)=[%d]mW, P(E)=[-]",
 				r_path->ToString().c_str(), temp_pwr_budget);
@@ -369,7 +369,7 @@ inline int64_t TempuraSchedPol::GetResourceBudget(
 	}
 #else
 	resource_budget = pmodel->GetResourceFromPower(
-			budgets[r_path]->power, resource_total);
+			budgets[r_path]->power, resource_total, cpufreq_gov);
 #endif
 
 	budgets[r_path]->curr = std::min<uint32_t>(resource_budget, resource_total);
