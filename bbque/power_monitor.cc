@@ -343,8 +343,8 @@ void  PowerMonitor::SampleResourcesStatus(
 				// Check if the power profile information has been required
 				info_type = PowerManager::InfoTypeIndex[info_idx];
 				if (rsrc->GetPowerInfoSamplesWindowSize(info_type) <= 0) {
-					logger->Warn("[T%d] power profile not enabled for %d",
-						thd_id, rsrc->Path());
+					logger->Warn("[T%d] power profile not enabled for %s",
+						thd_id, rsrc->Path().c_str());
 					continue;
 				}
 
