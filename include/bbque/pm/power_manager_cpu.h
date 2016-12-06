@@ -137,6 +137,44 @@ public:
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
+	/* ===========   Performance/power states  =========== */
+
+	/**
+	 * @brief Change the current CPU performance state
+	 *
+	 * This function has been implemented in order to provide an abstract
+	 * interface to the scheduling policy, such that it is possibile to get
+	 * the current frequency as the related position of the value in the
+	 * 'core_freqs' vector.
+	 *
+	 * @note it requires the cpufreq governor to be set to 'userspace' or
+	 * similar
+	 */
+	PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &value);
+
+	/**
+	 * @brief Get the number CPU performance states available
+	 *
+	 * This function returns the number of supported frequency values.
+	 *
+	 * @note it requires the cpufreq governor to be set to 'userspace' or
+	 * similar
+	 */
+	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count);
+
+	/**
+	 * @brief Change the current CPU performance state
+	 *
+	 * This function has been implemented in order to provide an abstract
+	 * interface to the scheduling policy, such that it is possibile to set
+	 * a frequency withouth knowing the exact value. The idea is to provide
+	 * an integer index as argument which corresponds to the position of the
+	 * frequency value in the related 'core_freqs' vector.
+	 *
+	 * @note it requires the cpufreq governor to be set to 'userspace' or
+	 * similar
+	 */
+	PMResult SetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t value);
 
 protected:
 

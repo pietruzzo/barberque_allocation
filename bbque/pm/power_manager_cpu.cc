@@ -666,4 +666,75 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyBoundaries(
 	return PMResult::OK;
 }
 
+/**********************************************************************
+ * Performance states                                                 *
+ **********************************************************************/
+
+PowerManager::PMResult CPUPowerManager::GetPerformanceState(
+		br::ResourcePathPtr_t const & rp, uint32_t &value) {
+	PowerManager::PMResult result;
+
+	uint32_t curr_freq;
+	result = GetClockFrequency(rp, curr_freq);
+	if (result != PMResult::OK)
+		return result;
+
+	std::vector<uint32_t> freqs;
+	result = GetAvailableFrequencies(rp, freqs);
+	if (result != PMResult::OK)
+		return result;
+
+	int curr_state = 0;
+	for (auto f: freqs) {
+		if (f == curr_freq) {
+			value = curr_state;
+			break;
+		}
+		else
+			curr_state++;
+	}
+
+	logger->Debug("<%s> current performance state: %d",
+		rp->ToString().c_str(), value);
+	return PMResult::OK;
+}
+
+PowerManager::PMResult CPUPowerManager::GetPerformanceStatesCount(
+		br::ResourcePathPtr_t const & rp, uint32_t & count) {
+	PowerManager::PMResult result;
+	std::vector<uint32_t> freqs;
+
+	result = GetAvailableFrequencies(rp, freqs);
+	if (result != PMResult::OK)
+		return result;
+
+	count = (uint32_t) freqs.size();
+	return PMResult::OK;
+}
+
+PowerManager::PMResult CPUPowerManager::SetPerformanceState(
+		br::ResourcePathPtr_t const & rp, uint32_t value) {
+	PowerManager::PMResult result;
+	std::vector<uint32_t> freqs;
+
+	result = GetAvailableFrequencies(rp, freqs);
+	if (result != PMResult::OK)
+		return result;
+
+	if (value >= freqs.size()) {
+		logger->Error("<%s> unsupported performance state value: %d",
+			rp->ToString().c_str(), value);
+		return PMResult::ERR_API_INVALID_VALUE;
+	}
+
+	result = SetClockFrequency(rp, freqs[value]);
+	if (result != PMResult::OK)
+		return result;
+
+	logger->Info("<%s> performance state set: %d",
+		rp->ToString().c_str(), value);
+
+	return PMResult::OK;
+}
+
 } // namespace bbque
