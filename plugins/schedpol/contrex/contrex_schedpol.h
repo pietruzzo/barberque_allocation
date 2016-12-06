@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <list>
 #include <memory>
+#include <vector>
 
 #include "bbque/configuration_manager.h"
 #include "bbque/scheduler_manager.h"

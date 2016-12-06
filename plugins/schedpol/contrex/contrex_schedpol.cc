@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <iostream>
 
+#include "bbque/binding_manager.h"
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/pm/power_manager.h"
@@ -231,7 +232,7 @@ SchedulerPolicyIF::ExitCode_t ContrexSchedPol::ScheduleApplication(
 		bbque::app::AppCPtr_t papp,
 		uint32_t proc_quota)
 {
-	// Build a new working mode featuring assigned resources
+	// AWM: build a new working mode
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	if (pawm == nullptr) {
 		pawm = std::make_shared<ba::WorkingMode>(
@@ -240,17 +241,27 @@ SchedulerPolicyIF::ExitCode_t ContrexSchedPol::ScheduleApplication(
 	else
 		pawm->ClearResourceRequests();
 
+	// AWM: adding resource request
 	logger->Debug("Schedule: [%s] adding the processing resource request...",
 		papp->StrId());
-
 	pawm->AddResourceRequest(
 		"sys0.cpu.pe", proc_quota, br::ResourceAssignment::Policy::SEQUENTIAL);
 
+	// Resource (CPU) binding
 	logger->Debug("Schedule: [%s] CPU binding...", papp->StrId());
-	int32_t ref_num = -1;
-	ref_num = pawm->BindResource(br::ResourceType::CPU, R_ID_ANY, 1, ref_num);
-	auto resource_path = std::make_shared<bbque::res::ResourcePath>("sys0.cpu1.pe");
+	BindingManager & bdm(BindingManager::GetInstance());
+	BindingMap_t & bindings(bdm.GetBindingOptions());
+	BBQUE_RID_TYPE bind_cpu_id = 0;
+	// Resource binding: getting the first CPU ID option
+	if (bindings.find(br::ResourceType::CPU) != bindings.end())
+		bind_cpu_id = bindings[br::ResourceType::CPU]->ids[0];
+	else
+		logger->Warn("Schedule: missing CPU binding options (setting to 0)");
 
+	int32_t ref_num = -1;
+	ref_num = pawm->BindResource(br::ResourceType::CPU, R_ID_ANY, bind_cpu_id, ref_num);
+
+	// Schedule request
 	bbque::app::Application::ExitCode_t app_result =
 		papp->ScheduleRequest(pawm, sched_status_view, ref_num);
 	if (app_result != bbque::app::Application::APP_SUCCESS) {
