@@ -124,7 +124,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 
 	// Thermal threshold
 	if (crit_temp == 0)
-		crit_temp = wm.GetThermalThreshold(WM_TEMP_CRITICAL_ID) * 1e3;
+		crit_temp = wm.GetThermalThreshold(WM_TEMP_CRITICAL_ID);
 
 	// System power budget
 	sys_power_budget = wm.GetSysPowerBudget();
@@ -300,9 +300,11 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 #else
 	PowerManager & pm(PowerManager::GetInstance());
 	pm.GetTemperature(r_path, curr_temp);
+	if (curr_temp > 1e3)
+		curr_temp /= 1e3;
 	pm.GetLoad(r_path, curr_load);
 #endif
-	logger->Debug("PowerBudget: <%s> TEMP_crit=[%d]  TEMP_curr=[%3d]",
+	logger->Debug("PowerBudget: <%s> TEMP_crit=[%d]C  TEMP_curr=[%3d]C",
 		r_path->ToString().c_str(), crit_temp, curr_temp);
 	logger->Debug("PowerBudget: <%s> prev_budget=%d  LOAD_curr=[%3d]",
 		r_path->ToString().c_str(), budgets[r_path]->curr, curr_load);
