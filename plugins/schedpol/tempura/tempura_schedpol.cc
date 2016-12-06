@@ -371,7 +371,7 @@ inline int64_t TempuraSchedPol::GetResourceBudget(
 #endif
 
 	budgets[r_path]->curr = std::min<uint32_t>(resource_budget, resource_total);
-	logger->Debug("Budget: <%s> P=[%4llu]mW, R=[%lu]",
+	logger->Debug("Budget: <%s> P=[%4lu]mW, R=[%lu]",
 			r_path->ToString().c_str(),
 			budgets[r_path]->power, budgets[r_path]->curr);
 	return budgets[r_path]->curr;
@@ -440,7 +440,7 @@ TempuraSchedPol::AssignWorkingMode(ba::AppCPtr_t papp) {
 	for (auto & entry: budgets) {
 		br::ResourcePathPtr_t const  & r_path(entry.first);
 		std::shared_ptr<BudgetInfo> & budget(entry.second);
-		logger->Debug("Assign: <%s> R_budget = % " PRIu64 "",
+		logger->Debug("Assign: <%s> R_budget = %lu",
 				r_path->ToString().c_str(), budget->curr);
 
 		// Slots to allocate for this resource binding domain
