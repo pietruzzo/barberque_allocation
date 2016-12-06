@@ -68,6 +68,14 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
+	PMResult GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius);
+
+
+	/* ===========  Frequency management =========== */
+
+	/**
+	 * @see class PowerManager
+	 */
 	PMResult GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz);
 
 	/**
@@ -85,10 +93,7 @@ public:
 			uint32_t khz_min,
 			uint32_t khz_max);
 
-	/**
-	 * @see class PowerManager
-	 */
-	PMResult GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius);
+
 
 	/**
 	 * @see class PowerManager
@@ -128,7 +133,8 @@ public:
 			int pe_id,
 			std::string const & governor);
 
-	/** Power consumption  */
+
+	/* ===========   Power consumption  =========== */
 
 	PMResult GetPowerUsage(
 			br::ResourcePathPtr_t const & rp, uint32_t & mwatt) {
@@ -229,7 +235,6 @@ protected:
 	 *  Set Cpufreq scaling governor for PE pe_id
 	 */
 	PMResult GetClockFrequencyGovernor(int pe_id, std::string & governor);
-
 };
 
 }
