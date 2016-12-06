@@ -46,7 +46,7 @@ public:
 		memset(value, '\0', len);
 		std::ifstream fd(filepath);
 		if (!fd.is_open()) {
-			fprintf(stderr, "File not found\n\n ");
+			fprintf(stderr, "File not found (%s)\n\n ", filepath.c_str());
 			return ExitCode_t::ERR_FILE_NOT_FOUND;
 		}
 		fd.read(value, len);
@@ -68,7 +68,7 @@ public:
 
 		std::ifstream fd(filepath);
 		if (!fd.is_open()) {
-			fprintf(stderr, "File not found\n\n ");
+			fprintf(stderr, "File not found (%s)\n\n ", filepath.c_str());
 			return ExitCode_t::ERR_FILE_NOT_FOUND;
 		}
 		while (!fd.eof()) {
