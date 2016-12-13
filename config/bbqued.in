@@ -48,11 +48,14 @@ PIL_GENERATE=$SYSROOT"/sbin/bbque-pil-generator"
 
 # Check mouting status of required controllers
 check_controllers() {
+
+	BBQUE_CGMOUNT_RESOLVED=$(readlink -f $BBQUE_CGMOUNT)
+
 	# Umount pre-existing unified hierarchies
-	EXISTING_M_POINT=$(mount | grep $BBQUE_CGMOUNT)
+	EXISTING_M_POINT=$(mount | grep $BBQUE_CGMOUNT_RESOLVED)
 	if [ "$EXISTING_M_POINT" != "" ]; then
 		bbqued_info "Umount pre-existing unified hierarchy"
-		sudo umount $BBQUE_CGMOUNT
+		sudo umount $BBQUE_CGMOUNT_RESOLVED
 	fi
 
 	# The [cpuset,memory,cpu,cpuacct] controller must be mounted on the same hierarchy
