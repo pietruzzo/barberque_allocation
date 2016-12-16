@@ -61,6 +61,10 @@ public:
 	virtual ExitCode_t MapResources(
 		AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
 
+
+	bool IsHighPerformance(
+			bbque::res::ResourcePathPtr_t const & path) const override;
+
 private:
 	TestPlatformProxy();
 

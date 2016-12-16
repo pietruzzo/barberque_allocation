@@ -99,6 +99,11 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::MapResources(
 	return PLATFORM_OK;
 }
 
+bool TestPlatformProxy::IsHighPerformance(
+			bbque::res::ResourcePathPtr_t const & path) const {
+	UNUSED(path);
+	return true;
+}
 
 }	// namespace pp
 }	// namespace bbque
