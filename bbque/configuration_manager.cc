@@ -33,9 +33,6 @@ ConfigurationManager::ConfigurationManager() :
 #ifdef BBQUE_DEBUG
 	//dbg_opts_desc("Debugging Options"),
 #endif
-#ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
-	tpd_opts_desc("TEST Platform Data Options"),
-#endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
 	cmd_opts_desc("") {
 
 	// BBQ core options (exposed to command line)
@@ -84,25 +81,6 @@ ConfigurationManager::ConfigurationManager() :
 	//all_opts_desc.add(dbg_opts_desc);
 	//cmd_opts_desc.add(dbg_opts_desc);
 #endif
-
-#ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
-	tpd_opts_desc.add_options()
-		("tpd.cpus", po::value<unsigned short>(&tpd_cpus_count)->
-			default_value(3),
-			"number of cpus (1..256, default: 3)")
-		("tpd.cmem", po::value<uint16_t>(&tpd_cpu_mem_mb)->
-			default_value(1024),
-			"amount [MB] of cpu-shared memory (1..65536, default: 1024 MB)")
-		("tpd.pes", po::value<unsigned short>(&tpd_pes_count)->
-			default_value(4),
-			"number of PEs per cpu (1..256, default: 4)")
-		("tpd.mem", po::value<uint32_t>(&tpd_sys_mem)->
-			default_value(8120),
-			"amount [MB] of system memory (1..2^32, default: 8120 MB)")
-		;
-	all_opts_desc.add(tpd_opts_desc);
-	cmd_opts_desc.add(tpd_opts_desc);
-#endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
 
 }
 

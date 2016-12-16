@@ -158,21 +158,6 @@ public:
 		return plugins_dir;
 	}
 
-#ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
-	inline uint8_t  TPD_CPUCount() const {
-		return tpd_cpus_count;
-	}
-	inline uint16_t TPD_CPUMem() const {
-		return tpd_cpu_mem_mb;
-	}
-	inline uint8_t  TPD_PEsCount() const {
-		return tpd_pes_count;
-	}
-	inline uint32_t TPD_SysMem() const {
-		return tpd_sys_mem;
-	}
-#endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
-
 private:
 
 	/**
@@ -197,17 +182,6 @@ private:
 	//options_description dbg_opts_desc;
 	//uint16_t test_run;
 #endif
-
-#ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
-	/**
-	 * The description of TEST platform data parameters
-	 */
-	options_description tpd_opts_desc;
-	unsigned short tpd_cpus_count;
-	uint16_t tpd_cpu_mem_mb;
-	unsigned short  tpd_pes_count;
-	uint32_t tpd_sys_mem;
-#endif // CONFIG_BBQUE_TEST_PLATFORM_DATA
 
 	/**
 	 * The description of command line available parameters
