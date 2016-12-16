@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system hostname="tpd" address="10.0.0.11">
+    <cpu arch="x86_64" id="0" socket_id="0" mem_id="0">
+        <pe id="0" core_id="0" share="100" partition="shared"/>
+        <pe id="1" core_id="1" share="100" partition="mdev"/>
+        <pe id="2" core_id="1" share="100" partition="mdev"/>
+        <pe id="3" core_id="1" share="100" partition="mdev"/>
+    </cpu>
+    <cpu arch="x86_64" id="1" socket_id="1" mem_id="1">
+        <pe id="0" core_id="0" share="100" partition="mdev"/>
+        <pe id="1" core_id="1" share="100" partition="mdev"/>
+        <pe id="2" core_id="1" share="100" partition="mdev"/>
+        <pe id="3" core_id="1" share="100" partition="mdev"/>
+    </cpu>
+    <mem id="0" quantity="1019892" unit="KB"/>
+    <mem id="1" quantity="1019892" unit="KB"/>
+</system>

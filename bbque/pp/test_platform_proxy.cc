@@ -34,45 +34,91 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::Setup(AppPtr_t papp) {
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData() {
 	logger->Info("PLAT TEST: LoadPlatformData()");
-	ConfigurationManager &cm(ConfigurationManager::GetInstance());
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	if (platformLoaded)
 		return PLATFORM_OK;
 
 	logger->Warn("Loading TEST platform data");
-	logger->Debug("CPUs          : %5d", cm.TPD_CPUCount());
-	logger->Debug("CPU memory    : %5d [MB]", cm.TPD_CPUMem());
-	logger->Debug("PEs per CPU   : %5d", cm.TPD_PEsCount());
-	logger->Debug("System memory : %5d", cm.TPD_SysMem());
 
-	char resourcePath[] = "sys0.cpu256.mem0";
-	//                     ........^
-	//                        8
-	// Registering CPUs, per-CPU memory and processing elements (cores)
-	logger->Debug("Registering resources:");
-	uint8_t p = 0;
-	for (uint8_t c = 0; c < cm.TPD_CPUCount(); ++c) {
-		snprintf(resourcePath+8, 8, "%d.mem0", c);
-		logger->Debug("  %s", resourcePath);
-		ra.RegisterResource(resourcePath, "MB", cm.TPD_CPUMem());
-
-		for (; p < cm.TPD_PEsCount() * (c+1); ++p) {
-			snprintf(resourcePath+8, 8, "%d.pe%d", c, p);
-			logger->Debug("  %s", resourcePath);
-			ra.RegisterResource(resourcePath, " ", 100);
-		}
+	const PlatformDescription *pd;
+	try {
+		pd = &this->GetPlatformDescription();
+	}
+	catch(const std::runtime_error& e) {
+		UNUSED(e);
+		logger->Fatal("Unable to get the PlatformDescription object");
+		return PLATFORM_LOADING_FAILED;
 	}
 
-	// Registering system memory
-	char sysMemPath[] = "sys0.mem0";
-	logger->Debug("  %s", sysMemPath);
-	ra.RegisterResource(sysMemPath, "MB", cm.TPD_SysMem());
+	for (const auto sys : pd->GetSystemsAll()) {
+		logger->Debug("[%s@%s] Scanning the CPUs...",
+				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+		for (const auto cpu : sys.GetCPUsAll()) {
+			ExitCode_t result = this->RegisterCPU(cpu);
+			if (unlikely(PLATFORM_OK != result)) {
+				logger->Fatal("Register CPU %d failed", cpu.GetId());
+				return result;
+			}
+		}
+		logger->Debug("[%s@%s] Scanning the memories...",
+				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+		for (const auto mem : sys.GetMemoriesAll()) {
+			ExitCode_t result = this->RegisterMEM(*mem);
+			if (unlikely(PLATFORM_OK != result)) {
+				logger->Fatal("Register MEM %d failed", mem->GetId());
+				return result;
+			}
+
+			if (sys.IsLocal()) {
+				logger->Debug("[%s@%s] is local",
+						sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+			}
+		}
+	}
 
 	platformLoaded = true;
 
 	return PLATFORM_OK;
 }
+
+TestPlatformProxy::ExitCode_t
+TestPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) {
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
+	for (const auto pe: cpu.GetProcessingElementsAll()) {
+		auto pe_type = pe.GetPartitionType();
+		if (PlatformDescription::MDEV == pe_type ||
+			PlatformDescription::SHARED == pe_type) {
+
+			const std::string resource_path = pe.GetPath();
+			const int share = pe.GetShare();
+
+			if (ra.RegisterResource(resource_path, "", share) == nullptr)
+				return PLATFORM_DATA_PARSING_ERROR;
+			logger->Debug("Registration of <%s>: %d", resource_path.c_str(), share);
+		}
+	}
+
+	return PLATFORM_OK;
+}
+
+
+TestPlatformProxy::ExitCode_t
+TestPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) {
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
+	std::string resource_path(mem.GetPath());
+	const auto q_bytes = mem.GetQuantity();
+
+	if (ra.RegisterResource(resource_path, "", q_bytes)  == nullptr)
+				return PLATFORM_DATA_PARSING_ERROR;
+
+	logger->Debug("Registration of <%s> %d bytes done",
+			resource_path.c_str(), q_bytes);
+
+	return PLATFORM_OK;
+}
+
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::Refresh() {
 	logger->Info("PLAT TEST: Refresh()");

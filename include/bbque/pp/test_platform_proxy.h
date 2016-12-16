@@ -66,7 +66,12 @@ public:
 			bbque::res::ResourcePathPtr_t const & path) const override;
 
 private:
+
 	TestPlatformProxy();
+
+	ExitCode_t RegisterCPU(const PlatformDescription::CPU &cpu);
+
+	ExitCode_t RegisterMEM(const PlatformDescription::Memory &mem);
 
 	/**
 	 * @brief The logger used by the worker thread
