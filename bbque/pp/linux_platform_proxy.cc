@@ -13,6 +13,7 @@
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
 #include <linux/version.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -26,7 +27,6 @@
 #include <linux/pkt_cls.h>
 #include <linux/rtnetlink.h>
 #include <netlink/ll_map.h>
-#include <net/if.h>
 
 #define NET_MAX_BANDWIDTH 1000000000000LL
 #define Q_HANDLE (0x100000)
