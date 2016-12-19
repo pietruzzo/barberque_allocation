@@ -22,7 +22,6 @@
 #include <linux/connector.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <proc/procps.h>
 #include <errno.h>
 #include <sstream>
 #include <fstream>
