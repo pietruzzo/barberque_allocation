@@ -189,6 +189,8 @@ void ProcessListener::Task(){
 					GetProcName(e->event_data.exec.process_pid).c_str(),
 					e->event_data.exit.exit_code);
 				break;
+			default:
+				break;
 			}
 		}
 	}
