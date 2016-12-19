@@ -47,6 +47,8 @@ public:
 	 */
 	~ProcessListener();
 
+	int Setup(std::string const & name, std::string const & logname);
+
 private:
 	/*** Constructor */
 	ProcessListener();

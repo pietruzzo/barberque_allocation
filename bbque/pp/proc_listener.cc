@@ -26,6 +26,8 @@
 #include <sstream>
 #include <fstream>
 
+#define MODULE_NAMESPACE "bq.pp.linux_ps"
+
 namespace bbque {
 
 ProcessListener & ProcessListener::GetInstance(){
@@ -47,8 +49,12 @@ ProcessListener::ProcessListener(){
 	sock = -1;
 	buffSize = getpagesize();
 	buf = new char[buffSize];
-	logger = bu::Logger::GetLogger("bq.pp.pl");
+	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Info("Linux Process Listener Started");
+
+	// Setup the worker thread (calling Task())
+	Worker::Setup(BBQUE_MODULE_NAME("pp.linux_ps"), MODULE_NAMESPACE);
+
 	/*
 	 * Initialization of Linux Connector Channel
 	 */
@@ -108,6 +114,7 @@ ProcessListener::ProcessListener(){
 }
 
 ProcessListener::~ProcessListener(){
+	Terminate();
 	if (sock!=-1)
 		close(sock);
 	delete[] buf;
