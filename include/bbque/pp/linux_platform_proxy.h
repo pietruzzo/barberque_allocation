@@ -10,6 +10,7 @@
 // The _types.h file must be included after the
 // constants define
 #include "bbque/pp/linux_platform_proxy_types.h"
+#include "bbque/pp/proc_listener.h"
 
 #include <bitset>
 
@@ -123,6 +124,10 @@ private:
 #endif
 
 	std::string memory_ids_all;
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+	ProcessListener & proc_listener;
+#endif
 
 //-------------------- METHODS
 

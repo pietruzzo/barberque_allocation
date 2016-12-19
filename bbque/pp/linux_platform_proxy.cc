@@ -59,7 +59,12 @@ LinuxPlatformProxy * LinuxPlatformProxy::GetInstance() {
 
 LinuxPlatformProxy::LinuxPlatformProxy() :
 	controller("cpuset"),
-	refreshMode(false) {
+	refreshMode(false)
+#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+	,
+	proc_listener(ProcessListener::GetInstance())
+#endif
+{
 
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(LINUX_PP_NAMESPACE);
@@ -78,6 +83,10 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	InitCoresType();
+#endif
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+	proc_listener.Start();
 #endif
 
 }
@@ -185,15 +194,13 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(AppPtr_t papp) noexcept
 void LinuxPlatformProxy::LoadConfiguration() noexcept {
 	po::options_description opts_desc("Linux Platform Proxy Options");
 	opts_desc.add_options()
-	(MODULE_CONFIG ".cfs_bandwidth.margin_pct",
-	po::value<int>
-	(&cfs_margin_pct)->default_value(0),
-	"The safety margin [%] to add for CFS bandwidth enforcement");
+		(MODULE_CONFIG ".cfs_bandwidth.margin_pct",
+		po::value<int> (&cfs_margin_pct)->default_value(0),
+		"The safety margin [%] to add for CFS bandwidth enforcement");
 	opts_desc.add_options()
-	(MODULE_CONFIG ".cfs_bandwidth.threshold_pct",
-	po::value<int>
-	(&cfs_threshold_pct)->default_value(100),
-	"The threshold [%] under which we enable CFS bandwidth enforcement");
+		(MODULE_CONFIG ".cfs_bandwidth.threshold_pct",
+		po::value<int> (&cfs_threshold_pct)->default_value(100),
+		"The threshold [%] under which we enable CFS bandwidth enforcement");
 	po::variables_map opts_vm;
 	ConfigurationManager::GetInstance().
 	ParseConfigurationFile(opts_desc, opts_vm);
@@ -296,7 +303,6 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 			logger->Error("PLAT LNX: Set CGroups FAILED");
 			return PLATFORM_MAPPING_FAILED;
 		}
-
 	}
 	logger->Debug("PLAT LNX: CGroup resource mapping DONE!");
 
@@ -305,22 +311,19 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 
 	br::ResourceBitset proc_elements =
 	        br::ResourceBinder::GetMask(
-		pres,
-		br::ResourceType::PROC_ELEMENT,
-		br::ResourceType::CPU,
-		R_ID_ANY,
-		papp,
-		rvt);
+				pres,
+				br::ResourceType::PROC_ELEMENT,
+				br::ResourceType::CPU,
+				R_ID_ANY,
+				papp, rvt);
 
 	br::ResourceBitset mem_nodes =
 	        br::ResourceBinder::GetMask(
-		pres,
-		br::ResourceType::MEMORY,
-		br::ResourceType::CPU,
-		R_ID_ANY,
-		papp,
-		rvt);
-
+				pres,
+				br::ResourceType::MEMORY,
+				br::ResourceType::CPU,
+				R_ID_ANY,
+				papp, rvt);
 
 	// Processing elements that have been allocated exclusively
 	br::ResourceBitset proc_elements_exclusive = proc_elements;
@@ -348,8 +351,10 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 			proc_elements.ToString().c_str(),
 			proc_elements_exclusive.ToString().c_str(),
 			mem_nodes.ToString().c_str());
-
-	papp->SetCGroupSetupData(proc_elements.ToULong(), mem_nodes.ToULong(), proc_elements_exclusive.ToULong());
+	papp->SetCGroupSetupData(
+			proc_elements.ToULong(),
+			mem_nodes.ToULong(),
+			proc_elements_exclusive.ToULong());
 #endif // CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 
 	return PLATFORM_OK;
