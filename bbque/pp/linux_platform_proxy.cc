@@ -901,7 +901,8 @@ uint64_t LinuxPlatformProxy::GetNetIFBandwidth(const std::string &ifname) const 
 
 	int err = ioctl(sock, SIOCETHTOOL, &ifr);
 	if (err) {
-		throw std::runtime_error("ioctl FAILED");
+		perror("ioctl FAILED");
+		return 0;
 	}
 
 	return ((uint64_t)edata.speed) * 1000000ULL;
