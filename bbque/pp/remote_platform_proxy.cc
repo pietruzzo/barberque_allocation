@@ -89,7 +89,7 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::MapResources(
 }
 
 
-bool RemotePlatformProxyManager::IsHighPerformance(
+bool RemotePlatformProxy::IsHighPerformance(
 		bbque::res::ResourcePathPtr_t const & path) const {
 	return false;
 }
