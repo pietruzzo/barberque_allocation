@@ -21,10 +21,13 @@
 
 #include <array>
 #include <cstdint>
+#include <map>
+#include <memory>
 #include <vector>
 
 #include "bbque/command_manager.h"
 #include "bbque/pm/model_manager.h"
+#include "bbque/res/resource_type.h"
 #include "bbque/utils/logging/logger.h"
 
 namespace bu = bbque::utils;
@@ -231,28 +234,19 @@ protected:
 	 */
 	std::unique_ptr<bu::Logger> logger;
 
-	/*
-	 * @brief A GPU specific PM provider
-	 *
-	 * NOTE: this implementation supports a single GPU vendor, which must be
-	 * defined at configuration time.
-	 */
-	std::unique_ptr<PowerManager> gpu;
-
-
-	/*
-	 * @brief A CPU specific PM provider
-	 *
-	 */
-	std::unique_ptr<PowerManager> cpu;
-
-
 	/**
 	 * @brief Available CPU frequency governors
 	 */
 	std::vector<std::string> cpufreq_governors;
 
-	/*
+private:
+
+	/**
+	 * @brief Device-specific power managers
+	 */
+	std::map<br::ResourceType, std::unique_ptr<PowerManager>> device_managers;
+
+	/**
 	 * @brief Command handler for setting a device fan speed
 	 *
 	 * @param rp The resource path referencing the device (e.g. sys0.gpu0)
