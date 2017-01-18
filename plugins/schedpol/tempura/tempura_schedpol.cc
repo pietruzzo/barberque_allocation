@@ -265,72 +265,73 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::ComputeBudgets() {
 
 	for (auto & entry: budgets) {
 		br::ResourcePathPtr_t const  & r_path(entry.first);
-		std::shared_ptr<BudgetInfo> & budget(entry.second);
+		std::shared_ptr<BudgetInfo> & budget_ptr(entry.second);
 	//	bw::ModelPtr_t pmodel(mm.GetModel("ARM Cortex A15"));
-		bw::ModelPtr_t pmodel(mm.GetModel(budgets[r_path]->model));
+		bw::ModelPtr_t pmodel(mm.GetModel(budget_ptr->model));
 		logger->Debug("Budget: <%s> using power-thermal model '%s'",
 				r_path->ToString().c_str(), pmodel->GetID().c_str());
 
-		budget->power = GetPowerBudget(r_path, pmodel);
-		budget->prev  = budget->curr;
-		budget->curr  = GetResourceBudget(r_path, pmodel);
+		budget_ptr->power = GetPowerBudget(budget_ptr, pmodel);
+		budget_ptr->prev  = budget_ptr->curr;
+		budget_ptr->curr  = GetResourceBudget(r_path, pmodel);
 	}
 
 	return SCHED_OK;
 }
 
 inline uint32_t TempuraSchedPol::GetPowerBudget(
-		br::ResourcePathPtr_t const & r_path,
+		std::shared_ptr<BudgetInfo> budget_ptr,
 		ModelPtr_t pmodel) {
 	uint32_t energy_pwr_budget = 0;
 	uint32_t temp_pwr_budget   = 0;
 	uint32_t curr_power = 0;
 	uint32_t curr_temp  = 0;
 	uint32_t curr_load  = 0;
-	logger->Debug("PowerBudget: resource path=<%s>", r_path->ToString().c_str());
+	logger->Debug("PowerBudget: resource path=<%s>",
+			budget_ptr->r_path->ToString().c_str());
 
 	// Current status
+	for (auto & rsrc: budget_ptr->r_list) {
+		curr_temp += rsrc->GetPowerInfo(
+			PowerManager::InfoType::TEMPERATURE, br::Resource::MEAN);
+		curr_load += rsrc->GetPowerInfo(
+			PowerManager::InfoType::LOAD, br::Resource::MEAN);
 #ifdef CONFIG_TARGET_ODROID_XU
-	br::ResourcePtr_t rsrc(ra.GetResource(r_path));
-	curr_temp = rsrc->GetPowerInfo(
-		PowerManager::InfoType::TEMPERATURE, br::Resource::MEAN);
-	curr_load = rsrc->GetPowerInfo(
-		PowerManager::InfoType::LOAD, br::Resource::MEAN);
-	curr_power = rsrc->GetPowerInfo(PowerManager::InfoType::POWER);
-#else
-	PowerManager & pm(PowerManager::GetInstance());
-	pm.GetTemperature(r_path, curr_temp);
+		curr_power = rsrc->GetPowerInfo(PowerManager::InfoType::POWER);
+#endif
+	}
+	curr_load /= budget_ptr->r_list.size();
+	curr_temp /= budget_ptr->r_list.size();
 	if (curr_temp > 1e3)
 		curr_temp /= 1e3;
-	pm.GetLoad(r_path, curr_load);
-#endif
+
 	logger->Debug("PowerBudget: <%s> TEMP_crit=[%d]C  TEMP_curr=[%3d]C",
-		r_path->ToString().c_str(), crit_temp, curr_temp);
+		budget_ptr->r_path->ToString().c_str(), crit_temp, curr_temp);
 	logger->Debug("PowerBudget: <%s> prev_budget=%d  LOAD_curr=[%3d]",
-		r_path->ToString().c_str(), budgets[r_path]->curr, curr_load);
+		budget_ptr->r_path->ToString().c_str(), budget_ptr->curr, curr_load);
 
 	// Thermal threshold correction
 	uint32_t new_crit_temp = crit_temp;
 	if ((sched_count > 0) &&
-			(std::abs(budgets[r_path]->curr - curr_load) <
-				BBQUE_TEMPURA_CPU_LOAD_MARGIN)) {
+			(std::abs(budget_ptr->curr - curr_load) < BBQUE_TEMPURA_CPU_LOAD_MARGIN)) {
 		new_crit_temp += (crit_temp - curr_temp);
 		logger->Debug("PowerBudget: <%s> critical temperature corrected"
 			" to T_crit=[%3d]C",
-			r_path->ToString().c_str(), new_crit_temp);
+			budget_ptr->r_path->ToString().c_str(), new_crit_temp);
 	}
 	logger->Debug("PowerBudget: <%s> T_crit=[%3d]C, T_curr=[%3d]C, P=[%5.0f]mW",
-			r_path->ToString().c_str(),
+			budget_ptr->r_path->ToString().c_str(),
 			new_crit_temp, curr_temp, curr_power);
 
 	// Power budget from thermal constraints
 	if (new_crit_temp < 1e3)
 		new_crit_temp *= 1e3;
 
+
 	temp_pwr_budget = pmodel->GetPowerFromTemperature(new_crit_temp, cpufreq_gov);
 	if (tot_resource_power_budget < 1) {
 		logger->Debug("PowerBudget: <%s> P(T)=[%d]mW, P(E)=[-]",
-				r_path->ToString().c_str(), temp_pwr_budget);
+				budget_ptr->r_path->ToString().c_str(), temp_pwr_budget);
 		return temp_pwr_budget;
 	}
 
@@ -343,7 +344,7 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	}
 #endif
 	logger->Debug("Budget: <%s> P(T)=[%d]mW, P(E)=[%d]mW",
-			r_path->ToString().c_str(),
+			budget_ptr->r_path->ToString().c_str(),
 			temp_pwr_budget, energy_pwr_budget);
 
 	return std::min<uint32_t>(temp_pwr_budget, energy_pwr_budget);

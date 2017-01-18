@@ -210,7 +210,8 @@ private:
 	 * @return The power value to cap (in milliwatts)
 	 */
 	uint32_t GetPowerBudget(
-			br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
+			std::shared_ptr<BudgetInfo> budget_ptr,
+			ModelPtr_t pmodel);
 
 	/**
 	 * @brief Define the resource budget to allocate according to the power
