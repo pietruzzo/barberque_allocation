@@ -43,6 +43,45 @@ namespace po = boost::program_options;
 
 namespace bbque { namespace plugins {
 
+
+// ================= Metrics collection ********************** //
+
+#ifdef CONFIG_BBQUE_SCHED_PROFILING
+
+#define SAMPLE_METRIC(NAME, DESC)\
+ {SCHEDULER_MANAGER_NAMESPACE ".tempura." NAME, DESC, \
+	 bu::MetricsCollector::SAMPLE, 0, NULL, 0         \
+ }
+
+
+MetricsCollector::MetricsCollection_t
+TempuraSchedPol::coll_metrics[TEMPURA_METRICS_COUNT] = {
+	SAMPLE_METRIC("init",    "Time to complete initializaton [ms]"),
+	SAMPLE_METRIC("budgets", "Time to compute budgets [ms]"),
+	SAMPLE_METRIC("assign",  "Time to define resource assignments [ms]"),
+	SAMPLE_METRIC("sched",   "Time to send all the scheduling requests [ms]")
+};
+
+/** Reset the timer used to evaluate metrics */
+#define RESET_TIMING(TIMER) TIMER.start();
+
+/** Acquire a new completion time sample */
+#define GET_TIMING(METRICS, INDEX, TIMER) \
+	mc.AddSample(METRICS[INDEX].mh, TIMER.getElapsedTimeMs());
+
+/* Get a new sample for the metrics */
+#define GET_SAMPLE(METRICS, INDEX, VALUE) \
+	mc.AddSample(METRICS[INDEX].mh, VALUE);
+
+#else // Scheduling Profiling support disabled
+
+#define SAMPLE_METRIC(NAME, DESC)
+#define RESET_TIMING(TIMER)
+#define GET_TIMING(METRICS, INDEX, TIMER)
+#define GET_SAMPLE(METRICS, INDEX, VALUE)
+
+#endif
+
 // :::::::::::::::::::::: Static plugin interface ::::::::::::::::::::::::::::
 
 void * TempuraSchedPol::Create(PF_ObjectParams *) {
@@ -67,10 +106,15 @@ TempuraSchedPol::TempuraSchedPol():
 		ra(ResourceAccounter::GetInstance()),
 		bdm(BindingManager::GetInstance()),
 		mm(bw::ModelManager::GetInstance())
+#ifdef CONFIG_BBQUE_SCHED_PROFILING
+		,
+		mc(bu::MetricsCollector::GetInstance())
+#endif
 #ifdef CONFIG_BBQUE_PM_BATTERY
 		,
 		bm(BatteryManager::GetInstance())
 #endif
+
 {
 	// Logger instance
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
@@ -80,6 +124,12 @@ TempuraSchedPol::TempuraSchedPol():
 	else
 		fprintf(stderr,
 				FI("tempura: Built new dynamic object [%p]\n"), (void *)this);
+
+#ifdef CONFIG_BBQUE_SCHED_PROFILING
+	// Register all the metrics to collect
+	mc.Register(coll_metrics, TEMPURA_METRICS_COUNT);
+#endif
+
 #ifdef CONFIG_BBQUE_PM_BATTERY
 	pbatt = bm.GetBattery();
 	if (pbatt == nullptr)
@@ -226,29 +276,37 @@ TempuraSchedPol::Schedule(
 	SchedulerPolicyIF::ExitCode_t result;
 	sys = &system;
 
+	RESET_TIMING(timer);
 	result = Init();
 	if (result != SCHED_OK) {
 		logger->Fatal("Schedule: policy initialization failed");
 		goto error;
 	}
+	GET_TIMING(coll_metrics, TEMPURA_INIT, timer);
 
+	RESET_TIMING(timer);
 	result = ComputeBudgets();
 	if (result != SCHED_OK) {
 		logger->Fatal("Schedule: budgets cannot be computed");
 		goto error;
 	}
+	GET_TIMING(coll_metrics, TEMPURA_COMP_BUDGETS, timer);
 
+	RESET_TIMING(timer);
 	result = DoResourcePartitioning();
 	if (result != SCHED_OK) {
 		logger->Fatal("Schedule: resource partitioning failed");
 		goto error;
 	}
+	GET_TIMING(coll_metrics, TEMPURA_RESOURCE_PARTITION, timer);
 
+	RESET_TIMING(timer);
 	result = DoScheduling();
 	if (result != SCHED_OK) {
 		logger->Fatal("Schedule: scheduling failed");
 		goto error;
 	}
+	GET_TIMING(coll_metrics, TEMPURA_DO_SCHEDULE, timer);
 
 	// Return the new resource status view according to the new resource
 	// allocation performed

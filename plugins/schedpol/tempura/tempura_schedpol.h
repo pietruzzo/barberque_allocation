@@ -30,6 +30,7 @@
 #include "bbque/pm/model_manager.h"
 #include "bbque/scheduler_manager.h"
 #include "bbque/resource_manager.h"
+#include "bbque/utils/metrics_collector.h"
 
 #define SCHEDULER_POLICY_NAME "tempura"
 
@@ -104,6 +105,24 @@ private:
 
 	/** P/T model manager */
 	ModelManager & mm;
+
+
+#ifdef CONFIG_BBQUE_SCHED_PROFILING
+	enum SchedPolMetrics_t {
+		// :::: Timing metrics
+		TEMPURA_INIT,
+		TEMPURA_COMP_BUDGETS,
+		TEMPURA_RESOURCE_PARTITION,
+		TEMPURA_DO_SCHEDULE,
+
+		TEMPURA_METRICS_COUNT
+	};
+
+	static bbque::utils::MetricsCollector::MetricsCollection_t
+		coll_metrics[TEMPURA_METRICS_COUNT];
+
+	bu::MetricsCollector & mc;
+#endif
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
 	/** Battery manager instance  */
