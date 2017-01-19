@@ -368,15 +368,15 @@ void ResourceManager::Optimize() {
 
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
 	//--- Profiling
-	logger->Info(LNPROB);
+	logger->Debug(LNPROB);
 	optimization_tmr.start();
 	ProfileManager::ExitCode_t profResult = om.ProfileSchedule();
 	optimization_tmr.stop();
 	if (profResult != ProfileManager::OK) {
 		logger->Warn("Scheduler profiling FAILED");
 	}
-	logger->Info(LNPROE);
-	logger->Notice("Prof Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
+	logger->Debug(LNPROE);
+	logger->Debug("Prof Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
 #else
 	logger->Debug("Scheduling profiling disabled");
 #endif
