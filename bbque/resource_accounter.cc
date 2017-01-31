@@ -1284,6 +1284,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 		requested, num_left_resources);
 	uint64_t alloc_amount_per_resource = 0;
 
+	br::ResourceAssignment::Policy alloc_policy = r_assign->GetPolicy();
+
 	// Get the list of the bound resources
 	for (auto & resource: r_assign->GetResourcesList()) {
 		// Break if the required resource has been completely allocated
@@ -1301,7 +1303,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 
 		// In case of "balanced" filling policy, spread the requested amount
 		// of resource over all the resources of the given binding
-		if (r_assign->GetPolicy() == br::ResourceAssignment::Policy::BALANCED)
+		if (alloc_policy == br::ResourceAssignment::Policy::BALANCED)
 			alloc_amount_per_resource = requested / num_left_resources;
 
 		// Scheduling: allocate required resource among its bindings
@@ -1317,9 +1319,9 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 
 	// The availability of resources mismatches the one checked in the
 	// scheduling phase. This should never happen!
-	if (requested != 0) {
-		logger->Crit("DRBooking: resource assignment mismatch in view=[%ld]",
-			status_view);
+	if (requested != 0 && alloc_policy == br::ResourceAssignment::Policy::BALANCED) {
+		logger->Crit("DRBooking: resource assignment mismatch in view=[%ld]."
+				"Left=%d",status_view, requested);
 		assert(requested != 0);
 		return RA_ERR_USAGE_EXC;
 	}
