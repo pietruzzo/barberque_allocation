@@ -429,7 +429,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseNetworkIFs(
 		pp::PlatformDescription::System & sys) {
 
 
-	node_ptr netif_tag = this->GetFirstChild(root,"netif",true) ;
+	node_ptr netif_tag = this->GetFirstChild(root, "netif", false);
 
 	while( netif_tag != NULL ) {
 		attr_ptr id_attr   = this->GetFirstAttribute(netif_tag, "id",   true);
