@@ -412,10 +412,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
 
 		mem.SetPrefix(sys.GetPath());
 		mem.SetId(id);
-
-
 		mem.SetQuantity(((int64_t)quantity) << exp);
-
 		sys.AddMemory(std::make_shared<pp::PlatformDescription::Memory>(mem));
 
 		memory_tag = memory_tag->next_sibling("mem");
