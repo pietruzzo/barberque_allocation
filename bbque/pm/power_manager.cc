@@ -248,7 +248,7 @@ PowerManager::GetClockFrequencyGovernor(
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetClockFrequencyGovernor(rp, governor);
+	return pm_iter->second->GetClockFrequencyGovernor(rp, governor);
 }
 
 PowerManager::PMResult
@@ -261,7 +261,7 @@ PowerManager::SetClockFrequencyGovernor(
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->SetClockFrequencyGovernor(rp, governor);
+	return pm_iter->second->SetClockFrequencyGovernor(rp, governor);
 }
 
 
@@ -273,7 +273,7 @@ PowerManager::GetVoltage(br::ResourcePathPtr_t const & rp, uint32_t &volt) {
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetVoltage(rp, volt);
+	return pm_iter->second->GetVoltage(rp, volt);
 }
 
 PowerManager::PMResult
@@ -288,7 +288,7 @@ PowerManager::GetVoltageInfo(
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetVoltageInfo(rp, volt_min, volt_max, volt_step);
+	return pm_iter->second->GetVoltageInfo(rp, volt_min, volt_max, volt_step);
 }
 
 
@@ -303,7 +303,7 @@ PowerManager::GetFanSpeed(
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetFanSpeed(rp, fs_type, value);
+	return pm_iter->second->GetFanSpeed(rp, fs_type, value);
 }
 
 PowerManager::PMResult
@@ -318,7 +318,7 @@ PowerManager::GetFanSpeedInfo(
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetFanSpeedInfo(rp, rpm_min, rpm_max, rpm_step);
+	return pm_iter->second->GetFanSpeedInfo(rp, rpm_min, rpm_max, rpm_step);
 }
 
 PowerManager::PMResult
@@ -332,7 +332,7 @@ PowerManager::SetFanSpeed(
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->SetFanSpeed(rp, fs_type, value);
+	return pm_iter->second->SetFanSpeed(rp, fs_type, value);
 }
 
 PowerManager::PMResult
@@ -343,7 +343,7 @@ PowerManager::ResetFanSpeed(br::ResourcePathPtr_t const & rp) {
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->ResetFanSpeed(rp);
+	return pm_iter->second->ResetFanSpeed(rp);
 }
 
 
@@ -355,7 +355,7 @@ PowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t &mwatt) {
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetPowerUsage(rp, mwatt);
+	return pm_iter->second->GetPowerUsage(rp, mwatt);
 }
 
 PowerManager::PMResult
@@ -369,7 +369,7 @@ PowerManager::GetPowerInfo(
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetPowerInfo(rp, mwatt_min, mwatt_max);
+	return pm_iter->second->GetPowerInfo(rp, mwatt_min, mwatt_max);
 }
 
 PowerManager::PMResult
@@ -380,7 +380,7 @@ PowerManager::GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t &state) {
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetPowerState(rp, state);
+	return pm_iter->second->GetPowerState(rp, state);
 }
 
 PowerManager::PMResult
@@ -393,7 +393,7 @@ PowerManager::GetPowerStatesInfo(
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetPowerStatesInfo(rp, min, max, step);
+	return pm_iter->second->GetPowerStatesInfo(rp, min, max, step);
 }
 
 PowerManager::PMResult
@@ -404,7 +404,7 @@ PowerManager::SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state) {
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->SetPowerState(rp, state);
+	return pm_iter->second->SetPowerState(rp, state);
 }
 
 
@@ -416,7 +416,7 @@ PowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &st
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetPerformanceState(rp, state);
+	return pm_iter->second->GetPerformanceState(rp, state);
 }
 
 PowerManager::PMResult
@@ -427,7 +427,7 @@ PowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->GetPerformanceStatesCount(rp, count);
+	return pm_iter->second->GetPerformanceStatesCount(rp, count);
 }
 
 PowerManager::PMResult
@@ -440,7 +440,7 @@ PowerManager::SetPerformanceState(
 			br::GetResourceTypeString(rp->ParentType(rp->Type())));
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
-	pm_iter->second->SetPerformanceState(rp, state);
+	return pm_iter->second->SetPerformanceState(rp, state);
 }
 
 
