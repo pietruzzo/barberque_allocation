@@ -979,13 +979,7 @@ RTLIB_ExitCode_t BbqueRPC::CGroupDelete(pRegisteredEXC_t exc)
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::CGroupCreate(pRegisteredEXC_t exc)
-{
-	(void) exc;
-	return RTLIB_OK;
-}
-
-RTLIB_ExitCode_t BbqueRPC::CGroupAttachEXC(pRegisteredEXC_t exc)
+RTLIB_ExitCode_t BbqueRPC::CGroupCreate(pRegisteredEXC_t exc, int pid)
 {
 	(void) exc;
 	return RTLIB_OK;
