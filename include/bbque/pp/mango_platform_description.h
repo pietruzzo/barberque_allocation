@@ -4,16 +4,21 @@
 #include <chrono>
 #include <cstdint>
 #include <vector>
+#include <boost/thread/shared_mutex.hpp>
 
 #include "bbque/pp/platform_description.h"
 
 namespace bbque {
 namespace pp {
 
-class MangoTile {
+class MangoTile : public PlatformDescription::ProcessingElement {
 
 public:
-
+	/**
+	 * @brief This enumeration represents the tile type in the Mango platform.
+	 * This values must agree with the Mango specification and low-level
+	 * runtime
+	 */
 	typedef enum MangoTileType_e {
 		HN_PEAK_0_TYPE,
 		HN_PEAK_1_TYPE,
@@ -24,55 +29,31 @@ public:
 		HN_HWACC_DCT
 	} MangoTileType_t;
 
-	typedef struct MangoTileStats_s {
-		uint_fast32_t unit_utilization;
-		uint_fast32_t flits_ejected_local;
-		uint_fast32_t flits_ejected_north;
-		uint_fast32_t flits_ejected_east;
-		uint_fast32_t flits_ejected_west;
-		uint_fast32_t flits_ejected_south;
-	} MangoTileStats_t;
 
+	/**
+	 * @brief Constructor for a MangoTile object.
+	 */
+	MangoTile(MangoTileType_t type) : type(type) {}
+
+	/**
+	 * @brief Returns the type of this tile
+	 */
+	inline MangoTileType_t GetType() const {
+		return this->type;
+	}
+
+	/**
+	 * @brief Returns the type of this tile
+	 */
+	inline void SetType(MangoTileType_t type) {
+		this->type = type;
+	}
 
 private:
-
 	MangoTileType_t type;
 
-	std::chrono::time_point<std::chrono::system_clock> last_stats_update;
-	MangoTileStats_t stats;
-
-	int nr_core;
-
-	std::chrono::time_point<std::chrono::system_clock> last_temp_update;
-	uint_fast32_t temperature;
-	
-
 };
 
-class MangoVN {
-
-};
-
-/**
- * @class MangoPlatformDescription
- *
- * @brief A MangoPlatformDescription object includes the description of the
- * underlying platform of the server and of the Mango HN node.
- *
- * @warning Non thread safe.
- */
-class MangoPlatformDescription : public PlatformDescription {
-
-public:
-	
-
-
-private:
-	std::vector<MangoTile> tiles;
-	std::vector<MangoVN> vns;
-
-
-}; // class PlatformDescription
 
 }   // namespace pp
 }   // namespace bbque

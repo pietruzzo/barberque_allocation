@@ -4,12 +4,15 @@
 #include "bbque/config.h"
 #include "bbque/platform_proxy.h"
 #include "bbque/utils/logging/logger.h"
+#include "bbque/pp/mango_platform_description.h"
 
 #define MANGO_PP_NAMESPACE "bq.pp.mango"
 
 
 namespace bbque {
 namespace pp {
+
+
 
 class MangoPlatformProxy : public PlatformProxy
 {
@@ -67,21 +70,16 @@ public:
 	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
 
 
+	
+
 private:
 //-------------------- CONSTS
-	/**
-	 * @brief Default MAX number of CPUs per socket
-	 */
-	const int MaxCpusCount = BBQUE_MAX_R_ID_NUM+1;
-
-	/**
-	 * @brief Default MAX number of MEMs node per host
-	 */
-	const int MaxMemsCount = BBQUE_MAX_R_ID_NUM+1;
 
 //-------------------- ATTRIBUTES
 
+	std::unique_ptr<bu::Logger> logger;
 	bool refreshMode;
+
 
 //-------------------- METHODS
 
