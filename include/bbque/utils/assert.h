@@ -23,17 +23,18 @@
 #include <cassert>
 
 #ifdef BBQUE_DEBUG
+
+	/**
+	 * @brief This is the custom assert logging function. You should not use
+	 *	  directly this function, but instead use the bbque_assert macro,
+	 *	  that works exactly as the std::assert one.
+	 */
+	void _bbque_assert(const char *msg, const char *file, int line);
+
 	// The following macro respect the C++ specification for assert
 	#define bbque_assert(EX) (void)((EX) || (_bbque_assert (#EX, __FILE__, __LINE__),0))
 #else
 	#define bbque_assert(EX)
 #endif
-
-/**
- * @brief This is the custom assert logging function. You should not use
- *	  directly this function, but instead use the bbque_assert macro,
- *	  that works exactly as the std::assert one.
- */
-void _bbque_assert(const char *msg, const char *file, int line);
 
 #endif // BBQUE_ASSERT_H_

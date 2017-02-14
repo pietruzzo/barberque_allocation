@@ -24,8 +24,6 @@
 
 #define BBQUE_ASSERT_NAMESPACE "bq.crash"
 
-#ifdef BBQUE_DEBUG
-
 namespace bu=bbque::utils;
 
 void _bbque_assert(const char *msg, const char *file, int line) {
@@ -40,7 +38,7 @@ void _bbque_assert(const char *msg, const char *file, int line) {
 	std::cout << std::flush;
 
 	// Get a logger
-	std::unique_ptr<bu::Logger> logger = 
+	std::unique_ptr<bu::Logger> logger =
 				bu::Logger::GetLogger(BBQUE_ASSERT_NAMESPACE);
 
 	//If we do not have a logger, we cannot log the problem, so, stdout
@@ -59,4 +57,3 @@ void _bbque_assert(const char *msg, const char *file, int line) {
 
 	// Unreachable code
 }
-#endif
