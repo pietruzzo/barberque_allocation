@@ -158,6 +158,13 @@ set (BBQUE_TARGET_OS "Android-Linux")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I../../../out/include -D__STDINT_LIMITS -D_GLIBCXX_USE_C99_STDINT_TR1 -D__BIONIC__ -Wno-psabi -march=armv7-a -mtune=xscale -msoft-float -fexceptions -frtti -mthumb -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -DANDROID  -Wa,--noexecstack")
 endif (CONFIG_TARGET_ANDROID)
 
+# Add "Mango-Linux" specific flags
+if (CONFIG_TARGET_LINUX_MANGO)
+set (BBQUE_TARGET_OS "Mango-Linux")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif (CONFIG_TARGET_LINUX_MANGO)
+
+
 # Check target bitness
 set (BBQUE_TARGET_ARCH 32)
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
