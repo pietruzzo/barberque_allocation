@@ -290,6 +290,34 @@ public:
 
 	typedef std::shared_ptr<NetworkIF> NetworkIF_t;
 
+	class InterConnect : public Resource {
+
+	public:
+
+		InterConnect(uint16_t id)
+			: Resource(id, res::ResourceType::INTERCONNECT)
+		{}
+
+		inline void SetBandwidth(uint64_t bandwidth) {
+			this->bandwidth = bandwidth;
+		}
+
+		inline uint64_t GetBandwidth() const {
+			return this->bandwidth;
+		}
+
+
+		void SetType(res::ResourceType type) = delete;
+
+
+	private:
+
+		uint64_t bandwidth;
+
+	};
+
+	typedef std::shared_ptr<InterConnect> InterConnect_t;
+
 	class System :  public Resource {
 	public:
 
@@ -390,6 +418,17 @@ public:
 			this->networkIFs.push_back(networkIF);
 		}
 
+		inline const std::vector<InterConnect_t> & GetInterConnectsAll() const {
+			return this->icns;
+		}
+
+		inline std::vector<InterConnect_t> & GetInterConnectsAll() {
+			return this->icns;
+		}
+
+		inline void AddInterConnect(InterConnect_t icn) {
+			this->icns.push_back(icn);
+		}
 
 		void SetType(res::ResourceType type) = delete;
 
@@ -404,6 +443,7 @@ public:
 		std::vector <MulticoreProcessor> accelerators;
 		std::vector <MemoryPtr_t> memories;
 		std::vector <NetworkIF_t> networkIFs;
+		std::vector <InterConnect_t> icns;
 	};
 
 	inline const System & GetLocalSystem() const {
