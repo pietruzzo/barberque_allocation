@@ -491,24 +491,37 @@ public:
 	 */
 	void ClearWorkingModeConstraints();
 
+
+	/**
+	 * @brief Get the profiling data collected at runtime by the RTLib
+	 *
+	 * @param mark_acknowledged
+	 * @return A data structure of type RuntimeProfiling_t
+	 */
 	inline RuntimeProfiling_t GetRuntimeProfile(
 			bool mark_acknowledged = false) {
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
-
-		RuntimeProfiling_t data = rt_prof;
-
 		if (mark_acknowledged)
 			rt_prof.is_valid = false;
-
-		return data;
+		return rt_prof;
 	}
 
+	/**
+	 * @brief Save the profiling data collected at runtime by the RTLib
+	 *
+	 * @param rt_profile The structure containing the profiling data
+	 */
 	inline void SetRuntimeProfile(struct RuntimeProfiling_t rt_profile) {
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		rt_prof = rt_profile;
 	}
 
-	inline void SetAllocationInfo(int cpu_usage_prediction, int expected_goal_gap = 0) {
+	/**
+	 * @brief Save predictions about profiling data
+	 *
+	 * @param cpu_usage_prediction The expected amount of CPU usage
+	 * @param goal_gap_prediction The expected goal gap
+	 */
 	inline void SetAllocationInfo(
 			int cpu_usage_prediction, int goal_gap_prediction = 0) {
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
