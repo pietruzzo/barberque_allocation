@@ -398,7 +398,7 @@ public:
 	 * @brief SetRuntime Profile information for this app
 	 */
 	virtual  void SetAllocationInfo(
-			int expected_cpu_usage, int expected_goal_gap = 0) = 0;
+			int cpu_usage_prediction, int goal_gap_prediction = 0) = 0;
 
 	/**
 	 * @brief Statics about a specific resource usage requirement

@@ -69,7 +69,7 @@ struct RuntimeProfiling_t {
 	/** The current Goal-Gap value, must be in [-100,100] */
 	int ggap_percent = 0;
 	int ggap_percent_prev = 0;
-	int ggap_percent_expected = 0;
+	int ggap_percent_prediction = 0;
 
 	struct {
 		int upper_cpu = -1;
@@ -82,16 +82,17 @@ struct RuntimeProfiling_t {
 
 	/** The current CPU Usage of an application. It should be received as a
 	 * feedback from the rtlib. */
-	int measured_cpu_usage = 0;
-	int measured_cpu_usage_prev = 0;
+	int cpu_usage      = 0;
+	int cpu_usage_prev = 0;
 
+	/** Cycle time */
 	int ctime_ms = 0;
 
 	/** The maximum CPU Usage allocated to an application. It should be
 	 * set by the scheduling policy and optionally compared with the variable
-	 * `measured_cpu_usage` */
-	int expected_cpu_usage = 0;
-	int expected_cpu_usage_prev = 0;
+	 * `cpu_usage` */
+	int cpu_usage_prediction = 0;
+	int cpu_usage_prediction_old = 0;
 };
 
 /**
@@ -492,8 +493,8 @@ public:
 
 	inline RuntimeProfiling_t GetRuntimeProfile(
 			bool mark_acknowledged = false) {
+		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 
-		std::unique_lock<std::mutex> rt_profile_lock(rt_prof_access);
 		RuntimeProfiling_t data = rt_prof;
 
 		if (mark_acknowledged)
@@ -503,16 +504,17 @@ public:
 	}
 
 	inline void SetRuntimeProfile(struct RuntimeProfiling_t rt_profile) {
-		std::unique_lock<std::mutex> rt_profile_lock(rt_prof_access);
+		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		rt_prof = rt_profile;
 	}
 
+	inline void SetAllocationInfo(int cpu_usage_prediction, int expected_goal_gap = 0) {
 	inline void SetAllocationInfo(
-				int expected_cpu_usage, int expected_goal_gap = 0) {
-		std::unique_lock<std::mutex> rt_profile_lock(rt_prof_access);
-		rt_prof.expected_cpu_usage_prev = rt_prof.expected_cpu_usage;
-		rt_prof.expected_cpu_usage = expected_cpu_usage;
-		rt_prof.ggap_percent_expected = expected_goal_gap;
+			int cpu_usage_prediction, int goal_gap_prediction = 0) {
+		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
+		rt_prof.cpu_usage_prediction_old = rt_prof.cpu_usage_prediction;
+		rt_prof.cpu_usage_prediction     = cpu_usage_prediction;
+		rt_prof.ggap_percent_prediction  = goal_gap_prediction;
 	}
 
 	/**
@@ -600,7 +602,8 @@ private:
 	 * @brief Store profiling information collected at runtime
 	 */
 	RuntimeProfiling_t rt_prof;
-	std::mutex rt_prof_access;
+
+	std::mutex rt_prof_mtx;
 
 	/**
 	 * Platform Specifica Data properly initialized

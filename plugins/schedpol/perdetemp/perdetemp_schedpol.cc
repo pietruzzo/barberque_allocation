@@ -378,8 +378,8 @@ void PerdetempSchedPol::DumpRuntimeProfileStats(ApplicationInfo &app){
 				app.runtime.gap_history.upper_cpu,
 				app.runtime.gap_history.upper_gap,
 				app.runtime.gap_history.upper_age);
-	logger->Debug("  Last measured CPU Usage: %d", app.runtime.measured_cpu_usage);
-	logger->Debug("  Last allocated CPU Usage: %d", app.runtime.expected_cpu_usage);
+	logger->Debug("  Last measured CPU Usage: %d", app.runtime.cpu_usage);
+	logger->Debug("  Last allocated CPU Usage: %d", app.runtime.cpu_usage_prediction);
 }
 
 
@@ -388,8 +388,8 @@ void PerdetempSchedPol::ComputeRequiredCPU(ApplicationInfo &app) {
 	if (app.runtime.is_valid == false) {
 		// If application had been already scheduled, for now the allocation
 		// will not change
-		if (app.runtime.measured_cpu_usage > 0)
-			app.required_resources = app.runtime.measured_cpu_usage;
+		if (app.runtime.cpu_usage > 0)
+			app.required_resources = app.runtime.cpu_usage;
 		// Application is totally unknown (maybe, first schedule):
 		// assign the application a fair amount of bandwidth
 		else
@@ -403,7 +403,7 @@ void PerdetempSchedPol::ComputeRequiredCPU(ApplicationInfo &app) {
 	// Compute quota according to runtime performance measurements
 	logger->Debug("[%s] Valid runtime measurements {GGAP %d, CUSAGE %d}",
 				app.name.c_str(), app.runtime.ggap_percent,
-				app.runtime.measured_cpu_usage);
+				app.runtime.cpu_usage);
 
 	float min_gap = (float) app.runtime.gap_history.lower_gap;
 	float max_gap = (float) app.runtime.gap_history.upper_gap;

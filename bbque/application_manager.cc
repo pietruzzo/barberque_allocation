@@ -1397,19 +1397,19 @@ ApplicationManager::SetRuntimeProfile(
 
 	// Updating runtime information with the received values
 	rt_prof.ggap_percent_prev = rt_prof.ggap_percent;
-	rt_prof.measured_cpu_usage_prev = rt_prof.measured_cpu_usage;
-	rt_prof.ggap_percent = gap;
-	rt_prof.measured_cpu_usage =
-			(cusage > 0) ? cusage : rt_prof.expected_cpu_usage;
+	rt_prof.ggap_percent      = gap;
+	rt_prof.cpu_usage_prev    = rt_prof.cpu_usage;
+	rt_prof.cpu_usage    =
+			(cusage > 0) ? cusage : rt_prof.cpu_usage_prediction;
 	// Removing fluctuation due to additional threads such as input collector,
 	// which are not included in the CPU usage count
-	rt_prof.measured_cpu_usage = std::min(cusage, rt_prof.expected_cpu_usage);
+	rt_prof.cpu_usage = std::min(cusage, rt_prof.cpu_usage_prediction);
 	rt_prof.ctime_ms = ctime_ms;
 	rt_prof.is_valid = true;
 
 	if (rt_prof.ggap_percent < 0) {
 		// Update lower bound value and age
-		rt_prof.gap_history.lower_cpu = rt_prof.measured_cpu_usage;
+		rt_prof.gap_history.lower_cpu = rt_prof.cpu_usage;
 		rt_prof.gap_history.lower_gap = rt_prof.ggap_percent;
 		rt_prof.gap_history.lower_age = 0;
 
@@ -1422,7 +1422,7 @@ ApplicationManager::SetRuntimeProfile(
 
 	} else {
 		// Update upper bound value and age
-		rt_prof.gap_history.upper_cpu = rt_prof.measured_cpu_usage;
+		rt_prof.gap_history.upper_cpu = rt_prof.cpu_usage;
 		rt_prof.gap_history.upper_gap = rt_prof.ggap_percent;
 		rt_prof.gap_history.upper_age = 0;
 
