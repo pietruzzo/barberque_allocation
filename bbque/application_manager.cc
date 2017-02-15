@@ -1296,8 +1296,15 @@ ApplicationManager::ClearConstraintsEXC(AppPid_t pid, uint8_t exc_id) {
 
 }
 
+
+/*******************************************************************************
+ *  Application Runtime Profiling
+ ******************************************************************************/
+
+
 ApplicationManager::ExitCode_t
-ApplicationManager::CheckGoalGapEXC(AppPtr_t papp,
+ApplicationManager::CheckGoalGapEXC(
+		AppPtr_t papp,
 		struct app::RuntimeProfiling_t &rt_prof) {
 	// Define the contraints for this execution context
 	logger->Debug("Checking Goal-Gap [%d] on EXC [%s]...",
@@ -1324,32 +1331,25 @@ ApplicationManager::IsReschedulingRequired(
 		AppPid_t pid,
 		uint8_t exc_id,
 		struct app::RuntimeProfiling_t &rt_prof) {
-	AppPtr_t papp;
-
-	// Find the required EXC
-	papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
 	if (!papp) {
 		logger->Warn("Check RT Info for EXC [%d:*:%d] FAILED "
 				"(Error: EXC not found)");
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
-
-	// Set constraints for this EXC
 	return IsReschedulingRequired(papp, rt_prof);
 
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::GetRuntimeProfile(AppPtr_t papp,
-		struct app::RuntimeProfiling_t &profile) {
+ApplicationManager::GetRuntimeProfile(AppPtr_t papp, struct app::RuntimeProfiling_t &profile) {
 	profile = papp->GetRuntimeProfile();
 	return AM_SUCCESS;
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::SetRuntimeProfile(AppPtr_t papp,
-		struct app::RuntimeProfiling_t profile) {
+ApplicationManager::SetRuntimeProfile(AppPtr_t papp, struct app::RuntimeProfiling_t profile) {
 	papp->SetRuntimeProfile(profile);
 	return AM_SUCCESS;
 }
@@ -1357,42 +1357,38 @@ ApplicationManager::SetRuntimeProfile(AppPtr_t papp,
 ApplicationManager::ExitCode_t
 ApplicationManager::GetRuntimeProfile(
 		AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t &profile) {
-	AppPtr_t papp;
-	// Find the required EXC
-	papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
 	if (!papp) {
 		logger->Warn("Get Runtime Profile for EXC [%d:*:%d] FAILED "
 				"(Error: EXC not found)");
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
-
-	// Set constraints for this EXC
 	return GetRuntimeProfile(papp, profile);
 }
 
 ApplicationManager::ExitCode_t
 ApplicationManager::SetRuntimeProfile(
 		AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t profile) {
-	AppPtr_t papp;
-	// Find the required EXC
-	papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
 	if (!papp) {
 		logger->Warn("Set Runtime Profile for EXC [%d:*:%d] FAILED "
 				"(Error: EXC not found)");
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
-
-	// Set constraints for this EXC
 	return SetRuntimeProfile(papp, profile);
 }
 
 ApplicationManager::ExitCode_t
 ApplicationManager::SetRuntimeProfile(
-		AppPid_t pid, uint8_t exc_id, int gap, int cusage, int ctime_ms) {
-	ExitCode_t result;
+		AppPid_t pid,
+		uint8_t exc_id,
+		int gap,
+		int cusage,
+		int ctime_ms) {
 	// Getting current runtime profile information
+	ExitCode_t result;
 	struct app::RuntimeProfiling_t rt_prof;
 	result = GetRuntimeProfile(pid, exc_id, rt_prof);
 	if (result != AM_SUCCESS)
