@@ -1313,13 +1313,16 @@ ApplicationManager::CheckGoalGapEXC(AppPtr_t papp,
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::AnalyseRuntimeProfile(AppPtr_t papp,
+ApplicationManager::IsReschedulingRequired(
+		AppPtr_t papp,
 		struct app::RuntimeProfiling_t &rt_prof) {
 	return CheckGoalGapEXC(papp, rt_prof);
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::AnalyseRuntimeProfile(AppPid_t pid, uint8_t exc_id,
+ApplicationManager::IsReschedulingRequired(
+		AppPid_t pid,
+		uint8_t exc_id,
 		struct app::RuntimeProfiling_t &rt_prof) {
 	AppPtr_t papp;
 
@@ -1333,7 +1336,7 @@ ApplicationManager::AnalyseRuntimeProfile(AppPid_t pid, uint8_t exc_id,
 	}
 
 	// Set constraints for this EXC
-	return AnalyseRuntimeProfile(papp, rt_prof);
+	return IsReschedulingRequired(papp, rt_prof);
 
 }
 
@@ -1435,8 +1438,7 @@ ApplicationManager::SetRuntimeProfile(
 	}
 
 	// Checking if a new schedule is needed
-	result = AnalyseRuntimeProfile(pid, exc_id, rt_prof);
-
+	result = IsReschedulingRequired(pid, exc_id, rt_prof);
 	if (result == AM_ABORT)
 		return AM_ABORT;
 
