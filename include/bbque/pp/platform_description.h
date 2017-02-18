@@ -458,6 +458,10 @@ public:
 		}
 		return *sys;
 	}
+	inline System & GetLocalSystem() {
+	        return const_cast<System&>(static_cast<const PlatformDescription*>(this)
+							->GetLocalSystem());
+	}
 
 	inline const std::vector<System> & GetSystemsAll() const {
 		return this->systems;

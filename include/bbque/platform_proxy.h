@@ -159,7 +159,7 @@ public:
     }
 #endif
 
-private:
+protected:
         static plugins::PlatformLoaderIF* pli;
 };
 
