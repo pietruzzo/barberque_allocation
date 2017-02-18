@@ -4,6 +4,10 @@
 #include "bbque/utils/assert.h"
 #include "bbque/pp/mango_platform_description.h"
 
+#include "bbque/pp/mango_platform_description.h"
+
+#include <mango-hn/hn.h>
+
 #define BBQUE_MANGOPP_PLATFORM_ID		"org.mango"
 
 namespace bb = bbque;
@@ -30,9 +34,13 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	logger = bu::Logger::GetLogger(MANGO_PP_NAMESPACE);
 	bbque_assert(logger);
 
+	bbque_assert ( 0 == hn_initialize(MANGO_DEVICE_NAME) ); 
+
 }
 
 MangoPlatformProxy::~MangoPlatformProxy() {
+
+	bbque_assert(0 == hn_end());
 
 }
 
@@ -82,6 +90,44 @@ MangoPlatformProxy::ExitCode_t MangoPlatformProxy::Refresh() noexcept {
 
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::LoadPlatformData() noexcept {
+
+	PlatformDescription &pd = pli->getPlatformInfo();
+
+	struct hn_st_configuration *hn_conf;
+
+	// TODO Get hn_conf from somewhere...
+
+	this->architecture_id = hn_conf->arch_id;
+
+	uint32_t num_tiles;
+	if ( 0 != hn_get_num_tiles(&num_tiles) ) {
+		logger->Fatal("Unable to get the number of tiles.");
+		return PLATFORM_INIT_FAILED;
+	}
+
+	logger->Info("Found a total of %d tiles.", num_tiles);
+
+	PlatformDescription::System &sys = pd.GetLocalSystem();
+
+	for ( uint32_t i=0; i < num_tiles; i++) {
+		struct hn_st_tile_info tile_info;
+		int err = hn_get_tile_info(i, &tile_info);
+		if ( 0 != err) {
+			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
+			return PLATFORM_INIT_FAILED;
+		}
+
+		MangoTile mt((MangoTile::MangoTileType_t)tile_info.tile_type);
+
+		for (int i=0; i < MangoTile::GetCoreNr(mt.GetType()); i++) {
+			typedef PlatformDescription pd_t;
+			pd_t::ProcessingElement pe(i , 0, 100, pd_t::PartitionType_t::MDEV);
+			mt.AddProcessingElement(pe);
+		}
+
+		sys.AddAccelerator(mt);
+
+	}
 
 	return PLATFORM_OK;
 }

@@ -11,7 +11,7 @@
 namespace bbque {
 namespace pp {
 
-class MangoTile : public PlatformDescription::ProcessingElement {
+class MangoTile : public PlatformDescription::MulticoreProcessor {
 
 public:
 	/**
@@ -20,7 +20,7 @@ public:
 	 * runtime
 	 */
 	typedef enum MangoTileType_e {
-		HN_PEAK_0_TYPE,
+		HN_PEAK_0_TYPE = 0,
 		HN_PEAK_1_TYPE,
 		HN_PEAK_2_TYPE,
 		HN_NUPLUS_0_TYPE,
@@ -47,6 +47,19 @@ public:
 	 */
 	inline void SetType(MangoTileType_t type) {
 		this->type = type;
+	}
+
+	static int GetCoreNr(MangoTile::MangoTileType_t type) noexcept {
+		switch(type) {
+			case HN_PEAK_0_TYPE:
+				return 2;
+			case HN_PEAK_1_TYPE:
+				return 4;
+			case HN_PEAK_2_TYPE:
+				return 8;
+			default:
+				return 0;
+		}
 	}
 
 private:

@@ -80,6 +80,7 @@ private:
 	std::unique_ptr<bu::Logger> logger;
 	bool refreshMode;
 
+	int architecture_id = -1;
 
 //-------------------- METHODS
 
