@@ -266,6 +266,7 @@ add_subdirectory(demos)
 if (CONFIG_BBQUE_BUILD_TESTS)
 add_subdirectory(test)
 endif (CONFIG_BBQUE_BUILD_TESTS)
+add_subdirectory(libpms)
 
 
 
