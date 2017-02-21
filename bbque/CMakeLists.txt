@@ -146,6 +146,8 @@ if (CONFIG_BBQUE_PM)
 	set (BARBEQUE_SRC power_monitor ${BARBEQUE_SRC})
 endif (CONFIG_BBQUE_PM)
 
+# Support for task-graph representations
+add_subdirectory(tg)
 
 add_executable (barbeque ${BARBEQUE_SRC})
 
