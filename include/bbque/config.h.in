@@ -202,6 +202,9 @@
 /** Enable Event Management support */
 #cmakedefine CONFIG_BBQUE_EM
 
+/** Monitoring library (AS-RTM) RTLib inclusion */
+#cmakedefine CONFIG_BBQUE_RTLIB_MONITORS
+
 /** Performance Counters Support */
 #cmakedefine CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 

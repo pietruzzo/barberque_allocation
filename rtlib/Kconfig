@@ -14,6 +14,14 @@ config BBQUE_RPC_TIMEOUT
   The amount of time (in seconds) after which a not responding application
   must be considered disabled.
 
+config BBQUE_RTLIB_MONITORS
+  bool "Monitor library (AS-RTM)"
+  default n
+  ---help---
+  Monitor library (also called ARGO). It consists of a framework to manage the
+  reconfiguration space of an application including several paramenters and
+  a wide range of possible values.
+
 config BBQUE_RTLIB_PERF_SUPPORT
   bool "Performance Counters Profiling Support"
   depends on TARGET_LINUX

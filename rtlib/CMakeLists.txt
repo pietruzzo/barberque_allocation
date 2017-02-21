@@ -31,8 +31,10 @@ if (CONFIG_BBQUE_RPC_FIFO)
 	set (RTLIB_SRC rpc_fifo_client ${RTLIB_SRC})
 endif (CONFIG_BBQUE_RPC_FIFO)
 
-# Build subdirs
-add_subdirectory(monitors)
+# Monitoring library subdirectory
+if (CONFIG_BBQUE_RTLIB_MONITORS)
+	add_subdirectory(monitors)
+endif (CONFIG_BBQUE_RTLIB_MONITORS)
 
 #----- Add "bbque_rtlib" target dinamic binary
 add_library(bbque_rtlib SHARED ${RTLIB_SRC})
