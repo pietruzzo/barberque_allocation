@@ -34,6 +34,8 @@ namespace bbque {
 
 class ExecutionSynchronizer: public bbque::rtlib::BbqueEXC {
 
+public:
+
 	enum class EventType {
 	    NONE,
 	    TASK_START,
@@ -61,7 +63,6 @@ class ExecutionSynchronizer: public bbque::rtlib::BbqueEXC {
 
 	virtual ~ExecutionSynchronizer() {}
 
-public:
 
 	inline void SetTaskGraph(std::shared_ptr<TaskGraph> tg) {
 		task_graph = tg;

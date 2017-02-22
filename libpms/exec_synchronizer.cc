@@ -20,7 +20,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
-#include "libpms/exec_synchronizer.h"
+#include "pmsl/exec_synchronizer.h"
 
 #define enqueue_task(t) \
 	if (!tasks_start_status.test(t->Id())) { \
