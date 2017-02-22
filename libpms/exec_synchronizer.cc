@@ -52,6 +52,35 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 	task_graph(tg) {
 }
 
+
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(std::shared_ptr<TaskGraph> tg) {
+	task_graph = tg;
+	if (!CheckTaskGraph()) {
+		task_graph = nullptr;
+		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
+	}
+
+	file_path  = BBQUE_TG_SERIAL_FILE
+		+ std::to_string(tg->GetApplicationId())
+		+ exc_name;
+
+	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
+	if (tasks_start_status.any()) {
+		// Cannot change the TG while still in execution
+		return ExitCode::ERR_TASKS_IN_EXECUTION;
+	}
+
+	for (auto t_entry: task_graph->Tasks()) {
+		auto & task = t_entry.second;
+		tasks_start_status.set(task->Id());
+	}
+
+	std::cerr << "Task status: " << tasks_start_status.to_string() << std::endl;
+	tasks_cv.notify_all();
+	return ExitCode::SUCCESS;
+}
+
+
 bool ExecutionSynchronizer::CheckTaskGraph() {
 	if (task_graph == nullptr) {
 		logger->Error("Task graph missing");
@@ -79,37 +108,42 @@ void ExecutionSynchronizer::RecvTaskGraphFromRM() {
 }
 
 
-void ExecutionSynchronizer::StartTask(uint32_t task_id) {
-	if (!CheckTaskGraph()) return ;
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(uint32_t task_id) {
+	if (!CheckTaskGraph())
+		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	auto task = task_graph->GetTask(task_id);
 	if (task == nullptr) {
 		logger->Error("Unknown task id: %d", task_id);
-		return ;
+		return ExitCode::ERR_TASK_ID;
 	}
 
 	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
 	enqueue_task(task);
 	tasks_cv.notify_all();
+	return ExitCode::SUCCESS;
 }
 
-void ExecutionSynchronizer::StartTasks(std::list<uint32_t> tasks_ids) {
-	if (!CheckTaskGraph()) return ;
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(std::list<uint32_t> tasks_ids) {
+	if (!CheckTaskGraph())
+		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
 	for (auto task_id: tasks_ids) {
 		auto task = task_graph->GetTask(task_id);
 		if (task == nullptr) {
 			logger->Error("Unknown task id: %d", task_id);
-			return ;
+			return ExitCode::ERR_TASK_ID;
 		}
 		enqueue_task(task);
 	}
 	tasks_cv.notify_all();
+	return ExitCode::SUCCESS;
 }
 
-void ExecutionSynchronizer::StartTasksAll() {
-	if (!CheckTaskGraph()) return ;
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() {
+	if (!CheckTaskGraph())
+		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
 	for (auto t_entry: task_graph->Tasks()) {
@@ -117,40 +151,49 @@ void ExecutionSynchronizer::StartTasksAll() {
 		enqueue_task(task);
 	}
 	tasks_cv.notify_all();
+	return ExitCode::SUCCESS;
+
 }
 
 
-void ExecutionSynchronizer::StopTask(uint32_t task_id) {
-	if (!CheckTaskGraph()) return ;
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(uint32_t task_id) {
+	if (!CheckTaskGraph())
+		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	auto task = task_graph->GetTask(task_id);
 	if (task == nullptr) {
 		logger->Error("Unknown task id: %d", task_id);
-		return ;
+			return ExitCode::ERR_TASK_ID;
 	}
 
 	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
 	dequeue_task(task);
 	tasks_cv.notify_all();
+	return ExitCode::SUCCESS;
+
 }
 
-void ExecutionSynchronizer::StopTasks(std::list<uint32_t> tasks_ids) {
-	if (!CheckTaskGraph()) return ;
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(std::list<uint32_t> tasks_ids) {
+	if (!CheckTaskGraph())
+		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
 	for (auto task_id: tasks_ids) {
 		auto task = task_graph->GetTask(task_id);
 		if (task == nullptr) {
 			logger->Error("Unknown task id: %d", task_id);
-			return ;
+			return ExitCode::ERR_TASK_ID;
 		}
 		dequeue_task(task);
 	}
 	tasks_cv.notify_all();
+	return ExitCode::SUCCESS;
+
 }
 
-void ExecutionSynchronizer::StopTasksAll() {
-	if (!CheckTaskGraph()) return ;
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() {
+	if (!CheckTaskGraph())
+		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
 	for (auto t_entry: task_graph->Tasks()) {

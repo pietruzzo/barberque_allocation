@@ -44,6 +44,14 @@ public:
 	    BUFFER_WRITE
 	};
 
+	enum class ExitCode {
+		SUCCESS,
+		ERR_TASK_ID,
+		ERR_TASK_GRAPH_NOT_VALID,
+		ERR_TASKS_IN_EXECUTION
+	};
+
+
 	struct Event {
 		std::mutex mx;
 		std::condition_variable cv;
@@ -64,28 +72,23 @@ public:
 	virtual ~ExecutionSynchronizer() {}
 
 
-	inline void SetTaskGraph(std::shared_ptr<TaskGraph> tg) {
-		task_graph = tg;
-		file_path  = BBQUE_TG_SERIAL_FILE
-			+ std::to_string(tg->GetApplicationId())
-			+ exc_name;
-	}
+	ExitCode SetTaskGraph(std::shared_ptr<TaskGraph> tg);
 
 	inline std::shared_ptr<TaskGraph> GetTaskGraph() {
 		return task_graph;
 	}
 
-	void StartTask(uint32_t task_id);
+	ExitCode StartTask(uint32_t task_id);
 
-	void StartTasks(std::list<uint32_t> tasks_id);
+	ExitCode StartTasks(std::list<uint32_t> tasks_id);
 
-	void StartTasksAll();
+	ExitCode StartTasksAll();
 
-	void StopTask(uint32_t task_id);
+	ExitCode StopTask(uint32_t task_id);
 
-	void StopTasks(std::list<uint32_t> tasks_id);
+	ExitCode StopTasks(std::list<uint32_t> tasks_id);
 
-	void StopTasksAll();
+	ExitCode StopTasksAll();
 
 
 	void WaitForResourceAllocation();
