@@ -160,8 +160,17 @@ void ExecutionSynchronizer::StopTasksAll() {
 	tasks_cv.notify_all();
 }
 
+void ExecutionSynchronizer::WaitForResourceAllocation() {
+	std::unique_lock<std::mutex> rtrm_ul(rtrm_mx);
+	while (!resources_assigned)
+		rtrm_cv.wait(rtrm_ul);
+}
 
-
+void ExecutionSynchronizer::NotifyResourceAllocation() {
+	std::unique_lock<std::mutex> rtrm_ul(rtrm_mx);
+	resources_assigned = true;
+	rtrm_cv.notify_all();
+}
 
 void ExecutionSynchronizer::StartTaskControl(uint32_t task_id) {
 
@@ -185,6 +194,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 
 	// Task graph here should has been filled by the RTRM policy
 	RecvTaskGraphFromRM();
+	NotifyResourceAllocation();
 
 	// Update the tasks status
 	std::unique_lock<std::mutex> tasks_lock(tasks_mx);

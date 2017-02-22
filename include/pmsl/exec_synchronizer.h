@@ -87,6 +87,14 @@ public:
 
 	void StopTasksAll();
 
+
+	void WaitForResourceAllocation();
+
+	inline bool IsResourceAllocationReady() {
+		std::unique_lock<std::mutex> rtrm_ul(rtrm_mx);
+		return resources_assigned;
+	}
+
 protected:
 
 	std::string file_path;
@@ -102,6 +110,12 @@ protected:
 	std::mutex tasks_mx;
 
 	std::condition_variable tasks_cv;
+
+	bool resources_assigned;
+
+	std::mutex rtrm_mx;
+
+	std::condition_variable rtrm_cv;
 
 
 	RTLIB_ExitCode_t onSetup();
@@ -121,6 +135,7 @@ protected:
 
 	void RecvTaskGraphFromRM();
 
+	void NotifyResourceAllocation();
 
 	void StartTaskControl(uint32_t task_id);
 
