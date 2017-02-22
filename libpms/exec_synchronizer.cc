@@ -256,6 +256,10 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 
 RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
 
+	if (Cycles() == 5)
+		return RTLIB_EXC_WORKLOAD_NONE;
+	logger->Notice("WIP: empty execution cycle...");
+
 	return RTLIB_OK;
 }
 
