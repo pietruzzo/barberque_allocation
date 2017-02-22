@@ -23,14 +23,14 @@
 #include "pmsl/exec_synchronizer.h"
 
 #define enqueue_task(t) \
-	if (!tasks_start_status.test(t->Id())) { \
+	if (tasks_start_status.test(t->Id())) { \
 		tasks_start_queue.push(t->Id()); \
-		tasks_start_status.set(t->Id()); \
+		tasks_start_status.reset(t->Id()); \
 	}
 
 #define dequeue_task(t) \
-	if (tasks_start_status.test(t->Id())) { \
-		tasks_start_status.reset(t->Id()); \
+	if (!tasks_start_status.test(t->Id())) { \
+		tasks_start_status.set(t->Id()); \
 	}
 
 namespace bbque {
