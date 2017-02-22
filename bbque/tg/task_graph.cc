@@ -67,6 +67,7 @@ bool TaskGraph::AreBuffersValid(TaskPtr_t task, BufferMap_t & buffers) {
 		auto b = buffers.find(id);
 		if (b == buffers.end()) return false;
 	}
+	return true;
 }
 
 
