@@ -53,7 +53,8 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 }
 
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(std::shared_ptr<TaskGraph> tg) {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
+		std::shared_ptr<TaskGraph> tg) noexcept {
 	task_graph = tg;
 	if (!CheckTaskGraph()) {
 		task_graph = nullptr;
@@ -81,7 +82,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(std::shared_
 }
 
 
-bool ExecutionSynchronizer::CheckTaskGraph() {
+bool ExecutionSynchronizer::CheckTaskGraph() noexcept {
 	if (task_graph == nullptr) {
 		logger->Error("Task graph missing");
 		return false;
@@ -108,7 +109,7 @@ void ExecutionSynchronizer::RecvTaskGraphFromRM() {
 }
 
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(uint32_t task_id) {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(uint32_t task_id) noexcept {
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
@@ -124,7 +125,8 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(uint32_t task_i
 	return ExitCode::SUCCESS;
 }
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(std::list<uint32_t> tasks_ids) {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(
+		std::list<uint32_t> tasks_ids) noexcept {
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
@@ -141,7 +143,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(std::list<uint
 	return ExitCode::SUCCESS;
 }
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() noexcept {
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
@@ -156,7 +158,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() {
 }
 
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(uint32_t task_id) {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(uint32_t task_id) noexcept {
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
@@ -173,7 +175,8 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(uint32_t task_id
 
 }
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(std::list<uint32_t> tasks_ids) {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(
+		std::list<uint32_t> tasks_ids) noexcept {
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
@@ -191,7 +194,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(std::list<uint3
 
 }
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() noexcept {
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
@@ -203,19 +206,19 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() {
 	tasks_cv.notify_all();
 }
 
-void ExecutionSynchronizer::WaitForResourceAllocation() {
+void ExecutionSynchronizer::WaitForResourceAllocation() noexcept {
 	std::unique_lock<std::mutex> rtrm_ul(rtrm_mx);
 	while (!resources_assigned)
 		rtrm_cv.wait(rtrm_ul);
 }
 
-void ExecutionSynchronizer::NotifyResourceAllocation() {
+void ExecutionSynchronizer::NotifyResourceAllocation() noexcept {
 	std::unique_lock<std::mutex> rtrm_ul(rtrm_mx);
 	resources_assigned = true;
 	rtrm_cv.notify_all();
 }
 
-void ExecutionSynchronizer::StartTaskControl(uint32_t task_id) {
+void ExecutionSynchronizer::StartTaskControl(uint32_t task_id) noexcept {
 
 }
 

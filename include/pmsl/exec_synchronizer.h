@@ -72,30 +72,30 @@ public:
 	virtual ~ExecutionSynchronizer() {}
 
 
-	ExitCode SetTaskGraph(std::shared_ptr<TaskGraph> tg);
+	ExitCode SetTaskGraph(std::shared_ptr<TaskGraph> tg) noexcept;
 
-	inline std::shared_ptr<TaskGraph> GetTaskGraph() {
+	inline std::shared_ptr<TaskGraph> GetTaskGraph() noexcept {
 		return task_graph;
 	}
 
-	ExitCode StartTask(uint32_t task_id);
+	ExitCode StartTask(uint32_t task_id) noexcept;
 
-	ExitCode StartTasks(std::list<uint32_t> tasks_id);
+	ExitCode StartTasks(std::list<uint32_t> tasks_id) noexcept;
 
-	ExitCode StartTasksAll();
+	ExitCode StartTasksAll() noexcept;
 
-	ExitCode StopTask(uint32_t task_id);
+	ExitCode StopTask(uint32_t task_id) noexcept;
 
-	ExitCode StopTasks(std::list<uint32_t> tasks_id);
+	ExitCode StopTasks(std::list<uint32_t> tasks_id) noexcept;
 
-	ExitCode StopTasksAll();
+	ExitCode StopTasksAll() noexcept;
 
 
-	void WaitForResourceAllocation();
+	void WaitForResourceAllocation() noexcept;
 
-	inline bool IsResourceAllocationReady() {
-		std::unique_lock<std::mutex> rtrm_ul(rtrm_mx);
-		return resources_assigned;
+	inline bool IsResourceAllocationReady() noexcept {
+		std::unique_lock<std::mutex> rtrm_ul(rtrm.mx);
+		return rtrm.scheduled;
 	}
 
 protected:
@@ -118,29 +118,30 @@ protected:
 
 	std::mutex rtrm_mx;
 
+	bool CheckTaskGraph() noexcept;
 	std::condition_variable rtrm_cv;
-
-
-	RTLIB_ExitCode_t onSetup();
-
-	RTLIB_ExitCode_t onConfigure(int8_t awm_id);
-
-	RTLIB_ExitCode_t onRun();
-
-	RTLIB_ExitCode_t onMonitor();
-
-	RTLIB_ExitCode_t onRelease();
-
-
-	bool CheckTaskGraph();
 
 	void SendTaskGraphToRM();
 
 	void RecvTaskGraphFromRM();
 
-	void NotifyResourceAllocation();
+	void NotifyResourceAllocation() noexcept;
 
-	void StartTaskControl(uint32_t task_id);
+	void StartTaskControl(uint32_t task_id) noexcept;
+
+
+	// ----- BbqueEXC derived functions ----- //
+
+
+	RTLIB_ExitCode_t onSetup() override;
+
+	RTLIB_ExitCode_t onConfigure(int8_t awm_id) override;
+
+	RTLIB_ExitCode_t onRun() override;
+
+	RTLIB_ExitCode_t onMonitor() override;
+
+	RTLIB_ExitCode_t onRelease() override;
 
 };
 
