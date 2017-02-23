@@ -37,11 +37,11 @@ class ExecutionSynchronizer: public bbque::rtlib::BbqueEXC {
 public:
 
 	enum class EventType {
-	    NONE,
-	    TASK_START,
-	    TASK_COMPLETE,
-	    BUFFER_READ,
-	    BUFFER_WRITE
+		NONE,
+		TASK_START,
+		TASK_COMPLETE,
+		BUFFER_READ,
+		BUFFER_WRITE
 	};
 
 	enum class ExitCode {
@@ -100,26 +100,36 @@ public:
 
 protected:
 
-	std::string file_path;
+	std::string serial_file_path;
 
 	std::shared_ptr<TaskGraph> task_graph;
 
-	std::vector<Event> tasks_events;
 
-	std::bitset<BBQUE_TASKS_MAX_NUM> tasks_start_status;
+	/**
+	 * \struct tasks
+	 * \brief Status information about tasks
+	 */
+	struct {
+		std::mutex mx;
+		std::condition_variable cv;
+		std::bitset<BBQUE_TASKS_MAX_NUM> start_status;
+		std::queue<uint32_t> start_queue;
+		std::vector<Event> events;
 
-	std::queue<uint32_t> tasks_start_queue;
+	} tasks;
 
-	std::mutex tasks_mx;
+	/**
+	 * \struct rtrm
+	 * \brief Status information the actions of the resource manager
+	 */
+	struct {
+		std::mutex mx;
+		std::condition_variable cv;
+		bool scheduled;
+	} rtrm;
 
-	std::condition_variable tasks_cv;
-
-	bool resources_assigned;
-
-	std::mutex rtrm_mx;
 
 	bool CheckTaskGraph() noexcept;
-	std::condition_variable rtrm_cv;
 
 	void SendTaskGraphToRM();
 

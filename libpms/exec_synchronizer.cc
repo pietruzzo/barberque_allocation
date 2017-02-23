@@ -23,14 +23,14 @@
 #include "pmsl/exec_synchronizer.h"
 
 #define enqueue_task(t) \
-	if (tasks_start_status.test(t->Id())) { \
-		tasks_start_queue.push(t->Id()); \
-		tasks_start_status.reset(t->Id()); \
+	if (tasks.start_status.test(t->Id())) { \
+		tasks.start_queue.push(t->Id()); \
+		tasks.start_status.reset(t->Id()); \
 	}
 
 #define dequeue_task(t) \
-	if (!tasks_start_status.test(t->Id())) { \
-		tasks_start_status.set(t->Id()); \
+	if (!tasks.start_status.test(t->Id())) { \
+		tasks.start_status.set(t->Id()); \
 	}
 
 namespace bbque {
@@ -61,23 +61,23 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 	}
 
-	file_path  = BBQUE_TG_SERIAL_FILE
+	serial_file_path = BBQUE_TG_SERIAL_FILE
 		+ std::to_string(tg->GetApplicationId())
 		+ exc_name;
 
-	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
-	if (tasks_start_status.any()) {
+	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
+	if (tasks.start_status.any()) {
 		// Cannot change the TG while still in execution
 		return ExitCode::ERR_TASKS_IN_EXECUTION;
 	}
 
 	for (auto t_entry: task_graph->Tasks()) {
 		auto & task = t_entry.second;
-		tasks_start_status.set(task->Id());
+		tasks.start_status.set(task->Id());
 	}
 
-	std::cerr << "Task status: " << tasks_start_status.to_string() << std::endl;
-	tasks_cv.notify_all();
+	logger->Error("Task status: %s", tasks.start_status.to_string().c_str());
+	tasks.cv.notify_all();
 	return ExitCode::SUCCESS;
 }
 
@@ -97,13 +97,13 @@ bool ExecutionSynchronizer::CheckTaskGraph() noexcept {
 
 
 void ExecutionSynchronizer::SendTaskGraphToRM() {
-	std::ofstream ofs(file_path);
+	std::ofstream ofs(serial_file_path);
 	boost::archive::text_oarchive oa(ofs);
 	oa << *(this->task_graph);
 }
 
 void ExecutionSynchronizer::RecvTaskGraphFromRM() {
-	std::ifstream ifs(file_path);
+	std::ifstream ifs(serial_file_path);
 	boost::archive::text_iarchive ia(ifs);
 	ia >> *(this->task_graph);
 }
@@ -119,9 +119,9 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(uint32_t task_i
 		return ExitCode::ERR_TASK_ID;
 	}
 
-	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
+	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	enqueue_task(task);
-	tasks_cv.notify_all();
+	tasks.cv.notify_all();
 	return ExitCode::SUCCESS;
 }
 
@@ -130,7 +130,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
-	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
+	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	for (auto task_id: tasks_ids) {
 		auto task = task_graph->GetTask(task_id);
 		if (task == nullptr) {
@@ -139,7 +139,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(
 		}
 		enqueue_task(task);
 	}
-	tasks_cv.notify_all();
+	tasks.cv.notify_all();
 	return ExitCode::SUCCESS;
 }
 
@@ -147,14 +147,13 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() noexcept 
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
-	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
+	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	for (auto t_entry: task_graph->Tasks()) {
 		auto & task = t_entry.second;
 		enqueue_task(task);
 	}
-	tasks_cv.notify_all();
+	tasks.cv.notify_all();
 	return ExitCode::SUCCESS;
-
 }
 
 
@@ -168,11 +167,10 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(uint32_t task_id
 			return ExitCode::ERR_TASK_ID;
 	}
 
-	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
+	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	dequeue_task(task);
-	tasks_cv.notify_all();
+	tasks.cv.notify_all();
 	return ExitCode::SUCCESS;
-
 }
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(
@@ -180,7 +178,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
-	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
+	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	for (auto task_id: tasks_ids) {
 		auto task = task_graph->GetTask(task_id);
 		if (task == nullptr) {
@@ -189,33 +187,32 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(
 		}
 		dequeue_task(task);
 	}
-	tasks_cv.notify_all();
+	tasks.cv.notify_all();
 	return ExitCode::SUCCESS;
-
 }
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() noexcept {
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
-	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
+	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	for (auto t_entry: task_graph->Tasks()) {
 		auto & task = t_entry.second;
 		dequeue_task(task);
 	}
-	tasks_cv.notify_all();
+	tasks.cv.notify_all();
 }
 
 void ExecutionSynchronizer::WaitForResourceAllocation() noexcept {
-	std::unique_lock<std::mutex> rtrm_ul(rtrm_mx);
-	while (!resources_assigned)
-		rtrm_cv.wait(rtrm_ul);
+	std::unique_lock<std::mutex> rtrm_ul(rtrm.mx);
+	while (!rtrm.scheduled)
+		rtrm.cv.wait(rtrm_ul);
 }
 
 void ExecutionSynchronizer::NotifyResourceAllocation() noexcept {
-	std::unique_lock<std::mutex> rtrm_ul(rtrm_mx);
-	resources_assigned = true;
-	rtrm_cv.notify_all();
+	std::unique_lock<std::mutex> rtrm_ul(rtrm.mx);
+	rtrm.scheduled = true;
+	rtrm.cv.notify_all();
 }
 
 void ExecutionSynchronizer::StartTaskControl(uint32_t task_id) noexcept {
@@ -243,14 +240,15 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 	NotifyResourceAllocation();
 
 	// Update the tasks status
-	std::unique_lock<std::mutex> tasks_lock(tasks_mx);
-	while (tasks_start_status.any()) {
-		tasks_cv.wait(tasks_lock);
-		while (!tasks_start_queue.empty()) {
-			auto task_id = tasks_start_queue.front();
+	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
+	while (tasks.start_status.any()) {
+		tasks.cv.wait(tasks_lock);
+		while (!tasks.start_queue.empty()) {
+			auto task_id = tasks.start_queue.front();
 			StartTaskControl(task_id);
-			tasks_start_queue.pop();
-			tasks_start_status.reset(task_id);
+			tasks.start_queue.pop();
+			tasks.start_status.reset(task_id);
+			logger->Info("Task [%d] started", task_id);
 		}
 	}
 
