@@ -220,6 +220,25 @@ public:
 	 */
 	inline BufferPtr_t OutputBuffer() { return out_buff; }
 
+
+	/**
+	 * \brief The events objects used for synchronization purposes
+	 * \return The map of Event object
+	 */
+	inline const EventMap_t & Events() { return events; }
+
+	/**
+	 * \brief Specific event object
+	 * \param id The event object identification number
+	 * \return A shared pointer to an Event object
+	 */
+	inline EventPtr_t GetEvent(uint32_t id) {
+		auto ev = events.find(id);
+		if (ev == events.end()) return nullptr;
+		return ev->second;
+	}
+
+
 private:
 
 	/*** Application identification number (PID, or other) ***/
