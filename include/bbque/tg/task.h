@@ -125,6 +125,18 @@ public:
 	 */
 	inline const std::list<uint32_t> & OutputBuffers() const { return out_buffers; }
 
+	/**
+	 * \brief Event (if) for synchronization purposes
+	 * \return the event identification number
+	 */
+	inline uint32_t Event() const { return event_id; }
+
+	/**
+	 * \brief Set the id of the event used synchronization purposes
+	 * \param id the event identification number
+	 */
+	inline void SetEvent(uint32_t id) { event_id = id; }
+
 
 private:
 
@@ -143,6 +155,9 @@ private:
 
 	// kernel function pointers
 
+	uint32_t event_id;
+
+
 	friend class boost::serialization::access;
 
 	template<class Archive>
@@ -153,6 +168,7 @@ private:
 		ar & processor_id;
 		ar & in_buffers;
 		ar & out_buffers;
+		ar & event_id;
 	}
 };
 
