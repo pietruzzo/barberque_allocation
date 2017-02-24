@@ -40,9 +40,9 @@ public:
 
 	inline uint32_t Id() const { return id; }
 
-	inline size_t GetSize() const { return size_in_bytes; }
+	inline size_t Size() const { return size_in_bytes; }
 
-	inline uint32_t GetPhysicalAddress() const { return phy_addr; }
+	inline uint32_t PhysicalAddress() const { return phy_addr; }
 
 	inline void SetPhysicalAddress(uint64_t address) {
 		phy_addr = address;
@@ -80,7 +80,8 @@ public:
 	}
 
 
-	inline uint32_t GetEvent() const { return event_id; }
+	inline uint32_t Event() const { return event_id; }
+
 
 
 private:

@@ -39,7 +39,7 @@ public:
 
 	inline uint32_t Id() const { return id; }
 
-	inline uint32_t GetPhysicalAddress() const { return phy_addr; }
+	inline uint32_t PhysicalAddress() const { return phy_addr; }
 
 private:
 
