@@ -73,9 +73,16 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 		return ExitCode::ERR_TASKS_IN_EXECUTION;
 	}
 
-	for (auto t_entry: task_graph->Tasks()) {
-		auto & task = t_entry.second;
+	for (auto & t_entry: task_graph->Tasks()) {
+		auto & task(t_entry.second);
 		tasks.start_status.set(task->Id());
+	}
+
+	for (auto & ev_entry: task_graph->Events()) {
+		auto & event(ev_entry.second);
+		std::shared_ptr<EventSync> ev_sync =
+			std::make_shared<EventSync>(event->Id());
+                events.emplace(event->Id(), ev_sync);
 	}
 
 	logger->Error("Task status: %s", tasks.start_status.to_string().c_str());
@@ -219,6 +226,16 @@ void ExecutionSynchronizer::NotifyResourceAllocation() noexcept {
 
 void ExecutionSynchronizer::StartTaskControl(uint32_t task_id) noexcept {
 
+}
+
+
+void ExecutionSynchronizer::NotifyEvent(uint32_t event_id) noexcept {
+	auto evit = events.find(event_id);
+	if (evit == events.end())
+		return;
+	evit->second->occurred = true;
+	evit->second->cv.notify_all();
+	logger->Info("Event{%d} notified", event_id);
 }
 
 

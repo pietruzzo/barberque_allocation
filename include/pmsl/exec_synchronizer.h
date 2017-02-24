@@ -52,10 +52,14 @@ public:
 	};
 
 
-	struct Event {
+	struct EventSync {
 		std::mutex mx;
 		std::condition_variable cv;
+		uint32_t id;
 		EventType event;
+		bool occurred = false;
+
+		EventSync(uint32_t _id): id(_id){}
 	};
 
 	ExecutionSynchronizer(
@@ -69,7 +73,9 @@ public:
 		RTLIB_Services_t * rtlib,
 		std::shared_ptr<TaskGraph> tg);
 
-	virtual ~ExecutionSynchronizer() {}
+	virtual ~ExecutionSynchronizer() {
+		events.clear();
+	}
 
 
 	ExitCode SetTaskGraph(std::shared_ptr<TaskGraph> tg) noexcept;
@@ -91,6 +97,9 @@ public:
 	ExitCode StopTasksAll() noexcept;
 
 
+	void NotifyEvent(uint32_t event_id) noexcept;
+
+
 	void WaitForResourceAllocation() noexcept;
 
 	inline bool IsResourceAllocationReady() noexcept {
@@ -106,6 +115,8 @@ protected:
 
 	std::shared_ptr<TaskGraph> task_graph;
 
+	std::map<uint32_t, std::shared_ptr<EventSync>> events;
+
 
 	/**
 	 * \struct tasks
@@ -116,8 +127,7 @@ protected:
 		std::condition_variable cv;
 		std::bitset<BBQUE_TASKS_MAX_NUM> start_status;
 		std::queue<uint32_t> start_queue;
-		std::vector<Event> events;
-
+		std::shared_ptr<EventSync> run_sync;
 	} tasks;
 
 	/**
