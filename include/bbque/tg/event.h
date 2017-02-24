@@ -47,10 +47,6 @@ private:
 
 	uint32_t phy_addr;
 
-	std::list<uint32_t> writer_tasks;
-
-	std::list<uint32_t> reader_tasks;
-
 
 	friend class boost::serialization::access;
 
@@ -58,8 +54,6 @@ private:
 	void serialize(Archive & ar, const unsigned int version) {
 		ar & id;
 		ar & phy_addr;
-		ar & writer_tasks;
-		ar & reader_tasks;
 	}
 
 };
