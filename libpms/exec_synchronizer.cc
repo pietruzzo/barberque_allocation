@@ -276,14 +276,18 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 	// Update the tasks status
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	while (tasks.start_status.any()) {
+		logger->Warn("Waiting for tasks to start...");
 		tasks.cv.wait(tasks_lock);
-		while (!tasks.start_queue.empty()) {
-			auto task_id = tasks.start_queue.front();
-			StartTaskControl(task_id);
-			tasks.start_queue.pop();
-			tasks.start_status.reset(task_id);
-			logger->Info("Task [%d] started", task_id);
-		}
+	}
+
+	logger->Crit("Task queue length: %d", tasks.start_queue.size());
+	while (!tasks.start_queue.empty()) {
+		auto task_id = tasks.start_queue.front();
+		StartTaskControl(task_id);
+		tasks.start_queue.pop();
+		tasks.start_status.reset(task_id);
+		logger->Info("Task [%d] started on processor %d", task_id,
+				task_graph->GetTask(task_id)->GetMappedProcessor());
 	}
 
 	return RTLIB_OK;
