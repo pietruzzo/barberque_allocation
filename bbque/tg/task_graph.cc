@@ -109,4 +109,13 @@ TaskGraph::AddTask(TaskPtr_t task, int in_buff_id, int out_buff_id) {
 /* ========================== Buffers ===================== */
 
 
+TaskGraph::ExitCode TaskGraph::SetOutputBuffer(int32_t id) {
+	auto outb = buffers.find(id);
+	if (outb == buffers.end())
+		return ExitCode::ERR_INVALID_BUFFER;
+	this->out_buff = outb->second;
+	return ExitCode::SUCCESS;
+}
+
+
 } // namespace bbque

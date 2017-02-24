@@ -205,6 +205,21 @@ public:
 	 */
 	void RemoveBuffer(uint32_t id);
 
+	/**
+	 * \brief Set the globale output buffer of the task-graph execution, i.e. where
+	 * the final output data will be written
+	 * \param id Buffer identification number
+	 * \return SUCCESS for success or ERR_INVALID_BUFFER if the id provided does not
+	 * correspond to any registered buffer
+	 */
+	ExitCode SetOutputBuffer(int32_t id);
+
+	/**
+	 * \brief Get the global output buffer
+	 * \return Shared pointer to the buffer descriptor
+	 */
+	inline BufferPtr_t OutputBuffer() { return out_buff; }
+
 private:
 
 	/*** Application identification number (PID, or other) ***/
@@ -221,6 +236,9 @@ private:
 
 	/*** Event objects ***/
 	EventMap_t events;
+
+	/*** Global output buffer ***/
+	BufferPtr_t out_buff = nullptr;
 
 
 	friend class boost::serialization::access;
