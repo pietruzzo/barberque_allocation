@@ -243,6 +243,21 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onSetup() {
 	if (!CheckTaskGraph())
 		return RTLIB_ERROR;
 
+	// Synchronization event for onRun() return
+	BufferPtr_t outb = task_graph->OutputBuffer();
+	if (outb == nullptr) {
+		logger->Error("Task-graph output buffer missing");
+		return RTLIB_ERROR;
+	}
+
+	EventPtr_t ev = task_graph->GetEvent(outb->Event());
+	if (ev == nullptr) {
+		logger->Error("Task-graph synchronization event missing");
+		return RTLIB_ERROR;
+	}
+
+	tasks.run_sync = events[ev->Id()];
+	logger->Info("Run synchronization event id = %d", tasks.run_sync->id);
 	SendTaskGraphToRM();
 	logger->Info("Application [%s] starting...", app_name.c_str());
 
@@ -282,6 +297,13 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
 			return RTLIB_EXC_WORKLOAD_NONE;
 		}
 	}
+
+	std::unique_lock<std::mutex> run_lock(tasks.run_sync->mx);
+	while (!tasks.run_sync->occurred) {
+		tasks.run_sync->cv.wait(run_lock);
+		logger->Info("onRun[%d] sync event = %d", Cycles(), tasks.run_sync->id);
+	}
+	tasks.run_sync->occurred = false;
 
 	return RTLIB_OK;
 }
