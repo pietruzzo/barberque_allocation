@@ -82,6 +82,7 @@ public:
 
 	inline uint32_t Event() const { return event_id; }
 
+	inline void SetEvent(uint32_t id) { event_id = id; }
 
 
 private:
