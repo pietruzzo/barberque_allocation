@@ -100,6 +100,8 @@ public:
 
 protected:
 
+	std::string app_name;
+
 	std::string serial_file_path;
 
 	std::shared_ptr<TaskGraph> task_graph;

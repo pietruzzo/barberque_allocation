@@ -39,7 +39,8 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 		std::string const & name,
 		std::string const & recipe,
 		RTLIB_Services_t * rtlib):
-	BbqueEXC(name, recipe, rtlib) {
+	BbqueEXC(name, recipe, rtlib),
+	app_name(name) {
 }
 
 
@@ -49,6 +50,7 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 		RTLIB_Services_t * rtlib,
 		std::shared_ptr<TaskGraph> tg):
 	BbqueEXC(name, recipe, rtlib),
+	app_name(name),
 	task_graph(tg) {
 }
 
@@ -225,7 +227,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onSetup() {
 		return RTLIB_ERROR;
 
 	SendTaskGraphToRM();
-	logger->Info("Application [%s] starting...", exc_name);
+	logger->Info("Application [%s] starting...", app_name.c_str());
 
 	return RTLIB_OK;
 }
