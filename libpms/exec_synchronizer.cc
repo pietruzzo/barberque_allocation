@@ -58,14 +58,14 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 		+ exc_name;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
-	if (tasks.start_status.any()) {
+	if (tasks.is_stopped.any()) {
 		// Cannot change the TG while still in execution
 		return ExitCode::ERR_TASKS_IN_EXECUTION;
 	}
 
 	for (auto & t_entry: task_graph->Tasks()) {
 		auto & task(t_entry.second);
-		tasks.start_status.set(task->Id());
+		tasks.is_stopped.set(task->Id());
 	}
 
 	for (auto & ev_entry: task_graph->Events()) {
@@ -75,7 +75,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
                 events.emplace(event->Id(), ev_sync);
 	}
 
-	logger->Error("Task status: %s", tasks.start_status.to_string().c_str());
+	logger->Error("Task status: %s", tasks.is_stopped.to_string().c_str());
 	tasks.cv.notify_all();
 	return ExitCode::SUCCESS;
 }
@@ -263,9 +263,10 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 	RecvTaskGraphFromRM();
 	NotifyResourceAllocation();
 
-	// Update the tasks status
+	// Wait for tasks to start
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
-	while (tasks.start_status.any()) {
+	logger->Info("Tasks status: %s", tasks.is_stopped.to_string().c_str());
+	while (tasks.is_stopped.any()) {
 		logger->Warn("Waiting for tasks to start...");
 		tasks.cv.wait(tasks_lock);
 	}
@@ -275,8 +276,8 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 		auto task_id = tasks.start_queue.front();
 		StartTaskControl(task_id);
 		tasks.start_queue.pop();
-		tasks.start_status.reset(task_id);
-		logger->Info("Task [%d] started on processor %d", task_id,
+		tasks.is_stopped.reset(task_id);
+		logger->Info("[Task %2d] started on processor %d", task_id,
 				task_graph->GetTask(task_id)->GetMappedProcessor());
 	}
 
@@ -286,8 +287,8 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
 	{
 		std::unique_lock<std::mutex> tasks_lock(tasks.mx);
-		if (tasks.start_status.count() == task_graph->TaskCount()) {
-			logger->Notice("Termination...");
+		if (tasks.is_stopped.count() == task_graph->TaskCount()) {
+			logger->Info("Termination...");
 			return RTLIB_EXC_WORKLOAD_NONE;
 		}
 	}
