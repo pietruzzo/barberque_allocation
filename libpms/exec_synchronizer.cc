@@ -67,6 +67,11 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 	for (auto & t_entry: task_graph->Tasks()) {
 		auto & task(t_entry.second);
 		tasks.is_stopped.set(task->Id());
+		tasks.is_running[task->Id()] = false;
+		// Profiling initialization
+		std::shared_ptr<TaskProfiling> t_prof =
+			std::make_shared<TaskProfiling>();
+		tasks.profiles.emplace(task->Id(), t_prof);
 	}
 
 	// Task synchronization events initialization
@@ -240,9 +245,49 @@ void ExecutionSynchronizer::NotifyResourceAllocation() noexcept {
 
 void ExecutionSynchronizer::TaskProfiler(uint32_t task_id) noexcept {
 
-
-
+	auto task = task_graph->GetTask(task_id);
+	if (task == nullptr) {
+		logger->Crit("[Task %2d] missing task descriptor", task_id);
 		return;
+	}
+
+	auto out_buffers = task->OutputBuffers();
+	if (out_buffers.empty()) {
+		logger->Error("[Task %2d] missing output buffers", task_id);
+		return;
+	}
+
+	// Pick the first output buffer of the task
+	auto buffer = task_graph->GetBuffer(out_buffers.front());
+	if (buffer == nullptr) {
+		logger->Error("[Task %2d] missing output buffer descriptor", task_id);
+		return;
+	}
+
+	auto evit = events.find(buffer->Event());
+	if (evit == events.end()) {
+		logger->Error("[Task %2d] missing event(%d) associated to buffer %d",
+			task_id, buffer->Event(), buffer->Id());
+		return;
+	}
+
+	auto & event(evit->second);
+	double t = 0;
+	auto prof_data = tasks.profiles[task_id];
+	prof_data->timer.start();
+
+	// Synchronize the profiling timing according to the events (write)
+	// affecting the output buffer of the task
+	logger->Info("[Task %2d] profiling started", task_id);
+	while (tasks.is_running[task_id]) {
+		std::unique_lock<std::mutex> ev_lock(event->mx);
+		event->cv.wait(ev_lock);
+		t = (prof_data->timer.getElapsedTimeUs() - t);
+		prof_data->acc(t);
+		logger->Info("[Task %d] timing current = %.2f us", task_id, t);
+	}
+	prof_data->timer.stop();
+
 }
 
 // ---------------- BbqueEXC overloading ------------------------------------//
@@ -294,6 +339,8 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 	logger->Info("Tasks queue length: %d", tasks.start_queue.size());
 	while (!tasks.start_queue.empty()) {
 		auto task_id = tasks.start_queue.front();
+		tasks.monitor_thr[task_id] = std::move(
+			std::thread(&ExecutionSynchronizer::TaskProfiler, this, task_id));
 		tasks.start_queue.pop();
 		tasks.is_stopped.reset(task_id);
 		logger->Info("[Task %2d] started on processor %d", task_id,
@@ -327,13 +374,24 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
 
 RTLIB_ExitCode_t ExecutionSynchronizer::onMonitor() {
 
+	for (auto & prof_entry: tasks.profiles) {
+		auto & prof_data(prof_entry.second);
+		logger->Warn("[Task %2d] timing mean = %.2f us",
+			prof_entry.first, mean(prof_data->acc));
+	}
+
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t ExecutionSynchronizer::onRelease() {
 
-	return RTLIB_OK;
+	for (auto & ev_entry: events)
+		NotifyEvent(ev_entry.first);
 
+	for (auto & t_entry: tasks.monitor_thr)
+		t_entry.second.join();
+
+	return RTLIB_OK;
 }
 
 // ---------------------------------------------------------------------------//

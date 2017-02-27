@@ -18,17 +18,25 @@
 #ifndef BBQUE_EXC_SYNCHRONIZER_H_
 #define BBQUE_EXC_SYNCHRONIZER_H_
 
+#include <atomic>
 #include <bitset>
 #include <mutex>
 #include <condition_variable>
 #include <queue>
+#include <thread>
 #include <vector>
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+
 #include "bbque/bbque_exc.h"
+#include "bbque/utils/timer.h"
 #include "bbque/tg/task_graph.h"
 
 #define BBQUE_TG_SERIAL_FILE "/tmp/tg_"
 
+
+using namespace boost::accumulators;
 
 namespace bbque {
 
@@ -59,6 +67,11 @@ public:
 		EventSync(uint32_t _id): id(_id){}
 	};
 
+	struct TaskProfiling {
+		bbque::utils::Timer timer;
+		accumulator_set<double, features<tag::mean, tag::variance>> acc;
+	};
+
 	/**
 	 * \brief Constructor
 	 */
@@ -80,6 +93,9 @@ public:
 	 * \brief Destructor
 	 */
 	virtual ~ExecutionSynchronizer() {
+		tasks.profiles.clear();
+		tasks.is_running.clear();
+		tasks.monitor_thr.clear();
 		events.clear();
 	}
 
@@ -197,6 +213,9 @@ protected:
 		std::condition_variable cv;
 		std::queue<uint32_t>                 start_queue;
 		std::bitset<BBQUE_TASKS_MAX_NUM>       is_stopped;
+		std::map<uint32_t, std::atomic<bool>> is_running;
+		std::map<uint32_t, std::thread>      monitor_thr;
+		std::map<uint32_t, std::shared_ptr<TaskProfiling>> profiles;
 	} tasks;
 
 	/**
