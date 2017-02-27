@@ -80,9 +80,7 @@ public:
 	 * \brief Destructor
 	 */
 	virtual ~ExecutionSynchronizer() {
-		tasks.profiles.clear();
-		tasks.is_running.clear();
-		tasks.monitor_thr.clear();
+		tasks.runtime.clear();
 		events.clear();
 	}
 
@@ -193,6 +191,15 @@ protected:
 		accumulator_set<double, features<tag::mean, tag::variance>> acc;
 	};
 
+	struct RuntimeInfo {
+		std::atomic<bool> is_running;
+		std::thread  monitor_thr;
+		TaskProfiling profile;
+
+		RuntimeInfo(bool _run): is_running(_run) {}
+	};
+
+
 	std::string app_name;
 
 	std::string serial_file_path;
@@ -205,6 +212,7 @@ protected:
 	std::map<uint32_t, std::shared_ptr<EventSync>> events;
 
 
+
 	/**
 	 * \struct tasks
 	 * \brief Status information about tasks
@@ -212,12 +220,11 @@ protected:
 	struct TasksInfo {
 		std::mutex mx;
 		std::condition_variable cv;
-		std::queue<uint32_t>                 start_queue;
-		std::bitset<BBQUE_TASKS_MAX_NUM>       is_stopped;
-		std::map<uint32_t, std::atomic<bool>> is_running;
-		std::map<uint32_t, std::thread>      monitor_thr;
-		std::map<uint32_t, std::shared_ptr<TaskProfiling>> profiles;
+		std::queue<uint32_t>             start_queue;
+		std::bitset<BBQUE_TASKS_MAX_NUM>  is_stopped;
+		std::map<uint32_t, std::shared_ptr<RuntimeInfo>> runtime;
 	} tasks;
+
 
 	/**
 	 * \struct rtrm
@@ -280,14 +287,14 @@ protected:
 		if (tasks.is_stopped.test(t->Id())) {
 			tasks.start_queue.push(t->Id());
 			tasks.is_stopped.reset(t->Id());
-			tasks.is_running[t->Id()] = true;
+			tasks.runtime[t->Id()]->is_running = true;
 		}
 	}
 
 	inline void dequeue_task(TaskPtr_t t) {
 		if (!tasks.is_stopped.test(t->Id())) {
 			tasks.is_stopped.set(t->Id());
-			tasks.is_running[t->Id()] = false;
+			tasks.runtime[t->Id()]->is_running = false;
 		}
 		NotifyEvent(t->Event());
 	}
