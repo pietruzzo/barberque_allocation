@@ -97,6 +97,7 @@ public:
 		return rtrm.scheduled;
 	}
 
+
 protected:
 
 	std::string app_name;
@@ -115,10 +116,10 @@ protected:
 	 * \struct tasks
 	 * \brief Status information about tasks
 	 */
-	struct {
+	struct TasksInfo {
 		std::mutex mx;
 		std::condition_variable cv;
-		std::queue<uint32_t> start_queue;
+		std::queue<uint32_t>                 start_queue;
 		std::bitset<BBQUE_TASKS_MAX_NUM>       is_stopped;
 	} tasks;
 
@@ -126,7 +127,7 @@ protected:
 	 * \struct rtrm
 	 * \brief Status information the actions of the resource manager
 	 */
-	struct {
+	struct RTRMInfo {
 		std::mutex mx;
 		std::condition_variable cv;
 		bool scheduled;
@@ -144,7 +145,7 @@ protected:
 	void StartTaskControl(uint32_t task_id) noexcept;
 
 
-	// ----- BbqueEXC derived functions ----- //
+	// --------------- BbqueEXC derived functions -------------------- //
 
 
 	RTLIB_ExitCode_t onSetup() override;

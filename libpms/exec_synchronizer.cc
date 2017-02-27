@@ -63,11 +63,13 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 		return ExitCode::ERR_TASKS_IN_EXECUTION;
 	}
 
+	// Task execution status initialization
 	for (auto & t_entry: task_graph->Tasks()) {
 		auto & task(t_entry.second);
 		tasks.is_stopped.set(task->Id());
 	}
 
+	// Task synchronization events initialization
 	for (auto & ev_entry: task_graph->Events()) {
 		auto & event(ev_entry.second);
 		std::shared_ptr<EventSync> ev_sync =
@@ -99,16 +101,19 @@ void ExecutionSynchronizer::SendTaskGraphToRM() {
 	std::ofstream ofs(serial_file_path);
 	boost::archive::text_oarchive oa(ofs);
 	oa << *(this->task_graph);
+	logger->Info("Task-graph sent for resource allocation");
 }
 
 void ExecutionSynchronizer::RecvTaskGraphFromRM() {
 	std::ifstream ifs(serial_file_path);
 	boost::archive::text_iarchive ia(ifs);
 	ia >> *(this->task_graph);
+	logger->Info("Task-graph restored after resource allocation");
 }
 
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(uint32_t task_id) noexcept {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(
+		uint32_t task_id) noexcept {
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
@@ -156,7 +161,8 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() noexcept 
 }
 
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(uint32_t task_id) noexcept {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(
+		uint32_t task_id) noexcept {
 	if (!CheckTaskGraph())
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
@@ -195,18 +201,36 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() noexcept {
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
-	for (auto t_entry: task_graph->Tasks()) {
-		auto & task = t_entry.second;
+	for (auto & t_entry: task_graph->Tasks()) {
+		auto & task(t_entry.second);
 		dequeue_task(task);
 	}
 	tasks.cv.notify_all();
 }
+
+
+
+void ExecutionSynchronizer::NotifyEvent(uint32_t event_id) noexcept {
+	auto evit = events.find(event_id);
+	if (evit == events.end())
+		return;
+	std::unique_lock<std::mutex> ev_lock(evit->second->mx);
+	evit->second->occurred = true;
+	evit->second->cv.notify_all();
+	logger->Info("[Event %2d] notified", event_id);
+}
+
+
 
 void ExecutionSynchronizer::WaitForResourceAllocation() noexcept {
 	std::unique_lock<std::mutex> rtrm_ul(rtrm.mx);
 	while (!rtrm.scheduled)
 		rtrm.cv.wait(rtrm_ul);
 }
+
+
+// ---------------- Protected/private ---------------------------------------//
+
 
 void ExecutionSynchronizer::NotifyResourceAllocation() noexcept {
 	std::unique_lock<std::mutex> rtrm_ul(rtrm.mx);
@@ -219,28 +243,23 @@ void ExecutionSynchronizer::StartTaskControl(uint32_t task_id) noexcept {
 }
 
 
-void ExecutionSynchronizer::NotifyEvent(uint32_t event_id) noexcept {
-	auto evit = events.find(event_id);
-	if (evit == events.end())
 		return;
-	evit->second->occurred = true;
-	evit->second->cv.notify_all();
-	logger->Info("Event{%d} notified", event_id);
 }
 
+// ---------------- BbqueEXC overloading ------------------------------------//
 
 RTLIB_ExitCode_t ExecutionSynchronizer::onSetup() {
 	if (!CheckTaskGraph())
 		return RTLIB_ERROR;
 
 	// Synchronization event for onRun() return
-	BufferPtr_t outb = task_graph->OutputBuffer();
+	auto outb = task_graph->OutputBuffer();
 	if (outb == nullptr) {
 		logger->Error("Task-graph output buffer missing");
 		return RTLIB_ERROR;
 	}
 
-	EventPtr_t ev = task_graph->GetEvent(outb->Event());
+	auto ev = task_graph->GetEvent(outb->Event());
 	if (ev == nullptr) {
 		logger->Error("Task-graph synchronization event missing");
 		return RTLIB_ERROR;
@@ -248,12 +267,13 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onSetup() {
 
 	on_run_sync = events[ev->Id()];
 	logger->Info("Task-graph synchronization event_id = %d", on_run_sync->id);
+
+	// Send the task graph
 	SendTaskGraphToRM();
-	logger->Info("Application [%s] starting...", app_name.c_str());
+	logger->Info("[Application %s] starting...", app_name.c_str());
 
 	return RTLIB_OK;
 }
-
 
 
 RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
@@ -261,6 +281,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 
 	// Task graph here should has been filled by the RTRM policy
 	RecvTaskGraphFromRM();
+	logger->Info("Resource allocation performed");
 	NotifyResourceAllocation();
 
 	// Wait for tasks to start
@@ -271,7 +292,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 		tasks.cv.wait(tasks_lock);
 	}
 
-	logger->Crit("Task queue length: %d", tasks.start_queue.size());
+	logger->Info("Tasks queue length: %d", tasks.start_queue.size());
 	while (!tasks.start_queue.empty()) {
 		auto task_id = tasks.start_queue.front();
 		StartTaskControl(task_id);
@@ -317,5 +338,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRelease() {
 
 }
 
+// ---------------------------------------------------------------------------//
 
-}
+
+} // namespace bbque
