@@ -32,6 +32,13 @@
 
 namespace bbque {
 
+/**
+ * \class ExecutionSynchronizer
+ *
+ * \brief This class exposes some high-level member function to enable the
+ * integration of a specific programming model on top of the BarbequeRTRM
+ * Application Execution Model.
+ */
 class ExecutionSynchronizer: public bbque::rtlib::BbqueEXC {
 
 public:
@@ -52,46 +59,115 @@ public:
 		EventSync(uint32_t _id): id(_id){}
 	};
 
+	/**
+	 * \brief Constructor
+	 */
 	ExecutionSynchronizer(
 		std::string const & name,
 		std::string const & recipe,
 		RTLIB_Services_t * rtlib);
 
+	/**
+	 * \brief Constructor
+	 */
 	ExecutionSynchronizer(
 		std::string const & name,
 		std::string const & recipe,
 		RTLIB_Services_t * rtlib,
 		std::shared_ptr<TaskGraph> tg);
 
+	/**
+	 * \brief Destructor
+	 */
 	virtual ~ExecutionSynchronizer() {
 		events.clear();
 	}
 
-
+	/**
+	 * \brief Set a task-graph based description of the application
+	 * \param tg Shared pointer to the TaskGraph object
+	 * \return
+	 */
 	ExitCode SetTaskGraph(std::shared_ptr<TaskGraph> tg) noexcept;
 
+	/**
+	 * \brief The task-graph based description of the application
+	 * \return Shared pointer to the TaskGraph object
+	 */
 	inline std::shared_ptr<TaskGraph> GetTaskGraph() noexcept {
 		return task_graph;
 	}
 
+	/**
+	 * \brief Notify the launch of a task
+	 * \param task_id The task identification number
+	 * \return SUCCESS for success. ERR_TASK_ID in case of wrong
+	 * task identification number. ERR_TASK_GRAPH_NOT_VALID in case
+	 * of bad formed task-graph
+	 */
 	ExitCode StartTask(uint32_t task_id) noexcept;
 
+	/**
+	 * \brief Notify the launch of a set of tasks
+	 * \param tasks_id List of task identification numbers
+	 * \return SUCCESS for success. ERR_TASK_ID in case of wrong
+	 * task identification number. ERR_TASK_GRAPH_NOT_VALID in case
+	 * of bad formed task-graph
+	 */
 	ExitCode StartTasks(std::list<uint32_t> tasks_id) noexcept;
 
+	/**
+	 * \brief Notify the launch of all the tasks in the task-graph
+	 * \return SUCCESS for success. ERR_TASK_ID in case of wrong
+	 * task identification number. ERR_TASK_GRAPH_NOT_VALID in case
+	 * of bad formed task-graph
+	 */
 	ExitCode StartTasksAll() noexcept;
 
+	/**
+	 * \brief Notify the stop of a task
+	 * \param task_id The task identification number
+	 * \return SUCCESS for success. ERR_TASK_ID in case of wrong
+	 * task identification number. ERR_TASK_GRAPH_NOT_VALID in case
+	 * of bad formed task-graph
+	 */
 	ExitCode StopTask(uint32_t task_id) noexcept;
 
+	/**
+	 * \brief Notify the stop of a set of tasks
+	 * \param tasks_id List of task identification numbers
+	 * \return SUCCESS for success. ERR_TASK_ID in case of wrong
+	 * task identification number. ERR_TASK_GRAPH_NOT_VALID in case
+	 * of bad formed task-graph
+	 */
 	ExitCode StopTasks(std::list<uint32_t> tasks_id) noexcept;
 
+	/**
+	 * \brief Notify the stop of all the tasks in the task-graph
+	 * \return SUCCESS for success. ERR_TASK_ID in case of wrong
+	 * task identification number. ERR_TASK_GRAPH_NOT_VALID in case
+	 * of bad formed task-graph
+	 */
 	ExitCode StopTasksAll() noexcept;
 
 
+	/**
+	 * \brief Notify (all) a registered event
+	 * \param event_id the event identification number
+	 */
 	void NotifyEvent(uint32_t event_id) noexcept;
 
-
+	/**
+	 * \brief Wait for the resource manager to assign resources to
+	 * the application
+	 */
 	void WaitForResourceAllocation() noexcept;
 
+	/**
+	 * \brief Thread-safe check of the resource assignment status
+	 * \return true if the application has been scheduled, false
+	 * otherwise
+	 */
 	inline bool IsResourceAllocationReady() noexcept {
 		std::unique_lock<std::mutex> rtrm_ul(rtrm.mx);
 		return rtrm.scheduled;
@@ -134,12 +210,27 @@ protected:
 	} rtrm;
 
 
+	/**
+	 * \brief Check the task graph provided is valid
+	 * \return true if yes, false otherwise
+	 */
 	bool CheckTaskGraph() noexcept;
 
+	/**
+	 * \brief Send the task graph to the resource manager
+	 */
 	void SendTaskGraphToRM();
 
+	/**
+	 * \brief Receive the task graph from the resource manager after
+	 * the policy execution
+	 */
 	void RecvTaskGraphFromRM();
 
+	/**
+	 * \brief Notify the resource allocation done and thus the
+	 * scheduling of the application
+	 */
 	void NotifyResourceAllocation() noexcept;
 
 	void StartTaskControl(uint32_t task_id) noexcept;
