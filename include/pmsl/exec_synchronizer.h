@@ -233,7 +233,11 @@ protected:
 	 */
 	void NotifyResourceAllocation() noexcept;
 
-	void StartTaskControl(uint32_t task_id) noexcept;
+	/**
+	 * \brief Perform the task profiling
+	 * \param task_id The task identification number
+	 */
+	void TaskProfiler(uint32_t task_id) noexcept;
 
 
 	// --------------- BbqueEXC derived functions -------------------- //

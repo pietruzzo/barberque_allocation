@@ -238,9 +238,8 @@ void ExecutionSynchronizer::NotifyResourceAllocation() noexcept {
 	rtrm.cv.notify_all();
 }
 
-void ExecutionSynchronizer::StartTaskControl(uint32_t task_id) noexcept {
+void ExecutionSynchronizer::TaskProfiler(uint32_t task_id) noexcept {
 
-}
 
 
 		return;
@@ -295,7 +294,6 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 	logger->Info("Tasks queue length: %d", tasks.start_queue.size());
 	while (!tasks.start_queue.empty()) {
 		auto task_id = tasks.start_queue.front();
-		StartTaskControl(task_id);
 		tasks.start_queue.pop();
 		tasks.is_stopped.reset(task_id);
 		logger->Info("[Task %2d] started on processor %d", task_id,
