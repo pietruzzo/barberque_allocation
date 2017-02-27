@@ -36,14 +36,6 @@ class ExecutionSynchronizer: public bbque::rtlib::BbqueEXC {
 
 public:
 
-	enum class EventType {
-		NONE,
-		TASK_START,
-		TASK_COMPLETE,
-		BUFFER_READ,
-		BUFFER_WRITE
-	};
-
 	enum class ExitCode {
 		SUCCESS,
 		ERR_TASK_ID,
@@ -51,12 +43,10 @@ public:
 		ERR_TASKS_IN_EXECUTION
 	};
 
-
 	struct EventSync {
 		std::mutex mx;
 		std::condition_variable cv;
 		uint32_t id;
-		EventType event;
 		bool occurred = false;
 
 		EventSync(uint32_t _id): id(_id){}
