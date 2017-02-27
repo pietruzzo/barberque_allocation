@@ -58,19 +58,6 @@ public:
 		ERR_TASKS_IN_EXECUTION
 	};
 
-	struct EventSync {
-		std::mutex mx;
-		std::condition_variable cv;
-		uint32_t id;
-		bool occurred = false;
-
-		EventSync(uint32_t _id): id(_id){}
-	};
-
-	struct TaskProfiling {
-		bbque::utils::Timer timer;
-		accumulator_set<double, features<tag::mean, tag::variance>> acc;
-	};
 
 	/**
 	 * \brief Constructor
@@ -191,6 +178,20 @@ public:
 
 
 protected:
+
+	struct EventSync {
+		std::mutex mx;
+		std::condition_variable cv;
+		uint32_t id;
+		bool occurred = false;
+
+		EventSync(uint32_t _id): id(_id){}
+	};
+
+	struct TaskProfiling {
+		bbque::utils::Timer timer;
+		accumulator_set<double, features<tag::mean, tag::variance>> acc;
+	};
 
 	std::string app_name;
 
