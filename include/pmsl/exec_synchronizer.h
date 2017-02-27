@@ -155,6 +155,25 @@ protected:
 
 	RTLIB_ExitCode_t onRelease() override;
 
+
+	// --------------------------------------------------------------- //
+
+	inline void enqueue_task(TaskPtr_t t) {
+		if (tasks.is_stopped.test(t->Id())) {
+			tasks.start_queue.push(t->Id());
+			tasks.is_stopped.reset(t->Id());
+			tasks.is_running[t->Id()] = true;
+		}
+	}
+
+	inline void dequeue_task(TaskPtr_t t) {
+		if (!tasks.is_stopped.test(t->Id())) {
+			tasks.is_stopped.set(t->Id());
+			tasks.is_running[t->Id()] = false;
+		}
+		NotifyEvent(t->Event());
+	}
+
 };
 
 

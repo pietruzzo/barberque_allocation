@@ -22,16 +22,6 @@
 
 #include "pmsl/exec_synchronizer.h"
 
-#define enqueue_task(t) \
-	if (tasks.start_status.test(t->Id())) { \
-		tasks.start_queue.push(t->Id()); \
-		tasks.start_status.reset(t->Id()); \
-	}
-
-#define dequeue_task(t) \
-	if (!tasks.start_status.test(t->Id())) { \
-		tasks.start_status.set(t->Id()); \
-	}
 
 namespace bbque {
 
