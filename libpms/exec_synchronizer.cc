@@ -217,18 +217,19 @@ void ExecutionSynchronizer::NotifyEvent(uint32_t event_id) noexcept {
 	auto evit = events.find(event_id);
 	if (evit == events.end())
 		return;
+	auto & event(evit->second);
 	std::unique_lock<std::mutex> ev_lock(evit->second->mx);
-	evit->second->occurred = true;
-	evit->second->cv.notify_all();
+	event->occurred = true;
+	event->cv.notify_all();
 	logger->Info("[Event %2d] notified", event_id);
 }
 
 
 
 void ExecutionSynchronizer::WaitForResourceAllocation() noexcept {
-	std::unique_lock<std::mutex> rtrm_ul(rtrm.mx);
+	std::unique_lock<std::mutex> rtrm_lock(rtrm.mx);
 	while (!rtrm.scheduled)
-		rtrm.cv.wait(rtrm_ul);
+		rtrm.cv.wait(rtrm_lock);
 }
 
 
@@ -236,7 +237,7 @@ void ExecutionSynchronizer::WaitForResourceAllocation() noexcept {
 
 
 void ExecutionSynchronizer::NotifyResourceAllocation() noexcept {
-	std::unique_lock<std::mutex> rtrm_ul(rtrm.mx);
+	std::unique_lock<std::mutex> rtrm_lock(rtrm.mx);
 	rtrm.scheduled = true;
 	rtrm.cv.notify_all();
 }
@@ -270,7 +271,7 @@ void ExecutionSynchronizer::TaskProfiler(uint32_t task_id) noexcept {
 	}
 
 	auto & event(evit->second);
-	double t = 0;
+	double t = 0.0;
 	auto & prof_data = tasks.runtime[task_id]->profile;
 	prof_data.timer.start();
 
