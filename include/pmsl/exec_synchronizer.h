@@ -105,6 +105,9 @@ protected:
 
 	std::shared_ptr<TaskGraph> task_graph;
 
+
+	std::shared_ptr<EventSync> on_run_sync;
+
 	std::map<uint32_t, std::shared_ptr<EventSync>> events;
 
 
@@ -116,7 +119,6 @@ protected:
 		std::mutex mx;
 		std::condition_variable cv;
 		std::queue<uint32_t> start_queue;
-		std::shared_ptr<EventSync> run_sync;
 		std::bitset<BBQUE_TASKS_MAX_NUM>       is_stopped;
 	} tasks;
 

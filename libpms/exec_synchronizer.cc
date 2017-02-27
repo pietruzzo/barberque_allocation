@@ -246,8 +246,8 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onSetup() {
 		return RTLIB_ERROR;
 	}
 
-	tasks.run_sync = events[ev->Id()];
-	logger->Info("Run synchronization event id = %d", tasks.run_sync->id);
+	on_run_sync = events[ev->Id()];
+	logger->Info("Task-graph synchronization event_id = %d", on_run_sync->id);
 	SendTaskGraphToRM();
 	logger->Info("Application [%s] starting...", app_name.c_str());
 
@@ -293,12 +293,14 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
 		}
 	}
 
-	std::unique_lock<std::mutex> run_lock(tasks.run_sync->mx);
-	while (!tasks.run_sync->occurred) {
-		tasks.run_sync->cv.wait(run_lock);
-		logger->Info("onRun[%d] sync event = %d", Cycles(), tasks.run_sync->id);
+	// Wait for synchronization event: task-graph output
+	std::unique_lock<std::mutex> run_lock(on_run_sync->mx);
+	while (!on_run_sync->occurred) {
+		on_run_sync->cv.wait(run_lock);
+		logger->Info("<onRun> cycle = %d sync_event = %d",
+			Cycles(), on_run_sync->id);
 	}
-	tasks.run_sync->occurred = false;
+	on_run_sync->occurred = false;
 
 	return RTLIB_OK;
 }
