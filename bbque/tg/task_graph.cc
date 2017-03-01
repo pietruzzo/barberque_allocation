@@ -80,41 +80,6 @@ bool TaskGraph::AreBuffersValid(TaskPtr_t task, BufferMap_t const & buffers) {
 }
 
 
-/* ========================== Tasks ===================== */
-/*
-TaskGraph::ExitCode
-TaskGraph::AddTask(TaskPtr_t task, BufferPtr_t in_buff, BufferPtr_t out_buff) {
-	if (in_buff != nullptr) {
-		in_buff->AddOutputTask(task);
-		buffers.emplace(in_buff->Id(), in_buff);
-	}
-	if (out_buff != nullptr) {
-		out_buff->AddInputTask(task);
-		buffers.emplace(out_buff->Id(), out_buff);
-	}
-
-	return AddTask(task);
-}
-
-TaskGraph::ExitCode
-TaskGraph::AddTask(TaskPtr_t task, int in_buff_id, int out_buff_id) {
-	auto in_buff = buffers.find(in_buff_id);
-	if (in_buff == buffers.end()) {
-		return ERR_INVALID_BUFFER;
-	}
-
-	auto out_buff = buffers.find(in_buff_id);
-	if (out_buff == buffers.end()) {
-		return ERR_INVALID_BUFFER;
-	}
-
-	in_buff->second->AddOutputTask(task);
-	out_buff->second->AddInputTask(task);
-	return AddTask(task);
-}
-*/
-
-
 /* ========================== Buffers ===================== */
 
 

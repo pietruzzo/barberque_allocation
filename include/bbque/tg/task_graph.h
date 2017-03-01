@@ -141,33 +141,6 @@ public:
 	}
 
 	/**
-	 * \brief Add a task to the task-graph
-	 * \param task Shared pointer to Task object
-	 * \param in_buff Shared pointer to input buffer
-	 * \param out_buff Shared pointer to output buffer
-	 * \return
-	 */
-	ExitCode AddTask(TaskPtr_t task, BufferPtr_t in_buff, BufferPtr_t out_buff);
-
-	/**
-	 * \brief Add a task to the task-graph
-	 * \param task Shared pointer to Task object
-	 * \param in_buff Input buffer id
-	 * \param out_buff Output buffer id
-	 * \return
-	 */
-	ExitCode AddTask(TaskPtr_t task, uint32_t in_buff, uint32_t out_buff);
-
-	/**
-	 * \brief Add a task to the task-graph
-	 * \param task Shared pointer to Task object
-	 * \param in_buffers List of input buffer id
-	 * \param out_buffers List of output buffer id
-	 * \return
-	 */
-	ExitCode AddTask(TaskPtr_t task, IdList_t in_buffers, IdList_t out_buffers);
-
-	/**
 	 * \brief Remove a task descriptor
 	 * \param task_id Task identification number
 	 */
@@ -201,22 +174,6 @@ public:
 		if (buff == buffers.end()) return nullptr;
 		return buff->second;
 	}
-
-	/**
-	 * \brief Add a buffer descriptor
-	 * \param writer_task The writer task descriptor
-	 * \param reader_task The reader task descriptor
-	 * \return
-	 */
-	ExitCode AddBuffer(BufferPtr_t buff, TaskPtr_t writer_task, TaskPtr_t reader_task);
-
-	/**
-	 * \brief Add a buffer descriptor
-	 * \param writer_tasks The writer tasks id list
-	 * \param reader_tasks The reader tasks id list
-	 * \return
-	 */
-	ExitCode AddBuffer(BufferPtr_t buff, IdList_t writer_tasks, IdList_t reader_tasks);
 
 	/**
 	 * \brief Remove a buffer descriptor
