@@ -209,6 +209,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() noexcept {
 		dequeue_task(task);
 	}
 	tasks.cv.notify_all();
+	return ExitCode::SUCCESS;
 }
 
 
