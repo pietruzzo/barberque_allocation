@@ -22,7 +22,6 @@ namespace bbque {
 
 TaskGraph::TaskGraph(uint32_t app_id):
 		application_id(app_id) {
-	this->is_valid = true;
 }
 
 TaskGraph::TaskGraph(
