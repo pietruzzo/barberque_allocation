@@ -38,8 +38,8 @@ TaskGraph::TaskGraph(
 		if (!buff_valid) return;
 	}
 
-	this->tasks   = tasks;
-	this->buffers = buffers;
+	this->tasks    = tasks;
+	this->buffers  = buffers;
 	this->is_valid = true;
 }
 
@@ -52,6 +52,7 @@ TaskGraph::TaskGraph(
 	bool buff_valid = false;
 	for (auto & t_entry: tasks) {
 		auto & t(t_entry.second);
+		// buffer validation
 		buff_valid = AreBuffersValid(t, buffers);
 		if (!buff_valid) return;
 		// Add event validation

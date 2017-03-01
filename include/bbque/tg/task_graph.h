@@ -110,6 +110,7 @@ public:
 		application_id = app_id;
 	}
 
+
 	/**
 	 * \brief Check if it is successfully initialized
 	 * \return True if so, false otherwise
@@ -223,12 +224,14 @@ public:
 	 */
 	void RemoveBuffer(uint32_t id);
 
+
 	/**
-	 * \brief Set the globale output buffer of the task-graph execution, i.e. where
+	 * \brief Set the globale output buffer of the task-graph execution,
+	 * i.e. where
 	 * the final output data will be written
 	 * \param id Buffer identification number
-	 * \return SUCCESS for success or ERR_INVALID_BUFFER if the id provided does not
-	 * correspond to any registered buffer
+	 * \return SUCCESS for success or ERR_INVALID_BUFFER if the id
+	 * provided does not correspond to any registered buffer
 	 */
 	ExitCode SetOutputBuffer(int32_t id);
 
