@@ -32,7 +32,7 @@ TaskGraph::TaskGraph(
 	application_id(app_id) {
 
 	bool buff_valid = false;
-	for (auto t_entry: tasks) {
+	for (auto & t_entry: tasks) {
 		auto t = t_entry.second;
 		buff_valid = AreBuffersValid(t, buffers);
 		if (!buff_valid) return;
@@ -50,8 +50,8 @@ TaskGraph::TaskGraph(
 		uint32_t app_id):
 	application_id(app_id) {
 	bool buff_valid = false;
-	for (auto t_entry: tasks) {
-		auto t = t_entry.second;
+	for (auto & t_entry: tasks) {
+		auto & t(t_entry.second);
 		buff_valid = AreBuffersValid(t, buffers);
 		if (!buff_valid) return;
 		// Add event validation
