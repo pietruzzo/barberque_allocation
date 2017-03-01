@@ -271,19 +271,21 @@ void ExecutionSynchronizer::TaskProfiler(uint32_t task_id) noexcept {
 	}
 
 	auto & event(evit->second);
-	double t = 0.0;
 	auto & prof_data = tasks.runtime[task_id]->profile;
 	prof_data.timer.start();
+	double t_curr, t_start, t_finish;
 
 	// Synchronize the profiling timing according to the events (write)
 	// affecting the output buffer of the task
 	logger->Info("[Task %2d] profiling started", task_id);
 	while (tasks.runtime[task_id]->is_running) {
 		std::unique_lock<std::mutex> ev_lock(event->mx);
+		t_start  = prof_data.timer.getElapsedTimeUs();
 		event->cv.wait(ev_lock);
-		t = (prof_data.timer.getElapsedTimeUs() - t);
-		prof_data.acc(t);
-		logger->Info("[Task %d] timing current = %.2f us", task_id, t);
+		t_finish = prof_data.timer.getElapsedTimeUs();
+		t_curr = t_finish - t_start;
+		prof_data.acc(t_curr);
+		logger->Debug("[Task %d] timing current = %.2f us", task_id, t_curr);
 	}
 	prof_data.timer.stop();
 
