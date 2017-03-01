@@ -233,7 +233,7 @@ protected:
 	struct RTRMInfo {
 		std::mutex mx;
 		std::condition_variable cv;
-		bool scheduled;
+		bool scheduled = false;
 	} rtrm;
 
 
