@@ -80,7 +80,6 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
                 events.emplace(event->Id(), ev_sync);
 	}
 
-	logger->Error("Task status: %s", tasks.is_stopped.to_string().c_str());
 	tasks.cv.notify_all();
 	return ExitCode::SUCCESS;
 }
@@ -129,6 +128,8 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	enqueue_task(task);
 	tasks.cv.notify_all();
+	logger->Info("[Task %2d] launched", task_id);
+
 	return ExitCode::SUCCESS;
 }
 
@@ -221,7 +222,7 @@ void ExecutionSynchronizer::NotifyEvent(uint32_t event_id) noexcept {
 	std::unique_lock<std::mutex> ev_lock(evit->second->mx);
 	event->occurred = true;
 	event->cv.notify_all();
-	logger->Info("[Event %2d] notified", event_id);
+	logger->Debug("[Event %2d] notified", event_id);
 }
 
 
@@ -288,7 +289,7 @@ void ExecutionSynchronizer::TaskProfiler(uint32_t task_id) noexcept {
 		logger->Debug("[Task %d] timing current = %.2f us", task_id, t_curr);
 	}
 	prof_data.timer.stop();
-
+	logger->Info("[Task %2d] profiling stopped", task_id);
 }
 
 // ---------------- BbqueEXC overloading ------------------------------------//
@@ -331,9 +332,9 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 
 	// Wait for tasks to start
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
-	logger->Info("Tasks status: %s", tasks.is_stopped.to_string().c_str());
+	logger->Info("Waiting for tasks to start...");
 	while (tasks.is_stopped.any()) {
-		logger->Warn("Waiting for tasks to start...");
+		logger->Debug("Tasks stopped: %s", tasks.is_stopped.to_string().c_str());
 		tasks.cv.wait(tasks_lock);
 	}
 
@@ -377,7 +378,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onMonitor() {
 
 	for (auto & rt_entry: tasks.runtime) {
 		auto & prof_data(rt_entry.second->profile);
-		logger->Warn("[Task %2d] timing mean = %.2f us",
+		logger->Info("[Task %2d] timing mean = %.2f us",
 			rt_entry.first, mean(prof_data.acc));
 	}
 

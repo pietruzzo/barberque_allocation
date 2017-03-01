@@ -289,6 +289,8 @@ protected:
 			tasks.is_stopped.reset(t->Id());
 			tasks.runtime[t->Id()]->is_running = true;
 		}
+		logger->Debug("Stopped tasks: %s", tasks.is_stopped.to_string().c_str());
+		logger->Debug("Starting queue: %d", tasks.start_queue.size());
 	}
 
 	inline void dequeue_task(TaskPtr_t t) {
