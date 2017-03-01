@@ -70,7 +70,10 @@ public:
 	 * \param buffers Map of registered buffers
 	 * \param app_id Application identification number
 	 */
-	TaskGraph(TaskMap_t & tasks, BufferMap_t & buffers, uint32_t app_id = 0);
+	TaskGraph(
+		TaskMap_t const & tasks,
+		BufferMap_t const & buffers,
+		uint32_t app_id = 0);
 
 	/**
 	 * \brief Constructor
@@ -79,7 +82,11 @@ public:
 	 * \param events Map of registered events
 	 * \param app_id Application identification number
 	 */
-	TaskGraph(TaskMap_t & tasks, BufferMap_t & buffers, EventMap_t & events, uint32_t app_id = 0);
+	TaskGraph(
+		TaskMap_t const & tasks,
+		BufferMap_t const & buffers,
+		EventMap_t const & events,
+		uint32_t app_id = 0);
 
 	/**
 	 * \brief Destructor
@@ -288,7 +295,7 @@ private:
 	 * \param buffers Map of registered buffers
 	 * \return true if valid, false otherwise
 	 */
-	bool AreBuffersValid(TaskPtr_t task, BufferMap_t & buffers);
+	bool AreBuffersValid(TaskPtr_t task, BufferMap_t const & buffers);
 
 };
 

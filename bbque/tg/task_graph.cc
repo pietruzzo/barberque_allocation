@@ -25,8 +25,12 @@ TaskGraph::TaskGraph(uint32_t app_id):
 	this->is_valid = true;
 }
 
-TaskGraph::TaskGraph(TaskMap_t & tasks, BufferMap_t & buffers, uint32_t app_id):
-		application_id(app_id) {
+TaskGraph::TaskGraph(
+		TaskMap_t const & tasks,
+		BufferMap_t const & buffers,
+		uint32_t app_id):
+	application_id(app_id) {
+
 	bool buff_valid = false;
 	for (auto t_entry: tasks) {
 		auto t = t_entry.second;
@@ -39,8 +43,12 @@ TaskGraph::TaskGraph(TaskMap_t & tasks, BufferMap_t & buffers, uint32_t app_id):
 	this->is_valid = true;
 }
 
-TaskGraph::TaskGraph(TaskMap_t & tasks, BufferMap_t & buffers, EventMap_t & events, uint32_t app_id):
-		application_id(app_id) {
+TaskGraph::TaskGraph(
+		TaskMap_t const & tasks,
+		BufferMap_t const & buffers,
+		EventMap_t const & events,
+		uint32_t app_id):
+	application_id(app_id) {
 	bool buff_valid = false;
 	for (auto t_entry: tasks) {
 		auto t = t_entry.second;
@@ -58,7 +66,7 @@ TaskGraph::TaskGraph(TaskMap_t & tasks, BufferMap_t & buffers, EventMap_t & even
 }
 
 
-bool TaskGraph::AreBuffersValid(TaskPtr_t task, BufferMap_t & buffers) {
+bool TaskGraph::AreBuffersValid(TaskPtr_t task, BufferMap_t const & buffers) {
 	for (auto id: task->InputBuffers()) {
 		auto b = buffers.find(id);
 		if (b == buffers.end()) return false;
