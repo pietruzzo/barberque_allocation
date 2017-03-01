@@ -80,7 +80,6 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
                 events.emplace(event->Id(), ev_sync);
 	}
 
-	tasks.cv.notify_all();
 	return ExitCode::SUCCESS;
 }
 
