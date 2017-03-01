@@ -19,18 +19,31 @@
 #define BBQUE_TG_BUFFER_H_
 
 #include <boost/serialization/list.hpp>
-//#include <boost/interprocess/containers/list.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
 namespace bbque {
 
+/**
+ * \class Buffer
+ * \brief This class represents a memory buffer from which one or more
+ * tasks can read or write into
+ */
 class Buffer {
 
 public:
 
+	/**
+	 * \brief Constructor
+	 */
 	Buffer() {}
 
+	/**
+	 * \brief Buffer constructor
+	 * \param _id Identification number
+	 * \param _size Size
+	 * \param _addr Address
+	 */
 	Buffer(uint32_t _id, size_t _size, uint64_t _addr = 0);
 
 	virtual  ~Buffer() {
@@ -38,54 +51,102 @@ public:
 		reader_tasks.clear();
 	}
 
+	/**
+	 * \brief Identification number
+	 */
 	inline uint32_t Id() const { return id; }
 
+	/**
+	 * \brief Size of the buffer
+	 */
 	inline size_t Size() const { return size_in_bytes; }
 
+	/**
+	 * \brief Physical address
+	 */
 	inline uint32_t PhysicalAddress() const { return phy_addr; }
 
+	/**
+	 * \brief Set the physical address
+	 * \param address The memory address
+	 */
 	inline void SetPhysicalAddress(uint64_t address) {
 		phy_addr = address;
 	}
 
-
+	/**
+	 * \brief The list of tasks writing into the buffer
+	 * \return A list of task ids
+	 */
 	inline const std::list<uint32_t> & WriterTasks() const {
 		return writer_tasks;
 	}
 
+	/**
+	 * \brief The list of tasks reading from the buffer
+	 * \return A list of task ids
+	 */
 	inline const std::list<uint32_t> & ReaderTasks() const {
 		return reader_tasks;
 	}
 
-
+	/**
+	 * \brief Add a writer task
+	 * \param task_id task id
+	 */
 	inline void AddWriterTask(uint32_t task_id) {
 		writer_tasks.push_back(task_id);
 	}
 
+	/**
+	 * \brief Add a reader task
+	 * \param task_id task id
+	 */
 	inline void AddReaderTask(uint32_t task_id) {
 		reader_tasks.push_back(task_id);
 	}
 
+	/**
+	 * \brief Remove a writer task
+	 * \param task_id task id
+	 */
 	inline void RemoveWriterTask(uint32_t task_id) {
 		writer_tasks.remove(task_id);
 	}
 
+	/**
+	 * \brief Remove a reader task
+	 * \param task_id task id
+	 */
 	inline void RemoveReaderTask(uint32_t task_id) {
 		reader_tasks.remove(task_id);
 	}
 
+	/**
+	 * \brief Remove a task (reader or writer)
+	 * \param task_id task id
+	 */
 	inline void RemoveTask(uint32_t task_id) {
 		RemoveWriterTask(task_id);
 		RemoveReaderTask(task_id);
 	}
 
-
+	/**
+	 * \brief Event associated to the buffer (used for synchronization
+	 * purposes
+	 * \return The event id number
+	 */
 	inline uint32_t Event() const { return event_id; }
 
+	/**
+	 * \brief Sert the event associated to the buffer
+	 * \param id The event id number
+	 */
 	inline void SetEvent(uint32_t id) { event_id = id; }
 
 
 private:
+
 	uint32_t id;
 
 	uint64_t phy_addr;

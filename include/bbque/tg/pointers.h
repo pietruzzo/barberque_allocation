@@ -37,9 +37,9 @@ class Task;
 class Buffer;
 class Event;
 
-typedef smart_pointer_type<Task> TaskPtr_t;
-typedef smart_pointer_type<Buffer> BufferPtr_t;
-typedef smart_pointer_type<Event> EventPtr_t;
+using TaskPtr_t   = smart_pointer_type<Task>;
+using BufferPtr_t = smart_pointer_type<Buffer>;
+using EventPtr_t  = smart_pointer_type<Event>;
 
 }
 

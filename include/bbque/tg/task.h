@@ -30,6 +30,9 @@ class Task {
 
 public:
 
+	/**
+	 * \brief Task constructor
+	 */
 	Task() {}
 
 	/**

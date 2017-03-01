@@ -25,20 +25,40 @@
 
 namespace bbque {
 
-
+/**
+ * \class Event
+ * \brief This class represents a synchronization resource used to track
+ * events like tasks start/stop or buffers read/write
+ */
 class Event {
 
 public:
-
+	/**
+	 * \brief Constructor
+	 */
 	Event() {}
 
+	/**
+	 * \brief Constructor
+	 * \param _id Identification number
+	 * \param _addr Optional memory address associated to the resource
+	 */
 	Event(uint32_t _id, uint32_t _addr = 0):
 		id(_id), phy_addr(_addr) {}
 
+	/**
+	 * \brief Destructor
+	 */
 	virtual ~Event() {}
 
+	/**
+	 * \brief Identification number
+	 */
 	inline uint32_t Id() const { return id; }
 
+	/**
+	 * \brief Physical address of the synchronization resource
+	 */
 	inline uint32_t PhysicalAddress() const { return phy_addr; }
 
 private:
