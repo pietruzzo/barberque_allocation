@@ -69,7 +69,10 @@ public:
 
 	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
 
-
+	/**
+	 * @brief Platform specific resource claiming interface.
+	 */
+	ExitCode_t LoadPartitions(AppPtr_t papp) noexcept override final;
 	
 
 private:
@@ -80,11 +83,14 @@ private:
 	std::unique_ptr<bu::Logger> logger;
 	bool refreshMode;
 
-	int architecture_id = -1;
+	uint32_t num_tiles;
+	uint32_t num_vns;
 
 //-------------------- METHODS
 
 	MangoPlatformProxy();
+
+	ExitCode_t RegisterTiles() noexcept;
 
 };
 

@@ -93,26 +93,43 @@ MangoPlatformProxy::LoadPlatformData() noexcept {
 
 	PlatformDescription &pd = pli->getPlatformInfo();
 
-	struct hn_st_configuration *hn_conf;
-
-	// TODO Get hn_conf from somewhere...
-
-	this->architecture_id = hn_conf->arch_id;
-
-	uint32_t num_tiles;
-	if ( 0 != hn_get_num_tiles(&num_tiles) ) {
+	// Get the number of tiles
+	if ( HN_SUCCEEDED != hn_get_num_tiles(&this->num_tiles) ) {
 		logger->Fatal("Unable to get the number of tiles.");
 		return PLATFORM_INIT_FAILED;
 	}
 
-	logger->Info("Found a total of %d tiles.", num_tiles);
+	// TODO Get the tiles topology
+
+	// Get the number of VNs
+	if ( HN_SUCCEEDED != hn_get_num_vns(&this->num_vns) ) {
+		logger->Fatal("Unable to get the number of VNs.");
+		return PLATFORM_INIT_FAILED;
+	}
+
+	logger->Info("Found a total of %d tiles and %d VNs.", this->num_tiles, this->num_vns);
 
 	PlatformDescription::System &sys = pd.GetLocalSystem();
 
-	for ( uint32_t i=0; i < num_tiles; i++) {
+
+	int err;
+
+	// Now we have to register the tiles to the PlatformDescription
+	err = RegisterTiles();
+	if (PLATFORM_OK != err) {
+		return err;
+	}
+
+	return PLATFORM_OK;
+}
+
+MangoPlatformProxy::ExitCode_t
+MangoPlatformProxy::RegisterTiles() noexcept {
+
+	for (uint32_t i=0; i < num_tiles; i++) {
 		struct hn_st_tile_info tile_info;
 		int err = hn_get_tile_info(i, &tile_info);
-		if ( 0 != err) {
+		if (HN_SUCCEDED != err) {
 			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
 			return PLATFORM_INIT_FAILED;
 		}
@@ -126,12 +143,11 @@ MangoPlatformProxy::LoadPlatformData() noexcept {
 		}
 
 		sys.AddAccelerator(mt);
-
 	}
+
 
 	return PLATFORM_OK;
 }
-
 
 }	// namespace pp
 }	// namespace bbque
