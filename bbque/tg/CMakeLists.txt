@@ -23,6 +23,7 @@ set_property (TARGET ${TARGET_NAME} PROPERTY PUBLIC_HEADER
 	${PROJECT_SOURCE_DIR}/include/bbque/tg/mem_buffer.h
 	${PROJECT_SOURCE_DIR}/include/bbque/tg/task.h
 	${PROJECT_SOURCE_DIR}/include/bbque/tg/task_graph.h
+	${PROJECT_SOURCE_DIR}/include/bbque/tg/hw.h
 	${PROJECT_SOURCE_DIR}/include/bbque/tg/pointers.h
 )
 

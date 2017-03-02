@@ -19,12 +19,16 @@
 #define BBQUE_TG_TASK_H_
 
 #include <boost/serialization/list.hpp>
+#include <boost/serialization/map.hpp>
 #include <boost/serialization/string.hpp>
-//#include <boost/interprocess/containers/string.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
+#include "bbque/tg/hw.h"
 namespace bbque {
+
+
+using ArchMap_t = std::map<ArchType, std::shared_ptr<ArchInfo>>;
 
 class Task {
 
@@ -141,6 +145,41 @@ public:
 	inline void SetEvent(uint32_t id) { event_id = id; }
 
 
+	/**
+	 * \brief Add a HW target architecture supported (i.e., for which
+	 * the binary is available)
+	 * \param arch Type of HW architecture
+	 * \param prio If the application specified a preference for
+	 * each target. priority=0 means highest preference value.
+	 */
+	inline void AddTarget(
+		ArchType arch,
+		uint8_t _prio = 0,
+		size_t _addr  = 0,
+		size_t _bs    = 0,
+		size_t _ss    = 0) {
+
+		hw_targets.emplace(arch,
+			std::make_shared<ArchInfo>(_prio, _addr, _bs, _ss));
+	}
+
+	/**
+	 * \brief Add a HW target architectures supported (i.e., for which
+	 * the binary is available)
+	 * \return A reference to the map of target architectures
+	 */
+	inline ArchMap_t & Targets() { return hw_targets; }
+
+	/**
+	 * \brief Remove a HW target architecture supported (i.e., for
+	 * which the binary is available)
+	 * \param arch Type of HW architecture
+	 */
+	inline void RemoveTarget(ArchType arch) {
+		hw_targets.erase(arch);
+	}
+
+
 private:
 
 	uint32_t id;
@@ -156,9 +195,10 @@ private:
 
 	std::list<uint32_t> out_buffers;
 
-	// kernel function pointers
 
 	uint32_t event_id;
+
+	ArchMap_t hw_targets;
 
 
 	friend class boost::serialization::access;
@@ -172,6 +212,7 @@ private:
 		ar & in_buffers;
 		ar & out_buffers;
 		ar & event_id;
+		ar & hw_targets;
 	}
 };
 
