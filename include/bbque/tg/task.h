@@ -112,25 +112,33 @@ public:
 	 * \brief Add a buffer (id) to which read from
 	 * \param buff_id Identification number of the buffer
 	 */
-	inline void AddInputBuffer(uint32_t buff_id) { in_buffers.push_back(buff_id); }
+	inline void AddInputBuffer(uint32_t buff_id) {
+		in_buffers.push_back(buff_id);
+	}
 
 	/**
 	 * \brief Add a buffer (id) to which write to
 	 * \param buff_id Identification number of the buffer
 	 */
-	inline void AddOutputBuffer(uint32_t buff_id) { out_buffers.push_back(buff_id); }
+	inline void AddOutputBuffer(uint32_t buff_id) {
+		out_buffers.push_back(buff_id);
+	}
 
 	/**
 	 * \brief Buffers (id) to read from
 	 * \return the list of input buffers id
 	 */
-	inline const std::list<uint32_t> & InputBuffers() const { return in_buffers; }
+	inline const std::list<uint32_t> & InputBuffers() const {
+		return in_buffers;
+	}
 
 	/**
 	 * \brief Buffers (id) to write to
 	 * \return the list of output buffers id
 	 */
-	inline const std::list<uint32_t> & OutputBuffers() const { return out_buffers; }
+	inline const std::list<uint32_t> & OutputBuffers() const {
+		return out_buffers;
+	}
 
 	/**
 	 * \brief Event (if) for synchronization purposes
