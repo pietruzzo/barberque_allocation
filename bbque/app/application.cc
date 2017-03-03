@@ -421,6 +421,7 @@ Application::ExitCode_t Application::Disable() {
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx, std::defer_lock);
 
 	// Not disabled applications could not be marked as READY
+	state_ul.lock();
 	if (_Disabled()) {
 		logger->Warn("Trying to disable already disabled application [%s]",
 				StrId());
@@ -428,7 +429,6 @@ Application::ExitCode_t Application::Disable() {
 	}
 
 	// Mark the application as ready to run
-	state_ul.lock();
 	SetState(DISABLED);
 	state_ul.unlock();
 	logger->Info("EXC [%s] DISABLED", StrId());
