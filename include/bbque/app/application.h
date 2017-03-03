@@ -34,6 +34,7 @@
 #include "bbque/utils/utility.h"
 
 #define APPLICATION_NAMESPACE "bq.app"
+#define APPLICATION_NAME_LEN  16
 
 namespace bu = bbque::utils;
 
@@ -44,11 +45,12 @@ class Resource;
 class ResourcePath;
 class ResourceConstraint;
 class ResourceAssignment;
-typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
-typedef std::shared_ptr<ResourceAssignment> ResourceAssignmentPtr_t;
-typedef std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath> > ResourceAssignmentMap_t;
-typedef std::shared_ptr<ResourceAssignmentMap_t> ResourceAssignmentMapPtr_t;
+using ResourcePathPtr_t = std::shared_ptr<ResourcePath> ;
+using ResourceAssignmentPtr_t = std::shared_ptr<ResourceAssignment>;
+using ResourceAssignmentMap_t = std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath>>;
+using  ResourceAssignmentMapPtr_t =std::shared_ptr<ResourceAssignmentMap_t> ;
 }
+
 namespace br = bbque::res;
 
 namespace app {
@@ -128,39 +130,29 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline std::string const & Name() const {
-		return name;
-	}
+	inline std::string const & Name() const noexcept { return name; }
 
 	/**
 	 * @brief Set the application name
 	 * @param app_name The application name
 	 */
-	inline void SetName(std::string const & app_name) {
-		name = app_name;
-	}
+	inline void SetName(std::string const & app_name) noexcept { name = app_name; }
 
 	/**
 	 * @brief Get the process ID of the application
 	 * @return PID value
 	 */
-	inline AppPid_t Pid() const {
-		return pid;
-	}
+	inline AppPid_t Pid() const noexcept { return pid; }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline uint8_t ExcId() const {
-		return exc_id;
-	}
+	inline uint8_t ExcId() const noexcept { return exc_id; }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline RTLIB_ProgrammingLanguage_t Language() const {
-		return language;
-	}
+	inline RTLIB_ProgrammingLanguage_t Language() const noexcept { return language; }
 
 	/**
 	 * @brief Get a string ID for this Execution Context
@@ -168,16 +160,12 @@ public:
 	 * PID:TASK_NAME:EXC_ID
 	 * @return String ID
 	 */
-	inline const char *StrId() const {
-		return str_id;
-	}
+	inline const char *StrId() const noexcept { return str_id; }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	AppPrio_t Priority() const {
-		return priority;
-	}
+	AppPrio_t Priority() const noexcept { return priority; }
 
 	/**
 	 * @brief Set the priority of the application
@@ -187,23 +175,17 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline float Value() const {
-		return schedule.value;
-	}
+	inline float Value() const noexcept { return schedule.value; }
 
 	/**
 	 * @see ApplicationConfIF
 	 */
-	inline void SetValue(float sched_metrics) {
-		schedule.value = sched_metrics;
-	}
+	inline void SetValue(float sched_metrics) noexcept { schedule.value = sched_metrics; }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline uint64_t ScheduleCount() {
-		return schedule.count;
-	}
+	inline uint64_t ScheduleCount() noexcept { return schedule.count; }
 
 	/**
 	 * @brief Enable the application for resources assignment
@@ -225,9 +207,7 @@ public:
 	 * stored in a specific object
 	 * @return A shared pointer to the recipe object
 	 */
-	inline RecipePtr_t GetRecipe() {
-		return recipe;
-	}
+	inline RecipePtr_t GetRecipe() noexcept { return recipe; }
 
 	/**
 	 * @brief Set the current recipe used by the application.
@@ -257,18 +237,14 @@ public:
 	 * @papp Shared pointer to the current Application (provided by the
 	 * Application Manager)
 	 */
-	inline void ReloadWorkingModes(AppPtr_t & papp) {
-		return InitWorkingModes(papp);
-	}
+	inline void ReloadWorkingModes(AppPtr_t & papp) { return InitWorkingModes(papp); }
 
 	/**
 	 * @brief Set Platform Specific Data initialized
 	 *
 	 * Mark the Platform Specific Data as initialized for this application
 	 */
-    inline void SetPlatformData() {
-		platform_data = true;
-	}
+	inline void SetPlatformData() noexcept { platform_data = true; }
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	inline void SetCGroupSetupData(
@@ -287,48 +263,37 @@ public:
 #endif // CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 
 	/**
-     * @brief Check Platform Specific Data initialization
-     *
-     * Return true if this application has already a properly configured
-     * set of Platform Specific Data.
-     */
-    inline bool HasPlatformData() const {
-		return platform_data;
-	}
+	 * @brief Check Platform Specific Data initialization
+	 *
+	 * Return true if this application has already a properly configured
+	 * set of Platform Specific Data.
+	 */
+	inline bool HasPlatformData() const noexcept { return platform_data; }
 
 	/** @brief Set a remote application
 	 *
 	 * Mark the application as remote or local
 	 */
-	inline void SetRemote(bool is_remote)
-	{
-		remotely_scheduled = is_remote;
-	}
+	inline void SetRemote(bool is_remote) noexcept { remotely_scheduled = is_remote; }
 
 	/**
 	 * @brief Return true if the application is executing or will be
 	 *        executed remotely, false if not.
 	 */
-	inline bool IsRemote() const {
-		return remotely_scheduled;
-	}
+	inline bool IsRemote() const noexcept { return remotely_scheduled; }
 
 	/**
 	 * @brief Set a remote application
 	 *
 	 * Mark the application as remote or local
 	 */
-	inline void SetLocal(bool is_local) {
-		locally_scheduled = is_local;
-	}
+	inline void SetLocal(bool is_local) noexcept { locally_scheduled = is_local; }
 
 	/**
 	 * @brief Return true if the application is executing or will be
 	 *        executed locally, false if not.
 	 */
-	inline bool IsLocal() const {
-		return locally_scheduled;
-	}
+	inline bool IsLocal() const noexcept { return locally_scheduled; }
 
 	/**
 	 * @see ApplicationStatuIF
@@ -378,9 +343,7 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	bool IsContainer() const {
-		return container;
-	}
+	bool IsContainer() const noexcept { return container; }
 
 	/**
 	 * @see ApplicationStatusIF
@@ -400,41 +363,43 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline AwmPtrList_t const & WorkingModes() {
-		return awms.enabled_list;
-	}
+	inline AwmPtrList_t const & WorkingModes() noexcept { return awms.enabled_list; }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline AwmPtr_t const & LowValueAWM() {
-		return awms.enabled_list.front();
-	}
+	inline AwmPtr_t const & LowValueAWM() noexcept { return awms.enabled_list.front(); }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline AwmPtr_t const & HighValueAWM() {
-		return awms.enabled_list.back();
-	}
+	inline AwmPtr_t const & HighValueAWM() noexcept { return awms.enabled_list.back(); }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	uint64_t GetResourceRequestStat(std::string const & rsrc_path,
+	uint64_t GetResourceRequestStat(
+			std::string const & rsrc_path,
 			ResourceUsageStatType_t ru_stat);
+
+
+
+	// -------------- Scheduling management ----------------------------- //
+
 
 	/**
 	 * @see ApplicationConfIF
 	 */
-	ExitCode_t ScheduleRequest(AwmPtr_t const & awm, br::RViewToken_t status_view,
+	ExitCode_t ScheduleRequest(
+			AwmPtr_t const & awm,
+			br::RViewToken_t status_view,
 			size_t b_refn = 0);
 
 	/**
 	 * @brief Commit a previously required re-scheduling request
 	 *
-	 * @return APP_SUCCESS on successful update of internal data structures,
-	 * APP_ABORT on errors.
+	 * @return APP_SUCCESS on successful update of internal data
+	 * structures, APP_ABORT on errors.
 	 */
 	ExitCode_t ScheduleCommit();
 
@@ -456,6 +421,36 @@ public:
 	 * @return APP_SUCCESS for success, APP_ABORT for failed.
 	 */
 	ExitCode_t ScheduleContinue();
+
+	/**
+	 * @brief Terminate this EXC by releasing all resources.
+	 *
+	 * This method requires to mark the EXC as terminated and to prepare the
+	 * ground for releasing all resources as soon as possible. Due to
+	 * asynchronous nature of this event and the activation of Optimized and
+	 * Synchronizer, a valid reference to the object is granted to be keept
+	 * alive until all of its users have terminated.
+	 */
+	ExitCode_t Terminate();
+
+
+	// --------------------- Working Modes ----------------------------- //
+
+
+	/**
+	 * @brief Get a working mode descriptor
+	 *
+	 * @param wmId Working mode ID
+	 * @return The (enabled) working mode descriptor
+	 *
+	 * @note The working mode must come from the enabled list
+	 */
+	inline AwmPtr_t GetWorkingMode(uint8_t wmId) {
+		auto wm_it(FindWorkingModeIter(awms.enabled_list, wmId));
+		if (wm_it == awms.enabled_list.end())
+			return AwmPtr_t();
+		return (*wm_it);
+	}
 
 	/**
 	 * @brief Set or clear a constraint on the working modes
@@ -491,6 +486,26 @@ public:
 	 */
 	void ClearWorkingModeConstraints();
 
+	/**
+	 * @brief Check the validity of the AWM scheduled
+	 *
+	 * This call check if the current scheduled AWM has been invalidated by a
+	 * constraint assertion.
+	 *
+	 * @return true is the AWM is no more valid, false otherwise.
+	 */
+	inline bool CurrentAWMNotValid() const noexcept { return awms.curr_inv; }
+
+	/**
+	 * @brief Dump on logger a list of valid AWMs
+	 *
+	 * The list of AWMs which are currently valid is dumped on log with the
+	 * Info loglevel.
+	 */
+	void DumpValidAWMs() const;
+
+
+	// ---------------------- Profiling management ---------------------- //
 
 	/**
 	 * @brief Get the profiling data collected at runtime by the RTLib
@@ -498,8 +513,7 @@ public:
 	 * @param mark_acknowledged
 	 * @return A data structure of type RuntimeProfiling_t
 	 */
-	inline RuntimeProfiling_t GetRuntimeProfile(
-			bool mark_acknowledged = false) {
+	inline RuntimeProfiling_t GetRuntimeProfile(bool mark_acknowledged = false) {
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		if (mark_acknowledged)
 			rt_prof.is_valid = false;
@@ -522,60 +536,13 @@ public:
 	 * @param cpu_usage_prediction The expected amount of CPU usage
 	 * @param goal_gap_prediction The expected goal gap
 	 */
-	inline void SetAllocationInfo(
-			int cpu_usage_prediction, int goal_gap_prediction = 0) {
+	inline void SetAllocationInfo(int cpu_usage_prediction, int goal_gap_prediction = 0) {
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		rt_prof.cpu_usage_prediction_old = rt_prof.cpu_usage_prediction;
 		rt_prof.cpu_usage_prediction     = cpu_usage_prediction;
 		rt_prof.ggap_percent_prediction  = goal_gap_prediction;
 	}
 
-	/**
-	 * @brief Get a working mode descriptor
-	 *
-	 * @param wmId Working mode ID
-	 * @return The (enabled) working mode descriptor
-	 *
-	 * @note The working mode must come from the enabled list
-	 */
-	inline AwmPtr_t GetWorkingMode(uint8_t wmId) {
-		AwmPtrList_t::iterator wm_it(
-				FindWorkingModeIter(awms.enabled_list, wmId));
-		if (wm_it == awms.enabled_list.end())
-			return AwmPtr_t();
-		return (*wm_it);
-	}
-
-	/**
-	 * @brief Check the validity of the AWM scheduled
-	 *
-	 * This call check if the current scheduled AWM has been invalidated by a
-	 * constraint assertion.
-	 *
-	 * @return true is the AWM is no more valid, false otherwise.
-	 */
-	inline bool CurrentAWMNotValid() const {
-		return awms.curr_inv;
-	}
-
-	/**
-	 * @brief Dump on logger a list of valid AWMs
-	 *
-	 * The list of AWMs which are currently valid is dumped on log with the
-	 * Info loglevel.
-	 */
-	void DumpValidAWMs() const;
-
-	/**
-	 * @brief Terminate this EXC by releasing all resources.
-	 *
-	 * This method requires to mark the EXC as terminated and to prepare the
-	 * ground for releasing all resources as soon as possible. Due to
-	 * asynchronous nature of this event and the activation of Optimized and
-	 * Synchronizer, a valid reference to the object is granted to be keept
-	 * alive until all of its users have terminated.
-	 */
-	ExitCode_t Terminate();
 
 private:
 
@@ -598,7 +565,7 @@ private:
 	RTLIB_ProgrammingLanguage_t language;
 
 	/** The application string ID */
-	char str_id[16];
+	char str_id[APPLICATION_NAME_LEN];
 
 	/** True if this is an application container */
 	bool container;
@@ -754,8 +721,8 @@ private:
 	 *
 	 * @return The list iterator of the Working Mode found
 	 */
-	AwmPtrList_t::iterator FindWorkingModeIter(AwmPtrList_t & awm_list,
-			uint16_t wmId);
+	AwmPtrList_t::iterator FindWorkingModeIter(
+			AwmPtrList_t & awm_list, uint16_t wmId);
 
 	/**
 	 * @brief Set a constraint on the working modes list

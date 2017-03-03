@@ -86,7 +86,7 @@ Application::Application(std::string const & _name,
 	assert(logger);
 
 	// Format the EXC string identifier
-	::snprintf(str_id, 16, "%05d:%6s:%02d",
+	::snprintf(str_id, APPLICATION_NAME_LEN, "%05d:%6s:%02d",
 			Pid(), Name().substr(0,6).c_str(), ExcId());
 
 	// Initialized scheduling state
@@ -99,8 +99,6 @@ Application::Application(std::string const & _name,
 
 Application::~Application() {
 	logger->Debug("Destroying EXC [%s]", StrId());
-
-	// Releasing AWMs and ResourceConstraints...
 	awms.recipe_vect.clear();
 	awms.enabled_list.clear();
 	rsrc_constraints.clear();
@@ -108,7 +106,6 @@ Application::~Application() {
 
 void Application::SetPriority(AppPrio_t _prio) {
 	bbque::ApplicationManager &am(bbque::ApplicationManager::GetInstance());
-
 	// If _prio value is greater then the lowest priority
 	// (maximum integer value) it is trimmed to the last one.
 	priority = std::min(_prio, am.LowestPriority());
@@ -116,10 +113,10 @@ void Application::SetPriority(AppPrio_t _prio) {
 
 void Application::InitWorkingModes(AppPtr_t & papp) {
 	// Get the working modes from recipe and init the vector size
-	AwmPtrVect_t const & rcp_awms(recipe->WorkingModesAll());
+	AwmPtrVect_t const & recipe_awms(recipe->WorkingModesAll());
 
 	// Init AWM range attributes (for AWM constraints)
-	awms.max_id   = rcp_awms.size() - 1;
+	awms.max_id   = recipe_awms.size() - 1;
 	awms.low_id   = 0;
 	awms.upp_id   = awms.max_id;
 	awms.curr_inv = false;
@@ -129,17 +126,13 @@ void Application::InitWorkingModes(AppPtr_t & papp) {
 	// Init AWM lists
 	for (int i = 0; i <= awms.max_id; ++i) {
 		// Copy the working mode and set the owner (current Application)
-		AwmPtr_t app_awm(new WorkingMode(*rcp_awms[i]));
-		assert(!app_awm->Owner());
+		AwmPtr_t app_awm = std::make_shared<WorkingMode>(*recipe_awms[i]);
 		app_awm->SetOwner(papp);
-
-		// Insert the working mode into the vector
 		awms.recipe_vect[app_awm->Id()] = app_awm;
 
 		// Do not insert the hidden AWMs into the enabled list
 		if (app_awm->Hidden()) {
-			logger->Debug("InitWorkingModes: skipping hidden AWM %d",
-					app_awm->Id());
+			logger->Debug("InitWorkingModes: skipping hidden AWM %d", app_awm->Id());
 			continue;
 		}
 
@@ -149,35 +142,26 @@ void Application::InitWorkingModes(AppPtr_t & papp) {
 
 	// Sort the enabled list by "value"
 	awms.enabled_list.sort(AwmValueLesser);
-	logger->Info("InitWorkingModes: %d enabled AWMs",
-			awms.enabled_list.size());
+	logger->Info("InitWorkingModes: %d enabled AWMs", awms.enabled_list.size());
 }
 
 void Application::InitResourceConstraints() {
-	ConstrMap_t::const_iterator cons_it(recipe->ConstraintsAll().begin());
-	ConstrMap_t::const_iterator end_cons(recipe->ConstraintsAll().end());
-
 	// For each static constraint on a resource make an assertion
-	for (; cons_it != end_cons; ++cons_it) {
-		ResourcePathPtr_t const & rsrc_path(cons_it->first);
-		ConstrPtr_t const & rsrc_constr(cons_it->second);
+	for (auto & constr_entry: recipe->ConstraintsAll()) {
+		ResourcePathPtr_t const & rsrc_path(constr_entry.first);
+		ConstrPtr_t const & rsrc_constr(constr_entry.second);
 
 		// Lower bound
 		if (rsrc_constr->lower > 0)
-				SetResourceConstraint(
-						rsrc_path,
-						br::ResourceConstraint::LOWER_BOUND,
-						rsrc_constr->lower);
+			SetResourceConstraint(
+				rsrc_path, br::ResourceConstraint::LOWER_BOUND, rsrc_constr->lower);
 		// Upper bound
 		if (rsrc_constr->upper > 0)
-				SetResourceConstraint(
-						rsrc_path,
-						br::ResourceConstraint::UPPER_BOUND,
-						rsrc_constr->upper);
+			SetResourceConstraint(
+				rsrc_path, br::ResourceConstraint::UPPER_BOUND, rsrc_constr->upper);
 	}
 
-	logger->Debug("%d resource constraints from the recipe",
-			rsrc_constraints.size());
+	logger->Debug("%d resource constraints from the recipe", rsrc_constraints.size());
 }
 
 Application::ExitCode_t
@@ -342,7 +326,6 @@ bool Application::SwitchingAWM() {
 
 // NOTE: this requires a lock on schedule.mtx
 void Application::SetSyncState(SyncState_t sync) {
-
 	logger->Debug("Changing sync state [%s, %d:%s => %d:%s]",
 			StrId(),
 			_SyncState(), SyncStateStr(_SyncState()),
@@ -364,43 +347,25 @@ void Application::SetState(State_t state, SyncState_t sync) {
 	// Entering a Synchronization state
 	if (state == SYNC) {
 		assert(sync != SYNC_NONE);
-
-		// Save a copy of the pre-synchronization state
-		schedule.preSyncState = _State();
-
-		// Update synchronization state
-		SetSyncState(sync);
-
-		// Update queue based on current application state
-		am.NotifyNewState(papp, Application::SYNC);
-
-		// Updating state
-		schedule.state = Application::SYNC;
-
+		schedule.preSyncState = _State();           // Previous pre-synchronization state
+		SetSyncState(sync);                         // Update synchronization state
+		am.NotifyNewState(papp, Application::SYNC); // Update status queues
+		schedule.state = Application::SYNC;         // Update state
 		return;
 	}
 
-
-	// Entering a statble state
+	// Entering a Stable state
 	assert(sync == SYNC_NONE);
-
-	// Update queue based on current application state
-	am.NotifyNewState(papp, state);
-
-	// Updating state
-	schedule.preSyncState = state;
-	schedule.state = state;
-
-	// Update synchronization state
-	SetSyncState(sync);
+	am.NotifyNewState(papp, state); // Update status queues
+	schedule.preSyncState = state;  // Previous pre-synchronization state
+	schedule.state = state;         // Updating state
+	SetSyncState(sync);             // Update synchronization state
 
 	// Release current selected AWM
-	if ((state == DISABLED) ||
-			(state == READY)) {
+	if ((state == DISABLED) || (state == READY)) {
 		schedule.awm.reset();
 		schedule.next_awm.reset();
 	}
-
 }
 
 /*******************************************************************************
@@ -422,11 +387,9 @@ Application::ExitCode_t Application::Terminate() {
 	// Mark the application as finished
 	SetState(FINISHED);
 	state_ul.unlock();
-
 	logger->Info("EXC [%s] FINISHED", StrId());
 
 	return APP_SUCCESS;
-
 }
 
 
@@ -435,15 +398,10 @@ Application::ExitCode_t Application::Terminate() {
  ******************************************************************************/
 
 Application::ExitCode_t Application::Enable() {
-	std::unique_lock<std::recursive_mutex>
-		state_ul(schedule.mtx, std::defer_lock);
-
-	// Enabling the execution context
+	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx, std::defer_lock);
 	logger->Debug("Enabling EXC [%s]...", StrId());
-
-	state_ul.lock();
-
 	// Not disabled applications could not be marked as READY
+	state_ul.lock();
 	if (!_Disabled()) {
 		logger->Crit("Trying to enable already enabled application [%s] "
 				"(Error: possible data structure curruption?)",
@@ -454,9 +412,7 @@ Application::ExitCode_t Application::Enable() {
 
 	// Mark the application has ready to run
 	SetState(READY);
-
 	state_ul.unlock();
-
 	logger->Info("EXC [%s] ENABLED", StrId());
 
 	return APP_SUCCESS;
@@ -468,8 +424,7 @@ Application::ExitCode_t Application::Enable() {
  ******************************************************************************/
 
 Application::ExitCode_t Application::Disable() {
-	std::unique_lock<std::recursive_mutex>
-		state_ul(schedule.mtx, std::defer_lock);
+	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx, std::defer_lock);
 
 	// Not disabled applications could not be marked as READY
 	if (_Disabled()) {
@@ -482,7 +437,6 @@ Application::ExitCode_t Application::Disable() {
 	state_ul.lock();
 	SetState(DISABLED);
 	state_ul.unlock();
-
 	logger->Info("EXC [%s] DISABLED", StrId());
 
 	return APP_SUCCESS;
@@ -505,8 +459,7 @@ Application::ExitCode_t Application::RequestSync(SyncState_t sync) {
 		return APP_ABORT;
 	}
 
-	logger->Debug("Request synchronization [%s, %d:%s]",
-			StrId(), sync, SyncStateStr(sync));
+	logger->Debug("Request synchronization [%s, %d:%s]", StrId(), sync, SyncStateStr(sync));
 
 	// Ensuring the AM has an hander for this application
 	if (!papp) {
@@ -530,18 +483,16 @@ Application::ExitCode_t Application::RequestSync(SyncState_t sync) {
 		// accepted.
 	}
 
-	logger->Info("Sync scheduled [%s, %d:%s]",
-			StrId(), sync, SyncStateStr(sync));
+	logger->Info("Sync scheduled [%s, %d:%s]", StrId(), sync, SyncStateStr(sync));
 
 	return APP_SUCCESS;
 
 }
 
-bool
-Application::Reshuffling(AwmPtr_t const & next_awm) {
+bool Application::Reshuffling(AwmPtr_t const & next_awm) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	br::ResourceAssignmentMapPtr_t pumc = _CurrentAWM()->GetResourceBinding();
-	br::ResourceAssignmentMapPtr_t puma = next_awm->GetResourceBinding();
+	auto pumc = _CurrentAWM()->GetResourceBinding();
+	auto puma = next_awm->GetResourceBinding();
 
 	// NOTE: This method is intended to be called if we already know we
 	// are in a RECONF state.
@@ -557,9 +508,7 @@ Application::Reshuffling(AwmPtr_t const & next_awm) {
 	return false;
 }
 
-Application::SyncState_t
-Application::SyncRequired(AwmPtr_t const & awm) {
-
+Application::SyncState_t Application::SyncRequired(AwmPtr_t const & awm) {
 	// This must be called only by running applications
 	assert(_State() == RUNNING);
 	assert(_CurrentAWM().get());
@@ -595,8 +544,7 @@ Application::SyncRequired(AwmPtr_t const & awm) {
 	return SYNC_NONE;
 }
 
-Application::ExitCode_t
-Application::Reschedule(AwmPtr_t const & awm) {
+Application::ExitCode_t Application::Reschedule(AwmPtr_t const & awm) {
 	SyncState_t sync;
 
 	// Ready application could be synchronized to start
@@ -649,7 +597,6 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceAccounter::ExitCode_t booking;
 	AppSPtr_t papp(awm->Owner());
-	ExitCode_t result;
 	logger->Info("ScheduleRequest: %s request for binding @[%d] view=%ld",
 		papp->StrId(), b_refn, status_view);
 
@@ -693,10 +640,7 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	// Reschedule accordingly to "awm"
 	logger->Debug("ScheduleRequest: rescheduling [%s] into AWM [%d:%s]...",
 			papp->StrId(), awm->Id(), awm->Name().c_str());
-	result = Reschedule(awm);
-
-	// Reschedule failed. Release resources and clear resource binding
-	if (result != APP_SUCCESS) {
+	if (Reschedule(awm) != APP_SUCCESS) {
 		ra.ReleaseResources(papp, status_view);
 		awm->ClearResourceBinding();
 		return APP_WM_REJECTED;
@@ -759,7 +703,6 @@ Application::ExitCode_t Application::ScheduleCommit() {
 			logger->Debug("Resetting GoalGap (%d%c) on [%s]",
 					rt_prof.ggap_percent, '%', StrId());
 			rt_prof.ggap_percent = 0;
-
 		}
 
 		schedule.awm = schedule.next_awm;
@@ -1020,10 +963,8 @@ void Application::ClearWorkingModesLowerBound() {
 	for (int i = awms.low_id - 1; i >= 0; --i)
 		awms.enabled_bset.set(i);
 
-	logger->Debug("SetConstraint (AWMs): cleared lower bound AWM {%d}",
-			awms.low_id);
-
 	// Reset the lower bound
+	logger->Debug("SetConstraint (AWMs): cleared lower bound AWM {%d}", awms.low_id);
 	awms.low_id = 0;
 }
 
@@ -1031,11 +972,8 @@ void Application::ClearWorkingModesUpperBound() {
 	// Set all the bit previously unset
 	for (int i = awms.upp_id + 1; i <= awms.max_id; ++i)
 		awms.enabled_bset.set(i);
-
-	logger->Debug("SetConstraint (AWMs): cleared upper bound AWM {%d}",
-			awms.upp_id);
-
 	// Reset the upperbound
+	logger->Debug("SetConstraint (AWMs): cleared upper bound AWM {%d}", awms.upp_id);
 	awms.upp_id = awms.max_id;
 }
 
@@ -1047,10 +985,8 @@ void Application::ClearWorkingModeConstraints() {
 	// Rebuild the list of enabled working modes
 	RebuildEnabledWorkingModes();
 
-	logger->Debug("ClearConstraint (AWMs): %d total working modes",
-			awms.recipe_vect.size());
-	logger->Debug("ClearConstraint (AWMs): %d enabled working modes",
-			awms.enabled_list.size());
+	logger->Debug("ClearConstraint (AWMs): %d total working modes", awms.recipe_vect.size());
+	logger->Debug("ClearConstraint (AWMs): %d enabled working modes", awms.enabled_list.size());
 }
 
 void Application::RebuildEnabledWorkingModes() {
@@ -1093,19 +1029,17 @@ void Application::FinalizeEnabledWorkingModes() {
 /************************** Resource Constraints ****************************/
 
 bool Application::UsageOutOfBounds(AwmPtr_t & awm) {
-	ConstrMap_t::iterator rsrc_constr_it;
-	ConstrMap_t::iterator end_rsrc_constr(rsrc_constraints.end());
-	br::ResourceAssignmentMap_t::const_iterator usage_it(awm->ResourceRequests().begin());
-	br::ResourceAssignmentMap_t::const_iterator end_usage(awm->ResourceRequests().end());
-
 	// Check if there are constraints on the resource assignments
-	for (; usage_it != end_usage; ++usage_it) {
-		rsrc_constr_it = rsrc_constraints.find(usage_it->first);
-		if (rsrc_constr_it == end_rsrc_constr)
+	for (auto const & rsrc_req_entry: awm->ResourceRequests()) {
+		auto & rsrc_path(rsrc_req_entry.first);
+		auto & rsrc_amount(rsrc_req_entry.second);
+
+		auto rsrc_constr_it = rsrc_constraints.find(rsrc_path);
+		if (rsrc_constr_it == rsrc_constraints.end())
 			continue;
 
 		// Check if the usage value is out of the constraint bounds
-		br::ResourceAssignmentPtr_t const & r_assign(usage_it->second);
+		br::ResourceAssignmentPtr_t const & r_assign(rsrc_amount);
 		if ((r_assign->GetAmount() < rsrc_constr_it->second->lower) ||
 			(r_assign->GetAmount() > rsrc_constr_it->second->upper))
 			return true;
@@ -1130,21 +1064,19 @@ void Application::UpdateEnabledWorkingModes() {
 Application::ExitCode_t Application::SetResourceConstraint(
 		ResourcePathPtr_t r_path,
 		br::ResourceConstraint::BoundType_t b_type,
-				uint64_t _value) {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+		uint64_t _value) {
 
 	// Check the existance of the resource
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	if (!ra.ExistResource(r_path)) {
-		logger->Warn("SetResourceConstraint: %s not found",
-				r_path->ToString().c_str());
+		logger->Warn("SetResourceConstraint: %s not found", r_path->ToString().c_str());
 		return APP_RSRC_NOT_FOUND;
 	}
 
 	// Init a new constraint (if do not exist yet)
-	ConstrMap_t::iterator it_con(rsrc_constraints.find(r_path));
+	auto const it_con(rsrc_constraints.find(r_path));
 	if (it_con == rsrc_constraints.end()) {
-		rsrc_constraints.insert(ConstrPair_t(r_path,
-					ConstrPtr_t(new br::ResourceConstraint)));
+		rsrc_constraints.emplace(r_path, std::make_shared<br::ResourceConstraint>());
 	}
 
 	// Set the constraint bound value (if value exists overwrite it)
@@ -1179,10 +1111,9 @@ Application::ExitCode_t Application::ClearResourceConstraint(
 		ResourcePathPtr_t r_path,
 		br::ResourceConstraint::BoundType_t b_type) {
 	// Lookup the constraint by resource pathname
-	ConstrMap_t::iterator it_con(rsrc_constraints.find(r_path));
+	auto const it_con(rsrc_constraints.find(r_path));
 	if (it_con == rsrc_constraints.end()) {
-		logger->Warn("ClearConstraint (Resources): failed due to unknown "
-				"resource path");
+		logger->Warn("ClearConstraint (Resources): failed due to unknown resource path");
 		return APP_CONS_NOT_FOUND;
 	}
 
@@ -1215,17 +1146,14 @@ uint64_t Application::GetResourceRequestStat(
 	uint64_t max_val  = 0;
 	uint64_t total = 0;
 
-	// AWMs (enabled)
-	for (auto const & awm: awms.enabled_list) {
-		// Resources
-		for (auto const & r_entry: awm->ResourceRequests()) {
+	for (auto const & awm: awms.enabled_list) {                 // AWMs (enabled)
+		for (auto const & r_entry: awm->ResourceRequests()) {      // Resources
 			ResourcePathPtr_t const & curr_path(r_entry.first);
 			uint64_t curr_amount = (r_entry.second)->GetAmount();
 
 			// Is current resource the one required?
 			br::ResourcePath key_path(rsrc_path);
-			if (key_path.Compare(*(curr_path.get())) ==
-					br::ResourcePath::NOT_EQUAL)
+			if (key_path.Compare(*(curr_path.get())) == br::ResourcePath::NOT_EQUAL)
 				continue;
 
 			// Cumulate the resource usage and update min or max
