@@ -47,7 +47,7 @@ using EventMap_t  = std::map<uint32_t, EventPtr_t>;
  * \class TaskGraph
  * \brief A task-graph representation
  */
-class TaskGraph {
+class TaskGraph: public Profilable {
 
 public:
 
@@ -242,6 +242,7 @@ private:
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version) {
+	        ar & boost::serialization::base_object<Profilable>(*this);
 		ar & application_id;
 		ar & is_valid;
 		ar & tasks;

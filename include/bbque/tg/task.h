@@ -25,12 +25,15 @@
 #include <boost/archive/text_iarchive.hpp>
 
 #include "bbque/tg/hw.h"
+#include "bbque/tg/profilable.h"
+
 namespace bbque {
 
 
 using ArchMap_t = std::map<ArchType, std::shared_ptr<ArchInfo>>;
 
-class Task {
+
+class Task: public Profilable {
 
 public:
 
@@ -213,6 +216,7 @@ private:
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version) {
+	        ar & boost::serialization::base_object<Profilable>(*this);
 		ar & id;
 		ar & name;
 		ar & thread_count;
