@@ -1044,15 +1044,10 @@ bool Application::UsageOutOfBounds(AwmPtr_t & awm) {
 
 void Application::UpdateEnabledWorkingModes() {
 	// Remove AWMs violating resources constraints
-	AwmPtrList_t::iterator awms_it(awms.enabled_list.begin());
-	for (; awms_it != awms.enabled_list.end(); awms_it++) {
-		if (!UsageOutOfBounds(*awms_it))
-			continue;
-		// This AWM must be removed
-		awms.enabled_list.remove(*awms_it);
-	}
+	awms.enabled_list.remove_if([this](AwmPtr_t & awm){ return UsageOutOfBounds(awm); });
 	// Check current AWM and re-order the list
 	FinalizeEnabledWorkingModes();
+	logger->Debug("UpdateEnabledWorkingModes:", awms.enabled_list.size());
 }
 
 Application::ExitCode_t Application::SetResourceConstraint(
