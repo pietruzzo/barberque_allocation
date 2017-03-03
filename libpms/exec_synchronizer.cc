@@ -344,7 +344,6 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 		tasks.runtime[task_id]->monitor_thr = std::move(
 			std::thread(&ExecutionSynchronizer::TaskProfiler, this, task_id));
 		tasks.start_queue.pop();
-		tasks.is_stopped.reset(task_id);
 		logger->Info("[Task %2d] started on processor %d", task_id,
 				task_graph->GetTask(task_id)->GetMappedProcessor());
 	}
