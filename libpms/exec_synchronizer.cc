@@ -377,9 +377,17 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onMonitor() {
 
 	for (auto & rt_entry: tasks.runtime) {
 		auto & prof_data(rt_entry.second->profile);
-		logger->Info("[Task %2d] timing mean = %.2f us",
-			rt_entry.first, mean(prof_data.acc));
+
+		uint16_t task_tput =
+			static_cast<uint16_t>(1e6 / (mean(prof_data.acc)));
+		logger->Info("[Task %2d] timing mean=%.2fus tput=%.2f",
+			rt_entry.first, mean(prof_data.acc), task_tput);
+		task_graph->GetTask(rt_entry.first)->SetProfiling(task_tput*100, 0);
 	}
+
+	logger->Info("Task-graph throughput: CPS:=%.2f", GetCPS());
+	task_graph->SetProfiling(GetCPS()*100, 0);
+	SendTaskGraphToRM();
 
 	return RTLIB_OK;
 }
