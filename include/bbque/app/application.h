@@ -445,12 +445,7 @@ public:
 	 *
 	 * @note The working mode must come from the enabled list
 	 */
-	inline AwmPtr_t GetWorkingMode(uint8_t wmId) {
-		auto wm_it(FindWorkingModeIter(awms.enabled_list, wmId));
-		if (wm_it == awms.enabled_list.end())
-			return AwmPtr_t();
-		return (*wm_it);
-	}
+	AwmPtr_t GetWorkingMode(uint8_t wmId);
 
 	/**
 	 * @brief Set or clear a constraint on the working modes
@@ -706,23 +701,6 @@ private:
 	ExitCode_t ClearResourceConstraint(br::ResourcePathPtr_t r_path,
 			br::ResourceConstraint::BoundType_t b_type);
 
-	/**
-	 * @brief Find a working mode from a list
-	 *
-	 * The method allow to hande two cases:
-	 * First, the search between the enabled working modes, which is the
-	 * exposed by the public API GetWorkingMode().
-	 * Second, the search between all the working modes loaded from the
-	 * recipes. This function should not be publicly available, but it is
-	 * provided for class internal purposes.
-	 *
-	 * @param awm_list Working modes list
-	 * @param wmId The working mode ID
-	 *
-	 * @return The list iterator of the Working Mode found
-	 */
-	AwmPtrList_t::iterator FindWorkingModeIter(
-			AwmPtrList_t & awm_list, uint16_t wmId);
 
 	/**
 	 * @brief Set a constraint on the working modes list

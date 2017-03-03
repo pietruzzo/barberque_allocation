@@ -191,20 +191,14 @@ Application::SetRecipe(RecipePtr_t & _recipe, AppPtr_t & papp) {
 	return APP_SUCCESS;
 }
 
-AwmPtrList_t::iterator Application::FindWorkingModeIter(
-		AwmPtrList_t & awm_list,
-		uint16_t wmId) {
-	AwmPtrList_t::iterator awm_it(awm_list.begin());
-	AwmPtrList_t::iterator end_awm(awm_list.end());
-
-	for (; awm_it != end_awm; ++awm_it) {
-		if ((*awm_it)->Id() == wmId)
-			break;
+AwmPtr_t Application::GetWorkingMode(uint8_t wmId) {
+	for (auto & awm: awms.enabled_list) {
+		if (awm->Id() == wmId)
+			return awm;
 	}
 
-	return awm_it;
+	return nullptr;
 }
-
 
 /*******************************************************************************
  *  EXC State and SyncState Management
