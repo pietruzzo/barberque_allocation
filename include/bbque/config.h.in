@@ -274,6 +274,12 @@
 #define BBQUE_APP_PRIO_LEVELS ${CONFIG_BBQUE_APP_PRIO_LEVELS}
 
 /**
+ * @brief The default path prefix for storing/retrieving the serialization
+ * files containing the application task-graphs
+ */
+#define BBQUE_APP_TG_PATH "${CONFIG_BBQUE_APP_TG_PATH}"
+
+/**
  * @brief The maximum number of resources per resource type
  *
  * For example, the maximum ID number of a processing element (computing
