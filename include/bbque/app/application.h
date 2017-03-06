@@ -21,12 +21,16 @@
 #include <bitset>
 #include <cassert>
 #include <cstdint>
+#include <cstdio>
+#include <fstream>
 #include <list>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
+#include <unistd.h>
 
+#include "bbque/config.h"
 #include "bbque/rtlib.h"
 #include "bbque/app/application_conf.h"
 #include "bbque/app/recipe.h"
@@ -538,6 +542,49 @@ public:
 		rt_prof.ggap_percent_prediction  = goal_gap_prediction;
 	}
 
+	// -------------------------- Task-graph management ------------------------------------- //
+
+	/**
+	 * @brief Restore/retrieve the task-graph description
+	 */
+	void LoadTaskGraph();
+
+	/**
+	 * @brief Return the current task-graph description
+	 */
+	inline std::shared_ptr<TaskGraph> GetTaskGraph() {
+		return task_graph;
+	}
+
+	/**
+	 * @brief Set a new task-graph description
+	 * @note Typically used by the scheduling policy for resource mapping purpose
+	 * @param tg Shared pointer to task-graph descriptor
+	 * @param write_through If set to true (default) update also the file or memory
+	 * region storing the copy shared with the RTLib
+	 */
+	inline void SetTaskGraph(std::shared_ptr<TaskGraph> tg, bool write_through=true) {
+		task_graph = tg;
+		if (write_through) UpdateTaskGraph();
+	}
+
+	/**
+	 * @brief Update the task-graph description shared with the RTLib
+	 */
+	inline void UpdateTaskGraph() {
+		std::ofstream ofs(tg_path);
+		boost::archive::text_oarchive oa(ofs);
+		oa << *task_graph;
+		logger->Debug("Task-graph sent back");
+	}
+
+	/**
+	 * @brief Destroy the task-graph description shared with the RTLib
+	 */
+	inline void RemoveTaskGraph() {
+		if (access(tg_path.c_str(), F_OK) != -1)
+			remove(tg_path.c_str());
+	}
 
 private:
 
@@ -579,6 +626,16 @@ private:
 	RuntimeProfiling_t rt_prof;
 
 	std::mutex rt_prof_mtx;
+
+	/**
+	 * Task-graph serialization file path
+	 */
+	std::string tg_path;
+
+	/**
+	 * Task-graph descriptor (shared pointer to)
+	 */
+	std::shared_ptr<TaskGraph> task_graph;
 
 	/**
 	 * Platform Specifica Data properly initialized

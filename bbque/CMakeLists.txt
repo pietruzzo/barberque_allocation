@@ -156,6 +156,7 @@ target_link_libraries(barbeque
 	bbque_utils
 	bbque_resources
 	bbque_apps
+	bbque_tg
 	${Boost_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 )

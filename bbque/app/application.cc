@@ -89,11 +89,13 @@ Application::Application(std::string const & _name,
 	::snprintf(str_id, APPLICATION_NAME_LEN, "%05d:%6s:%02d",
 			Pid(), Name().substr(0,6).c_str(), ExcId());
 
+	tg_path = BBQUE_TG_FILE_PREFIX + std::to_string(Pid()) + ":" + _name;
+	logger->Info("Task-graph serial file@: <%s>", tg_path.c_str());
+
 	// Initialized scheduling state
 	schedule.state        = DISABLED;
 	schedule.preSyncState = DISABLED;
 	schedule.syncState    = SYNC_NONE;
-
 	logger->Info("Built new EXC [%s]", StrId());
 }
 
@@ -102,6 +104,7 @@ Application::~Application() {
 	awms.recipe_vect.clear();
 	awms.enabled_list.clear();
 	rsrc_constraints.clear();
+	RemoveTaskGraph();
 }
 
 void Application::SetPriority(AppPrio_t _prio) {
@@ -1163,6 +1166,23 @@ uint64_t Application::GetResourceRequestStat(
 	};
 
 	return 0;
+}
+
+
+void Application::LoadTaskGraph() {
+	logger->Debug("Loading the task graph...");
+	std::ifstream ifs(tg_path);
+	if (!ifs.good()) {
+		logger->Debug("Task-graph not provided");
+		return;
+	}
+
+	if (task_graph == nullptr)
+		task_graph = std::make_shared<TaskGraph>();
+
+	boost::archive::text_iarchive ia(ifs);
+	ia >> *task_graph;
+	logger->Debug("Task-graph received");
 }
 
 } // namespace app

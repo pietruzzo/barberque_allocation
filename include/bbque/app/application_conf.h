@@ -19,6 +19,8 @@
 #define BBQUE_APPLICATION_CONF_IF_H_
 
 #include "bbque/app/application_status.h"
+#include "bbque/tg/task_graph.h"
+
 
 namespace bbque {
 
@@ -78,6 +80,21 @@ public:
 	 * @param sched_metrics The scheduling metrics computed by the policy
 	 */
 	virtual void SetValue(float sched_metrics) = 0;
+
+	/**
+	 * @brief Update the task-graph description shared with the RTLib
+	 */
+	virtual std::shared_ptr<TaskGraph> GetTaskGraph() = 0;
+
+	/**
+	 * @brief Set a new task-graph description
+	 * @note Typically used by the scheduling policy for resource mapping purpose
+	 * @param tg Shared pointer to task-graph descriptor
+	 * @param write_through If set to true (default) update also the file or memory
+	 * region storing the copy shared with the RTLib
+	 */
+	virtual void SetTaskGraph(std::shared_ptr<TaskGraph> tg, bool write_through=true) = 0;
+
 };
 
 } // namespace app
