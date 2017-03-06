@@ -34,6 +34,7 @@
 #include "bbque/tg/event.h"
 
 #define BBQUE_TASKS_MAX_NUM   32
+#define BBQUE_TG_FILE_PREFIX  BBQUE_APP_TG_PATH"/TG_"
 
 
 namespace bbque {
