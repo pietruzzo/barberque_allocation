@@ -52,7 +52,7 @@ class ResourceAssignment;
 using ResourcePathPtr_t = std::shared_ptr<ResourcePath> ;
 using ResourceAssignmentPtr_t = std::shared_ptr<ResourceAssignment>;
 using ResourceAssignmentMap_t = std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath>>;
-using  ResourceAssignmentMapPtr_t =std::shared_ptr<ResourceAssignmentMap_t> ;
+using ResourceAssignmentMapPtr_t = std::shared_ptr<ResourceAssignmentMap_t>;
 }
 
 namespace br = bbque::res;
