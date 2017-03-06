@@ -46,16 +46,22 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
-		std::shared_ptr<TaskGraph> tg) noexcept {
+		std::shared_ptr<TaskGraph> tg) {
 	task_graph = tg;
 	if (!CheckTaskGraph()) {
 		task_graph = nullptr;
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 	}
 
-	serial_file_path = BBQUE_TG_SERIAL_FILE
-		+ std::to_string(tg->GetApplicationId())
-		+ exc_name;
+	try {
+		serial_file_path = BBQUE_TG_FILE_PREFIX + std::string(GetUniqueID_String());
+		logger->Info("Task-graph serialization file: %s [uid=%d]", serial_file_path.c_str(),
+			GetUniqueID());
+	}
+	catch (std::exception & ex) {
+		logger->Error("Error while creating serialization file name");
+		return ExitCode::ERR_TASK_GRAPH_FILE_NAME;
+	}
 
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	if (tasks.is_stopped.any()) {

@@ -33,8 +33,6 @@
 #include "bbque/utils/timer.h"
 #include "bbque/tg/task_graph.h"
 
-#define BBQUE_TG_SERIAL_FILE "/tmp/tg_"
-
 
 using namespace boost::accumulators;
 
@@ -55,6 +53,7 @@ public:
 		SUCCESS,
 		ERR_TASK_ID,
 		ERR_TASK_GRAPH_NOT_VALID,
+		ERR_TASK_GRAPH_FILE_NAME,
 		ERR_TASKS_IN_EXECUTION
 	};
 
@@ -89,7 +88,7 @@ public:
 	 * \param tg Shared pointer to the TaskGraph object
 	 * \return
 	 */
-	ExitCode SetTaskGraph(std::shared_ptr<TaskGraph> tg) noexcept;
+	ExitCode SetTaskGraph(std::shared_ptr<TaskGraph> tg);
 
 	/**
 	 * \brief The task-graph based description of the application
