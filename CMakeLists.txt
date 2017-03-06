@@ -184,7 +184,7 @@ set (BOOST_ROOT ${CMAKE_INSTALL_PREFIX})
 set (BOOST_INCLUDEDIR ${CMAKE_INSTALL_PREFIX})
 
 # Check for required libs and packages (headers + lib)
-find_package(Boost 1.45.0 REQUIRED system program_options filesystem serialization)
+find_package(Boost 1.55.0 REQUIRED system program_options filesystem serialization)
 if (CONFIG_EXTERNAL_LIBCG)
 	find_package(CGroup REQUIRED)
 endif (CONFIG_EXTERNAL_LIBCG)
