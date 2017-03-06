@@ -216,6 +216,7 @@ private:
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version) {
+		(void) version;
 	        ar & boost::serialization::base_object<Profilable>(*this);
 		ar & id;
 		ar & name;

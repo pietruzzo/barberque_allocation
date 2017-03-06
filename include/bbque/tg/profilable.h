@@ -65,6 +65,7 @@ private:
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version) {
+		(void) version;
 		ar & perf_throughput;
 		ar & perf_ctime_us;
 	}

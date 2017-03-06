@@ -72,6 +72,7 @@ private:
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version) {
+		(void) version;
 		ar & id;
 		ar & phy_addr;
 	}
