@@ -940,8 +940,7 @@ AppPtr_t ApplicationManager::CreateEXC(
 	std::unique_lock<std::mutex> lang_ul(lang_mtx[_lang], std::defer_lock);
 	std::unique_lock<std::mutex> prio_ul(prio_mtx[_prio], std::defer_lock);
 	std::unique_lock<std::recursive_mutex> uids_ul(uids_mtx, std::defer_lock);
-	std::unique_lock<std::mutex> status_ul(
-			status_mtx[Application::DISABLED], std::defer_lock);
+	std::unique_lock<std::mutex> status_ul(status_mtx[Application::DISABLED], std::defer_lock);
 	std::unique_lock<std::mutex> apps_ul(apps_mtx, std::defer_lock);
 	Application::ExitCode_t app_result;
 	bp::RecipeLoaderIF::ExitCode_t rcp_result;
@@ -949,7 +948,11 @@ AppPtr_t ApplicationManager::CreateEXC(
 	AppPtr_t papp;
 
 	// Create a new descriptor
-	papp = AppPtr_t(new ba::Application(_name, _pid, _exc_id, _lang, container));
+	papp = std::make_shared<ba::Application>(_name, _pid, _exc_id, _lang, container);
+	if (papp == nullptr) {
+		logger->Error("Create EXC [%s] FAILED during object construction");
+		return papp;
+	}
 	papp->SetPriority(_prio);
 
 	logger->Info("Create EXC [%s], prio[%d]",
@@ -1081,7 +1084,7 @@ ApplicationManager::AppsRemove(AppPtr_t papp) {
 ApplicationManager::ExitCode_t
 ApplicationManager::CleanupEXC(AppPtr_t papp) {
 	std::unique_lock<std::recursive_mutex> uids_ul(uids_mtx, std::defer_lock);
-    PlatformManager::ExitCode_t pp_result;
+	PlatformManager::ExitCode_t pp_result;
 	ExitCode_t am_result;
 
 	am_result = StatusRemove(papp);
@@ -1093,8 +1096,8 @@ ApplicationManager::CleanupEXC(AppPtr_t papp) {
 	}
 
 	// Remove platform specific data
-    pp_result = plm.Release(papp);
-    if (pp_result != PlatformManager::PLATFORM_OK) {
+	pp_result = plm.Release(papp);
+	if (pp_result != PlatformManager::PLATFORM_OK) {
 		logger->Error("Cleanup EXC [%s] FAILED "
 				"(Error: platform data cleanup)",
 				papp->StrId());
@@ -1342,17 +1345,6 @@ ApplicationManager::IsReschedulingRequired(
 
 }
 
-ApplicationManager::ExitCode_t
-ApplicationManager::GetRuntimeProfile(AppPtr_t papp, struct app::RuntimeProfiling_t &profile) {
-	profile = papp->GetRuntimeProfile();
-	return AM_SUCCESS;
-}
-
-ApplicationManager::ExitCode_t
-ApplicationManager::SetRuntimeProfile(AppPtr_t papp, struct app::RuntimeProfiling_t profile) {
-	papp->SetRuntimeProfile(profile);
-	return AM_SUCCESS;
-}
 
 ApplicationManager::ExitCode_t
 ApplicationManager::GetRuntimeProfile(

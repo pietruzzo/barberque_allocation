@@ -125,11 +125,13 @@ public:
 	 */
 	ExitCode_t ClearConstraintsEXC(AppPid_t pid, uint8_t exc_id);
 
+
+	// --------------- Runtime profiling / feedbacks ---------------------------------------- //
+
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
-	ExitCode_t CheckGoalGapEXC(AppPtr_t papp,
-			struct app::RuntimeProfiling_t &profile);
+	ExitCode_t CheckGoalGapEXC(AppPtr_t papp, struct app::RuntimeProfiling_t &profile);
 
 	/**
 	 * @see ApplicationManagerConfIF
@@ -152,22 +154,32 @@ public:
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
-	ExitCode_t GetRuntimeProfile(AppPtr_t papp,
-			struct app::RuntimeProfiling_t &profile);
+	inline ExitCode_t GetRuntimeProfile(AppPtr_t papp,
+			struct app::RuntimeProfiling_t &profile) {
+		profile = papp->GetRuntimeProfile();
+		return AM_SUCCESS;
+	}
 
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t SetRuntimeProfile(AppPid_t pid,
 			uint8_t exc_id, struct app::RuntimeProfiling_t profile);
+
 	ExitCode_t SetRuntimeProfile(AppPid_t pid, uint8_t exc_id,
 			int gap, int cusage, int ctime);
 
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
-	ExitCode_t SetRuntimeProfile(AppPtr_t papp,
-			struct app::RuntimeProfiling_t profile);
+	inline ExitCode_t SetRuntimeProfile(AppPtr_t papp,
+			struct app::RuntimeProfiling_t profile) {
+		papp->SetRuntimeProfile(profile);
+		return AM_SUCCESS;
+	}
+
+
+	// ------------------------------------------------------------------------------------- //
 
 	/**
 	 * @see ApplicationManagerConfIF
@@ -409,8 +421,8 @@ private:
 	/** Lowest application priority value (maximum integer) */
 	app::AppPrio_t lowest_prio;
 
-    /** The PlatformManager, used to setup/release platform specific data */
-    PlatformManager & plm;
+	/** The PlatformManager, used to setup/release platform specific data */
+	PlatformManager & plm;
 
 	/**
 	 * MultiMap of all the applications instances which entered the
