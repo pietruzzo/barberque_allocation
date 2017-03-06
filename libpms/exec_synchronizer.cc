@@ -63,9 +63,10 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 		return ExitCode::ERR_TASK_GRAPH_FILE_NAME;
 	}
 
+	// Cannot change the TG while still in execution
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	if (tasks.is_stopped.any()) {
-		// Cannot change the TG while still in execution
+		logger->Error("Tasks execution still in progress...");
 		return ExitCode::ERR_TASKS_IN_EXECUTION;
 	}
 
