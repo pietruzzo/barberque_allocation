@@ -7,7 +7,7 @@ include_directories(
 
 # Sources
 set (TARGET_NAME bbque_tg)
-set (SOURCE task_graph)
+set (SOURCE task_graph partition)
 
 # Output: a shared library
 add_library(${TARGET_NAME} SHARED ${SOURCE})
@@ -21,6 +21,7 @@ target_link_libraries(${TARGET_NAME}
 set_property (TARGET ${TARGET_NAME} PROPERTY PUBLIC_HEADER
 	${PROJECT_SOURCE_DIR}/include/tg/event.h
 	${PROJECT_SOURCE_DIR}/include/tg/mem_buffer.h
+	${PROJECT_SOURCE_DIR}/include/tg/partition.h
 	${PROJECT_SOURCE_DIR}/include/tg/pointers.h
 	${PROJECT_SOURCE_DIR}/include/tg/profilable.h
 	${PROJECT_SOURCE_DIR}/include/tg/task.h
