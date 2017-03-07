@@ -268,6 +268,8 @@
  ******************************************************************************/
 #define MANGO_DEVICE_NAME "${CONFIG_MANGO_DEVICE}"
 
+#define MANGO_BASE_NUM_PARTITIONS ${CONFIG_MANGO_BASE_NUM_PARTITIONS}
+
 /*******************************************************************************
  * BarbequeRTRM Global Features
  ******************************************************************************/
