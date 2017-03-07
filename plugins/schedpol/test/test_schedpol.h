@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <list>
 #include <memory>
+#include <future>
 
 #include "bbque/configuration_manager.h"
 #include "bbque/plugins/plugin.h"
@@ -59,7 +60,7 @@ public:
 	static void * Create(PF_ObjectParams *);
 
 	/**
-	 * @brief Destroy the test plugin 
+	 * @brief Destroy the test plugin
 	 */
 	static int32_t Destroy(void *);
 
@@ -94,6 +95,7 @@ private:
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
+	std::future<void> fut_tg;
 
 	/**
 	 * @brief Constructor
@@ -109,6 +111,8 @@ private:
 	ExitCode_t Init();
 
 	SchedulerPolicyIF::ExitCode_t AssignWorkingMode(bbque::app::AppCPtr_t papp);
+
+	void MapTaskGraph(bbque::app::AppCPtr_t papp);
 };
 
 } // namespace plugins

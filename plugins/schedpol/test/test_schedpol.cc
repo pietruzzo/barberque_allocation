@@ -27,6 +27,7 @@
 #include "bbque/app/working_mode.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_path.h"
+#include "tg/task_graph.h"
 
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
@@ -89,6 +90,9 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Init() {
 	}
 	logger->Debug("Init: resources state view token: %ld", sched_status_view);
 
+	logger->Debug("Init: loading the applications task graphs");
+	fut_tg = std::async(std::launch::async, &System::LoadTaskGraphs, sys);
+
 	return SCHED_OK;
 }
 
@@ -106,6 +110,8 @@ TestSchedPol::Schedule(
 	/** INSERT YOUR CODE HERE **/
 	bbque::app::AppCPtr_t papp;
 	AppsUidMapIt app_it;
+
+	fut_tg.get();
 
 	// Ready applications
 	papp = sys->GetFirstReady(app_it);
@@ -136,7 +142,7 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 				papp->WorkingModes().size(),"Run-time", 1, papp);
 	}
 
-	// 
+	// Resource request addition
 	pawm->AddResourceRequest("sys0.cpu.pe", 200, br::ResourceAssignment::Policy::BALANCED);
 
 	// The ResourceBitset object is used for the processing elements binding
@@ -159,6 +165,9 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 
 	papp->ScheduleRequest(pawm, sched_status_view, ref_num);
 
+	// Task level mapping
+	MapTaskGraph(papp);
+
 	/*
 	// Enqueue scheduling entity
 	SchedEntityPtr_t psched = std::make_shared<SchedEntity_t>(
@@ -169,6 +178,34 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	return SCHED_OK;
 }
 
+
+void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
+	auto task_graph = papp->GetTaskGraph();
+	if (task_graph == nullptr) {
+		logger->Warn("[%s] No task-graph to map", papp->StrId());
+		return;
+	}
+
+	uint16_t throughput;
+	uint32_t c_time;
+	int unit_id = 3; // An arbitrary device id number
+
+	for (auto t_entry: task_graph->Tasks()) {
+		unit_id++;
+		auto & task(t_entry.second);
+		task->SetMappedProcessor(unit_id);
+		task->GetProfiling(throughput, c_time);
+		logger->Debug("[%s] <T %d]> throughput: %d  ctime: %d",
+			papp->StrId(), t_entry.first, throughput, c_time);
+	}
+
+	task_graph->GetProfiling(throughput, c_time);
+	logger->Info("[%s] Task-graph throughput: %d  ctime: %d",
+		papp->StrId(), throughput, c_time);
+
+	papp->SetTaskGraph(task_graph);
+	logger->Info("[%s] Task-graph updated", papp->StrId());
+}
 
 
 } // namespace plugins
