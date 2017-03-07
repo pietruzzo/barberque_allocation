@@ -350,8 +350,7 @@ public:
 	 * @param pid Application PID
 	 * @param exc_id Execution Contetx ID
 	 */
-	virtual AppPtr_t const GetApplication(AppPid_t pid,
-			uint8_t exc_id) = 0;
+	virtual AppPtr_t const GetApplication(AppPid_t pid, uint8_t exc_id) = 0;
 
 	/**
 	 * @brief Retrieve an application descriptor (shared pointer) by UID
