@@ -53,6 +53,8 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 	}
 
+	task_graph->SetApplicationId(GetUid());
+
 	try {
 		serial_file_path = BBQUE_TG_FILE_PREFIX + std::string(GetUniqueID_String());
 		logger->Info("Task-graph serialization file: %s [uid=%d]", serial_file_path.c_str(),
