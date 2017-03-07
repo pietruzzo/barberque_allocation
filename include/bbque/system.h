@@ -149,6 +149,12 @@ public:
 		return am.LowestPriority();
 	}
 
+	/**
+	 * @brief Load all the application task-graphs
+	 */
+	inline void LoadTaskGraphs() {
+		return am.LoadTaskGraphAll();
+	}
 
 	/// .............................: RESOURCES :............................
 
