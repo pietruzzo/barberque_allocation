@@ -33,7 +33,9 @@ public:
 	/**
 	 * @brief Constructor for a MangoTile object.
 	 */
-	MangoTile(MangoTileType_t type) : type(type) {}
+	MangoTile(MangoTileType_t type) : type(type) {
+		this->SetArchitecture("MangoTile");
+	}
 
 	/**
 	 * @brief Returns the type of this tile

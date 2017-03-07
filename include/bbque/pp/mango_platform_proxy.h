@@ -5,6 +5,7 @@
 #include "bbque/platform_proxy.h"
 #include "bbque/utils/logging/logger.h"
 #include "bbque/pp/mango_platform_description.h"
+#include "bbque/tg/partition.h"
 
 #define MANGO_PP_NAMESPACE "bq.pp.mango"
 
@@ -72,7 +73,7 @@ public:
 	/**
 	 * @brief Platform specific resource claiming interface.
 	 */
-	ExitCode_t LoadPartitions(AppPtr_t papp) noexcept override final;
+	ExitCode_t LoadPartitions(AppPtr_t papp) noexcept;
 	
 
 private:
@@ -86,11 +87,16 @@ private:
 	uint32_t num_tiles;
 	uint32_t num_vns;
 
+	uint32_t alloc_nr_req_cores;
+	uint32_t alloc_nr_req_buffers;
+
 //-------------------- METHODS
 
 	MangoPlatformProxy();
 
 	ExitCode_t RegisterTiles() noexcept;
+
+	static int PartitionSkimmer(std::list<Partition>&);
 
 };
 
