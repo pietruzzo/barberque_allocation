@@ -1,0 +1,15 @@
+
+config BBQUE_APP_TG_PATH
+  string "Serial files root directory"
+  default "/tmp/"
+  ---help---
+  In case of programming model based on the construction of task-graphs, this
+  option specifies the path where to store and retrieve the task-graph in a
+  serialization file form. To the sake of performance, we recommend to use a
+  path related to a memory mapped file-system (e.g., tmpFs).
+
+config BBQUE_APP_TG_TASKS_MAX_NUM
+  int "Maximum number of tasks"
+  default 32
+  ---help---
+  The maximum number of tasks that can be included in a task-graph.

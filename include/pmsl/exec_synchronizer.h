@@ -33,6 +33,7 @@
 #include "bbque/utils/timer.h"
 #include "bbque/tg/task_graph.h"
 
+#define BBQUE_TASKS_MAX_NUM BBQUE_APP_TG_TASKS_MAX_NUM
 
 using namespace boost::accumulators;
 

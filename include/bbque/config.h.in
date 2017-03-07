@@ -280,6 +280,11 @@
 #define BBQUE_APP_TG_PATH "${CONFIG_BBQUE_APP_TG_PATH}"
 
 /**
+ * @brief Maximum number of tasks that can be included in a task-graph
+ */
+#define BBQUE_APP_TG_TASKS_MAX_NUM ${CONFIG_BBQUE_APP_TG_TASKS_MAX_NUM}
+
+/**
  * @brief The maximum number of resources per resource type
  *
  * For example, the maximum ID number of a processing element (computing

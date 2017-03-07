@@ -214,6 +214,16 @@ menu "Run-Time Library (RTLib)"
   source "barbeque/rtlib/Kconfig"
 endmenu # RTLib Configuration
 
+
+################################################################################
+# Task-Graph Library
+################################################################################
+
+menu "Task-Graph Library (libtg)"
+  source "barbeque/libtg/Kconfig"
+endmenu # libtg
+
+
 ################################################################################
 # Advanced Options
 ################################################################################
@@ -241,15 +251,6 @@ config BBQUE_APP_PRIO_LEVELS
   ranging from 0 (highest priority) to a defined minimum value.
 
   Recipies define the priority of the corresponding Application.
-
-config BBQUE_APP_TG_PATH
-  string "Application Task-graph serial files path"
-  default "/tmp/"
-  ---help---
-  In case of programming model based on the construction of task-graphs, this
-  option specifies the path where to store and retrieve the task-graph in a
-  serialization file form. To the sake of performance, we recommend to use a
-  path related to a memory mapped file-system (e.g., tmpFs).
 
 config BBQUE_RESOURCE_MAX_NUM
   int "Number of Resources per Type"
