@@ -945,10 +945,9 @@ AppPtr_t ApplicationManager::CreateEXC(
 	Application::ExitCode_t app_result;
 	bp::RecipeLoaderIF::ExitCode_t rcp_result;
 	RecipePtr_t rcp_ptr;
-	AppPtr_t papp;
 
 	// Create a new descriptor
-	papp = std::make_shared<ba::Application>(_name, _pid, _exc_id, _lang, container);
+	AppPtr_t papp = std::make_shared<ba::Application>(_name, _pid, _exc_id, _lang, container);
 	if (papp == nullptr) {
 		logger->Error("Create EXC [%s] FAILED during object construction");
 		return papp;
@@ -1015,12 +1014,9 @@ AppPtr_t ApplicationManager::CreateEXC(
 
 ApplicationManager::ExitCode_t
 ApplicationManager::PriorityRemove(AppPtr_t papp) {
-	std::unique_lock<std::mutex> prio_ul(
-			prio_mtx[papp->Priority()]);
+	std::unique_lock<std::mutex> prio_ul(prio_mtx[papp->Priority()]);
 
-	logger->Debug("Releasing [%s] EXCs from PRIORITY map...",
-			papp->StrId());
-
+	logger->Debug("Releasing [%s] EXCs from PRIORITY map...", papp->StrId());
 	UpdateIterators(prio_ret[papp->Priority()], papp);
 	prio_vec[papp->Priority()].erase(papp->Uid());
 
@@ -1029,12 +1025,9 @@ ApplicationManager::PriorityRemove(AppPtr_t papp) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::StatusRemove(AppPtr_t papp) {
-	std::unique_lock<std::mutex> status_ul(
-			status_mtx[papp->State()]);
+	std::unique_lock<std::mutex> status_ul(status_mtx[papp->State()]);
 
-	logger->Debug("Releasing [%s] EXCs from STATUS map...",
-			papp->StrId());
-
+	logger->Debug("Releasing [%s] EXCs from STATUS map...", papp->StrId());
 	UpdateIterators(status_ret[papp->State()], papp);
 	status_vec[papp->State()].erase(papp->Uid());
 
@@ -1043,12 +1036,9 @@ ApplicationManager::StatusRemove(AppPtr_t papp) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::LangRemove(AppPtr_t papp) {
-	std::unique_lock<std::mutex> lang_ul(
-			lang_mtx[papp->Language()]);
+	std::unique_lock<std::mutex> lang_ul(lang_mtx[papp->Language()]);
 
-	logger->Debug("Releasing [%s] EXCs from LANGUAGE map...",
-			papp->StrId());
-
+	logger->Debug("Releasing [%s] EXCs from LANGUAGE map...", papp->StrId());
 	UpdateIterators(lang_ret[papp->Language()], papp);
 	lang_vec[papp->Language()].erase(papp->Uid());
 
@@ -1061,8 +1051,7 @@ ApplicationManager::AppsRemove(AppPtr_t papp) {
 	std::pair<AppsMap_t::iterator, AppsMap_t::iterator> range;
 	AppsMap_t::iterator it;
 
-	logger->Debug("Releasing [%s] EXC from APPs map...",
-			papp->StrId());
+	logger->Debug("Releasing [%s] EXC from APPs map...", papp->StrId());
 	range = apps.equal_range(papp->Pid());
 	it = range.first;
 	while (it != range.second &&
@@ -1119,12 +1108,9 @@ ApplicationManager::CleanupEXC(AppPtr_t papp) {
 
 void ApplicationManager::Cleanup() {
 	AppsUidMapIt apps_it;
-	AppPtr_t papp;
-
 	logger->Debug("Cleanup EXCs...");
-
 	// Loop on FINISHED apps to release all resources
-	papp = GetFirst(ApplicationStatusIF::FINISHED, apps_it);
+	AppPtr_t papp(GetFirst(ApplicationStatusIF::FINISHED, apps_it));
 	while (papp) {
 		CleanupEXC(papp);
 		papp = GetNext(ApplicationStatusIF::FINISHED, apps_it);
@@ -1183,10 +1169,8 @@ ApplicationManager::DestroyEXC(AppPtr_t papp) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::DestroyEXC(AppPid_t pid, uint8_t exc_id) {
-	AppPtr_t papp;
-
 	// Find the required EXC
-	papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	assert(papp);
 	if (!papp) {
 		logger->Warn("Stop EXC [%d:*:%d] FAILED "
@@ -1255,10 +1239,7 @@ ApplicationManager::SetConstraintsEXC(AppPtr_t papp,
 ApplicationManager::ExitCode_t
 ApplicationManager::SetConstraintsEXC(AppPid_t pid, uint8_t exc_id,
 			RTLIB_Constraint_t *constraints, uint8_t count) {
-	AppPtr_t papp;
-
-	// Find the required EXC
-	papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("Set constraints for EXC [%d:*:%d] FAILED "
 				"(Error: EXC not found)");
@@ -1283,10 +1264,8 @@ ApplicationManager::ClearConstraintsEXC(AppPtr_t papp) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::ClearConstraintsEXC(AppPid_t pid, uint8_t exc_id) {
-	AppPtr_t papp;
-
 	// Find the required EXC
-	papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("Clear constraints for EXC [%d:*:%d] FAILED "
 				"(Error: EXC not found)");
@@ -1442,25 +1421,19 @@ ApplicationManager::SetRuntimeProfile(
 
 ApplicationManager::ExitCode_t
 ApplicationManager::EnableEXC(AppPtr_t papp) {
-
-	// Enabling the execution context
 	logger->Debug("Enabling EXC [%s]...", papp->StrId());
-
 	if (papp->Enable() != Application::APP_SUCCESS) {
 		return AM_ABORT;
 	}
 
 	logger->Info("EXC [%s] ENABLED", papp->StrId());
-
 	return AM_SUCCESS;
 }
 
 ApplicationManager::ExitCode_t
 ApplicationManager::EnableEXC(AppPid_t pid, uint8_t exc_id) {
-	AppPtr_t papp;
-
 	// Find the required EXC
-	papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("Enable EXC [%d:*:%d] FAILED "
 				"(Error: EXC not found)",
@@ -1470,7 +1443,6 @@ ApplicationManager::EnableEXC(AppPid_t pid, uint8_t exc_id) {
 	}
 
 	return EnableEXC(papp);
-
 }
 
 
