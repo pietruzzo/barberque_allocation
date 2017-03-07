@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<BarbequeRTRM recipe_version="0.8">
+	<application priority="4">
+		<platform id="org.linux.cgroup">
+			<awms>
+				<awm id="0" name="OK" value="100">
+					<resources>
+						<cpu>
+							<pe qty="100"/>
+							<mem units="Mb" qty="20"/>
+						</cpu>
+					</resources>
+				</awm>
+			</awms>
+			<tasks>
+				<task name="stage1" id="0" throughput="2" hw_prefs="peak,cpu,nup"/>
+				<task name="stage2" id="1" ctime_ms="500" hw_prefs="cpu"/>
+			</tasks>
+		</platform>
+	</application>
+</BarbequeRTRM>
+<!-- vim: set tabstop=4 filetype=xml : -->
