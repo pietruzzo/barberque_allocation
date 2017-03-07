@@ -1414,6 +1414,32 @@ ApplicationManager::SetRuntimeProfile(
 	return result;
 }
 
+void ApplicationManager::LoadTaskGraph(AppPid_t pid, uint8_t exc_id) {
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
+	if (!papp) {
+		logger->Warn("Task-graph loading for EXC [%d:*:%d] FAILED "
+				"(Error: EXC not found)");
+		assert(papp);
+		return;
+	}
+	return LoadTaskGraph(papp);
+}
+
+
+void ApplicationManager::LoadTaskGraphAll() {
+	AppsUidMapIt app_it;
+
+	AppPtr_t papp = GetFirst(ba::ApplicationStatusIF::READY, app_it);
+	for (; papp; papp = GetNext(ba::ApplicationStatusIF::READY, app_it)) {
+		papp->LoadTaskGraph();
+	}
+
+	papp = GetFirst(ba::ApplicationStatusIF::RUNNING, app_it);
+	for (; papp; papp = GetNext(ba::ApplicationStatusIF::RUNNING, app_it)) {
+		papp->LoadTaskGraph();
+	}
+}
+
 
 /*******************************************************************************
  *  EXC Enabling
@@ -1481,6 +1507,7 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 		ra.ReleaseResources(papp);
 	}
 
+	papp->RemoveTaskGraph();
 	logger->Info("EXC [%s] DISABLED", papp->StrId());
 
 	return AM_SUCCESS;

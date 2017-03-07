@@ -406,6 +406,25 @@ public:
 		return AM_SUCCESS;
 	}
 
+
+	/**
+	 * @brief Load the task-graph of an application
+	 * @param pid the processi ID of the application
+	 * @param exc_id the Execution Context ID to enable
+	 */
+	void LoadTaskGraph(AppPid_t pid, uint8_t exc_id);
+
+	/**
+	 * @brief Load the task-graph of an application
+	 * @param The application descriptor
+	 */
+	inline void LoadTaskGraph(AppPtr_t papp) { papp->LoadTaskGraph(); }
+
+	/**
+	 * @brief Load the task-graphs of all the active applications (ready and running)
+	 */
+	void LoadTaskGraphAll();
+
 private:
 
 	/** The logger used by the application manager */

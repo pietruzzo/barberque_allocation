@@ -373,6 +373,11 @@ public:
 	 */
 	virtual void PrintStatusReport(bool verbose = false) = 0;
 
+	/**
+	 * @brief Load the task-graphs of all the active applications (ready and running)
+	 */
+	virtual void LoadTaskGraphAll() = 0;
+
 };
 
 } // namespace bbque
