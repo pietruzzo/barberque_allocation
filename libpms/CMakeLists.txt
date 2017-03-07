@@ -10,6 +10,10 @@ set (SOURCE exec_synchronizer app_controller)
 
 add_library(${TARGET_NAME} SHARED ${SOURCE})
 
+add_dependencies(${TARGET_NAME}
+	bbque_tg
+)
+
 target_link_libraries(${TARGET_NAME}
         bbque_rtlib
         bbque_tg

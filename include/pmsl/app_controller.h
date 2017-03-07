@@ -21,7 +21,7 @@
 #include <string>
 
 #include "bbque/rtlib.h"
-#include "bbque/tg/task_graph.h"
+#include "tg/task_graph.h"
 #include "pmsl/exec_synchronizer.h"
 
 

@@ -28,10 +28,10 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
-#include "bbque/tg/pointers.h"
-#include "bbque/tg/task.h"
-#include "bbque/tg/mem_buffer.h"
-#include "bbque/tg/event.h"
+#include "tg/pointers.h"
+#include "tg/task.h"
+#include "tg/mem_buffer.h"
+#include "tg/event.h"
 
 #define BBQUE_TG_FILE_PREFIX  BBQUE_APP_TG_PATH"/TG_"
 

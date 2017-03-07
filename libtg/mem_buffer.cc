@@ -16,7 +16,7 @@
  */
 
 
-#include "bbque/tg/mem_buffer.h"
+#include "tg/mem_buffer.h"
 
 namespace bbque {
 

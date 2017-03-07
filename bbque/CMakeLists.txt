@@ -104,8 +104,6 @@ endif (CONFIG_BBQUE_PM)
 if (CONFIG_BBQUE_EM)
   add_subdirectory(em)
 endif (CONFIG_BBQUE_EM)
-# Support for task-graph representations
-add_subdirectory(tg)
 
 # Add "barbeque" target binary
 set (BARBEQUE_SRC barbeque version object configuration_manager)

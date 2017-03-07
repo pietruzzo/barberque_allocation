@@ -1,7 +1,7 @@
 # Include
 include_directories(
-	${PROJECT_BINARY_DIR}/include/bbque/tg
-	${PROJECT_SOURCE_DIR}/include/bbque/tg
+	${PROJECT_BINARY_DIR}/include/tg
+	${PROJECT_SOURCE_DIR}/include/tg
 	${Boost_INCLUDE_DIR}
 )
 
@@ -19,13 +19,13 @@ target_link_libraries(${TARGET_NAME}
 
 # Set the public headers to install
 set_property (TARGET ${TARGET_NAME} PROPERTY PUBLIC_HEADER
-	${PROJECT_SOURCE_DIR}/include/bbque/tg/event.h
-	${PROJECT_SOURCE_DIR}/include/bbque/tg/mem_buffer.h
-	${PROJECT_SOURCE_DIR}/include/bbque/tg/pointers.h
-	${PROJECT_SOURCE_DIR}/include/bbque/tg/profilable.h
-	${PROJECT_SOURCE_DIR}/include/bbque/tg/task.h
-	${PROJECT_SOURCE_DIR}/include/bbque/tg/task_graph.h
-	${PROJECT_SOURCE_DIR}/include/bbque/tg/hw.h
+	${PROJECT_SOURCE_DIR}/include/tg/event.h
+	${PROJECT_SOURCE_DIR}/include/tg/mem_buffer.h
+	${PROJECT_SOURCE_DIR}/include/tg/pointers.h
+	${PROJECT_SOURCE_DIR}/include/tg/profilable.h
+	${PROJECT_SOURCE_DIR}/include/tg/task.h
+	${PROJECT_SOURCE_DIR}/include/tg/task_graph.h
+	${PROJECT_SOURCE_DIR}/include/tg/hw.h
 )
 
 # Install the library

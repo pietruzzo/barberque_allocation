@@ -31,7 +31,7 @@
 
 #include "bbque/bbque_exc.h"
 #include "bbque/utils/timer.h"
-#include "bbque/tg/task_graph.h"
+#include "tg/task_graph.h"
 
 #define BBQUE_TASKS_MAX_NUM BBQUE_APP_TG_TASKS_MAX_NUM
 

@@ -24,8 +24,8 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
-#include "bbque/tg/hw.h"
-#include "bbque/tg/profilable.h"
+#include "tg/hw.h"
+#include "tg/profilable.h"
 
 namespace bbque {
 

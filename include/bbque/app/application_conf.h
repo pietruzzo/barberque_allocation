@@ -19,7 +19,7 @@
 #define BBQUE_APPLICATION_CONF_IF_H_
 
 #include "bbque/app/application_status.h"
-#include "bbque/tg/task_graph.h"
+#include "tg/task_graph.h"
 
 
 namespace bbque {
