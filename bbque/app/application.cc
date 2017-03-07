@@ -88,8 +88,8 @@ Application::Application(std::string const & _name,
 	assert(logger);
 
 	// Format the EXC string identifier
-	::snprintf(str_id, APPLICATION_NAME_LEN, "%05d:%6s:%02d",
-			Pid(), Name().substr(0,6).c_str(), ExcId());
+	snprintf(str_id, APPLICATION_NAME_LEN, "%05d:%5s:%02d",
+		Pid(), Name().substr(0,5).c_str(), ExcId());
 
 	tg_path.assign(
 		BBQUE_TG_FILE_PREFIX +
