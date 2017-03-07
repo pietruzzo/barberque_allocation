@@ -104,7 +104,8 @@ endif (CONFIG_BBQUE_PM)
 if (CONFIG_BBQUE_EM)
   add_subdirectory(em)
 endif (CONFIG_BBQUE_EM)
-
+# Support for task-graph representations
+add_subdirectory(tg)
 
 # Add "barbeque" target binary
 set (BARBEQUE_SRC barbeque version object configuration_manager)
@@ -146,10 +147,11 @@ if (CONFIG_BBQUE_PM)
 	set (BARBEQUE_SRC power_monitor ${BARBEQUE_SRC})
 endif (CONFIG_BBQUE_PM)
 
-# Support for task-graph representations
-add_subdirectory(tg)
-
 add_executable (barbeque ${BARBEQUE_SRC})
+
+add_dependencies(barbeque
+	bbque_tg
+)
 
 # Linking dependencies
 target_link_libraries(barbeque
@@ -160,7 +162,6 @@ target_link_libraries(barbeque
 	${Boost_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 )
-
 
 # Linking dependencies for Generic-Linux targets
 if (CONFIG_TARGET_LINUX)

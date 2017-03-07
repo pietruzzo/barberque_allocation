@@ -252,6 +252,8 @@ include_directories(
 link_directories(
 	${Boost_LIBRARY_DIRS}
 	${CGroup_LIBRARY_DIRS}
+	${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_LIBS}
+	${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_RTLIB}
 )
 
 ################################################################################
