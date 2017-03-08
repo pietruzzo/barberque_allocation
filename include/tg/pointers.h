@@ -36,10 +36,12 @@ namespace bbque {
 class Task;
 class Buffer;
 class Event;
+class ArchInfo;
 
 using TaskPtr_t   = smart_pointer_type<Task>;
 using BufferPtr_t = smart_pointer_type<Buffer>;
 using EventPtr_t  = smart_pointer_type<Event>;
+using ArchInfoPtr_t = smart_pointer_type<ArchInfo>;
 
 }
 
