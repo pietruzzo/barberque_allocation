@@ -129,14 +129,14 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(
 
 	auto task = task_graph->GetTask(task_id);
 	if (task == nullptr) {
-		logger->Error("Unknown task id: %d", task_id);
+		logger->Error("StartTask: unknown task id: %d", task_id);
 		return ExitCode::ERR_TASK_ID;
 	}
 
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	enqueue_task(task);
 	tasks.cv.notify_all();
-	logger->Info("[Task %2d] launched", task_id);
+	logger->Info("StartTask: [Task %2d] launched", task_id);
 
 	return ExitCode::SUCCESS;
 }
@@ -150,7 +150,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(
 	for (auto task_id: tasks_ids) {
 		auto task = task_graph->GetTask(task_id);
 		if (task == nullptr) {
-			logger->Error("Unknown task id: %d", task_id);
+			logger->Error("StartTasks: unknown task id: %d", task_id);
 			return ExitCode::ERR_TASK_ID;
 		}
 		enqueue_task(task);
@@ -180,7 +180,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(
 
 	auto task = task_graph->GetTask(task_id);
 	if (task == nullptr) {
-		logger->Error("Unknown task id: %d", task_id);
+		logger->Error("StopTask: unknown task id: %d", task_id);
 			return ExitCode::ERR_TASK_ID;
 	}
 
@@ -199,7 +199,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(
 	for (auto task_id: tasks_ids) {
 		auto task = task_graph->GetTask(task_id);
 		if (task == nullptr) {
-			logger->Error("Unknown task id: %d", task_id);
+			logger->Error("StopTasks: unknown task id: %d", task_id);
 			return ExitCode::ERR_TASK_ID;
 		}
 		dequeue_task(task);
@@ -310,22 +310,22 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onSetup() {
 	// Synchronization event for onRun() return
 	auto outb = task_graph->OutputBuffer();
 	if (outb == nullptr) {
-		logger->Error("Task-graph output buffer missing");
+		logger->Error("onSetup: Task-graph output buffer missing");
 		return RTLIB_ERROR;
 	}
 
 	auto ev = task_graph->GetEvent(outb->Event());
 	if (ev == nullptr) {
-		logger->Error("Task-graph synchronization event missing");
+		logger->Error("onSetup: Task-graph synchronization event missing");
 		return RTLIB_ERROR;
 	}
 
 	on_run_sync = events[ev->Id()];
-	logger->Info("Task-graph synchronization event_id = %d", on_run_sync->id);
+	logger->Info("onSetup: Task-graph synchronization event_id = %d", on_run_sync->id);
 
 	// Send the task graph
 	SendTaskGraphToRM();
-	logger->Info("[Application %s] starting...", app_name.c_str());
+	logger->Info("onSetup: [Application %s] starting...", app_name.c_str());
 
 	return RTLIB_OK;
 }
@@ -336,24 +336,24 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 
 	// Task graph here should has been filled by the RTRM policy
 	RecvTaskGraphFromRM();
-	logger->Info("Resource allocation performed");
+	logger->Info("onConfigure: Resource allocation performed");
 	NotifyResourceAllocation();
 
 	// Wait for tasks to start
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
-	logger->Info("Waiting for tasks to start...");
+	logger->Info("onConfigure: Waiting for tasks to start...");
 	while (tasks.is_stopped.any()) {
 		logger->Debug("Tasks stopped: %s", tasks.is_stopped.to_string().c_str());
 		tasks.cv.wait(tasks_lock);
 	}
 
-	logger->Info("Tasks queue length: %d", tasks.start_queue.size());
+	logger->Info("onConfigure: Tasks queue length: %d", tasks.start_queue.size());
 	while (!tasks.start_queue.empty()) {
 		auto task_id = tasks.start_queue.front();
 		tasks.runtime[task_id]->monitor_thr = std::move(
 			std::thread(&ExecutionSynchronizer::TaskProfiler, this, task_id));
 		tasks.start_queue.pop();
-		logger->Info("[Task %2d] started on processor %d", task_id,
+		logger->Info("onConfigure: [Task %2d] started on processor %d", task_id,
 				task_graph->GetTask(task_id)->GetMappedProcessor());
 	}
 
@@ -364,7 +364,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
 	{
 		std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 		if (tasks.is_stopped.count() == task_graph->TaskCount()) {
-			logger->Info("Termination...");
+			logger->Info("onRun: Termination...");
 			return RTLIB_EXC_WORKLOAD_NONE;
 		}
 	}
@@ -373,7 +373,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
 	std::unique_lock<std::mutex> run_lock(on_run_sync->mx);
 	while (!on_run_sync->occurred) {
 		on_run_sync->cv.wait(run_lock);
-		logger->Info("<onRun> cycle = %d sync_event = %d",
+		logger->Info("onRun: Cycle %02d sync_event = %d",
 			Cycles(), on_run_sync->id);
 	}
 	on_run_sync->occurred = false;
@@ -389,12 +389,12 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onMonitor() {
 
 		uint16_t task_tput =
 			static_cast<uint16_t>(1e6 / (mean(prof_data.acc)));
-		logger->Info("[Task %2d] timing mean=%.2fus tput=%.2f",
+		logger->Info("onMonitor: [Task %2d] timing mean=%.2fus tput=%.2f",
 			rt_entry.first, mean(prof_data.acc), task_tput);
 		task_graph->GetTask(rt_entry.first)->SetProfiling(task_tput*100, 0);
 	}
 
-	logger->Info("Task-graph throughput: CPS:=%.2f", GetCPS());
+	logger->Info("onMonitor: Task-graph throughput: CPS:=%.2f", GetCPS());
 	task_graph->SetProfiling(GetCPS()*100, 0);
 	SendTaskGraphToRM();
 
@@ -409,6 +409,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRelease() {
 	for (auto & rt_entry: tasks.runtime) {
 		auto & monitor(rt_entry.second->monitor_thr);
 		monitor.join();
+		logger->Info("onRelease: Monitoring thread joined");
 	}
 
 	return RTLIB_OK;
