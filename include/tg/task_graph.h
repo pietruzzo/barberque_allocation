@@ -216,6 +216,7 @@ public:
 		return ev->second;
 	}
 
+	void Print() const noexcept;
 
 private:
 
