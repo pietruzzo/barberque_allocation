@@ -90,10 +90,7 @@ Application::Application(std::string const & _name,
 	// Format the EXC string identifier
 	snprintf(str_id, APPLICATION_NAME_LEN, "%05d:%5s:%02d",
 		Pid(), Name().substr(0,5).c_str(), ExcId());
-
-	tg_path.assign(
-		BBQUE_TG_FILE_PREFIX +
-		std::string(str_id).substr(0, BBQUE_APP_CHANNEL_ID_LENGTH));
+	tg_path.assign(BBQUE_TG_FILE_PREFIX + std::string(str_id).substr(0, 6) + Name());
 	logger->Info("Task-graph serial file@: <%s>", tg_path.c_str());
 
 	// Initialized scheduling state
