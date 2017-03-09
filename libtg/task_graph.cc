@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
 #include "tg/task_graph.h"
 
 namespace bbque {
@@ -65,6 +66,27 @@ TaskGraph::TaskGraph(
 	this->is_valid = true;
 }
 
+
+void TaskGraph::Print() const noexcept {
+	std::cerr << "Tasks: ";
+	for (auto & t_entry: tasks ) {
+		auto & t(t_entry.second);
+		std::cerr << t->Id() << " ";
+	}
+	std::cerr << std::endl;
+	std::cerr << "Buffers: ";
+	for (auto & b_entry: buffers ) {
+		auto & b(b_entry.second);
+		std::cerr << b->Id() << " ";
+	}
+	std::cerr << std::endl;
+	std::cerr << "Events: ";
+	for (auto & e_entry: events ) {
+		auto & e(e_entry.second);
+		std::cerr << e->Id() << " ";
+	}
+	std::cerr << std::endl;
+}
 
 bool TaskGraph::AreBuffersValid(TaskPtr_t task, BufferMap_t const & buffers) {
 	for (auto id: task->InputBuffers()) {
