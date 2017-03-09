@@ -136,8 +136,9 @@ public:
 	  a null pointer otherwise
 	 */
 	inline TaskPtr_t GetTask(uint32_t id) {
-		if (id > 0 && (size_t) id >= tasks.size()) return nullptr;
-		return tasks[id];
+		auto it_task = tasks.find(id);
+		if (it_task == tasks.end()) return nullptr;
+		return it_task->second;
 	}
 
 	/**
