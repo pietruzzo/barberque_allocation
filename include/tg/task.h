@@ -193,13 +193,13 @@ public:
 
 private:
 
-	uint32_t id;
+	uint32_t id = 0;
 
-	int thread_count;
+	int thread_count = 0;
 
 	std::string name;
 
-	int processor_id;
+	int processor_id = -1;
 
 
 	std::list<uint32_t> in_buffers;
