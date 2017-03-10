@@ -316,7 +316,8 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onSetup() {
 
 	auto ev = task_graph->GetEvent(outb->Event());
 	if (ev == nullptr) {
-		logger->Error("onSetup: Task-graph synchronization event missing");
+		logger->Error("onSetup: Task-graph synchronization event missing"
+			"(associated to the output buffer)");
 		return RTLIB_ERROR;
 	}
 
@@ -357,10 +358,13 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 				task_graph->GetTask(task_id)->GetMappedProcessor());
 	}
 
+	logger->Info("onConfigure: All tasks have been launched");
+
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
+	logger->Info("onRun: [c=%02d]...", Cycles());
 	{
 		std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 		if (tasks.is_stopped.count() == task_graph->TaskCount()) {
@@ -373,8 +377,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
 	std::unique_lock<std::mutex> run_lock(on_run_sync->mx);
 	while (!on_run_sync->occurred) {
 		on_run_sync->cv.wait(run_lock);
-		logger->Info("onRun: Cycle %02d sync_event = %d",
-			Cycles(), on_run_sync->id);
+		logger->Info("onRun: [c=%02d] sync_event: %d", Cycles(), on_run_sync->id);
 	}
 	on_run_sync->occurred = false;
 
@@ -389,8 +392,8 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onMonitor() {
 
 		uint16_t task_tput =
 			static_cast<uint16_t>(1e6 / (mean(prof_data.acc)));
-		logger->Info("onMonitor: [Task %2d] timing mean=%.2fus tput=%.2f",
-			rt_entry.first, mean(prof_data.acc), task_tput);
+		logger->Info("onMonitor: [Task %2d] timing mean=%.2fus",
+			rt_entry.first, mean(prof_data.acc));
 		task_graph->GetTask(rt_entry.first)->SetProfiling(task_tput*100, 0);
 	}
 
