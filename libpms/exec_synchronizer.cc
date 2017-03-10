@@ -156,6 +156,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(
 		enqueue_task(task);
 	}
 	tasks.cv.notify_all();
+	logger->Info("StartTasks: Requested tasks started");
 	return ExitCode::SUCCESS;
 }
 
@@ -169,6 +170,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() noexcept 
 		enqueue_task(task);
 	}
 	tasks.cv.notify_all();
+	logger->Info("StartTasksAll: Tasks started");
 	return ExitCode::SUCCESS;
 }
 
@@ -187,6 +189,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	dequeue_task(task);
 	tasks.cv.notify_all();
+	logger->Info("StopTask: [Task %2d] stopped", task_id);
 	return ExitCode::SUCCESS;
 }
 
@@ -205,6 +208,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(
 		dequeue_task(task);
 	}
 	tasks.cv.notify_all();
+	logger->Info("StopTasks: Required tasks stopped");
 	return ExitCode::SUCCESS;
 }
 
@@ -218,6 +222,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() noexcept {
 		dequeue_task(task);
 	}
 	tasks.cv.notify_all();
+	logger->Info("StopTasksAll: Tasks stopped");
 	return ExitCode::SUCCESS;
 }
 
@@ -407,8 +412,10 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onMonitor() {
 
 RTLIB_ExitCode_t ExecutionSynchronizer::onRelease() {
 
-	for (auto & ev_entry: events)
+	for (auto & ev_entry: events) {
+		logger->Info("onRelease: notifying event %d to unlock", ev_entry.first);
 		NotifyEvent(ev_entry.first);
+	}
 
 	for (auto & rt_entry: tasks.runtime) {
 		auto & monitor(rt_entry.second->monitor_thr);
