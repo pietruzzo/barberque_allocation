@@ -188,7 +188,9 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(
 
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	dequeue_task(task);
+	NotifyTaskEvents(task);
 	tasks.cv.notify_all();
+
 	logger->Info("StopTask: [Task %2d] stopped", task_id);
 	return ExitCode::SUCCESS;
 }
@@ -206,6 +208,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(
 			return ExitCode::ERR_TASK_ID;
 		}
 		dequeue_task(task);
+		NotifyTaskEvents(task);
 	}
 	tasks.cv.notify_all();
 	logger->Info("StopTasks: Required tasks stopped");
@@ -220,6 +223,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() noexcept {
 	for (auto & t_entry: task_graph->Tasks()) {
 		auto & task(t_entry.second);
 		dequeue_task(task);
+		NotifyTaskEvents(task);
 	}
 	tasks.cv.notify_all();
 	logger->Info("StopTasksAll: Tasks stopped");

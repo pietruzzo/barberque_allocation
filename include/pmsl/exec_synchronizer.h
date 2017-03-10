@@ -268,6 +268,20 @@ protected:
 	void TaskProfiler(uint32_t task_id) noexcept;
 
 
+	inline void NotifyBuffersEvents(const std::list<uint32_t> & buffers) {
+		for (auto buffer_id: buffers) {
+			auto buffer = task_graph->GetBuffer(buffer_id);
+			if (buffer != nullptr)
+				NotifyEvent(buffer->Event());
+		}
+	}
+
+	inline void NotifyTaskEvents(TaskPtr_t task) {
+		NotifyBuffersEvents(task->OutputBuffers());
+		NotifyBuffersEvents(task->InputBuffers());
+		NotifyEvent(task->Event());
+	}
+
 	// --------------- BbqueEXC derived functions -------------------- //
 
 
@@ -299,13 +313,10 @@ protected:
 			tasks.is_stopped.set(t->Id());
 			tasks.runtime[t->Id()]->is_running = false;
 		}
-		NotifyEvent(t->Event());
 	}
-
 };
 
-
-}
+} // namespace bbque
 
 
 #endif // BBQUE_EXC_SYNCHRONIZER_H_
