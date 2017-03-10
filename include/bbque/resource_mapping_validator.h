@@ -23,13 +23,48 @@
 #include <memory>
 
 #include "bbque/utils/logging/logger.h"
+#include "bbque/tg/task_graph.h"
 #include "bbque/tg/partition.h"
 
 namespace bu = bbque::utils;
 
 namespace bbque {
 
+/**
+ * @class PartitionSkimmer
+ *
+ * @brief The interface for declaration of a PartitionSkimmer object.
+ */
+class PartitionSkimmer {
 
+public:
+
+	typedef enum SkimmerType_t {
+		SKT_NONE,
+		SKT_MANGO_HN,
+		SKT_MANGO_MEMORY_MANAGER,
+		SKT_MANGO_POWER_MANAGER
+	} SkimmerType_t;
+
+	typedef enum ExitCode_t {
+		SK_OK = 0,
+		SK_GENERIC_ERROR,
+		SK_NO_PARTITION
+	} ExitCode_t;
+
+    virtual ~PartitionSkimmer() { }
+    virtual ExitCode_t Skim(const TaskGraph &tg, std::list<Partition>&) noexcept = 0;
+
+	PartitionSkimmer(SkimmerType_t type) : type(type) {}
+
+	SkimmerType_t GetType() { return type; }
+
+private:
+
+	SkimmerType_t type;
+};
+
+typedef std::shared_ptr<PartitionSkimmer> PartitionSkimmerPtr_t;
 
 /**
  * @class ResourceMappingValidator
@@ -42,21 +77,12 @@ class ResourceMappingValidator {
 public:
 
 	typedef enum ExitCode_t {
-		PMV_OK,
+		PMV_OK = 0,
 		PMV_GENERIC_ERROR,
 		PMV_NO_PARTITION,
 		PMV_SKIMMER_FAIL
 	} ExitCode_t;
 
-	typedef enum SkimmerType_t {
-		SKT_NONE,
-		SKT_MANGO_HN,
-		SKT_MANGO_MEMORY_MANAGER,
-		SKT_MANGO_POWER_MANAGER
-	} SkimmerType_t;
-
-	typedef std::function<int(std::list<Partition>&)> SkimmerFun_t;
-	typedef std::pair<SkimmerFun_t, SkimmerType_t> SkimmerPairType_t;
 
 	static ResourceMappingValidator & GetInstance();
 
@@ -67,10 +93,10 @@ public:
 	 * @brief Load the feasible partitions according to registered callbacks. 
 	 *
 	 */
-	ExitCode_t LoadPartitions(std::list<Partition> &partitions);
+	ExitCode_t LoadPartitions(const TaskGraph &tg, std::list<Partition> &partitions);
 
 
-	void RegisterSkimmer(SkimmerFun_t skimmer, int priority, SkimmerType_t type) noexcept;
+	void RegisterSkimmer(PartitionSkimmerPtr_t skimmer, int priority) noexcept;
 
 	/**
 	 * @brief If LoadPartitions failed with `PMV_NO_PARTITION` or `PMV_SKIMMER_FAIL`, this
@@ -79,7 +105,7 @@ public:
 	 * @note  If the LoadPartitions is never called or returned with other
 	 *	  value the return of this method is undefined.
 	 */
-	inline SkimmerType_t GetLastFailed() const noexcept { 
+	inline PartitionSkimmer::SkimmerType_t GetLastFailed() const noexcept { 
 		return failed_skimmer;
 	}
 
@@ -88,9 +114,9 @@ private:
 	/* ******* ATTRIBUTES ******* */
 	std::unique_ptr<bu::Logger> logger;
 
-	std::multimap<int, SkimmerPairType_t> skimmers;
+	std::multimap<int, PartitionSkimmerPtr_t> skimmers;
 
-	SkimmerType_t failed_skimmer;
+	PartitionSkimmer::SkimmerType_t failed_skimmer;
 
 	/* ******* METHODS ******* */
 	ResourceMappingValidator();

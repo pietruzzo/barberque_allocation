@@ -35,15 +35,15 @@ ResourceMappingValidator::ResourceMappingValidator():
 }
 
 void ResourceMappingValidator::
-		RegisterSkimmer(SkimmerFun_t skimmer, int priority, SkimmerType_t type) noexcept {
+		RegisterSkimmer(PartitionSkimmerPtr_t skimmer, int priority) noexcept {
 		skimmers.insert(
-			std::pair<int,SkimmerPairType_t> (priority, SkimmerPairType_t(skimmer, type)) 
+			std::pair<int,PartitionSkimmerPtr_t> (priority, skimmer) 
 		);
 }
 
 
 ResourceMappingValidator::ExitCode_t
-ResourceMappingValidator::LoadPartitions(std::list<Partition> &partitions) {
+ResourceMappingValidator::LoadPartitions(const TaskGraph &tg, std::list<Partition> &partitions) {
 
 	logger->Notice("Initial partitions nr. %d", partitions.size());
 
@@ -53,17 +53,17 @@ ResourceMappingValidator::LoadPartitions(std::list<Partition> &partitions) {
 	}
 
 
-	SkimmerType_t skimmer_type = SKT_NONE;
+	PartitionSkimmer::SkimmerType_t skimmer_type = PartitionSkimmer::SkimmerType_t::SKT_NONE;
 	// I get the skimmers in the reverse order, in order to execute the one with highest
 	// priority
 	for (auto s = skimmers.rbegin(); s != skimmers.rend(); ++s) {
 		int priority = s->first;
-		auto skimmer_fun = s->second.first; 
-		skimmer_type = s->second.second; 
+		PartitionSkimmerPtr_t skimmer = s->second; 
+		skimmer_type = skimmer->GetType(); 
 
-		logger->Debug("Executing to skimmer %d [priority=%d]", (int)skimmer_type, priority);
+		logger->Debug("Executing skimmer [type=%d] [priority=%d]", (int)skimmer_type, priority);
 
-		int ret = skimmer_fun(partitions);
+		int ret = skimmer->Skim(tg, partitions);
 
 		if (ret != 0) {
 			logger->Error("Skimmer %d [priority=%d] FAILED [err=%d]", 

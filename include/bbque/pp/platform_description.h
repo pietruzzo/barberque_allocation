@@ -206,6 +206,7 @@ public:
 		std::vector<ProcessingElement> pes;
 	};
 
+	typedef std::shared_ptr<MulticoreProcessor> MulticorePtr_t;
 
 	class CPU : public MulticoreProcessor {
 	public:

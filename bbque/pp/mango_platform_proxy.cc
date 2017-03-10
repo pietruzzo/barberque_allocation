@@ -36,8 +36,7 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	bbque_assert ( 0 == hn_initialize(MANGO_DEVICE_NAME) ); 
 
 	ResourceMappingValidator &rmv = ResourceMappingValidator::GetInstance();
-	rmv.RegisterSkimmer(MangoPlatformProxy::PartitionSkimmer, 100, 
-				ResourceMappingValidator::SKT_MANGO_HN);
+	rmv.RegisterSkimmer(std::make_shared<MangoPartitionSkimmer>() , 100);
 
 }
 
@@ -160,22 +159,76 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 	return PLATFORM_OK;
 }
 
-int MangoPlatformProxy::PartitionSkimmer(std::list<Partition>& part_list) {
+static hn_st_request_t FillReq(const TaskGraph &tg) {
+
+	hn_st_request_t req;
+	req.num_comp_rsc    = tg.TaskCount();
+	req.num_mem_buffers = tg.BufferCount();
+	
+
+	for (auto t : tg.Tasks()) {
+		// TODO
+	}
+
+	unsigned int i=0;
+	for (auto b : tg.Buffers()) {
+		bbque_assert(i < req.num_mem_buffers);
+		req.mem_buffers_size[i++] = b.second->Size();
+	}
+
+	return req;
+}
+
+static Partition GetPartition(const TaskGraph &tg, hn_st_request_t req, hn_st_response_t *res,
+							  int i) {
+
+	auto it_task = tg.Tasks().begin();
+	auto it_buff = tg.Buffers().begin();
+
+	Partition part(res[i].partition_id);
+
+	for (unsigned int j=0; j<req.num_comp_rsc; j++) {
+		part.MapTask(it_task->second, res[i].comp_rsc_tiles[j]);
+		it_task++;
+	}
+	bbque_assert(it_task == tg.Tasks().end());
+
+	for (unsigned int j=0; j<req.num_mem_buffers; j++) {
+		part.MapBuffer(it_buff->second, res[i].mem_buffers_tiles[j]);
+		it_buff++;
+	}
+	bbque_assert(it_buff == tg.Buffers().end());
+
+	return part;
+}
+
+MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
+MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
+														std::list<Partition>&part_list) noexcept {
 	hn_st_request_t req;
 	hn_st_response_t res[MANGO_BASE_NUM_PARTITIONS];
 	uint32 num_parts = MANGO_BASE_NUM_PARTITIONS;
 
-	int ret;
-	if ( (ret = hn_get_partitions(&req, res, &num_parts)) ) {
-		return ret;
+	bbque_assert(part_list.empty());
+
+	req = FillReq(tg);
+
+	if ( (hn_get_partitions(&req, res, &num_parts)) ) {
+		return SK_GENERIC_ERROR;
 	}
 
+	// No feasible partition found
 	if ( num_parts == 0 ) {
-		part_list.clear();
-		return 0;
+		return SK_NO_PARTITION;
+	}
+
+	// Fill the partition vector with the partitions returned by HN library
+	for (unsigned int i=0; i < num_parts; i++) {
+		Partition part = GetPartition(tg, req, res, i);
+		part_list.push_back(part);
 	}
 	
-
+	return SK_OK;
 
 }
 
