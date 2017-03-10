@@ -222,18 +222,19 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() noexcept {
 }
 
 
-
 void ExecutionSynchronizer::NotifyEvent(uint32_t event_id) noexcept {
 	auto evit = events.find(event_id);
-	if (evit == events.end())
+	if (evit == events.end()) {
+		logger->Error("[Event %2d] not registered", event_id);
 		return;
+	}
 	auto & event(evit->second);
-	std::unique_lock<std::mutex> ev_lock(evit->second->mx);
+
+	std::unique_lock<std::mutex> ev_lock(event->mx);
 	event->occurred = true;
 	event->cv.notify_all();
 	logger->Debug("[Event %2d] notified", event_id);
 }
-
 
 
 void ExecutionSynchronizer::WaitForResourceAllocation() noexcept {
