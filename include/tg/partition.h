@@ -57,6 +57,14 @@ public:
 		this->pm_score = score;
 	}
 
+	inline void MapTask(TaskPtr_t task, int unit) noexcept {
+		this->tasks_map.insert(std::make_pair(task, unit));
+	}
+
+	inline void MapBuffer(BufferPtr_t task, int unit) noexcept {
+		this->buffers_map.insert(std::make_pair(task, unit));
+	}
+
 	/**
 	 * @brief Get the id of the memory bank as an identifier number associated by the HN library
 	 * @except std::out_of_range if the buffer is not present in the mapping
@@ -67,7 +75,7 @@ public:
 	 * @brief Get the multicore processor assigned to the task
 	 * @except std::out_of_range if the task is not present in the mapping
 	 */
-	const pp::PlatformDescription::MulticoreProcessor &GetUnit(TaskPtr_t task) const;
+	int GetUnit(TaskPtr_t task) const;
 
 	/**
 	 * @brief Get the id of the unit assigned to the task.
@@ -83,7 +91,7 @@ private:
 
 	std::shared_ptr<TaskGraph> tg;	/** The pointer to the associated TaskGraph */
 	
-	std::map<TaskPtr_t, pp::PlatformDescription::MulticoreProcessor> tasks_map;
+	std::map<TaskPtr_t, int> tasks_map;
 	std::map<BufferPtr_t, int> buffers_map;
 
 };

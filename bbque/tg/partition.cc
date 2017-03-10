@@ -28,13 +28,12 @@ namespace bbque {
 	}
 
 
-	const pp::PlatformDescription::MulticoreProcessor &Partition::GetUnit(TaskPtr_t task) const {
+	int Partition::GetUnit(TaskPtr_t task) const {
 		return tasks_map.at(task);	// It returns out_of_range exception if not present
 	}
 
 	int Partition::GetUnitId(TaskPtr_t task) const {
 		// It returns out_of_range exception if not present
-		const pp::PlatformDescription::MulticoreProcessor &proc = tasks_map.at(task);
-		return proc.GetId();
+		return tasks_map.at(task);
 	}
 }
