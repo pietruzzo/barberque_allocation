@@ -25,6 +25,7 @@
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/extra_data_container.h"
 #include "bbque/res/resource_constraints.h"
+#include "tg/requirements.h"
 
 #define RECIPE_NAMESPACE "rcp"
 
@@ -71,6 +72,7 @@ typedef struct AppPluginData: public bu::PluginData_t {
 
 /// Shared pointer to AppPluginData_t
 typedef std::shared_ptr<AppPluginData_t> AppPluginDataPtr_t;
+
 
 /**
  * @brief An application recipe
@@ -153,6 +155,24 @@ public:
 	}
 
 	/**
+	 * @brief Add a set of performance requirements for a task
+	 * @param task_id Task identification number
+	 * @param tr Task requirements structure
+	 */
+	inline void AddTaskRequirements(uint32_t id, TaskRequirements tr) {
+		task_reqs[id] = tr;
+	}
+
+	/**
+	 * @brief Get the set of performance requirements for a task
+	 * @param task_id Task identification number
+	 * @return tr Task requirements structure
+	 */
+	inline const TaskRequirements & GetTaskRequirements(uint32_t id) {
+		return task_reqs[id];
+	}
+
+	/**
 	 * @brief Add a constraint to the static constraint map
 	 *
 	 * Lower bound assertion: AddConstraint(<resource_path>, value, 0);
@@ -209,6 +229,9 @@ private:
 
 	/** Static constraints included in the recipe */
 	ConstrMap_t constraints;
+
+	/** Per-task performance requirements */
+	std::map<uint32_t, TaskRequirements> task_reqs;
 
 
 	/** AWM attribute type flag */
