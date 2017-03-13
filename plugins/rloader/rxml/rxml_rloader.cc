@@ -136,6 +136,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 
 	// Recipe object
 	recipe_ptr = _recipe;
+	logger->Info("Loading recipe <%s>...", _recipe_name.c_str());
 
 	try {
 		// Plugin needs a logger
@@ -222,7 +223,6 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 
 
 rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xml_elem) {
-
 	rapidxml::xml_node<> * pp_elem = nullptr;
 	rapidxml::xml_node<> * pp_last = nullptr;
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
@@ -242,14 +242,14 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 		CheckMandatoryNode(pp_elem, "platform", _xml_elem);
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
 		// System platform ID
-        sys_platform_id = plm.GetPlatformID();
+		sys_platform_id = plm.GetPlatformID();
 		if (!sys_platform_id) {
 			logger->Error("Unable to get the system platform ID");
 			assert(sys_platform_id != nullptr);
 			return nullptr;
 		}
 		// Plaform hardware (optional)
-        sys_platform_hw.assign(plm.GetHardwareID());
+		sys_platform_hw.assign(plm.GetHardwareID());
 		logger->Info("Platform: System ID=%s HW=%s",
 				sys_platform_id, sys_platform_hw.c_str());
 
@@ -313,8 +313,7 @@ std::time_t RXMLRecipeLoader::LastModifiedTime(std::string const & _name) {
 
 //========================[ Working modes ]===================================
 
-RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(
-		rapidxml::xml_node<>  *_xml_elem) {
+RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node<>  *_xml_elem) {
 	uint8_t result = __RSRC_SUCCESS;
 	unsigned int wm_id;
 	unsigned int wm_value;
