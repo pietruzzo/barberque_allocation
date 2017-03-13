@@ -61,12 +61,16 @@ ResourcePath::~ResourcePath() {
  ******************************************************************/
 
 bool ResourcePath::operator< (ResourcePath const & comp_path) {
+	// Manage the case of different length
+	if (identifiers.size() < comp_path.NumLevels())
+		return true;
+	else if (identifiers.size() > comp_path.NumLevels())
+		return false;
+
+	// Per-level comparison of resource identifiers (equal length)
 	auto curr_it = identifiers.begin();
 	auto comp_it = comp_path.Begin();
-
-	// Per-level comparison of resource identifiers
-	for (; curr_it != identifiers.end(), comp_it != comp_path.End();
-			++curr_it, ++comp_it) {
+	for (; curr_it != identifiers.end(), comp_it != comp_path.End(); ++curr_it, ++comp_it) {
 		ResourceIdentifier & curr_resource_ident(*(*curr_it));
 		ResourceIdentifier & comp_resource_ident(*(*comp_it));
 
