@@ -109,9 +109,9 @@ void Resource::SetOnline() {
 }
 
 
-uint64_t Resource::Used(RViewToken_t status_view) {
+uint64_t Resource::Used(RViewToken_t view_id) {
 	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(status_view));
+	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view)
 		return 0;
 
@@ -119,7 +119,7 @@ uint64_t Resource::Used(RViewToken_t status_view) {
 	return view->used;
 }
 
-uint64_t Resource::Available(AppSPtr_t papp, RViewToken_t status_view) {
+uint64_t Resource::Available(AppSPtr_t papp, RViewToken_t view_id) {
 	uint64_t total_available = Unreserved();
 	ResourceStatePtr_t view;
 
@@ -128,7 +128,7 @@ uint64_t Resource::Available(AppSPtr_t papp, RViewToken_t status_view) {
 		return 0;
 
 	// Retrieve the state view
-	view = GetStateView(status_view);
+	view = GetStateView(view_id);
 	// If the view is not found, it means that nothing has been allocated.
 	// Thus the availability value to return is the total amount of
 	// resource
@@ -147,12 +147,11 @@ uint64_t Resource::Available(AppSPtr_t papp, RViewToken_t status_view) {
 
 }
 
-uint64_t Resource::ApplicationUsage(AppSPtr_t const & papp, RViewToken_t status_view) {
-	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(status_view));
+uint64_t Resource::ApplicationUsage(AppSPtr_t const & papp, RViewToken_t view_id) {
+	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
 		DB(fprintf(stderr, FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
-					name.c_str(), status_view));
+					name.c_str(), view_id));
 		return 0;
 	}
 
@@ -163,42 +162,40 @@ uint64_t Resource::ApplicationUsage(AppSPtr_t const & papp, RViewToken_t status_
 Resource::ExitCode_t Resource::UsedBy(AppUid_t & app_uid,
 		uint64_t & amount,
 		uint8_t idx,
-		RViewToken_t status_view) {
+		RViewToken_t view_id) {
 	// Get the map of Apps/EXCs using the resource
-	AppUseQtyMap_t apps_map;
-	size_t mapsize = ApplicationsCount(apps_map, status_view);
+	AppUsageQtyMap_t apps_map;
+	size_t mapsize = ApplicationsCount(apps_map, view_id);
 	size_t count = 0;
 	app_uid = 0;
-	amount = 0;
+	amount  = 0;
 
 	// Index overflow check
 	if (idx >= mapsize)
 		return RS_NO_APPS;
 
 	// Search the idx-th App/EXC using the resource
-	for (AppUseQtyMap_t::iterator apps_it = apps_map.begin();
-			apps_it != apps_map.end(); ++apps_it, ++count) {
-
+	for (auto const & apps_it: apps_map) {
 		// Skip until the required index has not been reached
-		if (count < idx)
-			continue;
-
+		if (count < idx) continue;
 		// Return the amount of resource used and the App/EXC Uid
-		amount = apps_it->second;
-		app_uid = apps_it->first;
+		amount  = apps_it.second;
+		app_uid = apps_it.first;
+		++count;
+
 		return RS_SUCCESS;
 	}
 
 	return RS_NO_APPS;
 }
 
+
 uint64_t Resource::Acquire(AppSPtr_t const & papp, uint64_t amount,
-		RViewToken_t status_view) {
-	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(status_view));
+		RViewToken_t view_id) {
+	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
-		view = ResourceStatePtr_t(new ResourceState());
-		state_views[status_view] = view;
+		view = std::make_shared<ResourceState>();
+		state_views[view_id] = view;
 	}
 
 	// Try to set the new "used" value
@@ -252,31 +249,25 @@ uint64_t Resource::Release(AppUid_t app_uid, ResourceStatePtr_t view) {
 	return used_by_app;
 }
 
-void Resource::DeleteView(RViewToken_t status_view) {
+
+void Resource::DeleteView(RViewToken_t view_id) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	// Avoid to delete the default view
-	if (status_view == ra.GetSystemView())
+	if (view_id == ra.GetSystemView())
 		return;
-	state_views.erase(status_view);
+	state_views.erase(view_id);
 }
 
-uint16_t Resource::ApplicationsCount(
-		AppUseQtyMap_t & apps_map,
-		RViewToken_t status_view) {
-	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(status_view));
+uint16_t Resource::ApplicationsCount(AppUsageQtyMap_t & apps_map, RViewToken_t view_id) {
+	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view)
 		return 0;
-
 	// Return the size and a reference to the map
 	apps_map = view->apps;
 	return apps_map.size();
 }
 
-uint64_t Resource::ApplicationUsage(
-		AppSPtr_t const & papp,
-		AppUseQtyMap_t & apps_map) {
-	// Sanity check
+uint64_t Resource::ApplicationUsage(AppSPtr_t const & papp, AppUsageQtyMap_t & apps_map) {
 	if (!papp) {
 		DB(fprintf(stderr, FW("Resource {%s}: App/EXC null pointer\n"),
 					name.c_str()));
@@ -284,7 +275,7 @@ uint64_t Resource::ApplicationUsage(
 	}
 
 	// Retrieve the application from the map
-	AppUseQtyMap_t::iterator app_using_it(apps_map.find(papp->Uid()));
+	auto app_using_it(apps_map.find(papp->Uid()));
 	if (app_using_it == apps_map.end()) {
 		DB(fprintf(stderr, FD("Resource {%s}: no usage value for [%s]\n"),
 					name.c_str(), papp->StrId()));
@@ -295,20 +286,18 @@ uint64_t Resource::ApplicationUsage(
 	return app_using_it->second;
 }
 
-ResourceStatePtr_t Resource::GetStateView(RViewToken_t status_view) {
+ResourceStatePtr_t Resource::GetStateView(RViewToken_t view_id) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-
 	// Default view if token = 0
-	if (status_view == 0)
-		status_view = ra.GetSystemView();
+	if (view_id == 0)
+		view_id = ra.GetSystemView();
 
 	// Retrieve the view from hash map otherwise
-	RSHashMap_t::iterator it = state_views.find(status_view);
+	auto it = state_views.find(view_id);
 	if (it != state_views.end())
 		return it->second;
 
-	// State view not found
-	return ResourceStatePtr_t();
+	return nullptr;
 }
 
 #ifdef CONFIG_BBQUE_PM
