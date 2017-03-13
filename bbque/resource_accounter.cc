@@ -206,43 +206,40 @@ void ResourceAccounter::PrintAppDetails(
 		br::ResourcePtr_t resource_ptr,
 		br::RViewToken_t status_view,
 		bool verbose) const {
-	br::Resource::ExitCode_t res_result;
-	ba::AppSPtr_t papp;
-	AppUid_t app_uid;
-	uint64_t rsrc_amount;
-	uint8_t app_index = 0;
 	//                           +----- 15 ----+             +-- 11 ---+  +--- 13 ----+ +--- 13 ----+
 	char app_text_row[] = "|     12345:exc_01:01,P01,AWM01 : 1234.123e+1 |             |             |";
 
-	// Get the resource descriptor
-	if (!resource_ptr || resource_ptr->ApplicationsCount(status_view) == 0)
+	if (resource_ptr == nullptr) {
+		logger->Warn("Null resource descriptor passed");
 		return;
+	}
 
-	do {
-		// How much does the application/EXC use?
-		res_result = resource_ptr->UsedBy(
-				app_uid, rsrc_amount, app_index, status_view);
-		if (res_result != br::Resource::RS_SUCCESS)
-			break;
+	br::AppUsageQtyMap_t apps_map;
+	resource_ptr->Applications(apps_map, status_view);
+	for (auto & app: apps_map) {
+		auto const & app_uid(app.first);
+		auto const & app_usage(app.second);
 
 		// Get the App/EXC descriptor
-		papp = am.GetApplication(app_uid);
-		if (!papp || !papp->CurrentAWM())
+		auto papp(am.GetApplication(app_uid));
+		if (papp == nullptr) {
+			logger->Error("[uid=%d] no application found", app_uid);
 			break;
+		}
+		if (!papp->CurrentAWM()) {
+			logger->Error("[uid=%d] no working mode", app_uid);
+			break;
+		}
 
 		// Build the row to print
 		sprintf(app_text_row, "| %19s,P%02d,AWM%02d : %11s |%13s|%13s|",
 				papp->StrId(),
 				papp->Priority(),
 				papp->CurrentAWM()->Id(),
-				PrettyFormat(rsrc_amount),
+				PrettyFormat(app_usage),
 				"", "");
 		PRINT_NOTICE_IF_VERBOSE(verbose, app_text_row);
-
-		// Next application/EXC
-		++app_index;
-	} while (papp);
-
+	}
 	// Print a separator line
 	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV3);
 }
