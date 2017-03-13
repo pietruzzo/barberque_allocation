@@ -198,6 +198,9 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 				throw std::runtime_error("LoadWorkingModes failed.");
 			}
 
+			// Task requirements (for task-graph based programming models)
+			LoadTasksRequirements(pp_node);
+
 			// "Static" constraints and plugins specific data
 			LoadConstraints(pp_node);
 			LoadPluginsData<ba::RecipePtr_t>(recipe_ptr, pp_node);
@@ -395,6 +398,78 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node
 
 	// TODO: RL_WEAK_LOAD case
 	return RL_SUCCESS;
+}
+
+
+/*
+<tasks>
+	<task name="stage1" id="0" throughput="2" hw_prefs="peak,cpu,nup"/>
+	<task name="stage2" id="1" ctime_ms="500" hw_prefs="cpu"/>
+</tasks>
+*/
+
+void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<>  *_xml_elem) {
+	rapidxml::xml_node<> * tasks_elem = nullptr;
+	rapidxml::xml_node<> * task_elem  = nullptr;
+	std::string read_attrib;
+	logger->Debug("LoadTasksRequirements: loading children of <%s>...", _xml_elem->name());
+
+	try {
+		tasks_elem = _xml_elem->first_node("tasks", 0, true);
+		if (tasks_elem == nullptr) {
+			logger->Warn("LoadTaskRequirements: Missing <tasks> section");
+			return;
+		}
+
+		CheckMandatoryNode(tasks_elem, "tasks", _xml_elem);
+		task_elem  = tasks_elem->first_node("task", 0, true);
+		if (task_elem == nullptr) {
+			logger->Warn("LoadTaskRequirements: No <task> sections included");
+			return;
+		}
+		CheckMandatoryNode(task_elem, "task", tasks_elem);
+
+		// <task name="stage2" id="1" ctime_ms="500" hw_prefs="cpu"/>
+		while (task_elem) {
+			logger->Debug("LoadTasksRequirements: loading task...");
+			//
+			read_attrib  = loadAttribute("id", true, task_elem);
+			logger->Debug("LoadTasksRequirements: task id=%s", read_attrib.c_str());
+			uint32_t id = atoi(read_attrib.c_str());
+
+			read_attrib = loadAttribute("throughput", false, task_elem);
+			logger->Debug("LoadTasksRequirements: throughput=%s", read_attrib.c_str());
+			float tp = atof(read_attrib.c_str());
+
+			read_attrib = loadAttribute("ctime_ms", false, task_elem);
+			logger->Debug("LoadTasksRequirements: ctime=%s", read_attrib.c_str());
+			uint32_t ct = atoi(read_attrib.c_str());
+
+			read_attrib = loadAttribute("in_bandwidth", false, task_elem);
+			logger->Debug("LoadTasksRequirements: inbw_kbps=%s", read_attrib.c_str());
+			uint32_t inb = atof(read_attrib.c_str());
+
+			read_attrib = loadAttribute("out_bandwidth", false, task_elem);
+			logger->Debug("LoadTasksRequirements: outbw_kbps=%s", read_attrib.c_str());
+			uint32_t outb = atof(read_attrib.c_str());
+
+			recipe_ptr->AddTaskRequirements(id, TaskRequirements(tp, ct, inb, outb));
+			logger->Info("LoadTasksRequirements: <T%2d>: tput=%.2f ctime=%dms"
+				" in_bw=%dKbps, out_bw=%dKbps", id,
+				recipe_ptr->GetTaskRequirements(id).Throughput(),
+				recipe_ptr->GetTaskRequirements(id).CompletionTime(),
+				recipe_ptr->GetTaskRequirements(id).InBandwidth(),
+				recipe_ptr->GetTaskRequirements(id).OutBandwidth());
+
+			task_elem = task_elem->next_sibling("task", 0, false);
+		}
+
+	} catch (rapidxml::parse_error &ex) {
+		logger->Error(ex.what());
+		return;
+	}
+
+	return;
 }
 
 

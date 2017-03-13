@@ -158,6 +158,13 @@ private:
 			std::string const & res_path);
 
 	/**
+	 * @brief Parse the section containing tasks performance requirements.
+	 *
+	 * @param xml_elem The XML element from which start loading
+	 */
+	void LoadTasksRequirements(rapidxml::xml_node<>  *_xml_elem);
+
+	/**
 	 * @brief Insert the resource in the working mode after checking if
 	 * resource path have some matches between system resources
 	 *
