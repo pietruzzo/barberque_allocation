@@ -25,6 +25,7 @@ namespace bbque {
 
 
 enum class ArchType {
+	NONE,
 	GN,
 	ARM,
 	PEAK,
