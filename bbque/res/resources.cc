@@ -212,27 +212,41 @@ uint64_t Resource::Acquire(AppSPtr_t const & papp, uint64_t amount,
 	return amount;
 }
 
-uint64_t Resource::Release(AppSPtr_t const & papp, RViewToken_t status_view) {
-	// Retrieve the state view
-	ResourceStatePtr_t view(GetStateView(status_view));
+uint64_t Resource::Release(AppSPtr_t const & papp, RViewToken_t view_id) {
+	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
-		DB(fprintf(stderr, FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
-					name.c_str(), status_view));
+		DB(fprintf(stderr,
+			FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
+				name.c_str(), view_id));
 		return 0;
 	}
+	return Release(papp->Uid(), view);
+}
 
+uint64_t Resource::Release(AppUid_t app_uid, RViewToken_t view_id) {
+	ResourceStatePtr_t view(GetStateView(view_id));
+	if (!view) {
+		DB(fprintf(stderr,
+			FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
+				name.c_str(), view_id));
+		return 0;
+	}
+	return Release(app_uid, view);
+}
+
+uint64_t Resource::Release(AppUid_t app_uid, ResourceStatePtr_t view) {
 	// Lookup the application using the resource
-	AppUseQtyMap_t::iterator lkp = view->apps.find(papp->Uid());
+	auto lkp = view->apps.find(app_uid);
 	if (lkp == view->apps.end()) {
-		DB(fprintf(stderr, FD("Resource {%s}: no resources allocated to [%s]\n"),
-					name.c_str(), papp->StrId()));
+		DB(fprintf(stderr, FD("Resource {%s}: no resources allocated to uid=%d\n"),
+					name.c_str(), app_uid));
 		return 0;
 	}
 
 	// Decrease the used value and remove the application
 	uint64_t used_by_app = lkp->second;
 	view->used -= used_by_app;
-	view->apps.erase(papp->Uid());
+	view->apps.erase(app_uid);
 
 	// Return the amount of resource released
 	return used_by_app;

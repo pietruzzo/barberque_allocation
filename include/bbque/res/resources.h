@@ -589,6 +589,28 @@ private:
 	 * @return The amount of resource released
 	 */
 	uint64_t Release(AppSPtr_t const & papp, RViewToken_t status_view = 0);
+	/**
+	 * @brief Release the resource
+	 *
+	 * Release the specific amount of resource used by an application
+	 *
+	 * @param app_uid The application unique id releasing the resource
+	 * @param view_id The token referencing the resource view
+	 * @return The amount of resource released
+	 */
+	uint64_t Release(AppUid_t app_uid, RViewToken_t view_id);
+
+	/**
+	 * @brief Release the resource
+	 *
+	 * Release the specific amount of resource used by an application
+	 *
+	 * @param app_uid The application unique id releasing the resource
+	 * @param view The resource status view from which releasing the resource
+	 * @return The amount of resource released
+	 */
+	uint64_t Release(AppUid_t app_uid, ResourceStatePtr_t view);
+
 
 	/**
 	 * @brief Apps/EXCs using the resource
