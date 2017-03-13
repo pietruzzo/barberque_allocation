@@ -122,6 +122,9 @@
 /** Target platform: ARM Architecture */
 #cmakedefine CONFIG_TARGET_ARM
 
+/** Target platform: Linux-Mango */
+#cmakedefine CONFIG_TARGET_LINUX_MANGO
+
 /** Target hardware */
 #cmakedefine CONFIG_TARGET_ARM_BIG_LITTLE
 #cmakedefine CONFIG_TARGET_ARM_CORTEX_A9

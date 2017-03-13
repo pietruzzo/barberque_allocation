@@ -83,7 +83,9 @@ choice
     depends on BBQUE_SCHEDPOL_CLOVES
     bool "Cloves"
 
-##NP
+  config BBQUE_SCHEDPOL_DEFAULT_MANGA
+    bool "MangA"
+    select BBQUE_SCHEDPOL_MANGA
 
 endchoice
 
@@ -94,3 +96,4 @@ source barbeque/plugins/schedpol/gridbalance/Kconfig
 source barbeque/plugins/schedpol/perdetemp/Kconfig
 source barbeque/plugins/schedpol/contrex/Kconfig
 source barbeque/plugins/schedpol/cloves/Kconfig
+source barbeque/plugins/schedpol/manga/Kconfig

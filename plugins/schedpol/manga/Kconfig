@@ -1,0 +1,6 @@
+config BBQUE_SCHEDPOL_MANGA
+  depends on TARGET_LINUX_MANGO
+  bool "MangA"
+  default n
+  ---help---
+  Description...
