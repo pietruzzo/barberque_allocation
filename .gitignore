@@ -12,3 +12,8 @@ config/templates/*.bsx
 config/templates/cpp/.cproject
 config/templates/cpp/.project
 nbproject/
+barbeque.config
+barbeque.creator*
+barbeque.files
+barbeque.includes
+Barbeque/Barbeque.*
