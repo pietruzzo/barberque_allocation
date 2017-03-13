@@ -194,7 +194,7 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 
 		logger->Notice("Removing EXC container...");
 
-        pid = atoi(argv[1]);
+		pid  = atoi(argv[1]);
 		papp = GetApplication(pid, 0);
 		if (!papp) {
 			logger->Warn("Container EXC for PID [%d] not FOUND", pid);
@@ -631,7 +631,7 @@ AppPtr_t const ApplicationManager::GetApplication(AppUid_t uid) {
 
 	//----- Find the required EXC
 	if (it == uids.end()) {
-		DB(logger->Error("Lookup for EXC [%05d:*:%02d] (UID: %07d) FAILED"
+		DB(logger->Warn("Lookup for EXC [%05d:*:%02d] (UID: %07d) FAILED"
 				" (Error: UID not registered)",
 				Application::Uid2Pid(uid),
 				Application::Uid2Eid(uid),
