@@ -302,11 +302,11 @@ bool ResourceAccounter::ExistResource(ResourcePathPtr_t resource_path_ptr) const
 ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath) {
 	auto rp_it = r_paths.find(strpath);
 	if (rp_it == r_paths.end()) {
-		logger->Warn("GetPath: No resource path object for [%s]",
-			strpath.c_str());
+		logger->Warn("GetPath: No resource path object for <%s>", strpath.c_str());
 		auto new_path = std::make_shared<br::ResourcePath>(strpath);
 		if (ExistResource(new_path)) {
 			r_paths.emplace(strpath, new_path);
+			logger->Info("GetPath: resource path object for <%s> added", strpath.c_str());
 			return new_path;
 		}
 		else
