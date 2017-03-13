@@ -167,7 +167,7 @@ void Application::InitResourceConstraints() {
 				rsrc_path, br::ResourceConstraint::UPPER_BOUND, rsrc_constr->upper);
 	}
 
-	logger->Debug("%d resource constraints from the recipe", rsrc_constraints.size());
+	logger->Debug("InitResourceConstraints: %d resource constraints", rsrc_constraints.size());
 }
 
 Application::ExitCode_t
@@ -184,15 +184,15 @@ Application::SetRecipe(RecipePtr_t & _recipe, AppPtr_t & papp) {
 
 	// Set working modes
 	InitWorkingModes(papp);
-	logger->Info("%d working modes", awms.enabled_list.size());
+	logger->Info("SetRecipe: %d working modes", awms.enabled_list.size());
 
 	// Set (optional) resource constraints
 	InitResourceConstraints();
-	logger->Info("%d constraints in the application", rsrc_constraints.size());
+	logger->Info("SetRecipe: %d constraints", rsrc_constraints.size());
 
 	// Specific attributes (i.e. plugin specific)
 	plugin_data = PluginDataMap_t(recipe->plugin_data);
-	logger->Info("%d plugin-specific attributes", plugin_data.size());
+	logger->Info("SetRecipe: %d plugin-specific attributes", plugin_data.size());
 
 	return APP_SUCCESS;
 }
