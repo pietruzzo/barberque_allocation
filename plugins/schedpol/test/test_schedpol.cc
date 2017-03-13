@@ -157,11 +157,11 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	auto resource_path = ra.GetPath("sys0.cpu1.pe");
 
 	ref_num = pawm->BindResource(resource_path, pes, ref_num);
-	logger->Info("Reference number for binding: %d", ref_num);
+	logger->Info("AssignWorkingMode: binding refn: %d", ref_num);
 
 	pes.Set(1);
 	ref_num = pawm->BindResource(resource_path, pes, ref_num);
-	logger->Info("Reference number for binding: %d", ref_num);
+	logger->Info("AssignWorkingMode: binding refn: %d", ref_num);
 
 	papp->ScheduleRequest(pawm, sched_status_view, ref_num);
 
