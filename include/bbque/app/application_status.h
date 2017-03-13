@@ -26,6 +26,8 @@
 #include "bbque/cpp11/mutex.h"
 #include "bbque/rtlib.h"
 #include "bbque/utils/extra_data_container.h"
+#include "tg/requirements.h"
+
 
 namespace bu = bbque::utils;
 
@@ -411,6 +413,11 @@ public:
 	 */
 	virtual uint64_t GetResourceRequestStat(std::string const & rsrc_path,
 			ResourceUsageStatType_t ru_stat) = 0;
+
+	/**
+	 * @brief Performance requirements of a task (if specified in the recipe)
+	 */
+	virtual const TaskRequirements & GetTaskRequirements(uint32_t task_id) = 0;
 
 	/**
 	 * @brief Verbose application state names

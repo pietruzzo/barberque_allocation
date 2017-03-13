@@ -586,6 +586,15 @@ public:
 			remove(tg_path.c_str());
 	}
 
+	/**
+	 * @brief Performance requirements of a task
+	 * @param task_id Task identification number
+	 * @return A reference to TaskRequirements stored in the recipe object
+	 */
+	inline const TaskRequirements & GetTaskRequirements(uint32_t task_id) {
+		return recipe->GetTaskRequirements(task_id);
+	};
+
 private:
 
 	/** The logger used by the application */
