@@ -281,6 +281,16 @@ public:
 	 * @return The 'quota' of resource used by the application
 	 */
 	uint64_t ApplicationUsage(AppSPtr_t const & papp, RViewToken_t status_view = 0);
+	/**
+	 * @brief Applications using the resource
+	 *
+	 * @param apps_map Map of application uid and resource usage amount
+	 * @param view_id The token referencing the resource view
+	 * @return The number of applications
+	 */
+	inline uint16_t Applications(AppUsageQtyMap_t & apps_map, RViewToken_t view_id = 0) {
+		return ApplicationsCount(apps_map, view_id);
+	}
 
 	/**
 	 * @brief Get the Uid of the idx-th App/EXC using the resource
