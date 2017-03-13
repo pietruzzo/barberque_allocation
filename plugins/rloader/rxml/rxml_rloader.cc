@@ -337,9 +337,8 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node
 		while (awm_elem) {
 			// Working mode attributes
 			read_attribute = loadAttribute("id", true, awm_elem);
-			wm_id = (uint8_t) atoi(read_attribute.c_str());
-			read_attribute = loadAttribute("name", false, awm_elem);
-			wm_name = (uint8_t) atoi(read_attribute.c_str());
+			wm_id   = (uint8_t) atoi(read_attribute.c_str());
+			wm_name = loadAttribute("name", false, awm_elem);
 			read_attribute = loadAttribute("value", true, awm_elem);
 			wm_value = (uint8_t) atoi(read_attribute.c_str());
 			read_attribute = loadAttribute("config-time", false, awm_elem);
