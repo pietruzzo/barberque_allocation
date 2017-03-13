@@ -247,9 +247,7 @@ public:
 	 * @param split_policy How to split the amount among the bound resources
 	 *
 	 * @return WM_RSRC_NOT_FOUND if the resource cannot be found in the
-	 * system. WM_RSRC_ERR_NAME if the resource path is not valid (unknown
-	 * types have been specified in the resource path string).
-	 * WM_SUCCESS if the request has been correctly added
+	 * system. WM_SUCCESS if the request has been correctly added.
 	 */
 	ExitCode_t AddResourceRequest(
 			std::string const & rsrc_path,
