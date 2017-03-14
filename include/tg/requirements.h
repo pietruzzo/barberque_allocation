@@ -85,6 +85,12 @@ public:
 		hw_prefs.push_back(arch_type);
 	}
 
+	/**
+	 * @brief Number of HW architecture preference
+	 * @param How many HW architecture preferences have been specified
+	 */
+	inline size_t NumArchPreferences() const noexcept { return hw_prefs.size(); }
+
 private:
 
 	float throughput;
