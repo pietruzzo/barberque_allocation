@@ -95,6 +95,7 @@ private:
 
 	MangoPlatformProxy();
 
+	ExitCode_t BootTiles() noexcept;
 	ExitCode_t RegisterTiles() noexcept;
 
 	class MangoPartitionSkimmer : public PartitionSkimmer {

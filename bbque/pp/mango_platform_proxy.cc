@@ -127,6 +127,27 @@ MangoPlatformProxy::LoadPlatformData() noexcept {
 		return err;
 	}
 
+	err = BootTiles();
+	if (PLATFORM_OK != err) {
+		return err;
+	}
+
+	return PLATFORM_OK;
+}
+
+MangoPlatformProxy::ExitCode_t
+MangoPlatformProxy::BootTiles() noexcept {
+	for (unsigned i=0; i < num_tiles; i++) {
+
+		logger->Info("Booting Tile nr=%d", i);
+		int ret = hn_boot_unit(i, 0, i << 28);
+
+		if (HN_SUCCEEDED != ret) {
+			logger->Error("Unable to boot Tile nr=%d", i);
+			return PLATFORM_LOADING_FAILED;
+		}
+	}
+
 	return PLATFORM_OK;
 }
 
@@ -204,7 +225,7 @@ static Partition GetPartition(const TaskGraph &tg, hn_st_request_t req, hn_st_re
 
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
-														std::list<Partition>&part_list) noexcept {
+							std::list<Partition>&part_list) noexcept {
 	hn_st_request_t req;
 	hn_st_response_t res[MANGO_BASE_NUM_PARTITIONS];
 	uint32 num_parts = MANGO_BASE_NUM_PARTITIONS;
