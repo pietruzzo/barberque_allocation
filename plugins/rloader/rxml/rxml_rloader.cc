@@ -21,6 +21,7 @@
 #include <cmath>
 #include <cassert>
 #include <iostream>
+#include <list>
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 
@@ -30,6 +31,7 @@
 #include "bbque/res/resource_constraints.h"
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
+#include "bbque/utils/string_utils.h"
 
 namespace ba = bbque::app;
 namespace br = bbque::res;
@@ -453,12 +455,28 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<>  *_xml_elem) {
 			uint32_t outb = atoi(read_attrib.c_str());
 
 			recipe_ptr->AddTaskRequirements(id, TaskRequirements(tp, ct, inb, outb));
+
+			read_attrib = loadAttribute("hw_prefs", false, task_elem);
+			logger->Debug("LoadTasksRequirements: hw_prefs=%s", read_attrib.c_str());
+
+			std::list<std::string> archs;
+			SplitString(read_attrib, archs, ",");
+			for(auto const & s: archs) {
+				ArchType type = GetArchTypeFromString(s);
+				if (type == ArchType::NONE) {
+					logger->Warn("LoadTaskRequirements: HW <%s> unsupported", s.c_str());
+					continue;
+				}
+				recipe_ptr->GetTaskRequirements(id).AddArchPreference(type);
+			}
+
 			logger->Info("LoadTasksRequirements: <T%2d>: tput=%.2f ctime=%dms"
-				" in_bw=%dKbps, out_bw=%dKbps", id,
+				" in_bw=%dKbps, out_bw=%dKbps #hw=<%d>", id,
 				recipe_ptr->GetTaskRequirements(id).Throughput(),
 				recipe_ptr->GetTaskRequirements(id).CompletionTime(),
 				recipe_ptr->GetTaskRequirements(id).InBandwidth(),
-				recipe_ptr->GetTaskRequirements(id).OutBandwidth());
+				recipe_ptr->GetTaskRequirements(id).OutBandwidth(),
+				recipe_ptr->GetTaskRequirements(id).NumArchPreferences());
 
 			task_elem = task_elem->next_sibling("task", 0, false);
 		}
