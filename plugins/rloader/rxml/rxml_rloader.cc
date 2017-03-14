@@ -446,11 +446,11 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<>  *_xml_elem) {
 
 			read_attrib = loadAttribute("in_bandwidth", false, task_elem);
 			logger->Debug("LoadTasksRequirements: inbw_kbps=%s", read_attrib.c_str());
-			uint32_t inb = atof(read_attrib.c_str());
+			uint32_t inb = atoi(read_attrib.c_str());
 
 			read_attrib = loadAttribute("out_bandwidth", false, task_elem);
 			logger->Debug("LoadTasksRequirements: outbw_kbps=%s", read_attrib.c_str());
-			uint32_t outb = atof(read_attrib.c_str());
+			uint32_t outb = atoi(read_attrib.c_str());
 
 			recipe_ptr->AddTaskRequirements(id, TaskRequirements(tp, ct, inb, outb));
 			logger->Info("LoadTasksRequirements: <T%2d>: tput=%.2f ctime=%dms"
