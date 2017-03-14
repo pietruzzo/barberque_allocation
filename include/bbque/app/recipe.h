@@ -168,7 +168,7 @@ public:
 	 * @param task_id Task identification number
 	 * @return tr Task requirements structure
 	 */
-	inline const TaskRequirements & GetTaskRequirements(uint32_t id) {
+	inline TaskRequirements & GetTaskRequirements(uint32_t id) {
 		return task_reqs[id];
 	}
 
