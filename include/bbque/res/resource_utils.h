@@ -124,17 +124,15 @@ public:
 	 * @return The template path (without resource IDs)
 	 */
 	inline static std::string const GetTemplate(std::string const & path) {
-		// Template path to return
 		std::string _templ_path;
-		std::string _tail = path;
+		std::string _tail(path);
 
-		// Split the path using numbers as separator pattern and append the
+		// Split the path using numbers as separators and append the
 		// head into the the path template
 		do {
 			_templ_path += SplitAndPop(_tail, "0123456789");
 		} while (!_tail.empty());
 
-		// The template path built
 		return _templ_path;
 	}
 
@@ -176,7 +174,7 @@ public:
 	 * If the given resource name is contained into the resource path,
 	 * substitute its ID with the one specified in out_id.
 	 *
-	 * @param curr_rsrc_path The resource path
+	 * @param curr_path The resource path
 	 * @param rsrc_name Name of the resource
 	 * @param source_id ID to replace
 	 * @param out_id New ID number
@@ -184,24 +182,24 @@ public:
 	 * @return The updated resource path
 	 */
 	inline static std::string ReplaceID(
-			std::string const & curr_rsrc_path,
+			std::string const & curr_path,
 			std::string const & rsrc_name,
 			BBQUE_RID_TYPE source_id,
 			BBQUE_RID_TYPE out_id) {
 
 		// Search the resource name in the current path
-		std::string bind_rsrc_path(curr_rsrc_path);
-		std::string rsrc_name_orig(AppendID(rsrc_name, source_id));
-		size_t start_pos = bind_rsrc_path.find(rsrc_name_orig);
+		std::string bind_path(curr_path);
+		std::string name_orig(AppendID(rsrc_name, source_id));
+		size_t start_pos = bind_path.find(name_orig);
 		if (start_pos == std::string::npos)
-			return bind_rsrc_path;
+			return bind_path;
 
 		// Replace it with the out_id-based form
-		size_t dot_pos = bind_rsrc_path.find(".", start_pos);
+		size_t dot_pos = bind_path.find(".", start_pos);
 		std::string bind_rsrc_name(AppendID(rsrc_name, out_id));
-		bind_rsrc_path.replace(start_pos, (dot_pos - start_pos),
+		bind_path.replace(start_pos, (dot_pos - start_pos),
 				bind_rsrc_name);
-		return bind_rsrc_path;
+		return bind_path;
 	}
 
 	/**
