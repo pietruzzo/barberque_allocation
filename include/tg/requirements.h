@@ -38,6 +38,10 @@ public:
 		bandwidth.out_kbps = outb;
 	}
 
+	virtual ~TaskRequirements() {
+		hw_prefs.clear();
+	}
+
 	/**
 	 * @brief Throughput: data fetching + processing + data output writing
 	 * @return Number of processing cycles per second
