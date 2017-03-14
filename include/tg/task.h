@@ -48,7 +48,8 @@ public:
 	 * \param _nthreads Number of threads to spawn
 	 * \param _name Task name (optional)
 	 */
-	Task(uint32_t _id, int _nthreads = 1, std::string const & _name = "");
+	Task(uint32_t _id, int _nthreads = 1, std::string const & _name = ""):
+		id(_id), thread_count(_nthreads), name(_name) { }
 
 	/**
 	 * \brief Task constructor
@@ -59,10 +60,14 @@ public:
 	 * \param _name Task name (optional)
 	 */
 	Task(uint32_t _id,
-		std::list<uint32_t> & _inb, std::list<uint32_t> & _outb,
-		int _nthreads = 1, std::string const & _name = "");
+			std::list<uint32_t> & _inb, std::list<uint32_t> & _outb,
+			int _nthreads = 1, std::string const & _name = ""):
+		id(_id), thread_count(_nthreads), name(_name),
+		in_buffers(_inb), out_buffers(_outb) { }
 
-
+	/**
+	 * \brief Destructor
+	 */
 	virtual ~Task() {
 		in_buffers.clear();
 		out_buffers.clear();

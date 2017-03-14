@@ -7,7 +7,7 @@ include_directories(
 
 # Sources
 set (TARGET_NAME bbque_tg)
-set (SOURCE mem_buffer task task_graph)
+set (SOURCE task_graph)
 
 # Output: a shared library
 add_library(${TARGET_NAME} SHARED ${SOURCE})

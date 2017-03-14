@@ -44,8 +44,12 @@ public:
 	 * \param _size Size
 	 * \param _addr Address
 	 */
-	Buffer(uint32_t _id, size_t _size, uint64_t _addr = 0);
+	Buffer(uint32_t _id, size_t _size, uint64_t _addr = 0):
+		id(_id), phy_addr(_addr), size_in_bytes(_size) { }
 
+	/**
+	 * \brief Destructor
+	 */
 	virtual  ~Buffer() {
 		writer_tasks.clear();
 		reader_tasks.clear();
