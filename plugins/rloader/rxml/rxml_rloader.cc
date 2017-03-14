@@ -274,14 +274,13 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 				continue;
 			}
 
+			// Keep track of the section matching the system platform ID
 			if (platform_id.compare(sys_platform_id) == 0) {
-				// Keep track of the section matching the system platform ID
 				pp_last = pp_elem;
 				id_matched = true;
-
 				// Hardware (SoC) check required?
 				if ((platform_hw.size() > 1)
-						&& (platform_hw.compare(sys_platform_hw) == 0)) {
+					&& (platform_hw.compare(sys_platform_hw) == 0)) {
 					break;
 				}
 			}
@@ -504,7 +503,6 @@ uint8_t RXMLRecipeLoader::LoadResources(rapidxml::xml_node<> * _xml_elem,
 		res_elem = _xml_elem->first_node(0, 0, true);
 		CheckMandatoryNode(res_elem, "", _xml_elem);
 		while (res_elem) {
-
 			// Parse the attributes from the resource element
 			res_path = _curr_path;
 			result |= GetResourceAttributes(res_elem, _wm, res_path);
