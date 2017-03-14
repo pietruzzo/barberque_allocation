@@ -26,6 +26,7 @@
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/scheduler_manager.h"
+#include "bbque/resource_mapping_validator.h"
 
 #define SCHEDULER_POLICY_NAME "manga"
 
@@ -91,6 +92,9 @@ private:
 	/** Resource accounter instance */
 	ResourceAccounter & ra;
 
+	/** Resource mapping validator for Partition management */
+	ResourceMappingValidator & rmv;
+
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
@@ -107,7 +111,19 @@ private:
 	 * @brief Optional initialization member function
 	 */
 	ExitCode_t Init();
+
+	ExitCode_t ServeApplicationsWithPriority(int priority) noexcept;
+
+	ExitCode_t ServeApp(ba::AppCPtr_t papp) noexcept;
+
+	void SuspendStrictApps(int priority) noexcept;
+
+	ExitCode_t RelaxRequirements(int priority) noexcept;
+
+	ExitCode_t AllocateArchitectural(ba::AppCPtr_t papp) noexcept;
+
 };
+
 
 } // namespace plugins
 

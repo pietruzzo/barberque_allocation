@@ -59,7 +59,8 @@ char const * MangASchedPol::Name() {
 
 MangASchedPol::MangASchedPol():
 		cm(ConfigurationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance()) {
+		ra(ResourceAccounter::GetInstance()),
+		rmv(ResourceMappingValidator::GetInstance()) {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 	if (logger)
@@ -106,13 +107,99 @@ MangASchedPol::Schedule(
 	sys = &system;
 	Init();
 
-	/** INSERT YOUR CODE HERE **/
+	for (AppPrio_t priority = 0; priority <= sys->ApplicationLowestPriority(); priority++) {
+		// Checking if there are applications at this priority
+		if (!sys->HasApplications(priority))
+			continue;
+
+		logger->Debug("Serving applications with priority %d", priority);
+
+		ExitCode_t err = ServeApplicationsWithPriority(priority);
+		if (err == SCHED_R_UNAVAILABLE) {
+			// We have finished the resources, suspend all other apps and returns
+			// gracefully
+			// TODO: Suspend apps
+			result = SCHED_DONE;
+			break;
+		} else if (err != SCHED_OK) {
+			logger->Error("Unexpected error in policy scheduling: %d", err);
+			result = err;
+			break;
+		}
+
+	}
 
 	// Return the new resource status view according to the new resource
 	// allocation performed
 	status_view = sched_status_view;
 	return result;
 }
+
+SchedulerPolicyIF::ExitCode_t
+MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
+
+
+	ExitCode_t err, err_relax = SCHED_OK;
+	do {
+		ba::AppCPtr_t  papp;
+		AppsUidMapIt app_iterator;
+		// Get all the applications @ this priority
+		papp = sys->GetFirstWithPrio(priority, app_iterator);
+		for (; papp; papp = sys->GetNextWithPrio(priority, app_iterator)) {
+			err = ServeApp(papp);
+
+			if(err == SCHED_SKIP_APP) {
+				continue;
+			}
+			else if (err == SCHED_R_UNAVAILABLE) {
+				SuspendStrictApps(priority);
+				err_relax = RelaxRequirements(priority);
+				break;
+			}
+			
+			if (err != SCHED_OK) {
+				// It returns SCHED_R_UNAVAILABLE if no more bandwidth is available
+				// or the error exit code in case of error.
+				return err;
+			}
+		}
+
+	} while (err != SCHED_OK && err_relax == SCHED_OK);
+
+	return err_relax != SCHED_OK ? err_relax : err;
+}
+
+void MangASchedPol::SuspendStrictApps(int priority) noexcept {
+	//TODO
+}
+
+SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noexcept {
+	//TODO
+}
+
+SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexcept {
+
+	ResourceMappingValidator::ExitCode_t rmv_err;
+	std::list<Partition> partitions;
+	
+	AllocateArchitectural(papp);
+	
+	rmv_err = rmv.LoadPartitions(*papp->GetTaskGraph(), partitions);
+
+	switch(rmv_err) {
+//		case PMV_NO_PARTITION:
+//			return SCHED_OK; 	// TODO
+		default:
+			return SCHED_OK;	// TODO
+	}
+
+}
+
+
+SchedulerPolicyIF::ExitCode_t MangASchedPol::AllocateArchitectural(ba::AppCPtr_t papp) noexcept {
+
+}
+
 
 } // namespace plugins
 
