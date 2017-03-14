@@ -18,6 +18,9 @@
 #ifndef BBQUE_TG_HW_H
 #define BBQUE_TG_HW_H
 
+#include "bbque/utils/string_utils.h"
+#include "bbque/utils/utility.h"
+
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
@@ -34,6 +37,27 @@ enum class ArchType {
 
 	STOP
 };
+
+
+inline ArchType GetArchTypeFromString(std::string const & str) {
+	std::string arch_str(UpperString(str));
+	switch(ConstHashString(arch_str.c_str())) {
+		case ConstHashString("GN"):
+			return ArchType::GN;
+		case ConstHashString("GPU"):
+			return ArchType::GPU;
+		case ConstHashString("PEAK"):
+			return ArchType::PEAK;
+		case ConstHashString("NUP"):
+			return ArchType::NUP;
+		case ConstHashString("ARM"):
+			return ArchType::ARM;
+		default:
+			return ArchType::NONE;
+	}
+
+	return ArchType::NONE;
+}
 
 
 class ArchInfo {
