@@ -79,53 +79,53 @@ public:
 	 * \param priority If the application specified a preference for
 	 * each target. priority=0 means highest preference value.
 	 */
-	inline void SetPriority(uint8_t _prio) { priority = _prio; }
+	inline void SetPriority(uint8_t _prio) noexcept { priority = _prio; }
 
 	/**
 	 * \brief Get the priority of HW target architecture supported
 	 * \param priority If the application specified a preference for
 	 * each target. priority=0 means highest preference value.
 	 */
-	inline uint8_t Priority() const { return priority; }
+	inline uint8_t Priority() const noexcept { return priority; }
 
 
 	/**
 	 * \brief The memory address to which deploy the task binary
 	 * \return The memory address
 	 */
-	inline size_t Address() const { return address; }
+	inline size_t Address() const noexcept { return address; }
 
 	/**
 	 * \brief Set the memory address to which deploy the task binary
 	 * \param _addr The memory address to set
 	 */
-	inline void SetAddress(size_t _addr) { address = _addr; }
+	inline void SetAddress(size_t _addr) noexcept { address = _addr; }
 
 
 	/**
 	 * \brief The current task binary size
 	 * \return The memory address
 	 */
-	inline size_t BinarySize() const { return binary_size; }
+	inline size_t BinarySize() const noexcept { return binary_size; }
 
 	/**
 	 * \brief Set the current task binary size
 	 * \return The memory address
 	 */
-	inline void SetBinarySize(size_t _binsize) { binary_size = _binsize; }
+	inline void SetBinarySize(size_t _binsize) noexcept { binary_size = _binsize; }
 
 
 	/**
 	 * \brief The stack size for the task execution
 	 * \return The memory stack size
 	 */
-	inline size_t StackSize() { return stack_size; }
+	inline size_t StackSize() const noexcept { return stack_size; }
 
 	/**
 	 * \brief Set the stack size for the task executio
 	 * \param _ss The memory stack size to set
 	 */
-	inline void SetStackSize(size_t _ss) { stack_size = _ss; }
+	inline void SetStackSize(size_t _ss) noexcept { stack_size = _ss; }
 
 
 protected:
