@@ -318,8 +318,7 @@ void Resource::EnablePowerProfile(
 			continue;
 
 		// New sample window size
-		pw_profile.values[i] =
-				bu::pEma_t(new bu::EMA(samples_window[i]));
+		pw_profile.values[i] = std::make_shared<bu::EMA>(samples_window[i]);
 	}
 	pw_profile.samples_window = samples_window;
 }

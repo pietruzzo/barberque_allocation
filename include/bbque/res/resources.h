@@ -406,8 +406,7 @@ public:
 	 *
 	 * @return The number of samples
 	 */
-	inline uint GetPowerInfoSamplesWindowSize(
-			PowerManager::InfoType i_type) {
+	inline uint GetPowerInfoSamplesWindowSize(PowerManager::InfoType i_type) {
 		return pw_profile.samples_window[int(i_type)];
 	}
 
@@ -424,8 +423,7 @@ public:
 	 * @param i_type The power profile information to update
 	 * @param sample The sample value
 	 */
-	inline void UpdatePowerInfo(
-			PowerManager::InfoType i_type, uint32_t sample) {
+	inline void UpdatePowerInfo(PowerManager::InfoType i_type, uint32_t sample) {
 		pw_profile.values[int(i_type)]->update(sample);
 	}
 
@@ -481,10 +479,10 @@ private:
 	 * @brief The metrics to track run-time availability of a resource
 	 */
 	typedef struct AvailabilityProfile {
-		Timer online_tmr;         ///> Timer to keep track of online time;
-		Timer offline_tmr;        ///> Timer to keep track of offline time;
-		uint64_t lastOnlineTime;  ///> Last online timeframe [ms]
-		uint64_t lastOfflineTime; ///> Last offline timeframe [ms]
+		Timer online_tmr;           /** Timer to keep track of online time;   */
+		Timer offline_tmr;          /** Timer to keep track of offline time;  */
+		uint64_t lastOnlineTime;   /** Last online timeframe [ms]            */
+		uint64_t lastOfflineTime;  /** Last offline timeframe [ms]           */
 	} AvailabilityProfile_t;
 
 
@@ -492,12 +490,9 @@ private:
 	 * @brief Information related to the power/thermal status of the resource
 	 */
 	typedef struct PowerProfile {
-		/** Flags of the available run-time information */
-		PowerManager::SamplesArray_t samples_window;
-		/** Sampled values */
-		std::vector<pEma_t> values;
-		/** Count of power profiling info enabled */
-		uint enabled_count;
+		PowerManager::SamplesArray_t samples_window; /** Flags of the available run-time information */
+		std::vector<pEma_t> values;                 /** Sampled values */
+		uint enabled_count;                          /** Count of power profiling info enabled */
 	} PowerProfile_t;
 
 
@@ -505,9 +500,7 @@ private:
 	 * @brief Runtime information about the reliability of the resource
 	 */
 	typedef struct ReliabilityProfile {
-		/** Percentage of degradation of the performance delivered
-		 * (statistics) */
-		pEma_t degradation_perc;
+		pEma_t degradation_perc; /** Percentage of performance degradation (stats) */
 	} ReliabilityProfile_t;
 
 
@@ -582,8 +575,7 @@ private:
 	 * @param view_id The token referencing the resource view
 	 * @return The amount of resource acquired if success, 0 otherwise.
 	 */
-	 uint64_t Acquire(AppSPtr_t const & papp, uint64_t amount,
-			 RViewToken_t view_id = 0);
+	 uint64_t Acquire(AppSPtr_t const & papp, uint64_t amount, RViewToken_t view_id = 0);
 
 	/**
 	 * @brief Release the resource
@@ -628,8 +620,7 @@ private:
 	 * @return The number of Apps/EXCs using the resource, and a
 	 * reference to the map
 	 */
-	uint16_t ApplicationsCount(AppUsageQtyMap_t & apps_map,
-			RViewToken_t view_id = 0);
+	uint16_t ApplicationsCount(AppUsageQtyMap_t & apps_map, RViewToken_t view_id = 0);
 
 	/**
 	 * @brief Amount of resource used by the application
