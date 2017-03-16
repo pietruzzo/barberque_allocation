@@ -80,6 +80,11 @@ void TaskGraph::Print() const noexcept {
 		std::cerr << b->Id() << " ";
 	}
 	std::cerr << std::endl;
+
+	std::string outb_str("unset");
+	if (out_buff)
+		outb_str = std::to_string(out_buff->Id());
+	std::cerr << "Output buffer: " << outb_str << std::endl;
 	std::cerr << "Events: ";
 	for (auto & e_entry: events ) {
 		auto & e(e_entry.second);
