@@ -329,6 +329,7 @@ void Resource::EnablePowerProfile() {
 }
 
 double Resource::GetPowerInfo(PowerManager::InfoType i_type, ValueType v_type) {
+	std::unique_lock<std::mutex> ul(pw_profile.mux);
 	if (!pw_profile.values[int(i_type)])
 		return 0.0;
 	// Instant or mean value?

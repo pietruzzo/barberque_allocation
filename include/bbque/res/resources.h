@@ -424,6 +424,7 @@ public:
 	 * @param sample The sample value
 	 */
 	inline void UpdatePowerInfo(PowerManager::InfoType i_type, uint32_t sample) {
+		std::unique_lock<std::mutex> ul(pw_profile.mux);
 		pw_profile.values[int(i_type)]->update(sample);
 	}
 
@@ -451,6 +452,7 @@ public:
 	 * @param deg_perc Percentage of performance degradation
 	 */
 	 inline void UpdateDegradationPerc(uint8_t deg_perc) {
+		std::unique_lock<std::mutex> ul(rb_profile.mux);
 		rb_profile.degradation_perc->update(deg_perc);
 	 }
 
@@ -460,6 +462,7 @@ public:
 	 * @return Current percentage of performance degradation
 	 */
 	 inline uint8_t CurrentDegradationPerc() {
+		std::unique_lock<std::mutex> ul(rb_profile.mux);
 		return rb_profile.degradation_perc->last_value();
 	 }
 
@@ -469,6 +472,7 @@ public:
 	 * @return Mean percentage of performance degradation
 	 */
 	 inline float MeanDegradationPerc() {
+		std::unique_lock<std::mutex> ul(rb_profile.mux);
 		return rb_profile.degradation_perc->get();
 	 }
 
@@ -490,6 +494,7 @@ private:
 	 * @brief Information related to the power/thermal status of the resource
 	 */
 	typedef struct PowerProfile {
+		std::mutex mux;
 		PowerManager::SamplesArray_t samples_window; /** Flags of the available run-time information */
 		std::vector<pEma_t> values;                 /** Sampled values */
 		uint enabled_count;                          /** Count of power profiling info enabled */
@@ -500,6 +505,7 @@ private:
 	 * @brief Runtime information about the reliability of the resource
 	 */
 	typedef struct ReliabilityProfile {
+		std::mutex mux;
 		pEma_t degradation_perc; /** Percentage of performance degradation (stats) */
 	} ReliabilityProfile_t;
 
