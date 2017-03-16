@@ -90,8 +90,7 @@ SchedulerPolicyIF::ExitCode_t GridBalanceSchedPol::Init() {
 		token_path.c_str());
 
 	// A new resource status view
-	ResourceAccounterStatusIF::ExitCode_t ra_result =
-		ra.GetView(token_path, sched_status_view);
+	auto ra_result = ra.GetView(token_path, sched_status_view);
 	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
 		logger->Fatal("Init: cannot get a new resource state view");
 		return SCHED_ERROR_VIEW;
@@ -147,7 +146,7 @@ GridBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		papp->CurrentAWM()->ClearResourceRequests();
 
 	// New AWM
-	ba::AwmPtr_t pawm = papp->CurrentAWM();
+	auto pawm = papp->CurrentAWM();
 	if (pawm == nullptr)
 		pawm = std::make_shared<ba::WorkingMode>(
 				papp->WorkingModes().size(),"Run-time", 1, papp);
@@ -173,8 +172,7 @@ GridBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		papp->StrId(), pawm->NumberOfResourceRequests());
 
 	// Enqueue scheduling entity
-	SchedEntityPtr_t sched_entity = std::make_shared<SchedEntity_t>(
-		papp, pawm, R_ID_ANY, 0);
+	auto sched_entity = std::make_shared<SchedEntity_t>(papp, pawm, R_ID_ANY, 0);
 	entities.push_back(sched_entity);
 
 	return SCHED_OK;
@@ -194,7 +192,7 @@ SchedulerPolicyIF::ExitCode_t GridBalanceSchedPol::BindWorkingModesAndSched() {
 		logger->Debug("Bind: [%s] <sys.cpu.pe>=%d => num_procs=%d",
 			sched_entity->papp->StrId(), req_amount, num_procs);
 
-		bbque::res::ResourceBitset proc_mask =
+		auto proc_mask =
 			bbque::res::ResourceBinder::GetMaskInRange(
 				proc_elements, iter, num_procs);
 		logger->Debug("Bind: [%s] <sys.cpu.pe> mask = %s",
