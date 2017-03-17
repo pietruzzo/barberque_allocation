@@ -113,6 +113,9 @@
  * BarbequeRTRM Supported Features
  ******************************************************************************/
 
+/** Target platform: Native-Linux */
+#cmakedefine CONFIG_TARGET_LINUX_NATIVE
+
 /** Target platform: Generic-Linux */
 #cmakedefine CONFIG_TARGET_LINUX
 

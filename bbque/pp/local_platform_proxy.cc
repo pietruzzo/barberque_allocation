@@ -2,11 +2,14 @@
 #include "bbque/pp/test_platform_proxy.h"
 #include "bbque/config.h"
 #include "bbque/res/resource_path.h"
+#include "bbque/utils/assert.h"
 
-#ifdef CONFIG_TARGET_LINUX
+#ifdef CONFIG_TARGET_LINUX_NATIVE
 #include "bbque/pp/linux_platform_proxy.h"
-#elif CONFIG_TARGET_ANDROID
+#elif defined CONFIG_TARGET_ANDROID
 #include "bbque/pp/android_platform_proxy.h"
+#elif defined CONFIG_TARGET_LINUX_MANGO
+#include "bbque/pp/mango_platform_proxy.h"
 #else
 #error LocalPlatformProxy does not know which target to compile.
 #endif
@@ -23,12 +26,15 @@ LocalPlatformProxy::LocalPlatformProxy() {
 #ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
 	this->host = std::unique_ptr<TestPlatformProxy>(
 						 TestPlatformProxy::GetInstance());
-#elif defined CONFIG_TARGET_LINUX
+#elif defined CONFIG_TARGET_LINUX_NATIVE
 	this->host = std::unique_ptr<LinuxPlatformProxy>(
 	                     LinuxPlatformProxy::GetInstance());
 #elif defined CONFIG_TARGET_ANDROID
 	this->host = std::unique_ptr<AndroidPlatformProxy>(
 	                     AndroidPlatformProxy()::GetInstance());
+#elif defined CONFIG_TARGET_LINUX_MANGO
+	this->host = std::unique_ptr<MangoPlatformProxy>(
+	                     MangoPlatformProxy::GetInstance());
 #else
 #error "No suitable PlatformProxy for host found."
 #endif
@@ -38,7 +44,7 @@ LocalPlatformProxy::LocalPlatformProxy() {
 	        std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
 #endif
 
-	assert(this->host);
+	bbque_assert(this->host);
 }
 
 const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const {
