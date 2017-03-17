@@ -148,12 +148,17 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 		papp = sys->GetFirstWithPrio(priority, app_iterator);
 		for (; papp; papp = sys->GetNextWithPrio(priority, app_iterator)) {
 
+			logger->Debug("Trying to allocate resources for application %s [pid=%d]", 
+					papp->Name().c_str(), papp->Pid());
+
 			// Try to allocate resourced for the application
 			err = ServeApp(papp);
 
 			if(err == SCHED_SKIP_APP) {
 				// In this case we have no sufficient memory to start it, the only
 				// one thing to do is to ignore it
+				logger->Notice("Unable to find resource for application %s [pid=%d]", 
+					papp->Name().c_str(), papp->Pid());
 				continue;
 			}
 
@@ -168,6 +173,9 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 				// It returns  error exit code in case of error.
 				return err;
 			}
+
+			logger->Info("Application %s [pid=%d] allocated successfully",
+				     papp->Name().c_str(), papp->Pid());
 		}
 
 	} while (err != SCHED_OK && err_relax == SCHED_OK);
@@ -177,6 +185,8 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noexcept {
 	//TODO: smart policy to reduce the requirements
+
+	UNUSED(priority);
 
 	return SCHED_R_UNAVAILABLE;
 }
@@ -191,6 +201,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 	err = AllocateArchitectural(papp);
 	
 	if (err != SCHED_OK) {
+		logger->Error("Allocate architectural failed");
 		return err;
 	}
 
@@ -198,10 +209,13 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 
 	switch(rmv_err) {
 		case ResourceMappingValidator::PMV_OK:
+			logger->Debug("LoadPartitions SUCCESS");
 			return SCHED_OK;
 		case ResourceMappingValidator::PMV_SKIMMER_FAIL:
+			logger->Error("At least one skimmer failed unexpectly");
 			return SCHED_ERROR;
 		case ResourceMappingValidator::PMV_NO_PARTITION:
+			logger->Debug("LoadPartitions NO PARTITION");
 			return DealWithNoPartitionFound(papp);
 		default:
 			logger->Fatal("Unexpected LoadPartitions return (?)");
@@ -236,6 +250,11 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::AllocateArchitectural(ba::AppCPtr_t
 	// Trivial allocation policy: we select always the best one for the receipe
 	// TODO: a smart one
 
+	if (nullptr == papp->GetTaskGraph()) {
+		logger->Error("TaskGraph not present for application %s [pid=%d]",
+				papp->Name().c_str(), papp->Pid());
+		return SCHED_ERROR;
+	}
 
 	for (auto task_pair : papp->GetTaskGraph()->Tasks()) {
 		auto task = task_pair.second;
