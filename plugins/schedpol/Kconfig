@@ -84,6 +84,7 @@ choice
     bool "Cloves"
 
   config BBQUE_SCHEDPOL_DEFAULT_MANGA
+    depends on TARGET_LINUX_MANGO
     bool "MangA"
     select BBQUE_SCHEDPOL_MANGA
 
