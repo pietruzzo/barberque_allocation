@@ -52,8 +52,10 @@ public:
 		SK_NO_PARTITION
 	} ExitCode_t;
 
-    virtual ~PartitionSkimmer() { }
-    virtual ExitCode_t Skim(const TaskGraph &tg, std::list<Partition>&) noexcept = 0;
+	virtual ~PartitionSkimmer() { }
+
+	virtual ExitCode_t Skim(const TaskGraph &tg, std::list<Partition>& partitions) noexcept = 0;
+	virtual ExitCode_t SetPartition(const TaskGraph &tg, const Partition &partition) noexcept = 0;
 
 	PartitionSkimmer(SkimmerType_t type) : type(type) {}
 
@@ -108,6 +110,8 @@ public:
 	inline PartitionSkimmer::SkimmerType_t GetLastFailed() const noexcept { 
 		return failed_skimmer;
 	}
+
+	ExitCode_t PropagatePartition(const TaskGraph &tg, const Partition &partition) const noexcept;
 
 private:
 

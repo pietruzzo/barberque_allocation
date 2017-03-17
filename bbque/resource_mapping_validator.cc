@@ -16,6 +16,7 @@
  */
 
 #include "bbque/resource_mapping_validator.h"
+#include "bbque/utils/assert.h"
 
 #define MODULE_NAMESPACE   "bq.rmv"
 #define MODULE_CONFIG      "ResourceMappingValidator"
@@ -63,9 +64,9 @@ ResourceMappingValidator::LoadPartitions(const TaskGraph &tg, std::list<Partitio
 
 		logger->Debug("Executing skimmer [type=%d] [priority=%d]", (int)skimmer_type, priority);
 
-		int ret = skimmer->Skim(tg, partitions);
+		PartitionSkimmer::ExitCode_t ret = skimmer->Skim(tg, partitions);
 
-		if (ret != 0) {
+		if (ret != PartitionSkimmer::SK_OK) {
 			logger->Error("Skimmer %d [priority=%d] FAILED [err=%d]", 
 				(int)skimmer_type, priority, ret);
 			this->failed_skimmer = skimmer_type;
@@ -86,7 +87,32 @@ ResourceMappingValidator::LoadPartitions(const TaskGraph &tg, std::list<Partitio
 		return PMV_NO_PARTITION;
 	}
 
+	this->failed_skimmer = PartitionSkimmer::SKT_NONE;
+
 	return PMV_OK;
 }
+
+ResourceMappingValidator::ExitCode_t
+ResourceMappingValidator::PropagatePartition(const TaskGraph &tg, 
+					     const Partition &partition) const noexcept {
+
+	// We have to ensure that no skimmer failed for any reasons before this call.
+	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
+
+	// Just propagate the selected partition to all registered partition skimmer. They should
+	// not fail for any reason, since they have already skimmed the partitions.
+
+	for (auto s = skimmers.rbegin(); s != skimmers.rend(); ++s) {
+		PartitionSkimmerPtr_t skimmer = s->second; 
+		PartitionSkimmer::ExitCode_t err = skimmer->SetPartition(tg, partition);
+		if ( PartitionSkimmer::SK_OK != err ) {
+			logger->Fatal("Skimmer failed to set partition [type=%d] [priority=%d] "
+				      "[err=%d]", skimmer->GetType(), s->first, err);
+			return PMV_GENERIC_ERROR;
+		}
+	}
+	return PMV_OK;
+}
+
 } // namespace bbque
 

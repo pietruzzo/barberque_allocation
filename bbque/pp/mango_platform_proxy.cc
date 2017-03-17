@@ -253,5 +253,19 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 
 }
 
+MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
+MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(const TaskGraph &tg,
+					  	        const Partition &partition) noexcept {
+
+	uint32_t part_id = partition.GetPartitionId();
+	uint32_t ret = hn_allocate_partition(part_id);
+	
+	if ( HN_SUCCEEDED != ret ) {
+		return SK_GENERIC_ERROR;
+	}
+
+	return SK_OK;
+}
+
 }	// namespace pp
 }	// namespace bbque
