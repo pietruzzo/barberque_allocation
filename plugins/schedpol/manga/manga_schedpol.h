@@ -116,11 +116,14 @@ private:
 
 	ExitCode_t ServeApp(ba::AppCPtr_t papp) noexcept;
 
-	void SuspendStrictApps(int priority) noexcept;
-
 	ExitCode_t RelaxRequirements(int priority) noexcept;
 
 	ExitCode_t AllocateArchitectural(ba::AppCPtr_t papp) noexcept;
+
+	ExitCode_t DealWithNoPartitionFound(ba::AppCPtr_t papp) noexcept; 
+
+	ExitCode_t SelectTheBestPartition(ba::AppCPtr_t papp, 
+					  const std::list<Partition> &partitions) noexcept;
 
 };
 

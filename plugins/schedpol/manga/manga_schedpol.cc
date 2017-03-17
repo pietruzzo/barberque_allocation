@@ -23,9 +23,10 @@
 
 #include "bbque/modules_factory.h"
 #include "bbque/utils/logging/logger.h"
-
+#include "bbque/utils/assert.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/binder.h"
+#include "bbque/tg/task_graph.h"
 
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
@@ -146,20 +147,25 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 		// Get all the applications @ this priority
 		papp = sys->GetFirstWithPrio(priority, app_iterator);
 		for (; papp; papp = sys->GetNextWithPrio(priority, app_iterator)) {
+
+			// Try to allocate resourced for the application
 			err = ServeApp(papp);
 
 			if(err == SCHED_SKIP_APP) {
+				// In this case we have no sufficient memory to start it, the only
+				// one thing to do is to ignore it
 				continue;
 			}
+
 			else if (err == SCHED_R_UNAVAILABLE) {
-				SuspendStrictApps(priority);
+				// In this case we have no bandwidth feasibility, so we can try to
+				// fairly reduce the bandwidth for non strict applications.
 				err_relax = RelaxRequirements(priority);
 				break;
 			}
 			
-			if (err != SCHED_OK) {
-				// It returns SCHED_R_UNAVAILABLE if no more bandwidth is available
-				// or the error exit code in case of error.
+			else if (err != SCHED_OK) {
+				// It returns  error exit code in case of error.
 				return err;
 			}
 		}
@@ -169,37 +175,113 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 	return err_relax != SCHED_OK ? err_relax : err;
 }
 
-void MangASchedPol::SuspendStrictApps(int priority) noexcept {
-	//TODO
-}
-
 SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noexcept {
-	//TODO
+	//TODO: smart policy to reduce the requirements
+
+	return SCHED_R_UNAVAILABLE;
 }
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexcept {
 
+	SchedulerPolicyIF::ExitCode_t err;
 	ResourceMappingValidator::ExitCode_t rmv_err;
 	std::list<Partition> partitions;
 	
-	AllocateArchitectural(papp);
+	// First of all we have to decide which processor type to assign to each task
+	err = AllocateArchitectural(papp);
 	
+	if (err != SCHED_OK) {
+		return err;
+	}
+
 	rmv_err = rmv.LoadPartitions(*papp->GetTaskGraph(), partitions);
 
 	switch(rmv_err) {
-//		case PMV_NO_PARTITION:
-//			return SCHED_OK; 	// TODO
+		case ResourceMappingValidator::PMV_OK:
+			return SCHED_OK;
+		case ResourceMappingValidator::PMV_SKIMMER_FAIL:
+			return SCHED_ERROR;
+		case ResourceMappingValidator::PMV_NO_PARTITION:
+			return DealWithNoPartitionFound(papp);
 		default:
-			return SCHED_OK;	// TODO
+			logger->Fatal("Unexpected LoadPartitions return (?)");
+			// Ehi what's happened here?
+			return SCHED_ERROR;
 	}
 
 }
 
+SchedulerPolicyIF::ExitCode_t MangASchedPol::DealWithNoPartitionFound(ba::AppCPtr_t papp) noexcept {
 
-SchedulerPolicyIF::ExitCode_t MangASchedPol::AllocateArchitectural(ba::AppCPtr_t papp) noexcept {
+	UNUSED(papp);
+
+	switch(rmv.GetLastFailed()) {
+
+		// In this case we can try to reduce the allocated bandwidth
+		case PartitionSkimmer::SKT_MANGO_HN:
+			return SCHED_R_UNAVAILABLE;
+
+		// Strict thermal constraints must not violated
+		case PartitionSkimmer::SKT_MANGO_POWER_MANAGER:	
+		// We have no sufficient memory to run the app
+		case PartitionSkimmer::SKT_MANGO_MEMORY_MANAGER:
+		default:
+			return SCHED_SKIP_APP;
+	}
 
 }
 
+SchedulerPolicyIF::ExitCode_t MangASchedPol::AllocateArchitectural(ba::AppCPtr_t papp) noexcept {
+
+	// Trivial allocation policy: we select always the best one for the receipe
+	// TODO: a smart one
+
+
+	for (auto task_pair : papp->GetTaskGraph()->Tasks()) {
+		auto task = task_pair.second;
+		const auto requirements = papp->GetTaskRequirements(task->Id());
+	
+		uint_fast8_t i=0; 
+		ArchType_t preferred_type;
+		const auto targets = task->Targets();
+		do {	// Select every time the best preferred available architecture
+			if ( i > 0 ) {
+				logger->Warn("I wanted to select architecture %d available in "
+					     "receipe but the task %i does not support it",
+					     preferred_type, task->Id() );
+			}
+			preferred_type = requirements.ArchPreference(i);
+			i++;
+		} while(targets.find(preferred_type) == targets.end());
+
+		if (preferred_type == ArchType_t::NONE) {
+			logger->Error("No architecture available for task %d", task->Id());
+			return SCHED_SKIP_APP;
+		}
+
+		logger->Info("Task %d preliminary assignment [arch=%d, in_bw=%d, out_bw=%d]",
+			task->Id(), preferred_type, requirements.GetAssignedBandwidth().in_kbps,
+			requirements.GetAssignedBandwidth().out_kbps);
+		task->SetAssignedArch( preferred_type );
+		task->SetAssignedBandwidth( requirements.GetAssignedBandwidth() );
+	}
+	return SCHED_OK;
+
+}
+
+SchedulerPolicyIF::ExitCode_t
+MangASchedPol::SelectTheBestPartition(ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept {
+
+	bbque_assert(partitions.size() > 0);
+
+	// TODO: Intelligent policy
+
+	// For the demo just select the first partition
+	rmv.PropagatePartition(*papp->GetTaskGraph(), partitions.front());
+
+	return SCHED_OK;
+
+}
 
 } // namespace plugins
 
