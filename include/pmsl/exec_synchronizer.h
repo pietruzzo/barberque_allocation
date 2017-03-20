@@ -229,7 +229,6 @@ protected:
 	std::map<uint32_t, std::shared_ptr<EventSync>> events;
 
 
-
 	/**
 	 * \struct tasks
 	 * \brief Status information about tasks
@@ -287,7 +286,10 @@ protected:
 	 */
 	void TaskProfiler(uint32_t task_id) noexcept;
 
-
+	/**
+	 * \brief Send a notification to all the events associated to the buffers
+	 * \param buffers A list of buffer ids
+	 */
 	inline void NotifyBuffersEvents(const std::list<uint32_t> & buffers) {
 		for (auto buffer_id: buffers) {
 			auto buffer = task_graph->GetBuffer(buffer_id);
@@ -296,6 +298,10 @@ protected:
 		}
 	}
 
+	/**
+	 * \brief Send a notification to all the events associated to the tasks
+	 * \param buffers A list of task ids
+	 */
 	inline void NotifyTaskEvents(TaskPtr_t task) {
 		NotifyBuffersEvents(task->OutputBuffers());
 		NotifyBuffersEvents(task->InputBuffers());
