@@ -46,16 +46,6 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(std::shared_ptr<TaskGraph> tg) {
-	try {
-		serial_file_path = BBQUE_TG_FILE_PREFIX + std::string(GetUniqueID_String());
-		logger->Info("Task-graph serialization file: %s [uid=%d]", serial_file_path.c_str(),
-			GetUniqueID());
-	}
-	catch (std::exception & ex) {
-		logger->Error("Error while creating serialization file name");
-		return ExitCode::ERR_TASK_GRAPH_FILE_NAME;
-	}
-
 	// Cannot change the TG while still in execution
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	if (tasks.is_stopped.any()) {
@@ -70,6 +60,13 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(std::shared_
 	}
 	task_graph = tg;
 	task_graph->SetApplicationId(GetUid());
+
+	// Set serialization file and named semaphore paths
+	auto ret = SetTaskGraphPaths();
+	if (ret != ExitCode::SUCCESS) {
+		logger->Error("SetTaskGraph: path setting failed");
+		return ret;
+	}
 
 	// Task execution status initialization
 	for (auto & t_entry: task_graph->Tasks()) {
@@ -92,8 +89,30 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(std::shared_
 }
 
 
-bool ExecutionSynchronizer::CheckTaskGraph() noexcept {
-	if (task_graph == nullptr) {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraphPaths() {
+	try {
+		tg_file_path = BBQUE_TG_FILE_PREFIX + std::string(GetUniqueID_String());
+		std::string tg_str(GetUniqueID_String());
+		std::replace(tg_str.begin(), tg_str.end(), ':', '.');
+		tg_sem_path  = "/" + tg_str;
+		logger->Info("Task-graph [uid=%d] file:<%s>  sem:<%s> ", GetUniqueID(),
+			tg_file_path.c_str(), tg_sem_path.c_str());
+
+		tg_sem = sem_open(tg_sem_path.c_str(), O_CREAT, 0644, 1);
+		if (tg_sem == nullptr) {
+			logger->Error("Task-graph [uid=%d]: cannot create semaphore <%s> errno=%d",
+				GetUniqueID(), tg_sem_path.c_str(), errno);
+		}
+		logger->Info("Semaphore open");
+
+	}
+	catch (std::exception & ex) {
+		logger->Error("Error while creating serialization file name");
+		return ExitCode::ERR_TASK_GRAPH_FILES;
+	}
+	return ExitCode::SUCCESS;
+}
+
 bool ExecutionSynchronizer::CheckTaskGraph(std::shared_ptr<TaskGraph> tg) noexcept {
 	if (tg == nullptr) {
 		logger->Error("Task graph missing");
@@ -109,16 +128,20 @@ bool ExecutionSynchronizer::CheckTaskGraph(std::shared_ptr<TaskGraph> tg) noexce
 
 
 void ExecutionSynchronizer::SendTaskGraphToRM() {
-	std::ofstream ofs(serial_file_path);
+	sem_wait(tg_sem);
+	std::ofstream ofs(tg_file_path);
 	boost::archive::text_oarchive oa(ofs);
 	oa << *(this->task_graph);
+	sem_post(tg_sem);
 	logger->Info("Task-graph sent for resource allocation");
 }
 
 void ExecutionSynchronizer::RecvTaskGraphFromRM() {
-	std::ifstream ifs(serial_file_path);
+	sem_wait(tg_sem);
+	std::ifstream ifs(tg_file_path);
 	boost::archive::text_iarchive ia(ifs);
 	ia >> *(this->task_graph);
+	sem_post(tg_sem);
 	logger->Info("Task-graph restored after resource allocation");
 }
 
@@ -348,6 +371,12 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 	RecvTaskGraphFromRM();
 	logger->Info("onConfigure: Resource allocation performed");
 	NotifyResourceAllocation();
+
+	// TODO: reconfiguration management
+	if (Cycles() > 1) {
+		logger->Warn("onConfigure: Reconfiguration not supported yet");
+		return RTLIB_OK;
+	}
 
 	// Wait for tasks to start
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);

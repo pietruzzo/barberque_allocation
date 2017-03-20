@@ -26,6 +26,10 @@
 #include <thread>
 #include <vector>
 
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <semaphore.h>
+
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 
@@ -55,7 +59,7 @@ public:
 		SUCCESS,
 		ERR_TASK_ID,
 		ERR_TASK_GRAPH_NOT_VALID,
-		ERR_TASK_GRAPH_FILE_NAME,
+		ERR_TASK_GRAPH_FILES,
 		ERR_TASKS_IN_EXECUTION
 	};
 
@@ -83,6 +87,14 @@ public:
 	virtual ~ExecutionSynchronizer() {
 		tasks.runtime.clear();
 		events.clear();
+
+		if (access(tg_file_path.c_str(), F_OK) != -1)
+			remove(tg_file_path.c_str());
+
+		if (tg_sem != nullptr) {
+			sem_close(tg_sem);
+			sem_unlink(tg_sem_path.c_str());
+		}
 	}
 
 	/**
@@ -203,9 +215,13 @@ protected:
 
 	std::string app_name;
 
-	std::string serial_file_path;
+	std::string tg_file_path;
+
+	std::string tg_sem_path;
 
 	std::shared_ptr<TaskGraph> task_graph;
+
+	sem_t * tg_sem = nullptr;
 
 
 	std::shared_ptr<EventSync> on_run_sync;
@@ -237,6 +253,10 @@ protected:
 		bool scheduled = false;
 	} rtrm;
 
+	/**
+	 * \brief Set the path of the semaphore and the serial file
+	 */
+	ExitCode SetTaskGraphPaths();
 
 	/**
 	 * \brief Check the task graph provided is valid
