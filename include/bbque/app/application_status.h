@@ -66,28 +66,17 @@ public:
 	 * Error codes returned by methods
 	 */
 	enum ExitCode_t {
-		/** Success */
-		APP_SUCCESS = 0,
-		/** Application being DISABLED */
-		APP_DISABLED,
-		/** Application being FINISHED */
-		APP_FINISHED,
-		/** Null recipe object passed */
-		APP_RECP_NULL,
-		/** Application working mode not found */
-		APP_WM_NOT_FOUND,
-		/** Resource not found */
-		APP_RSRC_NOT_FOUND,
-		/** Constraint not found */
-		APP_CONS_NOT_FOUND,
-		/** The working mode is not schedulable */
-		APP_WM_REJECTED,
-		/** The list of enabled working modes has changed */
-		APP_WM_ENAB_CHANGED,
-		/** The list of enabled working modes has not changed */
-		APP_WM_ENAB_UNCHANGED,
-		/** Method forced to exit */
-		APP_ABORT
+		APP_SUCCESS = 0,	/** Success */
+		APP_DISABLED,   	/** Application being DISABLED */
+		APP_FINISHED,   	/** Application being FINISHED */
+		APP_RECP_NULL,  	/** Null recipe object passed */
+		APP_WM_NOT_FOUND,	/** Application working mode not found */
+		APP_RSRC_NOT_FOUND,	/** Resource not found */
+		APP_CONS_NOT_FOUND,	/** Constraint not found */
+		APP_WM_REJECTED,	/** The working mode is not schedulable */
+		APP_WM_ENAB_CHANGED,	/** Enabled working modes list has changed */
+		APP_WM_ENAB_UNCHANGED,	/** Enabled working modes list has not changed */
+		APP_ABORT         	/** Unexpected error */
 	};
 
 	/**
@@ -99,19 +88,13 @@ public:
 	 * transition.
 	 */
 	typedef enum State {
-		/** Registered within Barbeque but currently disabled */
-		DISABLED = 0,
-		/** Ready to be scheduled */
-		READY,
-		/** The application must be reconfigured */
-		SYNC,
-		/** Running */
-		RUNNING,
-		/** Regular exit */
-		FINISHED,
+		DISABLED = 0, 	/** Registered within Barbeque but currently disabled */
+		READY,      	/** Registered within Barbeque and waiting to start */
+		SYNC,     	/** (Re-)scheduled but not reconfigured yet */
+		RUNNING,  	/** Running */
+		FINISHED, 	/** Regular termination */
 
-		/** This must alwasy be the last entry */
-		STATE_COUNT
+		STATE_COUNT	/** This must alwasy be the last entry */
 	} State_t;
 
 	/**
@@ -125,19 +108,13 @@ public:
 	typedef enum SyncState {
 	// NOTE These values should be reported to match (in number and order)
 	//      those defined by the RTLIB::RTLIB_ExitCode.
-		/** The application is entering the system */
-		STARTING = 0,
-		/** Must change working mode */
-		RECONF ,
-		/** Must migrate and change working mode */
-		MIGREC,
-		/** Must migrate into another cluster */
-		MIGRATE,
-		/** Must be blocked becaus of resource are not more available */
-		BLOCKED,
+		STARTING = 0, 	/** The application is entering the system */
+		RECONF ,      	/** Must change working mode */
+		MIGREC,       	/** Must migrate and change working mode */
+		MIGRATE,    	/** Must migrate into another cluster */
+		BLOCKED,    	/** Must be blocked becaus of resource are not more available */
 
-		/** This must alwasy be the last entry */
-		SYNC_STATE_COUNT
+		SYNC_STATE_COUNT /** This must alwasy be the last entry */
 	} SyncState_t;
 
 
