@@ -72,7 +72,7 @@ ApplicationManager & ApplicationManager::GetInstance() {
 
 ApplicationManager::ApplicationManager() :
 		cm(CommandManager::GetInstance()),
-        plm(PlatformManager::GetInstance()),
+		plm(PlatformManager::GetInstance()),
 		cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
 
 	// Get a logger
@@ -80,8 +80,7 @@ ApplicationManager::ApplicationManager() :
 	assert(logger);
 
 	//  Get the recipe loader instance
-	std::string rloader_plugin_id(
-			RECIPE_LOADER_NAMESPACE "." BBQUE_RLOADER_DEFAULT);
+	std::string rloader_plugin_id(RECIPE_LOADER_NAMESPACE "." BBQUE_RLOADER_DEFAULT);
 	rloader = ModulesFactory::GetModule<bp::RecipeLoaderIF>(rloader_plugin_id);
 	if (!rloader) {
 		logger->Fatal("Missing RecipeLoader plugin");
@@ -89,8 +88,7 @@ ApplicationManager::ApplicationManager() :
 	}
 
 	// Debug logging
-	logger->Debug("Priority levels: %d, (O = highest)",
-			BBQUE_APP_PRIO_LEVELS);
+	logger->Debug("Priority levels: %d, (O = highest)", BBQUE_APP_PRIO_LEVELS);
 
 	// Register commands
 #define CMD_WIPE_RECP ".recipes_wipe"
