@@ -242,7 +242,7 @@ protected:
 	 * \brief Check the task graph provided is valid
 	 * \return true if yes, false otherwise
 	 */
-	bool CheckTaskGraph() noexcept;
+	bool CheckTaskGraph(std::shared_ptr<TaskGraph>) noexcept;
 
 	/**
 	 * \brief Send the task graph to the resource manager

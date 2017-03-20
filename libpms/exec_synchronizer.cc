@@ -47,13 +47,7 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 		std::shared_ptr<TaskGraph> tg) {
-	task_graph = tg;
-	if (!CheckTaskGraph()) {
-		task_graph = nullptr;
-		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
-	}
 
-	task_graph->SetApplicationId(GetUid());
 
 	try {
 		serial_file_path = BBQUE_TG_FILE_PREFIX + std::string(GetUniqueID_String());
@@ -71,6 +65,14 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 		logger->Error("Tasks execution still in progress...");
 		return ExitCode::ERR_TASKS_IN_EXECUTION;
 	}
+
+	// Task graph validation and setting
+	if (!CheckTaskGraph(tg)) {
+		logger->Error("SetTaskGraph: task graph not valid");
+		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
+	}
+	task_graph = tg;
+	task_graph->SetApplicationId(GetUid());
 
 	// Task execution status initialization
 	for (auto & t_entry: task_graph->Tasks()) {
@@ -95,11 +97,13 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 
 bool ExecutionSynchronizer::CheckTaskGraph() noexcept {
 	if (task_graph == nullptr) {
+bool ExecutionSynchronizer::CheckTaskGraph(std::shared_ptr<TaskGraph> tg) noexcept {
+	if (tg == nullptr) {
 		logger->Error("Task graph missing");
 		return false;
 	}
 
-	if (!task_graph->IsValid()) {
+	if (!tg->IsValid()) {
 		logger->Error("Task graph not valid");
 		return false;
 	}
@@ -124,7 +128,7 @@ void ExecutionSynchronizer::RecvTaskGraphFromRM() {
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(
 		uint32_t task_id) noexcept {
-	if (!CheckTaskGraph())
+	if (!CheckTaskGraph(task_graph))
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	auto task = task_graph->GetTask(task_id);
@@ -143,7 +147,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(
 		std::list<uint32_t> tasks_ids) noexcept {
-	if (!CheckTaskGraph())
+	if (!CheckTaskGraph(task_graph))
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
@@ -161,7 +165,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasks(
 }
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() noexcept {
-	if (!CheckTaskGraph())
+	if (!CheckTaskGraph(task_graph))
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
@@ -177,7 +181,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() noexcept 
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(
 		uint32_t task_id) noexcept {
-	if (!CheckTaskGraph())
+	if (!CheckTaskGraph(task_graph))
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	auto task = task_graph->GetTask(task_id);
@@ -197,7 +201,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(
 		std::list<uint32_t> tasks_ids) noexcept {
-	if (!CheckTaskGraph())
+	if (!CheckTaskGraph(task_graph))
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
@@ -216,7 +220,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasks(
 }
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTasksAll() noexcept {
-	if (!CheckTaskGraph())
+	if (!CheckTaskGraph(task_graph))
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
@@ -314,7 +318,7 @@ void ExecutionSynchronizer::TaskProfiler(uint32_t task_id) noexcept {
 // ---------------- BbqueEXC overloading ------------------------------------//
 
 RTLIB_ExitCode_t ExecutionSynchronizer::onSetup() {
-	if (!CheckTaskGraph())
+	if (!CheckTaskGraph(task_graph))
 		return RTLIB_ERROR;
 
 	// Synchronization event for onRun() return
