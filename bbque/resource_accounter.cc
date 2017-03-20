@@ -1099,9 +1099,9 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncFinalize() {
 
 void ResourceAccounter::SyncWait() {
 	std::unique_lock<std::mutex> status_ul(status_mtx);
-	while (status != State::READY) {
+	while (status != State::READY)
 		status_cv.wait(status_ul);
-	}
+	status_cv.notify_all();
 }
 
 /************************************************************************
