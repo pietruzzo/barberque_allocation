@@ -45,10 +45,7 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 }
 
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
-		std::shared_ptr<TaskGraph> tg) {
-
-
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(std::shared_ptr<TaskGraph> tg) {
 	try {
 		serial_file_path = BBQUE_TG_FILE_PREFIX + std::string(GetUniqueID_String());
 		logger->Info("Task-graph serialization file: %s [uid=%d]", serial_file_path.c_str(),
@@ -62,7 +59,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 	// Cannot change the TG while still in execution
 	std::unique_lock<std::mutex> tasks_lock(tasks.mx);
 	if (tasks.is_stopped.any()) {
-		logger->Error("Tasks execution still in progress...");
+		logger->Error("SetTaskGraph: tasks execution still in progress...");
 		return ExitCode::ERR_TASKS_IN_EXECUTION;
 	}
 
@@ -78,18 +75,18 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(
 	for (auto & t_entry: task_graph->Tasks()) {
 		auto & task(t_entry.second);
 		tasks.is_stopped.set(task->Id());
-		std::shared_ptr<RuntimeInfo> rt_info =
-			std::make_shared<RuntimeInfo>(false);
+		std::shared_ptr<RuntimeInfo> rt_info = std::make_shared<RuntimeInfo>(false);
 		tasks.runtime.emplace(task->Id(), rt_info);
 	}
 
 	// Task synchronization events initialization
 	for (auto & ev_entry: task_graph->Events()) {
 		auto & event(ev_entry.second);
-		std::shared_ptr<EventSync> ev_sync =
-			std::make_shared<EventSync>(event->Id());
+		std::shared_ptr<EventSync> ev_sync = std::make_shared<EventSync>(event->Id());
                 events.emplace(event->Id(), ev_sync);
 	}
+
+	logger->Info("SetTaskGraph: task-graph successfully set");
 
 	return ExitCode::SUCCESS;
 }
@@ -126,8 +123,7 @@ void ExecutionSynchronizer::RecvTaskGraphFromRM() {
 }
 
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(
-		uint32_t task_id) noexcept {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTask(uint32_t task_id) noexcept {
 	if (!CheckTaskGraph(task_graph))
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
@@ -179,8 +175,7 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StartTasksAll() noexcept 
 }
 
 
-ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(
-		uint32_t task_id) noexcept {
+ExecutionSynchronizer::ExitCode ExecutionSynchronizer::StopTask(uint32_t task_id) noexcept {
 	if (!CheckTaskGraph(task_graph))
 		return ExitCode::ERR_TASK_GRAPH_NOT_VALID;
 
