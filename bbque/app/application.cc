@@ -91,9 +91,12 @@ Application::Application(std::string const & _name,
 	snprintf(str_id, APPLICATION_NAME_LEN, "%05d:%5s:%02d",
 		Pid(), Name().substr(0,5).c_str(), ExcId());
 
-	// Task-graph output serial file path
-	tg_path.assign(BBQUE_TG_FILE_PREFIX + std::string(str_id).substr(0, 6) + Name());
-	logger->Info("Task-graph serial file@: <%s>", tg_path.c_str());
+	// Task-graph file paths
+	std::string app_str(std::string(str_id).substr(0, 6) + Name());
+	tg_path.assign(BBQUE_TG_FILE_PREFIX + app_str);
+	std::replace(app_str.begin(), app_str.end(), ':', '.');
+	tg_sem_name.assign("/" + app_str);
+	logger->Info("Task-graph serial file: <%s> sem: <%s>", tg_path.c_str(), tg_sem_name.c_str());
 
 	// Initialized scheduling state
 	schedule.state        = DISABLED;
@@ -107,6 +110,8 @@ Application::~Application() {
 	awms.recipe_vect.clear();
 	awms.enabled_list.clear();
 	rsrc_constraints.clear();
+	if (tg_sem != nullptr)
+		sem_close(tg_sem);
 }
 
 void Application::SetPriority(AppPrio_t _prio) {
@@ -1171,20 +1176,69 @@ uint64_t Application::GetResourceRequestStat(
 }
 
 
-void Application::LoadTaskGraph() {
-	logger->Debug("Loading the task graph...");
-	std::ifstream ifs(tg_path);
-	if (!ifs.good()) {
-		logger->Debug("Task-graph not provided");
-		return;
+/*******************************************************************************
+ *  Task-graph Management
+ ******************************************************************************/
+
+Application::ExitCode_t Application::LoadTaskGraph() {
+	logger->Info("LoadTaskGraph: loading [path:%s sem=%s]...",
+		tg_path.c_str(), tg_sem_name.c_str());
+
+	if (tg_sem == nullptr) {
+		tg_sem = sem_open(tg_sem_name.c_str(), O_RDWR);
+		if (errno != 0) {
+			logger->Crit("LoadTaskGraph: Error while opening semaphore [errno=%d]", errno);
+			return APP_TG_SEM_ERROR;
+		}
 	}
 
-	if (task_graph == nullptr)
-		task_graph = std::make_shared<TaskGraph>();
+	if (tg_sem == SEM_FAILED) {
+		logger->Warn("LoadTaskGraph: task-graph not available on the application side");
+		return APP_TG_SEM_ERROR;
+	}
 
-	boost::archive::text_iarchive ia(ifs);
-	ia >> *task_graph;
-	logger->Debug("Task-graph received");
+	if (sem_wait(tg_sem) != 0) {
+		logger->Error("LoadTaskGraph: wait on semaphore failed [errno=%d]", errno);
+		return APP_TG_SEM_ERROR;
+	}
+
+	std::ifstream ifs(tg_path);
+	if (!ifs.good()) {
+		logger->Warn("LoadTaskGraph: task-graph not provided");
+		sem_post(tg_sem);
+		return APP_TG_FILE_ERROR;
+	}
+
+	if (task_graph == nullptr) {
+		task_graph = std::make_shared<TaskGraph>();
+		logger->Info("LoadTaskGraph: loading from scratch...");
+	}
+
+	try {
+		boost::archive::text_iarchive ia(ifs);
+		ia >> *task_graph;
+		sem_post(tg_sem);
+	}
+	catch(std::exception & ex) {
+		logger->Error("LoadTaskGraph: exception [%s]", ex.what());
+		return APP_TG_FILE_ERROR;
+	}
+
+	logger->Info("LoadTaskGraph: task-graph loaded");
+	return APP_SUCCESS;
+}
+
+
+void Application::UpdateTaskGraph() {
+	if (tg_sem == nullptr)
+		return;
+	sem_wait(tg_sem);
+
+	std::ofstream ofs(tg_path);
+	boost::archive::text_oarchive oa(ofs);
+	oa << *task_graph;
+	sem_post(tg_sem);
+	logger->Debug("Task-graph sent back");
 }
 
 } // namespace app

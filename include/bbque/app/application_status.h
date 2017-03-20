@@ -76,6 +76,8 @@ public:
 		APP_WM_REJECTED,	/** The working mode is not schedulable */
 		APP_WM_ENAB_CHANGED,	/** Enabled working modes list has changed */
 		APP_WM_ENAB_UNCHANGED,	/** Enabled working modes list has not changed */
+		APP_TG_SEM_ERROR,	/** Error while accessing task-graph semaphore */
+		APP_TG_FILE_ERROR,	/** Error while accessing task-graph serial file */
 		APP_ABORT         	/** Unexpected error */
 	};
 

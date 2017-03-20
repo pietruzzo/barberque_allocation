@@ -28,6 +28,10 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <semaphore.h>
 #include <unistd.h>
 
 #include "bbque/config.h"
@@ -547,14 +551,12 @@ public:
 	/**
 	 * @brief Restore/retrieve the task-graph description
 	 */
-	void LoadTaskGraph();
+	ExitCode_t LoadTaskGraph();
 
 	/**
 	 * @brief Return the current task-graph description
 	 */
-	inline std::shared_ptr<TaskGraph> GetTaskGraph() {
-		return task_graph;
-	}
+	inline std::shared_ptr<TaskGraph> GetTaskGraph() { return task_graph; }
 
 	/**
 	 * @brief Set a new task-graph description
@@ -571,12 +573,7 @@ public:
 	/**
 	 * @brief Update the task-graph description shared with the RTLib
 	 */
-	inline void UpdateTaskGraph() {
-		std::ofstream ofs(tg_path);
-		boost::archive::text_oarchive oa(ofs);
-		oa << *task_graph;
-		logger->Debug("Task-graph sent back");
-	}
+	 void UpdateTaskGraph();
 
 	/**
 	 * @brief Clear the task-graph description (it optionally forces a reload)
@@ -638,6 +635,13 @@ private:
 	 * Task-graph serialization file path
 	 */
 	std::string tg_path;
+
+	/**
+	 * Task-graph named semaphore
+	 */
+	std::string tg_sem_name;
+
+	sem_t * tg_sem = nullptr;
 
 	/**
 	 * Task-graph descriptor (shared pointer to)
