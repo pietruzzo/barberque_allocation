@@ -190,7 +190,7 @@ SchedulerManager::Schedule() {
 	}
 
 	// Clear the next AWM from the RUNNING Apps/EXC
-	ClearRunningApps();
+	CommitRunningApplications();
 
 	// Set the scheduled resource view
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
@@ -208,7 +208,7 @@ SchedulerManager::Schedule() {
 	return DONE;
 }
 
-void SchedulerManager::ClearRunningApps() {
+void SchedulerManager::CommitRunningApplications() {
 	AppsUidMapIt apps_it;
 	AppPtr_t papp = am.GetFirst(ApplicationStatusIF::RUNNING, apps_it);
 	for (; papp; papp = am.GetNext(ApplicationStatusIF::RUNNING, apps_it)) {

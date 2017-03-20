@@ -183,7 +183,7 @@ private:
 	/**
 	 * @brief Clear next AWM in RUNNING Applications/EXC
 	 */
-	void ClearRunningApps();
+	void CommitRunningApplications();
 
 	/**
 	 * @brief Set the current scheduling state
