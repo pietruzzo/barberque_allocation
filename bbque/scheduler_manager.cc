@@ -150,10 +150,6 @@ SchedulerManager::CollectStats() {
 
 SchedulerManager::ExitCode_t
 SchedulerManager::Schedule() {
-	ResourceAccounter &ra = ResourceAccounter::GetInstance();
-	System &sv = System::GetInstance();
-	SchedulerPolicyIF::ExitCode result;
-	br::RViewToken_t svt;
 
 	if (!policy) {
 		logger->Crit("Resource scheduling FAILED (Error: missing policy)");
@@ -174,21 +170,19 @@ SchedulerManager::Schedule() {
 
 	SetState(State_t::SCHEDULING);  // --> Applications from now in a not consistent state
 	++sched_count;
-	logger->Notice("Scheduling [%d] START, policy [%s]",
-			sched_count,
-			policy->Name());
+	logger->Notice("Scheduling [%d] START, policy [%s]", sched_count, policy->Name());
 
 	// Collecing execution metrics
 	if (sched_count > 1)
 		SM_GET_TIMING(metrics, SM_SCHED_PERIOD, sm_tmr);
 
-	// Account for actual scheduling runs
-	SM_COUNT_EVENT(metrics, SM_SCHED_RUNS);
+	SM_COUNT_EVENT(metrics, SM_SCHED_RUNS);  // Account for actual scheduling runs
+	SM_RESET_TIMING(sm_tmr);                 // Reset timer for policy execution time profiling
 
-	// Reset timer for schedule execution time collection
-	SM_RESET_TIMING(sm_tmr);
+	System &sv = System::GetInstance();
+	br::RViewToken_t sched_view_id;
 
-	result = policy->Schedule(sv, svt);
+	SchedulerPolicyIF::ExitCode result = policy->Schedule(sv, sched_view_id);
 	if (result != SchedulerPolicyIF::SCHED_DONE) {
 		logger->Error("Scheduling [%d] FAILED", sched_count);
 		SetState(State_t::READY);     // --> Applications in a consistent state again
@@ -199,20 +193,15 @@ SchedulerManager::Schedule() {
 	ClearRunningApps();
 
 	// Set the scheduled resource view
-	ra.SetScheduledView(svt);
-
-	// Collecing execution metrics
-	SM_GET_TIMING(metrics, SM_SCHED_TIME, sm_tmr);
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ra.SetScheduledView(sched_view_id);
 
 	SetState(State_t::READY);     // --> Applications in a consistent state again
-	// Reset timer for schedule period time collection
-	SM_RESET_TIMING(sm_tmr);
 
-	// Account for scheduling completed
-	SM_COUNT_EVENT(metrics, SM_SCHED_COMP);
-
-	// Collect statistics on scheduling decisions
-	CollectStats();
+	SM_GET_TIMING(metrics, SM_SCHED_TIME, sm_tmr); 	// Collecing execution metrics
+	SM_RESET_TIMING(sm_tmr);                // Reset timer for policy execution time profiling
+	SM_COUNT_EVENT(metrics, SM_SCHED_COMP); // Account for scheduling completed
+	CollectStats();                         // Collect statistics on scheduling execution
 
 	logger->Notice("Scheduling [%d] DONE", sched_count);
 
@@ -221,12 +210,8 @@ SchedulerManager::Schedule() {
 
 void SchedulerManager::ClearRunningApps() {
 	AppsUidMapIt apps_it;
-	AppPtr_t papp;
-
-	// Running Applications/EXC
-	papp = am.GetFirst(ApplicationStatusIF::RUNNING, apps_it);
+	AppPtr_t papp = am.GetFirst(ApplicationStatusIF::RUNNING, apps_it);
 	for (; papp; papp = am.GetNext(ApplicationStatusIF::RUNNING, apps_it)) {
-
 		// Commit a running state (this cleans the next AWM)
 		am.RunningCommit(papp);
 	}
