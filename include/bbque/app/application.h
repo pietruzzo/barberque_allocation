@@ -579,12 +579,10 @@ public:
 	}
 
 	/**
-	 * @brief Destroy the task-graph description shared with the RTLib
+	 * @brief Clear the task-graph description (it optionally forces a reload)
 	 */
-	inline void RemoveTaskGraph() {
-		if (access(tg_path.c_str(), F_OK) != -1)
-			remove(tg_path.c_str());
-	}
+	inline void ClearTaskGraph() { task_graph = nullptr; }
+
 
 	/**
 	 * @brief Performance requirements of a task

@@ -1507,7 +1507,7 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 		ra.ReleaseResources(papp);
 	}
 
-	papp->RemoveTaskGraph();
+	papp->ClearTaskGraph();
 	logger->Info("EXC [%s] DISABLED", papp->StrId());
 
 	return AM_SUCCESS;

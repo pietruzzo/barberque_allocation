@@ -107,7 +107,6 @@ Application::~Application() {
 	awms.recipe_vect.clear();
 	awms.enabled_list.clear();
 	rsrc_constraints.clear();
-	RemoveTaskGraph();
 }
 
 void Application::SetPriority(AppPrio_t _prio) {
