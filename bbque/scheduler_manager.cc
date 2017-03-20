@@ -172,6 +172,7 @@ SchedulerManager::Schedule() {
 	// a DELAYED exit code should be returned
 	DB(logger->Warn("TODO: add scheduling activation policy"));
 
+	SetState(State_t::SCHEDULING);  // --> Applications from now in a not consistent state
 	++sched_count;
 	logger->Notice("Scheduling [%d] START, policy [%s]",
 			sched_count,
@@ -190,6 +191,7 @@ SchedulerManager::Schedule() {
 	result = policy->Schedule(sv, svt);
 	if (result != SchedulerPolicyIF::SCHED_DONE) {
 		logger->Error("Scheduling [%d] FAILED", sched_count);
+		SetState(State_t::READY);     // --> Applications in a consistent state again
 		return FAILED;
 	}
 
@@ -202,6 +204,7 @@ SchedulerManager::Schedule() {
 	// Collecing execution metrics
 	SM_GET_TIMING(metrics, SM_SCHED_TIME, sm_tmr);
 
+	SetState(State_t::READY);     // --> Applications in a consistent state again
 	// Reset timer for schedule period time collection
 	SM_RESET_TIMING(sm_tmr);
 
@@ -228,6 +231,21 @@ void SchedulerManager::ClearRunningApps() {
 		am.RunningCommit(papp);
 	}
 }
+
+void SchedulerManager::SetState(State_t _s) {
+	std::unique_lock<std::mutex> ul(mux);
+	state = _s;
+	status_cv.notify_all();
+}
+
+void SchedulerManager::WaitForReady() {
+	std::unique_lock<std::mutex> ul(mux);
+	while (state != State_t::READY)
+		status_cv.wait(ul);
+	logger->Debug("State: READY");
+	status_cv.notify_all();
+}
+
 
 } // namespace bbque
 
