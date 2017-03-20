@@ -24,6 +24,7 @@
 #include "bbque/modules_factory.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/platform_manager.h"
+#include "bbque/scheduler_manager.h"
 #include "bbque/app/application.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/app/recipe.h"
@@ -1478,18 +1479,18 @@ ApplicationManager::EnableEXC(AppPid_t pid, uint8_t exc_id) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-
 	// A disabled EXC is moved (as soon as possible) into the DISABLED queue
 	// NOTE: other code-path should check wheter an application is still
 	// !DISABLED to _assume_ a normal operation
-
 	logger->Debug("Disabling EXC [%s:%s/%s]...",
 			papp->StrId(),
 			Application::stateStr[papp->State()],
 			Application::syncStateStr[papp->SyncState()]);
 
-	// Be sure that the ResourceAccounter is not performing a synchronization
+	SchedulerManager &sm(SchedulerManager::GetInstance());
+	sm.WaitForReady();
+
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ra.SyncWait();
 
 	if (papp->Disable() != Application::APP_SUCCESS) {
