@@ -225,7 +225,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
 	// Register all the resources referenced by the path specified
-	br::ResourcePtrList_t r_list(ra.GetResources(rp));
+	auto r_list(ra.GetResources(rp));
 	if (r_list.empty()) {
 		logger->Warn("No resources to monitor <%s>", rp->ToString().c_str());
 		return ExitCode_t::ERR_RSRC_MISSING;
@@ -234,7 +234,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	// Register each resource to monitor, specifying the number of samples to
 	// consider in the (exponential) mean computation and the output log file
 	// descriptor
-	for (br::ResourcePtr_t rsrc: r_list) {
+	for (auto & rsrc: r_list) {
 		rsrc->EnablePowerProfile(samples_window);
 		logger->Info("Registering <%s> for power monitoring...",
 			rsrc->Path().c_str());
@@ -323,14 +323,12 @@ void  PowerMonitor::SampleResourcesStatus(
 		// Power status monitoring over all the registered resources
 		uint16_t i = first_resource_index;
 		for (; i < last_resource_index; ++i) {
-			br::ResourcePathPtr_t const & r_path(wm_info.resources[i].path);
-			br::ResourcePtr_t & rsrc(wm_info.resources[i].resource_ptr);
+			auto const & r_path(wm_info.resources[i].path);
+			auto & rsrc(wm_info.resources[i].resource_ptr);
 
-			std::string log_inst_values("[");
-			std::string log_mean_values("[");
-			std::string log_file_values;
-			log_inst_values += rsrc->Path() + "] (I): ";
-			log_mean_values += rsrc->Path() + "] (M): ";
+			std::string log_insts("[" + rsrc->Path() + "] (I): ");
+			std::string log_means("[" + rsrc->Path() + "] (M): ");
+			std::string log_values;
 			uint info_idx   = 0;
 			uint info_count = 0;
 
@@ -364,24 +362,22 @@ void  PowerMonitor::SampleResourcesStatus(
 					<< std::setprecision(0)       << std::fixed
 					<< std::setw(str_w[info_idx]) << std::left
 					<< rsrc->GetPowerInfo(info_type, br::Resource::INSTANT);
-				log_inst_values += ss_i.str() + " ";
-				log_file_values += ss_i.str() + " ";
+				log_insts += ss_i.str() + " ";
+				log_values += ss_i.str() + " ";
 
 				std::stringstream ss_m;
 				ss_m
 					<< std::setprecision(str_p[info_idx]) << std::fixed
 					<< std::setw(str_w[info_idx])         << std::left
 					<< rsrc->GetPowerInfo(info_type, br::Resource::MEAN);
-				log_mean_values += ss_m.str() + " ";
+				log_means += ss_m.str() + " ";
 
 			}
 
-			logger->Debug("[T%d] sampling <%s> ",
-				thd_id, log_inst_values.c_str());
-			logger->Debug("[T%d] sampling <%s> ",
-				thd_id, log_mean_values.c_str());
+			logger->Debug("[T%d] sampling <%s> ", thd_id, log_insts.c_str());
+			logger->Debug("[T%d] sampling <%s> ", thd_id, log_means.c_str());
 			if (wm_info.log_enabled) {
-				DataLogWrite(r_path, log_file_values);
+				DataLogWrite(r_path, log_values);
 			}
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
@@ -558,15 +554,11 @@ int PowerMonitor::SystemLifetimeCmdHandler(
 void PowerMonitor::PrintSystemLifetimeInfo() const {
 	std::chrono::seconds secs_from_now;
 	// Print output
-	std::time_t time_out = std::chrono::system_clock::to_time_t(
-			sys_lifetime.target_time);
-	logger->Notice("PWR MNTR: System target lifetime: %s",
-			ctime(&time_out));
+	std::time_t time_out = std::chrono::system_clock::to_time_t(sys_lifetime.target_time);
+	logger->Notice("PWR MNTR: System target lifetime: %s", ctime(&time_out));
 	secs_from_now = GetSysLifetimeLeft();
-	logger->Notice("PWR MNTR: System target lifetime [s]: %d",
-			secs_from_now.count());
-	logger->Notice("PWR MNTR: System power budget [mW]: %d",
-			sys_lifetime.power_budget_mw);
+	logger->Notice("PWR MNTR: System target lifetime [s]: %d", secs_from_now.count());
+	logger->Notice("PWR MNTR: System power budget [mW]: %d", sys_lifetime.power_budget_mw);
 }
 
 #endif // Battery management enabled

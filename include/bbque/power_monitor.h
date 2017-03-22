@@ -57,12 +57,9 @@ public:
 	 * Class specific return codes
 	 */
 	enum class ExitCode_t {
-		/** Successful call */
-		OK = 0,
-		/** Not valid resource specified */
-		ERR_RSRC_MISSING,
-		/** A not specified error code */
-		ERR_UNKNOWN
+		OK = 0,           /** Successful call */
+		ERR_RSRC_MISSING, /** Not valid resource specified */
+		ERR_UNKNOWN       /** A not specified error code   */
 	};
 
 	/** Power Monitor instance */
@@ -152,17 +149,17 @@ public:
 
 private:
 
-	/*
+	/**
 	 * @brief Power manager instance
 	 */
 	PowerManager & pm;
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
-	/*
+	/**
 	 * @brief Battery manager instance
 	 */
 	BatteryManager & bm;
-	/*
+	/**
 	 * @brief Battery object instance
 	 */
 	BatteryPtr_t pbatt;
@@ -213,28 +210,20 @@ private:
 	 */
 	struct PowerMonitorInfo_t {
 		/*--------- Descriptors ------------------*/
-
-		/** Resources to monitor */
-		std::vector<ResourceHandler> resources;
-
+		std::vector<ResourceHandler> resources;   /** Resources to monitor */
 		/*--------- Data logging -----------------*/
-
-		/** Output file descriptors  */
-		std::map<br::ResourcePathPtr_t, std::ofstream *> log_fp;
-		/** Output file directory    */
-		std::string log_dir;
-		/** Enable / disable         */
-		bool log_enabled = false;
-
+		std::map<br::ResourcePathPtr_t, std::ofstream *> log_fp; /** Output file descriptors  */
+		std::string log_dir;       /** Output file directory    */
+		bool log_enabled = false;  /** Enable / disable         */
 		/*--------- Monitoring status -------------*/
-
-		/** Monitoring start/stop            */
-		bool started = false;
-		/** Monitoring period (milliseconds) */
-		uint32_t period_ms;
+		bool started = false;      /** Monitoring start/stop            */
+		uint32_t period_ms;        /** Monitoring period (milliseconds) */
 	} wm_info;
 
 
+	/**
+	 * @brief Number of monitoring threads to spawn
+	 */
 #define WM_TEMP_CRITICAL_ID  0
 #define WM_TEMP_WARNING_ID   1
 
