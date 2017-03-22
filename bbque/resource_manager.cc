@@ -385,7 +385,6 @@ void ResourceManager::Optimize() {
 
 void ResourceManager::EvtExcStart() {
 	uint32_t timeout = 0;
-	AppPtr_t papp;
 
 	logger->Info("EXC Enabled");
 
@@ -402,7 +401,7 @@ void ResourceManager::EvtExcStart() {
 	// while still allowing for reduced rescheduling on applications
 	// startup burst.
 	// TODO: make this policy more tunable via the configuration file
-	papp = am.HighestPrio(ApplicationStatusIF::READY);
+	AppPtr_t papp = am.HighestPrio(ApplicationStatusIF::READY);
 	if (!papp) {
 		// In this case the application has exited before the start
 		// event has had the change to be processed
@@ -418,7 +417,6 @@ void ResourceManager::EvtExcStart() {
 
 void ResourceManager::EvtExcStop() {
 	uint32_t timeout = 0;
-	AppPtr_t papp;
 
 	logger->Info("EXC Disabled");
 
@@ -435,7 +433,7 @@ void ResourceManager::EvtExcStop() {
 
 void ResourceManager::EvtBbqPlat() {
 
-	logger->Info("BBQ Platform Request");
+	logger->Info("BarbequeRTRM Optimization Request for Platform Event");
 
 	// Reset timer for START event execution time collection
 	RM_RESET_TIMING(rm_tmr);
@@ -453,7 +451,7 @@ void ResourceManager::EvtBbqPlat() {
 void ResourceManager::EvtBbqOpts() {
 	uint32_t timeout = 0;
 
-	logger->Info("BBQ Optimization Request");
+	logger->Info("BarbequeRTRM Optimization Request for Application Event");
 
 	// Reset timer for START event execution time collection
 	RM_RESET_TIMING(rm_tmr);
@@ -528,7 +526,7 @@ void ResourceManager::EvtBbqExit() {
 	AppsUidMapIt apps_it;
 	AppPtr_t papp;
 
-	logger->Notice("Terminating Barbeque...");
+	logger->Notice("Terminating BarbequeRTRM...");
 	done = true;
 	pendingEvts_cv.notify_one();
 
