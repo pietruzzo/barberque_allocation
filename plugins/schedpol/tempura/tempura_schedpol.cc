@@ -174,7 +174,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::Init() {
 
 	// Thermal threshold
 	if (crit_temp == 0)
-		crit_temp = wm.GetThermalThreshold(WM_TEMP_CRITICAL_ID);
+		crit_temp = wm.GetThermalThreshold();
 
 	// System power budget
 	sys_power_budget = wm.GetSysPowerBudget();

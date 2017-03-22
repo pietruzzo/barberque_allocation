@@ -40,11 +40,18 @@ domains = cpu,gpu
 # PlatformProxy Options
 ################################################################################
 [PowerMonitor]
+# log enabled at starting time
 log.enabled   = 0
+# output directory for the power monitor logs
 log.dir       = /tmp
+# monitoring period
 period_ms     = 1000
-temp.critical = 75
+# number of monitoring threads to spawn
 nr_threads    = 2
+temp.threshold  = 80
+#power.threshold = 16000
+#batt.threshold_rate  =
+batt.threshold_level = 15
 
 [PowerManager]
 nr_sockets   = 1

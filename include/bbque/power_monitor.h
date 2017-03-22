@@ -25,9 +25,11 @@
 #include "bbque/command_manager.h"
 #include "bbque/config.h"
 #include "bbque/configuration_manager.h"
+#include "bbque/resource_manager.h"
 #include "bbque/pm/battery_manager.h"
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/resources.h"
+#include "bbque/utils/deferrable.h"
 #include "bbque/utils/worker.h"
 #include "bbque/utils/logging/logger.h"
 
@@ -61,6 +63,17 @@ public:
 		ERR_RSRC_MISSING, /** Not valid resource specified */
 		ERR_UNKNOWN       /** A not specified error code   */
 	};
+
+	/**
+	 * @enum ThresholdType
+	 */
+	enum class ThresholdType {
+		TEMP,            /** Critical temperature */
+		POWER,           /** Power consumption upper bound */
+		BATT_RATE,       /** Battery critical discharging rate */
+		BATT_LEVEL,      /** Battery critical level */
+	} ThresholdType_t;
+
 
 	/** Power Monitor instance */
 	static PowerMonitor & GetInstance();
@@ -110,18 +123,24 @@ public:
 	void Stop();
 
 	/**
-	 * @brief Thermal theshold set
-	 *
-	 * @param level The critical level. 0 = critical, 1 = warning
+	 * @brief Thermal theshold
 	 *
 	 * @return The temperature in Celsius degree
 	 */
-	uint32_t GetThermalThreshold(uint level = 0) {
-		if (level > (sizeof(temp) / sizeof(uint32_t))) {
-			logger->Warn("Thermal level '%d' out of bounds", level);
-			return 0;
-		}
-		return temp[level];
+	inline uint32_t GetThermalThreshold() const { return GetThreshold(ThresholdType::TEMP); }
+
+	/**
+	 * @brief Get the current theshold
+	 *
+	 * @return For TEMP the temperature in Celsius degree.
+	 * For POWER the power consumption upper bound.
+	 * For BATTERY_LEVEL the charge level under which a policy execution could be triggered.
+	 * For BATTERY_RATE the maximum discahrging rate tolerated.
+	 */
+	inline uint32_t GetThreshold(ThresholdType t) const {
+		auto v = thresholds.find(t);
+		if (unlikely(v == thresholds.end())) return 0;
+		return v->second;
 	}
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
@@ -224,13 +243,17 @@ private:
 	/**
 	 * @brief Number of monitoring threads to spawn
 	 */
-#define WM_TEMP_CRITICAL_ID  0
-#define WM_TEMP_WARNING_ID   1
-
 	uint16_t nr_threads = 1;
 
-	/*** Thermal thresholds  */
-	uint32_t temp[2] = {80, 100};
+	/**
+	 * @brief Threshold values for triggering an optimization request
+	 */
+	std::map<ThresholdType, uint32_t> thresholds;
+
+	/**
+	 * @brief Deferrable for coalescing multiple optimization requests
+	 **/
+	bbque::utils::Deferrable optimize_dfr;
 
 
 	/** Function pointer to PowerManager member functions */
@@ -336,6 +359,15 @@ private:
 		return energy_budget / secs_from_now.count();
 	}
 #endif // CONFIG_BBQUE_PM_BATTERY
+
+	/**
+	 * @brief Send an optimization request to execute the resource allocation policy
+	 */
+	inline void OptimizationRequest() const {
+		ResourceManager & rm(ResourceManager::GetInstance());
+		logger->Debug("Sending optimization request...");
+		rm.NotifyEvent(ResourceManager::BBQ_PLAT);
+	}
 };
 
 } // namespace bbque

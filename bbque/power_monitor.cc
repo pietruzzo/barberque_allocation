@@ -60,40 +60,64 @@ PowerMonitor::PowerMonitor():
 		bm(BatteryManager::GetInstance()),
 #endif
 		cm(CommandManager::GetInstance()),
-		cfm(ConfigurationManager::GetInstance()) {
+		cfm(ConfigurationManager::GetInstance()),
+		optimize_dfr("wm.opt", std::bind(&PowerMonitor::OptimizationRequest, this)) {
+
 	// Get a logger module
 	logger = bu::Logger::GetLogger(POWER_MONITOR_NAMESPACE);
 	assert(logger);
 	logger->Info("PowerMonitor initialization...");
 	Init();
 
-	//---------- Loading configuration
-	po::options_description opts_desc("Power Monitor options");
-	opts_desc.add_options()
-		(MODULE_CONFIG ".period_ms",
-		 po::value<uint32_t>(&wm_info.period_ms)->default_value(WM_DEFAULT_PERIOD_MS),
-		 "The period [ms] power monitor sampling");
+	uint32_t temp_crit = 0, power_cons = 0, batt_level = 0, batt_rate = 0;
 
-	opts_desc.add_options()
-		(MODULE_CONFIG ".log.dir",
-		 po::value<std::string>(&wm_info.log_dir)->default_value("/tmp/"),
-		 "The output directory for the status data dump files");
-	opts_desc.add_options()
-		(MODULE_CONFIG ".log.enabled",
-		 po::value<bool>(&wm_info.log_enabled)->default_value(false),
-		 "Default status of the data logging");
-	// Thermal threshold configuration
-	opts_desc.add_options()
-		(MODULE_CONFIG ".temp.critical",
-		 po::value<uint32_t>(&temp[WM_TEMP_CRITICAL_ID])->default_value(90),
-		 "Default status of the data logging");
-	po::variables_map opts_vm;
+	try {
+		po::options_description opts_desc("Power Monitor options");
+		opts_desc.add_options()
+			(MODULE_CONFIG ".period_ms",
+			 po::value<uint32_t>(&wm_info.period_ms)->default_value(WM_DEFAULT_PERIOD_MS),
+			 "The period [ms] power monitor sampling");
 
-	opts_desc.add_options()
-		(MODULE_CONFIG ".nr_threads",
-		 po::value<uint16_t>(&nr_threads)->default_value(1),
-		 "Number of monitoring threads");
-	cfm.ParseConfigurationFile(opts_desc, opts_vm);
+		opts_desc.add_options()
+			(MODULE_CONFIG ".log.dir",
+			 po::value<std::string>(&wm_info.log_dir)->default_value("/tmp/"),
+			 "The output directory for the status data dump files");
+		opts_desc.add_options()
+			(MODULE_CONFIG ".log.enabled",
+			 po::value<bool>(&wm_info.log_enabled)->default_value(false),
+			 "Default status of the data logging");
+
+		opts_desc.add_options()
+			(MODULE_CONFIG ".temp.threshold",
+			 po::value<uint32_t>(&temp_crit)->default_value(0),
+			 "Critical temperature threshold");
+
+		opts_desc.add_options()
+			(MODULE_CONFIG ".power.threshold",
+			 po::value<uint32_t>(&power_cons)->default_value(0),
+			 "Critical power consumption threshold");
+
+		opts_desc.add_options()
+			(MODULE_CONFIG ".batt.threshold_level",
+			 po::value<uint32_t>(&batt_level)->default_value(0),
+			 "Critical battery level threshold");
+
+		opts_desc.add_options()
+			(MODULE_CONFIG ".batt.threshold_rate",
+			 po::value<uint32_t>(&batt_rate)->default_value(0),
+			 "Critical battery discharging rate");
+
+		opts_desc.add_options()
+			(MODULE_CONFIG ".nr_threads",
+			 po::value<uint16_t>(&nr_threads)->default_value(1),
+			 "Number of monitoring threads");
+
+		po::variables_map opts_vm;
+		cfm.ParseConfigurationFile(opts_desc, opts_vm);
+	}
+	catch(boost::program_options::invalid_option_value ex) {
+		logger->Error("Errors in configuration file [%s]", ex.what());
+	}
 
 #define CMD_WM_DATALOG "datalog"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_DATALOG,
@@ -111,6 +135,19 @@ PowerMonitor::PowerMonitor():
 	else
 		logger->Info("Battery available: %s", pbatt->StrId().c_str());
 #endif // CONFIG_BBQUE_PM_BATTERY
+
+	thresholds[ThresholdType::TEMP]       = temp_crit;
+	thresholds[ThresholdType::POWER]      = power_cons;
+	thresholds[ThresholdType::BATT_RATE]  = batt_rate;
+	thresholds[ThresholdType::BATT_LEVEL] = batt_level;
+	logger->Info("========================================");
+	logger->Info("| THRESHOLDS                           |");
+	logger->Info("+--------------------------------------+");
+	logger->Info("| Temperature            : %5d C     |",  thresholds[ThresholdType::TEMP]);
+	logger->Info("| Power consumption      : %5d mW    |",  thresholds[ThresholdType::POWER] );
+	logger->Info("| Battery discharge rate : %5d %%/h   |", thresholds[ThresholdType::BATT_RATE] );
+	logger->Info("| Battery charge level   : %5d %%/100 |", thresholds[ThresholdType::BATT_LEVEL] );
+	logger->Info("========================================");
 
 	//---------- Setup Worker
 	Worker::Setup(BBQUE_MODULE_NAME("wm"), POWER_MONITOR_NAMESPACE);
