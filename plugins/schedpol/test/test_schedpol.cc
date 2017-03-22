@@ -163,7 +163,11 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	ref_num = pawm->BindResource(resource_path, pes, ref_num);
 	logger->Info("AssignWorkingMode: binding refn: %d", ref_num);
 
-	papp->ScheduleRequest(pawm, sched_status_view, ref_num);
+	auto ret = papp->ScheduleRequest(pawm, sched_status_view, ref_num);
+	if (ret != ba::ApplicationStatusIF::APP_SUCCESS) {
+		logger->Error("AssignWorkingMode: schedule request failed for [%d]", papp->StrId());
+		return SCHED_ERROR;
+	}
 
 	// Task level mapping
 	MapTaskGraph(papp);
