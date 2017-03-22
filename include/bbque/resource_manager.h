@@ -18,6 +18,8 @@
 #ifndef BBQUE_RESOURCE_MANAGER_H_
 #define BBQUE_RESOURCE_MANAGER_H_
 
+#include <atomic>
+
 #include "bbque/config.h"
 #include "bbque/application_manager.h"
 #include "bbque/application_proxy.h"
@@ -297,6 +299,17 @@ private:
 	 * triggerted just by events.
 	 */
 	uint32_t opt_interval;
+
+	/**
+	 * @brief The optimization request has been triggered by a platform event?
+	 *
+	 * In case of events due to platform critical conditions (e.g., thermal threshold,
+	 * fast discharging rate, offlining of resources, degradation notifications,...)
+	 * the optimization must be executed independently from having active applications
+	 * or not. This because generally the policy can include power management actions
+	 * other than application scheduling.
+	 */
+	std::atomic<bool> plat_event;
 
 	// By default we use an event based activation of optimizations
 #define BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL 0

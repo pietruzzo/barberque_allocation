@@ -150,6 +150,8 @@ ResourceManager::ResourceManager() :
 
 	optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this)) {
 
+	plat_event = false;
+
 	//---------- Setup all the module metrics
 	mc.Register(metrics, RM_METRICS_COUNT);
 
@@ -304,7 +306,14 @@ void ResourceManager::Optimize() {
 	static bu::Timer optimization_tmr;
 	double period;
 
-	// Check if there is at least one application to synchronize
+	// If the optimization has been triggered by a platform event (BBQ_PLAT) the policy must be
+	// executed anyway. To the contrary, if it is an application event (BBQ_OPTS) check if
+	// there are actually active applications
+	if (!plat_event &&
+		!am.HasApplications(Application::READY) &&
+		!am.HasApplications(Application::RUNNING))
+		return;
+	plat_event = false;
 
 	ra.PrintStatusReport();
 	am.PrintStatusReport();
@@ -434,6 +443,7 @@ void ResourceManager::EvtExcStop() {
 void ResourceManager::EvtBbqPlat() {
 
 	logger->Info("BarbequeRTRM Optimization Request for Platform Event");
+	plat_event = true;
 
 	// Reset timer for START event execution time collection
 	RM_RESET_TIMING(rm_tmr);
@@ -673,12 +683,14 @@ void ResourceManager::ControlLoop() {
 			RM_COUNT_EVENT(metrics, RM_EVT_STOP);
 			RM_GET_PERIOD(metrics, RM_EVT_PERIOD_STOP, period);
 			break;
+		// Platform reconfiguration or warning conditions requiring a policy execution
 		case BBQ_PLAT:
 			logger->Debug("Event [BBQ_PLAT]");
 			EvtBbqPlat();
 			RM_COUNT_EVENT(metrics, RM_EVT_PLAT);
 			RM_GET_PERIOD(metrics, RM_EVT_PERIOD_PLAT, period);
 			break;
+		// Application-driven policy execution request
 		case BBQ_OPTS:
 			logger->Debug("Event [BBQ_OPTS]");
 			EvtBbqOpts();
