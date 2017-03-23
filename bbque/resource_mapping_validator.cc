@@ -37,6 +37,9 @@ ResourceMappingValidator::ResourceMappingValidator():
 
 void ResourceMappingValidator::
 		RegisterSkimmer(PartitionSkimmerPtr_t skimmer, int priority) noexcept {
+
+		std::lock_guard<std::mutex> curr_lock(skimmers_lock);
+
 		skimmers.insert(
 			std::pair<int,PartitionSkimmerPtr_t> (priority, skimmer) 
 		);
@@ -47,14 +50,16 @@ ResourceMappingValidator::ExitCode_t
 ResourceMappingValidator::LoadPartitions(const TaskGraph &tg, std::list<Partition> &partitions) {
 
 	logger->Notice("Initial partitions nr. %d", partitions.size());
+	PartitionSkimmer::SkimmerType_t skimmer_type = PartitionSkimmer::SkimmerType_t::SKT_NONE;
+
+	skimmers_lock.lock();
 
 	if ( skimmers.empty() ) {
 		logger->Warn("No skimmers registered, no action performed.");
+		skimmers_lock.unlock();
 		return PMV_OK;
 	}
 
-
-	PartitionSkimmer::SkimmerType_t skimmer_type = PartitionSkimmer::SkimmerType_t::SKT_NONE;
 	// I get the skimmers in the reverse order, in order to execute the one with highest
 	// priority
 	for (auto s = skimmers.rbegin(); s != skimmers.rend(); ++s) {
@@ -70,6 +75,7 @@ ResourceMappingValidator::LoadPartitions(const TaskGraph &tg, std::list<Partitio
 			logger->Error("Skimmer %d [priority=%d] FAILED [err=%d]", 
 				(int)skimmer_type, priority, ret);
 			this->failed_skimmer = skimmer_type;
+			skimmers_lock.unlock();
 			return PMV_SKIMMER_FAIL;
 		}
 
@@ -77,6 +83,9 @@ ResourceMappingValidator::LoadPartitions(const TaskGraph &tg, std::list<Partitio
 			break;
 		}
 	}
+
+	skimmers_lock.unlock();
+
 
 	if ( partitions.empty() ) {
 		logger->Notice("Skimmer %d: no feasible partitions", 
@@ -98,6 +107,8 @@ ResourceMappingValidator::PropagatePartition(const TaskGraph &tg,
 
 	// We have to ensure that no skimmer failed for any reasons before this call.
 	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
+
+	std::lock_guard<std::mutex> curr_lock(skimmers_lock);
 
 	// Just propagate the selected partition to all registered partition skimmer. They should
 	// not fail for any reason, since they have already skimmed the partitions.

@@ -21,6 +21,8 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
+
 
 #include "bbque/utils/logging/logger.h"
 #include "bbque/tg/task_graph.h"
@@ -40,7 +42,7 @@ class PartitionSkimmer {
 public:
 
 	typedef enum SkimmerType_t {
-		SKT_NONE,
+		SKT_NONE = 0,
 		SKT_MANGO_HN,
 		SKT_MANGO_MEMORY_MANAGER,
 		SKT_MANGO_POWER_MANAGER
@@ -54,11 +56,26 @@ public:
 
 	virtual ~PartitionSkimmer() { }
 
+	/**
+	 * @brief This abstract method should remove a subset of partitions (eventually all) from
+	 * 	  the list passed. The method can also eventually add partitions.
+	 */
 	virtual ExitCode_t Skim(const TaskGraph &tg, std::list<Partition>& partitions) noexcept = 0;
+
+	/**
+	 * @brief This abstract method is called when the policy finally decides which partition is
+	 *	  the best to be selected.
+	 */
 	virtual ExitCode_t SetPartition(const TaskGraph &tg, const Partition &partition) noexcept = 0;
 
+	/**
+	 * @brief The constructor that initializes the type of the skimmer.
+	 */
 	PartitionSkimmer(SkimmerType_t type) : type(type) {}
 
+	/**
+	 * @brief Return the type of the skimmer
+	 */
 	SkimmerType_t GetType() { return type; }
 
 private:
@@ -86,6 +103,9 @@ public:
 	} ExitCode_t;
 
 
+	/**
+	 * @brief Return the singleton instance
+	 */
 	static ResourceMappingValidator & GetInstance();
 
 
@@ -98,6 +118,10 @@ public:
 	ExitCode_t LoadPartitions(const TaskGraph &tg, std::list<Partition> &partitions);
 
 
+	/**
+	 * @brief Register a new skimmer with the given priority (high numbers mean high priority)
+	 * @note  Thread-safe
+	 */
 	void RegisterSkimmer(PartitionSkimmerPtr_t skimmer, int priority) noexcept;
 
 	/**
@@ -111,6 +135,11 @@ public:
 		return failed_skimmer;
 	}
 
+	/**
+	 * The policy should call this method when it finally decides the final selected partitions.
+	 * The partition is then propagated to all registered PartitionSkimmer with the SetPartition
+	 * method.
+	 */
 	ExitCode_t PropagatePartition(const TaskGraph &tg, const Partition &partition) const noexcept;
 
 private:
@@ -118,6 +147,7 @@ private:
 	/* ******* ATTRIBUTES ******* */
 	std::unique_ptr<bu::Logger> logger;
 
+	mutable std::mutex skimmers_lock;
 	std::multimap<int, PartitionSkimmerPtr_t> skimmers;
 
 	PartitionSkimmer::SkimmerType_t failed_skimmer;
