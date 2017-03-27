@@ -140,14 +140,10 @@ friend class bbque::ResourceAccounter;
 public:
 
 	enum ExitCode_t {
-		/** Generic success code */
-		RS_SUCCESS = 0,
-		/** Generic failure code */
-		RS_FAILED,
-		/** The resource is not used by any application */
-		RS_NO_APPS,
-		/** Required a power information not enabled */
-		RS_PWR_INFO_DISABLED
+		RS_SUCCESS = 0,       /** Generic success code */
+		RS_FAILED,            /** Generic failure code */
+		RS_NO_APPS,           /** Resource not used by any application */
+		RS_PWR_INFO_DISABLED  /** Required a power information not enabled */
 	};
 
 	enum ValueType {
@@ -296,18 +292,18 @@ public:
 	}
 
 	/**
-	 * @brief Get the Uid of the idx-th App/EXC using the resource
+	 * @brief Get the Uid of the n-th App/EXC using the resource
 	 *
 	 * @param app_uid The Uid of the n-th App/EXC using the resource
 	 * @param amount This is set to the amount of resource used by the App/EXC
-	 * @param idx The n-th App/EXC to find
+	 * @param nth The n-th App/EXC to find
 	 * @param view_id The token referencing the resource view
 	 * @return RS_SUCCESS if the App/EXC has been found, RS_NO_APPS otherwise
 	 */
 	ExitCode_t UsedBy(
 			AppUid_t & app_uid,
 			uint64_t & amount,
-			uint8_t idx = 0,
+			uint8_t nth = 0,
 			RViewToken_t view_id = 0);
 
 	/**
