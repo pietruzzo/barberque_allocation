@@ -297,6 +297,11 @@ private:
 	 */
 	virtual void Task();
 
+	void BuildLogString(
+			br::ResourcePtr_t rsrsc,
+			uint info_idx,
+			std::string & inst_values,
+			std::string & mean_values);
 
 	/**
 	 * @brief Log a data text line to file

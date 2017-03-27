@@ -363,14 +363,13 @@ void  PowerMonitor::SampleResourcesStatus(
 			auto const & r_path(wm_info.resources[i].path);
 			auto & rsrc(wm_info.resources[i].resource_ptr);
 
-			std::string log_insts("[" + rsrc->Path() + "] (I): ");
-			std::string log_means("[" + rsrc->Path() + "] (M): ");
-			std::string log_values;
+			std::string log_i("<" + rsrc->Path() + "> (I): ");
+			std::string log_m("<" + rsrc->Path() + "> (M): ");
+			std::string i_values, m_values;
 			uint info_idx   = 0;
 			uint info_count = 0;
 
-			logger->Debug("[T%d] monitoring <%s>",
-				thd_id, r_path->ToString().c_str());
+			logger->Debug("[T%d] monitoring <%s>", thd_id, r_path->ToString().c_str());
 
 			for (; info_idx < PowerManager::InfoTypeIndex.size() &&
 					info_count < rsrc->GetPowerInfoEnabledCount();
@@ -394,32 +393,44 @@ void  PowerMonitor::SampleResourcesStatus(
 				rsrc->UpdatePowerInfo(info_type, samples[info_idx]);
 
 				// Log messages
-				std::stringstream ss_i;
-				ss_i
-					<< std::setprecision(0)       << std::fixed
-					<< std::setw(str_w[info_idx]) << std::left
-					<< rsrc->GetPowerInfo(info_type, br::Resource::INSTANT);
-				log_insts += ss_i.str() + " ";
-				log_values += ss_i.str() + " ";
-
-				std::stringstream ss_m;
-				ss_m
-					<< std::setprecision(str_p[info_idx]) << std::fixed
-					<< std::setw(str_w[info_idx])         << std::left
-					<< rsrc->GetPowerInfo(info_type, br::Resource::MEAN);
-				log_means += ss_m.str() + " ";
+				BuildLogString(rsrc, info_idx, i_values, m_values);
 
 			}
 
-			logger->Debug("[T%d] sampling <%s> ", thd_id, log_insts.c_str());
-			logger->Debug("[T%d] sampling <%s> ", thd_id, log_means.c_str());
+			logger->Debug("[T%d] sampling <%s> ", thd_id, (log_i + i_values).c_str());
+			logger->Debug("[T%d] sampling <%s> ", thd_id, (log_m + m_values).c_str());
 			if (wm_info.log_enabled) {
-				DataLogWrite(r_path, log_values);
+				DataLogWrite(r_path, i_values);
 			}
 		}
+
 		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
 	}
 	logger->Notice("[T%d] terminating monitor thread", thd_id);
+}
+
+
+
+void PowerMonitor::BuildLogString(
+		br::ResourcePtr_t rsrc,
+		uint info_idx,
+		std::string & inst_values,
+		std::string & mean_values) {
+	auto info_type = PowerManager::InfoTypeIndex[info_idx];
+
+	std::stringstream ss_i;
+	ss_i
+		<< std::setprecision(0) << std::fixed
+		<< std::setw(str_w[info_idx]) << std::left
+		<< rsrc->GetPowerInfo(info_type, br::Resource::INSTANT);
+	inst_values  += ss_i.str() + " ";
+
+	std::stringstream ss_m;
+	ss_m
+		<< std::setprecision(str_p[info_idx]) << std::fixed
+		<< std::setw(str_w[info_idx]) << std::left
+		<< rsrc->GetPowerInfo(info_type, br::Resource::MEAN);
+	mean_values += ss_m.str() + " ";
 }
 
 /*******************************************************************
