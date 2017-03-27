@@ -37,7 +37,7 @@ namespace bbque {
 
 namespace res {
 	class ResourcePath;
-	typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
+	using ResourcePathPtr_t = std::shared_ptr<ResourcePath>;
 }
 namespace br = bbque::res;
 
@@ -46,25 +46,20 @@ class PowerManager: public CommandHandler {
 
 public:
 	enum class PMResult {
-		/** Successful call */
-		OK = 0,
-		/** A not specified error code */
-		ERR_UNKNOWN,
-		/** If something requires initialization and it is missing */
-		ERR_NOT_INITIALIZED,
-		/** Function not implemented in the current platform */
-		ERR_API_NOT_SUPPORTED,
-		/** Parameter with invalid value provided */
-		ERR_API_INVALID_VALUE,
-		/** Low level firmware version unsupported */
-		ERR_API_VERSION,
-		/** Information not provided for the resource specified */
-		ERR_INFO_NOT_SUPPORTED,
-		/** */
-		ERR_RSRC_INVALID_PATH,
-		/** Sensors error. e.g. cannot read a sensor*/
-		ERR_SENSORS_ERROR
+		OK = 0,                 /** Successful call */
+		ERR_UNKNOWN,            /** A not specified error code */
+		ERR_NOT_INITIALIZED,    /** Initialization not correctly performed */
+		ERR_API_NOT_SUPPORTED,  /** Function not implemented for the platform */
+		ERR_API_INVALID_VALUE,  /** Parameter with invalid value provided */
+		ERR_API_VERSION,        /** Low level firmware version unsupported */
+		ERR_INFO_NOT_SUPPORTED, /** Information not provided for the resource specified */
+		ERR_RSRC_INVALID_PATH,  /** Invalid resource path provided */
+		ERR_SENSORS_ERROR       /** Sensors error. e.g. cannot read a sensor*/
 	};
+
+// Default number of exponential mean average (EMA) samples for power profiling:
+// { LOAD, TEMPERATURE, FREQUENCY,... }
+#define BBQUE_PM_DEFAULT_SAMPLES_WINSIZE   {3,1,1,1}
 
 	/**
 	 * @enum Information classes that the module provides
@@ -85,7 +80,8 @@ public:
 	 * @brief Data structure to store the amount of samples specified for the
 	 * computation of mean value of the required (enabled) information
 	 */
-	typedef std::array<uint, int(InfoType::COUNT)> SamplesArray_t;
+	using  SamplesArray_t = std::array<uint, int(InfoType::COUNT)>;
+
 	/**
 	 * @brief Keep track of the integer indices associated to the information
 	 * types provided
@@ -93,9 +89,12 @@ public:
 	static std::array<InfoType, int(InfoType::COUNT)>   InfoTypeIndex;
 	static std::array<const char *, int(InfoType::COUNT)> InfoTypeStr;
 
+	/**
+	 * @enum FanSpeedType
+	 */
 	enum class FanSpeedType {
-		PERCENT = 0,
-		RPM
+		PERCENT = 0,   /** Percentage */
+		RPM            /** Round per minute */
 	};
 
 	static PowerManager & GetInstance();
@@ -254,8 +253,7 @@ private:
 	 *
 	 * @return 0 for success, a positive number otherwise
 	 */
-	int FanSpeedSetHandler(
-		br::ResourcePathPtr_t const & rp, uint8_t speed_perc);
+	int FanSpeedSetHandler(br::ResourcePathPtr_t const & rp, uint8_t speed_perc);
 };
 
 }

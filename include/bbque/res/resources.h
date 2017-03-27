@@ -35,10 +35,6 @@
 #include "bbque/utils/timer.h"
 #include "bbque/utils/stats.h"
 
-// Default number of samples for power profiling:
-// {LOAD,TEMPERATURE,FREQUENCY,...}
-// @see enum class InfoType
-#define BBQUE_PM_DEFAULT_SAMPLES_WINSIZE 	{3,1,1,1}
 
 using bbque::app::AppSPtr_t;
 using bbque::app::AppUid_t;
