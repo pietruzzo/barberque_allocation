@@ -48,6 +48,10 @@ namespace po = boost::program_options;
 namespace bbque {
 
 
+#define LOAD_CONFIG_OPTION(name, type, var, default) \
+	opts_desc.add_options() \
+		(MODULE_CONFIG "." name, po::value<type>(&var)->default_value(default), "");
+
 PowerMonitor & PowerMonitor::GetInstance() {
 	static PowerMonitor instance;
 	return instance;
@@ -73,44 +77,14 @@ PowerMonitor::PowerMonitor():
 
 	try {
 		po::options_description opts_desc("Power Monitor options");
-		opts_desc.add_options()
-			(MODULE_CONFIG ".period_ms",
-			 po::value<uint32_t>(&wm_info.period_ms)->default_value(WM_DEFAULT_PERIOD_MS),
-			 "The period [ms] power monitor sampling");
-
-		opts_desc.add_options()
-			(MODULE_CONFIG ".log.dir",
-			 po::value<std::string>(&wm_info.log_dir)->default_value("/tmp/"),
-			 "The output directory for the status data dump files");
-		opts_desc.add_options()
-			(MODULE_CONFIG ".log.enabled",
-			 po::value<bool>(&wm_info.log_enabled)->default_value(false),
-			 "Default status of the data logging");
-
-		opts_desc.add_options()
-			(MODULE_CONFIG ".temp.threshold",
-			 po::value<uint32_t>(&temp_crit)->default_value(0),
-			 "Critical temperature threshold");
-
-		opts_desc.add_options()
-			(MODULE_CONFIG ".power.threshold",
-			 po::value<uint32_t>(&power_cons)->default_value(0),
-			 "Critical power consumption threshold");
-
-		opts_desc.add_options()
-			(MODULE_CONFIG ".batt.threshold_level",
-			 po::value<uint32_t>(&batt_level)->default_value(0),
-			 "Critical battery level threshold");
-
-		opts_desc.add_options()
-			(MODULE_CONFIG ".batt.threshold_rate",
-			 po::value<uint32_t>(&batt_rate)->default_value(0),
-			 "Critical battery discharging rate");
-
-		opts_desc.add_options()
-			(MODULE_CONFIG ".nr_threads",
-			 po::value<uint16_t>(&nr_threads)->default_value(1),
-			 "Number of monitoring threads");
+		LOAD_CONFIG_OPTION("period_ms", uint32_t,  wm_info.period_ms, WM_DEFAULT_PERIOD_MS);
+		LOAD_CONFIG_OPTION("log.dir", std::string, wm_info.log_dir, "/tmp/");
+		LOAD_CONFIG_OPTION("log.enabled", bool,    wm_info.log_enabled, false);
+		LOAD_CONFIG_OPTION("temp.threshold", uint32_t, temp_crit, 0);
+		LOAD_CONFIG_OPTION("power.threshold", uint32_t, power_cons, 0);
+		LOAD_CONFIG_OPTION("batt.threshold_level", uint32_t, batt_level, 0);
+		LOAD_CONFIG_OPTION("batt.threshold_rate",  uint32_t, batt_rate,  0);
+		LOAD_CONFIG_OPTION("nr_threads", uint16_t, nr_threads, 1);
 
 		po::variables_map opts_vm;
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
