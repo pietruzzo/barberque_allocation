@@ -13,7 +13,7 @@
 				</awm>
 			</awms>
 			<tasks>
-				<task name="stage1" id="0" throughput="2" inbw_kbps="2000" outbw_kbps="2500" hw_prefs="peak,gn,nup"/>
+				<task name="stage1" id="0" throughput_cps="2" inbw_kbps="2000" outbw_kbps="2500" hw_prefs="peak,gn,nup"/>
 				<task name="stage2" id="1" ctime_ms="500" hw_prefs="gn"/>
 			</tasks>
 		</platform>

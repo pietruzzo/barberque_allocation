@@ -437,7 +437,7 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<>  *_xml_elem) {
 			logger->Debug("LoadTasksRequirements: task id=%s", read_attrib.c_str());
 			uint32_t id = atoi(read_attrib.c_str());
 
-			read_attrib = loadAttribute("throughput", false, task_elem);
+			read_attrib = loadAttribute("throughput_cps", false, task_elem);
 			logger->Debug("LoadTasksRequirements: throughput=%s", read_attrib.c_str());
 			float tp = atof(read_attrib.c_str());
 
@@ -445,11 +445,11 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<>  *_xml_elem) {
 			logger->Debug("LoadTasksRequirements: ctime=%s", read_attrib.c_str());
 			uint32_t ct = atoi(read_attrib.c_str());
 
-			read_attrib = loadAttribute("in_bandwidth", false, task_elem);
+			read_attrib = loadAttribute("inbw_kbps", false, task_elem);
 			logger->Debug("LoadTasksRequirements: inbw_kbps=%s", read_attrib.c_str());
 			uint32_t inb = atoi(read_attrib.c_str());
 
-			read_attrib = loadAttribute("out_bandwidth", false, task_elem);
+			read_attrib = loadAttribute("outbw_kbps", false, task_elem);
 			logger->Debug("LoadTasksRequirements: outbw_kbps=%s", read_attrib.c_str());
 			uint32_t outb = atoi(read_attrib.c_str());
 
