@@ -31,7 +31,8 @@ public:
 
 	enum ExitCode_t {
 		OK,
-		ERR_FILE_NOT_FOUND
+		ERR_FILE_NOT_FOUND,
+		ERR_ACCESS
 	};
 
 	/**
@@ -43,18 +44,24 @@ public:
 	 */
 	static ExitCode_t ReadValueFrom(
 			std::string const & filepath, char * value, int len = 1) {
-		memset(value, '\0', len);
-		std::ifstream fd(filepath);
-		if (!fd.is_open()) {
-			fprintf(stderr, "File not found (%s)\n\n ", filepath.c_str());
-			return ExitCode_t::ERR_FILE_NOT_FOUND;
+		try {
+			memset(value, '\0', len);
+			std::ifstream fd(filepath);
+			if (!fd.is_open()) {
+				fprintf(stderr, "File not found (%s)\n\n ", filepath.c_str());
+				return ExitCode_t::ERR_FILE_NOT_FOUND;
+			}
+			fd.read(value, len);
+			fd.close();
+
+			*std::remove(value, value+strlen(value), '\n') = '\0';
+
+			return ExitCode_t::OK;
 		}
-		fd.read(value, len);
-		fd.close();
-
-		*std::remove(value, value+strlen(value), '\n') = '\0';
-
-		return ExitCode_t::OK;
+		catch(std::exception & ex) {
+			fprintf(stderr, " (%s)\n\n ", ex.what());
+			return ExitCode_t::ERR_ACCESS;
+		}
 	}
 
 	/**
@@ -63,22 +70,26 @@ public:
 	 * @param path The attribute file path
 	 * @param value The string object to set to the value
 	 */
-	static ExitCode_t ReadValueFrom(
-			std::string const & filepath, std::string & value) {
-
-		std::ifstream fd(filepath);
-		if (!fd.is_open()) {
-			fprintf(stderr, "File not found (%s)\n\n ", filepath.c_str());
-			return ExitCode_t::ERR_FILE_NOT_FOUND;
+	static ExitCode_t ReadValueFrom(std::string const & filepath, std::string & value) {
+		try {
+			std::ifstream fd(filepath);
+			if (!fd.is_open()) {
+				fprintf(stderr, "File not found (%s)\n\n ", filepath.c_str());
+				return ExitCode_t::ERR_FILE_NOT_FOUND;
+			}
+			while (!fd.eof()) {
+				std::string substr;
+				fd >> substr;
+				value += substr;
+				value += " ";
+			}
+			fd.close();
+			return ExitCode_t::OK;
 		}
-		while (!fd.eof()) {
-			std::string substr;
-			fd >> substr;
-			value += substr;
-			value += " ";
+		catch(std::exception & ex) {
+			fprintf(stderr, " (%s)\n\n ", ex.what());
+			return ExitCode_t::ERR_ACCESS;
 		}
-		fd.close();
-		return ExitCode_t::OK;
 	}
 
 	static ExitCode_t ReadValueFromWithOffset(
