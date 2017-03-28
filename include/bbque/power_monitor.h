@@ -273,8 +273,8 @@ private:
 
 
 	/** Function pointer to PowerManager member functions */
-	typedef PowerManager::PMResult (PowerManager::*PMfunc)
-		(br::ResourcePathPtr_t const &, uint32_t &);
+	using PMfunc = std::function<
+		PowerManager::PMResult(PowerManager&, br::ResourcePathPtr_t const &, uint32_t &)>;
 
 	/**
 	 * @brief Array of Power Manager member functions

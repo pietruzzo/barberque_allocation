@@ -393,7 +393,7 @@ void  PowerMonitor::SampleResourcesStatus(
 						thd_id, PowerManager::InfoTypeStr[info_idx]);
 					continue;
 				}
-				(pm.*(PMfunc) PowerMonitorGet[info_idx])(r_path, samples[info_idx]);
+				PowerMonitorGet[info_idx](pm, r_path, samples[info_idx]);
 				rsrc->UpdatePowerInfo(info_type, samples[info_idx]);
 
 				// Log messages
