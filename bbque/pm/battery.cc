@@ -76,7 +76,7 @@ Battery::Battery(
 	else if (boost::filesystem::exists(info_dir + BBQUE_BATTERY_IF_ENERGY_FULL))
 		charge_full_file = info_dir + BBQUE_BATTERY_IF_ENERGY_FULL;
 	else
-		logger->Error("Batter: missing input for charge full status");
+		logger->Error("Battery: missing input for charge full status");
 	logger->Debug("Battery: reading from %s", charge_full_file.c_str());
 
 	char cf_str[20];
@@ -134,13 +134,13 @@ inline uint32_t Battery::GetMilliUInt32From(std::string const & path) {
 	uint32_t m_value;
 
 	if (!boost::filesystem::exists(path)) {
-		logger->Error("Missing file: %s", path.c_str());
+		logger->Error("Get: missing file <%s>", path.c_str());
 		return 0;
 	}
 
 	result = bu::IoFs::ReadIntValueFrom<uint32_t>(path, m_value);
 	if (result != bu::IoFs::OK) {
-		logger->Error("Failed in reading %s", path.c_str());
+		logger->Error("Get: failed in reading <%s>", path.c_str());
 		return 0;
 	}
 	return m_value / 1e3;
@@ -153,13 +153,13 @@ uint8_t Battery::GetChargePerc() {
 	bu::IoFs::ReadValueFrom(info_dir + BBQUE_BATTERY_IF_CHARGE_PERC,
 			perc_str, sizeof(perc_str)-1);
 	if (!isdigit(perc_str[0])) {
-		logger->Error("Not valid charge value");
+		logger->Error("GetChargePerc: not valid charge value");
 		return 0;
 	}
 
 	perc = std::stoi(perc_str);
 	if (perc > 100) {
-		logger->Error("Charge value > 100 %%");
+		logger->Error("GetChargePerc: charge value > 100 %%");
 		return 0;
 	}
 	return perc;
@@ -170,7 +170,7 @@ unsigned long Battery::GetChargeMAh() {
 
 	bu::IoFs::ReadValueFrom(charge_mah_file, mah, sizeof(mah)-1);
 	if (!isdigit(mah[0])) {
-		logger->Error("Not valid charge value");
+		logger->Error("GetChargeMAh: not valid charge value");
 		return 0;
 	}
 	return std::stol(mah) / 1000;
