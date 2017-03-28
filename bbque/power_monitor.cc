@@ -147,9 +147,9 @@ PowerMonitor::PowerMonitor():
 	logger->Info("| Battery discharge rate | %5d %%/h  | %6.0f%% | %9s |",
 		triggers[PowerManager::InfoType::CURRENT].threshold,
 		triggers[PowerManager::InfoType::CURRENT].margin * 100, batt_trig.c_str());
-	logger->Info("| Battery charge level   | %5d %%/100    | %6s | %9s",
-		triggers[PowerManager::InfoType::ENERGY].threshold, "-");
-	logger->Info("============================================================");
+	logger->Info("| Battery charge level   | %5d %c/100|  %6s | %9s |",
+		triggers[PowerManager::InfoType::ENERGY].threshold, '%', "-", batt_trig.c_str());
+	logger->Info("=============================================================");
 
 	// Staus of the optimization policy execution request
 	opt_request_sent = false;
@@ -218,10 +218,8 @@ void PowerMonitor::Task() {
 	}
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
-#ifdef BBQUE_DEBUG
 	samplers.push_back(std::thread(&PowerMonitor::SampleBatteryStatus, this));
-#endif // BBQUE_DEBUG
-#endif // CONFIG_BBQUE_PM_BATTERY
+#endif
 	while(!done)
 		Wait();
 	std::for_each(samplers.begin(), samplers.end(), std::mem_fn(&std::thread::join));
@@ -328,12 +326,13 @@ void PowerMonitor::Stop() {
 #ifdef CONFIG_BBQUE_PM_BATTERY
 
 void PowerMonitor::SampleBatteryStatus() {
-	if (pbatt == nullptr) return;
-	while (!done) {
+	while (pbatt && !done) {
 		if (events.none())
 			Wait();
-		if (events.test(WM_EVENT_UPDATE))
+		if (events.test(WM_EVENT_UPDATE)) {
 			logger->Debug("[Tbatt] Battery power = %d mW", pbatt->GetPower());
+			ExecuteTriggerForBattery();
+		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
 	}
 }

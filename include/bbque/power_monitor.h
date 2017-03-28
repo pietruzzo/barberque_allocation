@@ -247,6 +247,12 @@ private:
 	std::atomic<bool> opt_request_sent;
 
 	/**
+	 * @brief Track it an optimization request is due to the battery charge level
+	 */
+	bool opt_request_for_battery = false;
+
+
+	/**
 	 * @struct Data to manage the triggers execution
 	 */
 	struct TriggerInfo_t {
@@ -397,19 +403,44 @@ private:
 			UPDATE_REQUEST_STATUS(
 				info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN), t);
 	}
+
+#ifdef CONFIG_BBQUE_PM_BATTERY
+
+	/**
+	 * @brief Trigger execution for the battery status.
+	 * Theo optimization is required in case of battery level under
+	 */
+	inline void ExecuteTriggerForBattery() {
+		if (opt_request_sent)
 			return;
 
-		opt_request_sent = t.obj->Check(
-			t.threshold, rsrc->GetPowerInfo(info_type, br::Resource::MEAN), t.margin);
+		// Battery level check
+		auto & t_energy = triggers[PowerManager::InfoType::ENERGY];
+		bool to_require = !(t_energy.obj->Check(
+				t_energy.threshold,  static_cast<float>(pbatt->GetChargePerc()),
+				t_energy.margin));
 
-		if (opt_request_sent) {
-			logger->Info("Trigger: <InfoType: %d> current = %.0f, threshold = %d [%0.f%%]",
-				info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN),
-				t.threshold, t.margin * 100);
-			optimize_dfr.Schedule(milliseconds(WM_OPT_REQ_TIME_FACTOR * wm_info.period_ms));
-			opt_request_sent = true;
+		// Do not require other policy execution (due battery level) until the charge is not
+		// above the threshold value again
+		if (opt_request_for_battery)
+			opt_request_for_battery = to_require;
+		if (t_energy.obj != nullptr && !opt_request_for_battery && pbatt->IsDischarging()) {
+			opt_request_sent = to_require;
+			CHECK_REQUEST_STATUS(
+				PowerManager::InfoType::ENERGY, pbatt->GetChargePerc(), t_energy);
+			opt_request_for_battery = opt_request_sent;
+			return;
+		}
+
+		// Discharging rate check
+		auto & t_current = triggers[PowerManager::InfoType::CURRENT];
+		if (t_current.obj != nullptr) {
+			UPDATE_REQUEST_STATUS(
+				PowerManager::InfoType::CURRENT, pbatt->GetDischargingRate(), t_current);
+			return;
 		}
 	}
+#endif
 
 
 	/**
@@ -418,8 +449,9 @@ private:
 	inline void OptimizationRequest() {
 		ResourceManager & rm(ResourceManager::GetInstance());
 		rm.NotifyEvent(ResourceManager::BBQ_PLAT);
+		logger->Info("Trigger: optimization request sent [generic: %d, battery: %d]",
+			opt_request_sent.load(), opt_request_for_battery);
 		opt_request_sent = false;
-		logger->Info("Trigger: optimization request sent");
 	}
 };
 
