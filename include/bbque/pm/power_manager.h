@@ -73,7 +73,8 @@ public:
 		VOLTAGE     = 5,
 		PERF_STATE  = 6,
 		POWER_STATE = 7,
-		COUNT       = 8
+		ENERGY      = 8,
+		COUNT       = 9
 	};
 
 	/**
