@@ -25,6 +25,8 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/utility.h"
+#include "bbque/trig/trigger_manager.h"
+
 
 #define MODULE_CONFIG "PowerMonitor"
 #define MODULE_NAMESPACE POWER_MONITOR_NAMESPACE
@@ -74,16 +76,24 @@ PowerMonitor::PowerMonitor():
 	Init();
 
 	uint32_t temp_crit = 0, power_cons = 0, batt_level = 0, batt_rate = 0;
+	float  temp_margin = 0.05, power_margin = 0.05, batt_rate_margin = 0.05;
+	std::string temp_trig, power_trig, batt_trig;
 
 	try {
 		po::options_description opts_desc("Power Monitor options");
 		LOAD_CONFIG_OPTION("period_ms", uint32_t,  wm_info.period_ms, WM_DEFAULT_PERIOD_MS);
 		LOAD_CONFIG_OPTION("log.dir", std::string, wm_info.log_dir, "/tmp/");
 		LOAD_CONFIG_OPTION("log.enabled", bool,    wm_info.log_enabled, false);
+		LOAD_CONFIG_OPTION("temp.trigger", std::string, temp_trig, "");
 		LOAD_CONFIG_OPTION("temp.threshold", uint32_t, temp_crit, 0);
+		LOAD_CONFIG_OPTION("temp.margin", float, temp_margin, 0.05);
+		LOAD_CONFIG_OPTION("power.trigger", std::string, power_trig, "");
 		LOAD_CONFIG_OPTION("power.threshold", uint32_t, power_cons, 0);
+		LOAD_CONFIG_OPTION("power.margin", float, power_margin, 0.05);
+		LOAD_CONFIG_OPTION("batt.trigger", std::string, batt_trig, "");
 		LOAD_CONFIG_OPTION("batt.threshold_level", uint32_t, batt_level, 0);
 		LOAD_CONFIG_OPTION("batt.threshold_rate",  uint32_t, batt_rate,  0);
+		LOAD_CONFIG_OPTION("batt.margin_rate", float, batt_rate_margin, 0.05);
 		LOAD_CONFIG_OPTION("nr_threads", uint16_t, nr_threads, 1);
 
 		po::variables_map opts_vm;
@@ -110,18 +120,39 @@ PowerMonitor::PowerMonitor():
 		logger->Info("Battery available: %s", pbatt->StrId().c_str());
 #endif // CONFIG_BBQUE_PM_BATTERY
 
-	thresholds[ThresholdType::TEMP]       = temp_crit;
-	thresholds[ThresholdType::POWER]      = power_cons;
-	thresholds[ThresholdType::BATT_RATE]  = batt_rate;
-	thresholds[ThresholdType::BATT_LEVEL] = batt_level;
-	logger->Info("========================================");
-	logger->Info("| THRESHOLDS                           |");
-	logger->Info("+--------------------------------------+");
-	logger->Info("| Temperature            : %5d C     |",  thresholds[ThresholdType::TEMP]);
-	logger->Info("| Power consumption      : %5d mW    |",  thresholds[ThresholdType::POWER] );
-	logger->Info("| Battery discharge rate : %5d %%/h   |", thresholds[ThresholdType::BATT_RATE] );
-	logger->Info("| Battery charge level   : %5d %%/100 |", thresholds[ThresholdType::BATT_LEVEL] );
-	logger->Info("========================================");
+	bbque::trig::TriggerManager & tgm(bbque::trig::TriggerManager::GetInstance());
+	// Temperature scheduling policy trigger setting
+	triggers[PowerManager::InfoType::TEMPERATURE].threshold = temp_crit * 1000;
+	triggers[PowerManager::InfoType::TEMPERATURE].margin    = temp_margin;
+	triggers[PowerManager::InfoType::TEMPERATURE].obj       = tgm.Register(temp_trig);
+	// Power consumption scheduling policy trigger setting
+	triggers[PowerManager::InfoType::POWER].threshold = power_cons;
+	triggers[PowerManager::InfoType::POWER].margin    = power_margin;
+	triggers[PowerManager::InfoType::POWER].obj       = tgm.Register(power_trig);;
+	// Battery status scheduling policy trigger setting
+	triggers[PowerManager::InfoType::CURRENT].threshold = batt_rate;
+	triggers[PowerManager::InfoType::CURRENT].margin    = batt_rate_margin;
+	triggers[PowerManager::InfoType::ENERGY].threshold  = batt_level;
+	triggers[PowerManager::InfoType::ENERGY].obj        = tgm.Register(batt_trig);
+
+	logger->Info("=============================================================");
+	logger->Info("| THRESHOLDS             | VALUE      | MARGIN  | TRIGGER   |");
+	logger->Info("+------------------------+------------+---------+-----------+");
+	logger->Info("| Temperature            | %5d C    | %6.0f%%  | %9s |",
+		triggers[PowerManager::InfoType::TEMPERATURE].threshold /1000,
+		triggers[PowerManager::InfoType::TEMPERATURE].margin * 100, temp_trig.c_str());
+	logger->Info("| Power consumption      | %5d mW   | %6.0f%%  | %9s |",
+		triggers[PowerManager::InfoType::POWER].threshold,
+		triggers[PowerManager::InfoType::POWER].margin * 100, power_trig.c_str());
+	logger->Info("| Battery discharge rate | %5d %%/h  | %6.0f%% | %9s |",
+		triggers[PowerManager::InfoType::CURRENT].threshold,
+		triggers[PowerManager::InfoType::CURRENT].margin * 100, batt_trig.c_str());
+	logger->Info("| Battery charge level   | %5d %%/100    | %6s | %9s",
+		triggers[PowerManager::InfoType::ENERGY].threshold, "-");
+	logger->Info("============================================================");
+
+	// Staus of the optimization policy execution request
+	opt_request_sent = false;
 
 	//---------- Setup Worker
 	Worker::Setup(BBQUE_MODULE_NAME("wm"), POWER_MONITOR_NAMESPACE);
@@ -369,6 +400,10 @@ void  PowerMonitor::SampleResourcesStatus(
 				// Log messages
 				BuildLogString(rsrc, info_idx, i_values, m_values);
 
+				// Policy execution trigger (ENERGY is for the battery monitor thread)
+				if (opt_request_sent || info_type == PowerManager::InfoType::ENERGY)
+					continue;
+				ExecuteTrigger(rsrc, info_type);
 			}
 
 			logger->Debug("[T%d] sampling <%s> ", thd_id, (log_i + i_values).c_str());

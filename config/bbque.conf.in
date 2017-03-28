@@ -48,10 +48,17 @@ log.dir       = /tmp
 period_ms     = 1000
 # number of monitoring threads to spawn
 nr_threads    = 2
+# trigger types: threshold, ...
 temp.threshold  = 80
+temp.trigger   = threshold
+#temp.margin    = 0.05
 #power.threshold = 16000
-#batt.threshold_rate  =
-batt.threshold_level = 15
+#power.trigger   = threshold
+#power.margin    = 0.05
+#batt.threshold_rate  = 16000
+#batt.margin_rate     = 0.05
+#batt.threshold_level = 15
+#batt.trigger   = threshold
 
 [PowerManager]
 nr_sockets   = 1

@@ -32,10 +32,12 @@
 #include "bbque/utils/deferrable.h"
 #include "bbque/utils/worker.h"
 #include "bbque/utils/logging/logger.h"
+#include "bbque/trig/trigger.h"
 
 #define POWER_MONITOR_NAMESPACE "bq.wm"
 
-#define WM_DEFAULT_PERIOD_MS 1000
+#define WM_DEFAULT_PERIOD_MS    1000
+#define WM_OPT_REQ_TIME_FACTOR     4
 
 #define WM_EVENT_UPDATE      0
 #define WM_EVENT_COUNT       1
@@ -63,16 +65,6 @@ public:
 		ERR_RSRC_MISSING, /** Not valid resource specified */
 		ERR_UNKNOWN       /** A not specified error code   */
 	};
-
-	/**
-	 * @enum ThresholdType
-	 */
-	enum class ThresholdType {
-		TEMP,            /** Critical temperature */
-		POWER,           /** Power consumption upper bound */
-		BATT_RATE,       /** Battery critical discharging rate */
-		BATT_LEVEL,      /** Battery critical level */
-	} ThresholdType_t;
 
 
 	/** Power Monitor instance */
@@ -127,7 +119,9 @@ public:
 	 *
 	 * @return The temperature in Celsius degree
 	 */
-	inline uint32_t GetThermalThreshold() const { return GetThreshold(ThresholdType::TEMP); }
+	inline uint32_t GetThermalThreshold() const {
+		return GetThreshold(PowerManager::InfoType::TEMPERATURE);
+	}
 
 	/**
 	 * @brief Get the current theshold
@@ -137,10 +131,10 @@ public:
 	 * For BATTERY_LEVEL the charge level under which a policy execution could be triggered.
 	 * For BATTERY_RATE the maximum discahrging rate tolerated.
 	 */
-	inline uint32_t GetThreshold(ThresholdType t) const {
-		auto v = thresholds.find(t);
-		if (unlikely(v == thresholds.end())) return 0;
-		return v->second;
+	inline uint32_t GetThreshold(PowerManager::InfoType t) const {
+		auto v = triggers.find(t);
+		if (unlikely(v == triggers.end())) return 0;
+		return v->second.threshold;
 	}
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
@@ -246,10 +240,25 @@ private:
 	 */
 	uint16_t nr_threads = 1;
 
+
+	/**
+	 * @brief Keep track of sending status of an optimization request
+	 */
+	std::atomic<bool> opt_request_sent;
+
+	/**
+	 * @struct Data to manage the triggers execution
+	 */
+	struct TriggerInfo_t {
+		std::shared_ptr<bbque::trig::Trigger> obj;   /** Trigger object to call */
+		uint32_t threshold = 0;                      /** Threshold value */
+		float margin       = 0.1;                    /** Margin [0..1) */
+	};
+
 	/**
 	 * @brief Threshold values for triggering an optimization request
 	 */
-	std::map<ThresholdType, uint32_t> thresholds;
+	std::map<PowerManager::InfoType, TriggerInfo_t> triggers;
 
 	/**
 	 * @brief Deferrable for coalescing multiple optimization requests
@@ -365,13 +374,52 @@ private:
 	}
 #endif // CONFIG_BBQUE_PM_BATTERY
 
+
+#define UPDATE_REQUEST_STATUS(info_type, curr, trigger) \
+	opt_request_sent = trigger.obj->Check(trigger.threshold, curr, trigger.margin); \
+	CHECK_REQUEST_STATUS(info_type, curr, trigger)
+
+
+#define CHECK_REQUEST_STATUS(info_type, curr, trigger) \
+	if (opt_request_sent) { \
+		logger->Info("Trigger: <InfoType: %d> current = %d, threshold = %d [m=%0.f]", \
+				info_type, curr, trigger.threshold, trigger.margin); \
+		optimize_dfr.Schedule(milliseconds(WM_OPT_REQ_TIME_FACTOR * wm_info.period_ms)); \
+	}
+
+	/**
+	 * @brief Trigger execution: check if the current monitored value worth an
+	 * optimization policy execution request
+	 */
+	inline void ExecuteTrigger(br::ResourcePtr_t rsrc, PowerManager::InfoType info_type) {
+		auto & t = triggers[info_type];
+		if (t.obj != nullptr)
+			UPDATE_REQUEST_STATUS(
+				info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN), t);
+	}
+			return;
+
+		opt_request_sent = t.obj->Check(
+			t.threshold, rsrc->GetPowerInfo(info_type, br::Resource::MEAN), t.margin);
+
+		if (opt_request_sent) {
+			logger->Info("Trigger: <InfoType: %d> current = %.0f, threshold = %d [%0.f%%]",
+				info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN),
+				t.threshold, t.margin * 100);
+			optimize_dfr.Schedule(milliseconds(WM_OPT_REQ_TIME_FACTOR * wm_info.period_ms));
+			opt_request_sent = true;
+		}
+	}
+
+
 	/**
 	 * @brief Send an optimization request to execute the resource allocation policy
 	 */
-	inline void OptimizationRequest() const {
+	inline void OptimizationRequest() {
 		ResourceManager & rm(ResourceManager::GetInstance());
-		logger->Debug("Sending optimization request...");
 		rm.NotifyEvent(ResourceManager::BBQ_PLAT);
+		opt_request_sent = false;
+		logger->Info("Trigger: optimization request sent");
 	}
 };
 
