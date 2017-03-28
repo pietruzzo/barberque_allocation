@@ -206,6 +206,7 @@ private:
 	/*** Configuration manager instance */
 	ConfigurationManager & cfm;
 
+
 	/**
 	 * @brief The logger used by the power manager.
 	 */
@@ -228,13 +229,13 @@ private:
 	 * monitoring activity
 	 */
 	struct PowerMonitorInfo_t {
-		/*--------- Descriptors ------------------*/
+		// Resource handlers
 		std::vector<ResourceHandler> resources;   /** Resources to monitor */
-		/*--------- Data logging -----------------*/
+		// Data logging
 		std::map<br::ResourcePathPtr_t, std::ofstream *> log_fp; /** Output file descriptors  */
 		std::string log_dir;       /** Output file directory    */
 		bool log_enabled = false;  /** Enable / disable         */
-		/*--------- Monitoring status -------------*/
+		// Monitoring status
 		bool started = false;      /** Monitoring start/stop            */
 		uint32_t period_ms;        /** Monitoring period (milliseconds) */
 	} wm_info;
@@ -285,8 +286,7 @@ private:
 	 * @param first_resource_index First resource to monitor (from reg. index)
 	 * @param last_resource_index Last resource to monitor (from reg. array)
 	 */
-	void SampleResourcesStatus(
-		uint16_t first_resource_index, uint16_t last_resource_index);
+	void SampleResourcesStatus(uint16_t first_resource_index, uint16_t last_resource_index);
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
 	void SampleBatteryStatus();
