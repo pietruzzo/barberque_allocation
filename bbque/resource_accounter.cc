@@ -74,16 +74,16 @@ ResourceAccounter::ResourceAccounter() :
 	assert(logger);
 
 	// Init the system resources state view
-	sys_assign_view = AppAssignmentsMapPtr_t(new AppAssignmentsMap_t);
+	sys_assign_view = std::make_shared<AppAssignmentsMap_t>();
 	sys_view_token  = 0;
 	assign_per_views[sys_view_token] = sys_assign_view;
-	rsrc_per_views[sys_view_token]   = ResourceSetPtr_t(new ResourceSet_t);
+	rsrc_per_views[sys_view_token]   = std::make_shared<ResourceSet_t>();
 
 	// Init sync session info
 	sync_ssn.count = 0;
 
 	// Init prefix path object
-	r_prefix_path = br::ResourcePathPtr_t(new br::ResourcePath(PREFIX_PATH));
+	r_prefix_path = std::make_shared<br::ResourcePath>(PREFIX_PATH);
 
 	// Register set quota command
 #define CMD_SET_TOTAL "set_total"
@@ -96,7 +96,6 @@ ResourceAccounter::ResourceAccounter() :
 		static_cast<CommandHandler*>(this),
 		"Performance degradation affecting the resource [percentage]");
 }
-
 
 
 void ResourceAccounter::SetPlatformReady() {
@@ -127,17 +126,18 @@ void ResourceAccounter::WaitForPlatformReady() {
 }
 
 inline void ResourceAccounter::SetReady() {
-	status_mtx.lock();
+	std::unique_lock<std::mutex> status_ul(status_mtx);
 	status = State::READY;
-	status_mtx.unlock();
 	status_cv.notify_all();
 }
 
 
 ResourceAccounter::~ResourceAccounter() {
 	resources.clear();
+	resource_set.clear();
 	assign_per_views.clear();
 	rsrc_per_views.clear();
+	r_ids_per_type.clear();
 }
 
 /************************************************************************
@@ -317,11 +317,11 @@ bool ResourceAccounter::ExistResource(ResourcePathPtr_t resource_path_ptr) const
 ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath) {
 	auto rp_it = r_paths.find(strpath);
 	if (rp_it == r_paths.end()) {
-		logger->Warn("GetPath: No resource path object for <%s>", strpath.c_str());
+		logger->Debug("GetPath: No resource path object for <%s>", strpath.c_str());
 		auto new_path = std::make_shared<br::ResourcePath>(strpath);
 		if (ExistResource(new_path)) {
 			r_paths.emplace(strpath, new_path);
-			logger->Info("GetPath: resource path object for <%s> added", strpath.c_str());
+			logger->Debug("GetPath: resource path object for <%s> added", strpath.c_str());
 			return new_path;
 		}
 		else
@@ -619,7 +619,7 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 		uint64_t amount) {
 
 	// Build a resource path object (from the string)
-	ResourcePathPtr_t resource_path_ptr = std::make_shared<br::ResourcePath>(strpath);
+	auto resource_path_ptr = std::make_shared<br::ResourcePath>(strpath);
 	if (!resource_path_ptr) {
 		logger->Fatal("Register R<%s>: Invalid resource path",
 				strpath.c_str());
@@ -627,7 +627,7 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 	}
 
 	// Insert a new resource in the tree
-	br::ResourcePtr_t resource_ptr(resources.insert(*(resource_path_ptr.get())));
+	auto resource_ptr(resources.insert(*(resource_path_ptr.get())));
 	if (!resource_ptr) {
 		logger->Crit("Register R<%s>: "
 				"Unable to allocate a new resource descriptor",
@@ -636,7 +636,7 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 	}
 	resource_ptr->SetTotal(br::ConvertValue(amount, units));
 	resource_ptr->SetPath(strpath);
-	logger->Debug("Register R<%s>: Total = %llu %s",
+	logger->Debug("Register R<%s>: total = %llu %s",
 			strpath.c_str(), resource_ptr->Total(), units.c_str());
 
 	// Insert the path in the paths set
@@ -666,7 +666,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	std::unique_lock<std::mutex> status_ul(status_mtx, std::defer_lock);
 
 	// Lookup for the resource to be updated
-	br::ResourcePathPtr_t resource_path_ptr(GetPath(_path));
+	auto resource_path_ptr(GetPath(_path));
 	if (resource_path_ptr == nullptr) {
 		logger->Fatal("Updating resource FAILED "
 			"(Error: path [%s] does not reference a specific resource",
@@ -675,7 +675,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	}
 
 	// Get the path of the resource to update
-	br::ResourcePtr_t resource_ptr(GetResource(resource_path_ptr));
+	auto resource_ptr(GetResource(resource_path_ptr));
 	if (resource_ptr == nullptr) {
 		logger->Fatal("Updating resource FAILED "
 			"(Error: resource [%s] not found",
@@ -722,8 +722,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 		ResourcePathPtr_t resource_path_ptr,
 		uint64_t amount) {
 	br::Resource::ExitCode_t rresult;
-	br::ResourcePtrList_t const & resources_list(
-		resources.find_list(*resource_path_ptr, RT_MATCH_MIXED));
+	auto const & resources_list(resources.find_list(*resource_path_ptr, RT_MATCH_MIXED));
 	logger->Info("Reserving [%" PRIu64 "] for [%s] resources...",
 			amount, resource_path_ptr->ToString().c_str());
 
@@ -734,7 +733,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 		return RA_FAILED;
 	}
 
-	for (br::ResourcePtr_t r: resources_list) {
+	for (auto & r: resources_list) {
 		rresult = r->Reserve(amount);
 		if (rresult != br::Resource::RS_SUCCESS) {
 			logger->Warn("Reservation: Exceeding value [%" PRIu64 "] for [%s]",
@@ -749,7 +748,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 		std::string const & path,
 		uint64_t amount) {
-	br::ResourcePathPtr_t resource_path_ptr(GetPath(path));
+	auto resource_path_ptr(GetPath(path));
 	logger->Info("Reserve: built %d from %s", resource_path_ptr.get(), path.c_str());
 
 	if (resource_path_ptr == nullptr) {
@@ -850,7 +849,6 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_GetView(
 
 	// Allocate a new view for the applications resource assignments
 	assign_per_views.emplace(token, std::make_shared<AppAssignmentsMap_t>());
-
 	//Allocate a new view for the set of resources allocated
 	rsrc_per_views.emplace(token, std::make_shared<ResourceSet_t>());
 
@@ -925,15 +923,14 @@ br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t status_view) {
 
 	// Save the old view token, update the system state view token and the map
 	// of Apps/EXCs resource assignments
-	old_sys_status_view    = sys_view_token;
-	sys_view_token  = status_view;
-	sys_assign_view = assign_view_it->second;
+	old_sys_status_view = sys_view_token;
+	sys_view_token      = status_view;
+	sys_assign_view     = assign_view_it->second;
 
 	// Put the old view
 	_PutView(old_sys_status_view);
 
-	logger->Info("SetView: View %ld is the new system state view.",
-			sys_view_token);
+	logger->Info("SetView: View %ld is the new system state view.", sys_view_token);
 	logger->Debug("SetView: %ld resource set and %d assign_map per view currently managed",
 			rsrc_per_views.size(), assign_per_views.erase(status_view));
 	return sys_view_token;
@@ -1164,7 +1161,6 @@ void ResourceAccounter::ReleaseResources(
 		ba::AppSPtr_t papp,
 		br::RViewToken_t status_view) {
 	std::unique_lock<std::mutex> sync_ul(status_mtx);
-	// Sanity check
 	if (!papp) {
 		logger->Fatal("Release: application descriptor null pointer");
 		return;
@@ -1196,7 +1192,7 @@ void ResourceAccounter::_ReleaseResources(
 	}
 
 	// Get the map of resource assignments of the application
-	AppAssignmentsMap_t::iterator usemap_it(apps_assign->find(papp->Uid()));
+	auto usemap_it(apps_assign->find(papp->Uid()));
 	if (usemap_it == apps_assign->end()) {
 		logger->Debug("Release: resource set not assigned");
 		return;
@@ -1219,14 +1215,14 @@ ResourceAccounter::IncBookingCounts(
 		status_view);
 
 	// Get the set of resources referenced in the view
-	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(status_view));
+	auto rsrc_view(rsrc_per_views.find(status_view));
 	assert(rsrc_view != rsrc_per_views.end());
 	if (rsrc_view == rsrc_per_views.end()) {
 		logger->Fatal("Booking: invalid resource state view token [%ld]",
 			status_view);
 		return RA_ERR_MISS_VIEW;
 	}
-	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
+	auto & rsrc_set(rsrc_view->second);
 
 	// Get the map of resources used by the application (from the state view
 	// referenced by 'status_view').
@@ -1286,11 +1282,11 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 		br::RViewToken_t status_view,
 		ResourceSetPtr_t & rsrc_set) {
 	// Amount of resource to book and list of resource descriptors
-	uint64_t requested = r_assign->GetAmount();
+	auto requested = r_assign->GetAmount();
 	size_t num_left_resources = r_assign->GetResourcesList().size();
 	logger->Debug("DRBooking: amount % " PRIu64 " to be spread over %d resources",
 		requested, num_left_resources);
-	uint64_t alloc_amount_per_resource = 0;
+	auto alloc_amount_per_resource = 0;
 
 	br::ResourceAssignment::Policy alloc_policy = r_assign->GetPolicy();
 
@@ -1415,7 +1411,7 @@ void ResourceAccounter::DecBookingCounts(
 		logger->Fatal("DecCount: invalid resource state view: [%ld]", status_view);
 		return;
 	}
-	ResourceSetPtr_t & rsrc_set(rsrc_view->second);
+	auto & rsrc_set(rsrc_view->second);
 
 	// Release the all the resources hold by the Application/EXC
 	for (auto & ru_entry: *(assign_map.get())) {
@@ -1513,31 +1509,30 @@ int ResourceAccounter::SetResourceTotalHandler(char * r_path, char * value) {
 }
 
 int ResourceAccounter::ResourceDegradationHandler(int argc, char * argv[]) {
-	int idx = 1;
+	int index = 1;
 	argc--;
 
 	// Parsing the "<resource> <degradation_value>" pairs
 	while (argc) {
-		br::ResourcePtr_t rsrc(GetResource(argv[idx]));
-
+		auto rsrc(GetResource(argv[index]));
 		if (rsrc != nullptr) {
-			if (IsNumber(argv[idx+1])) {
-				rsrc->UpdateDegradationPerc(atoi(argv[idx+1]));
+			if (IsNumber(argv[index+1])) {
+				rsrc->UpdateDegradationPerc(atoi(argv[index+1]));
 				logger->Warn("Resource degradation: <%s> = %2d%% [mean=%.2f]",
-					argv[idx],
+					argv[index],
 					rsrc->CurrentDegradationPerc(),
 					rsrc->MeanDegradationPerc());
 			} else {
 				logger->Error("Resource degradation: <%s> not a valid value",
-					argv[idx+1]);
+					argv[index+1]);
 			}
 		} else {
 			logger->Error("Resource degradation: <%s> not a valid resource",
-				argv[idx]);
+				argv[index]);
 		}
 
-		idx  += 2;
-		argc -= 2;
+		index += 2;
+		argc  -= 2;
 	}
 
 	return 0;
