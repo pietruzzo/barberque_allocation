@@ -596,10 +596,6 @@ private:
 
 	std::set<br::ResourcePtr_t> resource_set;
 
-	/** Resources that can be allocated in 'slice', i.e. the assigned amount
-	 * is distributed over all the resources referenced by the mixed/template
-	 * path specified */
-	std::map<br::ResourcePathPtr_t, uint64_t> r_sliced;
 
 	/** Counter for the total number of registered resources */
 	std::map<br::ResourceType, uint16_t> r_count;
