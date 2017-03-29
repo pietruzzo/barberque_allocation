@@ -304,6 +304,15 @@ public:
 	ResourceIdentifierPtr_t GetIdentifier(ResourceType r_type) const;
 
 	/**
+	 * @brief Retrieve the entire list of identifiers
+	 *
+	 * @return A reference to the resource identifier objects
+	 */
+	inline std::vector<ResourceIdentifierPtr_t> const & GetIdentifiers() const {
+		return identifiers;
+	}
+
+	/**
 	 * @brief The depth level of type in a path
 	 *
 	 * @param r_type The resource type to find in the path
