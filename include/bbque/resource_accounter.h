@@ -170,18 +170,13 @@ public:
 
 	uint16_t CountPerType(br::ResourceType type) const;
 
-	/**
-	 * @see ResourceAccounterStatusIF
-	 */
-	inline uint16_t CountTypes() const {
-		return r_count.size();
-	}
+	inline uint16_t CountTypes() const { return r_ids_per_type.size(); }
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	inline std::list<br::ResourceType> GetTypesList() const {
-		return r_types;
+	inline std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> const & GetTypes() const {
+		return r_ids_per_type;
 	}
 
 	/**
@@ -290,6 +285,11 @@ public:
 	 */
 	void PrintAppDetails(
 	        br::ResourcePtr_t resource_ptr, br::RViewToken_t status_view, bool verbose) const;
+
+	/**
+	 * @brief Print the number of registered resources for each type
+	 */
+	void PrintCountPerType() const;
 
 	/**
 	 * @brief A prefix path for recipe validation
@@ -594,14 +594,12 @@ private:
 	/** The resource paths registered (strings and objects) */
 	std::map<std::string, br::ResourcePathPtr_t> r_paths;
 
+	/** The resource paths registered (strings and objects) */
 	std::set<br::ResourcePtr_t> resource_set;
 
+	/** Id numbers set for each type of registered resource */
+	std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> r_ids_per_type;
 
-	/** Counter for the total number of registered resources */
-	std::map<br::ResourceType, uint16_t> r_count;
-
-	/** List that keeps track of the managed resource types */
-	std::list<br::ResourceType> r_types;
 
 	/** Resource path (pointer) referencing the prefix */
 	br::ResourcePathPtr_t r_prefix_path;

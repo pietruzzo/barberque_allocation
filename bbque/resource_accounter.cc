@@ -106,6 +106,7 @@ void ResourceAccounter::SetPlatformReady() {
 	}
 	status = State::READY;
 	status_cv.notify_all();
+	PrintCountPerType();
 }
 
 void ResourceAccounter::SetPlatformNotReady() {
@@ -243,6 +244,20 @@ void ResourceAccounter::PrintAppDetails(
 	// Print a separator line
 	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV3);
 }
+
+
+void ResourceAccounter::PrintCountPerType() const {
+	logger->Debug("==================");
+	logger->Debug("| COUNT PER TYPE |");
+	logger->Debug("|----------------|");
+	for (auto const & entry: r_ids_per_type) {
+		auto & type(entry.first);
+		auto & ids(entry.second);
+		logger->Debug("| <%3s> : %5d  |",GetResourceTypeString(type), ids.size());
+	}
+	logger->Debug("==================");
+}
+
 
 /************************************************************************
  *             RESOURCE DESCRIPTORS ACCESS                              *
@@ -416,11 +431,10 @@ inline uint16_t ResourceAccounter::Count(
 }
 
 inline uint16_t ResourceAccounter::CountPerType(br::ResourceType type) const {
-	std::map<br::ResourceType, uint16_t>::const_iterator it;
-	it =  r_count.find(type);
-	if (it == r_count.end())
+	auto it = r_ids_per_type.find(type);
+	if (it == r_ids_per_type.end())
 		return 0;
-	return it->second;
+	return it->second.size();
 }
 
 
@@ -631,17 +645,14 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 	path_max_len = std::max((int) path_max_len, (int) strpath.length());
 
 	// Track the number of resources per type
-	br::ResourceType type = resource_path_ptr->Type();
-	if (r_count.find(type) == r_count.end()) {
-		r_count.insert(std::pair<br::ResourceType, uint16_t>(type, 1));
-		r_types.push_back(type);
+	for (auto const & id: resource_path_ptr->GetIdentifiers()) {
+		if (r_ids_per_type.find(id->Type()) == r_ids_per_type.end()) {
+			std::set<BBQUE_RID_TYPE> ids = { id->ID() };
+			r_ids_per_type.emplace(id->Type(), ids);
+		}
+		else
+			r_ids_per_type[id->Type()].insert(id->ID());
 	}
-	else
-		++r_count[type];
-
-	logger->Debug("Register R<%s>: Total = %llu %s DONE (c[%d]=%d)",
-			strpath.c_str(), Total(strpath), units.c_str(),
-			type, r_count[type]);
 
 	return resource_ptr;
 }

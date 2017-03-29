@@ -230,10 +230,10 @@ public:
 	}
 
 	/**
-	 * @see ResourceAccounterStatusIF::ResourceTypesList()
+	 * @see ResourceAccounterStatusIF::GetTypes()
 	 */
-	inline std::list<br::ResourceType> ResourceTypesList() const {
-		return ra.GetTypesList();
+	inline std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> const ResourceTypes() const {
+		return ra.GetTypes();
 	}
 
 	/**

@@ -319,7 +319,7 @@ public:
 	 *
 	 * @return A list filled of resource types
 	 */
-	virtual std::list<br::ResourceType> GetTypesList() const = 0;
+	virtual std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> const & GetTypes() const = 0;
 
 	/**
 	 * @brief Get a resource descriptor
