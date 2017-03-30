@@ -29,13 +29,15 @@ ApplicationController::ApplicationController(
 }
 
 ApplicationController::ExitCode ApplicationController::Init() noexcept {
-	RTLIB_Init(app_name.c_str(), &rtlib);
-	if (rtlib == nullptr) {
 		std::cerr << "Initialization error" << std::endl;
+	RTLIB_Services_t * rtlib_handler = nullptr;
+
+	RTLIB_Init(app_name.c_str(), &rtlib_handler);
+	if (rtlib_handler == nullptr) {
 		return ExitCode::ERR_INIT;
 	}
 
-	exec_sync = std::make_shared<ExecutionSynchronizer>(app_name, recipe, rtlib);
+	exec_sync = std::make_shared<ExecutionSynchronizer>(app_name, recipe, rtlib_handler);
 	if (exec_sync == nullptr) {
 		std::cerr << "Recipe error" << std::endl;
 		return ExitCode::ERR_APP_RECIPE;

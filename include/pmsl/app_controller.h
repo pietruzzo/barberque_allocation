@@ -123,8 +123,6 @@ private:
 	/*** The application recipe (as required by the execution model) */
 	std::string recipe;
 
-	/*** The BarbequeRTRM RTLib handler */
-	RTLIB_Services_t * rtlib;
 
 	/*** The object acting as synchronizer between the API and the AEM */
 	std::shared_ptr<ExecutionSynchronizer> exec_sync;
