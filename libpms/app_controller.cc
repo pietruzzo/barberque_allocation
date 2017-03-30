@@ -22,9 +22,8 @@
 namespace bbque {
 
 
-ApplicationController::ApplicationController(
-	std::string const & _name, std::string const & _recipe):
-	app_name(_name), recipe(_recipe) {
+ApplicationController::ApplicationController(std::string _name, std::string _recipe):
+		app_name(_name), recipe(_recipe) {
 
 }
 

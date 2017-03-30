@@ -61,7 +61,8 @@ public:
 	 * \param _recipe Recipe file name (withouth .recipe extension)
 	 */
 	ApplicationController(
-		std::string const & _name = "app", std::string const & _recipe = "generic");
+		std::string _name = std::string("app"),
+		std::string _recipe = std::string("generic"));
 
 	virtual ~ApplicationController() {}
 
@@ -125,7 +126,7 @@ private:
 
 
 	/*** The object acting as synchronizer between the API and the AEM */
-	std::shared_ptr<ExecutionSynchronizer> exec_sync;
+	std::shared_ptr<ExecutionSynchronizer> exec_sync = nullptr;
 
  };
 
