@@ -257,9 +257,34 @@ MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(const TaskGraph &tg,
 					  	        const Partition &partition) noexcept {
 
+	UNUSED(tg);
+
 	uint32_t part_id = partition.GetPartitionId();
 	uint32_t ret = hn_allocate_partition(part_id);
 	
+	if ( HN_SUCCEEDED != ret ) {
+		return SK_GENERIC_ERROR;
+	}
+
+	return SK_OK;
+}
+
+MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
+MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(const TaskGraph &tg,
+					  	          const Partition &partition) noexcept {
+
+	UNUSED(tg);
+
+	uint32_t part_id = partition.GetPartitionId();
+	uint32_t ret;
+	ret = hn_deallocate_partition(part_id);
+
+	if ( HN_SUCCEEDED != ret ) {
+		return SK_GENERIC_ERROR;
+	}
+
+	ret = hn_delete_partition(part_id);
+
 	if ( HN_SUCCEEDED != ret ) {
 		return SK_GENERIC_ERROR;
 	}

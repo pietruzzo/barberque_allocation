@@ -105,7 +105,9 @@ private:
 		virtual ExitCode_t Skim(const TaskGraph &tg, std::list<Partition>&) noexcept override final;
 		virtual ExitCode_t SetPartition(const TaskGraph &tg,
 						const Partition &partition) noexcept override final;
-	};	
+		virtual ExitCode_t UnsetPartition(const TaskGraph &tg,
+						  const Partition &partition) noexcept override final;
+	};
 
 };
 

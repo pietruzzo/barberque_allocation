@@ -41,19 +41,19 @@ public:
 		return this->partition_id;
 	}
 
-	inline uint_fast8_t GetMMScore() const noexcept {
+	inline int_fast8_t GetMMScore() const noexcept {
 		return this->mm_score;
 	}
 
-	inline void SetMMScore(uint_fast8_t score) noexcept {
+	inline void SetMMScore(int_fast8_t score) noexcept {
 		this->mm_score = score;
 	}
 
-	inline uint_fast8_t GetPMScore() const noexcept {
+	inline int_fast8_t GetPMScore() const noexcept {
 		return this->pm_score;
 	}
 
-	inline void SetPMScore(uint_fast8_t score) noexcept {
+	inline void SetPMScore(int_fast8_t score) noexcept {
 		this->pm_score = score;
 	}
 
@@ -86,8 +86,8 @@ public:
 
 private:
 	const uint32_t partition_id;	/** The internal identifier returned by HN library */
-	uint_fast8_t mm_score;	/** The score index [0;100] provided by the MemoryManager */
-	uint_fast8_t pm_score;	/** The score index [0;100] provided by the PowerManager */
+	int_fast8_t mm_score;	/** The score index [0;100] provided by the MemoryManager */
+	int_fast8_t pm_score;	/** The score index [0;100] provided by the PowerManager */
 
 	std::shared_ptr<TaskGraph> tg;	/** The pointer to the associated TaskGraph */
 	

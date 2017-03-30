@@ -69,6 +69,11 @@ public:
 	virtual ExitCode_t SetPartition(const TaskGraph &tg, const Partition &partition) noexcept = 0;
 
 	/**
+	 * @brief This abstract method is called when a partition is released
+	 */
+	virtual ExitCode_t UnsetPartition(const TaskGraph &tg, const Partition &partition) noexcept = 0;
+
+	/**
 	 * @brief The constructor that initializes the type of the skimmer.
 	 */
 	PartitionSkimmer(SkimmerType_t type) : type(type) {}
