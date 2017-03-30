@@ -25,58 +25,67 @@ namespace bbque {
 ApplicationController::ApplicationController(std::string _name, std::string _recipe):
 		app_name(_name), recipe(_recipe) {
 
+	bbque::utils::Logger::SetConfigurationFile(BBQUE_APP_CONFIG_FILE);
+	logger = bbque::utils::Logger::GetLogger(BBQUE_APP_CTRL_MODULE);
+	logger->Info("Controller for %s created [config=%s]", app_name.c_str());
 }
 
 ApplicationController::ExitCode ApplicationController::Init() noexcept {
-		std::cerr << "Initialization error" << std::endl;
 	RTLIB_Services_t * rtlib_handler = nullptr;
 
 	RTLIB_Init(app_name.c_str(), &rtlib_handler);
 	if (rtlib_handler == nullptr) {
+		logger->Error("Init: RTLib error");
 		return ExitCode::ERR_INIT;
 	}
 
 	exec_sync = std::make_shared<ExecutionSynchronizer>(app_name, recipe, rtlib_handler);
 	if (exec_sync == nullptr) {
-		std::cerr << "Recipe error" << std::endl;
+		logger->Error("Init: recipe error");
 		return ExitCode::ERR_APP_RECIPE;
 	}
 
+	logger->Info("Init: controller initialized");
 	return ExitCode::SUCCESS;
 }
 
 ApplicationController::ExitCode ApplicationController::GetResourceAllocation(
 	std::shared_ptr<TaskGraph> tg) noexcept {
 	if (exec_sync == nullptr) {
-		std::cerr << "Application controller not initialized" << std::endl;
+		logger->Error("GetResourceAllocation: controller not initialized");
 		return ExitCode::ERR_NOT_INITIALIZED;
 	}
 
-        exec_sync->SetTaskGraph(tg);
-        exec_sync->Start();
-        exec_sync->WaitForResourceAllocation();
-        std::cerr << "--- Resource allocation returned ---" << std::endl;
+	exec_sync->SetTaskGraph(tg);
+	logger->Debug("GetResourceAllocation: task-graph set");
+	exec_sync->Start();
+	logger->Debug("GetResourceAllocation: execution started");
+	exec_sync->WaitForResourceAllocation();
+	logger->Info("GetResourceAllocation: resource allocation performed");
 	return ExitCode::SUCCESS;
 }
 
 ApplicationController::ExitCode ApplicationController::NotifyTaskStart(int task_id) noexcept {
 	if (exec_sync == nullptr) {
-		std::cerr << "Application controller not initialized" << std::endl;
+		logger->Error("NotifyTaskStart: controller not initialized");
 		return ExitCode::ERR_NOT_INITIALIZED;
 	}
 
 	exec_sync->StartTask(task_id);
+	logger->Info("NotifyTaskStart: <task %d> start notified", task_id);
 	return ExitCode::SUCCESS;
 }
 
 
 ApplicationController::ExitCode ApplicationController::NotifyTaskStop(int task_id) noexcept {
 	if (exec_sync == nullptr) {
-		std::cerr << "Application controller not initialized" << std::endl;
+		logger->Error("NotifyTaskStop: controller not initialized");
 		return ExitCode::ERR_NOT_INITIALIZED;
 	}
 
 	exec_sync->StopTask(task_id);
+	logger->Info("NotifyTaskStop: <task %d> stop notified", task_id);
+
 	return ExitCode::SUCCESS;
 }
 

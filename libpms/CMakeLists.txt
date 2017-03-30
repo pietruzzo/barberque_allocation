@@ -1,6 +1,11 @@
 
 set (TARGET_NAME bbque_pms)
 
+configure_file (
+	"${PROJECT_SOURCE_DIR}/libpms/config/libpms.conf.in"
+	"${PROJECT_BINARY_DIR}/libpms/config/libpms.conf"
+)
+
 # Add "barbeque" specific flags
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBBQUE_PMSLIB")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
@@ -50,3 +55,7 @@ install (TARGETS ${TARGET_NAME} LIBRARY
 
 install (FILES generic.recipe
 		DESTINATION ${BBQUE_PATH_RECIPES})
+
+# Configuration file
+install (FILES "${PROJECT_BINARY_DIR}/libpms/config/libpms.conf"
+		DESTINATION ${BBQUE_PATH_CONF})

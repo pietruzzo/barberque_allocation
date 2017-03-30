@@ -21,9 +21,13 @@
 #include <string>
 
 #include "bbque/rtlib.h"
+#include <bbque/utils/logging/logger.h>
+
 #include "tg/task_graph.h"
 #include "pmsl/exec_synchronizer.h"
 
+#define BBQUE_APP_CTRL_MODULE    "actrl"
+#define BBQUE_APP_CONFIG_FILE    BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/libpms.conf"
 
 namespace bbque {
 
@@ -104,6 +108,7 @@ public:
 	 */
 	inline void NotifyEvent(uint32_t event_id) noexcept {
 		if (exec_sync == nullptr) return;
+		logger->Info("NotifyEvent: %d", event_id);
 		return exec_sync->NotifyEvent(event_id);
 	}
 
@@ -114,6 +119,7 @@ public:
 	inline void WaitForTermination() noexcept {
 		if (exec_sync == nullptr) return;
 		exec_sync->WaitCompletion();
+		logger->Notice("[%s] closing the controller...", app_name.c_str());
 	}
 
 private:
@@ -124,6 +130,8 @@ private:
 	/*** The application recipe (as required by the execution model) */
 	std::string recipe;
 
+	/** Logger */
+	std::unique_ptr<bbque::utils::Logger> logger = nullptr;
 
 	/*** The object acting as synchronizer between the API and the AEM */
 	std::shared_ptr<ExecutionSynchronizer> exec_sync = nullptr;
