@@ -23,8 +23,8 @@ target_link_libraries(${TARGET_NAME}
         bbque_rtlib
         bbque_tg
 	${Boost_LIBRARIES}
-#	bbque_utils
 )
+
 
 # Add "Generic-Linux" specific flags
 if (CONFIG_TARGET_LINUX)
@@ -32,6 +32,7 @@ target_link_libraries(${TARGET_NAME}
 	-ldl -lrt
 )
 endif (CONFIG_TARGET_LINUX)
+
 # Linking dependencies for not Android-Linux targets
 if (NOT CONFIG_TARGET_ANDROID)
   target_link_libraries(${TARGET_NAME} pthread)
@@ -40,9 +41,7 @@ endif (NOT CONFIG_TARGET_ANDROID)
 
 # Use link path ad RPATH
 set_property (TARGET ${TARGET_NAME} PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 set_property (TARGET ${TARGET_NAME} PROPERTY FRAMEWORK ON)
-
 set_property (TARGET ${TARGET_NAME} PROPERTY PUBLIC_HEADER
 		${PROJECT_SOURCE_DIR}/include/pmsl/exec_synchronizer.h
 		${PROJECT_SOURCE_DIR}/include/pmsl/app_controller.h)
@@ -53,6 +52,7 @@ install (TARGETS ${TARGET_NAME} LIBRARY
 		PUBLIC_HEADER DESTINATION ${BBQUE_PATH_HEADERS}/pmsl
 		COMPONENT BarbequeSynclib)
 
+# Default recipe
 install (FILES generic.recipe
 		DESTINATION ${BBQUE_PATH_RECIPES})
 
