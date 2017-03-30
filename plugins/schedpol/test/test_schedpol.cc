@@ -90,6 +90,13 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Init() {
 	}
 	logger->Debug("Init: resources state view token: %ld", sched_status_view);
 
+	// Processing elements IDs
+	auto & resource_types = sys->ResourceTypes();
+	auto const & r_ids_entry = resource_types.find(br::ResourceType::PROC_ELEMENT);
+	pe_ids = r_ids_entry->second;
+	logger->Debug("Init: %d processing elements available", pe_ids.size());
+
+	// Load all the applications task graphs
 	logger->Debug("Init: loading the applications task graphs");
 	fut_tg = std::async(std::launch::async, &System::LoadTaskGraphs, sys);
 
@@ -132,6 +139,10 @@ TestSchedPol::Schedule(
 	return result;
 }
 
+
+#define CPU_QUOTA_TO_ALLOCATE 200
+#define CPU_ASSIGNED_ID       "1"
+
 SchedulerPolicyIF::ExitCode_t
 TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 
@@ -143,25 +154,26 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	}
 
 	// Resource request addition
-	pawm->AddResourceRequest("sys0.cpu.pe", 200, br::ResourceAssignment::Policy::BALANCED);
+	pawm->AddResourceRequest(
+		"sys0.cpu.pe", CPU_QUOTA_TO_ALLOCATE, br::ResourceAssignment::Policy::BALANCED);
+
+	// CPU-level binding: the processing elements are in the scope of CPU '1'
+	int32_t ref_num = -1;
+	ref_num = pawm->BindResource(
+		br::ResourceType::CPU, R_ID_ANY, atoi(CPU_ASSIGNED_ID), ref_num);
+	auto resource_path = ra.GetPath("sys0.cpu" CPU_ASSIGNED_ID ".pe");
 
 	// The ResourceBitset object is used for the processing elements binding
 	// (CPU core mapping)
 	br::ResourceBitset pes;
-	pes.Set(0);
-
-	int32_t ref_num = -1;
-
-	// CPU-level binding: the processing elements are in the scope of CPU '1'
-	ref_num = pawm->BindResource(br::ResourceType::CPU, R_ID_ANY, 1, ref_num);
-	auto resource_path = ra.GetPath("sys0.cpu1.pe");
-
-	ref_num = pawm->BindResource(resource_path, pes, ref_num);
-	logger->Info("AssignWorkingMode: binding refn: %d", ref_num);
-
-	pes.Set(1);
-	ref_num = pawm->BindResource(resource_path, pes, ref_num);
-	logger->Info("AssignWorkingMode: binding refn: %d", ref_num);
+	uint16_t pe_count = 0;
+	for (auto & pe_id: pe_ids) {
+		pes.Set(pe_id);
+		ref_num = pawm->BindResource(resource_path, pes, ref_num);
+		logger->Info("AssignWorkingMode: binding refn: %d", ref_num);
+		++pe_count;
+		if (pe_count == CPU_QUOTA_TO_ALLOCATE / 100) break;
+	}
 
 	auto ret = papp->ScheduleRequest(pawm, sched_status_view, ref_num);
 	if (ret != ba::ApplicationStatusIF::APP_SUCCESS) {
@@ -208,8 +220,8 @@ void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
 	}
 
 	task_graph->GetProfiling(throughput, c_time);
-	logger->Info("[%s] Task-graph throughput: %d  ctime: %d",
-		papp->StrId(), throughput, c_time);
+	logger->Info("[%s] Task-graph throughput: %d  ctime: %d [app=%p]",
+		papp->StrId(), throughput, c_time, papp.get());
 
 	papp->SetTaskGraph(task_graph);
 	logger->Info("[%s] Task-graph updated", papp->StrId());

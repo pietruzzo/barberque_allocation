@@ -97,6 +97,8 @@ private:
 
 	std::future<void> fut_tg;
 
+	std::set<BBQUE_RID_TYPE> pe_ids;
+
 	/**
 	 * @brief Constructor
 	 *
