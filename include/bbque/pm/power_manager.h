@@ -27,7 +27,7 @@
 
 #include "bbque/command_manager.h"
 #include "bbque/pm/model_manager.h"
-#include "bbque/res/resource_type.h"
+#include "bbque/res/resource_path.h"
 #include "bbque/utils/logging/logger.h"
 
 namespace bu = bbque::utils;
@@ -244,7 +244,7 @@ private:
 	/**
 	 * @brief Device-specific power managers
 	 */
-	std::map<br::ResourceType, std::unique_ptr<PowerManager>> device_managers;
+	std::map<br::ResourceType, std::shared_ptr<PowerManager>> device_managers;
 
 	/**
 	 * @brief Command handler for setting a device fan speed
@@ -255,6 +255,21 @@ private:
 	 * @return 0 for success, a positive number otherwise
 	 */
 	int FanSpeedSetHandler(br::ResourcePathPtr_t const & rp, uint8_t speed_perc);
+
+
+	inline std::shared_ptr<PowerManager> GetDeviceManager(
+				br::ResourcePathPtr_t const & rp,
+				std::string const & api_name) const {
+		auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
+		if (pm_iter == device_managers.end()) {
+			logger->Warn("(PM) %s not supported for [%s]",
+					api_name.c_str(),
+					br::GetResourceTypeString(rp->ParentType(rp->Type())));
+			return nullptr;
+		}
+		else
+			return pm_iter->second;
+	}
 };
 
 }

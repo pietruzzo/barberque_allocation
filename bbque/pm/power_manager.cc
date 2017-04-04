@@ -102,12 +102,12 @@ PowerManager::PowerManager() {
 #ifdef CONFIG_BBQUE_PM_AMD
 	logger->Notice("Using AMD provider for GPUs power management");
 	device_managers[br::ResourceType::GPU] =
-		std::unique_ptr<PowerManager>(new AMDPowerManager());
+		std::shared_ptr<PowerManager>(new AMDPowerManager());
 #endif
 #ifdef CONFIG_BBQUE_PM_GPU_ARM_MALI
 	logger->Notice("Using ARM Mali provider for GPUs power management");
 	device_managers[br::ResourceType::GPU] =
-		std::unique_ptr<PowerManager>(new ARM_Mali_GPUPowerManager());
+		std::shared_ptr<PowerManager>(new ARM_Mali_GPUPowerManager());
 #endif
 
 	// CPU
@@ -115,19 +115,19 @@ PowerManager::PowerManager() {
 # ifdef CONFIG_TARGET_ODROID_XU
 	logger->Notice("Using ODROID-XU CPU power management module");
 	device_managers[br::ResourceType::CPU] =
-		std::unique_ptr<PowerManager>(new ODROID_XU_CPUPowerManager());
+		std::shared_ptr<PowerManager>(new ODROID_XU_CPUPowerManager());
 	return;
 # endif
 # ifdef CONFIG_TARGET_ARM_CORTEX_A9
 	logger->Notice("Using ARM Cortex A9 CPU power management module");
 	device_managers[br::ResourceType::CPU] =
-		std::unique_ptr<PowerManager>(new ARM_CortexA9_CPUPowerManager());
+		std::shared_ptr<PowerManager>(new ARM_CortexA9_CPUPowerManager());
 	return;
 # endif
 	// Generic
 	logger->Notice("Using generic CPU power management module");
 	device_managers[br::ResourceType::CPU] =
-		std::unique_ptr<PowerManager>(new CPUPowerManager());
+		std::shared_ptr<PowerManager>(new CPUPowerManager());
 #endif // CONFIG_BBQUE_PM_CPU
 
 }
@@ -140,37 +140,28 @@ PowerManager::~PowerManager() {
 
 PowerManager::PMResult PowerManager::GetLoad(
 		br::ResourcePathPtr_t const & rp, uint32_t &perc) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetLoad not supported for [%s]",
-				br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetLoad");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetLoad(rp, perc);
+	return dm->GetLoad(rp, perc);
 }
 
 
 PowerManager::PMResult PowerManager::GetTemperature(
 		br::ResourcePathPtr_t const & rp, uint32_t &celsius) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetTemperature not supported for [%s]",
-				br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetTemperature");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetTemperature(rp, celsius);
+	return dm->GetTemperature(rp, celsius);
 }
 
 
 PowerManager::PMResult
 PowerManager::GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t &khz) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetClockFrequency not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetClockFrequency");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetClockFrequency(rp, khz);
+	return dm->GetClockFrequency(rp, khz);
 }
 
 PowerManager::PMResult
@@ -179,62 +170,45 @@ PowerManager::GetClockFrequencyInfo(
 		uint32_t &khz_min,
 		uint32_t &khz_max,
 		uint32_t &khz_step) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetClockFrequencyInfo not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetClockFrequencyInfo");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetClockFrequencyInfo(rp, khz_min, khz_max, khz_step);
+	return dm->GetClockFrequencyInfo(rp, khz_min, khz_max, khz_step);
 }
 
 PowerManager::PMResult
 PowerManager::GetAvailableFrequencies(
 		br::ResourcePathPtr_t const & rp,
 		std::vector<uint32_t> & freqs) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetAvailableFrequencies not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetAvailableFrequencies");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetAvailableFrequencies(rp, freqs);
+	return dm->GetAvailableFrequencies(rp, freqs);
 }
 
 PowerManager::PMResult
 PowerManager::SetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t khz) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) SetClockFrequency not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "SetClockFrequency");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->SetClockFrequency(rp, khz);
+	return dm->SetClockFrequency(rp, khz);
 }
-
 
 PowerManager::PMResult
 PowerManager::SetClockFrequency(
 		br::ResourcePathPtr_t const & rp,
 		uint32_t min_khz, uint32_t max_khz) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) SetClockFrequency not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "SetClockFrequency");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->SetClockFrequency(rp, min_khz, max_khz);
+	return dm->SetClockFrequency(rp, min_khz, max_khz);
 }
-
 
 std::vector<std::string> const &
 PowerManager::GetAvailableFrequencyGovernors(br::ResourcePathPtr_t const & rp) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end())
-		logger->Warn("(PM) GetAvailableFrequencyGovernors not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
-	else
-		pm_iter->second->GetAvailableFrequencyGovernors(rp);
+	auto dm = GetDeviceManager(rp, "GetAvailableFrequencyGovernors");
+	if (dm != nullptr)
+		dm->GetAvailableFrequencyGovernors(rp);
 	return cpufreq_governors;
 }
 
@@ -242,38 +216,29 @@ PowerManager::PMResult
 PowerManager::GetClockFrequencyGovernor(
 		br::ResourcePathPtr_t const & rp,
 		std::string & governor) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetClockFrequencyGovernor not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetClockFrequencyGovernor");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetClockFrequencyGovernor(rp, governor);
+	return dm->GetClockFrequencyGovernor(rp, governor);
 }
 
 PowerManager::PMResult
 PowerManager::SetClockFrequencyGovernor(
 		br::ResourcePathPtr_t const & rp,
 		std::string const & governor) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) SetClockFrequencyGovernor not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "SetClockFrequencyGovernor");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->SetClockFrequencyGovernor(rp, governor);
+	return dm->SetClockFrequencyGovernor(rp, governor);
 }
 
 
 PowerManager::PMResult
 PowerManager::GetVoltage(br::ResourcePathPtr_t const & rp, uint32_t &volt) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetVoltage not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetVoltage");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetVoltage(rp, volt);
+	return dm->GetVoltage(rp, volt);
 }
 
 PowerManager::PMResult
@@ -282,13 +247,10 @@ PowerManager::GetVoltageInfo(
 		uint32_t &volt_min,
 		uint32_t &volt_max,
 		uint32_t &volt_step) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetVoltageInfo not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetVoltageInfo");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetVoltageInfo(rp, volt_min, volt_max, volt_step);
+	return dm->GetVoltageInfo(rp, volt_min, volt_max, volt_step);
 }
 
 
@@ -297,13 +259,10 @@ PowerManager::GetFanSpeed(
 		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t &value) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetFanSpeed not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetFanSpeed");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetFanSpeed(rp, fs_type, value);
+	return dm->GetFanSpeed(rp, fs_type, value);
 }
 
 PowerManager::PMResult
@@ -312,13 +271,10 @@ PowerManager::GetFanSpeedInfo(
 		uint32_t &rpm_min,
 		uint32_t &rpm_max,
 		uint32_t &rpm_step) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetFanSpeedInfo not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetFanSpeedInfo");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetFanSpeedInfo(rp, rpm_min, rpm_max, rpm_step);
+	return dm->GetFanSpeedInfo(rp, rpm_min, rpm_max, rpm_step);
 }
 
 PowerManager::PMResult
@@ -326,36 +282,27 @@ PowerManager::SetFanSpeed(
 		br::ResourcePathPtr_t const & rp,
 		FanSpeedType fs_type,
 		uint32_t value) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) SetFanSpeed not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "SetFanSpeed");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->SetFanSpeed(rp, fs_type, value);
+	return dm->SetFanSpeed(rp, fs_type, value);
 }
 
 PowerManager::PMResult
 PowerManager::ResetFanSpeed(br::ResourcePathPtr_t const & rp) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) ResetFanSpeed not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "ResetFanSpeed");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->ResetFanSpeed(rp);
+	return dm->ResetFanSpeed(rp);
 }
 
 
 PowerManager::PMResult
 PowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t &mwatt) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetPowerUsage not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetPowerUsage");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetPowerUsage(rp, mwatt);
+	return dm->GetPowerUsage(rp, mwatt);
 }
 
 PowerManager::PMResult
@@ -363,48 +310,36 @@ PowerManager::GetPowerInfo(
 		br::ResourcePathPtr_t const & rp,
 		uint32_t &mwatt_min,
 		uint32_t &mwatt_max) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetPowerInfo not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetPowerUsageInfo");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetPowerInfo(rp, mwatt_min, mwatt_max);
+	return dm->GetPowerInfo(rp, mwatt_min, mwatt_max);
 }
 
 PowerManager::PMResult
 PowerManager::GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t &state) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetPowerState not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetPowerState");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetPowerState(rp, state);
+	return dm->GetPowerState(rp, state);
 }
 
 PowerManager::PMResult
 PowerManager::GetPowerStatesInfo(
 		br::ResourcePathPtr_t const & rp,
 		uint32_t & min, uint32_t & max, int & step) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetPowerStatesInfo not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetPowerStatesInfo");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetPowerStatesInfo(rp, min, max, step);
+	return dm->GetPowerStatesInfo(rp, min, max, step);
 }
 
 PowerManager::PMResult
 PowerManager::SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) SetPowerState not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "SetPowerState");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->SetPowerState(rp, state);
+	return dm->SetPowerState(rp, state);
 }
 
 
@@ -421,26 +356,20 @@ PowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp, uint32_t &st
 
 PowerManager::PMResult
 PowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp, uint32_t &count) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) GetPerformanceStatesCount not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "GetPerfStatesCount");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->GetPerformanceStatesCount(rp, count);
+	return dm->GetPerformanceStatesCount(rp, count);
 }
 
 PowerManager::PMResult
 PowerManager::SetPerformanceState(
 		br::ResourcePathPtr_t const & rp,
 		uint32_t state) {
-	auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
-	if (pm_iter == device_managers.end()) {
-		logger->Warn("(PM) SetPerformanceState not supported for [%s]",
-			br::GetResourceTypeString(rp->ParentType(rp->Type())));
+	auto dm = GetDeviceManager(rp, "SetPerformanceState");
+	if (dm == nullptr)
 		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
-	return pm_iter->second->SetPerformanceState(rp, state);
+	return dm->SetPerformanceState(rp, state);
 }
 
 
