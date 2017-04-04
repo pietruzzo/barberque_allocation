@@ -220,10 +220,9 @@ void Battery::LogReportStatus() {
 std::string Battery::PrintChargeBar() {
 	int i;
 	int charge = GetChargePerc();
-	std::string bar("[");
-	for (i = 0; i < (charge / 10); ++i)
-		bar += "=";
-	bar += "] ";
+	std::string bar("[          ] ");
+	for (i = 1; i <= (charge / 10); ++i)
+		bar[i] = '=';
 	bar += std::to_string(charge);
 	bar += "%";
 	return bar;
