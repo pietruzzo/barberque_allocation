@@ -161,6 +161,14 @@ public:
 		uint32_t &mvolt_max,
 		uint32_t &mvolt_step);
 
+	/**  On/off status */
+
+	virtual PMResult SetOn(br::ResourcePathPtr_t const & rp);
+
+	virtual PMResult SetOff(br::ResourcePathPtr_t const & rp);
+
+	virtual bool IsOn(br::ResourcePathPtr_t const & rp) const;
+
 
 	/**  Fan speed information */
 

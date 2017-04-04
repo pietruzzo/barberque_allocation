@@ -253,6 +253,28 @@ PowerManager::GetVoltageInfo(
 	return dm->GetVoltageInfo(rp, volt_min, volt_max, volt_step);
 }
 
+PowerManager::PMResult
+PowerManager::SetOn(br::ResourcePathPtr_t const & rp) {
+	auto dm = GetDeviceManager(rp, "SetOn");
+	if (dm == nullptr)
+		return PMResult::ERR_API_NOT_SUPPORTED;
+	return dm->SetOn(rp);
+}
+
+PowerManager::PMResult
+PowerManager::SetOff(br::ResourcePathPtr_t const & rp) {
+	auto dm = GetDeviceManager(rp, "SetOff");
+	if (dm == nullptr)
+		return PMResult::ERR_API_NOT_SUPPORTED;
+	return dm->SetOff(rp);
+}
+
+bool PowerManager::IsOn(br::ResourcePathPtr_t const & rp) const {
+	auto dm = GetDeviceManager(rp, "IsOn");
+	if (dm == nullptr)
+		return true;
+	return dm->IsOn(rp);
+}
 
 PowerManager::PMResult
 PowerManager::GetFanSpeed(
