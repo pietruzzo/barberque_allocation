@@ -260,7 +260,7 @@ private:
 	inline std::shared_ptr<PowerManager> GetDeviceManager(
 				br::ResourcePathPtr_t const & rp,
 				std::string const & api_name) const {
-		auto pm_iter = device_managers.find(rp->ParentType(rp->Type()));
+		auto pm_iter = device_managers.find(rp->Type(-1));
 		if (pm_iter == device_managers.end()) {
 			logger->Warn("(PM) %s not supported for [%s]",
 					api_name.c_str(),
