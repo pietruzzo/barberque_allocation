@@ -233,6 +233,23 @@ public:
 	}
 
 	/**
+	 * @brief Get the type of resource at a given relative position of the
+	 * path
+	 *
+	 * @param rel_pos The relative position
+	 *
+	 * Example: path "sys.cpu.mem", rel_pos=-1 will return CPU.
+	 *
+	 * @return The related @ref ResourceType value
+	 **/
+	inline ResourceType Type(ssize_t rel_pos) {
+		ssize_t pos = rel_pos;
+		if (pos < 0)
+			pos += identifiers.size() - 1;
+		return identifiers.at(pos)->Type();
+	}
+
+	/**
 	 * @brief Get the type of the parent of a resource type in the path
 	 *
 	 * Example: The parent type of 'mem' in "sys.cpu.mem" is 'cpu'
