@@ -35,6 +35,14 @@ EventManager::EventManager() {
 	logger = bu::Logger::GetLogger(EVENT_MANAGER_NAMESPACE);
 	assert(logger);
 
+	// Create events folder if it doesn't exist
+	logger->Notice("Events directory: %s", archive_folder_path.c_str());
+	boost::filesystem::path dir(archive_folder_path);
+	if(boost::filesystem::create_directory(dir)) {
+		logger->Info("Directory created");
+	}
+
+	// Get current time to append to file name
 	high_resolution_clock::time_point p = high_resolution_clock::now();
 	milliseconds ms = duration_cast<milliseconds>(p.time_since_epoch());
 	std::chrono::seconds s = duration_cast<seconds>(ms);
@@ -51,15 +59,10 @@ EventManager::EventManager() {
 	strftime(buffer, 80, "bbque-events_%Y_%m_%d_%T", timeinfo);
 	std::string filename(buffer);
 
+	// Output events file
 	filename     = filename + ":" + fractional_seconds + ".txt";
 	archive_path = archive_folder_path + filename;
-
-	// Create events folder if it doesn't exist
-	const char* folder_path = std::string(archive_folder_path).c_str();
-	boost::filesystem::path dir(folder_path);
-	if(boost::filesystem::create_directory(dir)) {
-		logger->Info("Create events Archive folder...");
-	}
+	logger->Notice("Events file path: %s", archive_path.c_str());
 
 	std::ofstream ofs(archive_path);
 }
