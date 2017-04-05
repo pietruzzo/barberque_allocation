@@ -58,8 +58,9 @@ void BindingManager::InitBindingOptions() {
 	std::string binding_str;
 	br::ResourceType binding_type;
 	while (end_pos != std::string::npos) {
-		end_pos     = domains.find(',', beg_pos);
-		binding_str = domains.substr(beg_pos, end_pos);
+		end_pos     = domains.find(',');
+		binding_str = domains.substr(0, end_pos);
+		domains.erase(0, end_pos + 1);
 
 		// Binding domain resource path
 		br::ResourcePathPtr_t base_path =
