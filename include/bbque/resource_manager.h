@@ -195,13 +195,11 @@ private:
 
 
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
-
 	ProfileManager & om;
 #endif
 
 #ifdef CONFIG_BBQUE_EM
-
-	EventManager & em;
+	em::EventManager & em;
 #endif
 
 	std::bitset<EVENTS_COUNT> pendingEvts;

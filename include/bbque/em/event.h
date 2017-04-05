@@ -28,6 +28,8 @@
 
 namespace bbque {
 
+namespace em {
+
 class Event {
 
 public:
@@ -151,6 +153,8 @@ private:
 	int value = -1;
 
 };
+
+} // namespace em
 
 } // namespace bbque
 

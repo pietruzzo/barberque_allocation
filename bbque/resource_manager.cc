@@ -145,7 +145,7 @@ ResourceManager::ResourceManager() :
 	om(ProfileManager::GetInstance()),
 #endif
 #ifdef CONFIG_BBQUE_EM
-	em(EventManager::GetInstance()),
+	em(em::EventManager::GetInstance()),
 #endif
 
 	optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this)) {
@@ -174,7 +174,7 @@ ResourceManager::ResourceManager() :
 			"Force a new scheduling event");
 
 #ifdef CONFIG_BBQUE_EM
-	Event event(true, "rm", "", "barbeque", "__startup", 1);
+	em::Event event(true, "rm", "", "barbeque", "__startup", 1);
 	em.InitializeArchive(event);
 #endif
 

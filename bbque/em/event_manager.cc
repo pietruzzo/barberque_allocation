@@ -29,6 +29,8 @@ using namespace std::chrono;
 
 namespace bbque {
 
+namespace em {
+
 EventManager::EventManager() {
 	logger = bu::Logger::GetLogger(EVENT_MANAGER_NAMESPACE);
 	assert(logger);
@@ -141,5 +143,7 @@ void EventManager::Push(Event event) {
 	ew.AddEvent(event);
 	Serialize(ew);
 }
+
+} // namespace em
 
 } // namespace bbque

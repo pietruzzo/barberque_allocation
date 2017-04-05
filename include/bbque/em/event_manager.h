@@ -29,6 +29,8 @@ namespace bu = bbque::utils;
 
 namespace bbque {
 
+namespace em {
+
 class EventManager {
 
 public:
@@ -113,6 +115,8 @@ private:
 	std::string archive_folder_path;
 
 };
+
+} // namespace em
 
 } // namespace bbque
 

@@ -19,6 +19,8 @@
 
 namespace bbque {
 
+namespace em {
+
 Event::Event(bool const & valid, std::string const & module,
 	std::string const & resource, std::string const & application,
 	std::string const & type, const int & value):
@@ -36,4 +38,7 @@ Event::~Event() {
 
 }
 
+} // namespace em
+
 } // namespace bbque
+

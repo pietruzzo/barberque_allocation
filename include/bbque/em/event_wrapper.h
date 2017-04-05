@@ -25,6 +25,8 @@
 
 namespace bbque {
 
+namespace em {
+
 class EventWrapper {
 
 public:
@@ -77,6 +79,8 @@ private:
 	std::vector<Event> events;
 
 };
+
+} // namespace em
 
 } // namespace bbque
 

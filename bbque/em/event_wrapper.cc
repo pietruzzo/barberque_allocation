@@ -19,6 +19,8 @@
 
 namespace bbque {
 
+namespace em {
+
 EventWrapper::EventWrapper(std::vector<Event> const & events):
 	events(events) {
 
@@ -27,5 +29,7 @@ EventWrapper::EventWrapper(std::vector<Event> const & events):
 EventWrapper::~EventWrapper() {
 
 }
+
+} // namespace em
 
 } // namespace bbque
