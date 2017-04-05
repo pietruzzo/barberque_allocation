@@ -18,6 +18,7 @@
 #ifndef BBQUE_EVENT_MANAGER_H_
 #define BBQUE_EVENT_MANAGER_H_
 
+#include "bbque/config.h"
 #include "bbque/em/event.h"
 #include "bbque/em/event_wrapper.h"
 #include "bbque/utils/logging/logger.h"
@@ -46,10 +47,11 @@ public:
 	 * the constructor from the main one (used just within barbeque)
 	 */
 	EventManager(bool external);
+
 	/**
 	 * @brief Destructor
 	 */
-	~EventManager();
+	virtual ~EventManager() {}
 
 	/**
 	 * @brief Get the EventManager instance
@@ -112,7 +114,7 @@ private:
 	/**
 	 * @brief The path of the current archive folder.
 	 */
-	std::string archive_folder_path;
+	std::string archive_folder_path = ARCHIVE_FOLDER;
 
 };
 

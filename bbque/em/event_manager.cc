@@ -38,7 +38,7 @@ EventManager::EventManager() {
 	high_resolution_clock::time_point p = high_resolution_clock::now();
 	milliseconds ms = duration_cast<milliseconds>(p.time_since_epoch());
 	std::chrono::seconds s = duration_cast<seconds>(ms);
-	std::time_t t   = s.count();
+	std::time_t t  = s.count();
 	std::size_t fs = ms.count() % 1000;
 
 	std::ostringstream ostr;
@@ -51,7 +51,6 @@ EventManager::EventManager() {
 	strftime(buffer, 80, "bbque-events_%Y_%m_%d_%T", timeinfo);
 	std::string filename(buffer);
 
-	archive_folder_path = ARCHIVE_FOLDER;
 	filename     = filename + ":" + fractional_seconds + ".txt";
 	archive_path = archive_folder_path + filename;
 
@@ -66,12 +65,9 @@ EventManager::EventManager() {
 }
 
 EventManager::EventManager(bool external) {
-	archive_folder_path = ARCHIVE_FOLDER;
+	UNUSED(external);
 }
 
-EventManager::~EventManager() {
-
-}
 
 EventManager & EventManager::GetInstance() {
 	static EventManager instance;
@@ -147,3 +143,4 @@ void EventManager::Push(Event event) {
 } // namespace em
 
 } // namespace bbque
+
