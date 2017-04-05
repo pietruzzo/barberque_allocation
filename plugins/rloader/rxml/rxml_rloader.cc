@@ -125,7 +125,7 @@ int32_t RXMLRecipeLoader::Destroy(void *plugin) {
 RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 		std::string const & _recipe_name,
 		RecipePtr_t _recipe) {
-	RecipeLoaderIF::ExitCode_t result;
+	RecipeLoaderIF::ExitCode_t result = RL_SUCCESS;
 	rapidxml::xml_document<> doc;
 	rapidxml::xml_node<> * root_node = nullptr;
 	rapidxml::xml_node<> * app_node = nullptr;
