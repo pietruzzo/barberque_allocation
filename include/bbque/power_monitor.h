@@ -381,6 +381,8 @@ private:
 #endif // CONFIG_BBQUE_PM_BATTERY
 
 
+#ifdef CONFIG_BBQUE_PM
+
 #define UPDATE_REQUEST_STATUS(info_type, curr, trigger) \
 	opt_request_sent = trigger.obj->Check(trigger.threshold, curr, trigger.margin); \
 	CHECK_REQUEST_STATUS(info_type, curr, trigger)
@@ -403,6 +405,7 @@ private:
 			UPDATE_REQUEST_STATUS(
 				info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN), t);
 	}
+#endif // CONFIG_BBQUE_PM
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
 
