@@ -140,7 +140,7 @@ TestSchedPol::Schedule(
 }
 
 
-#define CPU_QUOTA_TO_ALLOCATE 200
+#define CPU_QUOTA_TO_ALLOCATE 100
 #define CPU_ASSIGNED_ID       "1"
 
 SchedulerPolicyIF::ExitCode_t
