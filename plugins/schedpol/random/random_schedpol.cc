@@ -83,7 +83,7 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 	int8_t selected_awm_id;
 	uint32_t selected_bd;
 	uint8_t bd_count;
-	size_t b_refn;
+	int32_t b_refn;
 	std::default_random_engine generator;
 
 	assert(papp);
@@ -91,12 +91,14 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 	// Check for a valid binding domain count
 	BindingMap_t & bindings(bdm.GetBindingOptions());
 	bd_count = bindings[br::ResourceType::CPU]->resources.size();
+	logger->Debug("CPU binding domains : %d", bd_count);
 	if (bd_count == 0) {
 		assert(bd_count != 0);
 		return;
 	}
 
 	ba::AwmPtrList_t const & awms(papp->WorkingModes());
+	logger->Debug("Application working modes : %d", awms.size());
 	std::uniform_int_distribution<int> awm_dist(0, awms.size()-1);
 	std::uniform_int_distribution<int> bd_dist(0, bd_count);
 	bool binding_done = false;
@@ -118,8 +120,8 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 				papp->StrId(), selected_bd, bd_count);
 		b_refn = selected_awm->BindResource(binding_type, R_ID_ANY, selected_bd);
 
-		if (b_refn != 0) {
-			// Schedule the selected AWM on the selected binding domain
+		// Scheduling attempt (if binding successful)
+		if (b_refn < 0) {
 			app_result = papp->ScheduleRequest(selected_awm, ra_view, b_refn);
 			if (app_result == ba::ApplicationStatusIF::APP_SUCCESS) {
 				logger->Info("Scheduling EXC [%s] on binding domain <%d> done.",
@@ -128,9 +130,11 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 				continue;
 			}
 		} else {
-		logger->Warn("Resource binding for EXC [%s] on <%d> FAILED "
-				"(attempt %d of %d)",
-				papp->StrId(), selected_bd, nr_attempts, NR_ATTEMPTS_MAX);
+			logger->Warn("Resource binding for EXC [%s] on <%d> FAILED "
+					"(attempt %d of %d)",
+					papp->StrId(), selected_bd, nr_attempts, NR_ATTEMPTS_MAX);
+
+		// Check if we still have attempts
 		if (++nr_attempts >= NR_ATTEMPTS_MAX)
 			return;
 		}
