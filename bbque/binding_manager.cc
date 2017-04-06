@@ -54,7 +54,6 @@ void BindingManager::InitBindingOptions() {
 
 	// Parse each binding domain string
 	size_t end_pos = 0;
-	size_t beg_pos = 0;
 	std::string binding_str;
 	br::ResourceType binding_type;
 	while (end_pos != std::string::npos) {
@@ -72,7 +71,6 @@ void BindingManager::InitBindingOptions() {
 		if (binding_type == br::ResourceType::UNDEFINED) {
 			logger->Error("Binding: Invalid domain type <%s>",
 					binding_str.c_str());
-			beg_pos = end_pos + 1;
 			continue;
 		}
 
@@ -89,9 +87,6 @@ void BindingManager::InitBindingOptions() {
 		logger->Info("Resource binding domain: '%s' Type:<%s>",
 				binding_options[binding_type]->base_path->ToString().c_str(),
 				br::GetResourceTypeString(binding_type));
-
-		// Next binding domain...
-		beg_pos  = end_pos + 1;
 	}
 }
 
