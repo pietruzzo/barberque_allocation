@@ -55,12 +55,6 @@ endmenu #Advanced Options
 
 choice
   prompt "Default scheduling policy"
-  config BBQUE_SCHEDPOL_DEFAULT_YAMS
-    depends on BBQUE_SCHEDPOL_YAMS
-    bool "YaMS"
-  config BBQUE_SCHEDPOL_DEFAULT_YAMCA
-    depends on BBQUE_SCHEDPOL_YAMCA
-    bool "YaMCA"
   config BBQUE_SCHEDPOL_DEFAULT_RANDOM
     depends on BBQUE_SCHEDPOL_RANDOM
     bool "Random"
@@ -86,8 +80,6 @@ choice
 
 endchoice
 
-source barbeque/plugins/schedpol/yams/Kconfig
-#source barbeque/plugins/schedpol/yamca/Kconfig
 source barbeque/plugins/schedpol/random/Kconfig
 source barbeque/plugins/schedpol/cloves/Kconfig
 source barbeque/plugins/schedpol/tempura/Kconfig
