@@ -131,7 +131,7 @@ private:
 	std::string recipe;
 
 	/** Logger */
-	std::unique_ptr<bbque::utils::Logger> logger = nullptr;
+	std::shared_ptr<bbque::utils::Logger> logger = nullptr;
 
 	/*** The object acting as synchronizer between the API and the AEM */
 	std::shared_ptr<ExecutionSynchronizer> exec_sync = nullptr;
