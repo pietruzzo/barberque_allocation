@@ -26,7 +26,6 @@ menu "Platform Loader"
   source "barbeque/plugins/ploader/Kconfig"
 endmenu
 
-
 menu "Simulated Mode"
 
 config BBQUE_TEST_PLATFORM_DATA

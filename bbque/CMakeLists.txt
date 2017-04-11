@@ -176,7 +176,7 @@ target_link_libraries(barbeque
 )
 endif (CONFIG_TARGET_ANDROID)
 
-# Linking dependencyes for OpenCL support
+# Linking dependencies for OpenCL support
 if (CONFIG_BBQUE_OPENCL)
 target_link_libraries(barbeque
 	${OPENCL_LIBRARY}
@@ -248,6 +248,7 @@ install (FILES "${PROJECT_BINARY_DIR}/config/rtlib.conf"
 install (FILES "${PROJECT_BINARY_DIR}/config/bbque_2parma_demo2.conf"
 		DESTINATION ${BBQUE_PATH_CONF}
 		COMPONENT BarbequeDEMOS)
+
 # Install the daemon init script and its configuration file
 install (PROGRAMS "${PROJECT_BINARY_DIR}/config/bbqued"
 	DESTINATION ${BBQUE_PATH_INIT}

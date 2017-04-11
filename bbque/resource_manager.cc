@@ -221,10 +221,10 @@ ResourceManager::Setup() {
 	}
 
 	// -------- Binding Manager initialization for the scheduling policy
-        if (bdm.LoadBindingOptions() != BindingManager::OK) {
+	if (bdm.LoadBindingOptions() != BindingManager::OK) {
 		logger->Fatal("Binding Manager initialization FAILED!");
 		return SETUP_FAILED;
-        }
+	}
 
 #ifdef CONFIG_BBQUE_WM
 	//----------- Start the Power Monitor
