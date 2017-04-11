@@ -50,7 +50,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
 		return PL_SUCCESS;
 	}
 
-	std::string   path(platforms_dir + "/systems.xml");
+	std::string   path(platforms_dir + "/" BBQUE_PIL_FILE);
 	std::ifstream xml_file(path);
 
 	if (unlikely(!xml_file.good())) {

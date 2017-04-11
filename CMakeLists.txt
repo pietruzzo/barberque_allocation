@@ -49,6 +49,24 @@ set (BBQUE_RTLIB_CONF_FILE "rtlib.conf")
 
 # Setup the CGroup-based Platform Integration Layers (PIL)
 set (BBQUE_PIL_CGROUP_MOUNT "mnt/cgroup")
+set (BBQUE_PIL_FILE         "systems.xml")
+
+if (CONFIG_BBQUE_TEST_PLATFORM_DATA)
+  set (CONFIG_TARGET_ID "tpd")
+  set (BBQUE_PIL_FILE   "symsys.xml")
+  message(STATUS "Setting CONFIG_TARGET_ID=${CONFIG_TARGET_ID}")
+endif (CONFIG_BBQUE_TEST_PLATFORM_DATA)
+
+if (CONFIG_TARGET_ID AND
+  EXISTS "${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}")
+	install (FILES
+		${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}/${BBQUE_PIL_FILE}
+		${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}/${CONFIG_TARGET_ID}.xml
+		DESTINATION ${BBQUE_PATH_PILS}
+		COMPONENT BarbequeRTRM)
+endif(CONFIG_TARGET_ID AND
+  EXISTS "${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}")
+
 
 # Setup the RPATH and RWPATH
 if ("${CONFIG_BOSP_RUNTIME_PATH}" STREQUAL "")

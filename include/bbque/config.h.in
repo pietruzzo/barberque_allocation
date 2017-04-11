@@ -102,6 +102,9 @@
 /** The RTLib configuration file */
 #define BBQUE_RTLIB_CONF_FILE "${BBQUE_RTLIB_CONF_FILE}"
 
+/** The platform description root file */
+#define BBQUE_PIL_FILE "${BBQUE_PIL_FILE}"
+
 /** The full path and filename of the RTLib configuration file */
 #define BBQUE_RTLIB_CONF_FILEPATH BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/" BBQUE_RTLIB_CONF_FILE
 

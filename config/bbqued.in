@@ -103,8 +103,7 @@ setup() {
 	fi
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
-	bbqued_info "Checking platform description file"
-	PILNAME=systems.xml
+	bbqued_info "Checking platform description file..."
 	bbqued_notice "Platform description: $PILNAME"
 	bbqued_notice "Host name: `hostname`"
 
