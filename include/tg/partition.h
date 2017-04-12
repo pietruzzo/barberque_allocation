@@ -77,12 +77,6 @@ public:
 	 */
 	int GetUnit(TaskPtr_t task) const;
 
-	/**
-	 * @brief Get the id of the unit assigned to the task.
-	 * @note In the case of MangoTile processor it returns the tile number
-	 * @except std::out_of_range if the task is not present in the mapping
-	 */
-	int GetUnitId(TaskPtr_t task) const;
 
 private:
 	const uint32_t partition_id;	/** The internal identifier returned by HN library */

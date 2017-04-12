@@ -32,8 +32,4 @@ namespace bbque {
 		return tasks_map.at(task);	// It returns out_of_range exception if not present
 	}
 
-	int Partition::GetUnitId(TaskPtr_t task) const {
-		// It returns out_of_range exception if not present
-		return tasks_map.at(task);
-	}
 }
