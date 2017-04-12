@@ -233,23 +233,56 @@ MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
 
 	return PLATFORM_OK;
 }
+static uint32 ArchTypeToMangoType(ArchType type, unsigned int nr_thread) {
+
+	switch (type) {
+		case ArchType::PEAK:
+			if (nr_thread <= 2) return HN_PEAK_TYPE_0;
+			if (nr_thread <= 4) return HN_PEAK_TYPE_1;
+			return HN_PEAK_TYPE_2;
+		break;
+		default:
+			throw std::runtime_error("Unsupported architecture");
+	}
+
+}
 
 static hn_st_request_t FillReq(const TaskGraph &tg) {
+
+	ApplicationManager &am = ApplicationManager::GetInstance();
 
 	hn_st_request_t req;
 	req.num_comp_rsc    = tg.TaskCount();
 	req.num_mem_buffers = tg.BufferCount();
-	
 
+	// We need the application to get the application bandwidth requirements
+	AppPtr_t app = am.GetApplication(tg.GetApplicationId());
+	
+	unsigned int i=0;
 	for (auto t : tg.Tasks()) {
-		// TODO
+		req.comp_rsc_types[i++] = ArchTypeToMangoType(t.second->GetAssignedArch(), 
+							      t.second->GetThreadCount());
+		auto tg_req = app->GetTaskRequirements(t.second->Id());
 	}
 
-	unsigned int i=0;
+	i=0;
 	for (auto b : tg.Buffers()) {
 		bbque_assert(i < req.num_mem_buffers);
 		req.mem_buffers_size[i++] = b.second->Size();
 	}
+
+	i=0;
+	unsigned int j=0;
+	for (auto t : tg.Tasks()) {
+		for (auto b : tg.Buffers()) {
+			req.bw_read_req[i][j]  = 0; // tg_req.InBandwidth();
+			req.bw_write_req[i][j] = 0; // tg_req.InBandwidth();
+			j++;
+		}
+		i++;
+	}
+
+	// TODO Requirements bandwidth
 
 	return req;
 }
@@ -283,10 +316,19 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 	hn_st_request_t req;
 	hn_st_response_t res[MANGO_BASE_NUM_PARTITIONS];
 	uint32 num_parts = MANGO_BASE_NUM_PARTITIONS;
+	
+	auto logger = bu::Logger::GetLogger(MANGO_PP_NAMESPACE ".skm");
+
 
 	bbque_assert(part_list.empty());
 
-	req = FillReq(tg);
+	try {
+		req = FillReq(tg);
+	}
+	catch (const std::runtime_error &err) {
+		logger->Error("MangoPartitionSkimmer: %s", err.what());
+		return SK_NO_PARTITION;
+	}
 
 	if ( (hn_get_partitions(&req, res, &num_parts)) ) {
 		return SK_GENERIC_ERROR;

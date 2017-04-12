@@ -40,6 +40,8 @@ void ResourceMappingValidator::
 
 		std::lock_guard<std::mutex> curr_lock(skimmers_lock);
 
+		logger->Notice("Registered skimmer with priority=%i", priority);
+
 		skimmers.insert(
 			std::pair<int,PartitionSkimmerPtr_t> (priority, skimmer) 
 		);
@@ -105,6 +107,7 @@ ResourceMappingValidator::ExitCode_t
 ResourceMappingValidator::PropagatePartition(const TaskGraph &tg, 
 					     const Partition &partition) const noexcept {
 
+	logger->Notice("Propagating partition id=%d", partition.GetPartitionId());
 	// We have to ensure that no skimmer failed for any reasons before this call.
 	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
 
