@@ -34,7 +34,7 @@
 # Binding Manager Options
 ################################################################################
 [BindingManager]
-domains = cpu,gpu
+domains = cpu,gpu,acc
 
 ################################################################################
 # PlatformProxy Options
