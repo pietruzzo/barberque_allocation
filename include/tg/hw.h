@@ -63,6 +63,18 @@ inline ArchType GetArchTypeFromString(std::string const & str) {
 	return ArchType::NONE;
 }
 
+inline const char* GetStringFromArchType(ArchType type) {
+	switch(type) {
+		case ArchType::NONE: return "NONE";
+		case ArchType::GN:   return "GN";
+		case ArchType::GPU:  return "GPU";
+		case ArchType::ARM:  return "ARM";
+		case ArchType::PEAK: return "PEAK";
+		case ArchType::NUP:  return "NUP";
+
+		default:  return "UNKW";
+	}
+}
 
 class ArchInfo {
 
