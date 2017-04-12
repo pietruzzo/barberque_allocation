@@ -8,6 +8,7 @@
 #include <mango-hn/hn.h>
 
 #define BBQUE_MANGOPP_PLATFORM_ID		"org.mango"
+#define MANGO_MEMORY_COUNT_START 10
 
 namespace bb = bbque;
 namespace br = bbque::res;
@@ -153,11 +154,15 @@ MangoPlatformProxy::BootTiles() noexcept {
 
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::RegisterTiles() noexcept {
+	typedef PlatformDescription pd_t;	// Just for convenience
 
-	PlatformDescription &pd = pli->getPlatformInfo();
-	PlatformDescription::System &sys = pd.GetLocalSystem();
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	pd_t &pd = pli->getPlatformInfo();
+	pd_t::System &sys = pd.GetLocalSystem();
 
-	for (uint32_t i=0; i < num_tiles; i++) {
+
+
+	for (uint_fast32_t i=0; i < num_tiles; i++) {
 		hn_st_tile_info tile_info;
 		int err = hn_get_tile_info(i, &tile_info);
 		if (HN_SUCCEEDED != err) {
@@ -165,17 +170,66 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 			return PLATFORM_INIT_FAILED;
 		}
 
-		MangoTile mt((MangoTile::MangoTileType_t)(tile_info.tile_type));
+		MangoTile mt(i, (MangoTile::MangoTileType_t)(tile_info.tile_type));
+		sys.AddAccelerator(mt);
+		mt.SetPrefix(sys.GetPath());
 
 		for (int i=0; i < MangoTile::GetCoreNr(mt.GetType()); i++) {
-			typedef PlatformDescription pd_t;
 			pd_t::ProcessingElement pe(i , 0, 100, pd_t::PartitionType_t::MDEV);
+			pe.SetPrefix(mt.GetPath());
 			mt.AddProcessingElement(pe);
+
+			ra.RegisterResource(pe.GetPath(), "", 100);
 		}
 
-		sys.AddAccelerator(mt);
+		// Let now register the memories. Unfortunately, memories are not easy to be
+		// retrieved, we have to iterate over all tiles and search memories
+		int mem_attached = tile_info.memory_attached;
+		if (mem_attached != 0) {
+			// Register the memory attached if present and if not already registered
+			ExitCode_t reg_err = RegisterMemoryBank(i, mem_attached);
+			if (reg_err) return reg_err;
+			auto mem = sys.GetMemoryById(mem_attached);
+			mt.SetMemory(mem);
+		}
 	}
 
+
+	return PLATFORM_OK;
+}
+
+MangoPlatformProxy::ExitCode_t
+MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
+	typedef PlatformDescription pd_t;	// Just for convenience
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
+	bbque_assert(mem_id > 0);
+
+	logger->Debug("Registering tile %d, memory %d", tile_id, mem_id);
+
+	if (found_memory_banks.test(mem_id)) {	// Already registered
+		return PLATFORM_OK;
+	}
+
+	found_memory_banks.set(mem_id);
+	uint32_t memory_size;
+	int err = hn_get_memory_size(tile_id, &memory_size);
+	if (HN_SUCCEEDED != err) {
+		logger->Fatal("Unable to get memory information of tile nr.%d, memory %d [error=%d].",
+			      tile_id, mem_id, err);
+		return PLATFORM_INIT_FAILED;
+	}
+
+	pd_t &pd = pli->getPlatformInfo();
+	pd_t::System &sys = pd.GetLocalSystem();
+
+	pd_t::Memory mem(MANGO_MEMORY_COUNT_START + mem_id, memory_size);
+	mem.SetPrefix(sys.GetPath());
+
+	sys.AddMemory(std::make_shared<pd_t::Memory>(mem));
+	ra.RegisterResource(mem.GetPath(), "", memory_size);
+
+	logger->Info("Registered memory id=%d size=%d", tile_id, memory_size);
 
 	return PLATFORM_OK;
 }

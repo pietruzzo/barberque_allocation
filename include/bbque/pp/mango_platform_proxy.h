@@ -91,12 +91,16 @@ private:
 	uint32_t alloc_nr_req_cores;
 	uint32_t alloc_nr_req_buffers;
 
+	std::bitset<16> found_memory_banks;
+
 //-------------------- METHODS
 
 	MangoPlatformProxy();
 
 	ExitCode_t BootTiles() noexcept;
 	ExitCode_t RegisterTiles() noexcept;
+	ExitCode_t RegisterMemoryBank (int tile_id, int mem_id) noexcept;
+
 
 	class MangoPartitionSkimmer : public PartitionSkimmer {
 
