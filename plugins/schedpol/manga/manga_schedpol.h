@@ -19,6 +19,7 @@
 #define BBQUE_MANGA_SCHEDPOL_H_
 
 #include <cstdint>
+#include <future>
 #include <list>
 #include <memory>
 
@@ -98,6 +99,7 @@ private:
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
+	std::future<void> fut_tg;
 
 	/**
 	 * @brief Constructor
