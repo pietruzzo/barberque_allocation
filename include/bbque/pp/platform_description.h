@@ -149,7 +149,7 @@ public:
 		Memory(uint16_t id = 0): Resource(id, res::ResourceType::MEMORY) {}
 
 		Memory(uint16_t id, uint64_t quantity)
-			: Resource(id), quantity(quantity)
+			: Resource(id, res::ResourceType::MEMORY), quantity(quantity)
 		{}
 
 		inline uint64_t GetQuantity() const {
@@ -201,9 +201,18 @@ public:
 			this->pes.push_back(pe);
 		}
 
+		inline std::shared_ptr<Memory> GetMemory() const {
+			return this->memory;
+		}
+
+		inline void SetMemory(std::shared_ptr<Memory> memory) {
+			this->memory = memory;
+		}
+
 	private:
 		std::string architecture;
 		std::vector<ProcessingElement> pes;
+		std::shared_ptr<Memory> memory;
 	};
 
 	typedef std::shared_ptr<MulticoreProcessor> MulticorePtr_t;
@@ -220,19 +229,10 @@ public:
 			this->socket_id = socket_id;
 		}
 
-		inline std::shared_ptr<Memory> GetMemory() const {
-			return this->memory;
-		}
-
-		inline void SetMemory(std::shared_ptr<Memory> memory) {
-			this->memory = memory;
-		}
-
 		void SetType(res::ResourceType type) = delete;
 
 	private:
 		uint16_t socket_id;
-		std::shared_ptr<Memory> memory;
 	};
 
 

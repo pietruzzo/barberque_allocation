@@ -33,7 +33,7 @@ public:
 	/**
 	 * @brief Constructor for a MangoTile object.
 	 */
-	MangoTile(MangoTileType_t type) : type(type) {
+	MangoTile(int id, MangoTileType_t type) : MulticoreProcessor(id), type(type) {
 		this->SetArchitecture("MangoTile");
 	}
 
