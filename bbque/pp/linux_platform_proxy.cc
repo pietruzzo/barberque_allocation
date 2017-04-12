@@ -467,8 +467,9 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 	        br::ResourceBinder::GetMask(pres, br::ResourceType::CPU));
 	BBQUE_RID_TYPE node_id = nodes.FirstSet();
 	if (unlikely(node_id < 0)) {
-		logger->Fatal("PLAT LNX: Missing binding to nodes/CPUs");
-		return PLATFORM_MAPPING_FAILED;
+		// No resources for LinuxPP
+		logger->Warn("PLAT LNX: Missing binding to nodes/CPUs");
+		return PLATFORM_OK;
 	}
 
 	// Map resources for each node (e.g., CPU)
