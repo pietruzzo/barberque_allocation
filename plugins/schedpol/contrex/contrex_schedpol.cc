@@ -255,7 +255,7 @@ SchedulerPolicyIF::ExitCode_t ContrexSchedPol::ScheduleApplication(
 	BBQUE_RID_TYPE bind_cpu_id = 0;
 	// Resource binding: getting the first CPU ID option
 	if (bindings.find(br::ResourceType::CPU) != bindings.end())
-		bind_cpu_id = bindings[br::ResourceType::CPU]->ids[0];
+		bind_cpu_id = *(bindings[br::ResourceType::CPU]->ids.begin());
 	else
 		logger->Warn("Schedule: missing CPU binding options (setting to 0)");
 

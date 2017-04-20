@@ -113,7 +113,7 @@ BindingManager::ExitCode_t BindingManager::LoadBindingOptions() {
 
 		// Get all the possible resource binding IDs
 		for (br::ResourcePtr_t & rsrc: binding.resources) {
-			binding.ids.push_back(rsrc->ID());
+			binding.ids.emplace(rsrc->ID());
 			logger->Info("Init: R<%s> ID: %d",
 					binding.base_path->ToString().c_str(), rsrc->ID());
 		}

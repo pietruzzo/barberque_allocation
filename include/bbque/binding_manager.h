@@ -21,7 +21,7 @@
 #include <list>
 #include <map>
 #include <memory>
-#include <vector>
+#include <set>
 
 #include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
@@ -44,7 +44,7 @@ typedef struct BindingInfo {
 	/// Resource pointer descriptor list
 	br::ResourcePtrList_t resources;
 	/// The IDs of all the possible bindings
-	std::vector<BBQUE_RID_TYPE> ids;
+	std::set<BBQUE_RID_TYPE> ids;
 	/// Keep track the bindings without available processing elements
 	br::ResourceBitset full;
 } BindingInfo_t;
