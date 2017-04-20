@@ -32,6 +32,8 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/resource_manager.h"
 #include "bbque/cpp11/chrono.h"
+#include "bbque/resource_mapping_validator.h"
+#include "bbque/utils/assert.h"
 
 #define APPLICATION_MANAGER_NAMESPACE "bq.am"
 #define MODULE_NAMESPACE APPLICATION_MANAGER_NAMESPACE
@@ -1479,7 +1481,15 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 		logger->Debug("EXC [%s] releasing assigned resources...", papp->StrId());
 		ra.ReleaseResources(papp);
 	}
+
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
+	auto partition = papp->GetPartition();
+	if (partition != nullptr) {
+		ResourceMappingValidator &rmv(ResourceMappingValidator::GetInstance());
+		auto ret = rmv.RemovePartition(*papp->GetTaskGraph(), *partition);
+		bbque_assert(ResourceMappingValidator::PMV_OK == ret);
+	}
+
 	papp->ClearTaskGraph();
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 

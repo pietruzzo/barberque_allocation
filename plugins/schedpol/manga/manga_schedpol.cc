@@ -309,6 +309,8 @@ MangASchedPol::SelectTheBestPartition(ba::AppCPtr_t papp, const std::list<Partit
 
 	auto tg = papp->GetTaskGraph();
 	auto selected_partition = partitions.front();
+
+	papp->SetPartition(std::make_shared<Partition>(selected_partition));		// For cleanup and similar
 	rmv.PropagatePartition(*tg, selected_partition);
 
 	// We now update the resource accounter
