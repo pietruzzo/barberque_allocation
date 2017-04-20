@@ -27,4 +27,19 @@ extern const char *g_git_version;
 
 }
 
+#define BBQUE_VERSION_MAJOR     1
+#define BBQUE_VERSION_MINOR     1
+#define BBQUE_VERSION_REVISION  1
+#define BBQUE_VERSION_STATUS    "dev"
+
+#define BBQUE_VERSION_STR \
+	BBQUE_STR(BBQUE_VERSION_MAJOR) "." \
+	BBQUE_STR(BBQUE_VERSION_MINOR) "." \
+	BBQUE_STR(BBQUE_VERSION_REVISION) "-" \
+	BBQUE_VERSION_STATUS
+
+#define BBQUE_STR(__A)       BBQUE_MAKE_STR(__A)
+#define BBQUE_MAKE_STR(__A)  #__A
+
+
 #endif // BBQUE_VERSION_H_

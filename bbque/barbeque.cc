@@ -16,6 +16,7 @@
  */
 
 #include "bbque/barbeque.h"
+#include "bbque/version.h"
 
 #include "bbque/configuration_manager.h"
 #include "bbque/modules_factory.h"
@@ -85,7 +86,8 @@ daemonize(const char *name, const char *uid,
 static void DaemonizeBBQ(bb::ConfigurationManager & cm) {
 	int result;
 
-	logger->Notice("Starting BarbequeRTRM as daemon [%s], running with uid [%s]...",
+	logger->Notice("Starting BarbequeRTRM (v%s) as daemon [%s], running with uid [%s]...",
+			BBQUE_VERSION_STR,
 			cm.GetDaemonName().c_str(), cm.GetUID().c_str());
 	logger->Notice("Using configuration file [%s]",
 			cm.GetConfigurationFile().c_str());
