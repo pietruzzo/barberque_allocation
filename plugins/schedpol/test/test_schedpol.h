@@ -114,6 +114,9 @@ private:
 
 	SchedulerPolicyIF::ExitCode_t AssignWorkingMode(bbque::app::AppCPtr_t papp);
 
+	SchedulerPolicyIF::ExitCode_t DoCPUBinding(
+		bbque::app::AppCPtr_t papp, bbque::app::AwmPtr_t pawm, BBQUE_RID_TYPE id);
+
 	void MapTaskGraph(bbque::app::AppCPtr_t papp);
 };
 

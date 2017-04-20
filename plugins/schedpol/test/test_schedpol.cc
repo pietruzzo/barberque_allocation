@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include "bbque/modules_factory.h"
+#include "bbque/binding_manager.h"
 #include "bbque/utils/logging/logger.h"
 
 #include "bbque/app/working_mode.h"
@@ -141,7 +142,7 @@ TestSchedPol::Schedule(
 
 
 #define CPU_QUOTA_TO_ALLOCATE 100
-#define CPU_ASSIGNED_ID       "1"
+#define CPU_ASSIGNED_ID         1
 
 SchedulerPolicyIF::ExitCode_t
 TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
@@ -157,11 +158,46 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	pawm->AddResourceRequest(
 		"sys0.cpu.pe", CPU_QUOTA_TO_ALLOCATE, br::ResourceAssignment::Policy::BALANCED);
 
-	// CPU-level binding: the processing elements are in the scope of CPU '1'
+	BindingManager & bdm(BindingManager::GetInstance());
+	BindingMap_t & bindings(bdm.GetBindingOptions());
+
+	BBQUE_RID_TYPE cpu_id = R_ID_NONE;
+	if (bindings[br::ResourceType::CPU]->ids.find(CPU_ASSIGNED_ID) !=
+			bindings[br::ResourceType::CPU]->ids.end()) {
+		cpu_id = CPU_ASSIGNED_ID;
+		logger->Info("AssingWorkingMode: hard-coded CPU id [%d] available", cpu_id);
+		ExitCode_t ret = DoCPUBinding(papp, pawm, cpu_id);
+		if (ret == SCHED_OK) {
+			MapTaskGraph(papp); // Task level mapping
+			return ret;
+		}
+	}
+	else
+		logger->Warn("AssingWorkingMode: hard-coded CPU id [%d] not found", cpu_id);
+
+	// In case of CPU_ASSIGNED_ID not found or failed binding
+	for (BBQUE_RID_TYPE cpu_id: bindings[br::ResourceType::CPU]->ids) {
+		logger->Info("AssingWorkingMode: binding attempt CPU id = %d", cpu_id);
+		ExitCode_t ret = DoCPUBinding(papp, pawm, cpu_id);
+		if (ret == SCHED_OK) {
+			MapTaskGraph(papp); // Task level mapping
+			return ret;
+		}
+	}
+
+	return SCHED_ERROR;
+}
+
+
+SchedulerPolicyIF::ExitCode_t
+TestSchedPol::DoCPUBinding(
+		bbque::app::AppCPtr_t papp,
+		bbque::app::AwmPtr_t pawm,
+		BBQUE_RID_TYPE cpu_id) {
+	// CPU-level binding: the processing elements are in the scope of the CPU 'cpu_id'
 	int32_t ref_num = -1;
-	ref_num = pawm->BindResource(
-		br::ResourceType::CPU, R_ID_ANY, atoi(CPU_ASSIGNED_ID), ref_num);
-	auto resource_path = ra.GetPath("sys0.cpu" CPU_ASSIGNED_ID ".pe");
+	ref_num = pawm->BindResource(br::ResourceType::CPU, R_ID_ANY, cpu_id, ref_num);
+	auto resource_path = ra.GetPath("sys0.cpu" + std::to_string(cpu_id) + ".pe");
 
 	// The ResourceBitset object is used for the processing elements binding
 	// (CPU core mapping)
@@ -180,16 +216,6 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		logger->Error("AssignWorkingMode: schedule request failed for [%d]", papp->StrId());
 		return SCHED_ERROR;
 	}
-
-	// Task level mapping
-	MapTaskGraph(papp);
-
-	/*
-	// Enqueue scheduling entity
-	SchedEntityPtr_t psched = std::make_shared<SchedEntity_t>(
-			papp, pawm, R_ID_ANY, 0);
-	entities.push_back(psched);
-	*/
 
 	return SCHED_OK;
 }
