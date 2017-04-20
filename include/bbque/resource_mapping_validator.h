@@ -147,6 +147,12 @@ public:
 	 */
 	ExitCode_t PropagatePartition(const TaskGraph &tg, const Partition &partition) const noexcept;
 
+	/**
+	 * Propagates the partition removal request to all skimmers
+	 */
+	ExitCode_t RemovePartition(const TaskGraph &tg, const Partition &partition) const noexcept;
+
+
 private:
 
 	/* ******* ATTRIBUTES ******* */

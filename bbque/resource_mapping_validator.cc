@@ -128,5 +128,30 @@ ResourceMappingValidator::PropagatePartition(const TaskGraph &tg,
 	return PMV_OK;
 }
 
+ResourceMappingValidator::ExitCode_t
+ResourceMappingValidator::RemovePartition(const TaskGraph &tg,
+					     const Partition &partition) const noexcept {
+
+	logger->Notice("Removing partition id=%d", partition.GetPartitionId());
+	// We have to ensure that no skimmer failed for any reasons before this call.
+	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
+
+	std::lock_guard<std::mutex> curr_lock(skimmers_lock);
+
+	// Just propagate the selected partition to all registered partition skimmer. They should
+	// not fail for any reason, since they have already skimmed the partitions.
+
+	for (auto s = skimmers.rbegin(); s != skimmers.rend(); ++s) {
+		PartitionSkimmerPtr_t skimmer = s->second;
+		PartitionSkimmer::ExitCode_t err = skimmer->UnsetPartition(tg, partition);
+		if ( PartitionSkimmer::SK_OK != err ) {
+			logger->Fatal("Skimmer failed to unset partition [type=%d] [priority=%d] "
+				      "[err=%d]", skimmer->GetType(), s->first, err);
+			return PMV_GENERIC_ERROR;
+		}
+	}
+	return PMV_OK;
+}
+
 } // namespace bbque
 
