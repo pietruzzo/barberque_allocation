@@ -41,6 +41,8 @@
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
 
+#include "tg/partition.h"
+
 #define APPLICATION_NAMESPACE "bq.app"
 #define APPLICATION_NAME_LEN  16
 
@@ -592,6 +594,20 @@ public:
 		return recipe->GetTaskRequirements(task_id);
 	};
 
+	/**
+	 * @brief Return the current partition
+	 */
+	inline std::shared_ptr<Partition> GetPartition() { return assigned_partition; }
+
+	/**
+	 * @brief Set the allocated partition
+	 * @note Typically used by the scheduling policy for resource mapping purpose
+	 * @param partition the allocated partition object
+	 */
+	inline void SetPartition(std::shared_ptr<Partition> partition) {
+		assigned_partition = partition;
+	}
+
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 private:
@@ -651,6 +667,11 @@ private:
 	 * Task-graph descriptor (shared pointer to)
 	 */
 	std::shared_ptr<TaskGraph> task_graph;
+
+	/**
+	 * Assigned partition
+	 */
+	std::shared_ptr<Partition> assigned_partition = nullptr;
 
 	/**
 	 * Platform Specifica Data properly initialized

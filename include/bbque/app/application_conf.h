@@ -20,7 +20,7 @@
 
 #include "bbque/app/application_status.h"
 #include "tg/task_graph.h"
-
+#include "tg/partition.h"
 
 namespace bbque {
 
@@ -96,6 +96,18 @@ public:
 	 * region storing the copy shared with the RTLib
 	 */
 	virtual void SetTaskGraph(std::shared_ptr<TaskGraph> tg, bool write_through=true) = 0;
+
+	/**
+	 * @brief Return the current partition
+	 */
+	virtual std::shared_ptr<Partition> GetPartition() = 0;
+
+	/**
+	 * @brief Set the allocated partition
+	 * @note Typically used by the scheduling policy for resource mapping purpose
+	 * @param partition the allocated partition object
+	 */
+	virtual void SetPartition(std::shared_ptr<Partition> partition) = 0;
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
