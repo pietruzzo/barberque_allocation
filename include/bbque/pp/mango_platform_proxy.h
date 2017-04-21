@@ -86,6 +86,8 @@ private:
 	bool refreshMode;
 
 	uint32_t num_tiles;
+	uint32_t num_tiles_x;
+	uint32_t num_tiles_y;
 	uint32_t num_vns;
 
 	uint32_t alloc_nr_req_cores;

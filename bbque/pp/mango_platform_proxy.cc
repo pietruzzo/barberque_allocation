@@ -14,6 +14,8 @@ namespace bb = bbque;
 namespace br = bbque::res;
 namespace po = boost::program_options;
 
+typedef hn_st_req hn_st_request_t;
+typedef hn_st_response hn_st_response_t;
 
 namespace bbque {
 namespace pp {
@@ -104,7 +106,8 @@ MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::LoadPlatformData() noexcept {
 
 	// Get the number of tiles
-	if ( HN_SUCCEEDED != hn_get_num_tiles(&this->num_tiles) ) {
+	if ( HN_SUCCEEDED != hn_get_num_tiles(&this->num_tiles, &this->num_tiles_x,
+									&this->num_tiles_y) ) {
 		logger->Fatal("Unable to get the number of tiles.");
 		return PLATFORM_INIT_FAILED;
 	}
@@ -288,21 +291,21 @@ static hn_st_request_t FillReq(const TaskGraph &tg) {
 }
 
 static Partition GetPartition(const TaskGraph &tg, hn_st_request_t req, hn_st_response_t *res,
-							  int i) {
+							  int partition_id) {
 
 	auto it_task = tg.Tasks().begin();
 	auto it_buff = tg.Buffers().begin();
 
-	Partition part(res[i].partition_id);
+	Partition part(partition_id);
 
 	for (unsigned int j=0; j<req.num_comp_rsc; j++) {
-		part.MapTask(it_task->second, res[i].comp_rsc_tiles[j]);
+		part.MapTask(it_task->second, res->comp_rsc_tiles[j]);
 		it_task++;
 	}
 	bbque_assert(it_task == tg.Tasks().end());
 
 	for (unsigned int j=0; j<req.num_mem_buffers; j++) {
-		part.MapBuffer(it_buff->second, res[i].mem_buffers_tiles[j]);
+		part.MapBuffer(it_buff->second, res->mem_buffers_tiles[j]);
 		it_buff++;
 	}
 	bbque_assert(it_buff == tg.Buffers().end());
@@ -315,6 +318,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 							std::list<Partition>&part_list) noexcept {
 	hn_st_request_t req;
 	hn_st_response_t res[MANGO_BASE_NUM_PARTITIONS];
+	uint32_t ids[MANGO_BASE_NUM_PARTITIONS];
 	uint32 num_parts = MANGO_BASE_NUM_PARTITIONS;
 	
 	auto logger = bu::Logger::GetLogger(MANGO_PP_NAMESPACE ".skm");
@@ -330,7 +334,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 		return SK_NO_PARTITION;
 	}
 
-	if ( (hn_get_partitions(&req, res, &num_parts)) ) {
+	if ( (hn_find_partitions(req, res, ids, num_parts)) ) {
 		return SK_GENERIC_ERROR;
 	}
 
@@ -341,7 +345,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 
 	// Fill the partition vector with the partitions returned by HN library
 	for (unsigned int i=0; i < num_parts; i++) {
-		Partition part = GetPartition(tg, req, res, i);
+		Partition part = GetPartition(tg, req, &res[i], ids[i]);
 		part_list.push_back(part);
 	}
 	
