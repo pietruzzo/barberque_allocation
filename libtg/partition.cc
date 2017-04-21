@@ -16,7 +16,7 @@
  */
 
 #include "bbque/pp/mango_platform_description.h"
-#include "bbque/tg/partition.h"
+#include "tg/partition.h"
 #include "bbque/utils/utility.h"
 
 namespace bbque {
