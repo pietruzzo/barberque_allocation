@@ -224,11 +224,21 @@ void ResourceAccounter::PrintAppDetails(
 		// Get the App/EXC descriptor
 		auto papp(am.GetApplication(app_uid));
 		if (papp == nullptr) {
-			logger->Error("[uid=%d] no application found", app_uid);
+			logger->Debug("[uid=%d] no application found", app_uid);
 			break;
 		}
+
+		// Skip finished applications
+		if (papp->State() == Application::FINISHED) {
+			logger->Debug("[pid=%d, uid=%d, state=%s] skipped",
+				papp->Pid(), app_uid, Application::StateStr(papp->State()));
+			break;
+		}
+
+		// Warning: unfinished application without AWM...
 		if (!papp->CurrentAWM()) {
-			logger->Error("[uid=%d] no working mode", app_uid);
+			logger->Warn("[pid=%d, uid=%d, state=%s] no working mode",
+				papp->Pid(), app_uid, Application::StateStr(papp->State()));
 			break;
 		}
 
