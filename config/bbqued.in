@@ -104,10 +104,12 @@ setup() {
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
 	bbqued_info "Checking platform description file..."
+	bbqued_notice "Platform description directory: $BBQUE_PILSETUPS"
 	bbqued_notice "Platform description: $PILNAME"
 	bbqued_notice "Host name: `hostname`"
 
 	mkdir -p $BBQUE_PILSETUPS
+	chmod a+rw $BBQUE_PILSETUPS
 
 	if [ ! -f $BBQUE_PILSETUPS/$PILNAME ]; then
 		# Generating the bpl file on the fly, exploiting menuconfig info
