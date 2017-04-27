@@ -1,5 +1,6 @@
 config BBQUE_SCHEDPOL_GRIDBALANCE
   bool "GridBalance"
+  depends on !BBQUE_TEST_PLATFORM_DATA
   default y
   ---help---
   This simple policy assigns an amount of CPU quota / number of CPU cores to

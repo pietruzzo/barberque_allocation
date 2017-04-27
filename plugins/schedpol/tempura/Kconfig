@@ -1,6 +1,7 @@
 config BBQUE_SCHEDPOL_TEMPURA
   bool "Tempura"
   default n
+  depends on !BBQUE_TEST_PLATFORM_DATA
   select BBQUE_PM
   select BBQUE_PM_CPU
   ---help---
@@ -11,4 +12,4 @@ config BBQUE_SCHEDPOL_TEMPURA
 
   The CPU upper bound then is partitioned among the active applications in a way
   proportional to the priority level.
- 
+
