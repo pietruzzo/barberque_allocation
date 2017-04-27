@@ -153,7 +153,9 @@ public:
 	 * @brief Load all the application task-graphs
 	 */
 	inline void LoadTaskGraphs() {
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
 		return am.LoadTaskGraphAll();
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 	}
 
 	/// .............................: RESOURCES :............................

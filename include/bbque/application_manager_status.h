@@ -372,10 +372,14 @@ public:
 	 */
 	virtual void PrintStatusReport(bool verbose = false) = 0;
 
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
 	/**
 	 * @brief Load the task-graphs of all the active applications (ready and running)
 	 */
 	virtual void LoadTaskGraphAll() = 0;
+
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 };
 

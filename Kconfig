@@ -214,12 +214,21 @@ endmenu # RTLib Configuration
 
 
 ################################################################################
-# Task-Graph Library
+# Programming Model
 ################################################################################
 
+menu "Programming Model"
+
+config BBQUE_TG_PROG_MODEL
+  bool "Task-graph based programming model"
+  default y
+
 menu "Task-Graph Library (libtg)"
+  depends on BBQUE_TG_PROG_MODEL
   source "barbeque/libtg/Kconfig"
 endmenu # libtg
+
+endmenu # Programming model
 
 
 ################################################################################

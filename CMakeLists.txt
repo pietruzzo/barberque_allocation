@@ -288,10 +288,10 @@ if (CONFIG_BBQUE_BUILD_TESTS)
 add_subdirectory(test)
 endif (CONFIG_BBQUE_BUILD_TESTS)
 
-# Programming model support for task-graph based applications
-add_subdirectory(libpms)
-# Support for task-graph representations
-add_subdirectory(libtg)
+if (CONFIG_BBQUE_TG_PROG_MODEL)
+add_subdirectory(libpms) # Programming model support for task-graph based applications
+add_subdirectory(libtg)  # Support for task-graph representations
+endif (CONFIG_BBQUE_TG_PROG_MODEL)
 
 ################################################################################
 # Doxygen Documentation

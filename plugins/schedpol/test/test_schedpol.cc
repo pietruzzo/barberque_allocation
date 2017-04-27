@@ -168,7 +168,9 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		logger->Info("AssingWorkingMode: hard-coded CPU id [%d] available", cpu_id);
 		ExitCode_t ret = DoCPUBinding(papp, pawm, cpu_id);
 		if (ret == SCHED_OK) {
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
 			MapTaskGraph(papp); // Task level mapping
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 			return ret;
 		}
 	}
@@ -180,7 +182,9 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		logger->Info("AssingWorkingMode: binding attempt CPU id = %d", cpu_id);
 		ExitCode_t ret = DoCPUBinding(papp, pawm, cpu_id);
 		if (ret == SCHED_OK) {
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
 			MapTaskGraph(papp); // Task level mapping
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 			return ret;
 		}
 	}
@@ -220,6 +224,7 @@ TestSchedPol::DoCPUBinding(
 	return SCHED_OK;
 }
 
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
 void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
 	auto task_graph = papp->GetTaskGraph();
@@ -253,6 +258,7 @@ void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
 	logger->Info("[%s] Task-graph updated", papp->StrId());
 }
 
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 } // namespace plugins
 

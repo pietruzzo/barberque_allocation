@@ -548,6 +548,8 @@ public:
 
 	// -------------------------- Task-graph management ------------------------------------- //
 
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
 	/**
 	 * @brief Restore/retrieve the task-graph description
 	 */
@@ -589,6 +591,8 @@ public:
 	inline const TaskRequirements & GetTaskRequirements(uint32_t task_id) {
 		return recipe->GetTaskRequirements(task_id);
 	};
+
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 private:
 

@@ -406,6 +406,7 @@ public:
 		return AM_SUCCESS;
 	}
 
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
 	/**
 	 * @brief Load the task-graph of an application
@@ -424,6 +425,8 @@ public:
 	 * @brief Load the task-graphs of all the active applications (ready and running)
 	 */
 	void LoadTaskGraphAll();
+
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 private:
 

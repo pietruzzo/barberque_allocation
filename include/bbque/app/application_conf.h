@@ -81,6 +81,8 @@ public:
 	 */
 	virtual void SetValue(float sched_metrics) = 0;
 
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
 	/**
 	 * @brief Update the task-graph description shared with the RTLib
 	 */
@@ -94,6 +96,8 @@ public:
 	 * region storing the copy shared with the RTLib
 	 */
 	virtual void SetTaskGraph(std::shared_ptr<TaskGraph> tg, bool write_through=true) = 0;
+
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 };
 

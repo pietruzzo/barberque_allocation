@@ -91,12 +91,15 @@ Application::Application(std::string const & _name,
 	snprintf(str_id, APPLICATION_NAME_LEN, "%05d:%5s:%02d",
 		Pid(), Name().substr(0,5).c_str(), ExcId());
 
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
 	// Task-graph file paths
 	std::string app_str(std::string(str_id).substr(0, 6) + Name());
 	tg_path.assign(BBQUE_TG_FILE_PREFIX + app_str);
 	std::replace(app_str.begin(), app_str.end(), ':', '.');
 	tg_sem_name.assign("/" + app_str);
-	logger->Info("Task-graph serial file: <%s> sem: <%s>", tg_path.c_str(), tg_sem_name.c_str());
+	logger->Info("Task-graph serial file: <%s> sem: <%s>",
+		tg_path.c_str(), tg_sem_name.c_str());
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 	// Initialized scheduling state
 	schedule.state        = DISABLED;
@@ -110,8 +113,10 @@ Application::~Application() {
 	awms.recipe_vect.clear();
 	awms.enabled_list.clear();
 	rsrc_constraints.clear();
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
 	if (tg_sem != nullptr)
 		sem_close(tg_sem);
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 }
 
 void Application::SetPriority(AppPrio_t _prio) {
@@ -1180,6 +1185,8 @@ uint64_t Application::GetResourceRequestStat(
  *  Task-graph Management
  ******************************************************************************/
 
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
 Application::ExitCode_t Application::LoadTaskGraph() {
 	logger->Info("LoadTaskGraph: loading [path:%s sem=%s]...",
 		tg_path.c_str(), tg_sem_name.c_str());
@@ -1240,6 +1247,8 @@ void Application::UpdateTaskGraph() {
 	sem_post(tg_sem);
 	logger->Debug("Task-graph sent back");
 }
+
+#endif //CONFIG_BBQUE_TG_PROG_MODEL
 
 } // namespace app
 

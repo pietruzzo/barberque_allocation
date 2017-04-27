@@ -393,10 +393,14 @@ public:
 	virtual uint64_t GetResourceRequestStat(std::string const & rsrc_path,
 			ResourceUsageStatType_t ru_stat) = 0;
 
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
 	/**
 	 * @brief Performance requirements of a task (if specified in the recipe)
 	 */
 	virtual const TaskRequirements & GetTaskRequirements(uint32_t task_id) = 0;
+
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 	/**
 	 * @brief Verbose application state names

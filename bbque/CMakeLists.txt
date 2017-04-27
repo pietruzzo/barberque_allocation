@@ -147,19 +147,22 @@ endif (CONFIG_BBQUE_PM)
 
 add_executable (barbeque ${BARBEQUE_SRC})
 
-add_dependencies(barbeque
-	bbque_tg
-)
-
 # Linking dependencies
 target_link_libraries(barbeque
 	bbque_utils
 	bbque_resources
 	bbque_apps
-	bbque_tg
 	${Boost_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 )
+
+# Linking dependencies due to task-graph based programming models
+if (CONFIG_BBQUE_TG_PROG_MODEL)
+add_dependencies(barbeque
+	bbque_tg)
+target_link_libraries(barbeque
+	bbque_tg)
+endif (CONFIG_BBQUE_TG_PROG_MODEL)
 
 # Linking dependencies for Generic-Linux targets
 if (CONFIG_TARGET_LINUX)

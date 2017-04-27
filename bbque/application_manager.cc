@@ -1388,6 +1388,8 @@ ApplicationManager::SetRuntimeProfile(
 	return result;
 }
 
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
 void ApplicationManager::LoadTaskGraph(AppPid_t pid, uint8_t exc_id) {
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
@@ -1413,6 +1415,7 @@ void ApplicationManager::LoadTaskGraphAll() {
 	}
 }
 
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 /*******************************************************************************
  *  EXC Enabling
@@ -1476,8 +1479,10 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 		logger->Debug("EXC [%s] releasing assigned resources...", papp->StrId());
 		ra.ReleaseResources(papp);
 	}
-
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
 	papp->ClearTaskGraph();
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
+
 	logger->Info("EXC [%s] DISABLED", papp->StrId());
 
 	return AM_SUCCESS;
