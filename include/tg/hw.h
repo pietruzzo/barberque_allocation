@@ -109,50 +109,63 @@ public:
 	 * \brief The memory address to which deploy the task binary
 	 * \return The memory address
 	 */
-	inline size_t Address() const noexcept { return address; }
+	inline uint32_t Address() const noexcept { return address; }
 
 	/**
 	 * \brief Set the memory address to which deploy the task binary
 	 * \param _addr The memory address to set
 	 */
-	inline void SetAddress(size_t _addr) noexcept { address = _addr; }
+	inline void SetAddress(uint32_t _addr) noexcept { address = _addr; }
+
+	/**
+	 * \brief The memory address to which deploy the task binary
+	 * \return The memory address
+	 */
+	inline uint32_t MemoryBank() const noexcept { return address; }
+
+	/**
+	 * \brief Set the memory address to which deploy the task binary
+	 * \param _addr The memory address to set
+	 */
+	inline void SetMemoryBank(uint32_t bank) noexcept { mem_bank = bank; }
 
 
 	/**
 	 * \brief The current task binary size
 	 * \return The memory address
 	 */
-	inline size_t BinarySize() const noexcept { return binary_size; }
+	inline uint32_t BinarySize() const noexcept { return binary_size; }
 
 	/**
 	 * \brief Set the current task binary size
 	 * \return The memory address
 	 */
-	inline void SetBinarySize(size_t _binsize) noexcept { binary_size = _binsize; }
+	inline void SetBinarySize(uint32_t _binsize) noexcept { binary_size = _binsize; }
 
 
 	/**
 	 * \brief The stack size for the task execution
 	 * \return The memory stack size
 	 */
-	inline size_t StackSize() const noexcept { return stack_size; }
+	inline uint32_t StackSize() const noexcept { return stack_size; }
 
 	/**
 	 * \brief Set the stack size for the task executio
 	 * \param _ss The memory stack size to set
 	 */
-	inline void SetStackSize(size_t _ss) noexcept { stack_size = _ss; }
+	inline void SetStackSize(uint32_t _ss) noexcept { stack_size = _ss; }
 
 
 protected:
 
 	uint8_t priority;
 
-	size_t address;
+	uint32_t address;
+	uint32_t mem_bank;
 
-	size_t binary_size;
+	uint32_t binary_size;
 
-	size_t stack_size;
+	uint32_t stack_size;
 
 
 	friend class boost::serialization::access;
@@ -162,6 +175,7 @@ protected:
 		(void) version;
 		ar & priority;
 		ar & address;
+		ar & mem_bank;
 		ar & binary_size;
 		ar & stack_size;
 	}
