@@ -9,6 +9,7 @@
 
 #define BBQUE_MANGOPP_PLATFORM_ID		"org.mango"
 #define MANGO_MEMORY_COUNT_START 10
+#define MANGO_PEAKOS_FILE_SIZE 256*1024*1024
 
 namespace bb = bbque;
 namespace br = bbque::res;
@@ -36,7 +37,23 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	logger = bu::Logger::GetLogger(MANGO_PP_NAMESPACE);
 	bbque_assert(logger);
 
-	bbque_assert ( 0 == hn_initialize(MANGO_DEVICE_NAME) ); 
+
+	// We prepare the filter to enable access to registers and statistics
+	hn_daemon_socket_filter filter;
+	filter.target = TARGET_MANGO;
+	filter.mode = APPL_MODE_SYNC_READS;
+	filter.tile = 999;
+	filter.core = 999;
+
+	int hn_init_err = hn_initialize(filter, UPV_PARTITION_STRATEGY, 1);	// TODO UPV_PARTITION_STRATEGY?
+
+	bbque_assert ( 0 == hn_init_err );
+
+	logger->Debug("Resetting MANGO platform...");
+
+	hn_reset(0);
+
+	logger->Debug("HN Library initialized");
 
 	ResourceMappingValidator &rmv = ResourceMappingValidator::GetInstance();
 	rmv.RegisterSkimmer(std::make_shared<MangoPartitionSkimmer>() , 100);
@@ -92,6 +109,7 @@ MangoPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 	UNUSED(papp);
 	UNUSED(pres);
 	UNUSED(excl);
+
 	return PLATFORM_OK;
 }
 
@@ -105,35 +123,38 @@ MangoPlatformProxy::ExitCode_t MangoPlatformProxy::Refresh() noexcept {
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::LoadPlatformData() noexcept {
 
+	int err;
+
 	// Get the number of tiles
-	if ( HN_SUCCEEDED != hn_get_num_tiles(&this->num_tiles, &this->num_tiles_x,
-									&this->num_tiles_y) ) {
-		logger->Fatal("Unable to get the number of tiles.");
+	err = hn_get_num_tiles(&this->num_tiles, &this->num_tiles_x, &this->num_tiles_y);
+
+	if ( HN_SUCCEEDED != err ) {
+		logger->Fatal("Unable to get the number of tiles [err=%d]", err);
 		return PLATFORM_INIT_FAILED;
 	}
-
-	// TODO Get the tiles topology
 
 	// Get the number of VNs
-	if ( HN_SUCCEEDED != hn_get_num_vns(&this->num_vns) ) {
-		logger->Fatal("Unable to get the number of VNs.");
+	err = hn_get_num_vns(&this->num_vns);
+	if ( HN_SUCCEEDED != err ) {
+		logger->Fatal("Unable to get the number of VNs [err=%d]", err);
 		return PLATFORM_INIT_FAILED;
 	}
 
-	logger->Info("Found a total of %d tiles and %d VNs.", this->num_tiles, this->num_vns);
+	logger->Info("Found a total of %d tiles (%dx%d) and %d VNs.", this->num_tiles,
+			this->num_tiles_x, this->num_tiles_y, this->num_vns);
 
 
-	ExitCode_t err;
+	ExitCode_t pp_err;
 
 	// Now we have to register the tiles to the PlatformDescription
-	err = RegisterTiles();
-	if (PLATFORM_OK != err) {
-		return err;
+	pp_err = RegisterTiles();
+	if (PLATFORM_OK != pp_err) {
+		return pp_err;
 	}
 
-	err = BootTiles();
-	if (PLATFORM_OK != err) {
-		return err;
+	pp_err = BootTiles();
+	if (PLATFORM_OK != pp_err) {
+		return pp_err;
 	}
 
 	return PLATFORM_OK;
@@ -143,10 +164,21 @@ MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::BootTiles() noexcept {
 	for (unsigned i=0; i < num_tiles; i++) {
 
-		logger->Info("Booting Tile nr=%d", i);
-		int ret = hn_boot_unit(i, 0, i << 28);
+		uint32 req_size = MANGO_PEAKOS_FILE_SIZE;
+		uint32 tile_memory;
+		uint32 base_addr;
 
-		if (HN_SUCCEEDED != ret) {
+		int err = hn_find_memory(i, req_size, &tile_memory, &base_addr);
+
+		if (HN_SUCCEEDED != err) {
+			logger->Error("Unable to get memory for tile nr=%d", i);
+			return PLATFORM_LOADING_FAILED;
+		}
+
+		logger->Info("Booting Tile nr=%d", i);
+		err = hn_boot_unit(i, tile_memory, base_addr);
+
+		if (HN_SUCCEEDED != err) {
 			logger->Error("Unable to boot Tile nr=%d", i);
 			return PLATFORM_LOADING_FAILED;
 		}
@@ -187,7 +219,7 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 
 		// Let now register the memories. Unfortunately, memories are not easy to be
 		// retrieved, we have to iterate over all tiles and search memories
-		int mem_attached = tile_info.memory_attached;
+		unsigned int mem_attached = 1; // TODO BUG tile_info.memory_attached;
 		if (mem_attached != 0) {
 			// Register the memory attached if present and if not already registered
 			ExitCode_t reg_err = RegisterMemoryBank(i, mem_attached);
@@ -256,7 +288,9 @@ static hn_st_request_t FillReq(const TaskGraph &tg) {
 
 	hn_st_request_t req;
 	req.num_comp_rsc    = tg.TaskCount();
-	req.num_mem_buffers = tg.BufferCount();
+
+	// We request one more buffer to write the kernel image
+	req.num_mem_buffers = tg.BufferCount() + tg.TaskCount();
 
 	// We need the application to get the application bandwidth requirements
 	AppPtr_t app = am.GetApplication(tg.GetApplicationId());
@@ -265,7 +299,6 @@ static hn_st_request_t FillReq(const TaskGraph &tg) {
 	for (auto t : tg.Tasks()) {
 		req.comp_rsc_types[i++] = ArchTypeToMangoType(t.second->GetAssignedArch(), 
 							      t.second->GetThreadCount());
-		auto tg_req = app->GetTaskRequirements(t.second->Id());
 	}
 
 	i=0;
@@ -274,14 +307,43 @@ static hn_st_request_t FillReq(const TaskGraph &tg) {
 		req.mem_buffers_size[i++] = b.second->Size();
 	}
 
+
 	i=0;
-	unsigned int j=0;
 	for (auto t : tg.Tasks()) {
+		auto tg_req = app->GetTaskRequirements(t.second->Id());
+		unsigned int j=0;
 		for (auto b : tg.Buffers()) {
-			req.bw_read_req[i][j]  = 0; // tg_req.InBandwidth();
-			req.bw_write_req[i][j] = 0; // tg_req.InBandwidth();
+			auto first = t.second->InputBuffers().cbegin();
+			auto last = t.second->InputBuffers().cend();
+
+			if ( std::find(first, last, b.second->Id()) != last) {
+				req.bw_read_req[i][j]  = 1; // tg_req.InBandwidth();
+			} else {
+				req.bw_read_req[i][j]  = 0;
+			}
+
+			first = t.second->OutputBuffers().cbegin();
+			last = t.second->OutputBuffers().cend();
+
+			if ( std::find(first, last, b.second->Id()) != last) {
+				req.bw_write_req[i][j]  = 1; // tg_req.OutBandwidth();
+			} else {
+				req.bw_write_req[i][j]  = 0;
+			}
+
+
+
 			j++;
 		}
+
+		// Extra buffer for kernel and stack memory
+		auto arch =  t.second->GetAssignedArch();
+		auto ksize = t.second->Targets()[arch]->BinarySize();
+		auto ssize = t.second->Targets()[arch]->StackSize();
+		req.mem_buffers_size[i] = ksize + ssize;
+		req.bw_read_req[i] [j+i]  = 1;
+		req.bw_write_req[i][j+i]  = 1;
+
 		i++;
 	}
 
@@ -290,27 +352,47 @@ static hn_st_request_t FillReq(const TaskGraph &tg) {
 	return req;
 }
 
-static Partition GetPartition(const TaskGraph &tg, hn_st_request_t req, hn_st_response_t *res,
+static Partition GetPartition(const TaskGraph &tg, hn_st_response_t *res,
 							  int partition_id) {
 
-	auto it_task = tg.Tasks().begin();
-	auto it_buff = tg.Buffers().begin();
+	auto it_task  = tg.Tasks().begin();
+	int tasks_size = tg.Tasks().size();
+	auto it_buff  = tg.Buffers().begin();
+	int buff_size = tg.Buffers().size();
 
 	Partition part(partition_id);
 
-	for (unsigned int j=0; j<req.num_comp_rsc; j++) {
-		part.MapTask(it_task->second, res->comp_rsc_tiles[j]);
+	for (int j=0; j < tasks_size; j++) {
+		part.MapTask(it_task->second, res->comp_rsc_tiles[j], res->mem_buffers_addr[buff_size + j]);
 		it_task++;
 	}
 	bbque_assert(it_task == tg.Tasks().end());
 
-	for (unsigned int j=0; j<req.num_mem_buffers; j++) {
-		part.MapBuffer(it_buff->second, res->mem_buffers_tiles[j]);
+	for (int j=0; j < buff_size; j++) {
+		part.MapBuffer(it_buff->second, res->mem_buffers_tiles[j], res->mem_buffers_addr[j]);
 		it_buff++;
 	}
 	bbque_assert(it_buff == tg.Buffers().end());
 
+
+
 	return part;
+}
+
+MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
+MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(const TaskGraph &tg, const Partition &partition) noexcept {
+
+	for ( auto buffer : tg.Buffers()) {
+		buffer.second->SetMemoryBank(partition.GetMemoryBank(buffer.second));
+		buffer.second->SetPhysicalAddress(partition.GetBufferAddress(buffer.second));
+	}
+
+	for ( auto task : tg.Tasks()) {
+		auto arch = task.second->GetAssignedArch();
+		task.second->Targets()[arch]->SetAddress(partition.GetKernelAddress(task.second));
+	}
+
+	return SK_OK;
 }
 
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
@@ -318,11 +400,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 							std::list<Partition>&part_list) noexcept {
 	hn_st_request_t req;
 	hn_st_response_t res[MANGO_BASE_NUM_PARTITIONS];
-	uint32_t ids[MANGO_BASE_NUM_PARTITIONS];
-	uint32 num_parts = MANGO_BASE_NUM_PARTITIONS;
+	uint32_t ids[MANGO_BASE_NUM_PARTITIONS];		// TODO multiple partition
+	uint32_t num_parts = 1; //MANGO_BASE_NUM_PARTITIONS;
+	uint32_t part_id;
 	
 	auto logger = bu::Logger::GetLogger(MANGO_PP_NAMESPACE ".skm");
-
 
 	bbque_assert(part_list.empty());
 
@@ -334,9 +416,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 		return SK_NO_PARTITION;
 	}
 
-	if ( (hn_find_partitions(req, res, ids, num_parts)) ) {
+	if ( (hn_find_partition(req, res, &part_id)) ) {
 		return SK_GENERIC_ERROR;
 	}
+
+	ids[0] = part_id;
 
 	// No feasible partition found
 	if ( num_parts == 0 ) {
@@ -345,10 +429,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 
 	// Fill the partition vector with the partitions returned by HN library
 	for (unsigned int i=0; i < num_parts; i++) {
-		Partition part = GetPartition(tg, req, &res[i], ids[i]);
+		Partition part = GetPartition(tg, &res[i], ids[i]);
 		part_list.push_back(part);
 	}
-	
+
+
 	return SK_OK;
 
 }
@@ -359,14 +444,19 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(const TaskGraph &tg,
 
 	UNUSED(tg);
 
-	uint32_t part_id = partition.GetPartitionId();
+
+	ExitCode_t err = SetAddresses(tg, partition);
+
+// TODO
+/*	uint32_t part_id = partition.GetPartitionId();
 	uint32_t ret = hn_allocate_partition(part_id);
 	
 	if ( HN_SUCCEEDED != ret ) {
 		return SK_GENERIC_ERROR;
 	}
+*/
 
-	return SK_OK;
+	return err;
 }
 
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
@@ -377,7 +467,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(const TaskGraph &tg,
 
 	uint32_t part_id = partition.GetPartitionId();
 	uint32_t ret;
-	ret = hn_deallocate_partition(part_id);
+	ret = hn_delete_partition(part_id);
 
 	if ( HN_SUCCEEDED != ret ) {
 		return SK_GENERIC_ERROR;

@@ -113,6 +113,8 @@ private:
 						const Partition &partition) noexcept override final;
 		virtual ExitCode_t UnsetPartition(const TaskGraph &tg,
 						  const Partition &partition) noexcept override final;
+
+		ExitCode_t SetAddresses(const TaskGraph &tg, const Partition &partition) noexcept;
 	};
 
 };

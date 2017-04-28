@@ -216,7 +216,7 @@ endif (CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH)
 #Linking the Mango library
 if (CONFIG_TARGET_LINUX_MANGO)
 target_link_libraries(barbeque
-	mango-hn
+	hn
 )
 endif (CONFIG_TARGET_LINUX_MANGO)
 
