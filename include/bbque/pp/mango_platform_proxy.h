@@ -10,6 +10,7 @@
 
 #define MANGO_PP_NAMESPACE "bq.pp.mango"
 
+#define MANGO_MAX_MEMORIES 16
 
 namespace bbque {
 namespace pp {
@@ -93,7 +94,7 @@ private:
 	uint32_t alloc_nr_req_cores;
 	uint32_t alloc_nr_req_buffers;
 
-	std::bitset<16> found_memory_banks;
+	std::bitset<MANGO_MAX_MEMORIES> found_memory_banks;
 
 //-------------------- METHODS
 
@@ -107,7 +108,7 @@ private:
 	class MangoPartitionSkimmer : public PartitionSkimmer {
 
 	public:
-		MangoPartitionSkimmer() : PartitionSkimmer(SKT_MANGO_HN) {}
+		MangoPartitionSkimmer();
 		virtual ExitCode_t Skim(const TaskGraph &tg, std::list<Partition>&) noexcept override final;
 		virtual ExitCode_t SetPartition(const TaskGraph &tg,
 						const Partition &partition) noexcept override final;
@@ -115,6 +116,8 @@ private:
 						  const Partition &partition) noexcept override final;
 
 		ExitCode_t SetAddresses(const TaskGraph &tg, const Partition &partition) noexcept;
+	private:
+		std::unique_ptr<bu::Logger> logger;
 	};
 
 };
