@@ -79,6 +79,19 @@ public:
 	}
 
 	/**
+	 * \brief Memory ID
+	 */
+	inline uint32_t MemoryBank() const { return mem_bank; }
+
+	/**
+	 * \brief Set the physical address
+	 * \param address The memory address
+	 */
+	inline void SetMemoryBank(uint32_t bank) {
+		mem_bank = bank;
+	}
+
+	/**
 	 * \brief The list of tasks writing into the buffer
 	 * \return A list of task ids
 	 */
@@ -153,7 +166,8 @@ private:
 
 	uint32_t id;
 
-	uint64_t phy_addr;
+	uint32_t phy_addr;
+	uint32_t mem_bank;
 
 	size_t size_in_bytes;
 
@@ -173,6 +187,7 @@ private:
 		(void) version;
 		ar & id;
 		ar & phy_addr;
+		ar & mem_bank;
 		ar & size_in_bytes;
 		ar & writer_tasks;
 		ar & reader_tasks;
