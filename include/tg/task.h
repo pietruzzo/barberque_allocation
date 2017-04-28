@@ -114,7 +114,11 @@ public:
 	 */
 	inline int GetMappedProcessor() const { return processor_id; }
 
-
+	/**
+	 * \brief Get the number of assigned cores
+	 * \todo TODO
+	 */
+	inline int GetMappedCores() const { return thread_count; }
 
 	/**
 	 * \brief Add a buffer (id) to which read from
@@ -259,6 +263,7 @@ private:
 		ar & name;
 		ar & thread_count;
 		ar & processor_id;
+		ar & assigned_arch;
 		ar & in_buffers;
 		ar & out_buffers;
 		ar & event_id;
