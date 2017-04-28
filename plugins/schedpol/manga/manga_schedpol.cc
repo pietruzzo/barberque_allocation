@@ -268,6 +268,12 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::AllocateArchitectural(ba::AppCPtr_t
 		uint_fast8_t i=0; 
 		ArchType_t preferred_type;
 		const auto targets = task->Targets();
+
+		for ( auto targ : task->Targets() ) {
+			logger->Debug("Task %d available [arch=%s (%d)]",task->Id(),
+					GetStringFromArchType(targ.first), targ.first);
+		}
+
 		do {	// Select every time the best preferred available architecture
 			if ( i > 0 ) {
 				logger->Warn("I wanted to select architecture %s (%d) available in "
@@ -353,6 +359,7 @@ MangASchedPol::SelectTheBestPartition(ba::AppCPtr_t papp, const std::list<Partit
 		return SCHED_ERROR;
 	}
 
+	 papp->SetTaskGraph(tg);
 
 	return SCHED_OK;
 
