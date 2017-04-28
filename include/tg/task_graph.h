@@ -127,7 +127,7 @@ public:
 	 * \brief Get the tasks vector
 	 * \return A vector of shared pointers to Task objects
 	 */
-	inline const TaskMap_t & Tasks() { return tasks; }
+	inline TaskMap_t & Tasks() { return tasks; }
 
 	/**
 	 * \brief Get the tasks vector
@@ -168,7 +168,7 @@ public:
 	 * \brief The buffers included in the task-graph
 	 * \return A map with shared pointers to all the Buffer objects
 	 */
-	inline const BufferMap_t & Buffers() { return buffers; }
+	inline BufferMap_t & Buffers() { return buffers; }
 
 	/**
 	 * \brief The buffers included in the task-graph
