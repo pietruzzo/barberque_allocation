@@ -57,12 +57,14 @@ public:
 		this->pm_score = score;
 	}
 
-	inline void MapTask(TaskPtr_t task, int unit) noexcept {
-		this->tasks_map.insert(std::make_pair(task, unit));
+	inline void MapTask(TaskPtr_t task, int unit, uint32_t addr) noexcept {
+		this->tasks_map.emplace(task->Id(), unit);
+		this->kernels_address.push_back(addr);
 	}
 
-	inline void MapBuffer(BufferPtr_t task, int unit) noexcept {
-		this->buffers_map.insert(std::make_pair(task, unit));
+	inline void MapBuffer(BufferPtr_t buff, int unit, uint32_t addr) noexcept {
+		this->buffers_map.emplace(buff->Id(), unit);
+		this->buffers_address.push_back(addr);
 	}
 
 	/**
@@ -77,6 +79,14 @@ public:
 	 */
 	int GetUnit(TaskPtr_t task) const;
 
+	uint32_t GetBufferAddress(BufferPtr_t buff) const {
+		return buffers_address[buff->Id()];
+	}
+
+	uint32_t GetKernelAddress(TaskPtr_t task) const {
+		return kernels_address[task->Id()];
+	}
+
 
 private:
 	const uint32_t partition_id;	/** The internal identifier returned by HN library */
@@ -85,8 +95,10 @@ private:
 
 	std::shared_ptr<TaskGraph> tg;	/** The pointer to the associated TaskGraph */
 	
-	std::map<TaskPtr_t, int> tasks_map;
-	std::map<BufferPtr_t, int> buffers_map;
+	std::map<int, int> tasks_map;
+	std::map<int, int> buffers_map;
+	std::vector<uint32_t> buffers_address;
+	std::vector<uint32_t> kernels_address;
 
 };
 
