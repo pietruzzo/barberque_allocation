@@ -59,12 +59,12 @@ public:
 
 	inline void MapTask(TaskPtr_t task, int unit, uint32_t addr) noexcept {
 		this->tasks_map.emplace(task->Id(), unit);
-		this->kernels_address.push_back(addr);
+		this->kernels_addr_map.emplace(task->Id(), addr);
 	}
 
 	inline void MapBuffer(BufferPtr_t buff, int unit, uint32_t addr) noexcept {
 		this->buffers_map.emplace(buff->Id(), unit);
-		this->buffers_address.push_back(addr);
+		this->buffers_addr_map.emplace(buff->Id(), addr);
 	}
 
 	/**
@@ -79,13 +79,9 @@ public:
 	 */
 	int GetUnit(TaskPtr_t task) const;
 
-	uint32_t GetBufferAddress(BufferPtr_t buff) const {
-		return buffers_address[buff->Id()];
-	}
+	uint32_t GetBufferAddress(BufferPtr_t buff) const;
 
-	uint32_t GetKernelAddress(TaskPtr_t task) const {
-		return kernels_address[task->Id()];
-	}
+	uint32_t GetKernelAddress(TaskPtr_t task) const;
 
 
 private:
@@ -97,6 +93,9 @@ private:
 	
 	std::map<int, int> tasks_map;
 	std::map<int, int> buffers_map;
+	std::map<int, int> kernels_addr_map;
+	std::map<int, int> buffers_addr_map;
+
 	std::vector<uint32_t> buffers_address;
 	std::vector<uint32_t> kernels_address;
 

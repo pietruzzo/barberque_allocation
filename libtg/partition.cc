@@ -31,4 +31,12 @@ namespace bbque {
 		return tasks_map.at(task->Id());	// It returns out_of_range exception if not present
 	}
 
+	uint32_t Partition::GetBufferAddress(BufferPtr_t buff) const {
+		return buffers_addr_map.at(buff->Id());
+	}
+
+	uint32_t Partition::GetKernelAddress(TaskPtr_t task) const {
+		return kernels_addr_map.at(task->Id());
+	}
+
 }

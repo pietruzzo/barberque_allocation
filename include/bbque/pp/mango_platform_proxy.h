@@ -101,6 +101,7 @@ private:
 	MangoPlatformProxy();
 
 	ExitCode_t BootTiles() noexcept;
+	ExitCode_t BootTiles_PEAK(int tile) noexcept;
 	ExitCode_t RegisterTiles() noexcept;
 	ExitCode_t RegisterMemoryBank (int tile_id, int mem_id) noexcept;
 

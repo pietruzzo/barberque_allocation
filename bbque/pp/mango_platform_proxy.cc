@@ -180,9 +180,9 @@ MangoPlatformProxy::LoadPlatformData() noexcept {
 }
 
 MangoPlatformProxy::ExitCode_t
-MangoPlatformProxy::BootTiles() noexcept {
+MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 
-	for (unsigned int i=0; i < num_tiles; i++) {
+		// TODO: Manage other types of tiles
 		uint32 req_size = MANGO_PEAKOS_FILE_SIZE;
 		uint32 tile_memory;	// This will be filled with the memory id
 		uint32 base_addr;	// This is the starting address selected
@@ -190,26 +190,49 @@ MangoPlatformProxy::BootTiles() noexcept {
 		// TODO: This is currently managed by the internal HN find memory, however, we have
 		//	 to replace this with an hook to the MemoryManager here.
 
-		int err = hn_find_memory(i, req_size, &tile_memory, &base_addr);
+		int err = hn_find_memory(tile, req_size, &tile_memory, &base_addr);
 
 		if (HN_SUCCEEDED != err) {
-			logger->Error("Unable to get memory for tile nr=%d", i);
+			logger->Error("BootTiles_PEAK: Unable to get memory for tile nr=%d", tile);
 			return PLATFORM_LOADING_FAILED;
 		}
 
-		// FIXME: Where is the loading of PeakOS image?
+		logger->Debug("Loading PEAK OS in memory bank %d [address=%x]", tile_memory, base_addr);
 
-		logger->Debug("Booting Tile nr=%d", i);
-		err = hn_boot_unit(i, tile_memory, base_addr);
+		err = hn_write_image_into_memory(MANGO_PEAK_OS, tile_memory, base_addr);
 
 		if (HN_SUCCEEDED != err) {
-			logger->Error("Unable to boot Tile nr=%d", i);
+			logger->Error("Unable to load PEAKOS in tile nr=%d", tile);
 			return PLATFORM_LOADING_FAILED;
+		}
+
+		logger->Debug("Booting PEAK tile nr=%d", tile);
+		err = hn_boot_unit(tile, tile_memory, base_addr);
+
+		if (HN_SUCCEEDED != err) {
+			logger->Error("Unable to boot PEAK tile nr=%d", tile);
+			return PLATFORM_LOADING_FAILED;
+		}
+		return PLATFORM_OK;
+} 
+
+MangoPlatformProxy::ExitCode_t
+MangoPlatformProxy::BootTiles() noexcept {
+
+	ExitCode_t err;
+
+	for (uint_fast32_t i=0; i < num_tiles; i++) {
+
+		// TODO: Manage other types of tiles
+
+		err = BootTiles_PEAK(i);
+		if (PLATFORM_OK != err) {
+			logger->Error("Unable to boot tile nr=%d", i);
+			return err;
 		}
 	}
 
 	logger->Info("All tiles successfully booted.");
-
 
 	return PLATFORM_OK;
 }
@@ -374,6 +397,8 @@ static hn_st_request_t FillReq(const TaskGraph &tg) {
 		req.mem_buffers_size[i++] = b.second->Size();
 	}
 
+	unsigned int filled_buffers = i;
+
 	// We now register the mapping task-buffer and we allocate a per-task buffer to allocate the
 	// kernel image.
 	// The bandwitdth is not currently managed by the HN library, so we use only a boolean value
@@ -408,9 +433,10 @@ static hn_st_request_t FillReq(const TaskGraph &tg) {
 		auto arch =  t.second->GetAssignedArch();
 		auto ksize = t.second->Targets()[arch]->BinarySize();
 		auto ssize = t.second->Targets()[arch]->StackSize();
-		req.mem_buffers_size[i] = ksize + ssize;
-		req.bw_read_req[i] [j+i]  = 1;	// TODO
-		req.bw_write_req[i][j+i]  = 1;	// TODO
+		int kimage_index = filled_buffers + i;
+		req.mem_buffers_size[kimage_index] = ksize + ssize;
+		req.bw_read_req[kimage_index] [j+i]  = 1;	// TODO
+		req.bw_write_req[kimage_index][j+i]  = 1;	// TODO
 
 		i++;
 	}
@@ -490,6 +516,14 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 	catch (const std::runtime_error &err) {
 		logger->Error("MangoPartitionSkimmer: %s", err.what());
 		return SK_NO_PARTITION;
+	}
+
+	logger->Debug("Request summary:");
+	for (unsigned int i=0; i < req.num_comp_rsc; i++) {
+		logger->Debug("  -> Computing Resource %d, HN type %d", i, req.comp_rsc_types[i]);
+	}
+	for (unsigned int i=0; i < req.num_mem_buffers; i++) {
+		logger->Debug("  -> Memory buffer %d, size %d", i, req.mem_buffers_size[i]);
 	}
 
 	// TODO: Change to multiple-partitions version of this function
