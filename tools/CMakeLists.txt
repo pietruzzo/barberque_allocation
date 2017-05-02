@@ -12,6 +12,8 @@ if (CONFIG_BBQUE_PIL_LEGACY)
 		RENAME bbque-plp)
 endif (CONFIG_BBQUE_PIL_LEGACY)
 
+add_subdirectory(plpxml)
+
 # .:: Accessory Tools to simplify the usage of the BarbequeRTRM
 # These tools must be:
 # - part of the BarbequeUTILS componet
@@ -28,6 +30,7 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbque-release-agent"
 	COMPONENT BarbequeUTILS
 	RENAME bbque-release-agent)
 
+
 #----- Deploy the BBQ Control Console script
 configure_file (
 	"${PROJECT_SOURCE_DIR}/tools/bbqueConsole.sh.in"
@@ -39,16 +42,17 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueConsole.sh"
 	COMPONENT BarbequeUTILS
 	RENAME bbque-console)
 
+
 #----- Deploy the BBQ Stress Test script
 configure_file (
-	"${PROJECT_SOURCE_DIR}/tools/bbqueStressTest.sh.in"
-	"${PROJECT_BINARY_DIR}/tools/bbqueStressTest.sh"
+	"${PROJECT_SOURCE_DIR}/tools/test/bbqueStressTest.sh.in"
+	"${PROJECT_BINARY_DIR}/tools/test/bbqueStressTest.sh"
 	@ONLY
 )
-install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueStressTest.sh"
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/test/bbqueStressTest.sh"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	COMPONENT BarbequeUTILS
-	RENAME bbque-stest)
+	RENAME bbque-test-stress)
 
 #----- Deploy the BBQ OP List generator script
 install(PROGRAMS "${PROJECT_SOURCE_DIR}/tools/bbqueOpListBuilder.awk"
@@ -56,42 +60,44 @@ install(PROGRAMS "${PROJECT_SOURCE_DIR}/tools/bbqueOpListBuilder.awk"
 	COMPONENT BarbequeUTILS
 	RENAME bbque-oplb)
 
+
 #----- Deploy the BBQ Metrics Plotting scripts
 configure_file (
-	"${PROJECT_SOURCE_DIR}/tools/bbqueLogParser.awk.in"
-	"${PROJECT_BINARY_DIR}/tools/bbqueLogParser.awk"
+	"${PROJECT_SOURCE_DIR}/tools/monitor/bbqueLogParser.awk.in"
+	"${PROJECT_BINARY_DIR}/tools/monitor/bbqueLogParser.awk"
 	@ONLY
 )
 configure_file (
-	"${PROJECT_SOURCE_DIR}/tools/bbqueLogPlots.sh.in"
-	"${PROJECT_BINARY_DIR}/tools/bbqueLogPlots.sh"
+	"${PROJECT_SOURCE_DIR}/tools/monitor/bbqueLogPlots.sh.in"
+	"${PROJECT_BINARY_DIR}/tools/monitor/bbqueLogPlots.sh"
 	@ONLY
 )
 
-install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueLogParser.awk"
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueLogParser.awk"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-logparser)
-install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueLogPlots.sh"
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueLogPlots.sh"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-logplots)
 
+
 # ----- CPU Usage dump
 configure_file (
-	"${PROJECT_SOURCE_DIR}/tools/bbqueCpuUsageDumpParser.awk.in"
-	"${PROJECT_BINARY_DIR}/tools/bbqueCpuUsageDumpParser.awk"
+	"${PROJECT_SOURCE_DIR}/tools/monitor/bbqueCpuUsageDumpParser.awk.in"
+	"${PROJECT_BINARY_DIR}/tools/monitor/bbqueCpuUsageDumpParser.awk"
 	@ONLY
 )
 configure_file (
-	"${PROJECT_SOURCE_DIR}/tools/bbqueCpuUsageDump.sh.in"
-	"${PROJECT_BINARY_DIR}/tools/bbqueCpuUsageDump.sh"
+	"${PROJECT_SOURCE_DIR}/tools/monitor/bbqueCpuUsageDump.sh.in"
+	"${PROJECT_BINARY_DIR}/tools/monitor/bbqueCpuUsageDump.sh"
 	@ONLY
 )
-install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueCpuUsageDumpParser.awk"
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueCpuUsageDumpParser.awk"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	RENAME bbque-cpu-parser)
-install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueCpuUsageDump.sh"
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueCpuUsageDump.sh"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	RENAME bbque-cpu-dump)
 
@@ -156,15 +162,18 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/pysched/modules/barbeque_utils.py"
 
 # ------- Deploy the BarbequeRTRM power traces plotter
 configure_file (
-	"${PROJECT_SOURCE_DIR}/tools/bbquePlotPowerTrace.py.in"
-	"${PROJECT_BINARY_DIR}/tools/bbquePlotPowerTrace.py"
+	"${PROJECT_SOURCE_DIR}/tools/monitor/bbquePlotPowerTrace.py.in"
+	"${PROJECT_BINARY_DIR}/tools/monitor/bbquePlotPowerTrace.py"
 	@ONLY
 )
-install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbquePlotPowerTrace.py"
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbquePlotPowerTrace.py"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	RENAME bbque-plotrace)
+install(PROGRAMS
+	"${PROJECT_SOURCE_DIR}/tools/monitor/bbqueCpuThermalPlotter.sh"
+	DESTINATION ${BBQUE_PATH_BBQ}
+	RENAME bbque-cpu-temp)
 
-add_subdirectory(plpxml)
 
 # ------- Deploy the BarbequeRTRM systemd configuration patch applier
 configure_file (
