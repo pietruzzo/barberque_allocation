@@ -54,6 +54,19 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/test/bbqueStressTest.sh"
 	COMPONENT BarbequeUTILS
 	RENAME bbque-test-stress)
 
+
+#----- Deploy the launcher for multiple bbque-testapp instance
+configure_file (
+	"${PROJECT_SOURCE_DIR}/tools/test/bbqueTestappLauncher.sh.in"
+	"${PROJECT_BINARY_DIR}/tools/test/bbqueTestappLauncher.sh"
+	@ONLY
+)
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/test/bbqueTestappLauncher.sh"
+	DESTINATION ${BBQUE_PATH_BBQ}
+	COMPONENT BarbequeUTILS
+	RENAME bbque-testapp-launcher)
+
+
 #----- Deploy the BBQ OP List generator script
 install(PROGRAMS "${PROJECT_SOURCE_DIR}/tools/bbqueOpListBuilder.awk"
 	DESTINATION ${BBQUE_PATH_BBQ}
@@ -185,3 +198,4 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueSystemdSetup.sh"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-systemd-setup)
+

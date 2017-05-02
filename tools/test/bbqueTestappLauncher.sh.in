@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Source the BOSP Shell configuration
+. @CONFIG_BOSP_RUNTIME_PATH@/etc/default/bbqued
+
+if [ -f "$PIDFILE" ]; then
+	printf "[I] The BarbequeRTRM daemon is running...\n"
+else
+	printf "[E] The BarbequeRTRM daemon is not running...\n"
+	exit 1
+fi
+
+# CONSOLE CONFIGURATION
+BBQUE_SYSROOT="${BBQUE_SYSROOT:-$SYSROOT}"
+
+if [ $# -lt 2 ]; then
+	printf "[E] Illegal number of parameters (%d specified)\n" $#
+	printf "\t1: number of instances to launch\n"
+	printf "\t2: number of test repetitions\n"
+	printf "\t3: execution time\n"
+	printf "\t4: number of cycles\n"
+	printf "\t5: recipe\n"
+	exit 2
+fi
+
+
+# Setup the test application binary
+testapp=${testapp:-$BBQUE_SYSROOT/var/bbque/bbque-testapp.sh}
+cat > $testapp <<EOF
+#!/bin/bash
+$BBQUE_SYSROOT/usr/bin/bbque-testapp -w \$1 -c \$2
+EOF
+chmod a+x $testapp
+
+nr_instances=$1
+nr_repetitions=$2
+exec_time=${exec_time:-10}
+nr_cycles=${exec_time:-20}
+
+
+for r in `seq 1 $nr_repetitions`; do
+	for i in `seq 1 $nr_instances`; do
+		echo "[I] Launching testapp $i.............."
+		$testapp $exec_time $nr_cycles &
+	done
+	wait
+done
+
+
