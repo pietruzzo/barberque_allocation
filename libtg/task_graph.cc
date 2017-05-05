@@ -18,6 +18,12 @@
 #include <iostream>
 #include "tg/task_graph.h"
 
+#ifdef BBQUE_DEBUG
+# define DB(x) x
+#else
+# define DB(x)
+#endif
+
 namespace bbque {
 
 
@@ -32,9 +38,16 @@ TaskGraph::TaskGraph(
 	application_id(app_id) {
 
 	bool buff_valid = false;
+	DB(std::cerr << "Task graph creation:" <<
+		" application=" << app_id <<
+		" tasks="   << tasks.size() <<
+		" buffers=" << buffers.size() << std::endl;
+	)
+
 	for (auto & t_entry: tasks) {
 		auto t = t_entry.second;
 		buff_valid = AreBuffersValid(t, buffers);
+		DB(std::cerr << "T[" << t->Id() << "] buffers valid: " << buff_valid << std::endl;)
 		if (!buff_valid) return;
 	}
 
@@ -49,15 +62,13 @@ TaskGraph::TaskGraph(
 		EventMap_t const & events,
 		uint32_t app_id):
 	application_id(app_id) {
+
 	bool buff_valid = false;
 	for (auto & t_entry: tasks) {
 		auto & t(t_entry.second);
 		// buffer validation
 		buff_valid = AreBuffersValid(t, buffers);
 		if (!buff_valid) return;
-		// Add event validation
-//		auto evit = events.find(t->GetEvent());
-//		if (evit == events.end()) return;
 	}
 
 	this->tasks    = tasks;
@@ -68,39 +79,53 @@ TaskGraph::TaskGraph(
 
 
 void TaskGraph::Print() const noexcept {
-	std::cerr << "Tasks: ";
-	for (auto & t_entry: tasks ) {
-		auto & t(t_entry.second);
-		std::cerr << t->Id() << "[unit=" << t->GetMappedProcessor() << "] ";
-	}
-	std::cerr << std::endl;
-	std::cerr << "Buffers: ";
-	for (auto & b_entry: buffers ) {
-		auto & b(b_entry.second);
-		std::cerr << b->Id() << " ";
-	}
-	std::cerr << std::endl;
+	DB(
+		std::cerr << "Tasks: ";
+		for (auto & t_entry: tasks ) {
+			auto & t(t_entry.second);
+			std::cerr << t->Id() << "[unit=" << t->GetMappedProcessor() << "] ";
+		}
+		std::cerr << std::endl;
+		std::cerr << "Buffers: ";
+		for (auto & b_entry: buffers ) {
+			auto & b(b_entry.second);
+			std::cerr << b->Id() << " ";
+		}
+		std::cerr << std::endl;
 
-	std::string outb_str("unset");
-	if (out_buff)
-		outb_str = std::to_string(out_buff->Id());
-	std::cerr << "Output buffer: " << outb_str << std::endl;
-	std::cerr << "Events: ";
-	for (auto & e_entry: events ) {
-		auto & e(e_entry.second);
-		std::cerr << e->Id() << " ";
-	}
-	std::cerr << std::endl;
+		std::string outb_str("unset");
+		if (out_buff)
+			outb_str = std::to_string(out_buff->Id());
+		std::cerr << "Output buffer: " << outb_str << std::endl;
+		std::cerr << "Events: ";
+		for (auto & e_entry: events ) {
+			auto & e(e_entry.second);
+			std::cerr << e->Id() << " ";
+		}
+		std::cerr << std::endl;
+	)
 }
 
 bool TaskGraph::AreBuffersValid(TaskPtr_t task, BufferMap_t const & buffers) {
+	DB(std::cerr << "T[" << task->Id() << "] input buffers=" <<
+		task->InputBuffers().size() << std::endl;
+	)
 	for (auto id: task->InputBuffers()) {
 		auto b = buffers.find(id);
-		if (b == buffers.end()) return false;
+		if (b == buffers.end()) {
+			DB(std::cerr << "IBuffer " << id << " does not exist." << std::endl;)
+			return  false;
+		}
 	}
+	DB(std::cerr << "T[" << task->Id() << "] output buffers=" <<
+		task->OutputBuffers().size() << std::endl;
+	)
 	for (auto id: task->OutputBuffers()) {
 		auto b = buffers.find(id);
-		if (b == buffers.end()) return false;
+		if (b == buffers.end()) {
+			DB(std::cerr << "OBuffer " << id << " does not exist." << std::endl;)
+			return false;
+		}
 	}
 	return true;
 }

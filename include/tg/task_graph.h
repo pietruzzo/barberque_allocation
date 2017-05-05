@@ -229,6 +229,9 @@ public:
 		return ev->second;
 	}
 
+	/**
+	 * \brief Print a textual description of the task-graph
+	 */
 	void Print() const noexcept;
 
 private:
