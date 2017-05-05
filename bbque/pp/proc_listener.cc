@@ -110,7 +110,10 @@ ProcessListener::ProcessListener(){
 	iov[2].iov_base = &op;
 	iov[2].iov_len = sizeof op;
 	//Sending the subscription message
-	writev(sock, iov, 3);
+	ssize_t ret = writev(sock, iov, 3);
+	if (ret < 0) {
+		logger->Error("Linux proc connector subscription failed");
+	}
 }
 
 ProcessListener::~ProcessListener(){
