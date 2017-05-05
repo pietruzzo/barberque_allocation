@@ -30,12 +30,12 @@
 
 namespace bbque {
 
-ProcessListener & ProcessListener::GetInstance(){
+ProcessListener & ProcessListener::GetInstance() {
 	static ProcessListener instance;
 	return instance;
 }
 
-std::string ProcessListener::GetProcName(int pid){
+std::string ProcessListener::GetProcName(int pid) {
 	std::stringstream ss;
 	std::string pname("");
 	ss << "/proc/" << pid << "/comm";
@@ -50,7 +50,7 @@ std::string ProcessListener::GetProcName(int pid){
 	return pname;
 }
 
-ProcessListener::ProcessListener(){
+ProcessListener::ProcessListener() {
 	sock = -1;
 	buffSize = getpagesize();
 	buf = new char[buffSize];
@@ -121,14 +121,14 @@ ProcessListener::ProcessListener(){
 	}
 }
 
-ProcessListener::~ProcessListener(){
+ProcessListener::~ProcessListener() {
 	Terminate();
 	if (sock!=-1)
 		close(sock);
 	delete[] buf;
 }
 
-void ProcessListener::Task(){
+void ProcessListener::Task() {
 	/*
 	 * Now we need to read the stream of messages. Just like the message we sent,
 	 * the stream of messages we receive are actually netlink messages,
