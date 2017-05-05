@@ -37,11 +37,16 @@ ProcessListener & ProcessListener::GetInstance(){
 
 std::string ProcessListener::GetProcName(int pid){
 	std::stringstream ss;
-	ss<<"/proc/"<<pid<<"/comm";
-	std::ifstream ifs(ss.str());
-	std::string pname;
-	ifs>>pname;
-	ifs.close();
+	std::string pname("");
+	ss << "/proc/" << pid << "/comm";
+	try {
+		std::ifstream ifs(ss.str());
+		ifs >> pname;
+		ifs.close();
+	}
+	catch(std::exception & ex) {
+		logger->Debug("GetProcName: %s", ex.what());
+	}
 	return pname;
 }
 
