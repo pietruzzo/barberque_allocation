@@ -121,7 +121,7 @@ public:
 	 * \brief The memory address to which deploy the task binary
 	 * \return The memory address
 	 */
-	inline uint32_t MemoryBank() const noexcept { return address; }
+	inline uint32_t MemoryBank() const noexcept { return mem_bank; }
 
 	/**
 	 * \brief Set the memory address to which deploy the task binary
