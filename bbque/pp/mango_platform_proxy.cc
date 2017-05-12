@@ -5,7 +5,7 @@
 #include "bbque/pp/mango_platform_description.h"
 #include "bbque/resource_mapping_validator.h"
 
-#include <mango-hn/hn.h>
+#include <libhn/hn.h>
 
 #define BBQUE_MANGOPP_PLATFORM_ID		"org.mango"
 #define MANGO_MEMORY_COUNT_START 10
@@ -51,13 +51,13 @@ MangoPlatformProxy::MangoPlatformProxy() :
 
 	logger->Debug("Initializing communciation with MANGO platform...");
 
-	int hn_init_err = hn_initialize(filter, UPV_PARTITION_STRATEGY, 1);
+	int hn_init_err = hn_initialize(filter, UPV_PARTITION_STRATEGY, 1, 0);
 
 	bbque_assert ( 0 == hn_init_err );
 
 	logger->Debug("Resetting MANGO platform...");
 
-	// We have now to reset the platform (TODO is it really necessary?)
+	// We have now to reset the platform
 	// This function call may take several seconds to conclude
 	hn_reset(0);
 
@@ -70,7 +70,7 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	rmv.RegisterSkimmer(std::make_shared<MangoPartitionSkimmer>() , 100);
 
 }
-
+ 
 MangoPlatformProxy::~MangoPlatformProxy() {
 
 	// Just clean up stuffs...
@@ -182,10 +182,9 @@ MangoPlatformProxy::LoadPlatformData() noexcept {
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 
-		// TODO: Manage other types of tiles
-		uint32 req_size = MANGO_PEAKOS_FILE_SIZE;
-		uint32 tile_memory;	// This will be filled with the memory id
-		uint32 base_addr;	// This is the starting address selected
+		uint32_t req_size = MANGO_PEAKOS_FILE_SIZE;
+		uint32_t tile_memory;	// This will be filled with the memory id
+		uint32_t base_addr;	// This is the starting address selected
 
 		// TODO: This is currently managed by the internal HN find memory, however, we have
 		//	 to replace this with an hook to the MemoryManager here.
@@ -199,13 +198,14 @@ MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 
 		logger->Debug("Loading PEAK OS in memory bank %d [address=%x]", tile_memory, base_addr);
 
+/*		TODO This was added directly to HN library (a very bad thing...)
 		err = hn_write_image_into_memory(MANGO_PEAK_OS, tile_memory, base_addr);
 
 		if (HN_SUCCEEDED != err) {
 			logger->Error("Unable to load PEAKOS in tile nr=%d", tile);
 			return PLATFORM_LOADING_FAILED;
 		}
-
+*/
 		logger->Debug("Booting PEAK tile nr=%d", tile);
 		err = hn_boot_unit(tile, tile_memory, base_addr);
 
@@ -256,6 +256,8 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
 			return PLATFORM_INIT_FAILED;
 		}
+
+		logger->Info("Loading tile %d of type %d...", i, tile_info.tile_type);
 
 		MangoTile mt(i, (MangoTile::MangoTileType_t)(tile_info.tile_type));
 		sys.AddAccelerator(mt);
@@ -350,11 +352,13 @@ MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
  */
 static uint32_t ArchTypeToMangoType(ArchType type, unsigned int nr_thread) {
 
+	UNUSED(nr_thread);
+
 	switch (type) {
 		case ArchType::PEAK:
-			if (nr_thread <= 2) return HN_PEAK_TYPE_0;
-			if (nr_thread <= 4) return HN_PEAK_TYPE_1;
-			return HN_PEAK_TYPE_2;
+			// TODO Selection of the subtype of architecture (who has to do this?
+			// the policy?)
+			return HN_PEAK_TYPE_1;	// Fix this, should go to policy
 		break;
 		// TODO add other architectures
 		default:
@@ -457,7 +461,8 @@ static Partition GetPartition(const TaskGraph &tg, hn_st_response_t *res, int pa
 	Partition part(partition_id);
 
 	for (int j=0; j < tasks_size; j++) {
-		part.MapTask(it_task->second, res->comp_rsc_tiles[j], res->mem_buffers_addr[buff_size + j]);
+		part.MapTask(it_task->second, res->comp_rsc_tiles[j],
+			res->mem_buffers_tiles[buff_size +j], res->mem_buffers_addr[buff_size + j]);
 		it_task++;
 	}
 	bbque_assert(it_task == tg.Tasks().end());
@@ -487,8 +492,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(const TaskGraph &tg, con
 	for ( auto task : tg.Tasks()) {
 		auto arch = task.second->GetAssignedArch();
 		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
+		uint32_t mem_tile    = partition.GetKernelBank(task.second);
+
 		logger->Debug("Task %d allocated space for kernel %s [address=0x%x]",
 				task.second->Id(), GetStringFromArchType(arch), phy_addr);
+		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
 		task.second->Targets()[arch]->SetAddress(phy_addr);
 	}
 
@@ -526,8 +534,10 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 		logger->Debug("  -> Memory buffer %d, size %d", i, req.mem_buffers_size[i]);
 	}
 
+	int err;
 	// TODO: Change to multiple-partitions version of this function
-	if ( (hn_find_partition(req, res, &part_id)) ) {
+	if ( (err = hn_find_partitions(req, res, &part_id, 1, &num_parts)) ) {
+		logger->Error("hn_find_partitions FAILED with error %d", err);
 		return SK_GENERIC_ERROR;
 	}
 
@@ -560,6 +570,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(const TaskGraph &tg,
 	// We set the mapping of buffers-addresses based on the selected partition
 	ExitCode_t err = SetAddresses(tg, partition);
 
+
+	for ( auto task : tg.Tasks()) {
+		task.second->SetMappedProcessor( partition.GetUnit(task.second) );
+	}
+
 	// TODO: with the find_partitions we should allocate the selected partition, but
 	//	 unfortunately this is not currently supported by HN library
 /*	uint32_t part_id = partition.GetPartitionId();
@@ -569,6 +584,17 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(const TaskGraph &tg,
 		return SK_GENERIC_ERROR;
 	}
 */
+
+	// TODO
+	#warning This is a very ugly hack (with also memory leak). Just for the May review meeting.
+	std::thread* __attribute__((unused)) t = new std::thread([](){
+		unsigned int risultato;
+		while(1) {
+			hn_receive_item(&risultato);
+		}
+	});
+
+
 
 	return err;
 }
