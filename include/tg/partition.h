@@ -57,9 +57,10 @@ public:
 		this->pm_score = score;
 	}
 
-	inline void MapTask(TaskPtr_t task, int unit, uint32_t addr) noexcept {
+	inline void MapTask(TaskPtr_t task, int unit, uint32_t mem_bank, uint32_t addr) noexcept {
 		this->tasks_map.emplace(task->Id(), unit);
 		this->kernels_addr_map.emplace(task->Id(), addr);
+		this->kernels_bank_map.emplace(task->Id(), mem_bank);
 	}
 
 	inline void MapBuffer(BufferPtr_t buff, int unit, uint32_t addr) noexcept {
@@ -83,6 +84,7 @@ public:
 
 	uint32_t GetKernelAddress(TaskPtr_t task) const;
 
+	uint32_t GetKernelBank(TaskPtr_t task) const;
 
 private:
 	const uint32_t partition_id;	/** The internal identifier returned by HN library */
@@ -94,6 +96,7 @@ private:
 	std::map<int, int> tasks_map;
 	std::map<int, int> buffers_map;
 	std::map<int, int> kernels_addr_map;
+	std::map<int, int> kernels_bank_map;
 	std::map<int, int> buffers_addr_map;
 
 	std::vector<uint32_t> buffers_address;

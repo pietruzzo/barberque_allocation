@@ -39,4 +39,8 @@ namespace bbque {
 		return kernels_addr_map.at(task->Id());
 	}
 
+	uint32_t Partition::GetKernelBank(TaskPtr_t task) const {
+		return kernels_bank_map.at(task->Id());
+	}
+
 }
