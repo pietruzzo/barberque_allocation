@@ -215,9 +215,19 @@ endif (CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH)
 
 #Linking the Mango library
 if (CONFIG_TARGET_LINUX_MANGO)
-target_link_libraries(barbeque
-	hn
-)
+	find_library ( HN hn
+				PATHS
+				/usr/lib
+				/usr/lib64
+				/usr/local/lib
+				/usr/local/lib64
+	)
+
+	if(NOT HN)
+	  message(FATAL_ERROR "libhn Not found")
+	endif()
+
+	target_link_libraries (barbeque ${HN})
 endif (CONFIG_TARGET_LINUX_MANGO)
 
 
