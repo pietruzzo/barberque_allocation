@@ -25,48 +25,100 @@
 
 #include "bbque/pp/platform_description.h"
 #include "bbque/tg/task_graph.h"
+#include "bbque/utils/assert.h"
 
 namespace bbque {
 
+/**
+ * \brief This class represents a partition of available resources that can be assigned to an entire
+ *	  TaskGraph. This type of object is generally retrieved from the platform proxy through the
+ *	  PlatformProxy
+ */
 class Partition {
 
 public:
 
-	Partition(uint32_t id) : partition_id(id) { }
+	/**
+	 * \brief The constructor of a new partition (the id must be unique for each TaskGraph)
+	 */
+	Partition(uint32_t id) : id(id) { }
 
-	~Partition() {}
+	virtual ~Partition() {}
 
-
-	inline uint32_t GetPartitionId() const noexcept {
-		return this->partition_id;
+	/**
+	 * \brief Getter method for the unique identifier of the partition (unique in each TG)
+	 */
+	inline uint32_t GetId() const noexcept {
+		return this->id;
 	}
 
+	/**
+	 * \brief It returns a score [0;100] representing the memory manager score for the current
+	 * 	  partition. A score of 0 means that the partition is not feasible and therefore it
+	 *	  should not selected.
+	 * \note If the memory manager did not fill this field, the return is undefined
+	 */
 	inline int_fast8_t GetMMScore() const noexcept {
 		return this->mm_score;
 	}
 
+	/**
+	 * \brief Set a score [0;100] representing the memory manager score for the current
+	 * 	  partition. A score of 0 means that the partition is not feasible and therefore it
+	 *	  should not selected.
+	 */
 	inline void SetMMScore(int_fast8_t score) noexcept {
+		bbque_assert(score >= 0 && score <= 100);
 		this->mm_score = score;
 	}
 
+	/**
+	 * \brief It returns a score [0;100] representing the power manager score for the current
+	 * 	  partition. A score of 0 means that the partition is not feasible and therefore it
+	 *	  should not selected.
+	 * \note If the power manager did not fill this field, the return is undefined
+	 */
 	inline int_fast8_t GetPMScore() const noexcept {
 		return this->pm_score;
 	}
 
+	/**
+	 * \brief Set a score [0;100] representing the power manager score for the current
+	 * 	  partition. A score of 0 means that the partition is not feasible and therefore it
+	 *	  should not selected.
+	 */
 	inline void SetPMScore(int_fast8_t score) noexcept {
+		bbque_assert(score >= 0 && score <= 100);
 		this->pm_score = score;
 	}
 
+	/**
+	 * \brief Map a task in the TaskGraph to a resource.
+	 * \param unit     The id of the processor unit
+	 * \param mem_bank The memory bank assigned to the kernel image
+	 * \param addr     The memory address assigned to the kernel image
+	 */
 	inline void MapTask(TaskPtr_t task, int unit, uint32_t mem_bank, uint32_t addr) noexcept {
 		this->tasks_map.emplace(task->Id(), unit);
 		this->kernels_addr_map.emplace(task->Id(), addr);
 		this->kernels_bank_map.emplace(task->Id(), mem_bank);
 	}
 
-	inline void MapBuffer(BufferPtr_t buff, int unit, uint32_t addr) noexcept {
-		this->buffers_map.emplace(buff->Id(), unit);
+	/**
+	 * \brief Map a buffer in the TaskGraph to a resource.
+	 * \param unit     The id of the memory bank
+	 * \param addr     The memory address assigned to the kernel image
+	 */
+	inline void MapBuffer(BufferPtr_t buff, int mem_bank, uint32_t addr) noexcept {
+		this->buffers_map.emplace(buff->Id(), mem_bank);
 		this->buffers_addr_map.emplace(buff->Id(), addr);
 	}
+
+	/**
+	 * @brief Get the multicore processor assigned to the task
+	 * @except std::out_of_range if the task is not present in the mapping
+	 */
+	int GetUnit(TaskPtr_t task) const;
 
 	/**
 	 * @brief Get the id of the memory bank as an identifier number associated by the HN library
@@ -75,19 +127,25 @@ public:
 	int GetMemoryBank(BufferPtr_t buff) const;
 
 	/**
-	 * @brief Get the multicore processor assigned to the task
-	 * @except std::out_of_range if the task is not present in the mapping
+	 * \brief Get the address of a specific buffer
+	 * \param buff the buffer
 	 */
-	int GetUnit(TaskPtr_t task) const;
-
 	uint32_t GetBufferAddress(BufferPtr_t buff) const;
 
+	/**
+	 * \brief Get the address of a kernel image
+	 * \param task the task to which the kernel image is associated
+	 */
 	uint32_t GetKernelAddress(TaskPtr_t task) const;
 
+	/**
+	 * \brief Get the bank of a kernel image
+	 * \param task the task to which the kernel image is associated
+	 */
 	uint32_t GetKernelBank(TaskPtr_t task) const;
 
 private:
-	const uint32_t partition_id;	/** The internal identifier returned by HN library */
+	const uint32_t id;	/** The internal identifier returned by HN library */
 	int_fast8_t mm_score;	/** The score index [0;100] provided by the MemoryManager */
 	int_fast8_t pm_score;	/** The score index [0;100] provided by the PowerManager */
 

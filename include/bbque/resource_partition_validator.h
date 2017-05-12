@@ -25,7 +25,7 @@
 
 
 #include "bbque/utils/logging/logger.h"
-#include "tg/task_graph.h"
+#include "bbque/tg/task_graph.h"
 #include "tg/partition.h"
 
 namespace bu = bbque::utils;
@@ -91,12 +91,12 @@ private:
 typedef std::shared_ptr<PartitionSkimmer> PartitionSkimmerPtr_t;
 
 /**
- * @class ResourceMappingValidator
+ * @class ResourcePartitionValidator
  *
  * @brief Provides the list of available partitions, validating them across the registered callback
  *	  function.
  */
-class ResourceMappingValidator {
+class ResourcePartitionValidator {
 
 public:
 
@@ -111,10 +111,10 @@ public:
 	/**
 	 * @brief Return the singleton instance
 	 */
-	static ResourceMappingValidator & GetInstance();
+	static ResourcePartitionValidator & GetInstance();
 
 
-	virtual ~ResourceMappingValidator()  {};
+	virtual ~ResourcePartitionValidator()  {};
 
 	/**
 	 * @brief Load the feasible partitions according to registered callbacks. 
@@ -164,7 +164,7 @@ private:
 	PartitionSkimmer::SkimmerType_t failed_skimmer;
 
 	/* ******* METHODS ******* */
-	ResourceMappingValidator();
+	ResourcePartitionValidator();
 
 };
 

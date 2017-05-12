@@ -148,8 +148,8 @@ updatetime.resources = 500   # In milliseconds
 # Set root category priority and its appender
 # By default all logs are only from level greater than or equal to INFO
 ###
-rootCategory = DEBUG, raFile
-#rootCategory = DEBUG, raConsole
+#rootCategory = DEBUG, raFile
+rootCategory = DEBUG, raConsole
 #rootCategory = ERROR, raSyslog
 #rootCategory = ERROR, raRSyslog
 ###
@@ -177,7 +177,8 @@ category.bq.rt = 	NOTICE
 #category.bq.app = 	INFO
 #category.bq.awm =	INFO
 category.bq.df = 	NOTICE
-#category.bq.pp = 	INFO
+category.bq.pp = 	DEBUG
+category.bq.pp.mango = 	DEBUG
 #category.bq.pm =	INFO
 #category.bq.wm =	INFO
 #category.bq.rpc.fif = 	INFO

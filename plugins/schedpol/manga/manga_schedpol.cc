@@ -61,7 +61,7 @@ char const * MangASchedPol::Name() {
 MangASchedPol::MangASchedPol():
 		cm(ConfigurationManager::GetInstance()),
 		ra(ResourceAccounter::GetInstance()),
-		rmv(ResourceMappingValidator::GetInstance()) {
+		rmv(ResourcePartitionValidator::GetInstance()) {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 	if (logger)
@@ -199,7 +199,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noe
 SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexcept {
 
 	SchedulerPolicyIF::ExitCode_t err;
-	ResourceMappingValidator::ExitCode_t rmv_err;
+	ResourcePartitionValidator::ExitCode_t rmv_err;
 	std::list<Partition> partitions;
 	
 	// First of all we have to decide which processor type to assign to each task
@@ -213,13 +213,13 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 	rmv_err = rmv.LoadPartitions(*papp->GetTaskGraph(), partitions);
 
 	switch(rmv_err) {
-		case ResourceMappingValidator::PMV_OK:
+		case ResourcePartitionValidator::PMV_OK:
 			logger->Debug("LoadPartitions SUCCESS");
 			return SelectTheBestPartition(papp, partitions);
-		case ResourceMappingValidator::PMV_SKIMMER_FAIL:
+		case ResourcePartitionValidator::PMV_SKIMMER_FAIL:
 			logger->Error("At least one skimmer failed unexpectly");
 			return SCHED_ERROR;
-		case ResourceMappingValidator::PMV_NO_PARTITION:
+		case ResourcePartitionValidator::PMV_NO_PARTITION:
 			logger->Debug("LoadPartitions NO PARTITION");
 			return DealWithNoPartitionFound(papp);
 		default:
@@ -291,6 +291,8 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::AllocateArchitectural(ba::AppCPtr_t
 			logger->Error("No architecture available for task %d", task->Id());
 			return SCHED_SKIP_APP;
 		}
+
+		// TODO We have to select also the number of cores!
 
 		logger->Info("Task %d preliminary assignment [arch=%s (%d), in_bw=%d, out_bw=%d]",
 			task->Id(), GetStringFromArchType(preferred_type), preferred_type,

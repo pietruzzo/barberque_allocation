@@ -15,27 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bbque/resource_mapping_validator.h"
+#include "bbque/resource_partition_validator.h"
 #include "bbque/utils/assert.h"
 
 #define MODULE_NAMESPACE   "bq.rmv"
-#define MODULE_CONFIG      "ResourceMappingValidator"
+#define MODULE_CONFIG      "ResourcePartitionValidator"
 
 
 namespace bbque {
 
 
-ResourceMappingValidator & ResourceMappingValidator::GetInstance() {
-	static ResourceMappingValidator instance;
+ResourcePartitionValidator & ResourcePartitionValidator::GetInstance() {
+	static ResourcePartitionValidator instance;
 	return instance;
 }
 
-ResourceMappingValidator::ResourceMappingValidator():
+ResourcePartitionValidator::ResourcePartitionValidator():
 		logger(bbque::utils::Logger::GetLogger(MODULE_NAMESPACE)) {
 	// Nothing to do
 }
 
-void ResourceMappingValidator::
+void ResourcePartitionValidator::
 		RegisterSkimmer(PartitionSkimmerPtr_t skimmer, int priority) noexcept {
 
 		std::lock_guard<std::mutex> curr_lock(skimmers_lock);
@@ -48,8 +48,8 @@ void ResourceMappingValidator::
 }
 
 
-ResourceMappingValidator::ExitCode_t
-ResourceMappingValidator::LoadPartitions(const TaskGraph &tg, std::list<Partition> &partitions) {
+ResourcePartitionValidator::ExitCode_t
+ResourcePartitionValidator::LoadPartitions(const TaskGraph &tg, std::list<Partition> &partitions) {
 
 	logger->Notice("Initial partitions nr. %d", partitions.size());
 	PartitionSkimmer::SkimmerType_t skimmer_type = PartitionSkimmer::SkimmerType_t::SKT_NONE;
@@ -103,11 +103,11 @@ ResourceMappingValidator::LoadPartitions(const TaskGraph &tg, std::list<Partitio
 	return PMV_OK;
 }
 
-ResourceMappingValidator::ExitCode_t
-ResourceMappingValidator::PropagatePartition(const TaskGraph &tg, 
+ResourcePartitionValidator::ExitCode_t
+ResourcePartitionValidator::PropagatePartition(const TaskGraph &tg, 
 					     const Partition &partition) const noexcept {
 
-	logger->Notice("Propagating partition id=%d", partition.GetPartitionId());
+	logger->Notice("Propagating partition id=%d", partition.GetId());
 	// We have to ensure that no skimmer failed for any reasons before this call.
 	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
 
@@ -128,11 +128,11 @@ ResourceMappingValidator::PropagatePartition(const TaskGraph &tg,
 	return PMV_OK;
 }
 
-ResourceMappingValidator::ExitCode_t
-ResourceMappingValidator::RemovePartition(const TaskGraph &tg,
+ResourcePartitionValidator::ExitCode_t
+ResourcePartitionValidator::RemovePartition(const TaskGraph &tg,
 					     const Partition &partition) const noexcept {
 
-	logger->Notice("Removing partition id=%d", partition.GetPartitionId());
+	logger->Notice("Removing partition id=%d", partition.GetId());
 	// We have to ensure that no skimmer failed for any reasons before this call.
 	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
 

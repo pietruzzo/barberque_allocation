@@ -3,7 +3,7 @@
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/assert.h"
 #include "bbque/pp/mango_platform_description.h"
-#include "bbque/resource_mapping_validator.h"
+#include "bbque/resource_partition_validator.h"
 
 #include <libhn/hn.h>
 
@@ -66,7 +66,7 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	// Register our skimmer for the incoming partitions (it actually fills the partition list,
 	// not skim it)
 	// Priority of 100 means the maximum priority, this is the first skimmer to be executed
-	ResourceMappingValidator &rmv = ResourceMappingValidator::GetInstance();
+	ResourcePartitionValidator &rmv = ResourcePartitionValidator::GetInstance();
 	rmv.RegisterSkimmer(std::make_shared<MangoPartitionSkimmer>() , 100);
 
 }
@@ -577,7 +577,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(const TaskGraph &tg,
 
 	// TODO: with the find_partitions we should allocate the selected partition, but
 	//	 unfortunately this is not currently supported by HN library
-/*	uint32_t part_id = partition.GetPartitionId();
+/*	uint32_t part_id = partition.GetId();
 	uint32_t ret = hn_allocate_partition(part_id);
 	
 	if ( HN_SUCCEEDED != ret ) {
@@ -605,7 +605,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(const TaskGraph &tg,
 
 	UNUSED(tg);
 
-	uint32_t part_id = partition.GetPartitionId();
+	uint32_t part_id = partition.GetId();
 	uint32_t ret;
 
 	logger->Debug("Deallocating partition [id=%d]...", part_id);

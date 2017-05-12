@@ -27,7 +27,7 @@
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/scheduler_manager.h"
-#include "bbque/resource_mapping_validator.h"
+#include "bbque/resource_partition_validator.h"
 
 #define SCHEDULER_POLICY_NAME "manga"
 
@@ -94,7 +94,7 @@ private:
 	ResourceAccounter & ra;
 
 	/** Resource mapping validator for Partition management */
-	ResourceMappingValidator & rmv;
+	ResourcePartitionValidator & rmv;
 
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
