@@ -26,7 +26,7 @@
 #include "bbque/utils/assert.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/binder.h"
-#include "bbque/tg/task_graph.h"
+#include "tg/task_graph.h"
 
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 

@@ -24,8 +24,8 @@
 #include <cstdint>
 
 #include "bbque/pp/platform_description.h"
-#include "bbque/tg/task_graph.h"
 #include "bbque/utils/assert.h"
+#include "tg/task_graph.h"
 
 namespace bbque {
 

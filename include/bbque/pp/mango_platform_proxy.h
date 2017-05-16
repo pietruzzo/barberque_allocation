@@ -5,7 +5,7 @@
 #include "bbque/platform_proxy.h"
 #include "bbque/utils/logging/logger.h"
 #include "bbque/pp/mango_platform_description.h"
-#include "bbque/tg/task_graph.h"
+#include "tg/task_graph.h"
 #include "bbque/resource_partition_validator.h"
 
 #define MANGO_PP_NAMESPACE "bq.pp.mango"

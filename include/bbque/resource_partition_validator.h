@@ -25,7 +25,7 @@
 
 
 #include "bbque/utils/logging/logger.h"
-#include "bbque/tg/task_graph.h"
+#include "tg/task_graph.h"
 #include "tg/partition.h"
 
 namespace bu = bbque::utils;
