@@ -1,4 +1,47 @@
+==============================================================================
+Summary of changes from v1.1 to v1.2 (Emily Entrecote)
+==============================================================================
 
+[Application]
+  * Added support for task based applications
+
+[Platforms]
+  * Overall refactoring
+  * New platform description loading (with plugin) based on XML files
+  * Introduced distributed systems support based on gRPC
+  * ANDROID: Build re-enabled
+  * LINUX: Network bandwidth support
+  * LINUX: Process listener based on kernel connector
+  * Initial support for MANGO platforms
+
+[Power Management]
+  * Power monitoring with policy triggers
+  * Power monitoring made multi-threaded
+  * CPU power management minor improvements
+  * Introduced NVIDIA power manager
+
+[RTLib]
+  * Profiling information refactoring
+  * Cgroups enforcement distributed at application level
+  * Monitor library build made optional
+
+[Scheduling Policies]
+  * YaMS no longer maintained
+  * Improvements and fixes in TEMPURA
+  * Added new (default) policy GridBalance
+  * Added new policy Perdetemp
+  * Added new policy Contrex
+  * Added new policy Test
+
+[libtg]
+  * Introduced a library providing data structures for task-graph
+    representations
+
+[libpms]
+  * Introduced a library for task-graph based programming models
+
+
+==============================================================================
 Summary of changes from v1.0 to v1.1
 ==============================================================================
 
