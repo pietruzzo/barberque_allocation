@@ -4,21 +4,61 @@ BOSPSH_SOURCES="@PROJECT_SOURCE_DIR@/.."
 APP_NAME=${1:-'MyApp'}
 APP_TYPE=${2:-'cpp'}
 
+LANG=(cpp ocl)
+
+clear
+
+CDIR=`pwd`
+
+echo
+echo '=== Creating a new BarbequeRTRM-managed application from template ==='
+echo
+echo -n "> Enter application name (use CamelCase, no spaces allowed) [$APP_NAME]: "
+read APP_NAME
+[ x$APP_NAME == x ] && APP_NAME='MyApp'
+
+echo -n "> Select application type (0: CPP) [$APP_TYPE]: "
+read APP_TYPE
+[ x$APP_TYPE == x ] && APP_TYPE=0
+
+APP_PATH="$BOSPSH_SOURCES/contrib/user/$APP_NAME"
+#echo -n "> Set application path [${APP_PATH}]: "
+#read APP_PATH
+[ x$APP_PATH == x ] && APP_PATH=$BOSPSH_SOURCES/contrib/user/$APP_NAME
+echo
+
 TEMPLATE_DIR="$BOSPSH_SOURCES/barbeque/config/templates"
-TEMPLATE_BUILDER="$TEMPLATE_DIR/bbque_template_$APP_TYPE.bsx"
-# Generate the application template if not already available
-if [ ! -f $TEMPLATE_BUILDER ]; then
-	cd $TEMPLATE_DIR
-	./build.sh $APP_TYPE
+TEMPLATE_BUILDER="$TEMPLATE_DIR/bbque_template_${LANG[$APP_TYPE]}.bsx"
+
+# Generate the template builder
+echo -e "> Generating the template builder..."
+cd $TEMPLATE_DIR
+./build.sh ${LANG[$APP_TYPE]}
+
+if ! [ $? == 0 ]; then
+	echo -e "ERROR: application sources generation failed...\n"
+	exit -1
 fi
 
 # Move into BOSP source tree root folder
 cd $BOSPSH_SOURCES
 
 # Generate the application
-$TEMPLATE_BUILDER "$BOSPSH_SOURCES" $APP_NAME
+echo -e "> Generating the application template...\n"
+$TEMPLATE_BUILDER "$BOSPSH_SOURCES" $APP_NAME $APP_PATH
 
 # Trigger a bootstrap to re-configure the building system
 make bootstrap
+
+# Move into application folder
+cd $APP_PATH
+
+# Open editor for EXC editing
+[ xdg-open &>/dev/null ] && \
+		xdg-open .       && \
+		xdg-open src/${APP_NAME}_exc.cc
+
+# Switch back to original folder, which could be convenient to trigger make
+cd $CDIR
 
 # vim: set tabstop=4:

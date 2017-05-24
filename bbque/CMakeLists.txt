@@ -73,7 +73,7 @@ endif (CONFIG_BBQUE_PIL_LOADER)
 # Setup Template generator
 configure_file (
 	"${PROJECT_SOURCE_DIR}/config/bbque-layapp.sh.in"
-	"${PROJECT_SOURCE_DIR}/config/bbque-layapp"
+	"${PROJECT_BINARY_DIR}/config/bbque-layapp"
 	@ONLY
 )
 configure_file (
@@ -289,4 +289,7 @@ install (PROGRAMS "${PROJECT_BINARY_DIR}/config/pil/bbque-pil-generator"
 		DESTINATION ${BBQUE_PATH_BBQ}
 		COMPONENT BarbequeRTRM)
 
+install (PROGRAMS "${PROJECT_BINARY_DIR}/config/bbque-layapp"
+		DESTINATION ${BBQUE_PATH_BBQ}
+		COMPONENT BarbequeRTRM)
 
