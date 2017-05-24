@@ -51,6 +51,14 @@ RTLIB_ExitCode_t MyApp::onConfigure(int8_t awm_id) {
 	logger->Warn("MyApp::onConfigure(): EXC [%s] => AWM [%02d]",
 		exc_name.c_str(), awm_id);
 
+	int32_t proc_quota, proc_nr, mem;
+	GetAssignedResources(PROC_ELEMENT, proc_quota);
+	GetAssignedResources(PROC_NR, proc_nr);
+	GetAssignedResources(MEMORY, mem);
+	logger->Notice("MayApp::onConfigure(): "
+		"EXC [%s], AWM[%02d] => R<PROC_quota>=%3d, R<PROC_nr>=%2d, R<MEM>=%3d",
+		exc_name.c_str(), awm_id, proc_quota, proc_nr, mem);
+
 	return RTLIB_OK;
 }
 
@@ -60,6 +68,7 @@ RTLIB_ExitCode_t MyApp::onRun() {
 	// Return after 5 cycles
 	if (Cycles() >= 5)
 		return RTLIB_EXC_WORKLOAD_NONE;
+
 
 	// Do one more cycle
 	logger->Warn("MyApp::onRun()      : EXC [%s]  @ AWM [%02d]",
@@ -71,8 +80,16 @@ RTLIB_ExitCode_t MyApp::onRun() {
 RTLIB_ExitCode_t MyApp::onMonitor() {
 	RTLIB_WorkingModeParams_t const wmp = WorkingModeParams();
 
-	logger->Warn("MyApp::onMonitor()  : EXC [%s]  @ AWM [%02d], Cycle [%4d]",
-		exc_name.c_str(), wmp.awm_id, Cycles());
+	logger->Warn("MyApp::onMonitor()  : EXC [%s]  @ AWM [%02d] "
+			"=> cycles [%d], CPS = %.2f",
+		exc_name.c_str(), wmp.awm_id, Cycles(), GetCPS());
+
+	return RTLIB_OK;
+}
+
+RTLIB_ExitCode_t MyApp::onSuspend() {
+
+	logger->Warn("MyApp::onSuspend()  : suspension...");
 
 	return RTLIB_OK;
 }

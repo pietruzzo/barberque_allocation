@@ -151,9 +151,8 @@ int main(int argc, char *argv[]) {
 
 	assert(rtlib);
 
-	logger->Info("STEP 1. Registering EXC using [%s] recipe...",
-			recipe.c_str());
-	pexc = pBbqueEXC_t(new MyApp("MyApp", recipe, rtlib));
+	logger->Info("STEP 1. Registering EXC with recipe <%s>...", recipe.c_str());
+	pexc = std::make_shared<MyApp>("MyApp", recipe, rtlib);
 	if (!pexc->isRegistered()) {
 		logger->Fatal("Registering failure.");
 		return RTLIB_ERROR;
