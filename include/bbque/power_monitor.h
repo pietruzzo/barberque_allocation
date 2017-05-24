@@ -419,6 +419,9 @@ private:
 
 		// Battery level check
 		auto & t_energy = triggers[PowerManager::InfoType::ENERGY];
+		if (t_energy.obj == nullptr)
+			return;
+
 		bool to_require = !(t_energy.obj->Check(
 				t_energy.threshold,  static_cast<float>(pbatt->GetChargePerc()),
 				t_energy.margin));
