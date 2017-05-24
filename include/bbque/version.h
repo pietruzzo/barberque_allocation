@@ -28,9 +28,9 @@ extern const char *g_git_version;
 }
 
 #define BBQUE_VERSION_MAJOR     1
-#define BBQUE_VERSION_MINOR     1
-#define BBQUE_VERSION_REVISION  1
-#define BBQUE_VERSION_STATUS    "dev"
+#define BBQUE_VERSION_MINOR     2
+#define BBQUE_VERSION_REVISION  0
+#define BBQUE_VERSION_STATUS    "stable"
 
 #define BBQUE_VERSION_STR \
 	BBQUE_STR(BBQUE_VERSION_MAJOR) "." \
