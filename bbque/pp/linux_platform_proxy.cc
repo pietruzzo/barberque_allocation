@@ -237,7 +237,7 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeCLS(int if_index) {
 	req.t.tcm_ifindex = if_index;
 
 	//try to talk
-	int err = rtnl_talk(&network_info.kernel_addr, &network_info.rth_2, 
+	int err = rtnl_talk(&network_info.kernel_addr, &network_info.rth_2,
 					&req.n, 0, 0, NULL, NULL, NULL);
 	if (unlikely(err < 0)) {
 		if (EEXIST == errno) {
@@ -800,7 +800,7 @@ LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) noexcept {
 
 	for (const auto pe : cpu.GetProcessingElementsAll()) {
 		auto pe_type = pe.GetPartitionType();
-		if (PlatformDescription::MDEV == pe_type || 
+		if (PlatformDescription::MDEV == pe_type ||
 			PlatformDescription::SHARED == pe_type) {
 
 			const std::string resource_path = pe.GetPath();
@@ -1259,7 +1259,7 @@ LinuxPlatformProxy::SetupCGroup(
 					pcgd->papp->StrId(),
 					cfs_c,
 					cpus_quota);
-		} else { 
+		} else {
 
 			logger->Debug("SetupCGroup: CPU for [%s]: {period [%s], quota [-]}",
 					pcgd->papp->StrId(),
