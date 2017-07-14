@@ -82,3 +82,5 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/bbque/utils"
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/bbque/cpp11"
 		DESTINATION "${BBQUE_PATH_HEADERS}"
 		FILES_MATCHING PATTERN "*.h")
+
+add_subdirectory (bindings)

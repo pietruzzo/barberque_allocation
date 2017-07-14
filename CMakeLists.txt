@@ -292,7 +292,6 @@ add_subdirectory (plugins)
 add_subdirectory (bbque)
 add_subdirectory (tools)
 add_subdirectory (demos)
-add_subdirectory (bindings)
 
 if (CONFIG_BBQUE_BUILD_TESTS)
 add_subdirectory(test)

@@ -7,6 +7,18 @@ choice
     Use the FIFO based RPC channel
 endchoice
 
+
+################################################################################
+# Bindings
+################################################################################
+
+menu "Bindings"
+  source "barbeque/rtlib/bindings/Kconfig"
+endmenu # Bindings Configuration
+
+
+################################################################################
+
 config BBQUE_RPC_TIMEOUT
   int "RPC Channel Timeout"
   default 5000
