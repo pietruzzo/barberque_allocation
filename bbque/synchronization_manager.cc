@@ -223,7 +223,7 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 		presp = (*resp_it).second;
 #endif
 
-Sync_PreChange_Check_EXC_Response(papp, presp);
+		Sync_PreChange_Check_EXC_Response(papp, presp);
 
 // Pre-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
