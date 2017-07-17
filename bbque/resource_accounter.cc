@@ -1096,7 +1096,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
 	// Release the last scheduled view, by setting it to the system view
 	SetScheduledView(sys_view_token);
 	SyncFinalize();
-	logger->Info("SyncCommit [%d]: session closed", sync_ssn.count);
+	logger->Info("SyncCommit [%d]: session committed", sync_ssn.count);
 
 	// Log the status report
 	PrintStatusReport();
@@ -1112,6 +1112,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncFinalize() {
 	std::unique_lock<std::mutex> status_ul(status_mtx);
 	status = State::READY;
 	status_cv.notify_all();
+	logger->Info("SyncFinalize [%d]: session closed", sync_ssn.count);
 	return RA_SUCCESS;
 }
 
