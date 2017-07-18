@@ -582,13 +582,6 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 
 		logger->Info("STEP M: SyncPlatform() ===> [%s]", papp->StrId());
 
-		// Jumping meanwhile disabled applications
-		if (papp->Disabled()) {
-			logger->Debug("STEP M: release resources of disabled EXC [%s]",
-					papp->StrId());
-            plm.ReclaimResources(papp);
-		}
-
 		// TODO: reconfigure resources
 		switch (syncState) {
 		case ApplicationStatusIF::STARTING:
