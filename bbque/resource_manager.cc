@@ -248,6 +248,7 @@ void ResourceManager::NotifyEvent(controlEvent_t evt) {
 
 	// Set the corresponding event flag
 	pendingEvts.set(evt);
+	logger->Debug("NotifyEvent: received event = %d", evt);
 
 	// Notify the control loop (just if it is sleeping)
 	if (pendingEvts_ul.try_lock())
