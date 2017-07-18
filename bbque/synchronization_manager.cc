@@ -585,16 +585,19 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 		// TODO: reconfigure resources
 		switch (syncState) {
 		case ApplicationStatusIF::STARTING:
+			logger->Debug("STEP M: allocating resources to [%s]", papp->StrId());
             result = plm.MapResources(papp,
 					papp->NextAWM()->GetResourceBinding());
 			break;
 		case ApplicationStatusIF::RECONF:
 		case ApplicationStatusIF::MIGREC:
 		case ApplicationStatusIF::MIGRATE:
+			logger->Debug("STEP M: re-mapping resources for [%s]", papp->StrId());
             result = plm.MapResources(papp,
 					papp->NextAWM()->GetResourceBinding());
 			break;
 		case ApplicationStatusIF::BLOCKED:
+			logger->Debug("STEP M: reclaiming resources from [%s]", papp->StrId());
             result = plm.ReclaimResources(papp);
 			break;
 		default:
@@ -602,8 +605,7 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 		}
 
         if (result != PlatformManager::PLATFORM_OK) {
-			logger->Error("STEP M: Cannot synchronize application [%s]",
-					papp->StrId());
+			logger->Error("STEP M: cannot synchronize application [%s]", papp->StrId());
 			am.DisableEXC(papp, true);
 			continue;
 		}
