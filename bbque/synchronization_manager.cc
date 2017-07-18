@@ -606,7 +606,6 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 
         if (result != PlatformManager::PLATFORM_OK) {
 			logger->Error("STEP M: cannot synchronize application [%s]", papp->StrId());
-			am.DisableEXC(papp, true);
 			continue;
 		}
 
