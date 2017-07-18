@@ -570,6 +570,7 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
     PlatformManager::ExitCode_t result = PlatformManager::PLATFORM_OK;
 	AppsUidMapIt apps_it;
 	AppPtr_t papp;
+	bool at_least_one_success = false;
 
 	logger->Debug("STEP M: SyncPlatform() START");
 	SM_RESET_TIMING(sm_tmr);
@@ -608,6 +609,9 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 			logger->Error("STEP M: cannot synchronize application [%s]", papp->StrId());
 			continue;
 		}
+		else
+			if (!at_least_one_success)
+				at_least_one_success = true;
 
 		logger->Info("STEP M: <--------- OK -- [%s]", papp->StrId());
 	}
@@ -616,7 +620,7 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_SYNCPLAT, sm_tmr, syncState);
 	logger->Debug("STEP M: SyncPlatform() DONE");
 
-    if (result == PlatformManager::PLATFORM_OK)
+    if (at_least_one_success)
 		return OK;
 
 	return PLATFORM_SYNC_FAILED;
