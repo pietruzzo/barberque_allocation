@@ -1067,10 +1067,13 @@ ApplicationManager::CleanupEXC(AppPtr_t papp) {
 	}
 
 	// Remove platform specific data
-	pp_result = plm.Release(papp);
-	if (pp_result != PlatformManager::PLATFORM_OK) {
-		logger->Error("EXC [%s] cleanup FAILED: platform data error", papp->StrId());
-		return AM_PLAT_PROXY_ERROR;
+	if (papp->HasPlatformData()) {
+		logger->Warn("CleanupEXC: [%s] missing platform data", papp->StrId());
+		pp_result = plm.Release(papp);
+		if (pp_result != PlatformManager::PLATFORM_OK) {
+			logger->Error("CleanupEXC: [%s] cleanup FAILED: platform data error", papp->StrId());
+			return AM_PLAT_PROXY_ERROR;
+		}
 	}
 
 	logger->Debug("CleanupEXC: [%s] cleaning up from UIDs map...", papp->StrId());
