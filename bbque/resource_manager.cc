@@ -367,7 +367,6 @@ void ResourceManager::Optimize() {
 			RM_COUNT_EVENT(metrics, RM_SYNCH_FAILED);
 			// FIXME here we should implement some counter-meaure to
 			// ensure consistency
-			return;
 		}
 		logger->Info(LNSYNE);
 		ra.PrintStatusReport(0, true);
