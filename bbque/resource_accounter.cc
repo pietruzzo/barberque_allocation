@@ -1100,7 +1100,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncFinalize() {
-	if (!Synching()) {
+	if (!_Synching()) {
 		logger->Error("SyncFinalize: synchronization not started");
 		return RA_ERR_SYNC_START;
 	}
@@ -1179,7 +1179,7 @@ void ResourceAccounter::ReleaseResources(
 	}
 
 	// Decrease resources in the sync view
-	if (status_view == 0 && Synching())
+	if (status_view == 0 && _Synching())
 		_ReleaseResources(papp, sync_ssn.view);
 
 	// Decrease resources in the required view

@@ -925,14 +925,18 @@ private:
 	 * @return true if the synchronization of the resource accounting is in
 	 * progress, false otherwise
 	 */
+	inline bool Synching() {
+		std::unique_lock<std::mutex> status_ul(status_mtx);
+		return (status == State::SYNC);
+	}
 
 	/**
-	 * @brief Thread-safe checking of sychronization step in progress
+	 * @brief Thread-unsafe checking of sychronization step in progress
 	 *
 	 * @return true if the synchronization of the resource accounting is in
 	 * progress, false otherwise
 	 */
-	inline bool Synching() {
+	inline bool _Synching() {
 		return (status == State::SYNC);
 	}
 
