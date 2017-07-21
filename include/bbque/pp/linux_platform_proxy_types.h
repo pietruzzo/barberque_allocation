@@ -63,7 +63,7 @@ typedef struct RLinuxBindings {
 	/** Memory limits in bytes */
 	char *memb = NULL;
 	/** The percentage of CPUs time assigned */
-	uint_fast16_t amount_cpus = 0;
+	uint_fast32_t amount_cpus = 0;
 	/** The bytes amount of Socket MEMORY assigned */
 	int_fast64_t amount_memb = 0;
 	/** The bytes/s amount of network bandwidth assigned */

@@ -686,8 +686,8 @@ LinuxPlatformProxy::GetResourceMapping(
 #else
 	prlb->amount_cpus = -1;
 #endif
-	logger->Debug("GetResourceMapping: Node [%d] quota: { %ld }",
-	node_id, prlb->amount_cpus);
+	logger->Debug("GetResourceMapping: Node [%d] quota: { %d }",
+			node_id, prlb->amount_cpus);
 
 	// Memory amount
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
