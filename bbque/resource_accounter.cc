@@ -97,6 +97,9 @@ ResourceAccounter::ResourceAccounter() :
 		"Performance degradation affecting the resource [percentage]");
 }
 
+/************************************************************************
+ *                   STATE SYNCHRONIZATION                              *
+ ************************************************************************/
 
 void ResourceAccounter::SetPlatformReady() {
 	std::unique_lock<std::mutex> status_ul(status_mtx);
@@ -124,13 +127,6 @@ void ResourceAccounter::WaitForPlatformReady() {
 		status_cv.wait(status_ul);
 	}
 }
-
-inline void ResourceAccounter::SetReady() {
-	std::unique_lock<std::mutex> status_ul(status_mtx);
-	status = State::READY;
-	status_cv.notify_all();
-}
-
 
 ResourceAccounter::~ResourceAccounter() {
 	resources.clear();
@@ -673,7 +669,6 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 		uint64_t _amount) {
 	uint64_t availability;
 	uint64_t reserved;
-	std::unique_lock<std::mutex> status_ul(status_mtx, std::defer_lock);
 
 	// Lookup for the resource to be updated
 	auto resource_path_ptr(GetPath(_path));
@@ -694,12 +689,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	}
 
 	// Resource accounter is not ready now
-	status_ul.lock();
-	while (status != State::READY)
-		status_cv.wait(status_ul);
-	status = State::NOT_READY;
-	status_ul.unlock();
-	status_cv.notify_all();
+	WaitForPlatformReady();
+	SetState(State::NOT_READY);
 
 	// If the required amount is <= 1, the resource is off-lined
 	if (_amount == 0)
@@ -712,7 +703,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 		logger->Error("Updating resource FAILED "
 				"(Error: availability [%d] exceeding registered amount [%d]",
 				availability, resource_ptr->Total());
-		SetReady();
+		SetState(State::READY);
 		return RA_ERR_OVERFLOW;
 	}
 
@@ -722,7 +713,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	resource_ptr->SetOnline();
 
 	// Back to READY
-	SetReady();
+	SetState(State::READY);
 
 	return RA_SUCCESS;
 }
@@ -837,10 +828,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::OnlineResources(
 ResourceAccounter::ExitCode_t ResourceAccounter::GetView(
 		std::string const & req_path,
 		br::RViewToken_t & token) {
-	std::unique_lock<std::mutex> status_ul(status_mtx);
-	while (status != State::READY) {
-		status_cv.wait(status_ul);
-	}
+	WaitForPlatformReady();
 	return _GetView(req_path, token);
 }
 
@@ -866,10 +854,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_GetView(
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::PutView(br::RViewToken_t status_view) {
-	std::unique_lock<std::mutex> status_ul(status_mtx);
-	while (status != State::READY) {
-		status_cv.wait(status_ul);
-	}
+	WaitForPlatformReady();
 	return _PutView(status_view);
 }
 
@@ -906,10 +891,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_PutView(
 }
 
 br::RViewToken_t ResourceAccounter::SetView(br::RViewToken_t status_view) {
-	std::unique_lock<std::mutex> status_ul(status_mtx);
-	while (status != State::READY) {
-		status_cv.wait(status_ul);
-	}
+	WaitForPlatformReady();
 	return _SetView(status_view);
 }
 
@@ -962,17 +944,12 @@ void ResourceAccounter::SetScheduledView(br::RViewToken_t svt) {
  ************************************************************************/
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncStart() {
-	std::unique_lock<std::mutex> status_ul(status_mtx);
 	ResourceAccounter::ExitCode_t result;
 	char tk_path[TOKEN_PATH_MAX_LEN];
 
-	// Wait for a READY status
-	while (status != State::READY) {
-		status_cv.wait(status_ul);
-	}
-	// Synchronization has started
-	status = State::SYNC;
-	status_cv.notify_all();
+	// Synchronization close to start...
+	WaitForPlatformReady();
+	SetState(State::SYNC);
 	logger->Info("SyncMode: start...");
 
 	// Build the path for getting the resource view token
@@ -1105,18 +1082,15 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncFinalize() {
 		return RA_ERR_SYNC_START;
 	}
 
-	std::unique_lock<std::mutex> status_ul(status_mtx);
-	status = State::READY;
-	status_cv.notify_all();
+	SetState(State::READY);
 	logger->Info("SyncFinalize [%d]: session closed", sync_ssn.count);
 	return RA_SUCCESS;
 }
 
 void ResourceAccounter::SyncWait() {
 	std::unique_lock<std::mutex> status_ul(status_mtx);
-	while (status != State::READY)
+	while (status == State::SYNC)
 		status_cv.wait(status_ul);
-	status_cv.notify_all();
 }
 
 /************************************************************************

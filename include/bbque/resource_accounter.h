@@ -653,7 +653,12 @@ private:
 	/**
 	 * @brief Set the status to READY
 	 */
-	void SetReady();
+	inline void SetState(State _s) {
+		std::unique_lock<std::mutex> status_ul(status_mtx);
+		status = _s;
+		logger->Debug("SetState: => %d", static_cast<int>(_s));
+		status_cv.notify_all();
+	}
 
 	/**
 	 * @brief Wrap the class of resource path on resource tree matching flags
