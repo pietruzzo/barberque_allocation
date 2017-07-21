@@ -920,14 +920,11 @@ private:
 	ExitCode_t SyncFinalize();
 
 	/**
-	 * @brief Abort a synchronized mode session
+	 * @brief Thread-safe checking of sychronization step in progress
 	 *
-	 * This is the synchronization session mutex free verios of the dual
-	 * public method SyncAbort
-	 *
-	 * @see SyncAbort
+	 * @return true if the synchronization of the resource accounting is in
+	 * progress, false otherwise
 	 */
-	void _SyncAbort();
 
 	/**
 	 * @brief Thread-safe checking of sychronization step in progress

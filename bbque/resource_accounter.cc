@@ -986,7 +986,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncStart() {
 	if (result != RA_SUCCESS) {
 		logger->Fatal("SyncMode [%d]: cannot get a resource state view",
 				sync_ssn.count);
-		_SyncAbort();
+		SyncAbort();
 		return RA_ERR_SYNC_VIEW;
 	}
 	logger->Debug("SyncMode [%d]: resource state view token = %ld",
@@ -1017,7 +1017,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit() {
 			logger->Fatal("SyncInit [%d]: resource booking failed for %s."
 					" Aborting sync session...",
 					sync_ssn.count, papp->StrId());
-			_SyncAbort();
+			SyncAbort();
 			return RA_ERR_SYNC_INIT;
 		}
 	}
@@ -1040,7 +1040,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 	if (!papp->NextAWM()) {
 		logger->Fatal("SyncMode [%d]: [%s] missing the next AWM",
 				sync_ssn.count, papp->StrId());
-		_SyncAbort();
+		SyncAbort();
 		return RA_ERR_MISS_AWM;
 	}
 
@@ -1051,7 +1051,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 	if (result != RA_SUCCESS) {
 		logger->Fatal("SyncMode [%d]: [%s] resource booking failed",
 				sync_ssn.count, papp->StrId());
-		_SyncAbort();
+		SyncAbort();
 		return result;
 	}
 
@@ -1063,12 +1063,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 }
 
 void ResourceAccounter::SyncAbort() {
-	std::unique_lock<std::mutex> sync_ul(status_mtx);
-	_SyncAbort();
-}
-
-// NOTE this method should be called while holding the sync session mutex
-void ResourceAccounter::_SyncAbort() {
+	logger->Debug("SyncAbort [%d]: aborting synchronization...",
+			sync_ssn.count);
 	_PutView(sync_ssn.view);
 	SyncFinalize();
 	logger->Error("SyncMode [%d]: session aborted", sync_ssn.count);
@@ -1089,7 +1085,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
 		logger->Fatal("SyncCommit [%d]: "
 				"unable to set the new system resource state view",
 				sync_ssn.count);
-		_SyncAbort();
+		SyncAbort();
 		return RA_ERR_SYNC_VIEW;
 	}
 
