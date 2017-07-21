@@ -646,7 +646,7 @@ LinuxPlatformProxy::MakeNetClass(AppPid_t handle, unsigned rate, int if_index) {
 	return PLATFORM_OK;
 }
 
-#endif
+#endif // CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::GetResourceMapping(
@@ -690,23 +690,25 @@ LinuxPlatformProxy::GetResourceMapping(
 	node_id, prlb->amount_cpus);
 
 	// Memory amount
-	prlb->amount_memb = -1;
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	uint64_t memb = ra.GetAssignedAmount(
 	        assign_map, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
 	if (memb > 0)
 		prlb->amount_memb = memb;
+#else
+	prlb->amount_memb = -1;
 #endif
 	logger->Debug("GetResourceMapping: Node [%d] memb : { %ld }",
 	node_id, prlb->amount_memb);
 
-	// Network Bandwisth amount
-	prlb->amount_net_bw = -1;
-#ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
+	// Network bandwidth
+#ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 	uint64_t netb = ra.GetAssignedAmount(
 	        assign_map, papp, rvt, br::ResourceType::NETWORK_IF, br::ResourceType::SYSTEM);
 	if (netb > 0)
 		prlb->amount_net_bw = netb;
+#else
+	prlb->amount_net_bw = -1;
 #endif
 	logger->Debug("GetResourceMapping: Node [%d] network bandwidth : { %ld }",
 	node_id, prlb->amount_net_bw);
