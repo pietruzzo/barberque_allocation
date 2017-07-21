@@ -144,6 +144,8 @@ private:
 
 	static MetricsCollector::MetricsCollection_t metrics[SM_METRICS_COUNT];
 
+	std::list<ba::AppPtr_t> sync_fails_apps;
+
 	/**
 	 * @brief   Build a new instance of the synchronization manager
 	 */
@@ -210,6 +212,12 @@ private:
 	 */
 	void Sync_SyncChange_Check_EXC_Response(AppPtr_t papp, 
                                  ApplicationProxy::pSyncChangeRsp_t presp) const;
+
+	/**
+	 * @brief Disable EXCs for which the synchronization has not been
+	 * successfully performed
+	 */
+	void DisableFailedEXC();
 };
 
 } // namespace bbque

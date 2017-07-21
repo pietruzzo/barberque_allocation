@@ -607,6 +607,7 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 
         if (result != PlatformManager::PLATFORM_OK) {
 			logger->Error("STEP M: cannot synchronize application [%s]", papp->StrId());
+			sync_fails_apps.push_back(papp);
 			continue;
 		}
 		else
@@ -744,6 +745,7 @@ SynchronizationManager::SyncSchedule() {
 			logger->Warn("SynchSchedule: apps sync FAILED, "
 					"aborting sync...");
 			ra.SyncAbort();
+			DisableFailedEXC();
 			return result;
 		}
 
@@ -760,6 +762,7 @@ SynchronizationManager::SyncSchedule() {
 	if (raResult != ResourceAccounter::RA_SUCCESS) {
 		logger->Fatal("SynchSchedule: Resource accounting sync session commit"
 				"failed");
+		DisableFailedEXC();
 		return ABORTED;
 	}
 
@@ -769,11 +772,21 @@ SynchronizationManager::SyncSchedule() {
 	// Account for SyncP completed
 	SM_COUNT_EVENT(metrics, SM_SYNCP_COMP);
 
+	DisableFailedEXC();
+
 	logger->Notice("Synchronization [%d] DONE", sync_count);
 	am.ReportStatusQ();
 	am.ReportSyncQ();
 
 	return OK;
+}
+
+void SynchronizationManager::DisableFailedEXC() {
+	for (auto papp: sync_fails_apps) {
+		logger->Warn("DisableFailedEXC: disabling [%s] due to failure",
+				papp->StrId());
+		am.DisableEXC(papp);
+	}
 }
 
 } // namespace bbque
