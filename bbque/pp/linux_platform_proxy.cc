@@ -698,8 +698,8 @@ LinuxPlatformProxy::GetResourceMapping(
 #else
 	prlb->amount_memb = -1;
 #endif
-	logger->Debug("GetResourceMapping: Node [%d] memb : { %ld }",
-	node_id, prlb->amount_memb);
+	logger->Debug("GetResourceMapping: Node [%d] memb : { %lld }",
+			node_id, prlb->amount_memb);
 
 	// Network bandwidth
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
@@ -710,11 +710,8 @@ LinuxPlatformProxy::GetResourceMapping(
 #else
 	prlb->amount_net_bw = -1;
 #endif
-	logger->Debug("GetResourceMapping: Node [%d] network bandwidth : { %ld }",
-	node_id, prlb->amount_net_bw);
-
-
-
+	logger->Debug("GetResourceMapping: Node [%d] network bandwidth : { %lld }",
+		node_id, prlb->amount_net_bw);
 
 	return PLATFORM_OK;
 }
