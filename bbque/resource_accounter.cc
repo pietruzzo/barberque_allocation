@@ -97,6 +97,14 @@ ResourceAccounter::ResourceAccounter() :
 		"Performance degradation affecting the resource [percentage]");
 }
 
+ResourceAccounter::~ResourceAccounter() {
+	resources.clear();
+	resource_set.clear();
+	assign_per_views.clear();
+	rsrc_per_views.clear();
+	r_ids_per_type.clear();
+}
+
 /************************************************************************
  *                   STATE SYNCHRONIZATION                              *
  ************************************************************************/
@@ -120,20 +128,11 @@ void ResourceAccounter::SetPlatformNotReady() {
 	status_cv.notify_all();
 }
 
-
 void ResourceAccounter::WaitForPlatformReady() {
 	std::unique_lock<std::mutex> status_ul(status_mtx);
 	while (status != State::READY) {
 		status_cv.wait(status_ul);
 	}
-}
-
-ResourceAccounter::~ResourceAccounter() {
-	resources.clear();
-	resource_set.clear();
-	assign_per_views.clear();
-	rsrc_per_views.clear();
-	r_ids_per_type.clear();
 }
 
 /************************************************************************
@@ -1077,6 +1076,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit() {
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncFinalize() {
+	logger->Debug("SyncFinalize: ending synchronization...");
 	if (!_Synching()) {
 		logger->Error("SyncFinalize: synchronization not started");
 		return RA_ERR_SYNC_START;
