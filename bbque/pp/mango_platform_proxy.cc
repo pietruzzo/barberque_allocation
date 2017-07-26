@@ -585,17 +585,6 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(const TaskGraph &tg,
 	}
 */
 
-	// TODO
-	#warning This is a very ugly hack (with also memory leak). Just for the May review meeting.
-	std::thread* __attribute__((unused)) t = new std::thread([](){
-		unsigned int risultato;
-		while(1) {
-			hn_receive_item(&risultato);
-		}
-	});
-
-
-
 	return err;
 }
 
