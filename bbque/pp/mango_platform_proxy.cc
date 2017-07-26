@@ -49,9 +49,9 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	filter.tile = 999;
 	filter.core = 999;
 
-	logger->Debug("Initializing communciation with MANGO platform...");
+	logger->Debug("Initializing communication with MANGO platform...");
 
-	int hn_init_err = hn_initialize(filter, UPV_PARTITION_STRATEGY, 1, 0);
+	int hn_init_err = hn_initialize(filter, UPV_PARTITION_STRATEGY, 1, 0, 0);
 
 	bbque_assert ( 0 == hn_init_err );
 
@@ -198,16 +198,15 @@ MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 
 		logger->Debug("Loading PEAK OS in memory bank %d [address=%x]", tile_memory, base_addr);
 
-/*		TODO This was added directly to HN library (a very bad thing...)
 		err = hn_write_image_into_memory(MANGO_PEAK_OS, tile_memory, base_addr);
 
 		if (HN_SUCCEEDED != err) {
 			logger->Error("Unable to load PEAKOS in tile nr=%d", tile);
 			return PLATFORM_LOADING_FAILED;
 		}
-*/
+
 		logger->Debug("Booting PEAK tile nr=%d", tile);
-		err = hn_boot_unit(tile, tile_memory, base_addr);
+		err = hn_boot_unit(tile, tile_memory, base_addr, MANGO_PEAK_PROTOCOL);
 
 		if (HN_SUCCEEDED != err) {
 			logger->Error("Unable to boot PEAK tile nr=%d", tile);
