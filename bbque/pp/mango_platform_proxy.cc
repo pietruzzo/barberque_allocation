@@ -198,15 +198,8 @@ MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 
 		logger->Debug("Loading PEAK OS in memory bank %d [address=%x]", tile_memory, base_addr);
 
-		err = hn_write_image_into_memory(MANGO_PEAK_OS, tile_memory, base_addr);
-
-		if (HN_SUCCEEDED != err) {
-			logger->Error("Unable to load PEAKOS in tile nr=%d", tile);
-			return PLATFORM_LOADING_FAILED;
-		}
-
 		logger->Debug("Booting PEAK tile nr=%d", tile);
-		err = hn_boot_unit(tile, tile_memory, base_addr, MANGO_PEAK_PROTOCOL);
+		err = hn_boot_unit(tile, tile_memory, base_addr, MANGO_PEAK_PROTOCOL, MANGO_PEAK_OS);
 
 		if (HN_SUCCEEDED != err) {
 			logger->Error("Unable to boot PEAK tile nr=%d", tile);
