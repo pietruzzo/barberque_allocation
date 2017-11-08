@@ -25,8 +25,8 @@ public:
 		HN_PEAK_2_TYPE,
 		HN_NUPLUS_0_TYPE,
 		HN_NUPLUS_1_TYPE,
-		HN_ARM,
-		HN_HWACC_DCT
+		HN_HWACC_DCT,
+		HN_NONE_TYPE = 99
 	} MangoTileType_t;
 
 
@@ -59,6 +59,8 @@ public:
 				return 4;
 			case HN_PEAK_2_TYPE:
 				return 8;
+			case HN_NONE_TYPE:	// GN emulation
+				return 4;
 			default:
 				return 0;
 		}

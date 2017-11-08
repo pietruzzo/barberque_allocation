@@ -212,15 +212,22 @@ MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::BootTiles() noexcept {
 
 	ExitCode_t err;
-
+	hn_st_tile_info tile_info;
 	for (uint_fast32_t i=0; i < num_tiles; i++) {
 
-		// TODO: Manage other types of tiles
+		int err = hn_get_tile_info(i, &tile_info);
+		if (HN_SUCCEEDED != err) {
+			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
+			return PLATFORM_INIT_FAILED;
+		}
 
-		err = BootTiles_PEAK(i);
-		if (PLATFORM_OK != err) {
-			logger->Error("Unable to boot tile nr=%d", i);
-			return err;
+		if (tile_info.tile_type == HN_PEAK_TYPE_1 || tile_info.tile_type == HN_PEAK_TYPE_2) {
+
+			err = BootTiles_PEAK(i);
+			if (PLATFORM_OK != err) {
+				logger->Error("Unable to boot tile nr=%d", i);
+				return PLATFORM_INIT_FAILED;
+			}
 		}
 	}
 
@@ -352,6 +359,11 @@ static uint32_t ArchTypeToMangoType(ArchType type, unsigned int nr_thread) {
 			// the policy?)
 			return HN_PEAK_TYPE_1;	// Fix this, should go to policy
 		break;
+		case ArchType::GN:
+			return HN_PEAK_TYPE_1;	// In GN emulation case we are not interested in the real time
+		break;
+
+
 		// TODO add other architectures
 		default:
 			throw std::runtime_error("Unsupported architecture");
