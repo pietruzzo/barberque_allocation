@@ -215,18 +215,26 @@ endif (CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH)
 
 #Linking the Mango library
 if (CONFIG_TARGET_LINUX_MANGO)
-message(STATUS "MANGO installation path.... : " ${CONFIG_MANGO_ROOT_PATH})
-  find_library (HN hn
-	  PATHS
-	    ${CONFIG_MANGO_ROOT_PATH}/lib
-	    /usr/lib
-	    /usr/lib64
-	    /usr/local/lib
-	    /usr/local/lib64
+  message(STATUS "MANGO installation path.... : " ${CONFIG_MANGO_ROOT_PATH})
+
+  include(${PROJECT_SOURCE_DIR}/../../global.cmake)
+
+  set (LIBHN_POSSIBLE_PATHS "${CONFIG_MANGO_ROOT_PATH}/lib;/usr/lib;/usr/lib64;/usr/local/lib;/usr/local/lib64")
+
+  if (CONFIG_LIBMANGO_GN)
+    find_library (HN gn
+	PATHS ${LIBHN_POSSIBLE_PATHS}
+	NO_DEFAULT_PATH
+    )
+  else (CONFIG_LIBMANGO_GN)
+    find_library (HN hn
+	PATHS ${LIBHN_POSSIBLE_PATHS}
+	NO_DEFAULT_PATH
   )
+  endif (CONFIG_LIBMANGO_GN)
 
   if(NOT HN)
-    message(FATAL_ERROR "MANGO HN library Not found")
+    message(FATAL_ERROR "MANGO GN/HN library Not found")
   endif()
 
   target_link_libraries (barbeque ${HN})
