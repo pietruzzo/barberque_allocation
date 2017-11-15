@@ -211,7 +211,6 @@ MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::BootTiles() noexcept {
 
-	ExitCode_t err;
 	hn_st_tile_info tile_info;
 	for (uint_fast32_t i=0; i < num_tiles; i++) {
 
