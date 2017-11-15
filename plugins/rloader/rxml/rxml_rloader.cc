@@ -728,17 +728,23 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node) {
 void RXMLRecipeLoader::CheckMandatoryNode (
 	 rapidxml::xml_node<> * _nodeToCheck,
 	 const char * _nodeToCheckName,
-	 rapidxml::xml_node<> * _nodeFather) {
+	 rapidxml::xml_node<> * _nodeParent) {
 
-	std::string father_name(_nodeFather->name());
+	if (_nodeParent == nullptr) {
+		std::string exception_message("Null parent node");
+		throw rapidxml::parse_error(exception_message.c_str(), _nodeParent);
+	}
+
+	std::string parent_name(_nodeParent->name());
 	std::string child_name(_nodeToCheckName);
+
 
 	//Throwing an exception if the mandatory node doesn't exist
 	if (_nodeToCheck == 0) {
 	std::string exception_message("The mandatory node doesn't exist in this"
 			"recipe. The node name is: " + child_name +"."
-			"The father name is: " + father_name);
-	throw rapidxml::parse_error(exception_message.c_str(), _nodeFather);
+			"The parent name is: " + parent_name);
+	throw rapidxml::parse_error(exception_message.c_str(), _nodeParent);
 	}
 }
 
