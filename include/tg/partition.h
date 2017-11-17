@@ -144,6 +144,66 @@ public:
 	 */
 	uint32_t GetKernelBank(TaskPtr_t task) const;
 
+	/**
+	 * \brief Get the TaskGraph
+	 */
+	inline std::shared_ptr<TaskGraph> GetTask() noexcept {
+		return this->tg;
+	}
+
+	/**
+	 * \brief Set the TaskGraph related
+	 * \param the task graph
+	 */
+	inline void GetTask(std::shared_ptr<TaskGraph> tg) noexcept {
+		this->tg = tg;
+	}
+
+
+/* ******************* ITERATORS ******************* */
+
+	typedef std::map<int,int>::const_iterator map_citerator_t;
+
+	inline map_citerator_t Tasks_cbegin() const noexcept {
+		return this->tasks_map.cbegin();
+	}
+
+	inline map_citerator_t Tasks_cend() const noexcept {
+		return this->tasks_map.cend();
+	}
+
+	inline map_citerator_t Buffers_cbegin() const noexcept {
+		return this->buffers_map.cbegin();
+	}
+
+	inline map_citerator_t Buffers_cend() const noexcept {
+		return this->buffers_map.cend();
+	}
+
+	inline map_citerator_t KernelsAddr_cbegin() const noexcept {
+		return this->kernels_addr_map.cbegin();
+	}
+
+	inline map_citerator_t KernelsAddr_cend() const noexcept {
+		return this->kernels_addr_map.cend();
+	}
+
+	inline map_citerator_t KernelsBank_cbegin() const noexcept {
+		return this->kernels_bank_map.cbegin();
+	}
+
+	inline map_citerator_t KernelsBank_cend() const noexcept {
+		return this->kernels_bank_map.cend();
+	}
+
+	inline map_citerator_t BuffersAddr_cbegin() const noexcept {
+		return this->buffers_addr_map.cbegin();
+	}
+
+	inline map_citerator_t BuffersAddr_cend() const noexcept {
+		return this->buffers_addr_map.cend();
+	}
+
 private:
 	const uint32_t id;	/** The internal identifier returned by HN library */
 	int_fast8_t mm_score;	/** The score index [0;100] provided by the MemoryManager */
@@ -156,9 +216,6 @@ private:
 	std::map<int, int> kernels_addr_map;
 	std::map<int, int> kernels_bank_map;
 	std::map<int, int> buffers_addr_map;
-
-	std::vector<uint32_t> buffers_address;
-	std::vector<uint32_t> kernels_address;
 
 };
 
