@@ -13,6 +13,7 @@ service RemoteAgent {
 
 message GenericRequest {
   uint32 sender_id = 1;
+  uint32 dest_id   = 2;
 }
 
 message GenericReply {
@@ -30,8 +31,9 @@ message GenericReply {
 
 message ResourceStatusRequest {
   uint32 sender_id = 1;
-  string path  = 2;
-  bool average = 3;
+  uint32 dest_id   = 2;
+  string path      = 3;
+  bool average     = 4;
 }
 
 message ResourceStatusReply {

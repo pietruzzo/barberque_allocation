@@ -24,9 +24,10 @@ namespace plugins
 
 using bbque::agent::ExitCode_t;
 
-AgentClient::AgentClient(int local_sys_id, const std::string & _address_port):
-	local_system_id(local_sys_id),
-	server_address_port(_address_port)
+AgentClient::AgentClient(int _local_id, int _remote_id, const std::string & _address_port):
+	local_system_id(_local_id),
+	remote_system_id(_remote_id),
+	remote_address_port(_address_port)
 {
 	logger = bbque::utils::Logger::GetLogger(AGENT_PROXY_NAMESPACE".grpc.cln");
 	Connect();
@@ -34,14 +35,14 @@ AgentClient::AgentClient(int local_sys_id, const std::string & _address_port):
 
 ExitCode_t AgentClient::Connect()
 {
-	logger->Debug("Connecting to %s...", server_address_port.c_str());
+	logger->Debug("Connecting to %s...", remote_address_port.c_str());
 	if (channel != nullptr) {
 		logger->Debug("Channel already open");
 		return agent::ExitCode_t::OK;
 	}
 
 	channel = grpc::CreateChannel(
-			  server_address_port, grpc::InsecureChannelCredentials());
+			  remote_address_port, grpc::InsecureChannelCredentials());
 	logger->Debug("Channel open");
 
 	service_stub = bbque::RemoteAgent::NewStub(channel);
@@ -80,6 +81,7 @@ ExitCode_t AgentClient::GetResourceStatus(
 	// Do RPC call
 	bbque::ResourceStatusRequest request;
 	request.set_sender_id(local_system_id);
+	request.set_dest_id(remote_system_id);
 	request.set_path(resource_path);
 	request.set_average(false);
 
@@ -117,6 +119,7 @@ ExitCode_t AgentClient::GetWorkloadStatus(
 
 	bbque::GenericRequest request;
 	request.set_sender_id(local_system_id);
+	request.set_dest_id(remote_system_id);
 	grpc::Status status;
 	grpc::ClientContext context;
 	bbque::WorkloadStatusReply reply;
@@ -149,6 +152,7 @@ ExitCode_t AgentClient::GetChannelStatus(
 
 	bbque::GenericRequest request;
 	request.set_sender_id(local_system_id);
+	request.set_dest_id(remote_system_id);
 	grpc::Status status;
 	grpc::ClientContext context;
 	bbque::ChannelStatusReply reply;

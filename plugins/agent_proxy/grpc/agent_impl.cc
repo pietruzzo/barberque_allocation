@@ -33,7 +33,8 @@ grpc::Status AgentImpl::GetResourceStatus(
 		const bbque::ResourceStatusRequest * request,
 		bbque::ResourceStatusReply * reply) {
 
-	logger->Debug("ResourceStatus: Request from system %d", request->sender_id());
+	logger->Debug("ResourceStatus: request from sys%d for sys%d",
+		request->sender_id(), request->dest_id());
 	if (request->path().empty()) {
 		logger->Error("ResourceStatus: Invalid resource path specified");
 		return grpc::Status::CANCELLED;
@@ -79,7 +80,8 @@ grpc::Status AgentImpl::GetWorkloadStatus(
 		const bbque::GenericRequest * request,
 		bbque::WorkloadStatusReply * reply) {
 
-	logger->Debug("WorkloadStatus: Request from system %d", request->sender_id());
+	logger->Debug("WorkloadStatus: request from sys%d for sys%d",
+		request->sender_id(), request->dest_id());
 	reply->set_nr_running(system.ApplicationsCount(
 		bbque::app::ApplicationStatusIF::RUNNING));
 	reply->set_nr_ready(system.ApplicationsCount(
@@ -93,7 +95,8 @@ grpc::Status AgentImpl::GetChannelStatus(
 		const bbque::GenericRequest * request,
 		bbque::ChannelStatusReply * reply) {
 
-	logger->Debug("ChannelStatus: Request from system %d", request->sender_id());
+	logger->Debug("ChannelStatus: request from sys%d for sys%d",
+		request->sender_id(), request->dest_id());
 	reply->set_connected(true);
 
 	return grpc::Status::OK;

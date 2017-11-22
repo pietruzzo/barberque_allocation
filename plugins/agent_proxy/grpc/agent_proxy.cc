@@ -167,27 +167,27 @@ uint16_t AgentProxyGRPC::GetSystemId(const std::string & system_path) const {
 }
 
 
-std::shared_ptr<AgentClient> AgentProxyGRPC::GetAgentClient(uint16_t system_id) {
-	logger->Debug("GetAgentClient: retrieving a client for sys%d", system_id);
-	if (!platform->ExistSystem(system_id)) {
-		logger->Error("GetAgentClient: sys%d not registered", system_id);
+std::shared_ptr<AgentClient> AgentProxyGRPC::GetAgentClient(uint16_t remote_system_id) {
+	logger->Debug("GetAgentClient: retrieving a client for sys%d", remote_system_id);
+	if (!platform->ExistSystem(remote_system_id)) {
+		logger->Error("GetAgentClient: sys%d not registered", remote_system_id);
 		return nullptr;
 	}
 
-	auto sys_client = clients.find(system_id);
+	auto sys_client = clients.find(remote_system_id);
 	if(sys_client == clients.end()) {
-		logger->Debug("GetAgentClient: creating a client for sys%d", system_id);
-		std::string server_address_port(platform->GetSystem(system_id).GetNetAddress());
+		logger->Debug("GetAgentClient: creating a client for sys%d", remote_system_id);
+		std::string server_address_port(platform->GetSystem(remote_system_id).GetNetAddress());
 		server_address_port.append(":" + std::to_string(port_num));
 		logger->Debug("GetAgentClient: allocating a client to connect to --> %s",
 			server_address_port.c_str());
 
 		std::shared_ptr<AgentClient> client_ptr =
-			std::make_shared<AgentClient>(system_id, server_address_port);
-		clients.emplace(system_id, client_ptr);
+			std::make_shared<AgentClient>(local_sys_id, remote_system_id, server_address_port);
+		clients.emplace(remote_system_id, client_ptr);
 	}
 	logger->Debug("GetAgentClient: active clients = %d", clients.size());
-	return clients.at(system_id);
+	return clients.at(remote_system_id);
 }
 
 
@@ -208,9 +208,9 @@ ExitCode_t AgentProxyGRPC::GetWorkloadStatus(
 }
 
 ExitCode_t AgentProxyGRPC::GetWorkloadStatus(
-		int system_id,
+		int remote_system_id,
 		agent::WorkloadStatus & status) {
-	std::shared_ptr<AgentClient> client(GetAgentClient(system_id));
+	std::shared_ptr<AgentClient> client(GetAgentClient(remote_system_id));
 	if (client)
 		return client->GetWorkloadStatus(status);
 	return agent::ExitCode_t::AGENT_UNREACHABLE;
@@ -224,9 +224,9 @@ ExitCode_t AgentProxyGRPC::GetChannelStatus(
 }
 
 ExitCode_t AgentProxyGRPC::GetChannelStatus(
-		int system_id,
+		int remote_system_id,
 		agent::ChannelStatus & status) {
-	std::shared_ptr<AgentClient> client(GetAgentClient(system_id));
+	std::shared_ptr<AgentClient> client(GetAgentClient(remote_system_id));
 	if (client)
 		return client->GetChannelStatus(status);
 	return agent::ExitCode_t::AGENT_UNREACHABLE;
@@ -240,7 +240,7 @@ ExitCode_t AgentProxyGRPC::SendJoinRequest(std::string const & path) {
 	return agent::ExitCode_t::AGENT_UNREACHABLE;
 }
 
-ExitCode_t AgentProxyGRPC::SendJoinRequest(int system_id) {
+ExitCode_t AgentProxyGRPC::SendJoinRequest(int remote_system_id) {
 
 	return agent::ExitCode_t::AGENT_UNREACHABLE;
 }
@@ -251,7 +251,7 @@ ExitCode_t AgentProxyGRPC::SendDisjoinRequest(std::string const & path) {
 	return agent::ExitCode_t::AGENT_UNREACHABLE;
 }
 
-ExitCode_t AgentProxyGRPC::SendDisjoinRequest(int system_id) {
+ExitCode_t AgentProxyGRPC::SendDisjoinRequest(int remote_system_id) {
 
 	return agent::ExitCode_t::AGENT_UNREACHABLE;
 }
