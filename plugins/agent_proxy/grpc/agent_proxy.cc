@@ -103,7 +103,6 @@ AgentProxyGRPC::AgentProxyGRPC() {
 AgentProxyGRPC::~AgentProxyGRPC() {
 	logger->Info("Destroying the AgentProxy module...");
 	clients.clear();
-	systems.clear();
 }
 
 void AgentProxyGRPC::SetPlatformDescription(
@@ -114,8 +113,8 @@ void AgentProxyGRPC::SetPlatformDescription(
 		return;
 	}
 
-	systems = platform->GetSystemsAll();
-	logger->Debug("Systems in the managed platform: %d", systems.size());
+	this->platform = platform;
+	logger->Debug("Systems in the managed platform: %d", platform->GetSystemsAll().size());
 
 	local_sys_id = platform->GetLocalSystem().GetId();
 	logger->Debug("Local system id: %d", local_sys_id);
@@ -169,28 +168,25 @@ uint16_t AgentProxyGRPC::GetSystemId(const std::string & system_path) const {
 
 
 std::shared_ptr<AgentClient> AgentProxyGRPC::GetAgentClient(uint16_t system_id) {
-	logger->Debug("Retrieving a client for system %d", system_id);
-	assert(!systems.empty());
-
-	if (system_id >= systems.size()) {
-		logger->Error("System %d not registered", system_id);
+	logger->Debug("GetAgentClient: retrieving a client for sys%d", system_id);
+	if (!platform->ExistSystem(system_id)) {
+		logger->Error("GetAgentClient: sys%d not registered", system_id);
 		return nullptr;
 	}
 
-	if(clients.size() <= system_id) {
-		logger->Debug("Creating a client for system %d", system_id);
-		std::string server_address_port(
-			systems.at(system_id).GetNetAddress());
+	auto sys_client = clients.find(system_id);
+	if(sys_client == clients.end()) {
+		logger->Debug("GetAgentClient: creating a client for sys%d", system_id);
+		std::string server_address_port(platform->GetSystem(system_id).GetNetAddress());
 		server_address_port.append(":" + std::to_string(port_num));
-		logger->Debug("Allocating a client to connect %s",
+		logger->Debug("GetAgentClient: allocating a client to connect to --> %s",
 			server_address_port.c_str());
 
-		std::shared_ptr<AgentClient> client =
-		        std::make_shared<AgentClient>(
-				local_sys_id, server_address_port);
-		clients.push_back(client);
+		std::shared_ptr<AgentClient> client_ptr =
+			std::make_shared<AgentClient>(system_id, server_address_port);
+		clients.emplace(system_id, client_ptr);
 	}
-	logger->Debug("Client instances: %d", clients.size());
+	logger->Debug("GetAgentClient: active clients = %d", clients.size());
 	return clients.at(system_id);
 }
 

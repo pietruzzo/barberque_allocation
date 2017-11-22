@@ -126,17 +126,16 @@ private:
 	std::unique_ptr<bu::Logger> logger;
 
 
-	std::vector<bbque::pp::PlatformDescription::System> systems;
+	bbque::pp::PlatformDescription const * platform;
 
 	uint16_t local_sys_id;
-
 
 
 	AgentImpl service;
 
 	std::unique_ptr<grpc::Server> server;
 
-	std::vector<std::shared_ptr<AgentClient>> clients;
+	std::map<uint16_t, std::shared_ptr<AgentClient>> clients;
 
 	bool server_started = false;
 
