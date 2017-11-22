@@ -139,10 +139,8 @@ ExitCode_t AgentClient::GetWorkloadStatus(
 	return ExitCode_t::OK;
 }
 
-ExitCode_t AgentClient::GetChannelStatus(
-		agent::ChannelStatus & channel_status) {
-
-        timer.start();
+ExitCode_t AgentClient::GetChannelStatus(agent::ChannelStatus & channel_status) {
+	timer.start();
 	ExitCode_t exit_code = Connect();
 	if (exit_code != ExitCode_t::OK) {
 		logger->Error("ChannelStatus: Connection failed");
