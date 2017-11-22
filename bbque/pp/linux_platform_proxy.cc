@@ -934,6 +934,7 @@ void LinuxPlatformProxy::InitPowerInfo(
 #ifdef CONFIG_BBQUE_WM
 	PowerMonitor & wm(PowerMonitor::GetInstance());
 	wm.Register(resourcePath);
+	logger->Debug("InitPowerInfo: [%s] registered for monitoring", resourcePath);
 #endif
 
 }
