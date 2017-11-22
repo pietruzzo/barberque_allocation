@@ -747,7 +747,9 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 
 	this->memory_ids_all = "";
 
-	for (const auto sys : pd->GetSystemsAll()) {
+	for (const auto & sys_entry: pd->GetSystemsAll()) {
+		auto sys = sys_entry.second;
+
 		logger->Debug("ScanPlatformDescription: [%s@%s] Looking for CPUs...",
 				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {

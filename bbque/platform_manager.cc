@@ -348,17 +348,21 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 #ifdef CONFIG_BBQUE_DIST_MODE
 	bool is_remote = false;
+	auto & pd_sys = GetPlatformDescription().GetSystemsAll();
 
 	// Check if application is local or remote.
 	for (int i = 0; i < systems.Count(); i++) {
 		if (systems.Test(i)) {
 			logger->Debug("Mapping: Checking system %d...", i);
-			if (GetPlatformDescription().GetSystemsAll()[i].IsLocal() ) {
+			auto const sys_entry = pd_sys.find(i);
+			if (sys_entry == pd_sys.end()) continue;
+			auto & sys = sys_entry->second;
+			if (sys.IsLocal()) {
 				is_local  = true;
-				logger->Debug("Mapping: System %d is local", i);
+				logger->Debug("Mapping: system id=%d is local", i);
 			} else {
 				is_remote = true;
-				logger->Debug("Mapping: System %d is remote", i);
+				logger->Debug("Mapping: system id=%d is remote", i);
 			}
 		}
 	}
