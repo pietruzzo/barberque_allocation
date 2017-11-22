@@ -33,7 +33,7 @@ grpc::Status AgentImpl::GetResourceStatus(
 		const bbque::ResourceStatusRequest * request,
 		bbque::ResourceStatusReply * reply) {
 
-	logger->Debug("ResourceStatus: Request from system &d", request->sender_id());
+	logger->Debug("ResourceStatus: Request from system %d", request->sender_id());
 	if (request->path().empty()) {
 		logger->Error("ResourceStatus: Invalid resource path specified");
 		return grpc::Status::CANCELLED;
