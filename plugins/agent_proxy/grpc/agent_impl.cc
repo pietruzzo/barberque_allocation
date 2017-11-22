@@ -61,15 +61,17 @@ grpc::Status AgentImpl::GetResourceStatus(
 	}
 
 	uint32_t degr_perc = 100;
-	uint32_t power_mw = 0, temp = 0;
+	uint32_t power_mw = 0, temp = 0, load = 0;
 #ifdef CONFIG_BBQUE_PM
 	bbque::PowerManager & pm(bbque::PowerManager::GetInstance());
 	pm.GetPowerUsage(resource_path, power_mw);
 	pm.GetTemperature(resource_path, temp);
+	pm.GetLoad(resource_path, load);
 #endif
 	reply->set_degradation(degr_perc);
 	reply->set_power_mw(power_mw);
 	reply->set_temperature(temp);
+	reply->set_load(load);
 
 	return grpc::Status::OK;
 }

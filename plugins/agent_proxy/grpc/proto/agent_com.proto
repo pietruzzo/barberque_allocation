@@ -42,6 +42,7 @@ message ResourceStatusReply {
   uint32 degradation  = 3;
   uint32 temperature  = 4;
   uint32 power_mw     = 5;
+  uint32 load         = 6;
 }
 
 
