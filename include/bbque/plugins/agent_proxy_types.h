@@ -51,6 +51,7 @@ struct ResourceStatus {
 	int32_t power_mw;
 	int32_t temperature;
 	int16_t degradation;
+	int32_t load;
 };
 
 /**
