@@ -751,7 +751,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 		logger->Debug("ScanPlatformDescription: [%s@%s] Looking for CPUs...",
 				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {
-			ExitCode_t result = this->RegisterCPU(cpu);
+			ExitCode_t result = this->RegisterCPU(cpu, sys.IsLocal());
 			if (unlikely(PLATFORM_OK != result)) {
 				logger->Fatal("Register CPU %d failed", cpu.GetId());
 				return result;
@@ -760,7 +760,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 		logger->Debug("ScanPlatformDescription: [%s@%s] Looking for memories...",
 				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto mem : sys.GetMemoriesAll()) {
-			ExitCode_t result = this->RegisterMEM(*mem);
+			ExitCode_t result = this->RegisterMEM(*mem, sys.IsLocal());
 			if (unlikely(PLATFORM_OK != result)) {
 				logger->Fatal("ScanPlatformDescription: MEM %d registration failed", mem->GetId());
 				return result;
@@ -774,7 +774,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 			}
 		}
 		for (const auto net : sys.GetNetworkIFsAll()) {
-			ExitCode_t result = this->RegisterNET(*net);
+			ExitCode_t result = this->RegisterNET(*net, sys.IsLocal());
 			if (unlikely(PLATFORM_OK != result)) {
 				logger->Fatal("ScanPlatformDescription: NETIF %d (%s) registration failed "
 						"[%d]",
@@ -794,7 +794,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) noexcept {
+LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu, bool is_local) noexcept {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	for (const auto pe : cpu.GetProcessingElementsAll()) {
@@ -811,7 +811,7 @@ LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) noexcept {
 			}
 			else {
 				ra.RegisterResource(resource_path, "", share);
-				InitPowerInfo(resource_path.c_str(), pe.GetId());
+				if (is_local) InitPowerInfo(resource_path.c_str(), pe.GetId());
 			}
 		}
 	}
@@ -820,7 +820,7 @@ LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) noexcept {
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) noexcept {
+LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem, bool is_local) noexcept {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	std::string resource_path = mem.GetPath();
@@ -841,7 +841,7 @@ LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) noexcept
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterNET(const PlatformDescription::NetworkIF &net) noexcept {
+LinuxPlatformProxy::RegisterNET(const PlatformDescription::NetworkIF &net, bool is_local) noexcept {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	std::string resource_path = net.GetPath();

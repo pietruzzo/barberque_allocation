@@ -172,9 +172,9 @@ private:
 
 
 	ExitCode_t ScanPlatformDescription() noexcept;
-	ExitCode_t RegisterCPU(const PlatformDescription::CPU &cpu) noexcept;
-	ExitCode_t RegisterMEM(const PlatformDescription::Memory &mem) noexcept;
-	ExitCode_t RegisterNET(const PlatformDescription::NetworkIF &net) noexcept;
+	ExitCode_t RegisterCPU(const PlatformDescription::CPU &cpu, bool is_local=true) noexcept;
+	ExitCode_t RegisterMEM(const PlatformDescription::Memory &mem, bool is_local=true) noexcept;
+	ExitCode_t RegisterNET(const PlatformDescription::NetworkIF &net, bool is_local=true) noexcept;
 
 	// --- CGroup-releated methods
 	ExitCode_t InitCGroups() noexcept;                          /**< Load the libcgroup and initialize the internal representation */
