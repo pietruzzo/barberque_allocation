@@ -50,7 +50,8 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData() {
 		return PLATFORM_LOADING_FAILED;
 	}
 
-	for (const auto sys : pd->GetSystemsAll()) {
+	for (const auto & sys_entry: pd->GetSystemsAll()) {
+		auto & sys = sys_entry.second;
 		logger->Debug("[%s@%s] Scanning the CPUs...",
 				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {
