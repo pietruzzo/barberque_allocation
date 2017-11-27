@@ -31,29 +31,30 @@ typedef struct task { // 13 Byte
 	res_bitset_t mapping;
 }task_t;
 
-struct  app_status{ // 32 Byte min
+typedef struct  app_status{ // 32 Byte min
 	uint32_t ts;
 	uint32_t id;
 	char name[MAX_APP_NAME_LEN];
 	uint32_t n_task;
 	task_t * tasks; // List of tasks
 	res_bitset_t mapping;
-};
+} app_status_t;
 
-struct resource_status{ //15 Byte
+typedef struct resource_status{ // 15 Byte
 	uint32_t ts;
 	res_bitset_t id;
 	uint8_t occupancy;
 	uint8_t load;
 	uint32_t power;
 	uint8_t temp;
-};
+} ressource_status_t;
 
-struct subscription{
-	res_bitset_t filter; // S|A|R|Reserved
-	res_bitset_t event; // S|A|R|Reserved
+typedef struct subscription{ // 5 Byte
+	sub_bitset_t filter; // S|A|R|Reserved
+	sub_bitset_t event; // S|A|R|Reserved
 	uint16_t rate_ms;
 	uint8_t mode; // 0 is subscribe; !0 is unsubscribe
+} subscription_t;
 };
 
 } // namespace stats
