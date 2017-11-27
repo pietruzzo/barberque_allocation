@@ -55,7 +55,18 @@ typedef struct subscription{ // 5 Byte
 	uint16_t rate_ms;
 	uint8_t mode; // 0 is subscribe; !0 is unsubscribe
 } subscription_t;
+
+struct status_message{ // 55 Byte min
+	uint32_t n_app_status_msgs;
+	app_status_t* app_status_msgs;
+	uint32_t n_res_status_msgs;
+	resource_status_t* res_status_msgs;
 };
+
+struct subscription_message{ // 9 Byte min
+	uint32_t n_sub_msg;
+	subscription_t* subs;
+}
 
 } // namespace stats
 
