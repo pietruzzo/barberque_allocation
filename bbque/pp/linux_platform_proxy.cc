@@ -824,6 +824,7 @@ LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu, bool is_loc
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem, bool is_local) noexcept {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	UNUSED(is_local);
 
 	std::string resource_path = mem.GetPath();
 	const auto q_bytes = mem.GetQuantity();
@@ -845,6 +846,7 @@ LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem, bool is_
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterNET(const PlatformDescription::NetworkIF &net, bool is_local) noexcept {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	UNUSED(is_local);
 
 	std::string resource_path = net.GetPath();
 	logger->Debug("RegisterNET: Registration of netif %d <%s>",
