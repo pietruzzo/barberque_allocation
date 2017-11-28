@@ -60,10 +60,28 @@ namespace data {
 	};
 
 	class Subscriber {
+	public:
+		Subscriber(){};
+
+		Subscriber(std::string ip_address,
+			uint32_t port_num,
+			Subscription & sub){
+				this->ip_address = ip_address;
+				this->port_num = port_num;
+				this->subscription = sub;
+				this->rate_deadline_ms = sub.rate_ms;
+		};
+
 		std::string ip_address;
 		uint32_t port_num;
 		Subscription subscription;
 		uint16_t rate_deadline_ms;
+
+		bool cmp(Subscriber &s1, Subscriber &s2) {
+			if(s1.rate_deadline_ms < s2.rate_deadline_ms)
+				return true;
+			return false;
+		}
 	};
 
 } // namespace data
