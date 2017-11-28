@@ -72,6 +72,12 @@ void DataManager::Task() {
 	while(1){
 		while(any_subscriber){
 
+			Publish();
+			
+			logger->Debug("Going to sleep for %d...",sleep_time);
+			
+			// Sleep
+			std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
 		}
 	}
 }
