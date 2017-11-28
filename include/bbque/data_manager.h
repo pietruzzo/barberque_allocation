@@ -61,6 +61,9 @@ using bbque::data::Subscription;
 using bbque::data::Subscriber;
 using bbque::data::status_event_t;
 
+typedef std::shared_ptr<Subscriber> SubscriberPtr_t;
+typedef std::list<SubscriberPtr_t> SubscriberPtrList_t;
+
 /**
  * @class DataManager
  *
@@ -111,12 +114,12 @@ private:
 	/*
 	 * @brief List of all rate-based subscribers
 	 */
-	std::list<Subscriber> subscribers_on_rate;
+	SubscriberPtrList_t subscribers_on_rate;
 
 	/*
 	 * @brief List of all event-based subscribers
 	 */
-	std::list<Subscriber> subscribers_on_event;
+	SubscriberPtrList_t subscribers_on_event;
 
 	/**
 	 * Mutex to protect concurrent access to the subscribers lists.
@@ -139,7 +142,7 @@ private:
 	 * @param subscr: the subscriber to add
 	 * @param event: true if the subscription refers to an event, false otherwise
 	 */
-	void Subscribe(Subscriber subscr, bool event);
+	void Subscribe(SubscriberPtr_t & subscr, bool event);
 
 	/*
 	 * @brief Publish the data to the @ref{subscribers_on_event}
