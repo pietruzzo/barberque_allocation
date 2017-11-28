@@ -138,7 +138,7 @@ private:
 	/**
 	 * @brief Time interval between different data publishing
 	 */
-	std::chrono::duration<int> sleep_time;
+	uint16_t sleep_time;
 
 	/*
 	 * @brief List of all rate-based subscribers
