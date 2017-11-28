@@ -25,13 +25,13 @@ namespace bbque { namespace stats {
 typedef uint64_t res_bitset_t;
 typedef uint8_t sub_bitset_t;
 
-typedef struct task { // 13 Byte
+typedef struct __attribute__((packed)) task { // 13 Byte
 	uint32_t id;
 	uint8_t perf; // In percentage
 	res_bitset_t mapping;
 }task_t;
 
-typedef struct  app_status{ // 32 Byte min
+typedef struct __attribute__((packed)) app_status{ // 32 Byte min
 	uint32_t ts;
 	uint32_t id;
 	char name[MAX_APP_NAME_LEN];
@@ -40,23 +40,23 @@ typedef struct  app_status{ // 32 Byte min
 	res_bitset_t mapping;
 } app_status_t;
 
-typedef struct resource_status{ // 15 Byte
+typedef struct __attribute__((packed)) resource_status{ // 15 Byte
 	uint32_t ts;
 	res_bitset_t id;
 	uint8_t occupancy;
 	uint8_t load;
 	uint32_t power;
 	uint8_t temp;
-} ressource_status_t;
+} resource_status_t;
 
-typedef struct subscription{ // 5 Byte
+typedef struct __attribute__((packed)) subscription{ // 5 Byte
 	sub_bitset_t filter; // S|A|R|Reserved
 	sub_bitset_t event; // S|A|R|Reserved
 	uint16_t rate_ms;
 	uint8_t mode; // 0 is subscribe; !0 is unsubscribe
 } subscription_t;
 
-struct status_message{ // 55 Byte min
+struct __attribute__((packed)) status_message{ // 55 Byte min
 	uint32_t n_app_status_msgs;
 	app_status_t* app_status_msgs;
 	uint32_t n_res_status_msgs;
