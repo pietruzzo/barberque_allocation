@@ -221,7 +221,7 @@ ResourceManager::Setup() {
 	}
 
 	// -------- Binding Manager initialization for the scheduling policy
-	if (bdm.LoadBindingOptions() != BindingManager::OK) {
+	if (bdm.LoadBindingDomains() != BindingManager::OK) {
 		logger->Fatal("Binding Manager initialization FAILED!");
 		return SETUP_FAILED;
 	}

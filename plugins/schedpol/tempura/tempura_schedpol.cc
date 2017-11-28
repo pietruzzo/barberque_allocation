@@ -226,7 +226,7 @@ TempuraSchedPol::InitResourceStateView() {
 SchedulerPolicyIF::ExitCode_t
 TempuraSchedPol::InitBudgets() {
 	// Binding type (CPU, GPU,...))
-	BindingMap_t & bindings(bdm.GetBindingOptions());
+	BindingMap_t & bindings(bdm.GetBindingDomains());
 	for (auto & bd_entry: bindings) {
 		BindingInfo_t const & bd_info(*(bd_entry.second));
 
@@ -573,7 +573,7 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::DoBinding(
 	logger->Debug("DoBinding: START");
 	size_t ref_n = -1;
 
-	BindingMap_t & bindings(bdm.GetBindingOptions());
+	BindingMap_t & bindings(bdm.GetBindingDomains());
 	for (auto & bd_entry: bindings) {
 		BindingInfo_t const & bd_info(*(bd_entry.second));
 		br::ResourceType bd_type = bd_entry.first;

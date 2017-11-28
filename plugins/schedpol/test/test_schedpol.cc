@@ -159,11 +159,11 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		"sys0.cpu.pe", CPU_QUOTA_TO_ALLOCATE, br::ResourceAssignment::Policy::BALANCED);
 
 	BindingManager & bdm(BindingManager::GetInstance());
-	BindingMap_t & bindings(bdm.GetBindingOptions());
+	BindingMap_t & bindings(bdm.GetBindingDomains());
 
 	BBQUE_RID_TYPE cpu_id = R_ID_NONE;
-	if (bindings[br::ResourceType::CPU]->ids.find(CPU_ASSIGNED_ID) !=
-			bindings[br::ResourceType::CPU]->ids.end()) {
+	auto & cpu_ids = bindings[br::ResourceType::CPU]->r_ids;
+	if (cpu_ids.find(CPU_ASSIGNED_ID) != cpu_ids.end()) {
 		cpu_id = CPU_ASSIGNED_ID;
 		logger->Info("AssingWorkingMode: hard-coded CPU id [%d] available", cpu_id);
 		ExitCode_t ret = DoCPUBinding(papp, pawm, cpu_id);
@@ -178,7 +178,7 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		logger->Warn("AssingWorkingMode: hard-coded CPU id [%d] not found", cpu_id);
 
 	// In case of CPU_ASSIGNED_ID not found or failed binding
-	for (BBQUE_RID_TYPE cpu_id: bindings[br::ResourceType::CPU]->ids) {
+	for (BBQUE_RID_TYPE cpu_id: bindings[br::ResourceType::CPU]->r_ids) {
 		logger->Info("AssingWorkingMode: binding attempt CPU id = %d", cpu_id);
 		ExitCode_t ret = DoCPUBinding(papp, pawm, cpu_id);
 		if (ret == SCHED_OK) {

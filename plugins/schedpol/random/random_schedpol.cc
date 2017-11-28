@@ -89,7 +89,7 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 	assert(papp);
 
 	// Check for a valid binding domain count
-	BindingMap_t & bindings(bdm.GetBindingOptions());
+	BindingMap_t & bindings(bdm.GetBindingDomains());
 	bd_count = bindings[br::ResourceType::CPU]->resources.size();
 	logger->Debug("CPU binding domains : %d", bd_count);
 	if (bd_count == 0) {

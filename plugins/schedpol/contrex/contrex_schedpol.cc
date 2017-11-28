@@ -251,7 +251,7 @@ SchedulerPolicyIF::ExitCode_t ContrexSchedPol::ScheduleApplication(
 	// Resource (CPU) binding
 	logger->Debug("Schedule: [%s] CPU binding...", papp->StrId());
 	BindingManager & bdm(BindingManager::GetInstance());
-	BindingMap_t & bindings(bdm.GetBindingOptions());
+	BindingMap_t & bindings(bdm.GetBindingDomains());
 	BBQUE_RID_TYPE bind_cpu_id = 0;
 	// Resource binding: getting the first CPU ID option
 	if (bindings.find(br::ResourceType::CPU) != bindings.end())

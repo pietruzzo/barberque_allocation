@@ -129,7 +129,7 @@ ClovesSchedPol::ExitCode_t ClovesSchedPol::InitDeviceQueues() {
 
 	// A device queue must be created for each binding domain
 	// (i.e., OpenCL device type (CPU, GPU,...))
-	BindingMap_t & bindings(bdm.GetBindingOptions());
+	BindingMap_t & bindings(bdm.GetBindingDomains());
 	for (auto & bd_entry: bindings) {
 		br::ResourceType  bd_type = bd_entry.first;
 		BindingInfo_t const & bd_info(*(bd_entry.second));
