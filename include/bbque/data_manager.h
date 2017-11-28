@@ -43,6 +43,17 @@ namespace data {
 	} status_event_t;
 
 	class Subscription {
+	public:
+		Subscription(){};
+
+		Subscription(std::string filter_bit, 
+			std::string event_bit, 
+			uint16_t rate_ms = -1){
+				filter = sub_bitset_t(filter_bit);
+				event = sub_bitset_t(event_bit);
+				this->rate_ms = rate_ms;
+		}
+
 		sub_bitset_t filter;
 		sub_bitset_t event;
 		uint16_t rate_ms;
