@@ -23,6 +23,8 @@
 #define DATA_MANAGER_NAMESPACE "bq.dm"
 #define MODULE_NAMESPACE DATA_MANAGER_NAMESPACE
 
+#define DEFAULT_SLEEP_TIME 1000
+
 // The prefix for configuration file attributes
 #define MODULE_CONFIG "DataManager"
 
@@ -36,6 +38,7 @@ DataManager & DataManager::GetInstance() {
 DataManager::DataManager() : Worker() {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("Setupping the publisher...");
+	sleep_time = DEFAULT_SLEEP_TIME;
 	Setup("DataManagePublisher", MODULE_NAMESPACE".pub");
 	logger->Info("Starting the publisher...");
 	Start();
@@ -76,6 +79,44 @@ void DataManager::Task() {
 void DataManager::SubscriptionHandler() {
 	subscription_server_tid = gettid();
 	logger->Info("Starting the subscription server... tid = %d", subscription_server_tid);
+
+void DataManager::Publish(){
+	uint16_t tmp_sleep_time, max_sleep_time = 0;// = sleep_time;
+
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
+
+	subs_lock.lock();
+
+	for(auto s : subscribers_on_rate){
+		s->rate_deadline_ms = s->rate_deadline_ms - sleep_time;
+
+		logger->Debug("Subscriber: %s -- next_deadline: %u",
+			s->ip_address.c_str(),
+			s->rate_deadline_ms);
+
+		if(s->rate_deadline_ms <= 0) {
+			//Push();
+
+			logger->Notice("Publish status to %s", s->ip_address.c_str());
+
+			s->rate_deadline_ms = s->subscription.rate_ms;
+
+			logger->Debug("Subscriber: %s -- updated next_deadline: %u",
+				s->ip_address.c_str(),
+				s->rate_deadline_ms);
+
+		}
+		tmp_sleep_time = subscribers_on_rate.front()->rate_deadline_ms;
+		if(s->rate_deadline_ms < tmp_sleep_time)
+			tmp_sleep_time = s->rate_deadline_ms;
+	}
+
+	sleep_time = tmp_sleep_time;
+
+	subscribers_on_rate.sort();
+
+	subs_lock.unlock();
+}
 
 }
 
