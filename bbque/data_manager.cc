@@ -118,6 +118,32 @@ void DataManager::Publish(){
 	subs_lock.unlock();
 }
 
+void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
+
+	subs_lock.lock();
+	any_subscriber = true;
+
+	if(event) {
+		subscribers_on_event.push_back(subscr);
+	}
+	else {
+		subscribers_on_rate.push_back(subscr);
+		logger->Debug("Sorting on rate...");
+		subscribers_on_rate.sort();
+	}
+
+
+	for (auto s : subscribers_on_rate){
+		logger->Debug("Subisccribers on rate: %s %d %s %d", 
+			s->ip_address.c_str(), 
+			s->rate_deadline_ms,
+			s->subscription.filter.to_string().c_str(),
+			s->subscription.rate_ms);	
+	}
+
+
+	subs_lock.unlock();
 }
 
 } // namespace bbque
