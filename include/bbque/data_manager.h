@@ -34,6 +34,8 @@ namespace bbque {
 
 namespace data {
 
+	typedef std::bitset<8> sub_bitset_t;
+
 	typedef enum status_event {
 		scheduling = 0,
 		application,
@@ -41,8 +43,8 @@ namespace data {
 	} status_event_t;
 
 	class Subscription {
-		std::bitset<8> filter;
-		std::bitset<8> event;
+		sub_bitset_t filter;
+		sub_bitset_t event;
 		uint16_t rate_ms;
 	};
 
