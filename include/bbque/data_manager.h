@@ -24,6 +24,11 @@
 #include <thread>
 #include <chrono>
 
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include "bbque/stat/types.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/utils/worker.h"
@@ -92,6 +97,7 @@ using bbque::data::status_event_t;
 
 typedef std::shared_ptr<Subscriber> SubscriberPtr_t;
 typedef std::list<SubscriberPtr_t> SubscriberPtrList_t;
+typedef struct sockaddr_in sockaddr_in_t;
 
 /**
  * @class DataManager
@@ -124,7 +130,7 @@ private:
 	/** The logger used by the application manager */
 	std::unique_ptr<bu::Logger> logger;
 
-	std::string ip_address = "0.0.0.0";
+	
 
 	uint32_t port_num;
 
@@ -164,6 +170,40 @@ private:
 	/*                      Communication fields                       */
 	/*******************************************************************/
 
+	/* 
+	 * @brief Socket descriptor
+	*/
+	int32_t sock;      
+  	
+  	/* 
+	 * @brief Local address
+	*/
+  	sockaddr_in_t local_address;
+  	
+  	/* 
+	 * @brief Client address
+	*/
+  	sockaddr_in_t client_addr;
+
+  	/* 
+	 * @brief Server port 
+	*/
+  	uint32_t server_port;
+  	  	
+  	/* 
+	 * @brief Length of incoming message
+	*/
+  	uint32_t client_addr_size;
+  	  	
+  	/* 
+	 * @brief IP address of server
+	*/
+  	std::string ip_address = "0.0.0.0";
+  	  	
+  	/* 
+	 * @brief Size of received response
+	*/
+  	int32_t recv_msg_size;
 	/*******************************************************************/
 	/*                    Publish/Subscribe methods                    */
 	/*******************************************************************/
