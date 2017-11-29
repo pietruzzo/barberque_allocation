@@ -20,7 +20,7 @@
 
 #define MAX_APP_NAME_LEN 16
 
-namespace bbque { namespace stats {
+namespace bbque { namespace stat {
 
 typedef uint64_t res_bitset_t;
 typedef uint8_t sub_bitset_t;
