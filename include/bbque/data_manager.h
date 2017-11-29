@@ -222,6 +222,11 @@ private:
 	void Subscribe(SubscriberPtr_t & subscr, bool event);
 
 	/*
+	 * @brief Remove a subscription
+	 */
+	void Unsubscribe(SubscriberPtr_t & subscr);
+
+	/*
 	 * @brief Publish the data to the @ref{subscribers_on_event}
 	 */
 	void PublishOnEvent();
