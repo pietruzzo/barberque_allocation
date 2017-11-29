@@ -129,6 +129,47 @@ void DataManager::SubscriptionHandler() {
 
 	/* ----------------------------------------------------------- */
 
+	/* ------------------ Subscription handling ------------------ */
+	// Listening cycle
+	for(;;) {
+
+		client_addr_size = sizeof(client_addr);
+
+		// Subscription receiving waiting
+		if((recv_msg_size = recvfrom(sock, temp_sub, sizeof(*temp_sub),	
+			0, (struct sockaddr*)&client_addr, &client_addr_size))<0)
+				logger->Error("Error during socket receiving");
+		
+		// Creating the temp Subscription
+		Subscription temp_subscription(data::sub_bitset_t(temp_sub->filter), 
+			data::sub_bitset_t(temp_sub->event),
+			temp_sub->rate_ms);
+
+		// Creating the temp Subscriber
+		SubscriberPtr_t temp_subscriber = std::make_shared<Subscriber>
+			(std::string(inet_ntoa(client_addr.sin_addr)),
+				(uint32_t) temp_sub->port_num,
+				temp_subscription);
+
+		// Logging messages
+		logger->Debug("Handling client %s", inet_ntoa(client_addr.sin_addr));		
+		logger->Debug("Incoming length: %u", sizeof(*temp_sub));
+		logger->Notice("Client subscriber:");
+		logger->Notice("\tPort: %d",temp_subscriber->port_num);
+		logger->Notice("\tFilter: %s",
+			data::sub_bitset_t(temp_subscriber->subscription.filter).to_string().c_str()); 
+		logger->Notice("\tEvent: %s", 
+			data::sub_bitset_t(temp_subscriber->subscription.event).to_string().c_str());
+		logger->Notice("\tRate: %d ms",temp_subscriber->subscription.rate_ms);
+		logger->Notice("\tMode: %d",temp_sub->mode);
+
+		if(temp_sub->mode == 0)
+			Subscribe(temp_subscriber,temp_sub->event != 0);
+		else
+			Unsubscribe(temp_subscriber);
+	}
+
+	/* ----------------------------------------------------------- */
 void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
