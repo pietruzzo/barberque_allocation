@@ -216,7 +216,7 @@ public:
 	 * \brief The events objects used for synchronization purposes
 	 * \return The map of Event object
 	 */
-	inline const EventMap_t & Events() { return events; }
+	inline const EventMap_t & Events() const { return events; }
 
 	/**
 	 * \brief Specific event object
