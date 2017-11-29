@@ -160,13 +160,21 @@ private:
 	 */
 	pid_t subscription_server_tid;
 
+	/*******************************************************************/
+	/*                      Communication fields                       */
+	/*******************************************************************/
+
+	/*******************************************************************/
+	/*                    Publish/Subscribe methods                    */
+	/*******************************************************************/
+
 	/*
 	 * @brief Publish the data to the @ref{subscribers_on_rate}
 	 */
 	void Publish();
 
 	/*
-	 * @brief Add subscription
+	 * @brief Add a subscription
 	 *
 	 * @param subscr: the subscriber to add
 	 * @param event: true if the subscription refers to an event, false otherwise
