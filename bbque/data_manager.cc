@@ -72,23 +72,6 @@ DataManager::~DataManager() {
 	Terminate();
 }
 
-void DataManager::Task() {
-
-	logger->Debug("Starting worker...");
-	while(1){
-
-		while(!any_subscriber){};
-		//while(any_subscriber){
-
-			Publish();
-			
-			logger->Debug("Going to sleep for %d...",sleep_time);
-			
-			// Sleep
-			std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
-		//}
-	}
-}
 
 /*******************************************************************/
 /*                      Subscription handling                      */
@@ -250,6 +233,24 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr){
 /*******************************************************************/
 /*                       Publishing handling                       */
 /*******************************************************************/
+
+void DataManager::Task() {
+
+	logger->Debug("Starting worker...");
+	while(1){
+
+		while(!any_subscriber){};
+		//while(any_subscriber){
+
+			Publish();
+			
+			logger->Debug("Going to sleep for %d...",sleep_time);
+			
+			// Sleep
+			std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+		//}
+	}
+}
 
 void DataManager::Publish(){
 	uint16_t tmp_sleep_time, max_sleep_time = 0;// = sleep_time;
