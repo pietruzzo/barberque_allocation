@@ -90,6 +90,10 @@ void DataManager::Task() {
 	}
 }
 
+/*******************************************************************/
+/*                      Subscription handling                      */
+/*******************************************************************/
+
 void DataManager::SubscriptionHandler() {
 
 	/* ---------------- Subscription server setup ---------------- */
@@ -241,6 +245,11 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr){
 
 	logger->Info("Unsubscribing client: %s",subscr->ip_address.c_str());
 }
+
+
+/*******************************************************************/
+/*                       Publishing handling                       */
+/*******************************************************************/
 
 void DataManager::Publish(){
 	uint16_t tmp_sleep_time, max_sleep_time = 0;// = sleep_time;
