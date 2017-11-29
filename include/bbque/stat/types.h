@@ -49,7 +49,8 @@ typedef struct __attribute__((packed)) resource_status{ // 15 Byte
 	uint8_t temp;
 } resource_status_t;
 
-typedef struct __attribute__((packed)) subscription{ // 5 Byte
+typedef struct __attribute__((packed)) subscription{ // 9 Byte
+	uint32_t port_num;
 	sub_bitset_t filter; // S|A|R|Reserved
 	sub_bitset_t event; // S|A|R|Reserved
 	uint16_t rate_ms;
