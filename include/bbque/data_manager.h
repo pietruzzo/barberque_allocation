@@ -46,11 +46,11 @@ namespace data {
 	public:
 		Subscription(){};
 
-		Subscription(std::string filter_bit, 
-			std::string event_bit, 
+		Subscription(sub_bitset_t filter_bit, 
+			sub_bitset_t event_bit, 
 			uint16_t rate_ms = -1){
-				filter = sub_bitset_t(filter_bit);
-				event = sub_bitset_t(event_bit);
+				filter = filter_bit;
+				event = event_bit;
 				this->rate_ms = rate_ms;
 		}
 
