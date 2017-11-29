@@ -66,7 +66,7 @@ public:
 	 * @brief This abstract method is called when the policy finally decides which partition is
 	 *	  the best to be selected.
 	 */
-	virtual ExitCode_t SetPartition(const TaskGraph &tg, const Partition &partition) noexcept = 0;
+	virtual ExitCode_t SetPartition(TaskGraph &tg, const Partition &partition) noexcept = 0;
 
 	/**
 	 * @brief This abstract method is called when a partition is released
@@ -145,7 +145,7 @@ public:
 	 * The partition is then propagated to all registered PartitionSkimmer with the SetPartition
 	 * method.
 	 */
-	ExitCode_t PropagatePartition(const TaskGraph &tg, const Partition &partition) const noexcept;
+	ExitCode_t PropagatePartition(TaskGraph &tg, const Partition &partition) const noexcept;
 
 	/**
 	 * Propagates the partition removal request to all skimmers

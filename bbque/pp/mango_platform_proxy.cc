@@ -565,7 +565,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 }
 
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
-MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(const TaskGraph &tg,
+MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(TaskGraph &tg,
 					  	        const Partition &partition) noexcept {
 
 	UNUSED(tg);

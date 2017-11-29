@@ -104,7 +104,7 @@ ResourcePartitionValidator::LoadPartitions(const TaskGraph &tg, std::list<Partit
 }
 
 ResourcePartitionValidator::ExitCode_t
-ResourcePartitionValidator::PropagatePartition(const TaskGraph &tg, 
+ResourcePartitionValidator::PropagatePartition(TaskGraph &tg, 
 					     const Partition &partition) const noexcept {
 
 	logger->Notice("Propagating partition id=%d", partition.GetId());
