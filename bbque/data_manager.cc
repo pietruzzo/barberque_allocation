@@ -70,7 +70,9 @@ void DataManager::Task() {
 
 	logger->Debug("Starting worker...");
 	while(1){
-		while(any_subscriber){
+
+		while(!any_subscriber){};
+		//while(any_subscriber){
 
 			Publish();
 			
@@ -78,7 +80,7 @@ void DataManager::Task() {
 			
 			// Sleep
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
-		}
+		//}
 	}
 }
 
