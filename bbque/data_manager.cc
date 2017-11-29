@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <csignal>
+#include <unistd.h>
+#include <stdlib.h>
+#include <cstring>
 
 #include "bbque/utils/utility.h"
 
@@ -43,6 +46,8 @@ DataManager::DataManager() : Worker() {
 	logger->Info("Starting the publisher...");
 	Start();
 
+	// Setting the subscription server port
+	server_port = SERVER_PORT;
 	logger->Debug("Spawing thread for the subscription server...");
 	subscription_server = std::thread(&DataManager::SubscriptionHandler, this);
 
@@ -85,9 +90,43 @@ void DataManager::Task() {
 }
 
 void DataManager::SubscriptionHandler() {
+
+	/* ---------------- Subscription server setup ---------------- */
+
+	// Getting the id of the subscription server thread
 	subscription_server_tid = gettid();
+
 	logger->Info("Starting the subscription server... tid = %d", subscription_server_tid);
 
+	// Allocating memory for the incoming subscriptions
+	bbque::stat::subscription_t * temp_sub = 
+		(bbque::stat::subscription_t*) malloc(sizeof(bbque::stat::subscription_t));
+
+	logger->Debug("Creating the socket...");
+
+	// Creating the socket
+	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+	if(sock<0)
+		logger->Error("Error during socket creation");
+
+	logger->Debug("Allocating the local address...");
+
+	// Allocating memory for the local address and port
+	memset(&local_address, 0, sizeof(local_address));	/* Zero out structure */
+	local_address.sin_family = AF_INET;					/* Internet address family */
+	local_address.sin_addr.s_addr = htonl(INADDR_ANY);	/* Any incoming interface */
+	local_address.sin_port = htons(server_port);		/* Local port */
+
+	logger->Debug("Binding the socket...");
+
+	// Binding the socket
+	if(bind(sock, (struct sockaddr *)&local_address, sizeof(local_address))<0)
+		logger->Error("Error during socket binding");
+
+	logger->Debug("Receiving UDP packets...");
+
+	/* ----------------------------------------------------------- */
 void DataManager::Publish(){
 	uint16_t tmp_sleep_time, max_sleep_time = 0;// = sleep_time;
 
