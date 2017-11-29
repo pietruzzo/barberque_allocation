@@ -573,10 +573,20 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(TaskGraph &tg,
 	// We set the mapping of buffers-addresses based on the selected partition
 	ExitCode_t err = SetAddresses(tg, partition);
 
-
 	for ( auto task : tg.Tasks()) {
 		task.second->SetMappedProcessor( partition.GetUnit(task.second) );
 	}
+
+	// Now, we have to ask for the location in TileReg of events
+	// TODO: Manage the UNIZG case
+	// TODO: what to do in case of failure?
+	// TODO: Policy for tile selection
+	for ( auto event : tg.Events()) {
+		uint32_t phy_addr;
+		hn_get_synchronization_id (&phy_addr, 0, HN_SYNCH_TYPE_REGULAR);
+		event.second->SetPhysicalAddress(phy_addr);
+	}
+
 
 	// TODO: with the find_partitions we should allocate the selected partition, but
 	//	 unfortunately this is not currently supported by HN library
@@ -601,6 +611,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(const TaskGraph &tg,
 	uint32_t ret;
 
 	logger->Debug("Deallocating partition [id=%d]...", part_id);
+
+	for ( const auto &event : tg.Events()) {
+		bbque_assert(event.second);
+		hn_release_synchronization_id (event.second->PhysicalAddress(), 1);
+	}
 
 /* TODO: no more supported by HN library, we have to check if in the future we need this or not
 
