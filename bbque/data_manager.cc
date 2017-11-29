@@ -170,6 +170,37 @@ void DataManager::SubscriptionHandler() {
 	}
 
 	/* ----------------------------------------------------------- */
+	
+
+	/* SAMPLE CODE */
+/*
+	Subscription subscr1("010","000",5000);
+	Subscription subscr2("001","000",4000);
+
+	logger->Notice("Subscription 1 rate = %d", subscr1.rate_ms);
+
+	SubscriberPtr_t Sub1(new Subscriber);
+	SubscriberPtr_t Sub2(new Subscriber);
+
+	Sub1->ip_address = "0.0.0.1";
+	Sub1->subscription = subscr1;
+	Sub1->rate_deadline_ms = subscr1.rate_ms;
+	
+	logger->Notice("Subscriber 1 rate = %d rate_deadline = %d", 
+		Sub1->subscription.rate_ms, 
+		Sub1->rate_deadline_ms);
+	
+	Sub2->ip_address = "0.0.0.2";
+	Sub2->subscription = subscr2;
+	Sub2->rate_deadline_ms = subscr2.rate_ms;
+
+	Subscribe(Sub2, false);
+	Subscribe(Sub1, false);
+*/
+	/* END SAMPLE CODE */
+
+}
+
 void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
