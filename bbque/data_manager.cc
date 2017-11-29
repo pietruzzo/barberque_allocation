@@ -27,6 +27,7 @@
 #define MODULE_NAMESPACE DATA_MANAGER_NAMESPACE
 
 #define DEFAULT_SLEEP_TIME 1000
+#define SERVER_PORT 30200
 
 // The prefix for configuration file attributes
 #define MODULE_CONFIG "DataManager"
@@ -127,6 +128,48 @@ void DataManager::SubscriptionHandler() {
 	logger->Debug("Receiving UDP packets...");
 
 	/* ----------------------------------------------------------- */
+
+void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
+
+	logger->Info("Subscribing client: %s",subscr->ip_address.c_str());
+
+	subs_lock.lock();
+/*
+	if(event) {
+		auto it = find(subscribers_on_event.begin(), subscribers_on_event.end(), subscr->ip_address);
+		if(it != subscribers_on_event.end()){
+			it->subscription.event|=subscr->subscription.event;
+		}else {
+			subscribers_on_event.push_back(subscr);
+			any_subscriber++;
+		}
+	}
+	else {
+		subscribers_on_rate.push_back(subscr);
+		logger->Debug("Sorting on rate...");
+		subscribers_on_rate.sort();
+	}*/
+
+
+	for (auto s : subscribers_on_rate){
+		logger->Debug("Subiscribers on rate: %s %d %s %d", 
+			s->ip_address.c_str(), 
+			s->rate_deadline_ms,
+			s->subscription.filter.to_string().c_str(),
+			s->subscription.rate_ms);	
+	}
+
+
+	subs_lock.unlock();
+}
+
+void DataManager::Unsubscribe(SubscriberPtr_t & subscr){
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
+
+	logger->Info("Unsubscribing client: %s",subscr->ip_address.c_str());
+}
+
 void DataManager::Publish(){
 	uint16_t tmp_sleep_time, max_sleep_time = 0;// = sleep_time;
 
@@ -161,34 +204,6 @@ void DataManager::Publish(){
 	sleep_time = tmp_sleep_time;
 
 	subscribers_on_rate.sort();
-
-	subs_lock.unlock();
-}
-
-void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
-	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
-
-	subs_lock.lock();
-	any_subscriber = true;
-
-	if(event) {
-		subscribers_on_event.push_back(subscr);
-	}
-	else {
-		subscribers_on_rate.push_back(subscr);
-		logger->Debug("Sorting on rate...");
-		subscribers_on_rate.sort();
-	}
-
-
-	for (auto s : subscribers_on_rate){
-		logger->Debug("Subisccribers on rate: %s %d %s %d", 
-			s->ip_address.c_str(), 
-			s->rate_deadline_ms,
-			s->subscription.filter.to_string().c_str(),
-			s->subscription.rate_ms);	
-	}
-
 
 	subs_lock.unlock();
 }
