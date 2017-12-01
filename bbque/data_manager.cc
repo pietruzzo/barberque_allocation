@@ -281,6 +281,45 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
 	logger->Info("Unsubscribing client: %s",subscr->ip_address.c_str());
+
+	subs_lock.lock();
+
+	if(event){ // If event-based subscription
+		
+		auto sub_it = findSubscriber(subscr, subscribers_on_event);
+		
+		if(sub_it != subscribers_on_event.end()){
+			sub_it->get()->subscription.event&=~(subscr->subscription.event);
+			if(sub_it->get()->subscription.event == 0){
+				subscribers_on_event.remove(*sub_it);
+				any_subscriber--;
+		}
+		}else{
+			logger->Error("Client not found!");
+		}
+		
+	}else{ // If rate-based subscription
+
+		auto sub_it = findSubscriber(subscr, subscribers_on_rate);	
+		
+		if(sub_it != subscribers_on_rate.end()){
+			sub_it->get()->subscription.filter&=~(subscr->subscription.filter);
+			if(sub_it->get()->subscription.filter == 0){
+				subscribers_on_rate.remove(*sub_it);
+				any_subscriber--;
+			}
+			subscribers_on_rate.sort();
+		}else{
+			logger->Error("Client not found!");
+		}
+		
+	}
+
+	// Printing all the subscribers
+	PrintSubscribers();
+
+	subs_lock.unlock();
+
 }
 
 
