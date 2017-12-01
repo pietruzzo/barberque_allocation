@@ -72,6 +72,24 @@ DataManager::~DataManager() {
 	Terminate();
 }
 
+void DataManager::PrintSubscribers(){
+
+	// Subscribers on rate
+	for (auto s : subscribers_on_rate){
+		logger->Debug("Subiscribers on rate: ip: %s deadline: %d filter: %s rate: %d", 
+			s->ip_address.c_str(), 
+			s->rate_deadline_ms,
+			s->subscription.filter.to_string().c_str(),
+			s->subscription.rate_ms);	
+	}
+
+	// Subscribers on event
+	for (auto s : subscribers_on_event){
+		logger->Debug("Subiscribers on event: ip: %s event: %s", 
+			s->ip_address.c_str(), 
+			s->subscription.event.to_string().c_str());	
+	}
+}
 
 /*******************************************************************/
 /*                      Subscription handling                      */

@@ -214,6 +214,12 @@ private:
 	 * @brief Size of received response
 	*/
   	int32_t recv_msg_size;
+
+  	/*
+  	 * @brief Utility method to print all the current subscribers
+  	 */
+  	void PrintSubscribers();
+
 	/*******************************************************************/
 	/*                    Publish/Subscribe methods                    */
 	/*******************************************************************/
