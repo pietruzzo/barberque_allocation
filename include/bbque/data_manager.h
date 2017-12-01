@@ -95,9 +95,11 @@ using bbque::data::Subscription;
 using bbque::data::Subscriber;
 using bbque::data::status_event_t;
 
-typedef std::shared_ptr<Subscriber> SubscriberPtr_t;
-typedef std::list<SubscriberPtr_t> SubscriberPtrList_t;
-typedef struct sockaddr_in sockaddr_in_t;
+// Type definition
+
+using SubscriberPtr_t = std::shared_ptr<Subscriber>;
+using SubscriberPtrList_t = std::list<SubscriberPtr_t>;
+using sockaddr_in_t = struct sockaddr_in;
 
 /**
  * @class DataManager
