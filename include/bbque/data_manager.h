@@ -254,7 +254,7 @@ private:
 	/*
 	 * @brief Remove a subscription
 	 */
-	void Unsubscribe(SubscriberPtr_t & subscr);
+	void Unsubscribe(SubscriberPtr_t & subscr, bool event);
 
 	/*
 	 * @brief Publish the data to the @ref{subscribers_on_event}

@@ -182,7 +182,7 @@ void DataManager::SubscriptionHandler() {
 		if(temp_sub->mode == 0)
 			Subscribe(temp_subscriber,temp_sub->event != 0);
 		else
-			Unsubscribe(temp_subscriber);
+			Unsubscribe(temp_subscriber,temp_sub->event != 0);
 	}
 
 	/* ----------------------------------------------------------- */
@@ -252,7 +252,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 	subs_lock.unlock();
 }
 
-void DataManager::Unsubscribe(SubscriberPtr_t & subscr){
+void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
 	logger->Info("Unsubscribing client: %s",subscr->ip_address.c_str());
