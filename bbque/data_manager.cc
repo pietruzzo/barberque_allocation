@@ -91,6 +91,17 @@ void DataManager::PrintSubscribers(){
 	}
 }
 
+SubscriberListIt_t DataManager::findSubscriber(SubscriberPtr_t & subscr,
+	SubscriberPtrList_t & list){
+	
+	auto sub_it = list.begin();
+	for(; sub_it != subscribers_on_rate.end(); sub_it++){
+		if(*sub_it->get() == *subscr.get())
+			break;
+	}
+	return sub_it;
+} 
+
 /*******************************************************************/
 /*                      Subscription handling                      */
 /*******************************************************************/

@@ -108,6 +108,7 @@ using bbque::data::status_event_t;
 using SubscriberPtr_t = std::shared_ptr<Subscriber>;
 using SubscriberPtrList_t = std::list<SubscriberPtr_t>;
 using sockaddr_in_t = struct sockaddr_in;
+using SubscriberListIt_t = std::list<SubscriberPtr_t>::iterator;
 
 /**
  * @class DataManager
@@ -219,6 +220,19 @@ private:
   	 * @brief Utility method to print all the current subscribers
   	 */
   	void PrintSubscribers();
+
+  	/*
+  	 * @brief Utility method to find a subscriber into a specific list.
+  	 * The search is performed on the ip address.
+	 *
+	 * @param subscr The subscriber to search
+	 * @param list The list in which to find the specified subscriber
+	 *
+	 * @return An iterator object pointing the found subscriber
+	 *
+  	 */
+  	SubscriberListIt_t findSubscriber(SubscriberPtr_t & subscr,
+  		SubscriberPtrList_t & list);
 
 	/*******************************************************************/
 	/*                    Publish/Subscribe methods                    */
