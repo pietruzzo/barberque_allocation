@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <cstring>
+#include <algorithm>
 
 #include "bbque/utils/utility.h"
 
@@ -223,31 +224,55 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 	logger->Info("Subscribing client: %s",subscr->ip_address.c_str());
 
 	subs_lock.lock();
-/*
-	if(event) {
-		auto it = find(subscribers_on_event.begin(), subscribers_on_event.end(), subscr->ip_address);
-		if(it != subscribers_on_event.end()){
-			it->subscription.event|=subscr->subscription.event;
-		}else {
+
+	if(event) { /* If event-based subscription */
+
+		auto sub_it = findSubscriber(subscr, subscribers_on_event);
+
+		// If the client is already a subscriber just update its event filter
+		if(sub_it != subscribers_on_event.end()){
+			logger->Debug("Before update %s - event: %s",
+				subscr->ip_address.c_str(),
+				sub_it->get()->subscription.event.to_string().c_str());
+			sub_it->get()->subscription.event|=subscr->subscription.event;
+			logger->Debug("After update %s - event: %s",
+				subscr->ip_address.c_str(),
+				sub_it->get()->subscription.event.to_string().c_str());
+		}else { 
+		// If is new, just add it to the list
 			subscribers_on_event.push_back(subscr);
 			any_subscriber++;
 		}
 	}
-	else {
-		subscribers_on_rate.push_back(subscr);
-		logger->Debug("Sorting on rate...");
+	else { /* If rate-based subscription */
+	
+		auto sub_it = findSubscriber(subscr, subscribers_on_rate);
+		
+		// If the client is already a subscriber just update its filter and rate
+		if(sub_it != subscribers_on_rate.end()){
+			logger->Debug("Before update %s - filter: %s - rate: %d",
+				subscr->ip_address.c_str(),
+				sub_it->get()->subscription.filter.to_string().c_str(),
+				sub_it->get()->subscription.rate_ms);
+			sub_it->get()->subscription.filter|=subscr->subscription.filter;
+			sub_it->get()->subscription.rate_ms = subscr->subscription.rate_ms;
+			logger->Debug("After update %s - filter: %s - rate: %d",
+				subscr->ip_address.c_str(),
+				sub_it->get()->subscription.filter.to_string().c_str(),
+				sub_it->get()->subscription.rate_ms);
+		}else { 
+		// If is new, just add it to the list
+			subscribers_on_rate.push_back(subscr);
+			logger->Debug("Sorting on rate...");
+			subscribers_on_rate.sort();
+			any_subscriber++;
+		}
 		subscribers_on_rate.sort();
-	}*/
 
-
-	for (auto s : subscribers_on_rate){
-		logger->Debug("Subiscribers on rate: %s %d %s %d", 
-			s->ip_address.c_str(), 
-			s->rate_deadline_ms,
-			s->subscription.filter.to_string().c_str(),
-			s->subscription.rate_ms);	
 	}
 
+	// Printing all the subscribers
+	PrintSubscribers();
 
 	subs_lock.unlock();
 }
