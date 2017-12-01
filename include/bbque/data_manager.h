@@ -87,6 +87,14 @@ namespace data {
 				return true;
 			return false;
 		}
+
+		bool operator== (const Subscriber &other) const{
+			if(this == &other)
+				return true;
+			if(ip_address == other.ip_address)
+				return true;
+			return false;
+		} 
 	};
 
 } // namespace data
