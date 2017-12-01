@@ -149,7 +149,7 @@ private:
 	/**
 	 * @brief Condition variable to indicate the presence of any subscriber
 	 */
-	bool any_subscriber;
+	uint32_t any_subscriber;
 
 	/**
 	 * @brief Time interval between different data publishing
