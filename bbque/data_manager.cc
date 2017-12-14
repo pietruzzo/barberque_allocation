@@ -356,17 +356,20 @@ void DataManager::Publish(){
 	tmp_sleep_time = subscribers_on_rate.front()->rate_deadline_ms;
 
 	for(auto s : subscribers_on_rate){
+		// Updating the deadline after the sleep
 		s->rate_deadline_ms = s->rate_deadline_ms - sleep_time;
 
 		logger->Debug("Subscriber: %s -- next_deadline: %u",
 			s->ip_address.c_str(),
 			s->rate_deadline_ms);
 
+		// If the deadline is missed or is now push the updated info
 		if(s->rate_deadline_ms <= 0) {
 			//Push();
 
 			logger->Notice("Publish status to %s", s->ip_address.c_str());
 
+			// Reset the deadline
 			s->rate_deadline_ms = s->subscription.rate_ms;
 
 			logger->Debug("Subscriber: %s -- updated next_deadline: %u",
@@ -374,10 +377,12 @@ void DataManager::Publish(){
 				s->rate_deadline_ms);
 
 		}
+		// Calculating the earlier sleep timethe sleep time with the earlier
 		if(s->rate_deadline_ms < tmp_sleep_time)
 			tmp_sleep_time = s->rate_deadline_ms;
 	}
 
+	// Updating the sleep time
 	sleep_time = tmp_sleep_time;
 
 	subscribers_on_rate.sort();
