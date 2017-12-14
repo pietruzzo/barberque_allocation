@@ -68,12 +68,12 @@ typedef struct __attribute__((packed)) status_message{ // 55 Byte min
 	resource_status_t* res_status_msgs;
 } status_message_t;
 
+/*
 struct subscription_message{ // 9 Byte min
 	uint32_t n_sub_msg;
-	subscription_t* subs;
-}
-
-} // namespace stats
+	subscription_t sub;
+};
+*/
 } // namespace stat
 
 } // namespace bbque
