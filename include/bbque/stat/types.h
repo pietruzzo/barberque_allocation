@@ -57,12 +57,12 @@ typedef struct __attribute__((packed)) subscription{ // 9 Byte
 	uint8_t mode; // 0 is subscribe; !0 is unsubscribe
 } subscription_message_t;
 
-struct __attribute__((packed)) status_message{ // 55 Byte min
+typedef struct __attribute__((packed)) status_message{ // 55 Byte min
 	uint32_t n_app_status_msgs;
 	app_status_t* app_status_msgs;
 	uint32_t n_res_status_msgs;
 	resource_status_t* res_status_msgs;
-};
+} status_message_t;
 
 struct subscription_message{ // 9 Byte min
 	uint32_t n_sub_msg;
