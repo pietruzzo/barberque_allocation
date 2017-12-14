@@ -353,6 +353,8 @@ void DataManager::Publish(){
 
 	subs_lock.lock();
 
+	tmp_sleep_time = subscribers_on_rate.front()->rate_deadline_ms;
+
 	for(auto s : subscribers_on_rate){
 		s->rate_deadline_ms = s->rate_deadline_ms - sleep_time;
 
@@ -372,7 +374,6 @@ void DataManager::Publish(){
 				s->rate_deadline_ms);
 
 		}
-		tmp_sleep_time = subscribers_on_rate.front()->rate_deadline_ms;
 		if(s->rate_deadline_ms < tmp_sleep_time)
 			tmp_sleep_time = s->rate_deadline_ms;
 	}
