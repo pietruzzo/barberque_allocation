@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_STATS_TYPES_H_
-#define BBQUE_STATS_TYPES_H_
+#ifndef BBQUE_STAT_TYPES_H_
+#define BBQUE_STAT_TYPES_H_
 
 #define MAX_APP_NAME_LEN 16
 
@@ -70,7 +70,8 @@ struct subscription_message{ // 9 Byte min
 }
 
 } // namespace stats
+} // namespace stat
 
 } // namespace bbque
 
-#endif // BBQUE_STATS_TYPES_H_
+#endif // BBQUE_STAT_TYPES_H_
