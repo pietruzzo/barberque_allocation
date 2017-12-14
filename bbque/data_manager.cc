@@ -117,10 +117,11 @@ void DataManager::SubscriptionHandler() {
 	logger->Info("Starting the subscription server... tid = %d", subscription_server_tid);
 
 	// Allocating memory for the incoming subscriptions
-	bbque::stat::subscription_t * temp_sub = 
-		(bbque::stat::subscription_t*) malloc(sizeof(bbque::stat::subscription_t));
+	bbque::stat::subscription_message_t * temp_sub = 
+		(bbque::stat::subscription_message_t*) malloc(sizeof(bbque::stat::subscription_message_t));
 
-	logger->Debug("Creating the socket...");
+	logger->Debug("Creating the socket at address %s and port %d...", 
+		ip_address.c_str(), server_port);
 
 	// Creating the socket
 	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

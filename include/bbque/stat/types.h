@@ -55,7 +55,7 @@ typedef struct __attribute__((packed)) subscription{ // 9 Byte
 	sub_bitset_t event; // S|A|R|Reserved
 	uint16_t rate_ms;
 	uint8_t mode; // 0 is subscribe; !0 is unsubscribe
-} subscription_t;
+} subscription_message_t;
 
 struct __attribute__((packed)) status_message{ // 55 Byte min
 	uint32_t n_app_status_msgs;
