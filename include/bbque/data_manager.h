@@ -117,6 +117,17 @@ using SubscriberListIt_t = std::list<SubscriberPtr_t>::iterator;
 class DataManager: public utils::Worker {
 
 public:
+	/**
+	 * @enum ExitCode_t
+	 *
+	 * Class specific return codes
+	 */
+	enum class ExitCode_t {
+		OK = 0,           /** Successful call */
+		ERR_CLIENT_COMM, /** The client is unreachable */
+		ERR_UNKNOWN       /** A not specified error code   */
+	};
+
 	DataManager();
 
 	virtual ~DataManager();
