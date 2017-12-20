@@ -22,9 +22,9 @@
 
 namespace bbque { namespace stat {
 
-#define STAT_EVENT_RESOURCE 1 // 00000001
-#define STAT_EVENT_APPLICATION 2 // 00000010
-#define STAT_EVENT_SCHEDULE  4 // 00000100
+#define STAT_BITSET_RESOURCE 1 // 00000001
+#define STAT_BITSET_APPLICATION 2 // 00000010
+#define STAT_BITSET_SCHEDULE  4 // 00000100
 
 typedef uint64_t res_bitset_t;
 typedef uint8_t sub_bitset_t;
