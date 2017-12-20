@@ -338,6 +338,9 @@ void DataManager::Task() {
 		while(!any_subscriber){};
 		//while(any_subscriber){
 
+			// Update resources and applications data
+			UpdateData();
+
 			PublishOnRate();
 			
 			logger->Debug("Going to sleep for %d...",sleep_time);
@@ -395,4 +398,10 @@ void DataManager::PublishOnRate(){
 DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	return ExitCode_t::OK;
 }
+
+void DataManager::UpdateData(){
+	logger->Notice("Updating applications and resources data...");
+
+}
+
 } // namespace bbque
