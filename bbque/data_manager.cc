@@ -367,7 +367,7 @@ void DataManager::PublishOnRate(){
 
 		// If the deadline is missed or is now push the updated info
 		if(s->rate_deadline_ms <= 0) {
-			//Push();
+			Push(s);
 
 			logger->Notice("Publish status to %s", s->ip_address.c_str());
 
@@ -392,4 +392,7 @@ void DataManager::PublishOnRate(){
 	subs_lock.unlock();
 }
 
+DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
+	return ExitCode_t::OK;
+}
 } // namespace bbque
