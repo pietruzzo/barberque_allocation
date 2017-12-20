@@ -77,8 +77,9 @@ void DataManager::PrintSubscribers(){
 
 	// Subscribers on rate
 	for (auto s : subscribers_on_rate){
-		logger->Debug("Subiscribers on rate: ip: %s deadline: %d filter: %s rate: %d", 
+		logger->Debug("Subiscribers on rate: ip: %s port: %d deadline: %d filter: %s rate: %d", 
 			s->ip_address.c_str(), 
+			s->port_num,
 			s->rate_deadline_ms,
 			s->subscription.filter.to_string().c_str(),
 			s->subscription.rate_ms);	
@@ -86,8 +87,9 @@ void DataManager::PrintSubscribers(){
 
 	// Subscribers on event
 	for (auto s : subscribers_on_event){
-		logger->Debug("Subiscribers on event: ip: %s event: %s", 
+		logger->Debug("Subiscribers on event: ip: %s port: %d event: %s", 
 			s->ip_address.c_str(), 
+			s->port_num,
 			s->subscription.event.to_string().c_str());	
 	}
 }
@@ -222,7 +224,7 @@ void DataManager::SubscriptionHandler() {
 void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
-	logger->Info("Subscribing client: %s",subscr->ip_address.c_str());
+	logger->Info("Subscribing client: %s:%d",subscr->ip_address.c_str(),subscr->port_num);
 
 	subs_lock.lock();
 
@@ -281,7 +283,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
-	logger->Info("Unsubscribing client: %s",subscr->ip_address.c_str());
+	logger->Info("Unsubscribing client: %s:%d",subscr->ip_address.c_str(),subscr->port_num);
 
 	subs_lock.lock();
 
