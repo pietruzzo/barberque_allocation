@@ -252,7 +252,7 @@ private:
 	/*
 	 * @brief Publish the data to the @ref{subscribers_on_rate}
 	 */
-	void Publish();
+	void PublishOnRate();
 
 	/*
 	 * @brief Add a subscription

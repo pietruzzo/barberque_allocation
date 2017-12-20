@@ -338,7 +338,7 @@ void DataManager::Task() {
 		while(!any_subscriber){};
 		//while(any_subscriber){
 
-			Publish();
+			PublishOnRate();
 			
 			logger->Debug("Going to sleep for %d...",sleep_time);
 			
@@ -348,7 +348,7 @@ void DataManager::Task() {
 	}
 }
 
-void DataManager::Publish(){
+void DataManager::PublishOnRate(){
 	uint16_t tmp_sleep_time, max_sleep_time = 0;// = sleep_time;
 
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
