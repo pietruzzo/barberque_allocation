@@ -372,7 +372,7 @@ void DataManager::PublishOnRate(){
 		if(s->rate_deadline_ms <= 0) {
 			Push(s);
 
-			logger->Notice("Publish status to %s", s->ip_address.c_str());
+			logger->Notice("Publish status to %s:%d", s->ip_address.c_str(),s->port_num);
 
 			// Reset the deadline
 			s->rate_deadline_ms = s->subscription.rate_ms;
