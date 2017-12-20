@@ -36,7 +36,6 @@ typedef struct __attribute__((packed)) task { // 13 Byte
 }task_t;
 
 typedef struct __attribute__((packed)) app_status{ // 32 Byte min
-	uint32_t ts;
 	uint32_t id;
 	char name[MAX_APP_NAME_LEN];
 	uint32_t n_task;
@@ -45,7 +44,6 @@ typedef struct __attribute__((packed)) app_status{ // 32 Byte min
 } app_status_t;
 
 typedef struct __attribute__((packed)) resource_status{ // 15 Byte
-	uint32_t ts;
 	res_bitset_t id;
 	uint8_t occupancy;
 	uint8_t load;
@@ -61,19 +59,15 @@ typedef struct __attribute__((packed)) subscription{ // 9 Byte
 	uint8_t mode; // 0 is subscribe; !0 is unsubscribe
 } subscription_message_t;
 
-typedef struct __attribute__((packed)) status_message{ // 55 Byte min
+typedef struct __attribute__((packed)) status_message{ // 59 Byte min
+	uint32_t ts;
 	uint32_t n_app_status_msgs;
 	app_status_t* app_status_msgs;
 	uint32_t n_res_status_msgs;
 	resource_status_t* res_status_msgs;
 } status_message_t;
 
-/*
-struct subscription_message{ // 9 Byte min
-	uint32_t n_sub_msg;
-	subscription_t sub;
-};
-*/
+
 } // namespace stat
 
 } // namespace bbque
