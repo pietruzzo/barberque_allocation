@@ -269,8 +269,22 @@ private:
 
 	/*
 	 * @brief Publish the data to the @ref{subscribers_on_event}
+	 *
+	 * @param event The event triggering the publication
 	 */
-	void PublishOnEvent();
+	void PublishOnEvent(data::sub_bitset_t event);
+
+	/**
+	 * @brief Push the update to the specified subscriber based on its information filter
+	 *
+	 * @param sub The target subscriber
+	 */
+	ExitCode_t Push(SubscriberPtr_t sub);
+
+	/**
+	 * @brief Update the content of resource and application data information
+	 */
+	void UpdateData();
 
 	/*
 	 * @brief Server to handle the subscription/unsubscription requests
