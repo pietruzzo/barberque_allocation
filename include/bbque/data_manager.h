@@ -211,6 +211,26 @@ private:
   	SubscriberListIt_t findSubscriber(SubscriberPtr_t & subscr,
   		SubscriberPtrList_t & list);
 
+  	/*
+  	 * @brief A pointer to the list of all application updated status structs
+  	 */
+  	std::list<app_status_t> app_stats;
+
+  	/*
+  	 * @brief A pointer to the list of all resources updated status structs
+  	 */
+  	std::list<resource_status_t> res_stats;
+
+  	/*
+  	 * @brief The number of current managed applications
+  	 */
+  	uint32_t num_current_res;
+
+  	/*
+  	 * @brief The number of current managed resources
+  	 */
+  	uint32_t num_current_apps;
+
 	/*******************************************************************/
 	/*                      Communication fields                       */
 	/*******************************************************************/
