@@ -152,7 +152,6 @@ void DataManager::SubscriptionHandler() {
 	logger->Debug("Receiving UDP packets...");
 
 	/* ----------------------------------------------------------- */
-
 	/* ------------------ Subscription handling ------------------ */
 	/* Listening cycle */
 	for(;;) {
@@ -192,37 +191,7 @@ void DataManager::SubscriptionHandler() {
 		else
 			Unsubscribe(temp_subscriber,temp_sub->event != 0);
 	}
-
 	/* ----------------------------------------------------------- */
-	
-
-	/* SAMPLE CODE */
-/*
-	Subscription subscr1("010","000",5000);
-	Subscription subscr2("001","000",4000);
-
-	logger->Notice("Subscription 1 rate = %d", subscr1.rate_ms);
-
-	SubscriberPtr_t Sub1(new Subscriber);
-	SubscriberPtr_t Sub2(new Subscriber);
-
-	Sub1->ip_address = "0.0.0.1";
-	Sub1->subscription = subscr1;
-	Sub1->rate_deadline_ms = subscr1.rate_ms;
-	
-	logger->Notice("Subscriber 1 rate = %d rate_deadline = %d", 
-		Sub1->subscription.rate_ms, 
-		Sub1->rate_deadline_ms);
-	
-	Sub2->ip_address = "0.0.0.2";
-	Sub2->subscription = subscr2;
-	Sub2->rate_deadline_ms = subscr2.rate_ms;
-
-	Subscribe(Sub2, false);
-	Subscribe(Sub1, false);
-*/
-	/* END SAMPLE CODE */
-
 }
 
 void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
@@ -233,7 +202,6 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 	subs_lock.lock();
 
 	if(event) { /* If event-based subscription */
-
 		auto sub_it = findSubscriber(subscr, subscribers_on_event);
 
 		/* If the client is already a subscriber just update its event filter */
@@ -252,7 +220,6 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 		}
 	}
 	else { /* If rate-based subscription */
-	
 		auto sub_it = findSubscriber(subscr, subscribers_on_rate);
 		
 		/* If the client is already a subscriber just update its filter and rate */
@@ -292,7 +259,6 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 	subs_lock.lock();
 
 	if(event){ /* If event-based subscription */
-		
 		auto sub_it = findSubscriber(subscr, subscribers_on_event);
 		
 		if(sub_it != subscribers_on_event.end()){
@@ -306,7 +272,6 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 		}
 		
 	}else{ /* If rate-based subscription */
-
 		auto sub_it = findSubscriber(subscr, subscribers_on_rate);	
 		
 		if(sub_it != subscribers_on_rate.end()){
@@ -340,7 +305,6 @@ void DataManager::Task() {
 	while(1){
 
 		while(!any_subscriber){};
-		//while(any_subscriber){
 
 			/* Update resources and applications data */
 			UpdateData();
@@ -351,7 +315,6 @@ void DataManager::Task() {
 			
 			/* Sleep */
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
-		//}
 	}
 }
 
