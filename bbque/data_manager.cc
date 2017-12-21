@@ -402,7 +402,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	boost::asio::ip::tcp::iostream client_sock(sub->ip_address, std::to_string(sub->port_num));
 	
 	if(!client_sock){
-		logger->Fatal("Cannot connect to %s:%d",sub->ip_address,sub->port_num);
+		logger->Fatal("Cannot connect to %s:%d",sub->ip_address.c_str(),sub->port_num);
 		return ExitCode_t::ERR_CLIENT_COMM;
 	}
 
