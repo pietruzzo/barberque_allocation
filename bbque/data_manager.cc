@@ -164,9 +164,9 @@ void DataManager::SubscriptionHandler() {
 			0, (struct sockaddr*)&client_addr, &client_addr_size))<0)
 				logger->Error("Error during socket receiving");
 		
-		// Creating the temp Subscription
-		Subscription temp_subscription(data::sub_bitset_t(temp_sub->filter), 
-			data::sub_bitset_t(temp_sub->event),
+		/* Creating the temp Subscription */
+		Subscription temp_subscription(bd::sub_bitset_t(temp_sub->filter), 
+			bd::sub_bitset_t(temp_sub->event),
 			temp_sub->rate_ms);
 
 		// Creating the temp Subscriber
