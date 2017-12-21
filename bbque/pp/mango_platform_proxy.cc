@@ -583,9 +583,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(TaskGraph &tg,
 	// TODO: Policy for tile selection
 	for ( auto event : tg.Events()) {
 		uint32_t phy_addr;
-		hn_get_synchronization_id (&phy_addr, 0, HN_SYNCH_TYPE_REGULAR);
+		hn_get_synch_id (&phy_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE);
+		logger->Debug("Event %d assigned to ID 0x%x", event.second->Id(), phy_addr);
 		event.second->SetPhysicalAddress(phy_addr);
 	}
+
 
 
 	// TODO: with the find_partitions we should allocate the selected partition, but
@@ -614,7 +616,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(const TaskGraph &tg,
 
 	for ( const auto &event : tg.Events()) {
 		bbque_assert(event.second);
-		hn_release_synchronization_id (event.second->PhysicalAddress(), 1);
+
+		uint32_t phy_addr = event.second->PhysicalAddress();
+
+		logger->Debug("Releasing event %d (ID 0x%x)", event.second->Id(), phy_addr);
+		hn_release_synch_id (phy_addr);
 	}
 
 /* TODO: no more supported by HN library, we have to check if in the future we need this or not
