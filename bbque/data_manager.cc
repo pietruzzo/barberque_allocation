@@ -154,12 +154,12 @@ void DataManager::SubscriptionHandler() {
 	/* ----------------------------------------------------------- */
 
 	/* ------------------ Subscription handling ------------------ */
-	// Listening cycle
+	/* Listening cycle */
 	for(;;) {
 
 		client_addr_size = sizeof(client_addr);
 
-		// Subscription receiving waiting
+		/* Subscription receiving waiting */
 		if((recv_msg_size = recvfrom(sock, temp_sub, sizeof(*temp_sub),	
 			0, (struct sockaddr*)&client_addr, &client_addr_size))<0)
 				logger->Error("Error during socket receiving");
@@ -169,13 +169,13 @@ void DataManager::SubscriptionHandler() {
 			bd::sub_bitset_t(temp_sub->event),
 			temp_sub->rate_ms);
 
-		// Creating the temp Subscriber
+		/* Creating the temp Subscriber */
 		SubscriberPtr_t temp_subscriber = std::make_shared<Subscriber>
 			(std::string(inet_ntoa(client_addr.sin_addr)),
 				(uint32_t) temp_sub->port_num,
 				temp_subscription);
 
-		// Logging messages
+		/* Logging messages */
 		logger->Debug("Handling client %s", inet_ntoa(client_addr.sin_addr));		
 		logger->Debug("Incoming length: %u", sizeof(*temp_sub));
 		logger->Notice("Client subscriber:");
@@ -236,7 +236,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 
 		auto sub_it = findSubscriber(subscr, subscribers_on_event);
 
-		// If the client is already a subscriber just update its event filter
+		/* If the client is already a subscriber just update its event filter */
 		if(sub_it != subscribers_on_event.end()){
 			logger->Debug("Before update %s - event: %s",
 				subscr->ip_address.c_str(),
@@ -246,7 +246,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 				subscr->ip_address.c_str(),
 				sub_it->get()->subscription.event.to_string().c_str());
 		}else { 
-		// If is new, just add it to the list
+		/* If is new, just add it to the list */
 			subscribers_on_event.push_back(subscr);
 			any_subscriber++;
 		}
@@ -255,7 +255,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 	
 		auto sub_it = findSubscriber(subscr, subscribers_on_rate);
 		
-		// If the client is already a subscriber just update its filter and rate
+		/* If the client is already a subscriber just update its filter and rate */
 		if(sub_it != subscribers_on_rate.end()){
 			logger->Debug("Before update %s - filter: %s - rate: %d",
 				subscr->ip_address.c_str(),
@@ -268,7 +268,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 				sub_it->get()->subscription.filter.to_string().c_str(),
 				sub_it->get()->subscription.rate_ms);
 		}else { 
-		// If is new, just add it to the list
+		/* If is new, just add it to the list */
 			subscribers_on_rate.push_back(subscr);
 			logger->Debug("Sorting on rate...");
 			subscribers_on_rate.sort();
@@ -278,7 +278,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 
 	}
 
-	// Printing all the subscribers
+	/* Printing all the subscribers */
 	PrintSubscribers();
 
 	subs_lock.unlock();
@@ -291,7 +291,7 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 
 	subs_lock.lock();
 
-	if(event){ // If event-based subscription
+	if(event){ /* If event-based subscription */
 		
 		auto sub_it = findSubscriber(subscr, subscribers_on_event);
 		
@@ -305,7 +305,7 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 			logger->Error("Client not found!");
 		}
 		
-	}else{ // If rate-based subscription
+	}else{ /* If rate-based subscription */
 
 		auto sub_it = findSubscriber(subscr, subscribers_on_rate);	
 		
@@ -322,7 +322,7 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 		
 	}
 
-	// Printing all the subscribers
+	/* Printing all the subscribers */
 	PrintSubscribers();
 
 	subs_lock.unlock();
@@ -342,14 +342,14 @@ void DataManager::Task() {
 		while(!any_subscriber){};
 		//while(any_subscriber){
 
-			// Update resources and applications data
+			/* Update resources and applications data */
 			UpdateData();
 
 			PublishOnRate();
 			
 			logger->Debug("Going to sleep for %d...",sleep_time);
 			
-			// Sleep
+			/* Sleep */
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
 		//}
 	}
@@ -365,20 +365,20 @@ void DataManager::PublishOnRate(){
 	tmp_sleep_time = subscribers_on_rate.front()->rate_deadline_ms;
 
 	for(auto s : subscribers_on_rate){
-		// Updating the deadline after the sleep
+		/* Updating the deadline after the sleep */
 		s->rate_deadline_ms = s->rate_deadline_ms - sleep_time;
 
 		logger->Debug("Subscriber: %s -- next_deadline: %u",
 			s->ip_address.c_str(),
 			s->rate_deadline_ms);
 
-		// If the deadline is missed or is now push the updated info
+		/* If the deadline is missed or is now push the updated info */
 		if(s->rate_deadline_ms <= 0) {
 			Push(s);
 
 			logger->Notice("Publish status to %s:%d", s->ip_address.c_str(),s->port_num);
 
-			// Reset the deadline
+			/* Reset the deadline */
 			s->rate_deadline_ms = s->subscription.rate_ms;
 
 			logger->Debug("Subscriber: %s -- updated next_deadline: %u",
@@ -386,12 +386,12 @@ void DataManager::PublishOnRate(){
 				s->rate_deadline_ms);
 
 		}
-		// Calculating the earlier sleep timethe sleep time with the earlier
+		/* Calculating the earlier sleep time the sleep time with the earlier */
 		if(s->rate_deadline_ms < tmp_sleep_time)
 			tmp_sleep_time = s->rate_deadline_ms;
 	}
 
-	// Updating the sleep time
+	/* Updating the sleep time */
 	sleep_time = tmp_sleep_time;
 
 	subscribers_on_rate.sort();

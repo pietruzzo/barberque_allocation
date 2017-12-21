@@ -108,7 +108,7 @@ namespace data {
 using namespace bbque::data;
 using namespace bbque::stat;
 
-// Type definition
+/* Type definition */
 
 using SubscriberPtr_t = std::shared_ptr<Subscriber>;
 using SubscriberPtrList_t = std::list<SubscriberPtr_t>;
