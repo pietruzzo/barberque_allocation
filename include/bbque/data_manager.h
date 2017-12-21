@@ -32,6 +32,12 @@
 #include "bbque/stat/types.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/utils/worker.h"
+// Boost libraries
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/asio.hpp>
 
 namespace bu = bbque::utils;
 
