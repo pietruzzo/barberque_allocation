@@ -39,13 +39,13 @@ namespace bbque {
 
 namespace data {
 
-	typedef std::bitset<8> sub_bitset_t;
+	using sub_bitset_t = std::bitset<8>;
 
-	typedef enum status_event {
+	enum status_event_t {
 		scheduling = 0,
 		application,
 		resource
-	} status_event_t;
+	};
 
 	class Subscription {
 	public:

@@ -26,46 +26,46 @@ namespace bbque { namespace stat {
 #define STAT_BITSET_APPLICATION 2 // 00000010
 #define STAT_BITSET_SCHEDULE  4 // 00000100
 
-typedef uint64_t res_bitset_t;
-typedef uint8_t sub_bitset_t;
+using res_bitset_t = uint64_t;
+using sub_bitset_t = uint8_t;
 
-typedef struct __attribute__((packed)) task { // 13 Byte
+struct task_t { // 13 Byte
 	uint32_t id;
 	uint8_t perf; // In percentage
 	res_bitset_t mapping;
-}task_t;
+};
 
-typedef struct __attribute__((packed)) app_status{ // 32 Byte min
+struct app_status_t { // 32 Byte min
 	uint32_t id;
 	char name[MAX_APP_NAME_LEN];
 	uint32_t n_task;
 	task_t * tasks; // List of tasks
 	res_bitset_t mapping;
-} app_status_t;
+};
 
-typedef struct __attribute__((packed)) resource_status{ // 15 Byte
+struct resource_status_t { // 15 Byte
 	res_bitset_t id;
 	uint8_t occupancy;
 	uint8_t load;
 	uint32_t power;
 	uint8_t temp;
-} resource_status_t;
+};
 
-typedef struct __attribute__((packed)) subscription{ // 9 Byte
+struct __attribute__((packed)) subscription_message_t { // 9 Byte
 	uint32_t port_num;
 	sub_bitset_t filter; // S|A|R|Reserved
 	sub_bitset_t event; // S|A|R|Reserved
 	uint16_t rate_ms;
 	uint8_t mode; // 0 is subscribe; !0 is unsubscribe
-} subscription_message_t;
+};
 
-typedef struct __attribute__((packed)) status_message{ // 59 Byte min
+struct status_message_t { // 59 Byte min
 	uint32_t ts;
 	uint32_t n_app_status_msgs;
 	app_status_t* app_status_msgs;
 	uint32_t n_res_status_msgs;
 	resource_status_t* res_status_msgs;
-} status_message_t;
+};
 
 
 } // namespace stat
