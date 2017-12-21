@@ -187,6 +187,24 @@ private:
 	 */
 	pid_t subscription_server_tid;
 
+	/*
+  	 * @brief Utility method to print all the current subscribers
+  	 */
+  	void PrintSubscribers();
+
+  	/*
+  	 * @brief Utility method to find a subscriber into a specific list.
+  	 * The search is performed on the ip address.
+	 *
+	 * @param subscr The subscriber to search
+	 * @param list The list in which to find the specified subscriber
+	 *
+	 * @return An iterator object pointing the found subscriber
+	 *
+  	 */
+  	SubscriberListIt_t findSubscriber(SubscriberPtr_t & subscr,
+  		SubscriberPtrList_t & list);
+
 	/*******************************************************************/
 	/*                      Communication fields                       */
 	/*******************************************************************/
@@ -226,23 +244,6 @@ private:
 	*/
   	int32_t recv_msg_size;
 
-  	/*
-  	 * @brief Utility method to print all the current subscribers
-  	 */
-  	void PrintSubscribers();
-
-  	/*
-  	 * @brief Utility method to find a subscriber into a specific list.
-  	 * The search is performed on the ip address.
-	 *
-	 * @param subscr The subscriber to search
-	 * @param list The list in which to find the specified subscriber
-	 *
-	 * @return An iterator object pointing the found subscriber
-	 *
-  	 */
-  	SubscriberListIt_t findSubscriber(SubscriberPtr_t & subscr,
-  		SubscriberPtrList_t & list);
 
 	/*******************************************************************/
 	/*                    Publish/Subscribe methods                    */
