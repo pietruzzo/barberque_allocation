@@ -400,6 +400,60 @@ void DataManager::PublishOnRate(){
 }
 
 DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
+	
+	/* Status message initialization */
+	status_message_t newStat;
+	newStat.ts = 1; //static_cast<uint32_t>(timer.getTimestamp());
+	newStat.n_app_status_msgs = num_current_apps;
+	newStat.n_res_status_msgs = num_current_res;
+
+	logger->Debug("Status timestamp is %d", newStat.ts);
+
+	/* Checking the subscriber filter */
+
+	// If has resource subscription
+	if((sub->subscription.filter & bd::sub_bitset_t(STAT_BITSET_RESOURCE)) == 
+		bd::sub_bitset_t(STAT_BITSET_RESOURCE)){
+		logger->Debug("Adding resources info to the subscriber %s's message...", 
+			sub->ip_address.c_str());
+		for(auto res_stat : res_stats){
+			newStat.res_status_msgs.push_back(res_stat);
+		}
+		for(auto res_stat : newStat.res_status_msgs){
+			logger->Fatal("ResId: %d, Occupancy: %d, Load: %d, Power: %d, Temp: %d",
+				res_stat.id, res_stat.occupancy, res_stat.load, res_stat.power, res_stat.temp);
+		}
+		
+	}
+
+	// If has application subscription
+	if((sub->subscription.filter & bd::sub_bitset_t(STAT_BITSET_APPLICATION)) == 
+		bd::sub_bitset_t(STAT_BITSET_APPLICATION)){
+		logger->Debug("Adding applications info to the subscriber %s's message...", 
+			sub->ip_address.c_str());
+		logger->Fatal("Not yet implemented");
+		// TODO
+	}
+
+	/* Create a TCP socket */
+	boost::asio::ip::tcp::iostream client_sock(sub->ip_address, std::to_string(sub->port_num));
+	
+	if(!client_sock){
+		logger->Fatal("Cannot connect to %s:%d",sub->ip_address,sub->port_num);
+		return ExitCode_t::ERR_CLIENT_COMM;
+	}
+
+	/* Saving data to archive */
+	boost::archive::text_oarchive archive(client_sock);
+
+	/* Sending data to the client */
+	try{ 
+		archive << newStat;
+	}catch(boost::exception const& ex){
+		logger->Fatal("Boost archive exception");
+		return ExitCode_t::ERR_CLIENT_COMM;
+	}
+
 	return ExitCode_t::OK;
 }
 
