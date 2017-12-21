@@ -30,20 +30,48 @@ using res_bitset_t = uint64_t;
 using sub_bitset_t = uint8_t;
 
 struct task_t { // 13 Byte
+	/* Serialization stuff */
+	template<class Archive>
+	void serialize(Archive &ar, const unsigned int version){
+		ar & id;
+		ar & perf;
+		ar & mapping;
+	}
+	/* Struct fields */
 	uint32_t id;
 	uint8_t perf; // In percentage
 	res_bitset_t mapping;
 };
 
 struct app_status_t { // 32 Byte min
+	/* Serialization stuff */
+	template<class Archive>
+	void serialize(Archive &ar, const unsigned int version){
+		ar & id;
+		ar & name;
+		ar & n_task;
+		ar & tasks;
+		ar & mapping;
+	}
+	/* Struct fields */
 	uint32_t id;
 	char name[MAX_APP_NAME_LEN];
 	uint32_t n_task;
-	task_t * tasks; // List of tasks
+	std::list<task_t> tasks; // List of tasks
 	res_bitset_t mapping;
 };
 
 struct resource_status_t { // 15 Byte
+	/* Serialization stuff */
+	template<class Archive>
+	void serialize(Archive &ar, const unsigned int version){
+		ar & id;
+		ar & occupancy;
+		ar & load;
+		ar & power;
+		ar & temp;
+	}
+	/* Struct fields */
 	res_bitset_t id;
 	uint8_t occupancy;
 	uint8_t load;
@@ -60,11 +88,20 @@ struct __attribute__((packed)) subscription_message_t { // 9 Byte
 };
 
 struct status_message_t { // 59 Byte min
+	/* Serialization stuff */
+	template<class Archive>
+	void serialize(Archive &ar, const unsigned int version){
+		ar & n_app_status_msgs;
+		ar & app_status_msgs;
+		ar & n_res_status_msgs;
+		ar & res_status_msgs;
+	}
+	/* Struct fields */
 	uint32_t ts;
 	uint32_t n_app_status_msgs;
-	app_status_t* app_status_msgs;
+	std::list<app_status_t> app_status_msgs;
 	uint32_t n_res_status_msgs;
-	resource_status_t* res_status_msgs;
+	std::list<resource_status_t> res_status_msgs;
 };
 
 
