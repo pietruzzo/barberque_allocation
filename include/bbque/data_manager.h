@@ -99,9 +99,8 @@ namespace data {
 
 } // namespace data
 
-using bbque::data::Subscription;
-using bbque::data::Subscriber;
-using bbque::data::status_event_t;
+using namespace bbque::data;
+using namespace bbque::stat;
 
 // Type definition
 

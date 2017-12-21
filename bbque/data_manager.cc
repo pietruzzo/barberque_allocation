@@ -35,6 +35,10 @@
 
 namespace bbque {
 
+using namespace bbque::stat;
+//using bbque::stat::resource_status_t;
+//using bbque::stat::status_message_t;
+namespace bd = bbque::data;
 DataManager & DataManager::GetInstance() {
 	static DataManager instance;
 	return instance;
