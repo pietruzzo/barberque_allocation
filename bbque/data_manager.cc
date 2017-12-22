@@ -382,7 +382,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	status_message_t newStat;
 	newStat.ts = 1; //static_cast<uint32_t>(timer.getTimestamp());
 	newStat.n_app_status_msgs = num_current_apps;
-	newStat.n_res_status_msgs = num_current_res;
+	newStat.n_res_status_msgs = 0;
 
 	logger->Debug("Status timestamp is %d", newStat.ts);
 
@@ -393,6 +393,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 		bd::sub_bitset_t(STAT_BITSET_RESOURCE)){
 		logger->Debug("Adding resources info to the subscriber %s's message...", 
 			sub->ip_address.c_str());
+		newStat.n_res_status_msgs = num_current_res;
 		for(auto res_stat : res_stats){
 			newStat.res_status_msgs.push_back(res_stat);
 		}
