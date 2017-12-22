@@ -127,7 +127,7 @@ public:
 	 *
 	 * Class specific return codes
 	 */
-	enum class ExitCode_t {
+	enum ExitCode_t {
 		OK = 0,           /** Successful call */
 		ERR_CLIENT_COMM, /** The client is unreachable */
 		ERR_UNKNOWN       /** A not specified error code   */
