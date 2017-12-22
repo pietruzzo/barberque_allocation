@@ -326,7 +326,7 @@ void DataManager::Task() {
 
 void DataManager::PublishOnRate(){
 	uint16_t tmp_sleep_time, max_sleep_time = 0;// = sleep_time;
-	ExitCode_t error;
+	ExitCode_t result;
 
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
@@ -344,9 +344,12 @@ void DataManager::PublishOnRate(){
 
 		// If the deadline is missed or is now push the updated info
 		if(s->rate_deadline_ms <= 0) {
-			error = Push(s);
-			if(error != ExitCode_t::OK){
-				logger->Fatal("Error in publish status to %s:%d", s->ip_address.c_str(),s->port_num);
+
+			result = Push(s);
+
+			if(result != OK){
+				logger->Error("Error in publish status to %s:%d", 
+					s->ip_address.c_str(),s->port_num);
 			}else{
 				logger->Notice("Publish status to %s:%d", 
 					s->ip_address.c_str(),s->port_num);
