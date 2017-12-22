@@ -55,7 +55,7 @@ struct app_status_t { // 32 Byte min
 	}
 	/* Struct fields */
 	uint32_t id;
-	char name[MAX_APP_NAME_LEN];
+	std::string name;
 	uint32_t n_task;
 	std::list<task_t> tasks; // List of tasks
 	res_bitset_t mapping;
