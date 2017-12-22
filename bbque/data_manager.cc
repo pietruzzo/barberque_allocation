@@ -381,7 +381,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	// Status message initialization
 	status_message_t newStat;
 	newStat.ts = 1; //static_cast<uint32_t>(timer.getTimestamp());
-	newStat.n_app_status_msgs = num_current_apps;
+	newStat.n_app_status_msgs = 0;
 	newStat.n_res_status_msgs = 0;
 
 	logger->Debug("Status timestamp is %d", newStat.ts);
@@ -412,8 +412,27 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 		bd::sub_bitset_t(STAT_BITSET_APPLICATION)){
 		logger->Debug("Adding applications info to the subscriber %s's message...", 
 			sub->ip_address.c_str());
-		logger->Fatal("Not yet implemented");
-		// TODO
+
+		newStat.n_app_status_msgs = num_current_apps;
+
+		for(auto app_stat : app_stats){
+			newStat.app_status_msgs.push_back(app_stat);
+		}
+
+		// Debug logging
+		for(auto app_stat : newStat.app_status_msgs){
+			logger->Debug("AppId: %d, AppName: %s, NunTasks: %d, Mapping: %d",
+				app_stat.id, 
+				app_stat.name, 
+				app_stat.n_task, 
+				app_stat.mapping);
+			for(auto task_stat : app_stat.tasks){
+				logger->Debug("TaskId: %d, Perf: %d, Mapping: %d",
+				task_stat.id, 
+				task_stat.perf, 
+				task_stat.mapping);
+			}
+		}
 	}
 
 	// Create a TCP socket
