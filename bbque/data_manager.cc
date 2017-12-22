@@ -128,7 +128,8 @@ void DataManager::SubscriptionHandler() {
 		(bbque::stat::subscription_message_t*) malloc(sizeof(bbque::stat::subscription_message_t));
 
 	logger->Debug("Creating the socket at address %s and port %d...", 
-		ip_address.c_str(), server_port);
+		ip_address.c_str(), 
+		server_port);
 
 	// Creating the socket
 	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -159,23 +160,23 @@ void DataManager::SubscriptionHandler() {
 
 		client_addr_size = sizeof(client_addr);
 
-		/* Subscription receiving waiting */
+		// Subscription receiving waiting
 		if((recv_msg_size = recvfrom(sock, temp_sub, sizeof(*temp_sub),	
 			0, (struct sockaddr*)&client_addr, &client_addr_size))<0)
 				logger->Error("Error during socket receiving");
 		
-		/* Creating the temp Subscription */
+		// Creating the temp Subscription
 		Subscription temp_subscription(bd::sub_bitset_t(temp_sub->filter), 
 			bd::sub_bitset_t(temp_sub->event),
 			temp_sub->rate_ms);
 
-		/* Creating the temp Subscriber */
+		// Creating the temp Subscriber
 		SubscriberPtr_t temp_subscriber = std::make_shared<Subscriber>
 			(std::string(inet_ntoa(client_addr.sin_addr)),
 				(uint32_t) temp_sub->port_num,
 				temp_subscription);
 
-		/* Logging messages */
+		// Logging messages
 		logger->Debug("Handling client %s", inet_ntoa(client_addr.sin_addr));		
 		logger->Debug("Incoming length: %u", sizeof(*temp_sub));
 		logger->Notice("Client subscriber:");
@@ -217,7 +218,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 				subscr->ip_address.c_str(),
 				sub->subscription.event.to_string().c_str());
 		}else { 
-		/* If is new, just add it to the list */
+		// If is new, just add it to the list
 			subscribers_on_event.push_back(subscr);
 			any_subscriber++;
 		}
@@ -240,17 +241,16 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 				sub->subscription.filter.to_string().c_str(),
 				sub->subscription.rate_ms);
 		}else { 
-		/* If is new, just add it to the list */
+		// If is new, just add it to the list
 			subscribers_on_rate.push_back(subscr);
 			logger->Debug("Sorting on rate...");
 			subscribers_on_rate.sort();
 			any_subscriber++;
 		}
 		subscribers_on_rate.sort();
-
 	}
 
-	/* Printing all the subscribers */
+	// Printing all the subscribers
 	PrintSubscribers();
 
 	subs_lock.unlock();
@@ -259,7 +259,9 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
-	logger->Info("Unsubscribing client: %s:%d",subscr->ip_address.c_str(),subscr->port_num);
+	logger->Info("Unsubscribing client: %s:%d",
+		subscr->ip_address.c_str(),
+		subscr->port_num);
 
 	subs_lock.lock();
 
@@ -291,7 +293,7 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 		
 	}
 
-	/* Printing all the subscribers */
+	// Printing all the subscribers
 	PrintSubscribers();
 
 	subs_lock.unlock();
@@ -310,14 +312,14 @@ void DataManager::Task() {
 
 		while(!any_subscriber){};
 
-			/* Update resources and applications data */
+			// Update resources and applications data
 			UpdateData();
 
 			PublishOnRate();
 			
 			logger->Debug("Going to sleep for %d...",sleep_time);
 			
-			/* Sleep */
+			// Sleep
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
 	}
 }
@@ -333,23 +335,24 @@ void DataManager::PublishOnRate(){
 	tmp_sleep_time = subscribers_on_rate.front()->rate_deadline_ms;
 
 	for(auto s : subscribers_on_rate){
-		/* Updating the deadline after the sleep */
+		// Updating the deadline after the sleep
 		s->rate_deadline_ms = s->rate_deadline_ms - sleep_time;
 
 		logger->Debug("Subscriber: %s -- next_deadline: %u",
 			s->ip_address.c_str(),
 			s->rate_deadline_ms);
 
-		/* If the deadline is missed or is now push the updated info */
+		// If the deadline is missed or is now push the updated info
 		if(s->rate_deadline_ms <= 0) {
 			error = Push(s);
 			if(error != ExitCode_t::OK){
 				logger->Fatal("Error in publish status to %s:%d", s->ip_address.c_str(),s->port_num);
 			}else{
-				logger->Notice("Publish status to %s:%d", s->ip_address.c_str(),s->port_num);
+				logger->Notice("Publish status to %s:%d", 
+					s->ip_address.c_str(),s->port_num);
 			}
 
-			/* Reset the deadline */
+			// Reset the deadline
 			s->rate_deadline_ms = s->subscription.rate_ms;
 
 			logger->Debug("Subscriber: %s -- updated next_deadline: %u",
@@ -357,12 +360,12 @@ void DataManager::PublishOnRate(){
 				s->rate_deadline_ms);
 
 		}
-		/* Calculating the earlier sleep time the sleep time with the earlier */
+		// Calculating the earlier sleep time the sleep time with the earlier
 		if(s->rate_deadline_ms < tmp_sleep_time)
 			tmp_sleep_time = s->rate_deadline_ms;
 	}
 
-	/* Updating the sleep time */
+	// Updating the sleep time
 	sleep_time = tmp_sleep_time;
 
 	subscribers_on_rate.sort();
@@ -372,7 +375,7 @@ void DataManager::PublishOnRate(){
 
 DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	
-	/* Status message initialization */
+	// Status message initialization
 	status_message_t newStat;
 	newStat.ts = 1; //static_cast<uint32_t>(timer.getTimestamp());
 	newStat.n_app_status_msgs = num_current_apps;
@@ -380,9 +383,9 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 
 	logger->Debug("Status timestamp is %d", newStat.ts);
 
-	/* Checking the subscriber filter */
+	// Checking the subscriber filter
 
-	// If has resource subscription
+	// If it has resource subscription
 	if((sub->subscription.filter & bd::sub_bitset_t(STAT_BITSET_RESOURCE)) == 
 		bd::sub_bitset_t(STAT_BITSET_RESOURCE)){
 		logger->Debug("Adding resources info to the subscriber %s's message...", 
@@ -391,13 +394,16 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 			newStat.res_status_msgs.push_back(res_stat);
 		}
 		for(auto res_stat : newStat.res_status_msgs){
-			logger->Fatal("ResId: %d, Occupancy: %d, Load: %d, Power: %d, Temp: %d",
-				res_stat.id, res_stat.occupancy, res_stat.load, res_stat.power, res_stat.temp);
-		}
-		
+			logger->Debug("ResId: %d, Occupancy: %d, Load: %d, Power: %d, Temp: %d",
+				res_stat.id, 
+				res_stat.occupancy, 
+				res_stat.load, 
+				res_stat.power, 
+				res_stat.temp);
+		}	
 	}
 
-	// If has application subscription
+	// If it has application subscription
 	if((sub->subscription.filter & bd::sub_bitset_t(STAT_BITSET_APPLICATION)) == 
 		bd::sub_bitset_t(STAT_BITSET_APPLICATION)){
 		logger->Debug("Adding applications info to the subscriber %s's message...", 
@@ -410,22 +416,24 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	tcp::iostream client_sock(sub->ip_address, std::to_string(sub->port_num));
 	
 	if(!client_sock){
-		logger->Fatal("Cannot connect to %s:%d",sub->ip_address.c_str(),sub->port_num);
-		return ExitCode_t::ERR_CLIENT_COMM;
+		logger->Error("Cannot connect to %s:%d",
+			sub->ip_address.c_str(),
+			sub->port_num);
+		return ERR_CLIENT_COMM;
 	}
 
 	// Saving data to archive
 	text_oarchive archive(client_sock);
 
-	/* Sending data to the client */
+	// Sending data to the client
 	try{ 
 		archive << newStat;
 	}catch(boost::exception const& ex){
-		logger->Fatal("Boost archive exception");
-		return ExitCode_t::ERR_CLIENT_COMM;
+		logger->Error("Boost archive exception");
+		return ERR_CLIENT_COMM;
 	}
 
-	return ExitCode_t::OK;
+	return OK;
 }
 
 void DataManager::UpdateData(){
