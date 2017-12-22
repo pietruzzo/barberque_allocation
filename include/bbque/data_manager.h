@@ -208,7 +208,7 @@ private:
 	 * @return An iterator object pointing the found subscriber
 	 *
   	 */
-  	SubscriberListIt_t findSubscriber(SubscriberPtr_t & subscr,
+  	SubscriberPtr_t findSubscriber(SubscriberPtr_t & subscr,
   		SubscriberPtrList_t & list);
 
   	/*

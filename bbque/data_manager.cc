@@ -100,15 +100,14 @@ void DataManager::PrintSubscribers(){
 	}
 }
 
-SubscriberListIt_t DataManager::findSubscriber(SubscriberPtr_t & subscr,
+SubscriberPtr_t DataManager::findSubscriber(SubscriberPtr_t & subscr,
 	SubscriberPtrList_t & list){
-	
-	auto sub_it = list.begin();
-	for(; sub_it != subscribers_on_rate.end(); sub_it++){
-		if(*sub_it->get() == *subscr.get())
-			break;
+
+	for(auto sub : list){
+		if(*sub.get() == *subscr.get())
+			return sub;
 	}
-	return sub_it;
+	return nullptr;
 } 
 
 /*******************************************************************/
@@ -203,39 +202,43 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 
 	subs_lock.lock();
 
-	if(event) { /* If event-based subscription */
-		auto sub_it = findSubscriber(subscr, subscribers_on_event);
+	if(event) { // If event-based subscription
+		auto sub = findSubscriber(subscr, subscribers_on_event);
 
-		/* If the client is already a subscriber just update its event filter */
-		if(sub_it != subscribers_on_event.end()){
+		// If the client is already a subscriber just update its event filter
+		if(sub != nullptr){
 			logger->Debug("Before update %s - event: %s",
 				subscr->ip_address.c_str(),
-				sub_it->get()->subscription.event.to_string().c_str());
-			sub_it->get()->subscription.event|=subscr->subscription.event;
+				sub->subscription.event.to_string().c_str());
+
+			sub->subscription.event|=subscr->subscription.event;
+
 			logger->Debug("After update %s - event: %s",
 				subscr->ip_address.c_str(),
-				sub_it->get()->subscription.event.to_string().c_str());
+				sub->subscription.event.to_string().c_str());
 		}else { 
 		/* If is new, just add it to the list */
 			subscribers_on_event.push_back(subscr);
 			any_subscriber++;
 		}
 	}
-	else { /* If rate-based subscription */
-		auto sub_it = findSubscriber(subscr, subscribers_on_rate);
-		
-		/* If the client is already a subscriber just update its filter and rate */
-		if(sub_it != subscribers_on_rate.end()){
+	else { // If rate-based subscription
+		auto sub = findSubscriber(subscr, subscribers_on_rate);
+
+		// If the client is already a subscriber just update its filter and rate
+		if(sub != nullptr){
 			logger->Debug("Before update %s - filter: %s - rate: %d",
 				subscr->ip_address.c_str(),
-				sub_it->get()->subscription.filter.to_string().c_str(),
-				sub_it->get()->subscription.rate_ms);
-			sub_it->get()->subscription.filter|=subscr->subscription.filter;
-			sub_it->get()->subscription.rate_ms = subscr->subscription.rate_ms;
+				sub->subscription.filter.to_string().c_str(),
+				sub->subscription.rate_ms);
+
+			sub->subscription.filter|=subscr->subscription.filter;
+			sub->subscription.rate_ms = subscr->subscription.rate_ms;
+
 			logger->Debug("After update %s - filter: %s - rate: %d",
 				subscr->ip_address.c_str(),
-				sub_it->get()->subscription.filter.to_string().c_str(),
-				sub_it->get()->subscription.rate_ms);
+				sub->subscription.filter.to_string().c_str(),
+				sub->subscription.rate_ms);
 		}else { 
 		/* If is new, just add it to the list */
 			subscribers_on_rate.push_back(subscr);
@@ -260,26 +263,25 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 
 	subs_lock.lock();
 
-	if(event){ /* If event-based subscription */
-		auto sub_it = findSubscriber(subscr, subscribers_on_event);
+	if(event){ // If event-based subscription
+		auto sub = findSubscriber(subscr, subscribers_on_event);
 		
-		if(sub_it != subscribers_on_event.end()){
-			sub_it->get()->subscription.event&=~(subscr->subscription.event);
-			if(sub_it->get()->subscription.event == 0){
-				subscribers_on_event.remove(*sub_it);
+		if(sub != nullptr){
+			sub->subscription.event&=~(subscr->subscription.event);
+			if(sub->subscription.event == 0){
+				subscribers_on_event.remove(sub);
 				any_subscriber--;
 		}
 		}else{
 			logger->Error("Client not found!");
 		}
+	}else{ // If rate-based subscription
+		auto sub = findSubscriber(subscr, subscribers_on_rate);	
 		
-	}else{ /* If rate-based subscription */
-		auto sub_it = findSubscriber(subscr, subscribers_on_rate);	
-		
-		if(sub_it != subscribers_on_rate.end()){
-			sub_it->get()->subscription.filter&=~(subscr->subscription.filter);
-			if(sub_it->get()->subscription.filter == 0){
-				subscribers_on_rate.remove(*sub_it);
+		if(sub != nullptr){
+			sub->subscription.filter&=~(subscr->subscription.filter);
+			if(sub->subscription.filter == 0){
+				subscribers_on_rate.remove(sub);
 				any_subscriber--;
 			}
 			subscribers_on_rate.sort();
