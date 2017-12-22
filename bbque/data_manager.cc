@@ -38,8 +38,6 @@ namespace bbque {
 using namespace bbque::stat;
 using namespace boost::asio::ip;
 using namespace boost::archive;
-//using bbque::stat::resource_status_t;
-//using bbque::stat::status_message_t;
 namespace bd = bbque::data;
 DataManager & DataManager::GetInstance() {
 	static DataManager instance;
@@ -50,7 +48,7 @@ DataManager::DataManager() : Worker() {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("Setupping the publisher...");
 	sleep_time = DEFAULT_SLEEP_TIME;
-	Setup("DataManagePublisher", MODULE_NAMESPACE".pub");
+	Setup("DataManagerPublisher", MODULE_NAMESPACE".pub");
 	logger->Info("Starting the publisher...");
 	Start();
 
@@ -397,6 +395,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 		for(auto res_stat : res_stats){
 			newStat.res_status_msgs.push_back(res_stat);
 		}
+		// Debug logging
 		for(auto res_stat : newStat.res_status_msgs){
 			logger->Debug("ResId: %d, Occupancy: %d, Load: %d, Power: %d, Temp: %d",
 				res_stat.id, 

@@ -48,9 +48,9 @@ namespace data {
 	using sub_bitset_t = std::bitset<8>;
 
 	enum status_event_t {
-		scheduling = 0,
-		application,
-		resource
+		SCHEDULING = 1,
+		APPLICATION = 2,
+		RESOURCE = 4
 	};
 
 	class Subscription {
@@ -123,9 +123,9 @@ class DataManager: public utils::Worker {
 
 public:
 	/**
-	 * @enum ExitCode_t
+	 * \enum ExitCode_t
 	 *
-	 * Class specific return codes
+	 * \brief Class specific return codes
 	 */
 	enum ExitCode_t {
 		OK = 0,           /** Successful call */
@@ -138,17 +138,17 @@ public:
 	virtual ~DataManager();
 
 	/**
-	 * @brief Return a reference to the DataManager module
+	 * \brief Return a reference to the DataManager module
 	 *
-	 * @return a reference to the DataManger module
+	 * \return a reference to the DataManger module
 	 */
 	static DataManager & GetInstance();
 
 
 	/*
-	 * @brief Notify an update event to the DataManager
+	 * \brief Notify an update event to the DataManager
 	 *
-	 * @param event: the notified event
+	 * \param event: the notified event
 	 */
 	void NotifyUpdate(status_event_t event);
 
@@ -164,22 +164,23 @@ private:
 	std::thread subscription_server;
 
 	/**
-	 * @brief Condition variable to indicate the presence of any subscriber
+	 * \brief Condition variable to indicate the presence of any subscriber
 	 */
 	uint32_t any_subscriber;
 
 	/**
-	 * @brief Time interval between different data publishing
+	 * \brief Time interval between different data publishing
 	 */
+	//std::chrono::milliseconds sleep_time;
 	uint16_t sleep_time;
 
 	/*
-	 * @brief List of all rate-based subscribers
+	 * \brief List of all rate-based subscribers
 	 */
 	SubscriberPtrList_t subscribers_on_rate;
 
 	/*
-	 * @brief List of all event-based subscribers
+	 * \brief List of all event-based subscribers
 	 */
 	SubscriberPtrList_t subscribers_on_event;
 
@@ -189,45 +190,45 @@ private:
 	std::mutex subscribers_mtx;
 
 	/**
-	 * @brief The thread ID of the subscription server thread
+	 * \brief The thread ID of the subscription server thread
 	 */
 	pid_t subscription_server_tid;
 
 	/*
-  	 * @brief Utility method to print all the current subscribers
+  	 * \brief Utility method to print all the current subscribers
   	 */
   	void PrintSubscribers();
 
   	/*
-  	 * @brief Utility method to find a subscriber into a specific list.
+  	 * \brief Utility method to find a subscriber into a specific list.
   	 * The search is performed on the ip address.
 	 *
-	 * @param subscr The subscriber to search
-	 * @param list The list in which to find the specified subscriber
+	 * \param subscr The subscriber to search
+	 * \param list The list in which to find the specified subscriber
 	 *
-	 * @return An iterator object pointing the found subscriber
+	 * \return An iterator object pointing the found subscriber
 	 *
   	 */
   	SubscriberPtr_t findSubscriber(SubscriberPtr_t & subscr,
   		SubscriberPtrList_t & list);
 
   	/*
-  	 * @brief A pointer to the list of all application updated status structs
+  	 * \brief A pointer to the list of all application updated status structs
   	 */
   	std::list<app_status_t> app_stats;
 
   	/*
-  	 * @brief A pointer to the list of all resources updated status structs
+  	 * \brief A pointer to the list of all resources updated status structs
   	 */
   	std::list<resource_status_t> res_stats;
 
   	/*
-  	 * @brief The number of current managed applications
+  	 * \brief The number of current managed applications
   	 */
   	uint32_t num_current_res;
 
   	/*
-  	 * @brief The number of current managed resources
+  	 * \brief The number of current managed resources
   	 */
   	uint32_t num_current_apps;
 
@@ -236,37 +237,37 @@ private:
 	/*******************************************************************/
 
 	/* 
-	 * @brief Socket descriptor
+	 * \brief Socket descriptor
 	*/
 	int32_t sock;      
   	
   	/* 
-	 * @brief Local address
+	 * \brief Local address
 	*/
   	sockaddr_in_t local_address;
   	
   	/* 
-	 * @brief Client address
+	 * \brief Client address
 	*/
   	sockaddr_in_t client_addr;
 
   	/* 
-	 * @brief Server port 
+	 * \brief Server port 
 	*/
   	uint32_t server_port;
   	  	
   	/* 
-	 * @brief Length of incoming message
+	 * \brief Length of incoming message
 	*/
   	uint32_t client_addr_size;
   	  	
   	/* 
-	 * @brief IP address of server
+	 * \brief IP address of server
 	*/
   	std::string ip_address = "0.0.0.0";
   	  	
   	/* 
-	 * @brief Size of received response
+	 * \brief Size of received response
 	*/
   	int32_t recv_msg_size;
 
@@ -276,44 +277,44 @@ private:
 	/*******************************************************************/
 
 	/*
-	 * @brief Publish the data to the @ref{subscribers_on_rate}
+	 * \brief Publish the data to the @ref{subscribers_on_rate}
 	 */
 	void PublishOnRate();
 
 	/*
-	 * @brief Add a subscription
+	 * \brief Add a subscription
 	 *
-	 * @param subscr: the subscriber to add
-	 * @param event: true if the subscription refers to an event, false otherwise
+	 * \param subscr: the subscriber to add
+	 * \param event: true if the subscription refers to an event, false otherwise
 	 */
 	void Subscribe(SubscriberPtr_t & subscr, bool event);
 
 	/*
-	 * @brief Remove a subscription
+	 * \brief Remove a subscription
 	 */
 	void Unsubscribe(SubscriberPtr_t & subscr, bool event);
 
 	/*
-	 * @brief Publish the data to the @ref{subscribers_on_event}
+	 * \brief Publish the data to the @ref{subscribers_on_event}
 	 *
-	 * @param event The event triggering the publication
+	 * \param event The event triggering the publication
 	 */
 	void PublishOnEvent(data::sub_bitset_t event);
 
 	/**
-	 * @brief Push the update to the specified subscriber based on its information filter
+	 * \brief Push the update to the specified subscriber based on its information filter
 	 *
-	 * @param sub The target subscriber
+	 * \param sub The target subscriber
 	 */
 	ExitCode_t Push(SubscriberPtr_t sub);
 
 	/**
-	 * @brief Update the content of resource and application data information
+	 * \brief Update the content of resource and application data information
 	 */
 	void UpdateData();
 
 	/*
-	 * @brief Server to handle the subscription/unsubscription requests
+	 * \brief Server to handle the subscription/unsubscription requests
 	 */	
 	void SubscriptionHandler();
 
