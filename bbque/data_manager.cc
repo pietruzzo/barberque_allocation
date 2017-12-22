@@ -36,6 +36,8 @@
 namespace bbque {
 
 using namespace bbque::stat;
+using namespace boost::asio::ip;
+using namespace boost::archive;
 //using bbque::stat::resource_status_t;
 //using bbque::stat::status_message_t;
 namespace bd = bbque::data;
@@ -402,16 +404,16 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 		// TODO
 	}
 
-	/* Create a TCP socket */
-	boost::asio::ip::tcp::iostream client_sock(sub->ip_address, std::to_string(sub->port_num));
+	// Create a TCP socket
+	tcp::iostream client_sock(sub->ip_address, std::to_string(sub->port_num));
 	
 	if(!client_sock){
 		logger->Fatal("Cannot connect to %s:%d",sub->ip_address.c_str(),sub->port_num);
 		return ExitCode_t::ERR_CLIENT_COMM;
 	}
 
-	/* Saving data to archive */
-	boost::archive::text_oarchive archive(client_sock);
+	// Saving data to archive
+	text_oarchive archive(client_sock);
 
 	/* Sending data to the client */
 	try{ 
