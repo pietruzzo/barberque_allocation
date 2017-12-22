@@ -422,7 +422,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 		for(auto app_stat : newStat.app_status_msgs){
 			logger->Debug("AppId: %d, AppName: %s, NunTasks: %d, Mapping: %d",
 				app_stat.id, 
-				app_stat.name, 
+				app_stat.name.c_str(), 
 				app_stat.n_task, 
 				app_stat.mapping);
 			for(auto task_stat : app_stat.tasks){
