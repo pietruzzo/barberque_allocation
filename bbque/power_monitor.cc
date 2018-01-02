@@ -295,6 +295,9 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 
 void PowerMonitor::Start(uint32_t period_ms) {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
+	logger->Debug("Start: <%d> registered resources to monitor",
+		wm_info.resources.size());
+
 	if ((period_ms != 0) && (period_ms != wm_info.period_ms))
 		wm_info.period_ms = period_ms;
 
