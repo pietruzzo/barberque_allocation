@@ -286,7 +286,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 }
 
 PowerMonitor::ExitCode_t PowerMonitor::Register(
-		const char * rp_str,
+		const std::string & rp_str,
 		PowerManager::SamplesArray_t const & samples_window) {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	return Register(ra.GetPath(rp_str), samples_window);

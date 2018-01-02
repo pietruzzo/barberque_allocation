@@ -97,7 +97,7 @@ public:
 	);
 
 	ExitCode_t Register(
-			const char * rp_str,
+			const std::string & rp_str,
 			PowerManager::SamplesArray_t const & samples_window =
 				{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
 	);
