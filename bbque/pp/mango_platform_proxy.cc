@@ -1,5 +1,6 @@
 #include "bbque/pp/mango_platform_proxy.h"
 #include "bbque/config.h"
+#include "bbque/power_monitor.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/assert.h"
 #include "bbque/pp/mango_platform_description.h"
@@ -243,7 +244,9 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 	pd_t &pd = pli->getPlatformInfo();
 	pd_t::System &sys = pd.GetLocalSystem();
 
-
+#ifdef CONFIG_BBQUE_WM
+	PowerMonitor & wm(PowerMonitor::GetInstance());
+#endif
 
 	for (uint_fast32_t i=0; i < num_tiles; i++) {
 
@@ -270,6 +273,16 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 
 			ra.RegisterResource(pe.GetPath(), "", 100);
 		}
+
+#ifdef CONFIG_BBQUE_WM
+		// Register only one processing element per tile (representing a reference
+		// to the entire tile), since we do not  expect to have per-core status
+		// information
+		std::string acc_pe_path(mt.GetPath() + ".pe0");
+		wm.Register(acc_pe_path);
+		logger->Debug("InitPowerInfo: [%s] registered for monitoring",
+			acc_pe_path.c_str());
+#endif
 
 		// Let now register the memories. Unfortunately, memories are not easy to be
 		// retrieved, we have to iterate over all tiles and search memories
