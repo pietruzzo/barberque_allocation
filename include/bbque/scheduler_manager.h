@@ -31,6 +31,8 @@
 #include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/scheduler_policy.h"
 
+#include "bbque/data_manager.h"
+
 namespace bu = bbque::utils;
 
 using bbque::plugins::SchedulerPolicyIF;
@@ -126,6 +128,10 @@ private:
 
 	ApplicationManager & am;
 	MetricsCollector & mc;
+	
+#ifdef CONFIG_BBQUE_DM
+	DataManager & dm;
+#endif
 
 	/**
 	 * @brief The number of synchronization cycles

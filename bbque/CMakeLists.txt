@@ -122,7 +122,11 @@ set (BARBEQUE_SRC resource_partition_validator ${BARBEQUE_SRC})
 set (BARBEQUE_SRC platform_manager ${BARBEQUE_SRC})
 set (BARBEQUE_SRC platform_proxy ${BARBEQUE_SRC})
 set (BARBEQUE_SRC pp/local_platform_proxy ${BARBEQUE_SRC})
-set (BARBEQUE_SRC data_manager ${BARBEQUE_SRC})
+
+if (CONFIG_BBQUE_DM)
+	set (BARBEQUE_SRC data_manager ${BARBEQUE_SRC})
+endif(CONFIG_BBQUE_DM)
+
 if (CONFIG_BBQUE_DIST_MODE)
 	set (BARBEQUE_SRC pp/remote_platform_proxy ${BARBEQUE_SRC})
 endif (CONFIG_BBQUE_DIST_MODE)

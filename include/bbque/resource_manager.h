@@ -34,6 +34,8 @@
 
 #include "bbque/command_manager.h"
 
+#include "bbque/data_manager.h"
+
 #ifdef CONFIG_BBQUE_EM
 #include "bbque/em/event.h"
 #include "bbque/em/event_manager.h"
@@ -193,6 +195,9 @@ private:
 
 	SynchronizationManager & ym;
 
+#ifdef CONFIG_BBQUE_DM
+	DataManager & dm;
+#endif
 
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
 	ProfileManager & om;

@@ -91,6 +91,9 @@ SchedulerManager & SchedulerManager::GetInstance() {
 SchedulerManager::SchedulerManager() :
 	am(ApplicationManager::GetInstance()),
 	mc(bu::MetricsCollector::GetInstance()),
+#ifdef CONFIG_BBQUE_DM
+	dm(DataManager::GetInstance()),
+#endif
 	sched_count(0) {
 	std::string opt_namespace((SCHEDULER_POLICY_NAMESPACE"."));
 	std::string opt_policy;
@@ -202,6 +205,10 @@ SchedulerManager::Schedule() {
 	SM_RESET_TIMING(sm_tmr);                // Reset timer for policy execution time profiling
 	SM_COUNT_EVENT(metrics, SM_SCHED_COMP); // Account for scheduling completed
 	CollectStats();                         // Collect statistics on scheduling execution
+
+#ifdef CONFIG_BBQUE_DM
+	dm.NotifyUpdate(data::SCHEDULING);
+#endif
 
 	logger->Notice("Scheduling [%d] DONE", sched_count);
 

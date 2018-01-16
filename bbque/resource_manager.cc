@@ -137,6 +137,9 @@ ResourceManager::ResourceManager() :
 	ra(ResourceAccounter::GetInstance()),
 	bdm(BindingManager::GetInstance()),
 	mc(MetricsCollector::GetInstance()),
+#ifdef CONFIG_BBQUE_DM
+	dm(DataManager::GetInstance()),
+#endif
 	plm(PlatformManager::GetInstance()),
 	cm(CommandManager::GetInstance()),
 	sm(SchedulerManager::GetInstance()),
