@@ -301,5 +301,20 @@ config BBQUE_EM
 
   If unsure say no, this will disable all the EM related features.
 
+config BBQUE_DM
+  bool "Data Manager"
+  default n
+  ---help---
+  Build the BarbequeRTRM with support for Data Management (DM).
+
+  The Data Manager is a component to provide a publish/subscribe support
+  for client applications that need to retrieve information about the status
+  of the system, application and allocation.
+
+  If your system does not need to provide information to third party clients
+  leave it disable to avoid dangerous information leakage.
+
+  NOTE: this is an experimental and not completed feature, leave un-selected if
+  unsure.
 
 endmenu # Advanced options
