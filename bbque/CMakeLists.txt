@@ -125,7 +125,7 @@ set (BARBEQUE_SRC pp/local_platform_proxy ${BARBEQUE_SRC})
 
 if (CONFIG_BBQUE_DM)
 	set (BARBEQUE_SRC data_manager ${BARBEQUE_SRC})
-endif(CONFIG_BBQUE_DM)
+endif (CONFIG_BBQUE_DM)
 
 if (CONFIG_BBQUE_DIST_MODE)
 	set (BARBEQUE_SRC pp/remote_platform_proxy ${BARBEQUE_SRC})
