@@ -225,7 +225,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 		}else { 
 		// If is new, just add it to the list
 			subscribers_on_event.push_back(subscr);
-			any_subscriber++;
+			//any_subscriber++;
 		}
 	}
 	else { // If rate-based subscription
@@ -277,7 +277,7 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 			sub->subscription.event&=~(subscr->subscription.event);
 			if(sub->subscription.event == 0){
 				subscribers_on_event.remove(sub);
-				any_subscriber--;
+				//any_subscriber--;
 		}
 		}else{
 			logger->Error("Client not found!");
@@ -316,10 +316,7 @@ void DataManager::Task() {
 	while(1){
 
 		while(!any_subscriber){};
-
-			// Update resources and applications data
-			UpdateData();
-
+			
 			PublishOnRate();
 			
 			logger->Debug("Going to sleep for %d...",sleep_time);
@@ -363,6 +360,9 @@ void DataManager::PublishOnRate(){
 	ExitCode_t result;
 
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
+
+	// Update resources and applications data
+	UpdateData();
 
 	subs_lock.lock();
 
