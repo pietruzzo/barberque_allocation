@@ -322,6 +322,35 @@ void DataManager::Task() {
 	}
 }
 
+void DataManager::PublishOnEvent(bd::sub_bitset_t event){
+	ExitCode_t result;
+
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
+
+	// Update resources and applications data
+	UpdateData();
+
+	subs_lock.lock();
+
+	for(auto s: subscribers_on_event){
+		// If event matched
+		if((s->subscription.event & event) == event){
+
+			result = Push(s);
+
+			if(result != OK){
+				logger->Error("Error in publish status to %s:%d", 
+					s->ip_address.c_str(),s->port_num);
+			}else{
+				logger->Notice("Publish status to %s:%d", 
+					s->ip_address.c_str(),s->port_num);
+			}
+		}
+	}
+
+	subs_lock.unlock();
+}
+
 void DataManager::PublishOnRate(){
 	uint16_t tmp_sleep_time, max_sleep_time = 0;// = sleep_time;
 	ExitCode_t result;
