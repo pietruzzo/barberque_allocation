@@ -97,7 +97,7 @@ namespace data {
 		bool operator== (const Subscriber &other) const{
 			if(this == &other)
 				return true;
-			if(ip_address == other.ip_address)
+			if(ip_address == other.ip_address && port_num == other.port_num)
 				return true;
 			return false;
 		} 
