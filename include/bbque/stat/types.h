@@ -70,6 +70,7 @@ struct resource_status_t { // 15 Byte
 		ar & load;
 		ar & power;
 		ar & temp;
+		ar & fans;
 	}
 	/* Struct fields */
 	res_bitset_t id;
@@ -77,6 +78,7 @@ struct resource_status_t { // 15 Byte
 	uint8_t load;
 	uint32_t power;
 	uint8_t temp;
+	uint32_t fans;
 };
 
 struct __attribute__((packed)) subscription_message_t { // 9 Byte
