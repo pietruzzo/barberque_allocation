@@ -77,7 +77,7 @@ struct resource_status_t { // 15 Byte
 	uint8_t occupancy;
 	uint8_t load;
 	uint32_t power;
-	uint8_t temp;
+	uint32_t temp;
 	uint32_t fans;
 };
 
