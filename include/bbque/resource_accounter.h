@@ -200,6 +200,10 @@ public:
 
 	bool ExistResource(br::ResourcePathPtr_t resource_path_ptr) const;
 
+	inline std::set<br::ResourcePtr_t> GetResourceSet(){
+		return resource_set;
+	}
+
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
