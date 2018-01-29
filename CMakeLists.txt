@@ -302,6 +302,10 @@ add_subdirectory(libpms) # Programming model support for task-graph based applic
 add_subdirectory(libtg)  # Support for task-graph representations
 endif (CONFIG_BBQUE_TG_PROG_MODEL)
 
+if (CONFIG_BBQUE_DM)
+add_subdirectory(libdci) # Support for Data Communication Interface
+endif (CONFIG_BBQUE_DM)
+
 ################################################################################
 # Doxygen Documentation
 ################################################################################
