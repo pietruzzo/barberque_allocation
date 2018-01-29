@@ -20,6 +20,11 @@
 
 #define MAX_APP_NAME_LEN 16
 
+#include <cstdint>
+#include <string>
+#include <list>
+#include <bitset>
+
 namespace bbque { namespace stat {
 
 #define STAT_BITSET_RESOURCE 1 // 00000001
