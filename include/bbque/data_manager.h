@@ -50,11 +50,11 @@ namespace data {
 	/**
 	 * @brief Status event description
 	 */
-	enum status_event_t {
+	/*enum status_event_t {
 		SCHEDULING = 1,
 		APPLICATION = 2,
 		RESOURCE = 4
-	};
+	};*/
 
 	class Subscription {
 	public:

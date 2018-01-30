@@ -207,7 +207,7 @@ SchedulerManager::Schedule() {
 	CollectStats();                         // Collect statistics on scheduling execution
 
 #ifdef CONFIG_BBQUE_DM
-	dm.NotifyUpdate(data::SCHEDULING);
+	dm.NotifyUpdate(stat::EVT_SCHEDULING);
 #endif
 
 	logger->Notice("Scheduling [%d] DONE", sched_count);

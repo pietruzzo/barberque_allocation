@@ -34,6 +34,13 @@ namespace bbque { namespace stat {
 using res_bitset_t = uint64_t;
 using sub_bitset_t = uint8_t;
 
+/* Status event description */
+enum status_event_t {
+	EVT_SCHEDULING = 1,     // 00000001
+	EVT_APPLICATION = 2,    // 00000010
+	EVT_RESOURCE = 4        // 00000100
+};
+
 struct task_t { // 13 Byte
 	/* Serialization stuff */
 	template<class Archive>

@@ -77,7 +77,7 @@ DataManager::~DataManager() {
 	Terminate();
 }
 
-void DataManager::NotifyUpdate(bd::status_event_t event){
+void DataManager::NotifyUpdate(status_event_t event){
 
 	logger->Notice("Update notified: %d",event);
 
