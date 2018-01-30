@@ -121,41 +121,41 @@ DataClient::ExitCode_t DataClient::Subscribe(
 	printf("Subscription: \n");
 	printf("\t - Reply port: %d\n",newSub.port_num);
 	printf("\t - Filter: %d\n",newSub.filter);
-		printf("\t - Event: %d\n",newSub.event);
-		printf("\t - Rate: %d\n",newSub.rate_ms);
-		printf("\t - Mode: %d\n",newSub.mode);
+	printf("\t - Event: %d\n",newSub.event);
+	printf("\t - Rate: %d\n",newSub.rate_ms);
+	printf("\t - Mode: %d\n",newSub.mode);
 
-		printf("Size struct: %ld\n", sizeof(newSub));
+	printf("Size struct: %ld\n", sizeof(newSub));
 
-		/* Create a datagram/UDP socket */
-		if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
-			return DataClient::ExitCode_t::ERR_SERVER_COMM;
-		}
-
-		/* Construct the server address structure */
-		memset(&serverAddr, 0, sizeof(serverAddr));                /* Zero out structure */
-		serverAddr.sin_family = AF_INET;                           /* Internet addr family */
-		serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());  /* Server IP address */
-		serverAddr.sin_port   = htons(serverPort);                 /* Server port */
-
-		int tempint = 0;
-
-		/* Send the subscription message to the server */
-		tempint = sendto(sock, (subscription_message_t*)&newSub, 
-			(1024+sizeof(newSub)), 0, 
-			(struct sockaddr *) &serverAddr, sizeof(serverAddr)); 
-
-		if (tempint == -1 ) {
-			printf("Sent struct size: %d\n", tempint);
-			return DataClient::ExitCode_t::ERR_UNKNOWN;
-		}else{
-			printf("Sending complete!\n");
+	/* Create a datagram/UDP socket */
+	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
+		return DataClient::ExitCode_t::ERR_SERVER_COMM;
 	}
 
-		/* Closing subscription socket */
-		close(sock);
+	/* Construct the server address structure */
+	memset(&serverAddr, 0, sizeof(serverAddr));                /* Zero out structure */
+	serverAddr.sin_family = AF_INET;                           /* Internet addr family */
+	serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());  /* Server IP address */
+	serverAddr.sin_port   = htons(serverPort);                 /* Server port */
 
-		return DataClient::ExitCode_t::OK;
+	int tempint = 0;
+
+	/* Send the subscription message to the server */
+	tempint = sendto(sock, (subscription_message_t*)&newSub, 
+		(1024+sizeof(newSub)), 0, 
+		(struct sockaddr *) &serverAddr, sizeof(serverAddr)); 
+
+	if (tempint == -1 ) {
+		printf("Sent struct size: %d\n", tempint);
+		return DataClient::ExitCode_t::ERR_UNKNOWN;
+	}else{
+		printf("Sending complete!\n");
+	}
+
+	/* Closing subscription socket */
+	close(sock);
+
+	return DataClient::ExitCode_t::OK;
 }
 
 } // namespace bbque
