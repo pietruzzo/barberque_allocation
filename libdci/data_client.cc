@@ -133,16 +133,17 @@ DataClient::ExitCode_t DataClient::Subscribe(
     }
 
   	/* Construct the server address structure */
-  	memset(&serverAddr, 0, sizeof(serverAddr));       /* Zero out structure */
-  	serverAddr.sin_family = AF_INET;                  /* Internet addr family */
-  	serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());   /* Server IP address */
-  	serverAddr.sin_port   = htons(serverPort);        /* Server port */
+  	memset(&serverAddr, 0, sizeof(serverAddr));                /* Zero out structure */
+  	serverAddr.sin_family = AF_INET;                           /* Internet addr family */
+  	serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());  /* Server IP address */
+  	serverAddr.sin_port   = htons(serverPort);                 /* Server port */
 
   	int tempint = 0;
 
   	/* Send the subscription message to the server */
-  	tempint = sendto(sock, (subscription_message_t*)&newSub, (1024+sizeof(newSub)), 0, (struct sockaddr *)
-    	&serverAddr, sizeof(serverAddr)); 
+  	tempint = sendto(sock, (subscription_message_t*)&newSub, 
+      (1024+sizeof(newSub)), 0, 
+      (struct sockaddr *) &serverAddr, sizeof(serverAddr)); 
 
   	if (tempint == -1 ) {
     	printf("Sent struct size: %d\n", tempint);
