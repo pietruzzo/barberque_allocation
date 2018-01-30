@@ -263,6 +263,28 @@ private:
   	 */
   	uint32_t num_current_apps;
 
+  	/**
+	 * @brief Mutex to protect concurrent access to the event map.
+	 */
+	std::mutex events_mtx;
+
+  	/*
+  	 * @brief This map allow to track if a specific event has occurred
+  	 */
+  	std::map<status_event_t,bool> event_map;
+
+  	/*
+  	 * @brief Event queue counter
+  	 */
+  	uint8_t any_event;
+
+  	std::thread event_handler;
+
+  	/**
+	 * @brief The thread ID of the event handler thread
+	 */
+	pid_t event_handler_tid;
+
 	/*******************************************************************/
 	/*                      Communication fields                       */
 	/*******************************************************************/
@@ -348,6 +370,11 @@ private:
 	 * @brief Server to handle the subscription/unsubscription requests
 	 */	
 	void SubscriptionHandler();
+
+	/*
+	 * @brief Handles the event queue for updates publication
+	 */
+	void EventHandler();
 
 
 	void Task();

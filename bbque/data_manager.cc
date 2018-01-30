@@ -59,6 +59,13 @@ DataManager::DataManager() : Worker() {
 	subscription_server = std::thread(&DataManager::SubscriptionHandler, this);
 
 	subscription_server.detach();
+
+	// Setting the event handler thread
+	any_event = 0;
+	logger->Debug("Spawing thread for the event handler...");
+	event_handler = std::thread(&DataManager::EventHandler, this);
+
+	event_handler.detach();
 }
 
 DataManager::~DataManager() {
@@ -66,23 +73,26 @@ DataManager::~DataManager() {
 	assert(subscription_server_tid != 0);
 	::kill(subscription_server_tid, SIGUSR1);
 
+	// Send signal to event handler
+	assert(event_handler_tid != 0);
+	::kill(event_handler_tid, SIGUSR1);
+
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
+	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
 
 	subs_lock.lock();
 	any_subscriber = 0;
 	subscribers_on_rate.clear();
 	subscribers_on_event.clear();
 	subs_lock.unlock();
+
+	events_lock.lock();
+	any_event = 0;
+	event_map.clear();
+	events_lock.unlock();
 	
 	logger->Info("Terminating the publisher...");
 	Terminate();
-}
-
-void DataManager::NotifyUpdate(status_event_t event){
-
-	logger->Notice("Update notified: %d",event);
-
-	PublishOnEvent(event);
 }
 
 void DataManager::PrintSubscribers(){
@@ -324,6 +334,45 @@ void DataManager::Task() {
 			
 			// Sleep
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+	}
+}
+
+void DataManager::NotifyUpdate(status_event_t event){
+
+	logger->Notice("Update notified: %d",event);
+
+	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
+
+	events_lock.lock();
+
+	if(!event_map[event]){
+		event_map[event] = true;
+		any_event++;
+	}
+
+	events_lock.unlock();
+}
+
+void DataManager::EventHandler(){
+	// Getting the id of the subscription server thread
+	event_handler_tid = gettid();
+
+	logger->Info("Starting the event handler... tid = %d", event_handler_tid);
+
+	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
+
+	while(1){
+		while(any_event>0){
+			for(auto event_pair : event_map){
+				events_lock.lock();
+				if(event_pair.second){
+					PublishOnEvent(event_pair.first);
+					event_pair.second = false;
+					any_event--;
+				}
+				events_lock.unlock();
+			}
+		}
 	}
 }
 
