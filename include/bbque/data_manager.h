@@ -41,6 +41,8 @@
 
 namespace bu = bbque::utils;
 
+using namespace bbque::stat;
+
 namespace bbque { 
 
 namespace data {

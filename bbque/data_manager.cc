@@ -423,8 +423,9 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	// Checking the subscriber filter
 
 	// If it has resource subscription
-	if((sub->subscription.filter & bd::sub_bitset_t(STAT_BITSET_RESOURCE)) == 
-		bd::sub_bitset_t(STAT_BITSET_RESOURCE)){
+	if((sub->subscription.filter & bd::sub_bitset_t(FILTER_RESOURCE)) == 
+		bd::sub_bitset_t(FILTER_RESOURCE)){
+		
 		logger->Debug("Adding resources info to the subscriber %s's message...", 
 			sub->ip_address.c_str());
 		newStat.n_res_status_msgs = num_current_res;
@@ -443,8 +444,9 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	}
 
 	// If it has application subscription
-	if((sub->subscription.filter & bd::sub_bitset_t(STAT_BITSET_APPLICATION)) == 
-		bd::sub_bitset_t(STAT_BITSET_APPLICATION)){
+	if((sub->subscription.filter & bd::sub_bitset_t(FILTER_APPLICATION)) == 
+		bd::sub_bitset_t(FILTER_APPLICATION)){
+		
 		logger->Debug("Adding applications info to the subscriber %s's message...", 
 			sub->ip_address.c_str());
 

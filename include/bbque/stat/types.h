@@ -27,12 +27,15 @@
 
 namespace bbque { namespace stat {
 
-#define STAT_BITSET_RESOURCE 1 // 00000001
-#define STAT_BITSET_APPLICATION 2 // 00000010
-#define STAT_BITSET_SCHEDULE  4 // 00000100
-
 using res_bitset_t = uint64_t;
 using sub_bitset_t = uint8_t;
+
+/* Status filter description */
+enum status_filter_t {
+	FILTER_RESOURCE = 1,    // 00000001
+	FILTER_APPLICATION = 2, // 00000010
+	FILTER_SCHEDULE = 4     // 00000100
+};
 
 /* Status event description */
 enum status_event_t {
