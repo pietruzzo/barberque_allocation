@@ -496,6 +496,31 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	return OK;
 }
 
+res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_path){
+	res_bitset_t res_bitset = 0;
+	for(auto resource_identifier : resource_path->GetIdentifiers()){
+	
+		switch(resource_identifier->Type()){
+			case res::ResourceType::SYSTEM:
+				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_SYS;
+				break;
+			case res::ResourceType::CPU: 
+			case res::ResourceType::GPU:
+			case res::ResourceType::ACCELERATOR:
+				res_bitset |= 
+					static_cast<uint64_t>(resource_identifier->Type()) << BITSET_OFFSET_UNIT_TYPE;
+				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_UNIT_ID;
+				break;
+			case res::ResourceType::PROC_ELEMENT:
+				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_PE;
+				break;
+			default:
+				break;
+		}
+	}
+	return res_bitset;
+}
+
 void DataManager::UpdateData(){
 	logger->Notice("Updating applications and resources data...");
 

@@ -224,6 +224,13 @@ private:
   	void PrintSubscribers();
 
   	/*
+  	 * @brief Utility method to build the resource bitset given a resource_path
+  	 *
+  	 * @param resource_path The resource path to convert
+  	 */
+  	res_bitset_t BuildResourceBitset(br::ResourcePathPtr_t resource_path);
+
+  	/*
   	 * @brief Utility method to find a subscriber into a specific list.
   	 * The search is performed on the ip address.
 	 *
