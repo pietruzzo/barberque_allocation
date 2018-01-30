@@ -356,7 +356,7 @@ void DataManager::PublishOnEvent(bd::sub_bitset_t event){
 }
 
 void DataManager::PublishOnRate(){
-	uint16_t tmp_sleep_time, max_sleep_time = 0;// = sleep_time;
+	uint16_t tmp_sleep_time;// = sleep_time;
 	ExitCode_t result;
 
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
@@ -366,7 +366,7 @@ void DataManager::PublishOnRate(){
 
 	subs_lock.lock();
 
-	tmp_sleep_time = subscribers_on_rate.front()->rate_deadline_ms;
+	tmp_sleep_time = subscribers_on_rate.back()->subscription.rate_ms;
 
 	for(auto s : subscribers_on_rate){
 		// Updating the deadline after the sleep
