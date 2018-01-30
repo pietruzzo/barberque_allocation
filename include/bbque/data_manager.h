@@ -180,32 +180,33 @@ private:
 	uint16_t sleep_time;
 
 	/*
-	 * \brief List of all rate-based subscribers
+	 * @brief List of all rate-based subscribers
 	 */
 	SubscriberPtrList_t subscribers_on_rate;
 
 	/*
-	 * \brief List of all event-based subscribers
+	 * @brief List of all event-based subscribers
 	 */
 	SubscriberPtrList_t subscribers_on_event;
+	//SubscriperPtrEvtMap_t subscribers_on_event;
 
 	/**
-	 * Mutex to protect concurrent access to the subscribers lists.
+	 * @brief Mutex to protect concurrent access to the subscribers lists.
 	 */
 	std::mutex subscribers_mtx;
 
 	/**
-	 * \brief The thread ID of the subscription server thread
+	 * @brief The thread ID of the subscription server thread
 	 */
 	pid_t subscription_server_tid;
 
 	/**
-	 * \brief Utility template function to drop bits outside the range [R, L) == [R, L - 1]
-	 * \brief R The rightmost bits of range
-	 * \brief L The leftmost bits of range
-	 * \brief N The size of the bitset
-	 * \param b The original bitset
-	 * \return A new bitset between the requested range
+	 * @brief Utility template function to drop bits outside the range [R, L) == [R, L - 1]
+	 * @brief R The rightmost bits of range
+	 * @brief L The leftmost bits of range
+	 * @brief N The size of the bitset
+	 * @param b The original bitset
+	 * @return A new bitset between the requested range
 	 */
 	template<std::size_t R, std::size_t L, std::size_t N>
 	std::bitset<N> BitsetRange(std::bitset<N> b)
