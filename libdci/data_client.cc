@@ -42,7 +42,7 @@ DataClient::ExitCode_t DataClient::Disconnect(){
   return DataClient::ExitCode_t::OK;
 }
 
-std::function<void()> DataClient::ClientReceiver(){
+void DataClient::ClientReceiver(){
 
   printf("Starting the client receiver...\n");
   status_message_t temp_stat;

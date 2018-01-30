@@ -115,7 +115,7 @@ public:
 
 private:
 
-	std::function<void()> ClientReceiver();
+	void ClientReceiver();
 
 	std::function<void(status_message_t)> client_callback;
 
