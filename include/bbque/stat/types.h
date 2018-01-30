@@ -20,8 +20,6 @@
 
 #define MAX_APP_NAME_LEN 16
 
-#include "bbque/utils/utility.h"
-
 #include <cstdint>
 #include <string>
 #include <list>
@@ -55,7 +53,7 @@ struct task_t { // 13 Byte
 	/* Serialization stuff */
 	template<class Archive>
 	void serialize(Archive &ar, const unsigned int version){
-		UNUSED(version);
+		(void) version;
 		ar & id;
 		ar & perf;
 		ar & mapping;
@@ -70,7 +68,7 @@ struct app_status_t { // 32 Byte min
 	/* Serialization stuff */
 	template<class Archive>
 	void serialize(Archive &ar, const unsigned int version){
-		UNUSED(version);
+		(void) version;
 		ar & id;
 		ar & name;
 		ar & n_task;
@@ -89,7 +87,7 @@ struct resource_status_t { // 15 Byte
 	/* Serialization stuff */
 	template<class Archive>
 	void serialize(Archive &ar, const unsigned int version){
-		UNUSED(version);
+		(void) version;
 		ar & id;
 		ar & occupancy;
 		ar & load;
@@ -118,7 +116,7 @@ struct status_message_t { // 59 Byte min
 	/* Serialization stuff */
 	template<class Archive>
 	void serialize(Archive &ar, const unsigned int version){
-		UNUSED(version);
+		(void) version;
 		ar & n_app_status_msgs;
 		ar & app_status_msgs;
 		ar & n_res_status_msgs;
