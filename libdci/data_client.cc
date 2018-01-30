@@ -31,76 +31,76 @@ DataClient::DataClient(std::string serverIP, int serverPort, int clientPort){
 
 DataClient::ExitCode_t DataClient::Connect(){
 	
-  receiver_started = true;
+	receiver_started = true;
 	client_thread = std::thread(&DataClient::ClientReceiver, this);
 
 	return DataClient::ExitCode_t::OK;
 }
 
 DataClient::ExitCode_t DataClient::Disconnect(){
-  
-  receiver_started = false;
-  client_thread.join();
+	
+	receiver_started = false;
+	client_thread.join();
 
-  return DataClient::ExitCode_t::OK;
+	return DataClient::ExitCode_t::OK;
 }
 
 void DataClient::ClientReceiver(){
 
-  printf("Starting the client receiver...\n");
-  status_message_t temp_stat;
+	printf("Starting the client receiver...\n");
+	status_message_t temp_stat;
 
-  io_service ios;
-  ip::tcp::endpoint endpoint = 
-    ip::tcp::endpoint(ip::tcp::v4(), clientPort);
+	io_service ios;
+	ip::tcp::endpoint endpoint = 
+		ip::tcp::endpoint(ip::tcp::v4(), clientPort);
 
-  /* Listening cycle */
-  while(receiver_started) {
+	/* Listening cycle */
+	while(receiver_started) {
 
-    boost::asio::ip::tcp::acceptor acceptor(ios);
-    boost::asio::ip::tcp::iostream stream;
+		boost::asio::ip::tcp::acceptor acceptor(ios);
+		boost::asio::ip::tcp::iostream stream;
 
-    /* TCP Socket setup */
-    printf("Socket setup...\n");
+		/* TCP Socket setup */
+		printf("Socket setup...\n");
 
-    try{
-    acceptor.open(endpoint.protocol());
-    acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
-    acceptor.bind(endpoint);
-    }catch(boost::exception const& ex){
-      perror("Exception during socket setup: %s");
-      break;
-    }
+		try{
+		acceptor.open(endpoint.protocol());
+		acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
+		acceptor.bind(endpoint);
+		}catch(boost::exception const& ex){
+			perror("Exception during socket setup: %s");
+			break;
+		}
 
-    /* Incoming connection management */
-    printf("Receiving TCP packets...\n");
-    try{
-    acceptor.listen();
-    acceptor.accept(*stream.rdbuf()); 
-    }catch(boost::exception const& ex){
-      perror("Exception waiting incoming replies: %s");
-      break;
-    }
+		/* Incoming connection management */
+		printf("Receiving TCP packets...\n");
+		try{
+		acceptor.listen();
+		acceptor.accept(*stream.rdbuf()); 
+		}catch(boost::exception const& ex){
+			perror("Exception waiting incoming replies: %s");
+			break;
+		}
 
-    /* Receiving update */
-    try{
-      boost::archive::text_iarchive archive(stream);
-      archive >> temp_stat;
-    }catch(boost::exception const& ex){
-      perror("Archive exception: %s");
-      break;
-    }
+		/* Receiving update */
+		try{
+			boost::archive::text_iarchive archive(stream);
+			archive >> temp_stat;
+		}catch(boost::exception const& ex){
+			perror("Archive exception: %s");
+			break;
+		}
 
-    /* Send update to the client calling its callback function */
-    client_callback(temp_stat);
+		/* Send update to the client calling its callback function */
+		client_callback(temp_stat);
 
-    try{
-      acceptor.close();
-    }catch(boost::exception const& ex){
-      perror("Exception closing the socket: %s");
-      break;
-    }
-  }
+		try{
+			acceptor.close();
+		}catch(boost::exception const& ex){
+			perror("Exception closing the socket: %s");
+			break;
+		}
+	}
 }
 
 DataClient::ExitCode_t DataClient::Subscribe(
@@ -119,43 +119,43 @@ DataClient::ExitCode_t DataClient::Subscribe(
 	struct sockaddr_in serverAddr;
 
 	printf("Subscription: \n");
- 	printf("\t - Reply port: %d\n",newSub.port_num);
- 	printf("\t - Filter: %d\n",newSub.filter);
-  	printf("\t - Event: %d\n",newSub.event);
-  	printf("\t - Rate: %d\n",newSub.rate_ms);
-  	printf("\t - Mode: %d\n",newSub.mode);
+	printf("\t - Reply port: %d\n",newSub.port_num);
+	printf("\t - Filter: %d\n",newSub.filter);
+		printf("\t - Event: %d\n",newSub.event);
+		printf("\t - Rate: %d\n",newSub.rate_ms);
+		printf("\t - Mode: %d\n",newSub.mode);
 
-  	printf("Size struct: %ld\n", sizeof(newSub));
+		printf("Size struct: %ld\n", sizeof(newSub));
 
-  	/* Create a datagram/UDP socket */
-  	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
-    	return DataClient::ExitCode_t::ERR_SERVER_COMM;
-    }
+		/* Create a datagram/UDP socket */
+		if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
+			return DataClient::ExitCode_t::ERR_SERVER_COMM;
+		}
 
-  	/* Construct the server address structure */
-  	memset(&serverAddr, 0, sizeof(serverAddr));                /* Zero out structure */
-  	serverAddr.sin_family = AF_INET;                           /* Internet addr family */
-  	serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());  /* Server IP address */
-  	serverAddr.sin_port   = htons(serverPort);                 /* Server port */
+		/* Construct the server address structure */
+		memset(&serverAddr, 0, sizeof(serverAddr));                /* Zero out structure */
+		serverAddr.sin_family = AF_INET;                           /* Internet addr family */
+		serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());  /* Server IP address */
+		serverAddr.sin_port   = htons(serverPort);                 /* Server port */
 
-  	int tempint = 0;
+		int tempint = 0;
 
-  	/* Send the subscription message to the server */
-  	tempint = sendto(sock, (subscription_message_t*)&newSub, 
-      (1024+sizeof(newSub)), 0, 
-      (struct sockaddr *) &serverAddr, sizeof(serverAddr)); 
+		/* Send the subscription message to the server */
+		tempint = sendto(sock, (subscription_message_t*)&newSub, 
+			(1024+sizeof(newSub)), 0, 
+			(struct sockaddr *) &serverAddr, sizeof(serverAddr)); 
 
-  	if (tempint == -1 ) {
-    	printf("Sent struct size: %d\n", tempint);
-      return DataClient::ExitCode_t::ERR_UNKNOWN;
-  	}else{
-    	printf("Sending complete!\n");
+		if (tempint == -1 ) {
+			printf("Sent struct size: %d\n", tempint);
+			return DataClient::ExitCode_t::ERR_UNKNOWN;
+		}else{
+			printf("Sending complete!\n");
 	}
 
-  	/* Closing subscription socket */
-  	close(sock);
+		/* Closing subscription socket */
+		close(sock);
 
-  	return DataClient::ExitCode_t::OK;
+		return DataClient::ExitCode_t::OK;
 }
 
 } // namespace bbque
