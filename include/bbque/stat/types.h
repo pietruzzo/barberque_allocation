@@ -32,6 +32,11 @@ namespace bbque { namespace stat {
 using res_bitset_t = uint64_t;
 using sub_bitset_t = uint8_t;
 
+#define BITSET_OFFSET_SYS       52
+#define BITSET_OFFSET_UNIT_TYPE 48
+#define BITSET_OFFSET_UNIT_ID   32
+#define BITSET_OFFSET_PE        0
+
 /* Status filter description */
 enum status_filter_t {
 	FILTER_RESOURCE = 1,    // 00000001
