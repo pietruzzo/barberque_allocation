@@ -52,8 +52,9 @@ DataManager::DataManager() : Worker() {
 	logger->Info("Starting the publisher...");
 	Start();
 
-	// Setting the subscription server port
+	// Setting the subscription server thread
 	server_port = SERVER_PORT;
+	any_subscriber = 0;
 	logger->Debug("Spawing thread for the subscription server...");
 	subscription_server = std::thread(&DataManager::SubscriptionHandler, this);
 
@@ -68,7 +69,7 @@ DataManager::~DataManager() {
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
 	subs_lock.lock();
-	any_subscriber = false;
+	any_subscriber = 0;
 	subscribers_on_rate.clear();
 	subscribers_on_event.clear();
 	subs_lock.unlock();
