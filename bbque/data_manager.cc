@@ -88,7 +88,7 @@ void DataManager::PrintSubscribers(){
 
 	// Subscribers on rate
 	for (auto s : subscribers_on_rate){
-		logger->Debug("Subiscribers on rate: ip: %s port: %d deadline: %d filter: %s rate: %d", 
+		logger->Debug("Subscribers on rate: ip: %s port: %d deadline: %d filter: %s rate: %d", 
 			s->ip_address.c_str(), 
 			s->port_num,
 			s->rate_deadline_ms,
@@ -98,7 +98,7 @@ void DataManager::PrintSubscribers(){
 
 	// Subscribers on event
 	for (auto s : subscribers_on_event){
-		logger->Debug("Subiscribers on event: ip: %s port: %d event: %s", 
+		logger->Debug("Subscribers on event: ip: %s port: %d event: %s", 
 			s->ip_address.c_str(), 
 			s->port_num,
 			s->subscription.event.to_string().c_str());	
