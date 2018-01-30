@@ -115,23 +115,32 @@ public:
 
 private:
 
+	/*
+	 * @brief This is the receiver loop-function to manage incoming information
+	 * published by the DataManager server instance.
+	 */
 	void ClientReceiver();
 
+	/*
+	 * @brief This is the callback function of the third-party client
+	 * It is called when new information are published by the 
+	 * DataManager server instance.
+	 */
 	std::function<void(status_message_t)> client_callback;
 
-	/* IP address of the server */
+	/* @brief IP address of the server */
 	std::string serverIP;             
 
-	/* The TCP port of the server*/
+	/* @brief The TCP port of the server*/
 	uint32_t serverPort;        
 
-	/* The TCP port of the client*/
+	/* @brief The TCP port of the client*/
 	uint32_t clientPort;        
 
-	/* The client receiver thread */
+	/* @brief The client receiver thread */
 	std::thread client_thread;
 
-	/* Flag to control the execution of the 
+	/* @brief Flag to control the execution of the 
 	 * receiver thread is started
 	 */
 	bool receiver_started;
