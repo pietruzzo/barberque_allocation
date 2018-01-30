@@ -524,6 +524,35 @@ res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_pat
 void DataManager::UpdateData(){
 	logger->Notice("Updating applications and resources data...");
 
+	std::set<br::ResourcePtr_t> resource_set = ra.GetResourceSet();
+	// Updating resource status list
+	res_stats.clear();
+
+	for(auto & resource_ptr : resource_set){
+		br::ResourcePathPtr_t resource_path = ra.GetPath(resource_ptr->Path());
+		logger->Fatal("%d: Used: %d Unreserved: %d Total: %d Temperature: %d Frequency: %d Power: %2.2f",
+			BuildResourceBitset(resource_path),
+			resource_ptr->Used(),
+			resource_ptr->Unreserved(),
+			resource_ptr->Total(),
+			static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE, 
+				br::Resource::ValueType::INSTANT)),
+			static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::FREQUENCY, 
+				br::Resource::ValueType::INSTANT)),
+			static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::POWER, 
+				br::Resource::ValueType::INSTANT)));
+
+		resource_status_t temp_res;
+		temp_res.id = BuildResourceBitset(resource_path);
+		temp_res.occupancy = static_cast<uint8_t>(resource_ptr->Used());
+		temp_res.load = static_cast<uint8_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::LOAD, 
+			br::Resource::ValueType::INSTANT));
+		temp_res.power = static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::POWER, 
+			br::Resource::ValueType::INSTANT));
+		temp_res.temp = static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE, 
+			br::Resource::ValueType::INSTANT));
+		res_stats.push_back(temp_res);
+	}
 }
 
 } // namespace bbque
