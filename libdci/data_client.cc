@@ -31,12 +31,15 @@ DataClient::DataClient(std::string serverIP, int serverPort, int clientPort){
 
 DataClient::ExitCode_t DataClient::Connect(){
 	
+  receiver_started = true;
 	client_thread = std::thread(&DataClient::ClientReceiver, this);
 
 	return DataClient::ExitCode_t::OK;
 }
 
 DataClient::ExitCode_t DataClient::Disconnect(){
+  
+  receiver_started = false;
   client_thread.join();
 
   return DataClient::ExitCode_t::OK;
@@ -52,7 +55,7 @@ void DataClient::ClientReceiver(){
     ip::tcp::endpoint(ip::tcp::v4(), clientPort);
 
   /* Listening cycle */
-  for(;;) {
+  while(receiver_started) {
 
     boost::asio::ip::tcp::acceptor acceptor(ios);
     boost::asio::ip::tcp::iostream stream;

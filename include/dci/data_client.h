@@ -131,6 +131,11 @@ private:
 	/* The client receiver thread */
 	std::thread client_thread;
 
+	/* Flag to control the execution of the 
+	 * receiver thread is started
+	 */
+	bool receiver_started;
+
 };
 
 } // namespace bbque
