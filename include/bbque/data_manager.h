@@ -18,6 +18,9 @@
 #ifndef BBQUE_DATA_MANAGER_H_
 #define BBQUE_DATA_MANAGER_H_
 
+#include "bbque/stat/types.h"
+#include "bbque/cpp11/mutex.h"
+#include "bbque/utils/worker.h"
 #include <list>
 #include <bitset>
 #include <iostream>
@@ -29,9 +32,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include "bbque/stat/types.h"
-#include "bbque/cpp11/mutex.h"
-#include "bbque/utils/worker.h"
+
 // Boost libraries
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/list.hpp>
