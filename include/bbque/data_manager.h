@@ -202,23 +202,6 @@ private:
 	 */
 	pid_t subscription_server_tid;
 
-	/**
-	 * @brief Utility template function to drop bits outside the range [R, L) == [R, L - 1]
-	 * @brief R The rightmost bits of range
-	 * @brief L The leftmost bits of range
-	 * @brief N The size of the bitset
-	 * @param b The original bitset
-	 * @return A new bitset between the requested range
-	 */
-	template<std::size_t R, std::size_t L, std::size_t N>
-	std::bitset<N> BitsetRange(std::bitset<N> b)
-	{
-	    static_assert(R <= L && L <= N, "invalid bitrange");
-	    b >>= R;            // drop R rightmost bits
-	    b <<= (N - L + R);  // drop L-1 leftmost bits
-	    b >>= (N - L);      // shift back into place
-	    return b;
-	}
 
 	/*
   	 * @brief Utility method to print all the current subscribers
