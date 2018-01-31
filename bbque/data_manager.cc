@@ -582,7 +582,11 @@ res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_pat
 void DataManager::UpdateData(){
 	logger->Notice("Updating applications and resources data...");
 
+	
+	// Taking data from Resource accounter and Power Manager
 	std::set<br::ResourcePtr_t> resource_set = ra.GetResourceSet();
+
+	num_current_res = resource_set.size();
 	// Updating resource status list
 	res_stats.clear();
 
