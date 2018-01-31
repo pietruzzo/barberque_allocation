@@ -171,7 +171,7 @@ private:
 	/**
 	 * @brief Condition variable to indicate the presence of any subscriber
 	 */
-	uint32_t any_subscriber;
+	std::atomic<uint32_t> any_subscriber;
 
 	/**
 	 * @brief Time interval between different data publishing
@@ -276,7 +276,7 @@ private:
   	/*
   	 * @brief Event queue counter
   	 */
-  	uint8_t any_event;
+  	std::atomic<uint8_t> any_event;
 
   	std::thread event_handler;
 
