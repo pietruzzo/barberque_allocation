@@ -352,7 +352,7 @@ private:
 	 *
 	 * @param event The event triggering the publication
 	 */
-	void PublishOnEvent(data::sub_bitset_t event);
+	void PublishOnEvent(status_event_t event);
 
 	/**
 	 * @brief Push the update to the specified subscriber based on its information filter
