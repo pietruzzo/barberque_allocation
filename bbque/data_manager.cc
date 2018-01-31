@@ -580,7 +580,7 @@ res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_pat
 }
 
 void DataManager::UpdateData(){
-	logger->Notice("Updating applications and resources data...");
+	logger->Debug("Updating applications and resources data...");
 
 	
 	// Taking data from Resource accounter and Power Manager
@@ -592,7 +592,7 @@ void DataManager::UpdateData(){
 
 	for(auto & resource_ptr : resource_set){
 		br::ResourcePathPtr_t resource_path = ra.GetPath(resource_ptr->Path());
-		logger->Fatal("%d: Used: %d Unreserved: %d Total: %d Temperature: %d Frequency: %d Power: %2.2f",
+		logger->Debug("%ld: Used: %d Unreserved: %d Total: %d Temperature: %d Frequency: %d Power: %2.2f",
 			BuildResourceBitset(resource_path),
 			resource_ptr->Used(),
 			resource_ptr->Unreserved(),
