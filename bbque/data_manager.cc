@@ -363,14 +363,22 @@ void DataManager::EventHandler(){
 
 	while(1){
 		while(any_event>0){
-			for(auto event_pair : event_map){
-				events_lock.lock();
+			std::vector<status_event_t> events_vec;
+			
+			events_lock.lock();
+			for(auto & event_pair : event_map){
 				if(event_pair.second){
-					PublishOnEvent(event_pair.first);
+					events_vec.push_back(event_pair.first);	
 					event_pair.second = false;
 					any_event--;
 				}
-				events_lock.unlock();
+			}
+			events_lock.unlock();
+			
+			// Avoiding blocking function
+			for(const auto & event : events_vec){
+				logger->Debug("Event handling: %d",event);
+				PublishOnEvent(event);
 			}
 		}
 	}
