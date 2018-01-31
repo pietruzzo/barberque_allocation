@@ -89,18 +89,6 @@ public:
 	ExitCode_t Subscribe(sub_bitset_t filter, sub_bitset_t event, uint16_t rate, SubMode mode);
 
 	/*
-	 * @brief It remove the subscription for the Client to the BarbequeRTRM DataManager
-	 * server instance basing on the given preferences.
-	 * 
-	 * @param filter The subscription target type filter
-	 * @param event The event filter
-	 * @param rate The rate for the update
-	 *
-	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
-	 */
-	ExitCode_t Unsubscribe(sub_bitset_t filter, sub_bitset_t event, uint16_t rate);
-
-	/*
 	 * @brief With this method the client can set its callback function.
 	 * The callback function is then invoked when new information message
 	 * are published by the BarbequeRTRM server instance.
