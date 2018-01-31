@@ -324,7 +324,7 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 void DataManager::Task() {
 
 	logger->Debug("Starting worker...");
-	while(1){
+	while(true){
 
 		while(!any_subscriber){};
 			
@@ -344,12 +344,10 @@ void DataManager::NotifyUpdate(status_event_t event){
 	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
 
 	events_lock.lock();
-
 	if(!event_map[event]){
 		event_map[event] = true;
 		any_event++;
 	}
-
 	events_lock.unlock();
 }
 
