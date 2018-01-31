@@ -254,12 +254,12 @@ private:
   	std::list<resource_status_t> res_stats;
 
   	/*
-  	 * @brief The number of current managed applications
+  	 * @brief The number of current managed resources
   	 */
   	uint32_t num_current_res;
 
   	/*
-  	 * @brief The number of current managed resources
+  	 * @brief The number of current managed applications
   	 */
   	uint32_t num_current_apps;
 
