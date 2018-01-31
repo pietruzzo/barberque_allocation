@@ -349,6 +349,7 @@ void DataManager::NotifyUpdate(status_event_t event){
 		any_event++;
 	}
 	events_lock.unlock();
+	evt_cv.notify_one();
 }
 
 void DataManager::EventHandler(){
@@ -359,25 +360,27 @@ void DataManager::EventHandler(){
 
 	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
 
-	while(1){
-		while(any_event>0){
-			std::vector<status_event_t> events_vec;
-			
-			events_lock.lock();
-			for(auto & event_pair : event_map){
-				if(event_pair.second){
-					events_vec.push_back(event_pair.first);	
-					event_pair.second = false;
-					any_event--;
-				}
+	while(true){
+		std::vector<status_event_t> events_vec;
+
+		events_lock.lock();
+		while(any_event==0) { 
+			evt_cv.wait(events_lock) ;
+		}
+
+		for(auto & event_pair : event_map){
+			if(event_pair.second){
+				events_vec.push_back(event_pair.first);	
+				event_pair.second = false;
+				any_event--;
 			}
-			events_lock.unlock();
-			
-			// Avoiding blocking function
-			for(const auto & event : events_vec){
-				logger->Debug("Event handling: %d",event);
-				PublishOnEvent(event);
-			}
+		}
+		events_lock.unlock();
+
+		// Avoiding blocking function
+		for(const auto & event : events_vec){
+			logger->Debug("Event handling: %d",event);
+			PublishOnEvent(event);
 		}
 	}
 }

@@ -26,6 +26,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <condition_variable>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -278,6 +279,8 @@ private:
   	 * @brief Event queue counter
   	 */
   	std::atomic<uint8_t> any_event;
+
+  	std::condition_variable evt_cv;
 
   	std::thread event_handler;
 
