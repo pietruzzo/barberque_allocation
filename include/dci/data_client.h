@@ -39,7 +39,11 @@ using namespace bbque::stat;
 class DataClient {
 public: 
 
-	enum SubMode {
+	/*
+	 * @brief Subscription modes
+	 *
+	 */
+	enum SubMode_t {
 		SUBSCRIBE = 0,
 		UNSUBSCRIBE = 1
 	};
@@ -83,6 +87,7 @@ public:
 	 * @param filter The subscription target type filter
 	 * @param event The event filter
 	 * @param rate The rate for the update
+	 * @param mode The subscription mode according to SubMode_t
 	 *
 	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
 	 */
