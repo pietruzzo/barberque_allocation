@@ -44,6 +44,7 @@ enum status_filter_t {
 
 /* Status event description */
 enum status_event_t {
+	NO_EVT = 0,             // 00000000
 	EVT_SCHEDULING = 1,     // 00000001
 	EVT_APPLICATION = 2,    // 00000010
 	EVT_RESOURCE = 4        // 00000100
