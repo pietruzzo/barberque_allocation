@@ -254,14 +254,9 @@ private:
 	std::mutex events_mtx;
 
   	/*
-  	 * @brief This map allow to track if a specific event has occurred
+  	 * @brief This list allow to track all the events occurred and not served.
   	 */
-  	std::map<status_event_t,bool> event_map;
-
-  	/*
-  	 * @brief Event queue counter
-  	 */
-  	std::atomic<uint8_t> any_event;
+  	std::list<status_event_t> event_queue;
 
   	std::condition_variable evt_cv;
 

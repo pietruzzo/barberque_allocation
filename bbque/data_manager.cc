@@ -61,7 +61,6 @@ DataManager::DataManager() : Worker() {
 	subscription_server.detach();
 
 	// Setting the event handler thread
-	any_event = 0;
 	logger->Debug("Spawing thread for the event handler...");
 	event_handler = std::thread(&DataManager::EventHandler, this);
 
@@ -87,8 +86,7 @@ DataManager::~DataManager() {
 	subs_lock.unlock();
 
 	events_lock.lock();
-	any_event = 0;
-	event_map.clear();
+	event_queue.clear();
 	events_lock.unlock();
 	
 	logger->Info("Terminating the publisher...");
@@ -313,7 +311,6 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 	PrintSubscribers();
 
 	subs_lock.unlock();
-
 }
 
 
@@ -344,10 +341,7 @@ void DataManager::NotifyUpdate(status_event_t event){
 	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
 
 	events_lock.lock();
-	if(!event_map[event]){
-		event_map[event] = true;
-		any_event++;
-	}
+	event_queue.push_back(event);
 	events_lock.unlock();
 	evt_cv.notify_one();
 }
@@ -364,17 +358,14 @@ void DataManager::EventHandler(){
 		std::vector<status_event_t> events_vec;
 
 		events_lock.lock();
-		while(any_event==0) { 
+		while(event_queue.size()==0){
 			evt_cv.wait(events_lock) ;
 		}
 
-		for(auto & event_pair : event_map){
-			if(event_pair.second){
-				events_vec.push_back(event_pair.first);	
-				event_pair.second = false;
-				any_event--;
-			}
+		for(auto & event: event_queue){
+			events_vec.push_back(event);
 		}
+		event_queue.clear();
 		events_lock.unlock();
 
 		// Avoiding blocking function
