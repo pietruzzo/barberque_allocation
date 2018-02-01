@@ -50,7 +50,7 @@ enum status_event_t {
 	EVT_RESOURCE = 4        // 00000100
 };
 
-struct task_t { // 13 Byte
+struct task_status_t { // 13 Byte
 	/* Serialization stuff */
 	template<class Archive>
 	void serialize(Archive &ar, const unsigned int version){
@@ -77,10 +77,10 @@ struct app_status_t { // 32 Byte min
 		ar & mapping;
 	}
 	/* Struct fields */
-	uint32_t id;
+	uint64_t id;
 	std::string name;
 	uint32_t n_task;
-	std::list<task_t> tasks; // List of tasks
+	std::list<task_status_t> tasks; // List of tasks
 	res_bitset_t mapping;
 };
 
