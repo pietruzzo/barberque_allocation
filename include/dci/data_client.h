@@ -60,7 +60,7 @@ public:
 
 	DataClient();
 
-	DataClient(std::string serverIP, int serverPort, int clientPort);
+	DataClient(std::string serverIP, uint32_t serverPort, uint32_t clientPort);
 
 	virtual ~DataClient(){};
 

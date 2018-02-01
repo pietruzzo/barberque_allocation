@@ -23,10 +23,10 @@ using namespace boost::archive;
 namespace bbque {
 
 
-DataClient::DataClient(std::string serverIP, int serverPort, int clientPort):
+DataClient::DataClient(std::string serverIP, uint32_t serverPort, uint32_t clientPort):
 	serverIP(serverIP),
 	serverPort(serverPort),
-		clientPort(clientPort){
+	clientPort(clientPort){
 
 }
 
