@@ -64,6 +64,10 @@ public:
 
 	virtual ~DataClient(){};
 
+	inline void setClientPort(const uint32_t clientPort) noexcept {
+		this->clientPort = clientPort;
+	}
+
 	/*
 	 * @brief This method performs the connection with the BarbequeRTRM DataManager 
 	 * server instance starting the receiver thread for incoming published updates.
