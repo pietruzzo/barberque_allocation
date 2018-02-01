@@ -86,12 +86,15 @@ public:
 	 * 
 	 * @param filter The subscription target type filter
 	 * @param event The event filter
-	 * @param rate The rate for the update
+	 * @param period The rate for the update
 	 * @param mode The subscription mode according to SubMode_t
 	 *
 	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
 	 */
-	ExitCode_t Subscribe(sub_bitset_t filter, sub_bitset_t event, uint16_t rate, SubMode mode);
+	ExitCode_t Subscribe(status_filter_t filter, 
+		status_event_t event, 
+		uint16_t period, 
+		SubMode_t mode);
 
 	/*
 	 * @brief With this method the client can set its callback function.

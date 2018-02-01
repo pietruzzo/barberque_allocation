@@ -105,13 +105,17 @@ void DataClient::ClientReceiver(){
 }
 
 DataClient::ExitCode_t DataClient::Subscribe(
-	sub_bitset_t filter, 
-	sub_bitset_t event, 
-	uint16_t rate, 
-	DataClient::SubMode mode){
+	status_filter_t filter, 
+	status_event_t event, 
+	uint16_t period, 
+	DataClient::SubMode_t mode){
 	
 	/* Subscription message initialization */
-	subscription_message_t newSub = {clientPort, filter, event, rate, mode};
+	subscription_message_t newSub = {clientPort, 
+		static_cast<sub_bitset_t>(filter), 
+		static_cast<sub_bitset_t>(event), 
+		period, 
+		mode};
 
 	/* Socket descriptor */
 	int sock;
