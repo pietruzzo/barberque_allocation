@@ -58,7 +58,7 @@ public:
 		ERR_UNKNOWN       /** A not specified error code   */
 	};
 
-	DataClient();
+	DataClient() = delete;
 
 	DataClient(std::string serverIP, uint32_t serverPort, uint32_t clientPort);
 
