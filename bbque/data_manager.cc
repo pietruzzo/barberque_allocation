@@ -248,6 +248,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 
 			sub->subscription.filter|=subscr->subscription.filter;
 			sub->subscription.rate_ms = subscr->subscription.rate_ms;
+			sub->rate_deadline_ms = sub->subscription.rate_ms;
 
 			logger->Debug("After update %s - filter: %s - rate: %d",
 				subscr->ip_address.c_str(),
