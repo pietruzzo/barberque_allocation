@@ -45,7 +45,8 @@ DataManager & DataManager::GetInstance() {
 	return instance;
 }
 
-DataManager::DataManager() : Worker() {
+DataManager::DataManager() : Worker(),
+	ra(ResourceAccounter::GetInstance()){
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("Setupping the publisher...");
 	sleep_time = DEFAULT_SLEEP_TIME;

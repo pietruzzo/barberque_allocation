@@ -168,6 +168,8 @@ private:
 	std::unique_ptr<bu::Logger> logger;
 
 	
+	/** Resource Accounter instance */
+	ResourceAccounter & ra;
 
 	uint32_t port_num;
 
