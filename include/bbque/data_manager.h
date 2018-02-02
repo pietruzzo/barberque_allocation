@@ -21,7 +21,8 @@
 #include "bbque/stat/types.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/utils/worker.h"
-#include "bbque/res/resource_path.h"
+#include "bbque/resource_accounter.h"
+//#include "bbque/res/resource_path.h"
 #include <list>
 #include <bitset>
 #include <iostream>
