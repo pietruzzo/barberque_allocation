@@ -364,7 +364,7 @@ void DataManager::EventHandler(){
 
 		events_lock.lock();
 		while(event_queue.size()==0){
-			evt_cv.wait(events_lock) ;
+			evt_cv.wait(events_lock);
 		}
 
 		for(auto & event: event_queue){
@@ -406,14 +406,12 @@ void DataManager::PublishOnEvent(status_event_t event){
 			}
 		}
 	}
-
 	subs_lock.unlock();
 }
 
 void DataManager::PublishOnRate(){
 	uint16_t tmp_sleep_time;// = sleep_time;
 	ExitCode_t result;
-
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
 	// Update resources and applications data
@@ -427,7 +425,7 @@ void DataManager::PublishOnRate(){
 		// Updating the deadline after the sleep
 		s->rate_deadline_ms = s->rate_deadline_ms - sleep_time;
 
-		logger->Debug("Subscriber: %s -- next_deadline: %u",
+		logger->Debug("Subscriber: %s -- next_deadline: %d",
 			s->ip_address.c_str(),
 			s->rate_deadline_ms);
 
@@ -584,6 +582,7 @@ void DataManager::UpdateData(){
 	std::set<br::ResourcePtr_t> resource_set = ra.GetResourceSet();
 
 	num_current_res = resource_set.size();
+	
 	// Updating resource status list
 	res_stats.clear();
 
