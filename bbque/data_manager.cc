@@ -412,12 +412,13 @@ void DataManager::PublishOnRate(){
 	ExitCode_t result;
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
+	tmp_sleep_time = subscribers_on_rate.back()->subscription.rate_ms;
+	
 	// Update resources and applications data
 	UpdateData();
 
 	subs_lock.lock();
 
-	tmp_sleep_time = subscribers_on_rate.back()->subscription.rate_ms;
 
 	for(auto s : subscribers_on_rate){
 		// Updating the deadline after the sleep
