@@ -39,7 +39,7 @@ using namespace bbque::stat;
 using namespace boost::asio::ip;
 using namespace boost::archive;
 namespace bd = bbque::data;
-namespace bt = bbque::res;
+namespace br = bbque::res;
 DataManager & DataManager::GetInstance() {
 	static DataManager instance;
 	return instance;

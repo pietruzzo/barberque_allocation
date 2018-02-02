@@ -42,7 +42,7 @@
 #include <boost/asio.hpp>
 
 namespace bu = bbque::utils;
-namespace bt = bbque::res;
+namespace br = bbque::res;
 
 using namespace bbque::stat;
 
