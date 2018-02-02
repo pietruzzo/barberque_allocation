@@ -383,15 +383,13 @@ void DataManager::EventHandler(){
 
 void DataManager::PublishOnEvent(status_event_t event){
 	ExitCode_t result;
-
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
 	// Update resources and applications data
 	UpdateData();
 
 	subs_lock.lock();
-
-	for(const auto & s : subscribers_on_event){
+	for(const auto s : subscribers_on_event){
 		// If event matched
 		if((s->subscription.event & bd::sub_bitset_t(event)) == bd::sub_bitset_t(event)){
 
