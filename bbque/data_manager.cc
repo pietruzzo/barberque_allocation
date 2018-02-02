@@ -320,7 +320,6 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 
 void DataManager::Task() {
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
-
 	logger->Debug("Starting worker...");
 	while(true){
 		
@@ -419,7 +418,6 @@ void DataManager::PublishOnRate(){
 
 	subs_lock.lock();
 
-
 	for(auto s : subscribers_on_rate){
 		// Updating the deadline after the sleep
 		s->rate_deadline_ms = s->rate_deadline_ms - sleep_time;
@@ -480,10 +478,13 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 		
 		logger->Debug("Adding resources info to the subscriber %s's message...", 
 			sub->ip_address.c_str());
+
 		newStat.n_res_status_msgs = num_current_res;
+
 		for(auto res_stat : res_stats){
 			newStat.res_status_msgs.push_back(res_stat);
 		}
+
 		// Debug logging
 		for(auto res_stat : newStat.res_status_msgs){
 			logger->Debug("ResId: %d, Occupancy: %d, Load: %d, Power: %d, Temp: %d",
