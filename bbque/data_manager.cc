@@ -54,7 +54,7 @@ DataManager::DataManager() : Worker() {
 
 	// Setting the subscription server thread
 	server_port = SERVER_PORT;
-	any_subscriber = 0;
+	//any_subscriber = 0;
 	logger->Debug("Spawing thread for the subscription server...");
 	subscription_server = std::thread(&DataManager::SubscriptionHandler, this);
 
@@ -80,7 +80,7 @@ DataManager::~DataManager() {
 	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
 
 	subs_lock.lock();
-	any_subscriber = 0;
+	//any_subscriber = 0;
 	subscribers_on_rate.clear();
 	subscribers_on_event.clear();
 	subs_lock.unlock();
@@ -234,7 +234,6 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 		}else { 
 		// If is new, just add it to the list
 			subscribers_on_event.push_back(subscr);
-			//any_subscriber++;
 		}
 	}
 	else { // If rate-based subscription
@@ -259,7 +258,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 			subscribers_on_rate.push_back(subscr);
 			logger->Debug("Sorting on rate...");
 			subscribers_on_rate.sort();
-			any_subscriber++;
+			subs_cv.notify_one();
 		}
 		subscribers_on_rate.sort();
 	}
@@ -268,6 +267,8 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 	PrintSubscribers();
 
 	subs_lock.unlock();
+
+	
 }
 
 void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
@@ -286,7 +287,6 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 			sub->subscription.event&=~(subscr->subscription.event);
 			if(sub->subscription.event == 0){
 				subscribers_on_event.remove(sub);
-				//any_subscriber--;
 		}
 		}else{
 			logger->Error("Client not found!");
@@ -298,7 +298,6 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 			sub->subscription.filter&=~(subscr->subscription.filter);
 			if(sub->subscription.filter == 0){
 				subscribers_on_rate.remove(sub);
-				any_subscriber--;
 			}
 			subscribers_on_rate.sort();
 		}else{
@@ -319,18 +318,23 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event){
 /*******************************************************************/
 
 void DataManager::Task() {
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
 	logger->Debug("Starting worker...");
 	while(true){
-
-		while(!any_subscriber){};
+		
+		subs_lock.lock();
+		while(subscribers_on_rate.empty()){
+			subs_cv.wait(subs_lock);
+		};
+		subs_lock.unlock();
 			
-			PublishOnRate();
+		PublishOnRate();
 			
-			logger->Debug("Going to sleep for %d...",sleep_time);
+		logger->Debug("Going to sleep for %d...",sleep_time);
 			
-			// Sleep
-			std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+		// Sleep
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
 	}
 }
 

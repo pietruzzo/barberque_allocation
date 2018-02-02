@@ -175,6 +175,8 @@ private:
 	 */
 	std::atomic<uint32_t> any_subscriber;
 
+	std::condition_variable subs_cv;
+
 	/**
 	 * @brief Time interval between different data publishing
 	 */
@@ -201,7 +203,6 @@ private:
 	 * @brief The thread ID of the subscription server thread
 	 */
 	pid_t subscription_server_tid;
-
 
 	/*
   	 * @brief Utility method to print all the current subscribers
