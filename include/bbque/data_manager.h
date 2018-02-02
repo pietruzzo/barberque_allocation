@@ -93,7 +93,7 @@ namespace data {
 		std::string ip_address;
 		uint32_t port_num;
 		Subscription subscription;
-		uint16_t rate_deadline_ms;
+		int16_t rate_deadline_ms;
 
 		bool cmp(Subscriber &s1, Subscriber &s2) {
 			if(s1.rate_deadline_ms < s2.rate_deadline_ms)
