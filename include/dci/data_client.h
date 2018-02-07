@@ -27,6 +27,7 @@ namespace bbque {
 
 using namespace bbque::stat;
 
+
 /*
  * @brief This class is the base class for third-party client to interface
  * with the BarbequeRTRM DataManager module.
@@ -113,7 +114,33 @@ public:
 		client_callback = callback;
 	}
 
+	/**
+	 * @biref Utility function to convert a resource bitset into a resource path string
+	 *
+	 * @param bitset The bitset to convert
+	 *
+	 * @return A pointer to the char string
+	 */
+	static const char * GetResourcePathString(res_bitset_t bitset);
+
 private:
+	/**
+	 * @brief Utility template function to drop bits outside the range [R, L) == [R, L - 1]
+	 * R The rightmost bits of range
+	 * L The leftmost bits of range
+	 * N The size of the bitset
+	 * @param b The original bitset
+	 * @return A new bitset between the requested range
+	 */
+	template<std::size_t R, std::size_t L, std::size_t N>
+	static std::bitset<N> RangeBitset(std::bitset<N> b)
+	{
+	    static_assert(R <= L && L <= N, "invalid range");
+	    b >>= R;            // drop R rightmost bits
+	    b <<= (N - L + R);  // drop L-1 leftmost bits
+	    b >>= (N - L);      // shift back into place
+	    return b;
+	}
 
 	/*
 	 * @brief This is the receiver loop-function to manage incoming information
