@@ -21,6 +21,7 @@
 #include "bbque/stat/types.h"
 #include "bbque/cpp11/mutex.h"
 #include "bbque/utils/worker.h"
+#include "bbque/configuration_manager.h"
 #include "bbque/resource_accounter.h"
 //#include "bbque/res/resource_path.h"
 #include <list>
@@ -167,11 +168,14 @@ private:
 	/** The logger used by the application manager */
 	std::unique_ptr<bu::Logger> logger;
 
-	
+	/** Configuration manager instance */
+	ConfigurationManager & cfm;
+
 	/** Resource Accounter instance */
 	ResourceAccounter & ra;
 
-	uint32_t port_num;
+
+	//uint32_t port_num;
 
 	std::thread subscription_server;
 

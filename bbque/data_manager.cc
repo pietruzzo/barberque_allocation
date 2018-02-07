@@ -21,6 +21,7 @@
 #include <algorithm>
 
 #include "bbque/utils/utility.h"
+#include "bbque/utils/timer.h"
 
 #include "bbque/data_manager.h"
 
@@ -28,7 +29,8 @@
 #define MODULE_NAMESPACE DATA_MANAGER_NAMESPACE
 
 #define DEFAULT_SLEEP_TIME 1000
-#define SERVER_PORT 30200
+#define DEFAULT_SERVER_PORT 30200
+
 
 // The prefix for configuration file attributes
 #define MODULE_CONFIG "DataManager"
@@ -40,17 +42,39 @@ using namespace boost::asio::ip;
 using namespace boost::archive;
 namespace bd = bbque::data;
 namespace br = bbque::res;
+namespace po = boost::program_options;
+
+
+#define LOAD_CONFIG_OPTION(name, type, var, default) \
+	opts_desc.add_options() \
+		(MODULE_CONFIG "." name, po::value<type>(&var)->default_value(default), "");
+
+
 DataManager & DataManager::GetInstance() {
 	static DataManager instance;
 	return instance;
 }
 
 DataManager::DataManager() : Worker(),
+	cfm(ConfigurationManager::GetInstance()),
 	ra(ResourceAccounter::GetInstance()){
+
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("Setupping the publisher...");
 	sleep_time = DEFAULT_SLEEP_TIME;
 	Setup("DataManagerPublisher", MODULE_NAMESPACE".pub");
+
+	try {
+		po::options_description opts_desc("Data Manager options");
+		LOAD_CONFIG_OPTION("subscription_server_port", uint32_t,  server_port, DEFAULT_SERVER_PORT);
+
+		po::variables_map opts_vm;
+		cfm.ParseConfigurationFile(opts_desc, opts_vm);
+	}
+	catch(boost::program_options::invalid_option_value ex) {
+		logger->Error("Errors in configuration file [%s]", ex.what());
+	}
+
 	logger->Info("Starting the publisher...");
 	Start();
 
@@ -560,7 +584,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_path){
 	res_bitset_t res_bitset = 0;
 	for(auto resource_identifier : resource_path->GetIdentifiers()){
-	
+
 		switch(resource_identifier->Type()){
 			case res::ResourceType::SYSTEM:
 				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_SYS;
