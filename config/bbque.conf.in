@@ -194,6 +194,8 @@ category.bq.pp.mango = 	DEBUG
 category.bq.sp.sc = 	ERROR
 category.bq.sp.scm = 	ERROR
 #category.bq.ym = 	INFO
+#category.bq.dm =	DEBUG
+#category.bq.pub =	DEBUG
 
 ###
 # Root Appender
