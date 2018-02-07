@@ -79,7 +79,7 @@ DataManager::DataManager() : Worker(),
 	Start();
 
 	// Setting the subscription server thread
-	server_port = SERVER_PORT;
+	//server_port = DEFAULT_SERVER_PORT;
 	//any_subscriber = 0;
 	logger->Debug("Spawing thread for the subscription server...");
 	subscription_server = std::thread(&DataManager::SubscriptionHandler, this);
