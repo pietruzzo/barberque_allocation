@@ -24,6 +24,7 @@
 #include "bbque/configuration_manager.h"
 #include "bbque/resource_accounter.h"
 //#include "bbque/res/resource_path.h"
+
 #include <list>
 #include <bitset>
 #include <iostream>
@@ -174,6 +175,8 @@ private:
 	/** Resource Accounter instance */
 	ResourceAccounter & ra;
 
+	/** The timer to get the timestamp */
+	//utils::Timer timer;
 
 	//uint32_t port_num;
 
