@@ -33,6 +33,7 @@
 #include "bbque/utils/worker.h"
 #include "bbque/utils/logging/logger.h"
 #include "bbque/trig/trigger.h"
+#include "bbque/data_manager.h"
 
 #define POWER_MONITOR_NAMESPACE "bq.wm"
 
@@ -200,6 +201,9 @@ private:
 	/*** Configuration manager instance */
 	ConfigurationManager & cfm;
 
+
+	/*** @brief Data manager instance */
+	DataManager & dm;
 
 	/**
 	 * @brief The logger used by the power manager.

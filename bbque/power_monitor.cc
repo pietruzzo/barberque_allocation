@@ -65,6 +65,9 @@ PowerMonitor::PowerMonitor():
 #ifdef CONFIG_BBQUE_PM_BATTERY
 		bm(BatteryManager::GetInstance()),
 #endif
+#ifdef CONFIG_BBQUE_DM
+		dm(DataManager::GetInstance()),
+#endif
 		cm(CommandManager::GetInstance()),
 		cfm(ConfigurationManager::GetInstance()),
 		optimize_dfr("wm.opt", std::bind(&PowerMonitor::OptimizationRequest, this)) {
