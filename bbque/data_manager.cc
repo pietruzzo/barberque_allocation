@@ -623,27 +623,34 @@ void DataManager::UpdateData(){
 
 	for(auto & resource_ptr : resource_set){
 		br::ResourcePathPtr_t resource_path = ra.GetPath(resource_ptr->Path());
-		logger->Debug("%ld: Used: %d Unreserved: %d Total: %d Temperature: %d Frequency: %d Power: %2.2f",
+		logger->Debug("%ld: Used: %d Unreserved: %d Total: %d",
 			BuildResourceBitset(resource_path),
 			resource_ptr->Used(),
 			resource_ptr->Unreserved(),
-			resource_ptr->Total(),
+			resource_ptr->Total());
+
+#ifdef CONFIG_BBQUE_PM
+		logger->Debug("%ld: Temperature: %d Frequency: %d Power: %2.2f",
+			BuildResourceBitset(resource_path),
 			static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE, 
 				br::Resource::ValueType::INSTANT)),
 			static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::FREQUENCY, 
 				br::Resource::ValueType::INSTANT)),
 			static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::POWER, 
 				br::Resource::ValueType::INSTANT)));
+#endif // CONFIG_BBQUE_PM
 
 		resource_status_t temp_res;
 		temp_res.id = BuildResourceBitset(resource_path);
 		temp_res.occupancy = static_cast<uint8_t>(resource_ptr->Used());
+#ifdef CONFIG_BBQUE_PM		
 		temp_res.load = static_cast<uint8_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::LOAD, 
 			br::Resource::ValueType::INSTANT));
 		temp_res.power = static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::POWER, 
 			br::Resource::ValueType::INSTANT));
 		temp_res.temp = static_cast<uint32_t>(resource_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE, 
 			br::Resource::ValueType::INSTANT));
+#endif // CONFIG_BBQUE_PM		
 		res_stats.push_back(temp_res);
 	}
 }
