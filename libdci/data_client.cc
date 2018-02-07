@@ -1,5 +1,6 @@
 
 #include "dci/data_client.h"
+#include "bbque/res/resource_type.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +9,10 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+
+#include <sstream>
+#include <string>
+#include <iostream>
 
 // Boost libraries
 #include <boost/serialization/access.hpp>
@@ -19,6 +24,7 @@
 using namespace bbque::stat;
 using namespace boost::asio;
 using namespace boost::archive;
+using namespace bbque::res;
 
 namespace bbque {
 
@@ -161,6 +167,65 @@ DataClient::ExitCode_t DataClient::Subscribe(
 	close(sock);
 
 	return DataClient::ExitCode_t::OK;
+}
+
+	const char * DataClient::GetResourcePathString(res_bitset_t bitset){
+	std::string resource_path, unit_type_str;
+	std::ostringstream os;
+	std::bitset<BITSET_LEN_RES> res_bitset(bitset);
+	/* Retrieving the system ID */
+	std::bitset<BITSET_LEN_RES> sys_bitset = 
+		RangeBitset<BITSET_OFFSET_SYS,BITSET_OFFSET_SYS+BITSET_LEN_SYS>(res_bitset);
+	sys_bitset = (sys_bitset>>BITSET_OFFSET_SYS);
+	os << GetResourceTypeString(ResourceType::SYSTEM) << std::to_string(sys_bitset.to_ulong());
+
+	/* Retrieving unit TYPE */
+	std::bitset<BITSET_LEN_RES> unit_bitset =
+		RangeBitset<BITSET_OFFSET_UNIT_TYPE,BITSET_OFFSET_UNIT_TYPE+BITSET_LEN_UNIT_TYPE>(res_bitset);
+	unit_bitset = (unit_bitset>>BITSET_OFFSET_UNIT_TYPE);
+	switch(unit_bitset.to_ulong()){
+		case static_cast<uint64_t>(ResourceType::CPU):
+		unit_type_str = GetResourceTypeString(ResourceType::CPU);
+		break;
+		case static_cast<uint64_t>(ResourceType::GPU):
+		unit_type_str = GetResourceTypeString(ResourceType::GPU);
+		break;
+		case static_cast<uint64_t>(ResourceType::ACCELERATOR):
+		unit_type_str = GetResourceTypeString(ResourceType::ACCELERATOR);
+		break;
+		case static_cast<uint64_t>(ResourceType::MEMORY):
+		unit_type_str = GetResourceTypeString(ResourceType::MEMORY);
+		break;
+		case static_cast<uint64_t>(ResourceType::NETWORK_IF):
+		unit_type_str = GetResourceTypeString(ResourceType::NETWORK_IF);
+		break;
+		default:
+		resource_path = os.str();
+		return resource_path.c_str();
+	}
+
+	/* Retrieving unit ID */
+	std::bitset<BITSET_LEN_RES> unit_id_bitset = 
+		RangeBitset<BITSET_OFFSET_UNIT_ID,BITSET_OFFSET_UNIT_ID+BITSET_LEN_UNIT_ID>(res_bitset);
+	unit_id_bitset = (unit_id_bitset>>BITSET_OFFSET_UNIT_ID);
+	os << "." << unit_type_str << std::to_string(unit_id_bitset.to_ulong());
+	
+	/* Retrieving process element TYPE */
+	std::bitset<BITSET_LEN_RES> pe_bitset = 
+		RangeBitset<BITSET_OFFSET_PE_TYPE,BITSET_OFFSET_PE_TYPE+BITSET_LEN_PE_TYPE>(res_bitset);
+	pe_bitset = (pe_bitset>>BITSET_OFFSET_PE_TYPE);
+	
+	/* Retrieving process element ID */
+	if(pe_bitset.to_ulong() != 0){
+		std::bitset<BITSET_LEN_RES> pe_id_bitset = 
+			RangeBitset<BITSET_OFFSET_PE_ID,BITSET_OFFSET_PE_ID+BITSET_LEN_PE_ID>(res_bitset);
+		pe_id_bitset = (pe_id_bitset>>BITSET_OFFSET_PE_ID);
+		os << "." << GetResourceTypeString(ResourceType::PROC_ELEMENT)
+			<< std::to_string(unit_id_bitset.to_ulong());
+	}
+
+	resource_path = os.str();
+	return resource_path.c_str();
 }
 
 } // namespace bbque
