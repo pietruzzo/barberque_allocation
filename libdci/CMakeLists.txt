@@ -1,7 +1,7 @@
 # Sources
 set (TARGET_NAME bbque_dci)
 set (VERSION_STRING 1.0.0)
-set (SOURCE data_client)
+set (SOURCE data_client ../bbque/res/resource_type)
 
 # Output: a shared library
 add_library(${TARGET_NAME} SHARED ${SOURCE})
