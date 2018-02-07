@@ -562,12 +562,15 @@ res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_pat
 			case res::ResourceType::CPU: 
 			case res::ResourceType::GPU:
 			case res::ResourceType::ACCELERATOR:
+			case res::ResourceType::MEMORY:
+			case res::ResourceType::NETWORK_IF:
 				res_bitset |= 
 					static_cast<uint64_t>(resource_identifier->Type()) << BITSET_OFFSET_UNIT_TYPE;
 				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_UNIT_ID;
 				break;
 			case res::ResourceType::PROC_ELEMENT:
-				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_PE;
+				res_bitset |= static_cast<uint64_t>(1) << BITSET_OFFSET_PE_TYPE;
+				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_PE_ID;
 				break;
 			default:
 				break;
