@@ -396,7 +396,13 @@ private:
 	if (opt_request_sent) { \
 		logger->Info("Trigger: <InfoType: %d> current = %d, threshold = %d [m=%0.f]", \
 				info_type, curr, trigger.threshold, trigger.margin); \
-		optimize_dfr.Schedule(milliseconds(WM_OPT_REQ_TIME_FACTOR * wm_info.period_ms)); \
+		auto trigger_func = trigger.obj->GetFunction(); \
+		if(trigger_func) { \
+			trigger_func(); \
+			opt_request_sent = false; \
+		} \
+		else \
+			optimize_dfr.Schedule(milliseconds(WM_OPT_REQ_TIME_FACTOR * wm_info.period_ms)); \
 	}
 
 	/**
@@ -409,6 +415,7 @@ private:
 			UPDATE_REQUEST_STATUS(
 				info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN), t);
 	}
+
 #endif // CONFIG_BBQUE_PM
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
