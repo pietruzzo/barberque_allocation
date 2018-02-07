@@ -35,6 +35,8 @@ public:
 
 	ThresholdTrigger() {}
 
+	ThresholdTrigger(std::function<void()> const & func) : Trigger(func){}
+
 	virtual ~ThresholdTrigger() {}
 
 	/**

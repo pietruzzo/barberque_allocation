@@ -62,6 +62,22 @@ public:
 	}
 
 	/**
+	 * @brief Register a trigger
+	 * @param id The identification string to retrieve it later
+	 * @return The shared pointer to the trigger instance
+	 */
+	inline std::shared_ptr<Trigger> Register(std::string const & id, std::function<void()> const & trigger_func) {
+		if (triggers.find(id) == triggers.end()){
+			if (id.compare("threshold") == 0) {
+				triggers[id] = std::shared_ptr<Trigger>(new ThresholdTrigger(trigger_func));
+				logger->Debug("Added 'threshold' trigger");
+			}
+			
+		}
+		return Get(id);
+	}
+
+	/**
 	 * @brief Get a trigger instance
 	 * @param id The identification string to retrieve it
 	 * @return The shared pointer to the trigger instance

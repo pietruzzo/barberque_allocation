@@ -18,6 +18,7 @@
 #ifndef BBQUE_TRIGGER_H_
 #define BBQUE_TRIGGER_H_
 
+#include <functional>
 
 namespace bbque {
 
@@ -36,6 +37,8 @@ public:
 
 	Trigger() {}
 
+	Trigger(std::function<void()> const & func) : func(func){}
+
 	virtual ~Trigger() {}
 
 	/**
@@ -44,6 +47,17 @@ public:
 	 */
 	virtual bool Check(float ref_value, float curr_value, float margin = 0.0) const = 0;
 
+	inline const std::function<void()> & GetFunction() const {
+		return this->func;
+	}
+
+	inline void SetFunction(std::function<void()> func) {
+		this->func = func;
+	}
+
+private:
+
+	std::function<void()> func;
 };
 
 } // namespace trig
