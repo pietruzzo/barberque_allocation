@@ -135,6 +135,12 @@ updatetime.resources = 500   # In milliseconds
 # test.mig_time =
 
 ################################################################################
+# Data Communication Interface Options
+################################################################################
+[DataManager]
+server_port = 30200
+
+################################################################################
 # Logger Options
 ################################################################################
 [logger]
@@ -208,9 +214,3 @@ appender.raFile.layout.ConversionPattern = %d{%Y-%m-%d %H:%M:%S,%l} - %-6p %-15c
 #appender.raRSyslog.facility = -1
 #appender.raRSyslog.portNumber = -1
 #appender.raRSyslog.layout.ConversionPattern = %d{%Y-%m-%d %H:%M:%S,%l} - %-6p %40c : %m%n
-
-################################################################################
-# Data Communication Interface Options
-################################################################################
-[DataManager]
-subscription_server_port = 30200

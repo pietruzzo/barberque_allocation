@@ -66,7 +66,7 @@ DataManager::DataManager() : Worker(),
 
 	try {
 		po::options_description opts_desc("Data Manager options");
-		LOAD_CONFIG_OPTION("subscription_server_port", uint32_t,  server_port, DEFAULT_SERVER_PORT);
+		LOAD_CONFIG_OPTION("server_port", uint32_t,  server_port, DEFAULT_SERVER_PORT);
 
 		po::variables_map opts_vm;
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
