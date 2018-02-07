@@ -33,7 +33,17 @@ using sub_bitset_t = uint8_t;
 #define BITSET_OFFSET_SYS       52
 #define BITSET_OFFSET_UNIT_TYPE 48
 #define BITSET_OFFSET_UNIT_ID   32
-#define BITSET_OFFSET_PE        0
+#define BITSET_OFFSET_PE_TYPE   31
+#define BITSET_OFFSET_PE_ID     0
+
+#define BITSET_LEN_SYS       12
+#define BITSET_LEN_UNIT_TYPE 4
+#define BITSET_LEN_UNIT_ID   16
+#define BITSET_LEN_PE_TYPE   1
+#define BITSET_LEN_PE_ID     31
+
+#define BITSET_LEN_RES       64
+#define BITSET_LEN_SUB       8
 
 /* Status filter description */
 enum status_filter_t {
