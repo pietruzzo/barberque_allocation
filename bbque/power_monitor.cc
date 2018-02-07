@@ -128,6 +128,9 @@ PowerMonitor::PowerMonitor():
 	triggers[PowerManager::InfoType::TEMPERATURE].threshold = temp_crit * 1000;
 	triggers[PowerManager::InfoType::TEMPERATURE].margin    = temp_margin;
 	triggers[PowerManager::InfoType::TEMPERATURE].obj       = tgm.Register(temp_trig);
+#ifdef CONFIG_BBQUE_DM
+	triggers[PowerManager::InfoType::TEMPERATURE].obj->SetFunction([&,this](){dm.NotifyUpdate(stat::EVT_RESOURCE);});
+#endif // CONFIG_BBQUE_DM
 	// Power consumption scheduling policy trigger setting
 	triggers[PowerManager::InfoType::POWER].threshold = power_cons;
 	triggers[PowerManager::InfoType::POWER].margin    = power_margin;
