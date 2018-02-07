@@ -466,7 +466,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 	
 	// Status message initialization
 	status_message_t newStat;
-	newStat.ts = 1; //static_cast<uint32_t>(timer.getTimestamp());
+	newStat.ts = static_cast<uint32_t>(utils::Timer::getTimestamp());
 	newStat.n_app_status_msgs = 0;
 	newStat.n_res_status_msgs = 0;
 
