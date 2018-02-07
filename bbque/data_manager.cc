@@ -184,7 +184,7 @@ void DataManager::SubscriptionHandler() {
 		// Creating the temp Subscription
 		Subscription temp_subscription(bd::sub_bitset_t(temp_sub->filter), 
 			bd::sub_bitset_t(temp_sub->event),
-			temp_sub->rate_ms);
+			static_cast<double>(temp_sub->rate_ms));
 
 		// Creating the temp Subscriber
 		SubscriberPtr_t temp_subscriber = std::make_shared<Subscriber>
@@ -260,7 +260,7 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event){
 		// If is new, just add it to the list
 			subscribers_on_rate.push_back(subscr);
 			logger->Debug("Sorting on rate...");
-			subscribers_on_rate.sort();
+			//subscribers_on_rate.sort();
 			subs_cv.notify_one();
 		}
 		subscribers_on_rate.sort();
@@ -411,6 +411,8 @@ void DataManager::PublishOnEvent(status_event_t event){
 void DataManager::PublishOnRate(){
 	uint16_t tmp_sleep_time;// = sleep_time;
 	ExitCode_t result;
+	utils::Timer tmr;
+	
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
 	tmp_sleep_time = subscribers_on_rate.back()->subscription.rate_ms;
@@ -420,9 +422,11 @@ void DataManager::PublishOnRate(){
 
 	subs_lock.lock();
 
+	tmr.start();
+
 	for(auto s : subscribers_on_rate){
 		// Updating the deadline after the sleep
-		s->rate_deadline_ms = s->rate_deadline_ms - sleep_time;
+		s->rate_deadline_ms = s->rate_deadline_ms - effective_sleep_time;
 
 		logger->Debug("Subscriber: %s -- next_deadline: %d",
 			s->ip_address.c_str(),
@@ -444,7 +448,7 @@ void DataManager::PublishOnRate(){
 			// Reset the deadline
 			s->rate_deadline_ms = s->subscription.rate_ms;
 
-			logger->Debug("Subscriber: %s -- updated next_deadline: %u",
+			logger->Debug("Subscriber: %s -- updated next_deadline: %d",
 				s->ip_address.c_str(),
 				s->rate_deadline_ms);
 
@@ -453,9 +457,11 @@ void DataManager::PublishOnRate(){
 		if(s->rate_deadline_ms < tmp_sleep_time)
 			tmp_sleep_time = s->rate_deadline_ms;
 	}
+	tmr.stop();
 
 	// Updating the sleep time
-	sleep_time = tmp_sleep_time;
+	sleep_time = tmp_sleep_time - static_cast<uint16_t>(tmr.getElapsedTimeMs());
+	effective_sleep_time = tmp_sleep_time;
 
 	subscribers_on_rate.sort();
 

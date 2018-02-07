@@ -183,10 +183,15 @@ private:
 	std::condition_variable subs_cv;
 
 	/**
-	 * @brief Time interval between different data publishing
+	 * @brief Time interval to sleep, corrected from the push delay
 	 */
 	//std::chrono::milliseconds sleep_time;
 	uint16_t sleep_time;
+
+	/**
+	 * @brief Time interval between different data publishing
+	 */
+	uint16_t effective_sleep_time;
 
 	/*
 	 * @brief List of all rate-based subscribers
