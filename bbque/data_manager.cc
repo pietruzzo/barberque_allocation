@@ -489,7 +489,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub){
 
 		// Debug logging
 		for(auto res_stat : newStat.res_status_msgs){
-			logger->Debug("ResId: %d, Occupancy: %d, Load: %d, Power: %d, Temp: %d",
+			logger->Debug("ResId: %ld, Occupancy: %d, Load: %d, Power: %d, Temp: %d",
 				res_stat.id, 
 				res_stat.occupancy, 
 				res_stat.load, 
