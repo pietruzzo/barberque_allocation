@@ -128,6 +128,7 @@ struct status_message_t { // 59 Byte min
 	template<class Archive>
 	void serialize(Archive &ar, const unsigned int version){
 		(void) version;
+		ar & ts;
 		ar & n_app_status_msgs;
 		ar & app_status_msgs;
 		ar & n_res_status_msgs;
