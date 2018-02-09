@@ -94,19 +94,11 @@ DataManager::~DataManager() {
 	assert(event_handler_tid != 0);
 	::kill(event_handler_tid, SIGUSR1);
 
-	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
-	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
-
-	subs_lock.lock();
-	//any_subscriber = 0;
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
+	std::unique_lock<std::mutex> events_lock(events_mtx);
 	subscribers_on_rate.clear();
 	subscribers_on_event.clear();
-	subs_lock.unlock();
-
-	events_lock.lock();
 	event_queue.clear();
-	events_lock.unlock();
-	
 
 	logger->Info("DataManager terminating...");
 	Terminate();
@@ -215,16 +207,13 @@ void DataManager::SubscriptionHandler() {
 		else
 			Unsubscribe(subscriber, sub_msg.event != 0);
 	}
-	/* ----------------------------------------------------------- */
 }
 
-	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
 void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event_based) {
 	logger->Info("Subscribe: client <%s:%d>",
 			subscr->ip_address.c_str(),subscr->port_num);
-
-	subs_lock.lock();
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
 
 	if (event_based) { // If event-based subscription
 		auto sub = FindSubscriber(subscr, subscribers_on_event);
@@ -269,15 +258,14 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event_based) {
 	}
 
 	PrintSubscribers();
-	subs_lock.unlock();
 }
 
-	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 
 void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event_based) {
 	logger->Info("Unsubscribe: client <%s:%d>",
-	subs_lock.lock();
 		subscr->ip_address.c_str(), subscr->port_num);
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
+
 	if (event_based) {
 		auto sub = FindSubscriber(subscr, subscribers_on_event);
 		if (sub != nullptr) {
@@ -301,8 +289,6 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event_based) {
 	}
 
 	PrintSubscribers();
-
-	subs_lock.unlock();
 }
 
 
@@ -311,13 +297,11 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event_based) {
 /*******************************************************************/
 
 void DataManager::Task() {
-	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
-		subs_lock.lock();
 	logger->Debug("Task: starting worker...");
+	std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
 	while (true) {
 		while (subscribers_on_rate.empty())
 			subs_cv.wait(subs_lock);
-		subs_lock.unlock();
 		PublishOnRate();
 		logger->Debug("Task: sleeping for %d...", sleep_time);
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
@@ -326,10 +310,8 @@ void DataManager::Task() {
 
 void DataManager::NotifyUpdate(status_event_t event) {
 	logger->Notice("NotifyUpdate: update notified: %d",event);
-	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
-	events_lock.lock();
+	std::unique_lock<std::mutex> events_lock(events_mtx);
 	event_queue.push_back(event);
-	events_lock.unlock();
 	event_cv.notify_one();
 }
 
@@ -374,7 +356,6 @@ void DataManager::PublishOnEvent(status_event_t event){
 					s->ip_address.c_str(),s->port_num);
 		}
 	}
-	subs_lock.unlock();
 }
 
 void DataManager::PublishOnRate(){
@@ -419,7 +400,6 @@ void DataManager::PublishOnRate(){
 
 	// Sort subscribers by deadline in ascending order
 	subscribers_on_rate.sort();
-	subs_lock.unlock();
 }
 
 DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
