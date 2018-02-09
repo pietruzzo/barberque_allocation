@@ -182,7 +182,7 @@ void DataManager::SubscriptionHandler() {
 		Subscription subscription_info(
 			bd::sub_bitset_t(sub_msg.filter),
 			bd::sub_bitset_t(sub_msg.event),
-			static_cast<double>(sub_msg.rate_ms));
+			sub_msg.rate_ms);
 
 		// Subscriber
 		SubscriberPtr_t subscriber = std::make_shared<Subscriber>
