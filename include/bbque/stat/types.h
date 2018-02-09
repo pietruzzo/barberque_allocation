@@ -70,9 +70,9 @@ struct task_status_t { // 13 Byte
 		ar & mapping;
 	}
 	/* Struct fields */
-	uint32_t id;
-	uint8_t perf; // In percentage
-	res_bitset_t mapping;
+	uint32_t id;             /// Task identification number
+	uint8_t perf;            /// Runtime performance (%) w.r.t. the goal
+	res_bitset_t mapping;    /// Mapping to computing units
 };
 
 struct app_status_t { // 32 Byte min
@@ -87,11 +87,11 @@ struct app_status_t { // 32 Byte min
 		ar & mapping;
 	}
 	/* Struct fields */
-	uint64_t id;
-	std::string name;
-	uint32_t n_task;
-	std::list<task_status_t> tasks; // List of tasks
-	res_bitset_t mapping;
+	uint64_t id;            /// Identification number
+	std::string name;       /// Binary name
+	uint32_t n_task;        /// Number of tasks included
+	std::list<task_status_t> tasks; /// Per-task information
+	res_bitset_t mapping;  /// Task mappings
 };
 
 struct resource_status_t { // 15 Byte
@@ -108,19 +108,19 @@ struct resource_status_t { // 15 Byte
 	}
 	/* Struct fields */
 	res_bitset_t id;
-	uint8_t occupancy;
-	uint8_t load;
-	uint32_t power;
-	uint32_t temp;
-	uint32_t fans;
+	uint8_t occupancy;   /// Amount assigned by the resource manager
+	uint8_t load;        /// Utilization observerd at runtime
+	uint32_t power;      /// Power consumption
+	uint32_t temp;       /// Current temperature
+	uint32_t fans;       /// Fan speed
 };
 
 struct __attribute__((packed)) subscription_message_t { // 9 Byte
-	uint32_t port_num;
-	sub_bitset_t filter; // S|A|R|Reserved
-	sub_bitset_t event; // S|A|R|Reserved
-	uint16_t rate_ms;
-	uint8_t mode; // 0 is subscribe; !0 is unsubscribe
+	uint32_t port_num;    /// Client-side port
+	sub_bitset_t filter;  /// S|A|R|Reserved
+	sub_bitset_t event;   /// S|A|R|Reserved
+	uint16_t rate_ms;     /// Periodic update requirement
+	uint8_t mode;         /// 0=subscribe; !0=unsubscribe
 };
 
 struct status_message_t { // 59 Byte min
@@ -135,11 +135,11 @@ struct status_message_t { // 59 Byte min
 		ar & res_status_msgs;
 	}
 	/* Struct fields */
-	uint32_t ts;
-	uint32_t n_app_status_msgs;
-	std::list<app_status_t> app_status_msgs;
-	uint32_t n_res_status_msgs;
-	std::list<resource_status_t> res_status_msgs;
+	uint32_t ts;                   /// Timestamp
+	uint32_t n_app_status_msgs;    /// Number of (application) status messages
+	std::list<app_status_t> app_status_msgs; /// Application status messages
+	uint32_t n_res_status_msgs;    /// Number of (resource) status messages
+	std::list<resource_status_t> res_status_msgs; /// Resource status messages
 };
 
 

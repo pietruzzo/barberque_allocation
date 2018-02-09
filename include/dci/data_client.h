@@ -28,104 +28,100 @@ namespace bbque {
 using namespace bbque::stat;
 
 
-/*
+/**
+ * @class DataClient
  * @brief This class is the base class for third-party client to interface
  * with the BarbequeRTRM DataManager module.
  * It hides from the developers the connection and network management.
  * It provides a method to subscribe to specific event and information filter.
- * It allows the client to set a callback function to update the client when new status information
- * are published by BarbequeRTRM instance.
+ * It allows the client to set a callback function to update the client
+ * when new status informationare published by BarbequeRTRM instance.
  * This class should be instantiated by the third-party client.
  */
 class DataClient {
-public: 
+public:
 
-	/*
-	 * @brief Subscription modes
-	 *
-	 */
-	enum SubMode_t {
-		SUBSCRIBE = 0,
-		UNSUBSCRIBE = 1
-	};
-
-	/*enum ExitCode_t
-	 *
+	/**
+	 * @enum ExitCode_t
 	 * @brief Class specific return codes
 	 */
 	enum ExitCode_t {
-		OK = 0,           /** Successful call */
-		ERR_SERVER_COMM,  /** The server is unreachable */
-		ERR_UNKNOWN       /** A not specified error code   */
+		OK = 0,           /// Successful call
+		ERR_SERVER_COMM,  /// Server unreachable
+		ERR_UNKNOWN       /// Unspecified error code
+	};
+
+	/**
+	 * @enum SubscriptionMode_t
+	 */
+	enum subscription_mode_t {
+		SUBSCRIBE   = 0,
+		UNSUBSCRIBE = 1
 	};
 
 	DataClient() = delete;
 
-	DataClient(std::string serverIP, uint32_t serverPort, uint32_t clientPort);
+	DataClient(std::string ip, uint32_t server_port, uint32_t client_port);
 
 	virtual ~DataClient(){};
 
-	inline void setClientPort(const uint32_t clientPort) noexcept {
-		this->clientPort = clientPort;
+	inline void SetClientPort(const uint32_t client_port) noexcept {
+		this->client_port = client_port;
 	}
 
-	/*
-	 * @brief This method performs the connection with the BarbequeRTRM DataManager 
+	/**
+	 * @brief This method performs the connection with the BarbequeRTRM DataManager
 	 * server instance starting the receiver thread for incoming published updates.
-	 * 
 	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
 	 */
 	ExitCode_t Connect();
 
-	/*
+	/**
 	 * @brief This method stops the receiver thread and closes connection to the
 	 * BarbequeRTRM DataManager server instance.
-	 * 
 	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
 	 */
 	ExitCode_t Disconnect();
 
-	/*
+	/**
 	 * @brief It performs the subscription for the Client to the BarbequeRTRM DataManager
 	 * server instance basing on the given preferences.
-	 * 
 	 * @param filter The subscription target type filter
 	 * @param event The event filter
 	 * @param period The rate for the update
 	 * @param mode The subscription mode according to SubMode_t
-	 *
 	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
 	 */
-	ExitCode_t Subscribe(status_filter_t filter, 
-		status_event_t event, 
-		uint16_t period, 
-		SubMode_t mode);
+	ExitCode_t Subscribe(
+			status_filter_t filter,
+			status_event_t event,
+			uint16_t period,
+			subscription_mode_t mode);
 
-	/*
+	/**
 	 * @brief With this method the client can set its callback function.
 	 * The callback function is then invoked when new information message
 	 * are published by the BarbequeRTRM server instance.
 	 * The callback function has to be implemented by the third-party client
 	 * and has to have a status message parameter.
-	 * .
 	 * @param client_callback The client's callback function.
 	 */
-	inline void SetCallback(std::function<void(status_message_t)> callback) noexcept {
-		client_callback = callback;
+	inline void SetCallback(
+			std::function<void(status_message_t)> callback_fn) noexcept {
+		client_callback = callback_fn;
 	}
 
 	/**
-	 * @biref Utility function to convert a resource bitset into a resource path string
-	 *
+	 * @brief Utility function to convert a resource bitset into a resource path string
 	 * @param bitset The bitset to convert
-	 *
 	 * @return A pointer to the char string
 	 */
 	static const char * GetResourcePathString(res_bitset_t bitset);
 
 private:
 	/**
-	 * @brief Utility template function to drop bits outside the range [R, L) == [R, L - 1]
+	 * @brief Utility template function to drop bits outside the range
+	 * [R, L) == [R, L - 1]
 	 * R The rightmost bits of range
 	 * L The leftmost bits of range
 	 * N The size of the bitset
@@ -133,8 +129,7 @@ private:
 	 * @return A new bitset between the requested range
 	 */
 	template<std::size_t R, std::size_t L, std::size_t N>
-	static std::bitset<N> RangeBitset(std::bitset<N> b)
-	{
+	static std::bitset<N> RangeBitset(std::bitset<N> b) {
 	    static_assert(R <= L && L <= N, "invalid range");
 	    b >>= R;            // drop R rightmost bits
 	    b <<= (N - L + R);  // drop L-1 leftmost bits
@@ -142,34 +137,32 @@ private:
 	    return b;
 	}
 
-	/*
+	/**
 	 * @brief This is the receiver loop-function to manage incoming information
 	 * published by the DataManager server instance.
 	 */
 	void ClientReceiver();
 
-	/*
+	/**
 	 * @brief This is the callback function of the third-party client
-	 * It is called when new information are published by the 
+	 * It is called when new information are published by the
 	 * DataManager server instance.
 	 */
 	std::function<void(status_message_t)> client_callback;
 
-	/* @brief IP address of the server */
-	std::string serverIP;             
+	/// IP address of the server
+	std::string server_ip;
 
-	/* @brief The TCP port of the server*/
-	uint32_t serverPort;        
+	/// TCP port of the server
+	uint32_t server_port;
 
-	/* @brief The TCP port of the client*/
-	uint32_t clientPort;        
+	/// The TCP port of the client
+	uint32_t client_port;
 
-	/* @brief The client receiver thread */
+	/// The client receiver thread
 	std::thread client_thread;
 
-	/* @brief Flag to control the execution of the 
-	 * receiver thread is started
-	 */
+	/// Flag to control the execution of the receiver thread is started
 	bool receiver_started;
 
 };
