@@ -181,7 +181,7 @@ const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 	std::bitset<BBQUE_DCI_LEN_RES> sys_bitset =
 		RangeBitset<BBQUE_DCI_OFFSET_SYS,BBQUE_DCI_OFFSET_SYS+BBQUE_DCI_LEN_SYS>(res_bitset);
 	sys_bitset = (sys_bitset >> BBQUE_DCI_OFFSET_SYS);
-	outstr << GetResourceTypeString(ResourceType::SYSTEM) << sys_bitset.to_string();
+	outstr << GetResourceTypeString(ResourceType::SYSTEM) << std::to_string(sys_bitset.to_ulong());
 
 	/* Retrieving unit TYPE */
 	std::bitset<BBQUE_DCI_LEN_RES> unit_bitset =
@@ -225,7 +225,7 @@ const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 			RangeBitset<BBQUE_DCI_OFFSET_PE_ID,BBQUE_DCI_OFFSET_PE_ID+BBQUE_DCI_LEN_PE_ID>(res_bitset);
 		pe_id_bitset = (pe_id_bitset>>BBQUE_DCI_OFFSET_PE_ID);
 		outstr << "." << GetResourceTypeString(ResourceType::PROC_ELEMENT)
-			<< unit_id_bitset.to_string();
+			<< std::to_string(unit_id_bitset.to_ulong());
 	}
 
 	resource_path = outstr.str();
