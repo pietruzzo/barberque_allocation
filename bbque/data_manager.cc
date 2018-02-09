@@ -460,7 +460,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
 	// TCP socket for data messages
 	tcp::iostream client_sock(sub->ip_address, std::to_string(sub->port_num));
 	if (!client_sock) {
-		logger->Error("Push: cannot connect to <%s:%>d",
+		logger->Error("Push: cannot connect to <%s:%d>",
 			sub->ip_address.c_str(), sub->port_num);
 		return ERR_CLIENT_COMM;
 	}
