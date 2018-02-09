@@ -298,10 +298,11 @@ void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event_based) {
 
 void DataManager::Task() {
 	logger->Debug("Task: starting worker...");
-	std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
 	while (true) {
+		std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
 		while (subscribers_on_rate.empty())
 			subs_cv.wait(subs_lock);
+		subs_lock.unlock();
 		PublishOnRate();
 		logger->Debug("Task: sleeping for %d...", sleep_time);
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
