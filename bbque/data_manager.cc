@@ -22,18 +22,14 @@
 
 #include "bbque/utils/utility.h"
 #include "bbque/utils/timer.h"
-
 #include "bbque/data_manager.h"
 
 #define DATA_MANAGER_NAMESPACE "bq.dm"
 #define MODULE_NAMESPACE DATA_MANAGER_NAMESPACE
-
-#define DEFAULT_SLEEP_TIME 1000
-#define DEFAULT_SERVER_PORT 30200
-
-
-// The prefix for configuration file attributes
 #define MODULE_CONFIG "DataManager"
+
+#define BBQUE_DM_DEFAULT_SLEEP_TIME  1000
+#define BBQUE_DM_DEFAULT_SERVER_PORT 30200
 
 namespace bbque {
 
@@ -61,13 +57,13 @@ DataManager::DataManager() : Worker(),
 
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("Publisher setup...");
-	sleep_time = DEFAULT_SLEEP_TIME;
+	sleep_time = BBQUE_DM_DEFAULT_SLEEP_TIME;
 	Setup("DataManagerPublisher", MODULE_NAMESPACE".pub");
 
 	try {
 		po::options_description opts_desc("Data Manager options");
-		LOAD_CONFIG_OPTION("server_port", uint32_t,  server_port, DEFAULT_SERVER_PORT);
-
+		LOAD_CONFIG_OPTION("server_port", uint32_t, server_port,
+			BBQUE_DM_DEFAULT_SERVER_PORT);
 		po::variables_map opts_vm;
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
 	}
@@ -86,7 +82,6 @@ DataManager::DataManager() : Worker(),
 	// Setting the event handler thread
 	logger->Debug("Event handler thread start...");
 	event_handler = std::thread(&DataManager::EventHandler, this);
-
 	event_handler.detach();
 }
 
@@ -507,20 +502,20 @@ DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_path) {
 	for(auto resource_identifier: resource_path->GetIdentifiers()){
 		switch(resource_identifier->Type()){
 			case res::ResourceType::SYSTEM:
-				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_SYS;
+				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_SYS;
 				break;
-			case res::ResourceType::CPU: 
+			case res::ResourceType::CPU:
 			case res::ResourceType::GPU:
 			case res::ResourceType::ACCELERATOR:
 			case res::ResourceType::MEMORY:
 			case res::ResourceType::NETWORK_IF:
-				res_bitset |= 
-					static_cast<uint64_t>(resource_identifier->Type()) << BITSET_OFFSET_UNIT_TYPE;
-				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_UNIT_ID;
+				res_bitset |=
+					static_cast<uint64_t>(resource_identifier->Type()) << BBQUE_DCI_OFFSET_UNIT_TYPE;
+				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_UNIT_ID;
 				break;
 			case res::ResourceType::PROC_ELEMENT:
-				res_bitset |= static_cast<uint64_t>(1) << BITSET_OFFSET_PE_TYPE;
-				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BITSET_OFFSET_PE_ID;
+				res_bitset |= static_cast<uint64_t>(1) << BBQUE_DCI_OFFSET_PE_TYPE;
+				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_PE_ID;
 				break;
 			default:
 				break;

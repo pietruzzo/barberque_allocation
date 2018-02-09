@@ -176,17 +176,17 @@ DataClient::ExitCode_t DataClient::Subscribe(
 const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 	std::string resource_path, unit_type_str;
 	std::ostringstream outstr;
-	std::bitset<BITSET_LEN_RES> res_bitset(bitset);
+	std::bitset<BBQUE_DCI_LEN_RES> res_bitset(bitset);
 	/* Retrieving the system ID */
-	std::bitset<BITSET_LEN_RES> sys_bitset = 
-		RangeBitset<BITSET_OFFSET_SYS,BITSET_OFFSET_SYS+BITSET_LEN_SYS>(res_bitset);
-	sys_bitset = (sys_bitset>>BITSET_OFFSET_SYS);
+	std::bitset<BBQUE_DCI_LEN_RES> sys_bitset =
+		RangeBitset<BBQUE_DCI_OFFSET_SYS,BBQUE_DCI_OFFSET_SYS+BBQUE_DCI_LEN_SYS>(res_bitset);
+	sys_bitset = (sys_bitset >> BBQUE_DCI_OFFSET_SYS);
 	outstr << GetResourceTypeString(ResourceType::SYSTEM) << sys_bitset.to_string();
 
 	/* Retrieving unit TYPE */
-	std::bitset<BITSET_LEN_RES> unit_bitset =
-		RangeBitset<BITSET_OFFSET_UNIT_TYPE,BITSET_OFFSET_UNIT_TYPE+BITSET_LEN_UNIT_TYPE>(res_bitset);
-	unit_bitset = (unit_bitset>>BITSET_OFFSET_UNIT_TYPE);
+	std::bitset<BBQUE_DCI_LEN_RES> unit_bitset =
+		RangeBitset<BBQUE_DCI_OFFSET_UNIT_TYPE,BBQUE_DCI_OFFSET_UNIT_TYPE+BBQUE_DCI_LEN_UNIT_TYPE>(res_bitset);
+	unit_bitset = (unit_bitset>>BBQUE_DCI_OFFSET_UNIT_TYPE);
 	switch(unit_bitset.to_ulong()){
 		case static_cast<uint64_t>(ResourceType::CPU):
 			unit_type_str = GetResourceTypeString(ResourceType::CPU);
@@ -209,21 +209,21 @@ const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 	}
 
 	/* Retrieving unit ID */
-	std::bitset<BITSET_LEN_RES> unit_id_bitset = 
-		RangeBitset<BITSET_OFFSET_UNIT_ID,BITSET_OFFSET_UNIT_ID+BITSET_LEN_UNIT_ID>(res_bitset);
-	unit_id_bitset = (unit_id_bitset>>BITSET_OFFSET_UNIT_ID);
-	os << "." << unit_type_str << std::to_string(unit_id_bitset.to_ulong());
-	
+	std::bitset<BBQUE_DCI_LEN_RES> unit_id_bitset =
+		RangeBitset<BBQUE_DCI_OFFSET_UNIT_ID,BBQUE_DCI_OFFSET_UNIT_ID+BBQUE_DCI_LEN_UNIT_ID>(res_bitset);
+	unit_id_bitset = (unit_id_bitset>>BBQUE_DCI_OFFSET_UNIT_ID);
+	outstr << "." << unit_type_str << std::to_string(unit_id_bitset.to_ulong());
+
 	/* Retrieving process element TYPE */
-	std::bitset<BITSET_LEN_RES> pe_bitset = 
-		RangeBitset<BITSET_OFFSET_PE_TYPE,BITSET_OFFSET_PE_TYPE+BITSET_LEN_PE_TYPE>(res_bitset);
-	pe_bitset = (pe_bitset>>BITSET_OFFSET_PE_TYPE);
-	
+	std::bitset<BBQUE_DCI_LEN_RES> pe_bitset =
+		RangeBitset<BBQUE_DCI_OFFSET_PE_TYPE,BBQUE_DCI_OFFSET_PE_TYPE+BBQUE_DCI_LEN_PE_TYPE>(res_bitset);
+	pe_bitset = (pe_bitset>>BBQUE_DCI_OFFSET_PE_TYPE);
+
 	/* Retrieving process element ID */
 	if (pe_bitset.any()) {
-		std::bitset<BITSET_LEN_RES> pe_id_bitset = 
-			RangeBitset<BITSET_OFFSET_PE_ID,BITSET_OFFSET_PE_ID+BITSET_LEN_PE_ID>(res_bitset);
-		pe_id_bitset = (pe_id_bitset>>BITSET_OFFSET_PE_ID);
+		std::bitset<BBQUE_DCI_LEN_RES> pe_id_bitset =
+			RangeBitset<BBQUE_DCI_OFFSET_PE_ID,BBQUE_DCI_OFFSET_PE_ID+BBQUE_DCI_LEN_PE_ID>(res_bitset);
+		pe_id_bitset = (pe_id_bitset>>BBQUE_DCI_OFFSET_PE_ID);
 		outstr << "." << GetResourceTypeString(ResourceType::PROC_ELEMENT)
 			<< unit_id_bitset.to_string();
 	}
