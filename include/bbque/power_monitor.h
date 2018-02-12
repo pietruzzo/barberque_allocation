@@ -193,21 +193,15 @@ private:
 	} sys_lifetime;
 #endif
 
-	/**
-	 * @brief Command manager instance
-	 */
+
+	/// Command manager instance
 	CommandManager & cm;
 
-	/*** Configuration manager instance */
-	ConfigurationManager & cfm;
-
-
-	/*** @brief Data manager instance */
+	/// Data manager instance
 	DataManager & dm;
 
-	/**
-	 * @brief The logger used by the power manager.
-	 */
+	/// Configuration manager instance
+	ConfigurationManager & cfm;
 	std::unique_ptr<bu::Logger> logger;
 
 	/**
