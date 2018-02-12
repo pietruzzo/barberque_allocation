@@ -340,7 +340,7 @@ void PowerMonitor::ManageRequest(
 
 	// Check the required trigger is available
 	auto & trigger_info = triggers[info_type];
-	if (trigger_info.obj != nullptr)
+	if (trigger_info.obj == nullptr)
 		return;
 
 	// opt_request_sent =
