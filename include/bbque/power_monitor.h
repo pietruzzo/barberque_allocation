@@ -305,10 +305,6 @@ private:
 	 */
 	void SampleResourcesStatus(uint16_t first_resource_index, uint16_t last_resource_index);
 
-#ifdef CONFIG_BBQUE_PM_BATTERY
-	void SampleBatteryStatus();
-#endif
-
 	/**
 	 * @brief Periodic task
 	 */
@@ -368,6 +364,11 @@ private:
 
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
+	/**
+	 * @brief Sample the battery status
+	 */
+	void SampleBatteryStatus();
+
 	/**
 	 * @brief Compute the system power budget
 	 * @return The power value in milliwatts.
