@@ -18,8 +18,6 @@
 #ifndef BBQUE_STAT_TYPES_H_
 #define BBQUE_STAT_TYPES_H_
 
-#define MAX_APP_NAME_LEN 16
-
 #include <cstdint>
 #include <string>
 #include <list>
