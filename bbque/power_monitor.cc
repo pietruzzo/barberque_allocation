@@ -332,20 +332,10 @@ void PowerMonitor::Stop() {
 }
 
 
-#ifdef CONFIG_BBQUE_PM_BATTERY
 
-void PowerMonitor::SampleBatteryStatus() {
-	while (pbatt && !done) {
-		if (events.none())
-			Wait();
-		if (events.test(WM_EVENT_UPDATE)) {
-			logger->Debug("[Tbatt] Battery power = %d mW", pbatt->GetPower());
-			ExecuteTriggerForBattery();
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
 	}
 }
-#endif // CONFIG_BBQUE_PM_BATTERY
 
 
 void  PowerMonitor::SampleResourcesStatus(
@@ -560,6 +550,7 @@ int32_t PowerMonitor::GetSysPowerBudget() {
 #endif
 }
 
+
 #ifdef CONFIG_BBQUE_PM_BATTERY
 
 int PowerMonitor::SystemLifetimeCmdHandler(
@@ -616,6 +607,18 @@ int PowerMonitor::SystemLifetimeCmdHandler(
 }
 
 
+void PowerMonitor::SampleBatteryStatus() {
+	while (pbatt && !done) {
+		if (events.none())
+			Wait();
+		if (events.test(WM_EVENT_UPDATE)) {
+			logger->Debug("[Tbatt] Battery power = %d mW", pbatt->GetPower());
+			ExecuteTriggerForBattery();
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
+	}
+}
+
 void PowerMonitor::PrintSystemLifetimeInfo() const {
 	std::chrono::seconds secs_from_now;
 	// Print output
@@ -626,7 +629,8 @@ void PowerMonitor::PrintSystemLifetimeInfo() const {
 	logger->Notice("PWR MNTR: System power budget [mW]: %d", sys_lifetime.power_budget_mw);
 }
 
-#endif // Battery management enabled
+#endif // CONFIG_BBQUE_PM_BATTERY
+
 
 } // namespace bbque
 
