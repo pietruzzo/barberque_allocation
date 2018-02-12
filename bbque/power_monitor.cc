@@ -70,7 +70,7 @@ PowerMonitor::PowerMonitor():
 		dm(DataManager::GetInstance()),
 #endif
 		cfm(ConfigurationManager::GetInstance()),
-		optimize_dfr("wm.opt", std::bind(&PowerMonitor::OptimizationRequest, this)) {
+		optimize_dfr("wm.opt", std::bind(&PowerMonitor::SendOptimizationRequest, this)) {
 
 	// Get a logger module
 	logger = bu::Logger::GetLogger(POWER_MONITOR_NAMESPACE);
@@ -332,9 +332,44 @@ void PowerMonitor::Stop() {
 }
 
 
+void PowerMonitor::ManageRequest(
+		PowerManager::InfoType info_type,
+		double curr_value) {
+	// Return if optimization request already sent
+	if (opt_request_sent) return;
 
+	// Check the required trigger is available
+	auto & trigger_info = triggers[info_type];
+	if (trigger_info.obj != nullptr)
+		return;
+
+	// opt_request_sent =
+	bool request_to_send = trigger_info.obj->Check(
+		trigger_info.threshold, curr_value, trigger_info.margin);
+
+//	if (opt_request_sent) {
+	if (request_to_send) {
+		logger->Info("Trigger: <InfoType: %d> current = %d, threshold = %d [m=%0.f]",
+				info_type, curr_value, trigger_info.threshold, trigger_info.margin);
+		auto trigger_func = trigger_info.obj->GetFunction();
+		if (trigger_func) {
+			trigger_func();
+			opt_request_sent = false;
+		}
+		else {
+			opt_request_sent = true;
+			optimize_dfr.Schedule(milliseconds(WM_OPT_REQ_TIME_FACTOR * wm_info.period_ms));
 		}
 	}
+}
+
+
+void PowerMonitor::SendOptimizationRequest() {
+	ResourceManager & rm(ResourceManager::GetInstance());
+	rm.NotifyEvent(ResourceManager::BBQ_PLAT);
+	logger->Info("Trigger: optimization request sent [generic: %d, battery: %d]",
+		opt_request_sent.load(), opt_request_for_battery);
+	opt_request_sent = false;
 }
 
 
@@ -371,7 +406,6 @@ void  PowerMonitor::SampleResourcesStatus(
 			std::string i_values, m_values;
 			uint info_idx   = 0;
 			uint info_count = 0;
-
 			logger->Debug("[T%d] monitoring <%s>", thd_id, r_path->ToString().c_str());
 
 			for (; info_idx < PowerManager::InfoTypeIndex.size() &&
@@ -399,9 +433,8 @@ void  PowerMonitor::SampleResourcesStatus(
 				BuildLogString(rsrc, info_idx, i_values, m_values);
 
 				// Policy execution trigger (ENERGY is for the battery monitor thread)
-				if (opt_request_sent || info_type == PowerManager::InfoType::ENERGY)
-					continue;
-				ExecuteTrigger(rsrc, info_type);
+				if (info_type != PowerManager::InfoType::ENERGY)
+					ExecuteTrigger(rsrc, info_type);
 			}
 
 			logger->Debug("[T%d] sampling <%s> ", thd_id, (log_i + i_values).c_str());
@@ -415,7 +448,6 @@ void  PowerMonitor::SampleResourcesStatus(
 	}
 	logger->Notice("[T%d] terminating monitor thread", thd_id);
 }
-
 
 
 void PowerMonitor::BuildLogString(
@@ -618,6 +650,20 @@ void PowerMonitor::SampleBatteryStatus() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
 	}
 }
+
+
+void PowerMonitor::ExecuteTriggerForBattery() {
+	// Do not require other policy execution (due battery level) until the charge
+	// is not above the threshold value again
+	if (pbatt->IsDischarging()) {
+		// Battery level
+		ManageRequest(
+			PowerManager::InfoType::ENERGY, static_cast<float>(pbatt->GetChargePerc()));
+		// Discharging rate check
+		ManageRequest(PowerManager::InfoType::CURRENT, pbatt->GetDischargingRate());
+	}
+}
+
 
 void PowerMonitor::PrintSystemLifetimeInfo() const {
 	std::chrono::seconds secs_from_now;

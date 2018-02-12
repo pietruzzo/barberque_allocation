@@ -343,27 +343,27 @@ private:
 	 */
 	int DataLogCmdHandler(const char * arg);
 
-	/**
-	 * @brief System target lifetime setting
-	 *
-	 * @param action The control actions:
-	 *		set   (to set the amount of hours)
-	 *		info  (to get the current information)
-	 *		clear (to clear the target)
-	 *		help  (command help)
-	 *
-	 * @param hours For the action 'set' only
-	 * @return 0 for success, a negative number in case of error
-	 */
-	int SystemLifetimeCmdHandler(
-			const std::string action,
-			const std::string arg);
 
+	/**
+	 * @brief Manage a trigger and conditionally send an optimization request
+	 * @param info_type Type of runtime information
+	 * @param curr_value Current value (e.g. of temperature)
+	 */
+	void ManageRequest(PowerManager::InfoType info_type, double curr_value);
+
+	/**
+	 * @brief Trigger execution: check if the current monitored value worth an
+	 * optimization policy execution request
+	 */
+	inline void ExecuteTrigger(br::ResourcePtr_t rsrc, PowerManager::InfoType info_type) {
+			ManageRequest(info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN));
+	}
 
 	/**
 	 * @brief Send an optimization request to execute the resource allocation policy
 	 */
-	void PrintSystemLifetimeInfo() const;
+	void SendOptimizationRequest();
+
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
 	/**
@@ -378,94 +378,35 @@ private:
 					pbatt->GetVoltage() / 1e3;
 		return energy_budget / secs_from_now.count();
 	}
-#endif // CONFIG_BBQUE_PM_BATTERY
-
-
-#ifdef CONFIG_BBQUE_PM
-
-#define UPDATE_REQUEST_STATUS(info_type, curr, trigger) \
-	opt_request_sent = trigger.obj->Check(trigger.threshold, curr, trigger.margin); \
-	CHECK_REQUEST_STATUS(info_type, curr, trigger)
-
-
-#define CHECK_REQUEST_STATUS(info_type, curr, trigger) \
-	if (opt_request_sent) { \
-		logger->Info("Trigger: <InfoType: %d> current = %d, threshold = %d [m=%0.f]", \
-				info_type, curr, trigger.threshold, trigger.margin); \
-		auto trigger_func = trigger.obj->GetFunction(); \
-		if(trigger_func) { \
-			trigger_func(); \
-			opt_request_sent = false; \
-		} \
-		else \
-			optimize_dfr.Schedule(milliseconds(WM_OPT_REQ_TIME_FACTOR * wm_info.period_ms)); \
-	}
-
-	/**
-	 * @brief Trigger execution: check if the current monitored value worth an
-	 * optimization policy execution request
-	 */
-	inline void ExecuteTrigger(br::ResourcePtr_t rsrc, PowerManager::InfoType info_type) {
-		auto & t = triggers[info_type];
-		if (t.obj != nullptr)
-			UPDATE_REQUEST_STATUS(
-				info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN), t);
-	}
-
-#endif // CONFIG_BBQUE_PM
-
-#ifdef CONFIG_BBQUE_PM_BATTERY
 
 	/**
 	 * @brief Trigger execution for the battery status.
-	 * Theo optimization is required in case of battery level under
+	 * The optimization is required in case of battery level under
+	 * a given threshold
 	 */
-	inline void ExecuteTriggerForBattery() {
-		if (opt_request_sent)
-			return;
-
-		// Battery level check
-		auto & t_energy = triggers[PowerManager::InfoType::ENERGY];
-		if (t_energy.obj == nullptr)
-			return;
-
-		bool to_require = !(t_energy.obj->Check(
-				t_energy.threshold,  static_cast<float>(pbatt->GetChargePerc()),
-				t_energy.margin));
-
-		// Do not require other policy execution (due battery level) until the charge is not
-		// above the threshold value again
-		if (opt_request_for_battery)
-			opt_request_for_battery = to_require;
-		if (t_energy.obj != nullptr && !opt_request_for_battery && pbatt->IsDischarging()) {
-			opt_request_sent = to_require;
-			CHECK_REQUEST_STATUS(
-				PowerManager::InfoType::ENERGY, pbatt->GetChargePerc(), t_energy);
-			opt_request_for_battery = opt_request_sent;
-			return;
-		}
-
-		// Discharging rate check
-		auto & t_current = triggers[PowerManager::InfoType::CURRENT];
-		if (t_current.obj != nullptr) {
-			UPDATE_REQUEST_STATUS(
-				PowerManager::InfoType::CURRENT, pbatt->GetDischargingRate(), t_current);
-			return;
-		}
-	}
-#endif
-
+	void ExecuteTriggerForBattery();
 
 	/**
-	 * @brief Send an optimization request to execute the resource allocation policy
+	 * @brief System target lifetime setting
+	 * @param action The control actions:
+	 *		set   (to set the amount of hours)
+	 *		info  (to get the current information)
+	 *		clear (to clear the target)
+	 *		help  (command help)
+	 * @param hours For the action 'set' only
+	 * @return 0 for success, a negative number in case of error
 	 */
-	inline void OptimizationRequest() {
-		ResourceManager & rm(ResourceManager::GetInstance());
-		rm.NotifyEvent(ResourceManager::BBQ_PLAT);
-		logger->Info("Trigger: optimization request sent [generic: %d, battery: %d]",
-			opt_request_sent.load(), opt_request_for_battery);
-		opt_request_sent = false;
-	}
+	int SystemLifetimeCmdHandler(
+			const std::string action,
+			const std::string arg);
+
+	/**
+	 * @brief System target lifetime information report
+	 */
+	void PrintSystemLifetimeInfo() const;
+
+#endif // CONFIG_BBQUE_PM_BATTERY
+
 };
 
 } // namespace bbque
