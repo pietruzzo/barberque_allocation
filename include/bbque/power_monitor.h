@@ -196,8 +196,10 @@ private:
 	/// Command manager instance
 	CommandManager & cm;
 
+#ifdef CONFIG_BBQUE_DM
 	/// Data manager instance
 	DataManager & dm;
+#endif
 
 	/// Configuration manager instance
 	ConfigurationManager & cfm;
