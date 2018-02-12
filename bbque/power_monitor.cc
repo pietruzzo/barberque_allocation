@@ -343,11 +343,10 @@ void PowerMonitor::ManageRequest(
 	if (trigger_info.obj == nullptr)
 		return;
 
-	// opt_request_sent =
+	// Check and execute the trigger (i.e., the trigger function or the
+	// schedule the optimization request
 	bool request_to_send = trigger_info.obj->Check(
 		trigger_info.threshold, curr_value, trigger_info.margin);
-
-//	if (opt_request_sent) {
 	if (request_to_send) {
 		logger->Info("Trigger: <InfoType: %d> current = %d, threshold = %d [m=%0.f]",
 				info_type, curr_value, trigger_info.threshold, trigger_info.margin);
