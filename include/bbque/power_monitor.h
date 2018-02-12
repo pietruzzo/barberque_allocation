@@ -58,8 +58,7 @@ public:
 
 	/**
 	 * @enum ExitCode_t
-	 *
-	 * Class specific return codes
+	 * @brief Class specific return codes
 	 */
 	enum class ExitCode_t {
 		OK = 0,           /** Successful call */
@@ -87,7 +86,6 @@ public:
 	 *
 	 * @param rp Resource path of the resource(s)
 	 * @param info_mask A bitset with the flags of the information to sample
-	 *
 	 * @return ERR_RSRC_MISSING if the resource path does not
 	 * reference any resource, OK otherwise
 	 */
@@ -179,20 +177,21 @@ private:
 	BatteryPtr_t pbatt;
 
 	/**
+	 * @struct SystemLifetimeInfo_t
 	 * @brief System power budget information
 	 */
 	struct SystemLifetimeInfo_t {
 		/** Mutex to protect concurrent accesses */
 		std::mutex mtx;
-		/** Time point of the reuired system lifetime */
+		/** Time point of the required system lifetime */
 		std::chrono::system_clock::time_point target_time;
 		/** System power budget for guarateeing the required lifetime */
 		int32_t power_budget_mw = 0;
 		/** If true the request is to keep the system always on */
 		bool always_on;
 	} sys_lifetime;
-#endif
 
+#endif // CONFIG_BBQUE_PM_BATTERY
 
 	/// Command manager instance
 	CommandManager & cm;
@@ -202,14 +201,17 @@ private:
 
 	/// Configuration manager instance
 	ConfigurationManager & cfm;
+
+	/// The logger used by the power manager
 	std::unique_ptr<bu::Logger> logger;
 
-	/**
-	 * @brief The set of flags related to pending monitoring events to handle
-	 */
+	/// The set of flags related to pending monitoring events to handle
 	std::bitset<WM_EVENT_COUNT> events;
 
-
+	/**
+	 * @struct SystemLifetimeInfo_t
+	 * @brief System power budget information
+	 */
 	struct ResourceHandler {
 		br::ResourcePathPtr_t path;
 		br::ResourcePtr_t resource_ptr;
@@ -359,7 +361,7 @@ private:
 
 
 	/**
-	 * @brief System target lifetime information report
+	 * @brief Send an optimization request to execute the resource allocation policy
 	 */
 	void PrintSystemLifetimeInfo() const;
 
