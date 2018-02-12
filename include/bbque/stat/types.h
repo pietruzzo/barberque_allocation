@@ -34,16 +34,15 @@ using sub_bitset_t = uint8_t;
 #define BBQUE_DCI_OFFSET_UNIT_TYPE 48
 #define BBQUE_DCI_OFFSET_UNIT_ID   32
 #define BBQUE_DCI_OFFSET_PE_TYPE   31
-#define BBQUE_DCI_OFFSET_PE_ID     0
+#define BBQUE_DCI_OFFSET_PE_ID      0
 
-#define BBQUE_DCI_LEN_SYS       12
-#define BBQUE_DCI_LEN_UNIT_TYPE 4
-#define BBQUE_DCI_LEN_UNIT_ID   16
-#define BBQUE_DCI_LEN_PE_TYPE   1
-#define BBQUE_DCI_LEN_PE_ID     31
-
-#define BBQUE_DCI_LEN_RES       64
-#define BBQUE_DCI_LEN_SUB       8
+#define BBQUE_DCI_LEN_SYS          12
+#define BBQUE_DCI_LEN_UNIT_TYPE     4
+#define BBQUE_DCI_LEN_UNIT_ID      16
+#define BBQUE_DCI_LEN_PE_TYPE       1
+#define BBQUE_DCI_LEN_PE_ID        31
+#define BBQUE_DCI_LEN_RES          64
+#define BBQUE_DCI_LEN_SUB           8
 
 /* Status filter description */
 enum status_filter_t {
