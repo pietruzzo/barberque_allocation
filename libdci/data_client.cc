@@ -52,12 +52,14 @@ DataClient::DataClient(std::string ip_addr, uint32_t server_port, uint32_t clien
 }
 
 DataClient::ExitCode_t DataClient::Connect() {
+	printf("Starting the client receiver...\n");
 	receiver_started = true;
 	client_thread = std::thread(&DataClient::ClientReceiver, this);
 	return DataClient::ExitCode_t::OK;
 }
 
 DataClient::ExitCode_t DataClient::Disconnect() {
+	printf("Stopping the client receiver...\n");
 	receiver_started = false;
 	
 	// Send signal to server
@@ -68,7 +70,6 @@ DataClient::ExitCode_t DataClient::Disconnect() {
 }
 
 void DataClient::ClientReceiver() {
-	printf("Starting the client receiver...\n");
 	status_message_t stat_msg;
 
 	client_thread_tid = syscall(SYS_gettid);
@@ -83,7 +84,6 @@ void DataClient::ClientReceiver() {
 		ip::tcp::iostream stream;
 
 		/* TCP Socket setup */
-		printf("Socket setup...\n");
 		try {
 			acceptor.open(endpoint.protocol());
 			acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
@@ -94,7 +94,6 @@ void DataClient::ClientReceiver() {
 		}
 
 		/* Incoming connection management */
-		printf("Receiving TCP packets...\n");
 		try {
 			acceptor.listen();
 			acceptor.accept(*stream.rdbuf());
@@ -142,14 +141,6 @@ DataClient::ExitCode_t DataClient::Subscribe(
 	int sock_fd;
 	struct sockaddr_in server_addr;
 
-	printf("Subscription: \n");
-	printf("\t - Reply port: %d\n",new_subscript.port_num);
-	printf("\t - Filter: %d\n",new_subscript.filter);
-	printf("\t - Event: %d\n",new_subscript.event);
-	printf("\t - Rate: %d\n",new_subscript.rate_ms);
-	printf("\t - Mode: %d\n",new_subscript.mode);
-	printf("Size struct: %ld\n", sizeof(new_subscript));
-
 	/* Open a datagram/UDP socket */
 	if ((sock_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
 		return DataClient::ExitCode_t::ERR_SERVER_COMM;
@@ -170,8 +161,6 @@ DataClient::ExitCode_t DataClient::Subscribe(
 	if (msg_size == -1 ) {
 		printf("Sent struct size: %d\n", msg_size);
 		return DataClient::ExitCode_t::ERR_UNKNOWN;
-	} else {
-		printf("Sending complete!\n");
 	}
 
 	/* Closing subscription socket */
