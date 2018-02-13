@@ -25,6 +25,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/syscall.h>
 
 #include <sstream>
 #include <string>
@@ -58,13 +59,19 @@ DataClient::ExitCode_t DataClient::Connect() {
 
 DataClient::ExitCode_t DataClient::Disconnect() {
 	receiver_started = false;
-	client_thread.join();
+	
+	// Send signal to server
+	assert(client_thread_tid != 0);
+	::kill(client_thread_tid, SIGUSR1);
+
 	return DataClient::ExitCode_t::OK;
 }
 
 void DataClient::ClientReceiver() {
 	printf("Starting the client receiver...\n");
 	status_message_t stat_msg;
+
+	client_thread_tid = syscall(SYS_gettid);
 
 	io_service ios;
 	ip::tcp::endpoint endpoint =
