@@ -64,13 +64,13 @@ public:
 	Subscription(
 			sub_bitset_t filter_bit,
 			sub_bitset_t event_bit,
-			uint16_t rate_ms = -1):
-		filter(filter_bit), event(event_bit), rate_ms(rate_ms) {
+			uint16_t period_ms = -1):
+		filter(filter_bit), event(event_bit), period_ms(period_ms) {
 	}
 
-	sub_bitset_t filter;   /// Type of information to subscribe
-	sub_bitset_t event;    /// Type of events for which receive updates
-	uint16_t     rate_ms;  /// Update rate (milliseconds)
+	sub_bitset_t filter;     /// Type of information to subscribe
+	sub_bitset_t event;      /// Type of events for which receive updates
+	uint16_t     period_ms;  /// Update rate (milliseconds)
 };
 
 /**
@@ -83,16 +83,16 @@ public:
 
 	Subscriber(std::string ip, uint32_t port, Subscription & sub):
 			ip_address(ip), port_num(port), subscription(sub) {
-		this->rate_deadline_ms = sub.rate_ms;
+		this->period_deadline_ms = sub.period_ms;
 	}
 
-	std::string  ip_address;        /// Client IP address
-	uint32_t     port_num;          /// Client port number
-	Subscription subscription;      /// Information subscribed data
-	int16_t      rate_deadline_ms;  /// Milliseconds before next update
+	std::string  ip_address;          /// Client IP address
+	uint32_t     port_num;            /// Client port number
+	Subscription subscription;        /// Information subscribed data
+	int16_t      period_deadline_ms;  /// Milliseconds before next update
 
 	bool cmp(Subscriber & s1, Subscriber & s2) {
-		if(s1.rate_deadline_ms < s2.rate_deadline_ms)
+		if(s1.period_deadline_ms < s2.period_deadline_ms)
 			return true;
 		return false;
 	}

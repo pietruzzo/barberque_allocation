@@ -116,7 +116,7 @@ struct __attribute__((packed)) subscription_message_t { // 9 Byte
 	uint32_t port_num;    /// Client-side port
 	sub_bitset_t filter;  /// S|A|R|Reserved
 	sub_bitset_t event;   /// S|A|R|Reserved
-	uint16_t rate_ms;     /// Periodic update requirement
+	uint16_t period_ms;     /// Periodic update requirement
 	uint8_t mode;         /// 0=subscribe; !0=unsubscribe
 };
 

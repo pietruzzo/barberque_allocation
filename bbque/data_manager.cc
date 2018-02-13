@@ -109,12 +109,12 @@ DataManager::~DataManager() {
 void DataManager::PrintSubscribers(){
 	// Subscribers on rate
 	for (auto s : subscribers_on_rate){
-		logger->Debug("Subscribers on rate: ip: %s port: %d deadline: %d filter: %s rate: %d",
+		logger->Debug("Subscribers on rate: ip: %s port: %d deadline: %d filter: %s period: %d",
 			s->ip_address.c_str(),
 			s->port_num,
-			s->rate_deadline_ms,
+			s->period_deadline_ms,
 			s->subscription.filter.to_string().c_str(),
-			s->subscription.rate_ms);
+			s->subscription.period_ms);
 	}
 
 	// Subscribers on event
@@ -184,7 +184,7 @@ void DataManager::SubscriptionHandler() {
 		Subscription subscription_info(
 			bd::sub_bitset_t(sub_msg.filter),
 			bd::sub_bitset_t(sub_msg.event),
-			sub_msg.rate_ms);
+			sub_msg.period_ms);
 
 		// Subscriber
 		SubscriberPtr_t subscriber = std::make_shared<Subscriber>
@@ -201,7 +201,7 @@ void DataManager::SubscriptionHandler() {
 			data::sub_bitset_t(subscriber->subscription.filter).to_string().c_str());
 		logger->Notice("\tEvent: %s",
 			data::sub_bitset_t(subscriber->subscription.event).to_string().c_str());
-		logger->Notice("\tRate: %d ms",subscriber->subscription.rate_ms);
+		logger->Notice("\tPeriod: %d ms",subscriber->subscription.period_ms);
 		logger->Notice("\tMode: %d",sub_msg.mode);
 
 		if (sub_msg.mode == 0)
@@ -239,18 +239,18 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event_based) {
 		auto sub = FindSubscriber(subscr, subscribers_on_rate);
 		// If the client is already a subscriber just update its filter and rate
 		if (sub != nullptr) {
-			logger->Debug("Subscribe: <%s> current filter: %s rate: %d ms",
+			logger->Debug("Subscribe: <%s> current filter: %s period: %d ms",
 				subscr->ip_address.c_str(),
 				sub->subscription.filter.to_string().c_str(),
-				sub->subscription.rate_ms);
+				sub->subscription.period_ms);
 
 			sub->subscription.filter |= subscr->subscription.filter;
-			sub->subscription.rate_ms = subscr->subscription.rate_ms;
-			sub->rate_deadline_ms     = sub->subscription.rate_ms;
-			logger->Debug("Subscribe: <%s> updated filter: %s rate: %d m",
+			sub->subscription.period_ms = subscr->subscription.period_ms;
+			sub->period_deadline_ms     = sub->subscription.period_ms;
+			logger->Debug("Subscribe: <%s> updated filter: %s period: %d m",
 				subscr->ip_address.c_str(),
 				sub->subscription.filter.to_string().c_str(),
-				sub->subscription.rate_ms);
+				sub->subscription.period_ms);
 		}
 		else {
 			subscribers_on_rate.push_back(subscr);
@@ -366,18 +366,18 @@ void DataManager::PublishOnRate(){
 	ExitCode_t result;
 	utils::Timer tmr;
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
-	tmp_sleep_time = subscribers_on_rate.back()->subscription.rate_ms;
+	tmp_sleep_time = subscribers_on_rate.back()->subscription.period_ms;
 	UpdateData(); // Update resources and applications data
 	subs_lock.lock();
 	tmr.start();
 	for (auto s: subscribers_on_rate) {
 		// Update deadline after sleep
-		s->rate_deadline_ms = s->rate_deadline_ms - actual_sleep_time;
+		s->period_deadline_ms = s->period_deadline_ms - actual_sleep_time;
 		logger->Debug("PublishOnRate: subscriber: <%s:%d> next_deadline: %d",
-			s->ip_address.c_str(), s->port_num, s->rate_deadline_ms);
+			s->ip_address.c_str(), s->port_num, s->period_deadline_ms);
 
 		// Deadline passed => push the updated information
-		if (s->rate_deadline_ms <= 0) {
+		if (s->period_deadline_ms <= 0) {
 			result = Push(s);
 			if (result != OK)
 				logger->Error("PublishOnRate: error in publishing to <%s:%d>",
@@ -387,13 +387,13 @@ void DataManager::PublishOnRate(){
 					s->ip_address.c_str(),s->port_num);
 
 			// Reset the deadline
-			s->rate_deadline_ms = s->subscription.rate_ms;
+			s->period_deadline_ms = s->subscription.period_ms;
 			logger->Debug("PublishOnRate: subscriber: <%s:%d> updated next_deadline: %d",
-				s->ip_address.c_str(), s->port_num, s->rate_deadline_ms);
+				s->ip_address.c_str(), s->port_num, s->period_deadline_ms);
 		}
 		// Calculating the earlier sleep time the sleep time with the earlier
-		if(s->rate_deadline_ms < tmp_sleep_time)
-			tmp_sleep_time = s->rate_deadline_ms;
+		if(s->period_deadline_ms < tmp_sleep_time)
+			tmp_sleep_time = s->period_deadline_ms;
 	}
 	tmr.stop();
 
