@@ -26,6 +26,8 @@
 
 #define DATA_MANAGER_NAMESPACE "bq.dm"
 #define MODULE_NAMESPACE DATA_MANAGER_NAMESPACE
+
+// The prefix for configuration file attributes
 #define MODULE_CONFIG "DataManager"
 
 #define BBQUE_DM_DEFAULT_SLEEP_TIME  1000
@@ -333,7 +335,7 @@ void DataManager::EventHandler() {
 		// Avoiding blocking function due to long execution time
 		// of PublishOnEvent
 		for (const auto & event: events_vec) {
-			logger->Debug("EventHandler: psblishing for event %d", event);
+			logger->Debug("EventHandler: publishing for event %d", event);
 			PublishOnEvent(event);
 		}
 	}
