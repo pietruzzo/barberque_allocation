@@ -162,6 +162,9 @@ private:
 	/// The client receiver thread
 	std::thread client_thread;
 
+	/// The client receiver thread tid
+	pid_t client_thread_tid;
+
 	/// Flag to control the execution of the receiver thread is started
 	bool receiver_started;
 
