@@ -18,10 +18,10 @@
 #ifndef BBQUE_DATA_MANAGER_H_
 #define BBQUE_DATA_MANAGER_H_
 
-#include "bbque/stat/types.h"
 #include "bbque/utils/worker.h"
 #include "bbque/configuration_manager.h"
 #include "bbque/resource_accounter.h"
+#include "dci/types.h"
 
 #include <list>
 #include <bitset>

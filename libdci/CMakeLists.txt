@@ -21,7 +21,7 @@ target_link_libraries(${TARGET_NAME}
 # Set the public headers to install
 set_property (TARGET ${TARGET_NAME} PROPERTY PUBLIC_HEADER
 	${PROJECT_SOURCE_DIR}/include/dci/data_client.h
-	${PROJECT_SOURCE_DIR}/include/bbque/stat/types.h
+	${PROJECT_SOURCE_DIR}/include/dci/types.h
 	${PROJECT_SOURCE_DIR}/include/bbque/res/resource_type.h
 )
 set_property (TARGET ${TARGET_NAME} PROPERTY VERSION ${VERSION_STRING})

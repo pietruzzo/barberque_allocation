@@ -18,7 +18,7 @@
 #ifndef BBQUE_DATA_CLIENT_H_
 #define BBQUE_DATA_CLIENT_H_
 
-#include "bbque/stat/types.h"
+#include "dci/types.h"
 
 #include <functional>
 #include <thread>
