@@ -132,7 +132,6 @@ void DataClient::ClientReceiver() {
 		return;
 	}
 
-		/* TCP Socket setup */
 	{ // Set connection ready
 		std::unique_lock<std::mutex> lck(mtx_connection);
 		is_connected = true;
@@ -140,25 +139,23 @@ void DataClient::ClientReceiver() {
 	}
 
 	while (IsConnected()) {
-		/* Incoming connection management */
+		// Incoming connection management
 		try {
 			acceptor.listen();
 			acceptor.accept(*stream.rdbuf());
-		} catch(boost::exception const& ex){
-			perror("Exception waiting incoming replies: %s");
+		} catch(boost::exception const& ex) {
+			perror("Exception waiting for incoming replies");
 			break;
 		}
-
-		/* Receiving update */
+		// Receiving update
 		try {
 			boost::archive::text_iarchive archive(stream);
 			archive >> stat_msg;
 		} catch(boost::exception const& ex){
-			perror("Archive exception: %s");
+			perror("Exception while sending message");
 			break;
 		}
-
-		/* Send update to the client calling its callback function */
+		// Execute callback function
 		client_callback(stat_msg);
 	}
 
@@ -177,7 +174,7 @@ DataClient::ExitCode_t DataClient::Subscribe(
 		uint16_t period,
 		DataClient::subscription_mode_t mode) {
 
-	/* Subscription message initialization */
+	// Subscription message initialization
 	subscription_message_t new_subscript = {
 		client_port,
 		static_cast<sub_bitset_t>(filter),
@@ -189,29 +186,29 @@ DataClient::ExitCode_t DataClient::Subscribe(
 	int sock_fd;
 	struct sockaddr_in server_addr;
 
-	/* Open a datagram/UDP socket */
+	// Open a datagram/UDP socket
 	if ((sock_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
-		return DataClient::ExitCode_t::ERR_SERVER_COMM;
+		return DataClient::ExitCode_t::ERR_SERVER_UNREACHABLE;
 	}
 
-	/* Construct the server address structure */
+	// Construct the server address structure
 	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = inet_addr(server_ip.c_str());
 	server_addr.sin_port   = htons(server_port);
 
-	/* Send the subscription message to the server */
+	// Send the subscription message to the server
 	int msg_size = sendto(sock_fd,
 			(subscription_message_t*) &new_subscript,
 			(1024+sizeof(new_subscript)), 0,
 			(struct sockaddr *) &server_addr, sizeof(server_addr));
 
 	if (msg_size == -1 ) {
-		printf("Sent struct size: %d\n", msg_size);
+		fprintf(stderr, "Sent struct size: %d\n", msg_size);
 		return DataClient::ExitCode_t::ERR_UNKNOWN;
 	}
 
-	/* Closing subscription socket */
+	// Closing subscription socket
 	close(sock_fd);
 	return DataClient::ExitCode_t::OK;
 }
@@ -223,13 +220,16 @@ const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 	std::bitset<BBQUE_DCI_LEN_RES> res_bitset(bitset);
 	/* Retrieving the system ID */
 	std::bitset<BBQUE_DCI_LEN_RES> sys_bitset =
-		RangeBitset<BBQUE_DCI_OFFSET_SYS,BBQUE_DCI_OFFSET_SYS+BBQUE_DCI_LEN_SYS>(res_bitset);
+		RangeBitset<BBQUE_DCI_OFFSET_SYS,
+					BBQUE_DCI_OFFSET_SYS + BBQUE_DCI_LEN_SYS>(res_bitset);
 	sys_bitset = (sys_bitset >> BBQUE_DCI_OFFSET_SYS);
-	outstr << GetResourceTypeString(ResourceType::SYSTEM) << std::to_string(sys_bitset.to_ulong());
+	outstr << GetResourceTypeString(ResourceType::SYSTEM)
+		<< std::to_string(sys_bitset.to_ulong());
 
 	/* Retrieving unit TYPE */
 	std::bitset<BBQUE_DCI_LEN_RES> unit_bitset =
-		RangeBitset<BBQUE_DCI_OFFSET_UNIT_TYPE,BBQUE_DCI_OFFSET_UNIT_TYPE+BBQUE_DCI_LEN_UNIT_TYPE>(res_bitset);
+		RangeBitset<BBQUE_DCI_OFFSET_UNIT_TYPE,
+					BBQUE_DCI_OFFSET_UNIT_TYPE + BBQUE_DCI_LEN_UNIT_TYPE>(res_bitset);
 	unit_bitset = (unit_bitset>>BBQUE_DCI_OFFSET_UNIT_TYPE);
 	switch(unit_bitset.to_ulong()){
 		case static_cast<uint64_t>(ResourceType::CPU):
@@ -254,19 +254,22 @@ const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 
 	/* Retrieving unit ID */
 	std::bitset<BBQUE_DCI_LEN_RES> unit_id_bitset =
-		RangeBitset<BBQUE_DCI_OFFSET_UNIT_ID,BBQUE_DCI_OFFSET_UNIT_ID+BBQUE_DCI_LEN_UNIT_ID>(res_bitset);
+		RangeBitset<BBQUE_DCI_OFFSET_UNIT_ID,
+					BBQUE_DCI_OFFSET_UNIT_ID + BBQUE_DCI_LEN_UNIT_ID>(res_bitset);
 	unit_id_bitset = (unit_id_bitset>>BBQUE_DCI_OFFSET_UNIT_ID);
 	outstr << "." << unit_type_str << std::to_string(unit_id_bitset.to_ulong());
 
 	/* Retrieving process element TYPE */
 	std::bitset<BBQUE_DCI_LEN_RES> pe_bitset =
-		RangeBitset<BBQUE_DCI_OFFSET_PE_TYPE,BBQUE_DCI_OFFSET_PE_TYPE+BBQUE_DCI_LEN_PE_TYPE>(res_bitset);
+		RangeBitset<BBQUE_DCI_OFFSET_PE_TYPE,
+					BBQUE_DCI_OFFSET_PE_TYPE + BBQUE_DCI_LEN_PE_TYPE>(res_bitset);
 	pe_bitset = (pe_bitset>>BBQUE_DCI_OFFSET_PE_TYPE);
 
 	/* Retrieving process element ID */
 	if (pe_bitset.any()) {
 		std::bitset<BBQUE_DCI_LEN_RES> pe_id_bitset =
-			RangeBitset<BBQUE_DCI_OFFSET_PE_ID,BBQUE_DCI_OFFSET_PE_ID+BBQUE_DCI_LEN_PE_ID>(res_bitset);
+			RangeBitset<BBQUE_DCI_OFFSET_PE_ID,
+						BBQUE_DCI_OFFSET_PE_ID + BBQUE_DCI_LEN_PE_ID>(res_bitset);
 		pe_id_bitset = (pe_id_bitset>>BBQUE_DCI_OFFSET_PE_ID);
 		outstr << "." << GetResourceTypeString(ResourceType::PROC_ELEMENT)
 			<< std::to_string(unit_id_bitset.to_ulong());
