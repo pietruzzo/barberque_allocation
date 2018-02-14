@@ -127,7 +127,7 @@ void DataClient::ClientReceiver() {
 		acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
 		acceptor.bind(endpoint);
 	} catch(boost::exception const& ex){
-		perror("Exception during socket setup");
+		fprintf(stderr,"Exception during socket setup\n");
 		client_thread_tid = 0;
 		return;
 	}
@@ -144,15 +144,16 @@ void DataClient::ClientReceiver() {
 			acceptor.listen();
 			acceptor.accept(*stream.rdbuf());
 		} catch(boost::exception const& ex) {
-			perror("Exception waiting for incoming replies");
+			fprintf(stderr,"Exception waiting for incoming replies\n");
 			break;
 		}
+
 		// Receiving update
 		try {
 			boost::archive::text_iarchive archive(stream);
 			archive >> stat_msg;
 		} catch(boost::exception const& ex){
-			perror("Exception while sending message");
+			fprintf(stderr,"Exception while sending message\n");
 			break;
 		}
 		// Execute callback function
@@ -163,7 +164,7 @@ void DataClient::ClientReceiver() {
 	try {
 		acceptor.close();
 	} catch(boost::exception const& ex){
-		perror("Exception closing the socket");
+		fprintf(stderr,"Exception closing the socket\n");
 	}
 	client_thread_tid = 0;
 }
