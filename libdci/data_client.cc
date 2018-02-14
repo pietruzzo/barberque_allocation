@@ -62,7 +62,6 @@ DataClient::~DataClient() {
 	Disconnect();
 }
 
-
 DataClient::ExitCode_t DataClient::Connect() {
 	if (client_thread_tid != 0) {
 		fprintf(stderr, "Client may be already connected\n");
@@ -72,6 +71,7 @@ DataClient::ExitCode_t DataClient::Connect() {
 	fprintf(stderr, "Connecting... \n");
 	unsigned short nr_attempts = BBQUE_DCI_CONNECT_NR_ATTEMPTS;
 	client_thread = std::thread(&DataClient::ClientReceiver, this);
+	client_thread.detach();
 	std::unique_lock<std::mutex> lck(mtx_connection);
 	while (!is_connected && nr_attempts > 0) {
 		cv_connection.wait_for(lck, std::chrono::seconds(BBQUE_DCI_CONNECT_WAIT_S));
