@@ -188,33 +188,22 @@ DataClient::ExitCode_t DataClient::Subscribe(
 		mode
 	};
 
-	int sock_fd;
-	struct sockaddr_in server_addr;
-
-	// Open a datagram/UDP socket
-	if ((sock_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0){
-		return DataClient::ExitCode_t::ERR_SERVER_UNREACHABLE;
+	// TCP socket for data messages
+	ip::tcp::iostream server_sock(server_ip, std::to_string(server_port));
+	if (!server_sock) {
+		fprintf(stderr,"Exception during subscription socket setup\n");
+		return  DataClient::ExitCode_t::ERR_SERVER_UNREACHABLE;
 	}
 
-	// Construct the server address structure
-	memset(&server_addr, 0, sizeof(server_addr));
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(server_ip.c_str());
-	server_addr.sin_port   = htons(server_port);
-
-	// Send the subscription message to the server
-	int msg_size = sendto(sock_fd,
-			(subscription_message_t*) &new_subscript,
-			(1024+sizeof(new_subscript)), 0,
-			(struct sockaddr *) &server_addr, sizeof(server_addr));
-
-	if (msg_size == -1 ) {
-		fprintf(stderr, "Sent struct size: %d\n", msg_size);
+	// Message serialization and transmission
+	text_oarchive archive(server_sock);
+	try {
+		archive << new_subscript;  // Send
+	} catch(boost::exception const& ex){
+		fprintf(stderr,"Exception during sending subscription\n");
 		return DataClient::ExitCode_t::ERR_UNKNOWN;
 	}
 
-	// Closing subscription socket
-	close(sock_fd);
 	return DataClient::ExitCode_t::OK;
 }
 
