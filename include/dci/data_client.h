@@ -22,6 +22,11 @@
 
 #include <functional>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
+
+#define BBQUE_DCI_CONNECT_NR_ATTEMPTS  3
+#define BBQUE_DCI_CONNECT_WAIT_S       3
 
 namespace bbque {
 
@@ -47,7 +52,8 @@ public:
 	 */
 	enum ExitCode_t {
 		OK = 0,           /// Successful call
-		ERR_SERVER_COMM,  /// Server unreachable
+		ERR_SERVER_UNREACHABLE,  /// Server unreachable
+		ERR_MISSING_CONNECTION,
 		ERR_UNKNOWN       /// Unspecified error code
 	};
 
@@ -61,27 +67,32 @@ public:
 
 	DataClient() = delete;
 
-	DataClient(std::string ip, uint32_t server_port, uint32_t client_port);
-
-	virtual ~DataClient(){};
-
-	inline void SetClientPort(const uint32_t client_port) noexcept {
-		this->client_port = client_port;
-	}
+	/**
+	 * @brief Constructor
+	 * This construct the client object and connect to the server
+	 * @param ip_addr BarbequeRTRM server address
+	 * @param server_port Server port
+	 * @param client_port Client port
+	 * @param callback_fn Callback function for incoming data
+	 */
+	DataClient(
+		std::string ip_addr,
+		uint32_t server_port,
+		uint32_t client_port,
+		std::function<void(status_message_t)> callback_fn =
+			[](status_message_t s){(void)s;});
 
 	/**
-	 * @brief This method performs the connection with the BarbequeRTRM DataManager
-	 * server instance starting the receiver thread for incoming published updates.
-	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
+	 * @brief Destructor
+	 * This perform also disconnect the client from the BarbequeRTRM server
 	 */
-	ExitCode_t Connect();
+	virtual ~DataClient();
 
 	/**
-	 * @brief This method stops the receiver thread and closes connection to the
-	 * BarbequeRTRM DataManager server instance.
-	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
+	 * @brief Check if the client has successfully connected to BarbequeRTRM server
+	 * @return true for success, false otherwise
 	 */
-	ExitCode_t Disconnect();
+	bool IsConnected();
 
 	/**
 	 * @brief It performs the subscription for the Client to the BarbequeRTRM DataManager
@@ -99,7 +110,7 @@ public:
 			subscription_mode_t mode);
 
 	/**
-	 * @brief With this method the client can set its callback function.
+	 * @brief Set the callback function.
 	 * The callback function is then invoked when new information message
 	 * are published by the BarbequeRTRM server instance.
 	 * The callback function has to be implemented by the third-party client
@@ -119,6 +130,21 @@ public:
 	static const char * GetResourcePathString(res_bitset_t bitset);
 
 private:
+
+	/**
+	 * @brief This method performs the connection with the BarbequeRTRM DataManager
+	 * server instance starting the receiver thread for incoming published updates.
+	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
+	 */
+	ExitCode_t Connect();
+
+	/**
+	 * @brief This method stops the receiver thread and closes connection to the
+	 * BarbequeRTRM DataManager server instance.
+	 * @return A DataClient exit code. 0 if OK, 1 if ERR_SERVER_COMM.
+	 */
+	ExitCode_t Disconnect();
+
 	/**
 	 * @brief Utility template function to drop bits outside the range
 	 * [R, L) == [R, L - 1]
@@ -143,12 +169,6 @@ private:
 	 */
 	void ClientReceiver();
 
-	/**
-	 * @brief This is the callback function of the third-party client
-	 * It is called when new information are published by the
-	 * DataManager server instance.
-	 */
-	std::function<void(status_message_t)> client_callback;
 
 	/// IP address of the server
 	std::string server_ip;
@@ -159,14 +179,27 @@ private:
 	/// The TCP port of the client
 	uint32_t client_port;
 
+	/**
+	 * @brief This is the callback function of the third-party client
+	 * It is called when new information are published by the
+	 * DataManager server instance.
+	 */
+	std::function<void(status_message_t)> client_callback;
+
+	/// Connection status flag
+	bool is_connected = false;
+
+	/// Mutex protecting connection status flag
+	std::mutex mtx_connection;
+
+	/// Condition variable to notify connections status changes
+	std::condition_variable cv_connection;
+
 	/// The client receiver thread
 	std::thread client_thread;
 
 	/// The client receiver thread tid
 	pid_t client_thread_tid;
-
-	/// Flag to control the execution of the receiver thread is started
-	bool receiver_started;
 
 };
 

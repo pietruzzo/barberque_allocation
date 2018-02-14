@@ -45,54 +45,101 @@ using namespace bbque::res;
 
 namespace bbque {
 
-DataClient::DataClient(std::string ip_addr, uint32_t server_port, uint32_t client_port):
+DataClient::DataClient(
+	std::string ip_addr,
+	uint32_t server_port,
+	uint32_t client_port,
+	std::function<void(status_message_t)> callback_fn):
 		server_ip(ip_addr),
 		server_port(server_port),
-		client_port(client_port) {
+		client_port(client_port),
+		client_callback(callback_fn) {
+	client_thread_tid = 0;
+	Connect();
 }
 
+DataClient::~DataClient() {
+	Disconnect();
+}
+
+
 DataClient::ExitCode_t DataClient::Connect() {
-	printf("Starting the client receiver...\n");
-	receiver_started = true;
+	if (client_thread_tid != 0) {
+		fprintf(stderr, "Client may be already connected\n");
+		return DataClient::ExitCode_t::OK;
+	}
+
+	fprintf(stderr, "Connecting... \n");
+	unsigned short nr_attempts = BBQUE_DCI_CONNECT_NR_ATTEMPTS;
 	client_thread = std::thread(&DataClient::ClientReceiver, this);
+	std::unique_lock<std::mutex> lck(mtx_connection);
+	while (!is_connected && nr_attempts > 0) {
+		cv_connection.wait_for(lck, std::chrono::seconds(BBQUE_DCI_CONNECT_WAIT_S));
+		nr_attempts--;
+		fprintf(stderr, "Connecting... [attempts left: %d]\n", nr_attempts);
+	}
+
+	if (!is_connected) {
+		fprintf(stderr, "Connection failed!\n");
+		return DataClient::ExitCode_t::ERR_SERVER_UNREACHABLE;
+	}
+	fprintf(stderr, "Connected\n");
 	return DataClient::ExitCode_t::OK;
 }
 
 DataClient::ExitCode_t DataClient::Disconnect() {
-	printf("Stopping the client receiver...\n");
-	receiver_started = false;
-	
-	// Send signal to server
+	fprintf(stderr, "Disconnecting...\n");
 	assert(client_thread_tid != 0);
-	::kill(client_thread_tid, SIGUSR1);
+	if (client_thread_tid != 0)
+		return DataClient::ExitCode_t::ERR_MISSING_CONNECTION;
 
+	{
+		std::unique_lock<std::mutex> lck(mtx_connection);
+		is_connected = false;
+		cv_connection.notify_one();
+	}
+
+	// Kill the connection thread
+	::kill(client_thread_tid, SIGUSR1);
+	fprintf(stderr, "Disconnected\n");
 	return DataClient::ExitCode_t::OK;
+}
+
+
+bool DataClient::IsConnected() {
+	std::unique_lock<std::mutex> lck(mtx_connection);
+	return is_connected;
 }
 
 void DataClient::ClientReceiver() {
 	status_message_t stat_msg;
-
 	client_thread_tid = syscall(SYS_gettid);
 
 	io_service ios;
 	ip::tcp::endpoint endpoint =
 		ip::tcp::endpoint(ip::tcp::v4(), client_port);
+	ip::tcp::acceptor acceptor(ios);
+	ip::tcp::iostream stream;
 
-	/* Listening cycle */
-	while (receiver_started) {
-		ip::tcp::acceptor acceptor(ios);
-		ip::tcp::iostream stream;
+	// TCP Socket setup
+	try {
+		acceptor.open(endpoint.protocol());
+		acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
+		acceptor.bind(endpoint);
+	} catch(boost::exception const& ex){
+		perror("Exception during socket setup");
+		client_thread_tid = 0;
+		return;
+	}
 
 		/* TCP Socket setup */
-		try {
-			acceptor.open(endpoint.protocol());
-			acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
-			acceptor.bind(endpoint);
-		} catch(boost::exception const& ex){
-			perror("Exception during socket setup: %s");
-			break;
-		}
+	{ // Set connection ready
+		std::unique_lock<std::mutex> lck(mtx_connection);
+		is_connected = true;
+		cv_connection.notify_one();
+	}
 
+	while (IsConnected()) {
 		/* Incoming connection management */
 		try {
 			acceptor.listen();
@@ -113,14 +160,15 @@ void DataClient::ClientReceiver() {
 
 		/* Send update to the client calling its callback function */
 		client_callback(stat_msg);
-
-		try {
-			acceptor.close();
-		} catch(boost::exception const& ex){
-			perror("Exception closing the socket: %s");
-			break;
-		}
 	}
+
+	fprintf(stderr, "Closing incoming connections...\n");
+	try {
+		acceptor.close();
+	} catch(boost::exception const& ex){
+		perror("Exception closing the socket");
+	}
+	client_thread_tid = 0;
 }
 
 DataClient::ExitCode_t DataClient::Subscribe(
