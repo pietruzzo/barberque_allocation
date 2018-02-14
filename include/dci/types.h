@@ -112,12 +112,22 @@ struct resource_status_t { // 15 Byte
 	uint32_t fans;       /// Fan speed
 };
 
-struct __attribute__((packed)) subscription_message_t { // 9 Byte
-	uint32_t port_num;    /// Client-side port
-	sub_bitset_t filter;  /// S|A|R|Reserved
-	sub_bitset_t event;   /// S|A|R|Reserved
+struct subscription_message_t { // 9 Byte
+	/* Serialization stuff */
+	template<class Archive>
+	void serialize(Archive &ar, const unsigned int version){
+		(void) version;
+		ar & port_num;
+		ar & filter;
+		ar & event;
+		ar & period_ms;
+		ar & mode;
+	}
+	uint32_t port_num;      /// Client-side port
+	sub_bitset_t filter;    /// S|A|R|Reserved
+	sub_bitset_t event;     /// S|A|R|Reserved
 	uint16_t period_ms;     /// Periodic update requirement
-	uint8_t mode;         /// 0=subscribe; !0=unsubscribe
+	uint8_t mode;           /// 0=subscribe; !0=unsubscribe
 };
 
 struct status_message_t { // 59 Byte min

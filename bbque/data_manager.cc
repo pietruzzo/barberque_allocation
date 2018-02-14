@@ -36,6 +36,7 @@
 namespace bbque {
 
 using namespace bbque::stat;
+using namespace boost::asio;
 using namespace boost::asio::ip;
 using namespace boost::archive;
 namespace bd = bbque::data;
@@ -147,24 +148,24 @@ void DataManager::SubscriptionHandler() {
 	subscription_server_tid = gettid();
 	logger->Info("SubscriptionHandler: starting server [tid=%d]... ",
 		subscription_server_tid);
+	
+	// Local address settings
+	io_service ios;
+	ip::tcp::endpoint endpoint =
+		ip::tcp::endpoint(ip::tcp::v4(), server_port);
+	ip::tcp::acceptor acceptor(ios);
 
 	// Creating the socket
-	logger->Debug("SubscriptionHandler: opening socket @<%s:%d>...",
-		ip_address.c_str(), server_port);
-	sock_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if(sock_fd<0)
+	try {
+		logger->Debug("SubscriptionHandler: opening socket @<%s:%d>...",
+			ip_address.c_str(), server_port);
+		acceptor.open(endpoint.protocol());
+		acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
+		acceptor.bind(endpoint);
+	} catch(boost::exception const& ex){
 		logger->Error("SubscriptionHandler: error during socket creation");
-
-	// Local address settings
-	memset(&local_addr, 0, sizeof(local_addr));
-	local_addr.sin_family = AF_INET;
-	local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	local_addr.sin_port = htons(server_port);
-
-	// Binding the socket
-	logger->Debug("SubscriptionHandler: binding socket...");
-	if (bind(sock_fd, (struct sockaddr *)&local_addr, sizeof(local_addr)) < 0)
-		logger->Error("SubscriptionHandler: error during socket binding");
+		return;
+	}	
 
 	/* ----------------------------------------------------------- */
 	/* ------------------ Subscription handling ------------------ */
@@ -173,12 +174,29 @@ void DataManager::SubscriptionHandler() {
 	bbque::stat::subscription_message_t sub_msg;
 	logger->Debug("SubscriptionHandler: ready");
 	for(;;) {
-		client_addr_size = sizeof(client_addr);
+		
+		ip::tcp::iostream stream;
 
 		// Subscription receiving waiting
-		if((recv_msg_size = recvfrom(sock_fd, &sub_msg, sizeof(sub_msg),
-			0, (struct sockaddr*) &client_addr, &client_addr_size)) < 0)
-				logger->Error("SubscriptionHandler: error during socket receiving");
+		try {
+			acceptor.listen();
+			acceptor.accept(*stream.rdbuf());
+		} catch(boost::exception const& ex) {
+			logger->Error("SubscriptionHandler: error during socket receiving");
+			break;
+		}
+
+		// Receiving subscription
+		std::string client_addr;
+		try {
+			client_addr = stream.rdbuf()->remote_endpoint().address().to_string();
+			boost::archive::text_iarchive archive(stream);
+			archive >> sub_msg;
+		} catch(boost::exception const& ex){
+			logger->Error("SubscriptionHandler: error during subscription receiving");
+			break;
+		}
+
 
 		// Subscription information
 		Subscription subscription_info(
@@ -188,12 +206,11 @@ void DataManager::SubscriptionHandler() {
 
 		// Subscriber
 		SubscriberPtr_t subscriber = std::make_shared<Subscriber>
-			(std::string(inet_ntoa(client_addr.sin_addr)),
-				(uint32_t) sub_msg.port_num, subscription_info);
+			(client_addr, (uint32_t) sub_msg.port_num, subscription_info);
 
 		// Logging messages
 		logger->Debug("SubscriptionHandler: client <%s:%d>",
-			inet_ntoa(client_addr.sin_addr), sub_msg.port_num);
+			client_addr.c_str(), sub_msg.port_num);
 		logger->Debug("SubscriptionHandler: message size: %u", sizeof(sub_msg));
 		logger->Notice("Client subscriber:");
 		logger->Notice("\tPort: %d",subscriber->port_num);
@@ -209,6 +226,14 @@ void DataManager::SubscriptionHandler() {
 		else
 			Unsubscribe(subscriber, sub_msg.event != 0);
 	}
+
+	// Closing the socket
+	try {
+		acceptor.close();
+	} catch(boost::exception const& ex){	
+		logger->Error("SubscriptionHandler: error during closing socket");
+	}
+	logger->Error("SubscriptionHandler: error during socket receiving");
 }
 
 

@@ -238,27 +238,11 @@ private:
 	/*                      Communication fields                       */
 	/*******************************************************************/
 
-	/// Socket descriptor
-	int32_t sock_fd;
-
-	/// Local address
-	sockaddr_in_t local_addr;
-
-	/// Client address
-	sockaddr_in_t client_addr;
-
 	/// Server port
 	uint32_t server_port;
 
-	/// Incoming message size
-	uint32_t client_addr_size;
-
 	/// Server IP address of server
 	std::string ip_address = "0.0.0.0";
-
-	/// Response message size
-	int32_t recv_msg_size;
-
 
 	/*******************************************************************/
 	/*                    Publish/Subscribe methods                    */
