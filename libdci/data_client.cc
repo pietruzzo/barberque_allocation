@@ -119,7 +119,6 @@ void DataClient::ClientReceiver() {
 	ip::tcp::endpoint endpoint =
 		ip::tcp::endpoint(ip::tcp::v4(), client_port);
 	ip::tcp::acceptor acceptor(ios);
-	ip::tcp::iostream stream;
 
 	// TCP Socket setup
 	try {
@@ -139,6 +138,7 @@ void DataClient::ClientReceiver() {
 	}
 
 	while (IsConnected()) {
+		ip::tcp::iostream stream;
 		// Incoming connection management
 		try {
 			acceptor.listen();
@@ -156,16 +156,20 @@ void DataClient::ClientReceiver() {
 			fprintf(stderr,"Exception while sending message\n");
 			break;
 		}
+
 		// Execute callback function
 		client_callback(stat_msg);
+
 	}
 
 	fprintf(stderr, "Closing incoming connections...\n");
+		
 	try {
 		acceptor.close();
 	} catch(boost::exception const& ex){
 		fprintf(stderr,"Exception closing the socket\n");
 	}
+
 	client_thread_tid = 0;
 }
 
