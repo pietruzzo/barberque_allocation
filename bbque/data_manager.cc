@@ -222,6 +222,7 @@ void DataManager::SubscriptionHandler() {
 		logger->Info("\tMode: %d",sub_msg.mode);
 
 		std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
+
 		if (sub_msg.mode == 0)
 			Subscribe(subscriber, sub_msg.event != 0);
 		else
@@ -241,6 +242,7 @@ void DataManager::SubscriptionHandler() {
 void DataManager::Subscribe(SubscriberPtr_t subscr, bool event_based) {
 	logger->Debug("Subscribe: client <%s:%d>",
 			subscr->ip_address.c_str(),subscr->port_num);
+
 	if (event_based) { // If event-based subscription
 		auto sub = FindSubscriber(subscr, subscribers_on_event);
 		// If the client is already a subscriber just update its event filter
@@ -396,7 +398,7 @@ void DataManager::PublishOnEvent(status_event_t event){
 }
 
 void DataManager::PublishOnRate(){
-	uint16_t tmp_sleep_time; // = sleep_time;
+	uint16_t tmp_sleep_time;
 	ExitCode_t result;
 	utils::Timer tmr;
 	std::list<SubscriberPtr_t> push_list;
@@ -531,8 +533,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
 	return OK;
 }
 
-res_bitset_t
-DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_path) {
+res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_path) {
 	res_bitset_t res_bitset = 0;
 	for(auto resource_identifier: resource_path->GetIdentifiers()){
 		switch(resource_identifier->Type()){

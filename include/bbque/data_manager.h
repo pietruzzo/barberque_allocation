@@ -67,8 +67,9 @@ public:
 			sub_bitset_t filter_bit,
 			sub_bitset_t event_bit,
 			uint16_t period_ms = -1):
-		filter(filter_bit), event(event_bit), period_ms(period_ms) {
-	}
+			filter(filter_bit), 
+			event(event_bit), 
+			period_ms(period_ms) {}
 
 	sub_bitset_t filter;     /// Type of information to subscribe
 	sub_bitset_t event;      /// Type of events for which receive updates
@@ -191,6 +192,7 @@ private:
 
 	/// Maximum communication attempts per client
 	uint16_t max_client_attempts;
+
 	/// list of all application updated status structs
 	std::list<app_status_t> app_stats;
 
