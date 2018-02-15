@@ -133,7 +133,7 @@ public:
 	inline uint32_t GetThreshold(PowerManager::InfoType t) const {
 		auto v = triggers.find(t);
 		if (unlikely(v == triggers.end())) return 0;
-		return v->second.threshold;
+		return v->second->threshold_high;
 	}
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
@@ -257,16 +257,18 @@ private:
 	/**
 	 * @struct Data to manage the triggers execution
 	 */
-	struct TriggerInfo_t {
-		std::shared_ptr<bbque::trig::Trigger> obj;   /** Trigger object to call */
-		uint32_t threshold = 0;                      /** Threshold value */
-		float margin       = 0.1;                    /** Margin [0..1) */
-	};
+	//struct TriggerInfo_t {
+	//	std::shared_ptr<bbque::trig::Trigger> obj;   /** Trigger object to call */
+	//	uint32_t threshold_high = 0;                      /** Threshold high value */
+	//	uint32_t threshold_low = 0;                  /** Threshold low armed value */
+	//	float margin       = 0.1;                    /** Margin [0..1) */
+	//};
 
 	/**
 	 * @brief Threshold values for triggering an optimization request
 	 */
-	std::map<PowerManager::InfoType, TriggerInfo_t> triggers;
+	//std::map<PowerManager::InfoType, TriggerInfo_t> triggers;
+	std::map<PowerManager::InfoType, std::shared_ptr<bbque::trig::Trigger>> triggers;
 
 	/**
 	 * @brief Deferrable for coalescing multiple optimization requests

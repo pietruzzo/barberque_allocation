@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017  Politecnico di Milano
+ * Copyright (C) 2018  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_TRIGGER_THRESHOLD_H_
-#define BBQUE_TRIGGER_THRESHOLD_H_
+#ifndef BBQUE_TRIGGER_UNDERTHRESHOLD_H_
+#define BBQUE_TRIGGER_UNDERTHRESHOLD_H_
 
 #include "bbque/app/application.h"
 #include "bbque/res/resources.h"
@@ -29,24 +29,39 @@ namespace trig {
  * @class ThresholdTrigger
  * @brief Type of trigger based on threshold values
  */
-class ThresholdTrigger: public Trigger {
+class UnderThresholdTrigger: public Trigger {
 
 public:
 
-	ThresholdTrigger() {}
+	UnderThresholdTrigger() {}
 
-	ThresholdTrigger(std::function<void()> const & func) : Trigger(func){}
+	UnderThresholdTrigger(uint32_t threshold_high,
+		uint32_t threshold_low,
+		float margin,
+		bool armed = true) :
+		Trigger(threshold_high, threshold_low, margin,armed){}
 
-	virtual ~ThresholdTrigger() {}
+	virtual ~UnderThresholdTrigger() {}
 
 	/**
 	 * @brief The condition is verified if the current value is above the reference value
 	 * for a given margin
 	 * @return true in case of condition verified, false otherwise
 	 */
-	inline bool Check(float threshold, float curr_value, float margin = 0.0) const {
-		float thres_with_margin = static_cast<float>(threshold) * (1.0 - margin);
-		if (curr_value > thres_with_margin)
+	inline bool Check(float curr_value) {
+		if(check_func)
+			return check_func(curr_value);
+		return DefaultCheck(curr_value);
+	}
+
+	/**
+	 * @brief Default check function provided if no custom check function are set
+	 *
+	 * @brief true in case of condition verified, false otherwise
+	 */
+	inline bool DefaultCheck(float curr_value) {
+		float thres_high_with_margin = static_cast<float>(threshold_high) * (1.0 - margin);
+		if (curr_value < thres_high_with_margin)
 			return true;
 		return false;
 	}
@@ -58,4 +73,4 @@ public:
 } // namespace bbque
 
 
- #endif // BBQUE_TRIGGER_THRESHOLD_H_
+ #endif // BBQUE_TRIGGER_UNDERTHRESHOLD_H_

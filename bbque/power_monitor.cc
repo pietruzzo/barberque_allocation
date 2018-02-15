@@ -25,7 +25,7 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/utility.h"
-#include "bbque/trig/trigger_manager.h"
+#include "bbque/trig/trigger_factory.h"
 
 
 #define MODULE_CONFIG "PowerMonitor"
@@ -46,6 +46,7 @@
 
 
 namespace po = boost::program_options;
+using namespace bbque::trig;
 
 namespace bbque {
 
@@ -78,7 +79,8 @@ PowerMonitor::PowerMonitor():
 	logger->Info("PowerMonitor initialization...");
 	Init();
 
-	uint32_t temp_crit = 0, power_cons = 0, batt_level = 0, batt_rate = 0;
+	uint32_t temp_crit = 0, temp_crit_arm = 0, power_cons = 0, power_cons_arm = 0, 
+			batt_level = 0, batt_rate = 0;
 	float  temp_margin = 0.05, power_margin = 0.05, batt_rate_margin = 0.05;
 	std::string temp_trig, power_trig, batt_trig;
 
@@ -88,10 +90,12 @@ PowerMonitor::PowerMonitor():
 		LOAD_CONFIG_OPTION("log.dir", std::string, wm_info.log_dir, "/tmp/");
 		LOAD_CONFIG_OPTION("log.enabled", bool,    wm_info.log_enabled, false);
 		LOAD_CONFIG_OPTION("temp.trigger", std::string, temp_trig, "");
-		LOAD_CONFIG_OPTION("temp.threshold", uint32_t, temp_crit, 0);
+		LOAD_CONFIG_OPTION("temp.threshold_high", uint32_t, temp_crit, 0);
+		LOAD_CONFIG_OPTION("temp.threshold_low", uint32_t, temp_crit_arm, 0);
 		LOAD_CONFIG_OPTION("temp.margin", float, temp_margin, 0.05);
 		LOAD_CONFIG_OPTION("power.trigger", std::string, power_trig, "");
-		LOAD_CONFIG_OPTION("power.threshold", uint32_t, power_cons, 0);
+		LOAD_CONFIG_OPTION("power.threshold_high", uint32_t, power_cons, 0);
+		LOAD_CONFIG_OPTION("power.threshold_low", uint32_t, power_cons_arm, 0);
 		LOAD_CONFIG_OPTION("power.margin", float, power_margin, 0.05);
 		LOAD_CONFIG_OPTION("batt.trigger", std::string, batt_trig, "");
 		LOAD_CONFIG_OPTION("batt.threshold_level", uint32_t, batt_level, 0);
@@ -123,39 +127,49 @@ PowerMonitor::PowerMonitor():
 		logger->Info("Battery available: %s", pbatt->StrId().c_str());
 #endif // CONFIG_BBQUE_PM_BATTERY
 
-	bbque::trig::TriggerManager & tgm(bbque::trig::TriggerManager::GetInstance());
+	bbque::trig::TriggerFactory & tgf(TriggerFactory::GetInstance());
 	// Temperature scheduling policy trigger setting
-	triggers[PowerManager::InfoType::TEMPERATURE].threshold = temp_crit * 1000;
-	triggers[PowerManager::InfoType::TEMPERATURE].margin    = temp_margin;
-	triggers[PowerManager::InfoType::TEMPERATURE].obj       = tgm.Register(temp_trig);
+	logger->Debug("Temperature scheduling policy trigger setting");
+	triggers[PowerManager::InfoType::TEMPERATURE] = tgf.GetTrigger(temp_trig);
+	triggers[PowerManager::InfoType::TEMPERATURE]->threshold_high = temp_crit * 1000;
+	triggers[PowerManager::InfoType::TEMPERATURE]->threshold_low = temp_crit_arm * 1000;
+	triggers[PowerManager::InfoType::TEMPERATURE]->margin = temp_margin;
 #ifdef CONFIG_BBQUE_DM
-	triggers[PowerManager::InfoType::TEMPERATURE].obj->SetFunction([&,this](){dm.NotifyUpdate(stat::EVT_RESOURCE);});
+	triggers[PowerManager::InfoType::TEMPERATURE]->SetActionFunction(
+		[&,this](){
+			dm.NotifyUpdate(stat::EVT_RESOURCE);
+		});
 #endif // CONFIG_BBQUE_DM
 	// Power consumption scheduling policy trigger setting
-	triggers[PowerManager::InfoType::POWER].threshold = power_cons;
-	triggers[PowerManager::InfoType::POWER].margin    = power_margin;
-	triggers[PowerManager::InfoType::POWER].obj       = tgm.Register(power_trig);;
+	logger->Debug("Power consumption scheduling policy trigger setting");
+	triggers[PowerManager::InfoType::POWER] = tgf.GetTrigger(power_trig);
+	triggers[PowerManager::InfoType::POWER]->threshold_high = power_cons;
+	triggers[PowerManager::InfoType::POWER]->threshold_low = power_cons_arm;
+	triggers[PowerManager::InfoType::POWER]->margin = power_margin;
+	logger->Debug("Battery current scheduling policy trigger setting");
 	// Battery status scheduling policy trigger setting
-	triggers[PowerManager::InfoType::CURRENT].threshold = batt_rate;
-	triggers[PowerManager::InfoType::CURRENT].margin    = batt_rate_margin;
-	triggers[PowerManager::InfoType::ENERGY].threshold  = batt_level;
-	triggers[PowerManager::InfoType::ENERGY].obj        = tgm.Register(batt_trig);
+	triggers[PowerManager::InfoType::CURRENT] = tgf.GetTrigger(batt_trig);
+	triggers[PowerManager::InfoType::CURRENT]->threshold_high = batt_rate;
+	triggers[PowerManager::InfoType::CURRENT]->margin    = batt_rate_margin;
+	logger->Debug("Battery energy scheduling policy trigger setting");
+	triggers[PowerManager::InfoType::ENERGY] = tgf.GetTrigger(batt_trig);
+	triggers[PowerManager::InfoType::ENERGY]->threshold_high  = batt_level;
 
-	logger->Info("=============================================================");
-	logger->Info("| THRESHOLDS             | VALUE      | MARGIN  | TRIGGER   |");
-	logger->Info("+------------------------+------------+---------+-----------+");
-	logger->Info("| Temperature            | %5d C    | %6.0f%%  | %9s |",
-		triggers[PowerManager::InfoType::TEMPERATURE].threshold /1000,
-		triggers[PowerManager::InfoType::TEMPERATURE].margin * 100, temp_trig.c_str());
-	logger->Info("| Power consumption      | %5d mW   | %6.0f%%  | %9s |",
-		triggers[PowerManager::InfoType::POWER].threshold,
-		triggers[PowerManager::InfoType::POWER].margin * 100, power_trig.c_str());
-	logger->Info("| Battery discharge rate | %5d %%/h  | %6.0f%% | %9s |",
-		triggers[PowerManager::InfoType::CURRENT].threshold,
-		triggers[PowerManager::InfoType::CURRENT].margin * 100, batt_trig.c_str());
-	logger->Info("| Battery charge level   | %5d %c/100|  %6s | %9s |",
-		triggers[PowerManager::InfoType::ENERGY].threshold, '%', "-", batt_trig.c_str());
-	logger->Info("=============================================================");
+	logger->Info("====================================================================");
+	logger->Info("| THRESHOLDS             | VALUE      | MARGIN  |      TRIGGER     |");
+	logger->Info("+------------------------+------------+---------+------------------+");
+	logger->Info("| Temperature            | %5d C    | %6.0f%%  | %16s |",
+		triggers[PowerManager::InfoType::TEMPERATURE]->threshold_high /1000,
+		triggers[PowerManager::InfoType::TEMPERATURE]->margin * 100, temp_trig.c_str());
+	logger->Info("| Power consumption      | %5d mW   | %6.0f%%  | %16s |",
+		triggers[PowerManager::InfoType::POWER]->threshold_high,
+		triggers[PowerManager::InfoType::POWER]->margin * 100, power_trig.c_str());
+	logger->Info("| Battery discharge rate | %5d %%/h  | %6.0f%% | %16s |",
+		triggers[PowerManager::InfoType::CURRENT]->threshold_high,
+		triggers[PowerManager::InfoType::CURRENT]->margin * 100, batt_trig.c_str());
+	logger->Info("| Battery charge level   | %5d %c/100|  %6s | %16s |",
+		triggers[PowerManager::InfoType::ENERGY]->threshold_high, '%', "-", batt_trig.c_str());
+	logger->Info("====================================================================");
 
 	// Staus of the optimization policy execution request
 	opt_request_sent = false;
@@ -339,18 +353,20 @@ void PowerMonitor::ManageRequest(
 	if (opt_request_sent) return;
 
 	// Check the required trigger is available
-	auto & trigger_info = triggers[info_type];
-	if (trigger_info.obj == nullptr)
+	auto & trigger = triggers[info_type];
+	if (trigger == nullptr)
 		return;
 
 	// Check and execute the trigger (i.e., the trigger function or the
-	// schedule the optimization request
-	bool request_to_send = trigger_info.obj->Check(
-		trigger_info.threshold, curr_value, trigger_info.margin);
+	// schedule the optimization request)
+	logger->Debug("Before check trigger is armed: %d",trigger->IsArmed());
+	bool request_to_send = trigger->Check(curr_value);
+	logger->Debug("After check trigger is armed: %d",trigger->IsArmed());
+
 	if (request_to_send) {
-		logger->Info("Trigger: <InfoType: %d> current = %d, threshold = %d [m=%0.f]",
-				info_type, curr_value, trigger_info.threshold, trigger_info.margin);
-		auto trigger_func = trigger_info.obj->GetFunction();
+		logger->Info("Trigger: <InfoType: %d> current = %d, threshold = %u [m=%0.f]",
+				info_type, curr_value, trigger->threshold_high, trigger->margin);
+		auto trigger_func = trigger->GetActionFunction();
 		if (trigger_func) {
 			trigger_func();
 			opt_request_sent = false;
@@ -378,6 +394,7 @@ void  PowerMonitor::SampleResourcesStatus(
 	PowerManager::SamplesArray_t samples;
 	PowerManager::InfoType info_type;
 	uint16_t thd_id = 0;
+
 	if (last_resource_index != first_resource_index)
 		thd_id = first_resource_index / (last_resource_index - first_resource_index);
 	else
