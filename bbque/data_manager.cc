@@ -368,13 +368,14 @@ void DataManager::EventHandler() {
 
 void DataManager::PublishOnEvent(status_event_t event){
 	ExitCode_t result;
+	std::list<SubscriberPtr_t> push_list;
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 	UpdateData(); // Update resources and applications data
 	subs_lock.lock();
 	for (const auto s : subscribers_on_event) {
 		// If event matched
 		if((s->subscription.event & bd::sub_bitset_t(event)) == bd::sub_bitset_t(event)){
-			result = Push(s);
+			push_list.push_back(s);
 			if (result != OK) {
 				logger->Error("PublishOnEvent: error in publish status to %s:%d",
 					s->ip_address.c_str(),s->port_num);
@@ -382,6 +383,18 @@ void DataManager::PublishOnEvent(status_event_t event){
 			else
 				logger->Debug("PublishOnEvent: publish status to <%s:%d>",
 					s->ip_address.c_str(),s->port_num);
+	// Publishing information
+	for(auto s: push_list){
+		result = Push(s);
+		if(result == ERR_CLIENT_TIMEOUT){
+			logger->Error("PublishOnEvent: attempts limit reached, the client is removed");
+			continue;
+		} else if (result != OK){
+			logger->Error("PublishOnEvent: error in publishing to <%s:%d>",
+				s->ip_address.c_str(),s->port_num);
+		} else {
+			logger->Info("PublishOnEvent: published information to <%s:%d>",
+				s->ip_address.c_str(),s->port_num);
 		}
 	}
 }
@@ -390,12 +403,16 @@ void DataManager::PublishOnRate(){
 	uint16_t tmp_sleep_time; // = sleep_time;
 	ExitCode_t result;
 	utils::Timer tmr;
+	std::list<SubscriberPtr_t> push_list;
+	
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 	tmp_sleep_time = subscribers_on_rate.back()->subscription.period_ms;
 	UpdateData(); // Update resources and applications data
+	
 	subs_lock.lock();
 	tmr.start();
-	for (auto s: subscribers_on_rate) {
+
+	for (const auto s: subscribers_on_rate) {
 		// Update deadline after sleep
 		s->period_deadline_ms = s->period_deadline_ms - actual_sleep_time;
 		logger->Debug("PublishOnRate: subscriber: <%s:%d> next_deadline: %d",
@@ -403,7 +420,6 @@ void DataManager::PublishOnRate(){
 
 		// Deadline passed => push the updated information
 		if (s->period_deadline_ms <= 0) {
-			result = Push(s);
 			if (result != OK)
 				logger->Error("PublishOnRate: error in publishing to <%s:%d>",
 					s->ip_address.c_str(),s->port_num);
@@ -411,6 +427,7 @@ void DataManager::PublishOnRate(){
 				logger->Info("PublishOnRate: published information to <%s:%d>",
 					s->ip_address.c_str(),s->port_num);
 
+			push_list.push_back(s);
 			// Reset the deadline
 			s->period_deadline_ms = s->subscription.period_ms;
 			logger->Debug("PublishOnRate: subscriber: <%s:%d> updated next_deadline: %d",
@@ -419,6 +436,21 @@ void DataManager::PublishOnRate(){
 		// Calculating the earlier sleep time the sleep time with the earlier
 		if(s->period_deadline_ms < tmp_sleep_time)
 			tmp_sleep_time = s->period_deadline_ms;
+	}
+
+	// Publishing information
+	for(auto s: push_list){
+		result = Push(s);
+		if(result == ERR_CLIENT_TIMEOUT){
+			logger->Error("PublishOnRate: attempts limit reached, the client is removed");
+			continue;
+		} else if (result != OK){
+			logger->Error("PublishOnRate: error in publishing to <%s:%d>",
+				s->ip_address.c_str(),s->port_num);
+		} else {
+			logger->Info("PublishOnRate: published information to <%s:%d>",
+				s->ip_address.c_str(),s->port_num);
+		}
 	}
 	tmr.stop();
 

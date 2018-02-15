@@ -129,9 +129,10 @@ public:
 	 * @brief Class specific return codes
 	 */
 	enum ExitCode_t {
-		OK = 0,           /** Successful call */
-		ERR_CLIENT_COMM,  /** The client is unreachable */
-		ERR_UNKNOWN       /** A not specified error code   */
+		OK = 0,             /** Successful call */
+		ERR_CLIENT_COMM,    /** The client is unreachable */
+		ERR_CLIENT_TIMEOUT, /** The communication timeout is elapsed, the client is removed*/
+		ERR_UNKNOWN         /** A not specified error code   */
 	};
 
 	DataManager();
@@ -258,12 +259,12 @@ private:
 	 * @param subscr: the subscriber to add
 	 * @param event: true if the subscription refers to an event, false otherwise
 	 */
-	void Subscribe(SubscriberPtr_t & subscr, bool event);
+	void Subscribe(SubscriberPtr_t subscr, bool event);
 
 	/**
 	 * @brief Remove a subscription
 	 */
-	void Unsubscribe(SubscriberPtr_t & subscr, bool event);
+	void Unsubscribe(SubscriberPtr_t subscr, bool event);
 
 	/**
 	 * @brief Publish the data to the @ref{subscribers_on_event}
