@@ -266,7 +266,7 @@ const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 						BBQUE_DCI_OFFSET_PE_ID + BBQUE_DCI_LEN_PE_ID>(res_bitset);
 		pe_id_bitset = (pe_id_bitset>>BBQUE_DCI_OFFSET_PE_ID);
 		outstr << "." << GetResourceTypeString(ResourceType::PROC_ELEMENT)
-			<< std::to_string(unit_id_bitset.to_ulong());
+			<< std::to_string(pe_id_bitset.to_ulong());
 	}
 
 	resource_path = outstr.str();
