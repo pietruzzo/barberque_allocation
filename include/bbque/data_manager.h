@@ -48,6 +48,8 @@ namespace br = bbque::res;
 
 using namespace bbque::stat;
 
+#define MAX_SUB_COMM_FAILURE 5
+
 namespace bbque {
 namespace data {
 
@@ -90,6 +92,7 @@ public:
 	uint32_t     port_num;            /// Client port number
 	Subscription subscription;        /// Information subscribed data
 	int16_t      period_deadline_ms;  /// Milliseconds before next update
+	uint16_t     comm_failures = 0;   /// Number of communication failures
 
 	bool cmp(Subscriber & s1, Subscriber & s2) {
 		if(s1.period_deadline_ms < s2.period_deadline_ms)
@@ -186,6 +189,8 @@ private:
 	/// The thread ID of the subscription server thread
 	pid_t subscription_server_tid;
 
+	/// Maximum communication attempts per client
+	uint16_t max_client_attempts;
 	/// list of all application updated status structs
 	std::list<app_status_t> app_stats;
 

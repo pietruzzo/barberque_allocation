@@ -65,8 +65,8 @@ DataManager::DataManager() : Worker(),
 
 	try {
 		po::options_description opts_desc("Data Manager options");
-		LOAD_CONFIG_OPTION("server_port", uint32_t, server_port,
-			BBQUE_DM_DEFAULT_SERVER_PORT);
+		LOAD_CONFIG_OPTION("server_port", uint32_t, server_port, BBQUE_DM_DEFAULT_SERVER_PORT);
+		LOAD_CONFIG_OPTION("client_attempts", uint16_t, max_client_attempts, MAX_SUB_COMM_FAILURE);
 		po::variables_map opts_vm;
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
 	}
@@ -221,6 +221,7 @@ void DataManager::SubscriptionHandler() {
 		logger->Info("\tPeriod: %d ms",subscriber->subscription.period_ms);
 		logger->Info("\tMode: %d",sub_msg.mode);
 
+		std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
 		if (sub_msg.mode == 0)
 			Subscribe(subscriber, sub_msg.event != 0);
 		else
@@ -237,11 +238,9 @@ void DataManager::SubscriptionHandler() {
 }
 
 
-void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event_based) {
+void DataManager::Subscribe(SubscriberPtr_t subscr, bool event_based) {
 	logger->Debug("Subscribe: client <%s:%d>",
 			subscr->ip_address.c_str(),subscr->port_num);
-	std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
-
 	if (event_based) { // If event-based subscription
 		auto sub = FindSubscriber(subscr, subscribers_on_event);
 		// If the client is already a subscriber just update its event filter
@@ -288,10 +287,9 @@ void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event_based) {
 }
 
 
-void DataManager::Unsubscribe(SubscriberPtr_t & subscr, bool event_based) {
+void DataManager::Unsubscribe(SubscriberPtr_t subscr, bool event_based) {
 	logger->Info("Unsubscribe: client <%s:%d>",
 		subscr->ip_address.c_str(), subscr->port_num);
-	std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
 
 	if (event_based) {
 		auto sub = FindSubscriber(subscr, subscribers_on_event);
@@ -371,18 +369,16 @@ void DataManager::PublishOnEvent(status_event_t event){
 	std::list<SubscriberPtr_t> push_list;
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 	UpdateData(); // Update resources and applications data
+
 	subs_lock.lock();
+
 	for (const auto s : subscribers_on_event) {
 		// If event matched
 		if((s->subscription.event & bd::sub_bitset_t(event)) == bd::sub_bitset_t(event)){
 			push_list.push_back(s);
-			if (result != OK) {
-				logger->Error("PublishOnEvent: error in publish status to %s:%d",
-					s->ip_address.c_str(),s->port_num);
-			}
-			else
-				logger->Debug("PublishOnEvent: publish status to <%s:%d>",
-					s->ip_address.c_str(),s->port_num);
+		}
+	}
+
 	// Publishing information
 	for(auto s: push_list){
 		result = Push(s);
@@ -420,13 +416,6 @@ void DataManager::PublishOnRate(){
 
 		// Deadline passed => push the updated information
 		if (s->period_deadline_ms <= 0) {
-			if (result != OK)
-				logger->Error("PublishOnRate: error in publishing to <%s:%d>",
-					s->ip_address.c_str(),s->port_num);
-			else
-				logger->Info("PublishOnRate: published information to <%s:%d>",
-					s->ip_address.c_str(),s->port_num);
-
 			push_list.push_back(s);
 			// Reset the deadline
 			s->period_deadline_ms = s->subscription.period_ms;
@@ -521,6 +510,12 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
 	if (!client_sock) {
 		logger->Error("Push: cannot connect to <%s:%d>",
 			sub->ip_address.c_str(), sub->port_num);
+		sub->comm_failures++;
+		if(sub->comm_failures++ >= max_client_attempts){
+			// Unsubscribing the unreachable client
+			Unsubscribe(sub,sub->subscription.event != 0);
+			return ERR_CLIENT_TIMEOUT;
+		}
 		return ERR_CLIENT_COMM;
 	}
 
