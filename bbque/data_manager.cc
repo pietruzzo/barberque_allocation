@@ -209,17 +209,17 @@ void DataManager::SubscriptionHandler() {
 			(client_addr, (uint32_t) sub_msg.port_num, subscription_info);
 
 		// Logging messages
-		logger->Debug("SubscriptionHandler: client <%s:%d>",
+		logger->Info("SubscriptionHandler: client <%s:%d>",
 			client_addr.c_str(), sub_msg.port_num);
 		logger->Debug("SubscriptionHandler: message size: %u", sizeof(sub_msg));
-		logger->Notice("Client subscriber:");
-		logger->Notice("\tPort: %d",subscriber->port_num);
-		logger->Notice("\tFilter: %s",
+		logger->Info("Client subscriber:");
+		logger->Info("\tPort: %d",subscriber->port_num);
+		logger->Info("\tFilter: %s",
 			data::sub_bitset_t(subscriber->subscription.filter).to_string().c_str());
-		logger->Notice("\tEvent: %s",
+		logger->Info("\tEvent: %s",
 			data::sub_bitset_t(subscriber->subscription.event).to_string().c_str());
-		logger->Notice("\tPeriod: %d ms",subscriber->subscription.period_ms);
-		logger->Notice("\tMode: %d",sub_msg.mode);
+		logger->Info("\tPeriod: %d ms",subscriber->subscription.period_ms);
+		logger->Info("\tMode: %d",sub_msg.mode);
 
 		if (sub_msg.mode == 0)
 			Subscribe(subscriber, sub_msg.event != 0);
@@ -238,7 +238,7 @@ void DataManager::SubscriptionHandler() {
 
 
 void DataManager::Subscribe(SubscriberPtr_t & subscr, bool event_based) {
-	logger->Info("Subscribe: client <%s:%d>",
+	logger->Debug("Subscribe: client <%s:%d>",
 			subscr->ip_address.c_str(),subscr->port_num);
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
 
@@ -380,7 +380,7 @@ void DataManager::PublishOnEvent(status_event_t event){
 					s->ip_address.c_str(),s->port_num);
 			}
 			else
-				logger->Notice("PublishOnEvent: publish status to <%s:%d>",
+				logger->Debug("PublishOnEvent: publish status to <%s:%d>",
 					s->ip_address.c_str(),s->port_num);
 		}
 	}
