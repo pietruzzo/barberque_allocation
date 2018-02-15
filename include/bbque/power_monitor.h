@@ -123,12 +123,12 @@ public:
 	}
 
 	/**
-	 * @brief Get the current theshold
+	 * @brief Get the current threshold
 	 *
 	 * @return For TEMP the temperature in Celsius degree.
 	 * For POWER the power consumption upper bound.
 	 * For BATTERY_LEVEL the charge level under which a policy execution could be triggered.
-	 * For BATTERY_RATE the maximum discahrging rate tolerated.
+	 * For BATTERY_RATE the maximum discharging rate tolerated.
 	 */
 	inline uint32_t GetThreshold(PowerManager::InfoType t) const {
 		auto v = triggers.find(t);
