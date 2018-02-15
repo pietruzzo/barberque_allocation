@@ -513,13 +513,14 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
 		logger->Error("Push: cannot connect to <%s:%d>",
 			sub->ip_address.c_str(), sub->port_num);
 		sub->comm_failures++;
-		if(sub->comm_failures++ >= max_client_attempts){
+		if(sub->comm_failures > max_client_attempts){
 			// Unsubscribing the unreachable client
 			Unsubscribe(sub,sub->subscription.event != 0);
 			return ERR_CLIENT_TIMEOUT;
 		}
 		return ERR_CLIENT_COMM;
 	}
+	sub->comm_failures = 0;
 
 	// Message serialization and transmission
 	text_oarchive archive(client_sock);
