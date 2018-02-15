@@ -193,26 +193,35 @@ private:
 
 #endif // CONFIG_BBQUE_PM_BATTERY
 
-	/// Command manager instance
+	/**
+	 * @brief Command manager instance
+	 */
 	CommandManager & cm;
 
 #ifdef CONFIG_BBQUE_DM
-	/// Data manager instance
+	/**
+	 * @brief Data manager instance
+	 */
 	DataManager & dm;
 #endif
 
-	/// Configuration manager instance
+	/**
+	 * @brief Configuration manager instance
+	 */
 	ConfigurationManager & cfm;
 
-	/// The logger used by the power manager
+	/**
+	 * @brief The logger used by the power manager
+	 */
 	std::unique_ptr<bu::Logger> logger;
 
-	/// The set of flags related to pending monitoring events to handle
+	/**
+	 * @brief The set of flags related to pending monitoring events to handle
+	 */
 	std::bitset<WM_EVENT_COUNT> events;
 
 	/**
-	 * @struct SystemLifetimeInfo_t
-	 * @brief System power budget information
+	 * @struct ResourceHandler
 	 */
 	struct ResourceHandler {
 		br::ResourcePathPtr_t path;
@@ -221,6 +230,7 @@ private:
 
 
 	/**
+	 * @struct PowerMonitorInfo_t
 	 * @brief Structure to collect support information for the power
 	 * monitoring activity
 	 */
@@ -241,7 +251,6 @@ private:
 	 * @brief Number of monitoring threads to spawn
 	 */
 	uint16_t nr_threads = 1;
-
 
 	/**
 	 * @brief Keep track of sending status of an optimization request
