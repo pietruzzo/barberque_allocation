@@ -3,3 +3,8 @@ if (CONFIG_BBQUE_BINDINGS_PYTHON)
 else()
 endif (CONFIG_BBQUE_BINDINGS_PYTHON)
 
+if (CONFIG_BBQUE_BINDINGS_JAVA)
+  add_subdirectory (java)
+else()
+endif (CONFIG_BBQUE_BINDINGS_JAVA)
+
