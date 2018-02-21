@@ -19,10 +19,12 @@
 
 #include "bbque/application_manager.h"
 #include "bbque/configuration_manager.h"
-#include "bbque/power_monitor.h"
 #include "bbque/signals_manager.h"
 #include "bbque/utils/utility.h"
 
+#ifdef CONFIG_BBQUE_WM
+#include "bbque/power_monitor.h"
+#endif
 
 #define RESOURCE_MANAGER_NAMESPACE "bq.rm"
 #define MODULE_NAMESPACE RESOURCE_MANAGER_NAMESPACE

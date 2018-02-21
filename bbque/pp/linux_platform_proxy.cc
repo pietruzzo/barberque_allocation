@@ -1,6 +1,5 @@
 #include "bbque/config.h"
 
-#include "bbque/power_monitor.h"
 #include "bbque/pp/linux_platform_proxy.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_path.h"
@@ -18,6 +17,10 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sstream>
+
+#ifdef CONFIG_BBQUE_WM
+#include "bbque/power_monitor.h"
+#endif
 
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 #include <asm/types.h>

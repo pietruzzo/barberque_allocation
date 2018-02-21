@@ -1,10 +1,13 @@
 #include "bbque/pp/mango_platform_proxy.h"
 #include "bbque/config.h"
-#include "bbque/power_monitor.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/assert.h"
 #include "bbque/pp/mango_platform_description.h"
 #include "bbque/resource_partition_validator.h"
+
+#ifdef CONFIG_BBQUE_WM
+#include "bbque/power_monitor.h"
+#endif
 
 #include <libhn/hn.h>
 
