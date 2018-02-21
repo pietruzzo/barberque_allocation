@@ -12,7 +12,7 @@ add_library(bbque_java_bindings MODULE
 
 set_target_properties(bbque_java_bindings PROPERTIES
   OUTPUT_NAME "barbeque"
-  PREFIX ""
+  PREFIX "lib"
   INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque:${CONFIG_BOSP_RUNTIME_PATH}/lib"
   )
 
