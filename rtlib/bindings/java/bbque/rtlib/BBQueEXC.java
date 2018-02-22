@@ -29,7 +29,7 @@ public abstract class BBQueEXC {
     public synchronized void dispose() {
         if (!mDisposed) {
             // TODO this cause an error, maybe is not necessary to delete the native pointer?
-            // disposeNative(mNativePointer);
+            disposeNative(mNativePointer);
             mDisposed = true;
         } else {
             throw new IllegalStateException("Executor already disposed");
@@ -132,66 +132,66 @@ public abstract class BBQueEXC {
      ************************************* NATIVE CALLBACKS BRIDGE *********************************************
      ***********************************************************************************************************/
 
-    private int onSetupCallback() {
+    private RTLibExitCode onSetupCallback() {
         try {
             onSetup();
         } catch (RTLibException e) {
-            return e.getExitCode().ordinal();
+            return e.getExitCode();
         }
-        return RTLibExitCode.RTLIB_OK.ordinal();
+        return RTLibExitCode.RTLIB_OK;
     }
 
-    private int onConfigureCallback(int awmId) {
+    private RTLibExitCode onConfigureCallback(int awmId) {
         try {
             onConfigure(awmId);
         } catch (RTLibException e) {
-            return e.getExitCode().ordinal();
+            return e.getExitCode();
         }
-        return RTLibExitCode.RTLIB_OK.ordinal();
+        return RTLibExitCode.RTLIB_OK;
     }
 
-    private int onSuspendCallback() {
+    private RTLibExitCode onSuspendCallback() {
         try {
             onSuspend();
         } catch (RTLibException e) {
-            return e.getExitCode().ordinal();
+            return e.getExitCode();
         }
-        return RTLibExitCode.RTLIB_OK.ordinal();
+        return RTLibExitCode.RTLIB_OK;
     }
 
-    private int onResumeCallback() {
+    private RTLibExitCode onResumeCallback() {
         try {
             onResume();
         } catch (RTLibException e) {
-            return e.getExitCode().ordinal();
+            return e.getExitCode();
         }
-        return RTLibExitCode.RTLIB_OK.ordinal();
+        return RTLibExitCode.RTLIB_OK;
     }
 
-    private int onRunCallback() {
+    private RTLibExitCode onRunCallback() {
         try {
             onRun();
         } catch (RTLibException e) {
-            return e.getExitCode().ordinal();
+            return e.getExitCode();
         }
-        return RTLibExitCode.RTLIB_OK.ordinal();
+        return RTLibExitCode.RTLIB_OK;
     }
 
-    private int onMonitorCallback() {
+    private RTLibExitCode onMonitorCallback() {
         try {
             onMonitor();
         } catch (RTLibException e) {
-            return e.getExitCode().ordinal();
+            return e.getExitCode();
         }
-        return RTLibExitCode.RTLIB_OK.ordinal();
+        return RTLibExitCode.RTLIB_OK;
     }
 
-    private int onReleaseCallback() {
+    private RTLibExitCode onReleaseCallback() {
         try {
             onRelease();
         } catch (RTLibException e) {
-            return e.getExitCode().ordinal();
+            return e.getExitCode();
         }
-        return RTLibExitCode.RTLIB_OK.ordinal();
+        return RTLibExitCode.RTLIB_OK;
     }
 }

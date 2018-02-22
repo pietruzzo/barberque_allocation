@@ -8,7 +8,7 @@ public class RTLibException extends Exception {
 
     public RTLibException(String message) {
         super(message);
-        mExitCode = RTLibExitCode.RTLIB_OK;
+        mExitCode = RTLibExitCode.RTLIB_ERROR;
     }
 
     public RTLibException(RTLibExitCode exitCode) {
