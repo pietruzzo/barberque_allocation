@@ -29,31 +29,31 @@ private:
 	jclass callback_class;
 
 	RTLIB_ExitCode_t onSetup() override {
-		return onGenericIntCallback("onSetupCallback", "()I");
+		return onGenericIntCallback("onSetupCallback", "()Lbbque/rtlib/enumeration/RTLibExitCode;");
 	}
 
 	RTLIB_ExitCode_t onConfigure(int8_t awm_id) override {
-		return onGenericIntCallback("onConfigureCallback", "(I)I", (jint) awm_id);
+		return onGenericIntCallback("onConfigureCallback", "(I)Lbbque/rtlib/enumeration/RTLibExitCode;", (jint) awm_id);
 	}
 
 	RTLIB_ExitCode_t onSuspend() override {
-		return onGenericIntCallback("onSuspendCallback", "()I");
+		return onGenericIntCallback("onSuspendCallback", "()Lbbque/rtlib/enumeration/RTLibExitCode;");
 	}
 
 	RTLIB_ExitCode_t onResume() override {
-		return onGenericIntCallback("onResumeCallback", "()I");
+		return onGenericIntCallback("onResumeCallback", "()Lbbque/rtlib/enumeration/RTLibExitCode;");
 	}
 
 	RTLIB_ExitCode_t onRun() override {
-		return onGenericIntCallback("onRunCallback", "()I");
+		return onGenericIntCallback("onRunCallback", "()Lbbque/rtlib/enumeration/RTLibExitCode;");
 	}
 
 	RTLIB_ExitCode_t onMonitor() override {
-		return onGenericIntCallback("onMonitorCallback", "()I");
+		return onGenericIntCallback("onMonitorCallback", "()Lbbque/rtlib/enumeration/RTLibExitCode;");
 	}
 
 	RTLIB_ExitCode_t onRelease() override {
-		return onGenericIntCallback("onReleaseCallback", "()I");
+		return onGenericIntCallback("onReleaseCallback", "()Lbbque/rtlib/enumeration/RTLibExitCode;");
 	}
 
 	RTLIB_ExitCode_t onGenericIntCallback(const char *method, const char *signature, ...);

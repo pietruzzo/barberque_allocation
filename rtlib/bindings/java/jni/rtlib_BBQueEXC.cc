@@ -1,6 +1,9 @@
 #include <cstdarg>
 #include <bbque/bbque_exc.h>
 #include "rtlib_BBQueEXC.h"
+#include "rtlib_Enums.h"
+
+#include <iostream>
 
 jlong Java_bbque_rtlib_BBQueEXC_initNative(JNIEnv *env, jobject obj, jstring javaName, jstring javaRecipe) {
 	const char *nativeName = env->GetStringUTFChars(javaName, JNI_FALSE);
@@ -81,10 +84,12 @@ void Java_bbque_rtlib_BBQueEXC_clearAWMConstraints(JNIEnv *env, jobject obj) {
 	throwRTLibExceptionIfNecessary(env, obj, code);
 }
 
-/*
-JNIEXPORT void JNICALL Java_bbque_rtlib_BBQueEXC_setGoalGap(JNIEnv *, jobject, jint) {
-	// TODO: implement this function
-}*/
+void Java_bbque_rtlib_BBQueEXC_setGoalGap(JNIEnv *env, jobject obj, jint goal_gap_percent) {
+	jlong native_pointer = getEXCNativePointer(env, obj);
+	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
+	RTLIB_ExitCode_t code = jni_exc->SetGoalGap(goal_gap_percent);
+	throwRTLibExceptionIfNecessary(env, obj, code);
+}
 
 jstring Java_bbque_rtlib_BBQueEXC_getUniqueID_1String(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getEXCNativePointer(env, obj);
@@ -207,10 +212,13 @@ RTLIB_ExitCode_t JNIBbqueEXC::onGenericIntCallback(const char *method, const cha
 	JNIEnv *env;
 	jvm->AttachCurrentThread((void **)&env, NULL);
 	jmethodID callback_method = env->GetMethodID(callback_class, method, signature);
-	jint exit_code = env->CallIntMethodV(callback_obj, callback_method, arguments);
+	jobject java_exit_code = env->CallObjectMethodV(callback_obj, callback_method, arguments);
+	jclass java_exit_code_class = env->GetObjectClass(java_exit_code);
+	jfieldID jni_exit_code_value_id = env->GetFieldID(java_exit_code_class, "mJNIValue", "I");
+	jint jni_exit_code_value = env->GetIntField(java_exit_code, jni_exit_code_value_id);
 	va_end(arguments);
 	jvm->DetachCurrentThread();
-	return RTLIB_OK; // TODO: find a way to convert exit codes from java to cpp
+	return getNativeExitCode(jni_exit_code_value);
 }
 
 jlong getEXCNativePointer(JNIEnv *env, jobject obj) {
@@ -221,6 +229,13 @@ jlong getEXCNativePointer(JNIEnv *env, jobject obj) {
 
 void throwRTLibExceptionIfNecessary(JNIEnv *env, jobject obj, RTLIB_ExitCode_t exit_code) {
 	if (exit_code != RTLIB_OK) {
-        	// TODO: throw an RTLibException with the given exit_code (cpp to java)
+		int java_code = getJavaExitCode(exit_code);
+		jclass java_exit_code_class = env->FindClass("bbque/rtlib/enumeration/RTLibExitCode");
+    		jmethodID java_exit_code_met = env->GetStaticMethodID(java_exit_code_class, "fromJNIValue", "(I)Lbbque/rtlib/enumeration/RTLibExitCode;");
+		jobject java_exit_code = env->CallStaticObjectMethod(java_exit_code_class, java_exit_code_met, java_code);
+		jclass java_exception_class = env->FindClass("bbque/rtlib/exception/RTLibException");
+		jmethodID java_exception_method_id = env->GetMethodID(java_exception_class, "<init>", "(Lbbque/rtlib/enumeration/RTLibExitCode;)V");
+		jobject java_exception = env->NewObject(java_exception_class, java_exception_method_id, java_exit_code);
+		env->Throw((jthrowable) java_exception);
 	}
 }
