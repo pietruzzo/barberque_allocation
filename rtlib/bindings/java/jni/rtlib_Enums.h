@@ -111,21 +111,18 @@
 #define bbque_rtlib_enumeration_Constants_EXACT_VALUE 2L
 
 static std::map<RTLIB_ExitCode_t, int> generateExitCodeCPPJMap();
-// static std::map<RTLIB_ResourceType, int> generateResourceTypeCPPJMap();
 static std::map<int, RTLIB_ExitCode_t> generateExitCodeJCPPMap();
 static std::map<int, RTLIB_ResourceType_t> generateResourceTypeJCPPMap();
 static std::map<int, RTLIB_ConstraintOperation_t> generateConstraintOperationJCPPMap();
 static std::map<int, RTLIB_ConstraintType_t> generateConstraintTypeJCPPMap();
 
 static int getJavaExitCode(RTLIB_ExitCode_t code);
-// static int getJavaResourceType(RTLIB_ResourceType type);
 static RTLIB_ExitCode_t getNativeExitCode(int java_exit_code);
 static RTLIB_ResourceType_t getNativeResourceType(int java_resource_type);
 static RTLIB_ConstraintOperation_t getNativeConstraintOperation(int java_constraint_operation);
 static RTLIB_ConstraintType_t getNativeConstraintType(int java_constraint_type);
 
 static std::map<RTLIB_ExitCode_t, int> map_exit_codes_cppj = generateExitCodeCPPJMap();
-// static std::map<RTLIB_ResourceType, int> map_resource_types_cppj = generateResourceTypeCPPJMap();
 static std::map<int, RTLIB_ExitCode_t> map_exit_codes_jcpp = generateExitCodeJCPPMap();
 static std::map<int, RTLIB_ResourceType_t> map_resource_types_jcpp = generateResourceTypeJCPPMap();
 static std::map<int, RTLIB_ConstraintOperation_t> map_constraint_operations_jcpp = generateConstraintOperationJCPPMap();
@@ -168,19 +165,6 @@ static std::map<RTLIB_ExitCode_t, int> generateExitCodeCPPJMap() {
 	m[RTLIB_EXIT_CODE_COUNT] = bbque_rtlib_enumeration_Constants_RTLIB_EXIT_CODE_COUNT;
 	return m;
 }
-
-/*
-static std::map<RTLIB_ResourceType, int> generateResourceTypeCPPJMap() {
-	std::map<RTLIB_ResourceType, int> m;
-	m[SYSTEM] = bbque_rtlib_enumeration_Constants_RESOURCE_TYPE_SYSTEM;
-	m[CPU] = bbque_rtlib_enumeration_Constants_RESOURCE_TYPE_CPU;
-	m[PROC_NR] = bbque_rtlib_enumeration_Constants_RESOURCE_TYPE_PROC_NR;
-	m[PROC_ELEMENT] = bbque_rtlib_enumeration_Constants_RESOURCE_TYPE_PROC_ELEMENT;
-	m[MEMORY] = bbque_rtlib_enumeration_Constants_RESOURCE_TYPE_MEMORY;
-	m[GPU] = bbque_rtlib_enumeration_Constants_RESOURCE_TYPE_GPU;
-	m[ACCELERATOR] = bbque_rtlib_enumeration_Constants_RESOURCE_TYPE_ACCELERATOR;
-	return m;
-}*/
 
 static std::map<int, RTLIB_ExitCode_t> generateExitCodeJCPPMap() {
 	std::map<int, RTLIB_ExitCode_t> m;
@@ -255,16 +239,6 @@ static int getJavaExitCode(RTLIB_ExitCode_t code) {
 		return bbque_rtlib_enumeration_Constants_RTLIB_ERROR;
 	}
 }
-
-/*
-static int getJavaResourceType(RTLIB_ResourceType type) {
-	std::map<RTLIB_ResourceType, int>::iterator i = map_resource_types_cppj.find(type);
-	if (i != map_resource_types_cppj.end()) {
-		return i->second;
-	} else {
-		return bbque_rtlib_enumeration_Constants_RESOURCE_TYPE_SYSTEM;
-	}
-}*/
 
 static RTLIB_ExitCode_t getNativeExitCode(int java_exit_code) {
 	std::map<int, RTLIB_ExitCode_t>::iterator i = map_exit_codes_jcpp.find(java_exit_code);

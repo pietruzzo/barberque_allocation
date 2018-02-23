@@ -63,22 +63,12 @@ private:
 extern "C" {
 #endif
 
-#define bbque_rtlib_BBQueEXC_ERROR_LIB_INIT -1L
-#define bbque_rtlib_BBQueEXC_ERROR_EXECUTION_CONTEXT_REGISTRATION -2L
-
 /*
  * Class:     bbque_rtlib_BBQueEXC
  * Method:    initNative
- * Signature: (Ljava/lang/String;Ljava/lang/String;)J
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Lbbque/rtlib/RTLibServices;)J
  */
-JNIEXPORT jlong JNICALL Java_bbque_rtlib_BBQueEXC_initNative(JNIEnv *, jobject, jstring, jstring);
-
-/*
- * Class:     bbque_rtlib_BBQueEXC
- * Method:    disposeNative
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_bbque_rtlib_BBQueEXC_disposeNative(JNIEnv *, jobject, jlong);
+JNIEXPORT jlong JNICALL Java_bbque_rtlib_BBQueEXC_initNative(JNIEnv *, jobject, jstring, jstring, jobject);
 
 /*
  * Class:     bbque_rtlib_BBQueEXC
@@ -149,6 +139,13 @@ JNIEXPORT void JNICALL Java_bbque_rtlib_BBQueEXC_setGoalGap(JNIEnv *, jobject, j
  * Signature: ()Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_bbque_rtlib_BBQueEXC_getUniqueID_1String(JNIEnv *, jobject);
+
+/*
+ * Class:     bbque_rtlib_BBQueEXC
+ * Method:    getUniqueId
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_bbque_rtlib_BBQueEXC_getUniqueID(JNIEnv *, jobject);
 
 /*
  * Class:     bbque_rtlib_BBQueEXC
@@ -280,12 +277,12 @@ JNIEXPORT jobject JNICALL Java_bbque_rtlib_BBQueEXC_configuration(JNIEnv *, jobj
  * This function is used to extract the native pointer from the java instance of the EXC
  * and return it as a jlong object.
  */
-jlong getEXCNativePointer(JNIEnv *env, jobject obj);
+jlong getObjectNativePointer(JNIEnv *env, jobject obj);
 
 /*
- * This function checks if is necessary to throw a java exception looking at the provided exit code.
+ * This function checks if it is necessary to throw a java exception looking at the provided exit code.
  */
-void throwRTLibExceptionIfNecessary(JNIEnv *env, jobject obj, RTLIB_ExitCode_t exit_code);
+void throwRTLibExceptionIfNecessary(JNIEnv *env, RTLIB_ExitCode_t exit_code);
 
 #ifdef __cplusplus
 }

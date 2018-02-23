@@ -8,7 +8,7 @@ public enum RTLibExitCode {
     RTLIB_OK(Constants.RTLIB_OK),
     /** Unspecified (generic) error */
     RTLIB_ERROR(Constants.RTLIB_ERROR),
-    /** RTLibServices Version does not match that of the Barbeque RTRM */
+    /** RTLib Version does not match that of the Barbeque RTRM */
     RTLIB_VERSION_MISMATCH(Constants.RTLIB_VERSION_MISMATCH),
     /** No new working mode error */
     RTLIB_NO_WORKING_MODE(Constants.RTLIB_NO_WORKING_MODE),
