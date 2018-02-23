@@ -6,39 +6,13 @@ import bbque.rtlib.exception.*;
 
 public abstract class BBQueEXC {
 
-    private static final int ERROR_LIB_INIT = -1;
-    private static final int ERROR_EXECUTION_CONTEXT_REGISTRATION = -2;
-
     private final long mNativePointer;
-    private boolean mDisposed;
 
-    public BBQueEXC(String name, String recipe) throws RTLibException {
-        mNativePointer = initNative(name, recipe);
-        mDisposed = false;
-        if (mNativePointer <= 0) {
-            if (mNativePointer == ERROR_LIB_INIT) {
-                throw new RTLibInitException("RTLib initialization failed");
-            } else if (mNativePointer == ERROR_EXECUTION_CONTEXT_REGISTRATION) {
-                throw new RTLibRegistrationException("RTLib execution context registration failed");
-            } else {
-                throw new RTLibException(String.format("Unknown error, RTLib returned pointer: %d", mNativePointer));
-            }
-        }
+    public BBQueEXC(String name, String recipe, RTLibServices services) throws RTLibRegistrationException {
+        mNativePointer = initNative(name, recipe, services);
     }
 
-    public synchronized void dispose() {
-        if (!mDisposed) {
-            // TODO this cause an error, maybe is not necessary to delete the native pointer?
-            disposeNative(mNativePointer);
-            mDisposed = true;
-        } else {
-            throw new IllegalStateException("Executor already disposed");
-        }
-    }
-
-    private native long initNative(String name, String recipe);
-
-    private native void disposeNative(long nativePointer);
+    private native long initNative(String name, String recipe, RTLibServices services);
 
     /***********************************************************************************************************
      ********************************** AEM EXECUTION CONTEXT MANAGEMENT ***************************************
@@ -72,7 +46,7 @@ public abstract class BBQueEXC {
 
     public native String getUniqueID_String();
 
-    /*TODO: is getUniqueId() necessary? */
+    public native int getUniqueID();
 
     public native int getAssignedResources(RTLibResourceType resourceType) throws RTLibException;
 
