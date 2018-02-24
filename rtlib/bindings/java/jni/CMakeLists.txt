@@ -7,8 +7,10 @@ else ()
 endif()
 
 add_library(bbque_java_bindings MODULE
-  rtlib_RTLibServices.cc
-  rtlib_BBQueEXC.cc
+  bbque_rtlib_RTLib.cc
+  bbque_rtlib_model_RTLibServices.cc
+  bbque_rtlib_model_BBQueEXC.cc
+  bbque_rtlib_commons.cc
   )
 
 set_target_properties(bbque_java_bindings PROPERTIES
