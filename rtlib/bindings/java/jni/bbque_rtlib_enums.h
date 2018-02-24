@@ -1,8 +1,8 @@
 #include <map>
-#include <bbque/bbque_exc.h>
+#include <bbque/rtlib.h>
 
-#ifndef _Included_bbque_rtlib_Enums
-#define _Included_bbque_rtlib_Enums
+#ifndef _Included_bbque_rtlib_enums
+#define _Included_bbque_rtlib_enums
 
 /*
  * Define contract between JNI and 'RTLibExitCode' Java class
