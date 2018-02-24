@@ -1,4 +1,4 @@
-package bbque.rtlib;
+package bbque.rtlib.model;
 
 import bbque.rtlib.enumeration.RTLibConstraintOperation;
 import bbque.rtlib.enumeration.RTLibConstraintType;
@@ -15,15 +15,15 @@ public class RTLibConstraint {
         mType = type;
     }
 
-    public int getAwm() {
+    public int awm() {
         return mAwm;
     }
 
-    public RTLibConstraintOperation getOperation() {
+    public RTLibConstraintOperation operation() {
         return mOperation;
     }
 
-    public RTLibConstraintType getType() {
+    public RTLibConstraintType type() {
         return mType;
     }
 }

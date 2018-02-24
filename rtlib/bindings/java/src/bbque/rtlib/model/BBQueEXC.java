@@ -1,4 +1,4 @@
-package bbque.rtlib;
+package bbque.rtlib.model;
 
 import bbque.rtlib.enumeration.RTLibExitCode;
 import bbque.rtlib.enumeration.RTLibResourceType;
@@ -82,7 +82,7 @@ public abstract class BBQueEXC {
 
     public native int currentAWM();
 
-    public native RTLibConf configuration();
+    public native RTLibConfig configuration();
 
     /***********************************************************************************************************
      ************************************ AEM APPLICATION CALLBACKS ********************************************
