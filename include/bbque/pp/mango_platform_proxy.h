@@ -10,7 +10,8 @@
 
 #define MANGO_PP_NAMESPACE "bq.pp.mango"
 
-#define MANGO_MAX_MEMORIES 16
+// UPV -> POLIMI there could be as much memories as tiles in MANGO
+#define MANGO_MAX_MEMORIES 256
 
 namespace bbque {
 namespace pp {
@@ -96,6 +97,9 @@ private:
 
 	std::bitset<MANGO_MAX_MEMORIES> found_memory_banks;
 
+	// the next keeps track of the memory tiles & addresses where peakos has been uploaded
+	std::map<uint32_t, uint32_t> allocated_resources_peakos;
+
 //-------------------- METHODS
 
 	MangoPlatformProxy();
@@ -119,6 +123,7 @@ private:
 		ExitCode_t SetAddresses(const TaskGraph &tg, const Partition &partition) noexcept;
 	private:
 		std::unique_ptr<bu::Logger> logger;
+
 	};
 
 };

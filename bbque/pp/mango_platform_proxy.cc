@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "bbque/pp/mango_platform_proxy.h"
 #include "bbque/config.h"
 #include "bbque/res/resource_path.h"
@@ -19,8 +21,6 @@ namespace bb = bbque;
 namespace br = bbque::res;
 namespace po = boost::program_options;
 
-typedef hn_st_req hn_st_request_t;
-typedef hn_st_response hn_st_response_t;
 
 namespace bbque {
 namespace pp {
@@ -47,9 +47,9 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	// TODO: this was a copy-and-paste of the example, we have to ask to UPV
 	//       how to properly tune these parameters, in particular the meaning of
 	//	 UPV_PARTITION_STRATEGY
-	hn_daemon_socket_filter filter;
-	filter.target = TARGET_MANGO;
-	filter.mode = APPL_MODE_SYNC_READS;
+	hn_filter_t filter;
+	filter.target = HN_FILTER_TARGET_MANGO;
+	filter.mode = HN_FILTER_APPL_MODE_SYNC_READS;
 	filter.tile = 999;
 	filter.core = 999;
 
@@ -76,6 +76,15 @@ MangoPlatformProxy::MangoPlatformProxy() :
 }
  
 MangoPlatformProxy::~MangoPlatformProxy() {
+ 
+	// first release occupied resources, p.e. allocated memory for peakOS
+	// Hope Partitions are unset correctly too
+	for (auto rsc : allocated_resources_peakos) {
+		uint32_t tile_mem = rsc.first;
+		uint32_t addr     = rsc.second;
+		hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE);
+		logger->Info("Released peakOS memory %d address 0x%08x", tile_mem, addr);
+	}
 
 	// Just clean up stuffs...
 	int hn_err_ret = hn_end();
@@ -186,36 +195,44 @@ MangoPlatformProxy::LoadPlatformData() noexcept {
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 
-		uint32_t req_size = MANGO_PEAKOS_FILE_SIZE;
-		uint32_t tile_memory;	// This will be filled with the memory id
-		uint32_t base_addr;	// This is the starting address selected
+	uint32_t req_size = MANGO_PEAKOS_FILE_SIZE;
+	uint32_t tile_memory;	// This will be filled with the memory id
+	uint32_t base_addr;	// This is the starting address selected
 
-		// TODO: This is currently managed by the internal HN find memory, however, we have
-		//	 to replace this with an hook to the MemoryManager here.
+	// TODO: This is currently managed by the internal HN find memory, however, we have
+	//	 to replace this with an hook to the MemoryManager here.
 
-		int err = hn_find_memory(tile, req_size, &tile_memory, &base_addr);
+	int err = hn_find_memory(tile, req_size, &tile_memory, &base_addr);
 
-		if (HN_SUCCEEDED != err) {
-			logger->Error("BootTiles_PEAK: Unable to get memory for tile nr=%d", tile);
-			return PLATFORM_LOADING_FAILED;
-		}
+	if (HN_SUCCEEDED != err) {
+		logger->Error("BootTiles_PEAK: Unable to get memory for tile nr=%d", tile);
+		return PLATFORM_LOADING_FAILED;
+	}
 
-		logger->Debug("Loading PEAK OS in memory bank %d [address=%x]", tile_memory, base_addr);
+	err = hn_allocate_memory(tile_memory, base_addr, req_size);
+	if (HN_SUCCEEDED != err) {
+		logger->Error("BootTiles_PEAK: Unable to allocate memory for tile nr=%d", tile);
+		return PLATFORM_LOADING_FAILED;
+	}
 
-		logger->Debug("Booting PEAK tile nr=%d [PEAK_OS:%s] [PEAK_PROT:%s]", tile, MANGO_PEAK_OS, MANGO_PEAK_PROTOCOL);
-		err = hn_boot_unit(tile, tile_memory, base_addr, MANGO_PEAK_PROTOCOL, MANGO_PEAK_OS);
+	logger->Debug("Loading PEAK OS in memory id %d [address=0x%x]", tile_memory, base_addr);
+	allocated_resources_peakos[tile_memory] = base_addr;
 
-		if (HN_SUCCEEDED != err) {
-			logger->Error("Unable to boot PEAK tile nr=%d", tile);
-			return PLATFORM_LOADING_FAILED;
-		}
-		return PLATFORM_OK;
+	logger->Debug("Booting PEAK tile nr=%d [PEAK_OS:%s] [PEAK_PROT:%s]", tile, MANGO_PEAK_OS,
+			MANGO_PEAK_PROTOCOL);
+	err = hn_boot_unit(tile, tile_memory, base_addr, MANGO_PEAK_PROTOCOL, MANGO_PEAK_OS);
+
+	if (HN_SUCCEEDED != err) {
+		logger->Error("Unable to boot PEAK tile nr=%d", tile);
+		return PLATFORM_LOADING_FAILED;
+	}
+	return PLATFORM_OK;
 } 
 
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::BootTiles() noexcept {
 
-	hn_st_tile_info tile_info;
+	hn_tile_info_t tile_info;
 	for (uint_fast32_t i=0; i < num_tiles; i++) {
 
 		int err = hn_get_tile_info(i, &tile_info);
@@ -224,7 +241,7 @@ MangoPlatformProxy::BootTiles() noexcept {
 			return PLATFORM_INIT_FAILED;
 		}
 
-		if (tile_info.tile_type == HN_PEAK_TYPE_1 || tile_info.tile_type == HN_PEAK_TYPE_2) {
+		if (tile_info.unit_family == HN_TILE_FAMILY_PEAK) {
 
 			err = BootTiles_PEAK(i);
 			if (PLATFORM_OK != err) {
@@ -254,22 +271,24 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 	for (uint_fast32_t i=0; i < num_tiles; i++) {
 
 		// First of all get the information of tiles from HN library
-		hn_st_tile_info tile_info;
+		hn_tile_info_t tile_info;
 		int err = hn_get_tile_info(i, &tile_info);
 		if (HN_SUCCEEDED != err) {
 			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
 			return PLATFORM_INIT_FAILED;
 		}
 
-		logger->Info("Loading tile %d of type %d...", i, tile_info.tile_type);
+		logger->Info("Loading tile %d of family %s and model %s...", i, 
+			hn_to_str_unit_family(tile_info.unit_family), 
+			hn_to_str_unit_model(tile_info.unit_model));
 
-		MangoTile mt(i, (MangoTile::MangoTileType_t)(tile_info.tile_type));
+		MangoTile mt(i, (MangoTile::MangoUnitFamily_t)(tile_info.unit_family),(MangoTile::MangoUnitModel_t)(tile_info.unit_model));
 		sys.AddAccelerator(mt);
 		mt.SetPrefix(sys.GetPath());
 
 		// For each tile, we register how many PE how may cores the accelerator has, this
 		// will simplify the tracking of ResourceAccounter resources
-		for (int i=0; i < MangoTile::GetCoreNr(mt.GetType()); i++) {
+		for (int i=0; i < MangoTile::GetCoreNr(mt.GetFamily(), mt.GetModel()); i++) {
 			pd_t::ProcessingElement pe(i , 0, 100, pd_t::PartitionType_t::MDEV);
 			pe.SetPrefix(mt.GetPath());
 			mt.AddProcessingElement(pe);
@@ -290,12 +309,12 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 		// Let now register the memories. Unfortunately, memories are not easy to be
 		// retrieved, we have to iterate over all tiles and search memories
 
-		// FIXME: the tile_info.memory_attached field is bugged and it does not
-		//        returns the correct number, ask UPV to fix it
-		unsigned int mem_attached = 1; // should be tile_info.memory_attached;
+		unsigned int mem_attached = tile_info.memory_attached;
 		if (mem_attached != 0) {
 			// Register the memory attached if present and if not already registered
-			ExitCode_t reg_err = RegisterMemoryBank(i, mem_attached);
+			// Fixed mem_id to tile_id, it can be only a memory controller attached to a mango tile
+			// So, the mem_id equals to the tile_id, since the HN does not set IDs for memories
+			ExitCode_t reg_err = RegisterMemoryBank(i, i);
 			if (reg_err) {
 				return reg_err;
 			}
@@ -315,9 +334,9 @@ MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
 	typedef PlatformDescription pd_t;	// Just for convenience
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
-	logger->Debug("Registering tile %d, memory %d", tile_id, mem_id);
+	logger->Debug("Registering tile %d, memory id %d", tile_id, mem_id);
 
-	bbque_assert(mem_id > 0 && mem_id < MANGO_MAX_MEMORIES);
+	bbque_assert(mem_id > -1 && mem_id < MANGO_MAX_MEMORIES);
 
 	if (found_memory_banks.test(mem_id)) {
 		// We have already registered this memory, nothing to do
@@ -330,7 +349,7 @@ MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
 	uint32_t memory_size;
 	int err = hn_get_memory_size(tile_id, &memory_size);
 	if (HN_SUCCEEDED != err) {
-		logger->Fatal("Unable to get memory information of tile nr.%d, memory %d [error=%d].",
+		logger->Fatal("Unable to get memory information of tile nr.%d, memory id %d [error=%d].",
 			      tile_id, mem_id, err);
 		return PLATFORM_INIT_FAILED;
 	}
@@ -348,7 +367,7 @@ MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
 	sys.AddMemory(std::make_shared<pd_t::Memory>(mem));
 	ra.RegisterResource(mem.GetPath(), "", memory_size);
 
-	logger->Info("Registered memory id=%d size=%d", tile_id, memory_size);
+	logger->Info("Registered memory id=%d size=%u", tile_id, memory_size);
 
 	return PLATFORM_OK;
 }
@@ -370,13 +389,19 @@ static uint32_t ArchTypeToMangoType(ArchType type, unsigned int nr_thread) {
 
 	switch (type) {
 		case ArchType::PEAK:
-			// TODO Selection of the subtype of architecture (who has to do this?
-			// the policy?)
-			return HN_PEAK_TYPE_1;	// Fix this, should go to policy
-		break;
+			return HN_TILE_FAMILY_PEAK;
+
+		case ArchType::NUPLUS:
+			return UNIT_FAMILY_NUPLUS;
+
+		case ArchType::DCT:
+			return UNIT_FAMILY_DCT;
+
+		case ArchType::TETRAPOD:
+			return UNIT_FAMILY_TETRAPOD;
+
 		case ArchType::GN:
-			return HN_PEAK_TYPE_1;	// In GN emulation case we are not interested in the real time
-		break;
+			return HN_TILE_FAMILY_NONE;	// In GN emulation case we are not interested in the real time
 
 
 		// TODO add other architectures
@@ -388,8 +413,11 @@ static uint32_t ArchTypeToMangoType(ArchType type, unsigned int nr_thread) {
 
 /**
  * @brief This function basically converts a TaskGraph object in the request struct of HN library
+ *
+ * \deprecated
  */
-static hn_st_request_t FillReq(const TaskGraph &tg) {
+/*
+static hn_st_request_t FillReq(const TaskGraph &tg) __attribute__((unused)) {
 
 	ApplicationManager &am = ApplicationManager::GetInstance();
 
@@ -466,10 +494,95 @@ static hn_st_request_t FillReq(const TaskGraph &tg) {
 
 	return req;
 }
+*/
+
+/**
+ * @brief This function gets sets of units for running the tasks in the TG
+ */
+static void FindUnitsSets(const TaskGraph &tg, unsigned int ***tiles, unsigned int ***families_order, 
+                          unsigned int *nsets) {
+	int num_tiles = tg.TaskCount();
+	unsigned int *tiles_family = new unsigned int[num_tiles];  // FIXME UPV -> POLIMI static memory better ?
+
+	// Fill the computing resources requested
+	int i=0;
+	for (auto t : tg.Tasks()) {
+		tiles_family[i++] = ArchTypeToMangoType(t.second->GetAssignedArch(), 
+							      t.second->GetThreadCount());
+	}
+
+
+	int res = hn_find_units_sets(0, num_tiles, tiles_family, tiles, families_order, nsets);
+	delete tiles_family;
+
+	if (res != HN_SUCCEEDED)
+	throw std::runtime_error("Unable to find units sets");
+}
+
+/**
+ * @brief This function gets a set of memories for the buffers in the TG
+ */
+static void FindAndAllocateMemory(const TaskGraph &tg, unsigned int *tiles_set, 
+                         unsigned int *mem_buffers_tiles, unsigned int *mem_buffers_addr) {
+	// We request the number of shared buffer + the number of task, since we have to load also
+	// the kernels in memory
+	int            num_mem_buffers = tg.BufferCount() + tg.TaskCount();
+  unsigned int *mem_buffers_size = new unsigned int[num_mem_buffers]; // FIXME UPV -> POLIMI, static mem better?
+
+	int i=0;
+	for (auto b : tg.Buffers()) {
+		bbque_assert(i < num_mem_buffers);
+		mem_buffers_size[i++] = b.second->Size();
+	}
+
+	int filled_buffers = i;
+
+	// We now register the mapping task-buffer and we allocate a per-task buffer to allocate the
+	// kernel image.
+	// The bandwitdth is not currently managed by the HN library, so we use only a boolean value
+	// to indicate that the buffer uses that task and vice versa.
+	i=0;
+	for (auto t : tg.Tasks()) {
+		// Extra buffer for kernel and stack memory
+		auto arch =  t.second->GetAssignedArch();
+		auto ksize = t.second->Targets()[arch]->BinarySize();
+		auto ssize = t.second->Targets()[arch]->StackSize();
+		int kimage_index = filled_buffers + i;
+		mem_buffers_size[kimage_index] = ksize + ssize;
+
+		i++;
+	}
+
+  for (i = 0; i < num_mem_buffers; i++) {
+    unsigned int tile = 0;
+    if (i >= filled_buffers) {
+      // Let's set the kernel buffer close to the tile where the task will run on
+      tile = tiles_set[i - filled_buffers];
+    } else {
+      // for input and output buffers. 
+      // FIXME Better to allocate the buffer close to the tiles the unit that are using it will be mapped on
+      tile = tiles_set[0];
+    }
+    int res = hn_find_memory(tile, mem_buffers_size[i], &mem_buffers_tiles[i], &mem_buffers_addr[i]);
+    if (res != HN_SUCCEEDED) {
+      delete mem_buffers_size;
+      throw std::runtime_error("Unable to find memory");
+    }
+
+    res = hn_allocate_memory(mem_buffers_tiles[i], mem_buffers_addr[i], mem_buffers_size[i]);
+    if (res != HN_SUCCEEDED) {
+      delete mem_buffers_size;
+      throw std::runtime_error("Unable to allocate memory");
+    }
+  }
+
+  delete mem_buffers_size;
+}
 
 /**
  * @brief This function convert a TG + HN response to a Partition object used in Barbeque
  */
+/*
 static Partition GetPartition(const TaskGraph &tg, hn_st_response_t *res, int partition_id) noexcept {
 
 	auto it_task  = tg.Tasks().begin();
@@ -494,29 +607,79 @@ static Partition GetPartition(const TaskGraph &tg, hn_st_response_t *res, int pa
 
 	return part;
 }
+*/
+static Partition GetPartition(const TaskGraph &tg, unsigned int *tiles, unsigned int *families_order, 
+                              unsigned int *mem_buffers_tiles, unsigned int *mem_buffers_addr,
+                              int partition_id) noexcept {
+
+	auto it_task      = tg.Tasks().begin();
+	int tasks_size    = tg.Tasks().size();
+	auto it_buff      = tg.Buffers().begin();
+	int buff_size     = tg.Buffers().size();
+  bool *tile_mapped = new bool[tasks_size];
+  std::fill_n(tile_mapped, tasks_size, false);
+
+	Partition part(partition_id);
+
+  // FIXME UPV -> POLIMI do it in a more efficient way if required
+  //       We have to map the task to a tile according to its family type
+	for (int j=0; j < tasks_size; j++) {
+    uint32_t family = ArchTypeToMangoType(it_task->second->GetAssignedArch(), it_task->second->GetThreadCount());
+
+    // look for the family type of the task
+    int k = 0;
+    for (k = 0; k < tasks_size; k++) {
+      if ((families_order[k] == family) && (!tile_mapped[k])) {
+        tile_mapped[k] = true;
+        break;
+      }
+    }
+    // we are always going to find an unmapped tile as the sets provided by hn_find_units_sets hnlib function 
+    // return sets of task_size tiles
+		part.MapTask(it_task->second, tiles[k], mem_buffers_tiles[buff_size + j], mem_buffers_addr[buff_size + j]);
+		it_task++;
+	}
+  delete tile_mapped;
+	bbque_assert(it_task == tg.Tasks().end());
+
+	for (int j=0; j < buff_size; j++) {
+		part.MapBuffer(it_buff->second, mem_buffers_tiles[j], mem_buffers_addr[j]);
+		it_buff++;
+	}
+	bbque_assert(it_buff == tg.Buffers().end());
+
+	return part;
+}
 
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(const TaskGraph &tg, const Partition &partition) noexcept {
-
-	for ( auto buffer : tg.Buffers()) {
-
+  for ( auto buffer : tg.Buffers()) {
 		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
 		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
-		logger->Debug("Buffer %d is located at bank %d [address=0x%x]",
+		logger->Debug("Buffer %d is located at memory id %d [address=0x%x]",
 				buffer.second->Id(), memory_bank, phy_addr);
 		buffer.second->SetMemoryBank(memory_bank);
 		buffer.second->SetPhysicalAddress(phy_addr);
+
+    if (hn_allocate_memory(memory_bank, phy_addr, buffer.second->Size()) != HN_SUCCEEDED) {
+      return SK_GENERIC_ERROR;
+    }
 	}
 
 	for ( auto task : tg.Tasks()) {
 		auto arch = task.second->GetAssignedArch();
 		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
 		uint32_t mem_tile    = partition.GetKernelBank(task.second);
-
-		logger->Debug("Task %d allocated space for kernel %s [address=0x%x]",
-				task.second->Id(), GetStringFromArchType(arch), phy_addr);
+		auto     ksize       = task.second->Targets()[arch]->BinarySize();
+		auto     ssize       = task.second->Targets()[arch]->StackSize();
+		logger->Debug("Task %d allocated space for kernel %s [mem_id=%u address=0x%x size=%lu]",
+				task.second->Id(), GetStringFromArchType(arch), mem_tile, phy_addr, ksize + ssize);
 		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
 		task.second->Targets()[arch]->SetAddress(phy_addr);
+
+    if (hn_allocate_memory(mem_tile, phy_addr, ksize + ssize) != HN_SUCCEEDED) {
+      return SK_GENERIC_ERROR;
+    }
 	}
 
 	return SK_OK;
@@ -525,59 +688,129 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(const TaskGraph &tg, con
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 							std::list<Partition>&part_list) noexcept {
-	hn_st_request_t req;
-	hn_st_response_t res[MANGO_BASE_NUM_PARTITIONS];
-	uint32_t ids[MANGO_BASE_NUM_PARTITIONS];		// TODO multiple partition
-	uint32_t num_parts = 1;					// TODO multiple partition;
-	uint32_t part_id;
+	unsigned int num_mem_buffers = tg.BufferCount() + tg.TaskCount();
+	ExitCode_t res               = SK_OK;
+	auto it_task                 = tg.Tasks().begin();
+	size_t tasks_size            = tg.Tasks().size();
+	auto it_buff                 = tg.Buffers().begin();
+	size_t buff_size             = tg.Buffers().size();
+	uint32_t **tiles             = NULL;
+	uint32_t **families_order    = NULL;
+	uint32_t **mem_buffers_tiles = NULL;
+	uint32_t **mem_buffers_addr  = NULL;
+	uint32_t *mem_buffers_size   = new uint32_t[buff_size];
+	uint32_t num_sets            = 0;
 
 	bbque_assert(part_list.empty());
 
+	// Let's get the required memory size per kernel
+	logger->Debug("Request summary:");
+	for (int i = 0; i < tasks_size; i++) {
+		auto arch = it_task->second->GetAssignedArch();
+		uint32_t unit_family = ArchTypeToMangoType(arch, 
+				               it_task->second->GetThreadCount());
+		auto ksize = it_task->second->Targets()[arch]->BinarySize();
+		auto ssize = it_task->second->Targets()[arch]->StackSize();
+		mem_buffers_size[buff_size + i] = ksize + ssize;
+		it_task++;
+		logger->Debug("  -> Computing Resource %d, HN type %s", i, hn_to_str_unit_family(unit_family));
+	}
+	bbque_assert(it_task == tg.Tasks().end());
+
+	// Let's get the required memory size per buffer
+	for (int i = 0; i < buff_size; i++) {
+		uint32_t mem_size = it_buff->second->Size();
+		mem_buffers_size[i] = mem_size;
+		it_buff++;
+		logger->Debug("  -> Memory buffer %d, size %d", i, mem_size);
+	}
+	bbque_assert(it_buff == tg.Buffers().end());
+
+
 	try {
-		// Convert TG to a hn_st_request_t
+		// Find resources for TG
 		// It may generate exception if the architecture is not supported
 		// (in that case we should not be here ;-))
-		logger->Debug("Converting TG into HN struct...");
-		req = FillReq(tg);
+		logger->Debug("Finding resources for TG");
+
+		/*
+		* Let's try to find the partitions that satisfy the TG.
+		* First, find different sets of units
+		* Next, find and reserve memory for every set. We cannot call hn_find_memory more than once
+		* without allocate the memory returned, since it would return the same bank.
+		*/
+		FindUnitsSets(tg, &tiles, &families_order, &num_sets);
+		mem_buffers_tiles = new uint32_t*[num_sets];
+		mem_buffers_addr  = new uint32_t*[num_sets];
+		memset(mem_buffers_tiles, 0, num_sets*sizeof(uint32_t *));
+		memset(mem_buffers_addr, 0, num_sets*sizeof(uint32_t *));
+		for (unsigned int i = 0; i < num_sets; i++) {
+			// let's find and allocate memory close the tiles obtained for the set
+			mem_buffers_tiles[i] = new uint32_t[num_mem_buffers];
+			mem_buffers_addr[i]  = new uint32_t[num_mem_buffers];
+			FindAndAllocateMemory(tg, tiles[i], mem_buffers_tiles[i], mem_buffers_addr[i]);
+		}
 	}
 	catch (const std::runtime_error &err) {
 		logger->Error("MangoPartitionSkimmer: %s", err.what());
-		return SK_NO_PARTITION;
+		res = SK_NO_PARTITION;
+	} 
+
+	if (res == SK_OK) {
+
+		logger->Debug("Found %d partitions", num_sets);
+
+		// No feasible partition found
+		if ( num_sets == 0 ) {
+			res = SK_NO_PARTITION;
+		} else {
+			// Fill the partition vector with the partitions returned by HN library
+			for (unsigned int i=0; i < num_sets; i++) {
+				Partition part = GetPartition(tg, tiles[i], families_order[i], 
+						      mem_buffers_tiles[i], mem_buffers_addr[i], i);
+				part_list.push_back(part);
+			}
+		}
 	}
 
-	logger->Debug("Request summary:");
-	for (unsigned int i=0; i < req.num_comp_rsc; i++) {
-		logger->Debug("  -> Computing Resource %d, HN type %d", i, req.comp_rsc_types[i]);
-	}
-	for (unsigned int i=0; i < req.num_mem_buffers; i++) {
-		logger->Debug("  -> Memory buffer %d, size %d", i, req.mem_buffers_size[i]);
-	}
-
-	int err;
-	// TODO: Change to multiple-partitions version of this function
-	if ( (err = hn_find_partitions(req, res, &part_id, 1, &num_parts)) ) {
-		logger->Error("hn_find_partitions FAILED with error %d", err);
-		return SK_GENERIC_ERROR;
+	// let's deallocate memory created in the hn_find_units_sets hnlib function
+	if (tiles != NULL) {
+		for (unsigned int i = 0; i < num_sets; i++)
+			free(tiles[i]);
+		free(tiles);
 	}
 
-	ids[0] = part_id;	// Just an hack for the single find_partition version
-
-	logger->Debug("Found %d partitions", num_parts);
-
-	// No feasible partition found
-	if ( num_parts == 0 ) {
-		return SK_NO_PARTITION;
+	if (families_order != NULL) {
+		for (unsigned int i = 0; i < num_sets; i++)
+			free(families_order[i]);
+		free(families_order);
 	}
 
-	// Fill the partition vector with the partitions returned by HN library
-	for (unsigned int i=0; i < num_parts; i++) {
-		Partition part = GetPartition(tg, &res[i], ids[i]);
-		part_list.push_back(part);
+	// let's deallocate memory created in this method
+	if (mem_buffers_tiles != NULL) {
+		for (unsigned int i = 0; i < num_sets; i++) 
+			if (mem_buffers_tiles[i] != NULL) {
+				// TRICK we allocated memory banks when finding them in order to get different banks (see try above), 
+				// so now it is the right moment to release them
+				// Next, When setting the partition it will be allocated again
+				for (unsigned int j = 0; j < num_mem_buffers; j++)
+					hn_release_memory(mem_buffers_tiles[i][j], mem_buffers_addr[i][j],
+							mem_buffers_size[j]);
+				delete mem_buffers_tiles[i];
+			}
+		delete mem_buffers_tiles;
 	}
 
+	if (mem_buffers_addr != NULL) {
+		for (unsigned int i = 0; i < num_sets; i++) 
+			if (mem_buffers_addr[i] != NULL)
+				delete mem_buffers_addr[i];
+			delete mem_buffers_addr;
+	}
 
-	return SK_OK;
+	delete mem_buffers_size;
 
+	return res;
 }
 
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
@@ -604,17 +837,22 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(TaskGraph &tg,
 		event.second->SetPhysicalAddress(phy_addr);
 	}
 
+	// allocate units
+	unsigned int num_tiles = tg.TaskCount();
+	uint32_t *units = new uint32_t[num_tiles];
+	int i = 0;
+	for ( auto task : tg.Tasks()) {
+		auto arch = task.second->GetAssignedArch();
+		units[i]  = partition.GetUnit(task.second);
 
-
-	// TODO: with the find_partitions we should allocate the selected partition, but
-	//	 unfortunately this is not currently supported by HN library
-/*	uint32_t part_id = partition.GetId();
-	uint32_t ret = hn_allocate_partition(part_id);
-	
-	if ( HN_SUCCEEDED != ret ) {
-		return SK_GENERIC_ERROR;
+		logger->Debug("Task %d reserved a unit at tile %u for kernel %s",
+				task.second->Id(), units[i], GetStringFromArchType(arch));
+		i++;
+	}  
+	if (hn_reserve_units_set(num_tiles, units) != HN_SUCCEEDED) {
+		err = SK_GENERIC_ERROR;
 	}
-*/
+	delete units;
 
 	return err;
 }
@@ -626,7 +864,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(const TaskGraph &tg,
 	UNUSED(tg);
 
 	uint32_t part_id = partition.GetId();
-	uint32_t ret;
+	ExitCode_t ret = SK_OK;
 
 	logger->Debug("Deallocating partition [id=%d]...", part_id);
 
@@ -639,21 +877,55 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(const TaskGraph &tg,
 		hn_release_synch_id (phy_addr);
 	}
 
-/* TODO: no more supported by HN library, we have to check if in the future we need this or not
+	// release memory
+	for ( auto buffer : tg.Buffers()) {
+		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
+		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
+		uint32_t size        = buffer.second->Size();;
+		logger->Debug("Buffer %d is released at bank %d [address=0x%x]",
+				buffer.second->Id(), memory_bank, phy_addr);
+		buffer.second->SetMemoryBank(memory_bank);
+		buffer.second->SetPhysicalAddress(phy_addr);
 
-	ret = hn_deallocate_partition(part_id);
-
-	if ( HN_SUCCEEDED != ret ) {
-		return SK_GENERIC_ERROR;
+		if (hn_release_memory(memory_bank, phy_addr, size) != HN_SUCCEEDED) {
+			ret = SK_GENERIC_ERROR;
+		}
 	}
-*/
-	ret = hn_delete_partition(part_id);
 
-	if ( HN_SUCCEEDED != ret ) {
-		return SK_GENERIC_ERROR;
+	for ( auto task : tg.Tasks()) {
+		auto arch = task.second->GetAssignedArch();
+		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
+		uint32_t mem_tile    = partition.GetKernelBank(task.second);
+		auto     ksize       = task.second->Targets()[arch]->BinarySize();
+		auto     ssize       = task.second->Targets()[arch]->StackSize();
+		logger->Debug("Task %d released space for kernel %s [address=0x%x size=%lu]",
+				task.second->Id(), GetStringFromArchType(arch), phy_addr, ksize + ssize);
+		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
+		task.second->Targets()[arch]->SetAddress(phy_addr);
+
+		if (hn_release_memory(mem_tile, phy_addr, ksize + ssize) != HN_SUCCEEDED) {
+		ret = SK_GENERIC_ERROR;
+		}
 	}
 
-	return SK_OK;
+	// release units
+	unsigned int num_tiles = tg.TaskCount();
+	uint32_t *units = new uint32_t[num_tiles];
+	int i = 0;
+	for ( auto task : tg.Tasks()) {
+		auto arch = task.second->GetAssignedArch();
+		units[i] = partition.GetUnit(task.second);
+
+		logger->Debug("Task %d released tile %u for kernel %s",
+				task.second->Id(), units[i], GetStringFromArchType(arch));
+		i++;
+	}
+	if (hn_release_units_set(num_tiles, units) != HN_SUCCEEDED) {
+		ret = SK_GENERIC_ERROR;
+	}
+	delete units;
+
+	return ret;
 }
 
 MangoPlatformProxy::MangoPartitionSkimmer::MangoPartitionSkimmer() : PartitionSkimmer(SKT_MANGO_HN)

@@ -33,7 +33,9 @@ typedef enum class ArchType {
 	GPU,
 	ARM,
 	PEAK,
-	NUP,
+	NUPLUS,
+	DCT,
+	TETRAPOD
 
 	STOP
 } ArchType_t;
