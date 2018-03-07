@@ -392,13 +392,13 @@ static uint32_t ArchTypeToMangoType(ArchType type, unsigned int nr_thread) {
 			return HN_TILE_FAMILY_PEAK;
 
 		case ArchType::NUPLUS:
-			return UNIT_FAMILY_NUPLUS;
+			return HN_TILE_FAMILY_NUPLUS;
 
 		case ArchType::DCT:
-			return UNIT_FAMILY_DCT;
+			return HN_TILE_FAMILY_DCT;
 
 		case ArchType::TETRAPOD:
-			return UNIT_FAMILY_TETRAPOD;
+			return HN_TILE_FAMILY_TETRAPOD;
 
 		case ArchType::GN:
 			return HN_TILE_FAMILY_NONE;	// In GN emulation case we are not interested in the real time
@@ -705,7 +705,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 
 	// Let's get the required memory size per kernel
 	logger->Debug("Request summary:");
-	for (int i = 0; i < tasks_size; i++) {
+	for (size_t i = 0; i < tasks_size; i++) {
 		auto arch = it_task->second->GetAssignedArch();
 		uint32_t unit_family = ArchTypeToMangoType(arch, 
 				               it_task->second->GetThreadCount());
@@ -718,7 +718,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(const TaskGraph &tg,
 	bbque_assert(it_task == tg.Tasks().end());
 
 	// Let's get the required memory size per buffer
-	for (int i = 0; i < buff_size; i++) {
+	for (size_t i = 0; i < buff_size; i++) {
 		uint32_t mem_size = it_buff->second->Size();
 		mem_buffers_size[i] = mem_size;
 		it_buff++;
