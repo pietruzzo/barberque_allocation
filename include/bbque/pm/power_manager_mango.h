@@ -168,7 +168,7 @@ protected:
 	/**
 	 * @brief Runtime status of a MANGO tile
 	 */
-	hn_st_tile_stats tile_stats;
+	hn_tile_stats_t tile_stats;
 
 };
 

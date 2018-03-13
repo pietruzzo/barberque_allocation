@@ -25,7 +25,7 @@ namespace bbque {
 
 MangoPowerManager::MangoPowerManager() {
 	logger->Info("MangoPowerManager initialization...");
-	memset(&tile_stats, 0, sizeof(hn_st_tile_stats));
+	memset(&tile_stats, 0, sizeof(hn_tile_stats_t));
 }
 
 PowerManager::PMResult
@@ -54,3 +54,4 @@ MangoPowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsiu
 
 
 } // namespace bbque
+
