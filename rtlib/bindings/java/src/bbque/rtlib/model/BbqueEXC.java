@@ -4,11 +4,11 @@ import bbque.rtlib.enumeration.RTLibExitCode;
 import bbque.rtlib.enumeration.RTLibResourceType;
 import bbque.rtlib.exception.*;
 
-public abstract class BBQueEXC {
+public abstract class BbqueEXC {
 
     private final long mNativePointer;
 
-    public BBQueEXC(String name, String recipe, RTLibServices services) throws RTLibRegistrationException {
+    public BbqueEXC(String name, String recipe, RTLibServices services) throws RTLibRegistrationException {
         mNativePointer = initNative(name, recipe, services);
     }
 

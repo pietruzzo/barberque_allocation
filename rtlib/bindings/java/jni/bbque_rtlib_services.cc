@@ -1,6 +1,6 @@
 #include <jni.h>
 #include <bbque/rtlib.h>
-#include "bbque_rtlib_model_RTLibServices.h"
+#include "bbque_rtlib_services.h"
 #include "bbque_rtlib_commons.h"
 
 jobject Java_bbque_rtlib_model_RTLibServices_version(JNIEnv *env, jobject obj) {

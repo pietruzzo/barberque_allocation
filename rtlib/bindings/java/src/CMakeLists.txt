@@ -14,7 +14,7 @@ set(SRC
     bbque/rtlib/enumeration/RTLibResourceType.java
     bbque/rtlib/exception/RTLibException.java
     bbque/rtlib/exception/RTLibRegistrationException.java
-    bbque/rtlib/model/BBQueEXC.java
+    bbque/rtlib/model/BbqueEXC.java
     bbque/rtlib/model/RTLibAPIVersion.java
     bbque/rtlib/model/RTLibConfig.java
     bbque/rtlib/model/RTLibConstraint.java

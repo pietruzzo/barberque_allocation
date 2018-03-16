@@ -1,10 +1,10 @@
 #include <jni.h>
 #include <bbque/bbque_exc.h>
-#include "bbque_rtlib_model_BBQueEXC.h"
+#include "bbque_exc.h"
 #include "bbque_rtlib_commons.h"
 #include "bbque_rtlib_enums.h"
 
-jlong Java_bbque_rtlib_model_BBQueEXC_initNative(JNIEnv *env, jobject obj, jstring java_name, jstring java_recipe, jobject java_services) {
+jlong Java_bbque_rtlib_model_BbqueEXC_initNative(JNIEnv *env, jobject obj, jstring java_name, jstring java_recipe, jobject java_services) {
 	const char *native_name = env->GetStringUTFChars(java_name, JNI_FALSE);
 	const char *native_recipe = env->GetStringUTFChars(java_recipe, JNI_FALSE);
 	jlong rtlib_native_pointer = getObjectNativePointer(env, java_services);
@@ -23,48 +23,48 @@ jlong Java_bbque_rtlib_model_BBQueEXC_initNative(JNIEnv *env, jobject obj, jstri
 	return native_pointer;
 }
 
-jboolean Java_bbque_rtlib_model_BBQueEXC_isRegistered(JNIEnv *env, jobject obj) {
+jboolean Java_bbque_rtlib_model_BbqueEXC_isRegistered(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return jni_exc->isRegistered();
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_start(JNIEnv *env, jobject obj) {
+void Java_bbque_rtlib_model_BbqueEXC_start(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->Start();
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_waitCompletion(JNIEnv *env, jobject obj) {
+void Java_bbque_rtlib_model_BbqueEXC_waitCompletion(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->WaitCompletion();
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_terminate(JNIEnv *env, jobject obj) {
+void Java_bbque_rtlib_model_BbqueEXC_terminate(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->Terminate();
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_enable(JNIEnv *env, jobject obj) {
+void Java_bbque_rtlib_model_BbqueEXC_enable(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->Enable();
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_disable(JNIEnv *env, jobject obj) {
+void Java_bbque_rtlib_model_BbqueEXC_disable(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->Disable();
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_setAWMConstraints(JNIEnv *env, jobject obj, jobjectArray java_constraints) {
+void Java_bbque_rtlib_model_BbqueEXC_setAWMConstraints(JNIEnv *env, jobject obj, jobjectArray java_constraints) {
 	int array_size = env->GetArrayLength(java_constraints);
 	RTLIB_Constraint_t native_array[array_size];
 	for (int i = 0; i < array_size; i++) {
@@ -92,33 +92,33 @@ void Java_bbque_rtlib_model_BBQueEXC_setAWMConstraints(JNIEnv *env, jobject obj,
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_clearAWMConstraints(JNIEnv *env, jobject obj) {
+void Java_bbque_rtlib_model_BbqueEXC_clearAWMConstraints(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->ClearAWMConstraints();
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_setGoalGap(JNIEnv *env, jobject obj, jint goal_gap_percent) {
+void Java_bbque_rtlib_model_BbqueEXC_setGoalGap(JNIEnv *env, jobject obj, jint goal_gap_percent) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->SetGoalGap(goal_gap_percent);
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-jstring Java_bbque_rtlib_model_BBQueEXC_getUniqueID_1String(JNIEnv *env, jobject obj) {
+jstring Java_bbque_rtlib_model_BbqueEXC_getUniqueID_1String(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return env->NewStringUTF(jni_exc->GetUniqueID_String());
 }
 
-jint Java_bbque_rtlib_model_BBQueEXC_getUniqueID(JNIEnv *env, jobject obj) {
+jint Java_bbque_rtlib_model_BbqueEXC_getUniqueID(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return jni_exc->GetUniqueID();
 }
 
-jint Java_bbque_rtlib_model_BBQueEXC_getAssignedResources__Lbbque_rtlib_enumeration_RTLibResourceType_2(JNIEnv *env, jobject obj, jobject java_resource_type) {
+jint Java_bbque_rtlib_model_BbqueEXC_getAssignedResources__Lbbque_rtlib_enumeration_RTLibResourceType_2(JNIEnv *env, jobject obj, jobject java_resource_type) {
 	jclass java_resource_type_class = env->GetObjectClass(java_resource_type);
 	jfieldID java_resource_type_value_id = env->GetFieldID(java_resource_type_class, "mJNIValue", "I");
 	jint jni_resource_type_value = env->GetIntField(java_resource_type, java_resource_type_value_id);
@@ -131,7 +131,7 @@ jint Java_bbque_rtlib_model_BBQueEXC_getAssignedResources__Lbbque_rtlib_enumerat
 	return value;
 }
 
-jintArray Java_bbque_rtlib_model_BBQueEXC_getAffinityMask(JNIEnv *env, jobject obj, jintArray java_ids_vector) {
+jintArray Java_bbque_rtlib_model_BbqueEXC_getAffinityMask(JNIEnv *env, jobject obj, jintArray java_ids_vector) {
 	int array_size = env->GetArrayLength(java_ids_vector);
 	jint *native_ids_vector = env->GetIntArrayElements(java_ids_vector, 0);
 	jlong native_pointer = getObjectNativePointer(env, obj);
@@ -142,7 +142,7 @@ jintArray Java_bbque_rtlib_model_BBQueEXC_getAffinityMask(JNIEnv *env, jobject o
 	return java_ids_vector;
 }
 
-jintArray Java_bbque_rtlib_model_BBQueEXC_getAssignedResources__Lbbque_rtlib_enumeration_RTLibResourceType_2_3I
+jintArray Java_bbque_rtlib_model_BbqueEXC_getAssignedResources__Lbbque_rtlib_enumeration_RTLibResourceType_2_3I
 (JNIEnv *env, jobject obj, jobject java_resource_type, jintArray java_systems) {
 	jclass java_resource_type_class = env->GetObjectClass(java_resource_type);
 	jfieldID java_resource_type_value_id = env->GetFieldID(java_resource_type_class, "mJNIValue", "I");
@@ -158,79 +158,79 @@ jintArray Java_bbque_rtlib_model_BBQueEXC_getAssignedResources__Lbbque_rtlib_enu
 	return java_systems;
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_setCPS(JNIEnv *env, jobject obj, jfloat java_cps) {
+void Java_bbque_rtlib_model_BbqueEXC_setCPS(JNIEnv *env, jobject obj, jfloat java_cps) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->SetCPS(java_cps);
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_setJPSGoal(JNIEnv *env, jobject obj, jfloat java_jps_min, jfloat java_jps_max, jint java_jpc) {
+void Java_bbque_rtlib_model_BbqueEXC_setJPSGoal(JNIEnv *env, jobject obj, jfloat java_jps_min, jfloat java_jps_max, jint java_jpc) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->SetJPSGoal(java_jps_min, java_jps_max, java_jpc);
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_updateJPC(JNIEnv *env, jobject obj, jint java_jpc) {
+void Java_bbque_rtlib_model_BbqueEXC_updateJPC(JNIEnv *env, jobject obj, jint java_jpc) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->UpdateJPC(java_jpc);
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_setCPSGoal__FF(JNIEnv *env, jobject obj, jfloat java_cps_min, jfloat java_cps_max) {
+void Java_bbque_rtlib_model_BbqueEXC_setCPSGoal__FF(JNIEnv *env, jobject obj, jfloat java_cps_min, jfloat java_cps_max) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->SetCPSGoal(java_cps_min, java_cps_max);
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_setCPSGoal__F(JNIEnv *env, jobject obj, jfloat java_cps) {
+void Java_bbque_rtlib_model_BbqueEXC_setCPSGoal__F(JNIEnv *env, jobject obj, jfloat java_cps) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->SetCPSGoal(java_cps);
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-void Java_bbque_rtlib_model_BBQueEXC_setMinimumCycleTimeUs(JNIEnv *env, jobject obj, jint java_min_cycle_time_us) {
+void Java_bbque_rtlib_model_BbqueEXC_setMinimumCycleTimeUs(JNIEnv *env, jobject obj, jint java_min_cycle_time_us) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_ExitCode_t code = jni_exc->SetMinimumCycleTimeUs(java_min_cycle_time_us);
 	throwRTLibExceptionIfNecessary(env, code);
 }
 
-jfloat Java_bbque_rtlib_model_BBQueEXC_getCPS(JNIEnv *env, jobject obj) {
+jfloat Java_bbque_rtlib_model_BbqueEXC_getCPS(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return jni_exc->GetCPS();
 }
 
-jfloat Java_bbque_rtlib_model_BBQueEXC_getJPS(JNIEnv *env, jobject obj) {
+jfloat Java_bbque_rtlib_model_BbqueEXC_getJPS(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return jni_exc->GetJPS();
 }
 
-jint Java_bbque_rtlib_model_BBQueEXC_getCTimeUs(JNIEnv *env, jobject obj) {
+jint Java_bbque_rtlib_model_BbqueEXC_getCTimeUs(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return jni_exc->GetCTimeUs();
 }
 
-jint Java_bbque_rtlib_model_BBQueEXC_getCTimeMs(JNIEnv *env, jobject obj) {
+jint Java_bbque_rtlib_model_BbqueEXC_getCTimeMs(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return jni_exc->GetCTimeMs();
 }
 
-jint Java_bbque_rtlib_model_BBQueEXC_cycles(JNIEnv *env, jobject obj) {
+jint Java_bbque_rtlib_model_BbqueEXC_cycles(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return jni_exc->Cycles();
 }
 
-jobject Java_bbque_rtlib_model_BBQueEXC_workingModeParams(JNIEnv *env, jobject obj) {
+jobject Java_bbque_rtlib_model_BbqueEXC_workingModeParams(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_WorkingModeParams_t wmp = jni_exc->WorkingModeParams();
@@ -260,19 +260,19 @@ jobject Java_bbque_rtlib_model_BBQueEXC_workingModeParams(JNIEnv *env, jobject o
 	return env->NewObject(java_working_mode_params_class, java_working_mode_params_method_id, wmp.awm_id, java_services, java_system_resources);
 }
 
-jboolean Java_bbque_rtlib_model_BBQueEXC_done(JNIEnv *env, jobject obj) {
+jboolean Java_bbque_rtlib_model_BbqueEXC_done(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return jni_exc->Done();
 }
 
-jint Java_bbque_rtlib_model_BBQueEXC_currentAWM(JNIEnv *env, jobject obj) {
+jint Java_bbque_rtlib_model_BbqueEXC_currentAWM(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	return jni_exc->CurrentAWM();
 }
 
-jobject Java_bbque_rtlib_model_BBQueEXC_configuration(JNIEnv *env, jobject obj) {
+jobject Java_bbque_rtlib_model_BbqueEXC_configuration(JNIEnv *env, jobject obj) {
 	jlong native_pointer = getObjectNativePointer(env, obj);
 	JNIBbqueEXC *jni_exc = reinterpret_cast<JNIBbqueEXC *>(native_pointer);
 	RTLIB_Conf_t config = jni_exc->Configuration();

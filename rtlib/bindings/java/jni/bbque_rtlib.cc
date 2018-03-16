@@ -1,6 +1,6 @@
 #include <jni.h>
 #include <bbque/rtlib.h>
-#include "bbque_rtlib_RTLib.h"
+#include "bbque_rtlib.h"
 #include "bbque_rtlib_commons.h"
 #include "bbque_rtlib_enums.h"
 
