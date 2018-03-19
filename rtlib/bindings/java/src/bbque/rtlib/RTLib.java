@@ -6,7 +6,7 @@ import bbque.rtlib.model.RTLibServices;
 
 public class RTLib {
 
-    private static final String SHARED_LIBRARY_NAME = "barbeque";
+    private static final String SHARED_LIBRARY_NAME = "bbque_java_rtlib";
 
     static {
         System.loadLibrary(SHARED_LIBRARY_NAME);
