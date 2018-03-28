@@ -138,7 +138,7 @@ else (CONFIG_BBQUE_TEST_PLATFORM_DATA)
 	set (BARBEQUE_SRC pp/linux_platform_proxy ${BARBEQUE_SRC})
   endif (CONFIG_TARGET_LINUX)
   if (CONFIG_TARGET_LINUX_MANGO)
-	set (BARBEQUE_SRC pp/mango_platform_proxy ${BARBEQUE_SRC})
+	set (BARBEQUE_SRC pp/mango_platform_proxy pp/test_platform_proxy ${BARBEQUE_SRC})
   endif (CONFIG_TARGET_LINUX_MANGO)
 endif (CONFIG_BBQUE_TEST_PLATFORM_DATA)
 
@@ -242,7 +242,10 @@ if (CONFIG_TARGET_LINUX_MANGO)
     message(FATAL_ERROR "MANGO GN/HN library Not found")
   endif()
 
-  target_link_libraries (barbeque ${HN})
+  target_link_libraries (barbeque
+	${HN}
+	-ldl
+	-lrt)
   include_directories (barbeque ${CONFIG_MANGO_ROOT_PATH}/include/)
 endif (CONFIG_TARGET_LINUX_MANGO)
 
