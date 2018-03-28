@@ -87,7 +87,6 @@ check_controllers() {
 
 # Setup CGroups if required
 setup() {
-
 	# Check for required ROOT permissions
 	[[ $(whoami) == "root" ]] || bbqued_error "This script must be run as root"
 	eval `env | grep SUDO_USER`
@@ -111,6 +110,15 @@ setup() {
 	mkdir -p $BBQUE_PILSETUPS
 	chmod a+rw $BBQUE_PILSETUPS
 
+	if [ "$1" == "--nocg" ]; then
+		bbqued_notice "Cgroups: DISABLED"
+		return
+	else
+		setup_cgroups
+	fi
+}
+
+setup_cgroups() {
 	if [ ! -f $BBQUE_PILSETUPS/$PILNAME ]; then
 		# Generating the bpl file on the fly, exploiting menuconfig info
 		bbqued_info "Generating PIL layout"
@@ -196,6 +204,7 @@ setup() {
 	echo "1" > $BBQUE_CGMOUNT/user.slice/notify_on_release
 }
 
+
 start() {
 	# Start the daemon only if there is not another instance running
 	if [ -f $BBQUE_PIDFILE ]; then
@@ -204,7 +213,7 @@ start() {
 	fi
 
 	# Setup CGroups
-	setup
+	setup $1
 
 	# Ensure the run-time BBQ folder exists and it is world writable
 	mkdir -p $BBQUE_BRTF 2>/dev/null
@@ -255,13 +264,13 @@ stop() {
 
 case "$1" in
 	start)
-		start
+		start $2
 		;;
 	stop)
 		stop
 		;;
 	setup)
-		setup
+		setup $2
 		;;
 	release)
 		release
