@@ -26,26 +26,21 @@ namespace pp {
 LocalPlatformProxy::LocalPlatformProxy() {
 
 #ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
-	this->host = std::unique_ptr<TestPlatformProxy>(
-						 TestPlatformProxy::GetInstance());
+	this->host = std::unique_ptr<TestPlatformProxy>(TestPlatformProxy::GetInstance());
 #elif defined CONFIG_TARGET_LINUX
-	this->host = std::unique_ptr<LinuxPlatformProxy>(
-	                     LinuxPlatformProxy::GetInstance());
+	this->host = std::unique_ptr<LinuxPlatformProxy>(LinuxPlatformProxy::GetInstance());
 #elif defined CONFIG_TARGET_ANDROID
-	this->host = std::unique_ptr<AndroidPlatformProxy>(
-	                     AndroidPlatformProxy()::GetInstance());
+	this->host = std::unique_ptr<AndroidPlatformProxy>(AndroidPlatformProxy()::GetInstance());
 #else
 #error "No suitable PlatformProxy for host found."
 #endif
 
 #ifdef CONFIG_TARGET_LINUX_MANGO
-	this->aux.push_back(std::unique_ptr<MangoPlatformProxy>(
-	                     MangoPlatformProxy::GetInstance()));
+	this->aux.push_back(std::unique_ptr<MangoPlatformProxy>(MangoPlatformProxy::GetInstance()));
 #endif
 
 #ifdef CONFIG_BBQUE_OPENCL
-	this->aux.push_back(
-	        std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
+	this->aux.push_back(std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
 #endif
 
 	bbque_assert(this->host);
