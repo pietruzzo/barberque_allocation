@@ -110,6 +110,13 @@ setup() {
 	mkdir -p $BBQUE_PILSETUPS
 	chmod a+rw $BBQUE_PILSETUPS
 
+	# Generate a platform description file (XML)
+	# If the generator experiences errors, the bpl file is not created.
+	# The error log is shown by the generator itself
+	gen_platform_descr
+	if [ ! -f $BBQUE_PILSETUPS/$PILNAME ]; then exit; fi
+
+	# Setup control groups
 	if [ "$1" == "--nocg" ]; then
 		bbqued_notice "Cgroups: DISABLED"
 		return
@@ -118,7 +125,8 @@ setup() {
 	fi
 }
 
-setup_cgroups() {
+gen_platform_descr() {
+	bbqued_info "PIL generator: " $PIL_GENERATE
 	if [ ! -f $BBQUE_PILSETUPS/$PILNAME ]; then
 		# Generating the bpl file on the fly, exploiting menuconfig info
 		bbqued_info "Generating PIL layout"
@@ -131,12 +139,13 @@ setup_cgroups() {
 		sudo chmod a+x $PIL_GENERATE
 		# Launch the generator
 		$PIL_GENERATE $HIERARCHY_DEPTH
-		# If the generator experiences errors, the bpl file is not created.
-		# The error log is shown by the generator itself, so we can exit
-		# without warnings
-		[ ! -f $BBQUE_PILSETUPS/$PILNAME ] && exit
+	else
+		bbqued_info "Platform description already available"
 	fi
+}
 
+setup_cgroups() {
+	bbque_notice "Cgroup initialization..."
 	# Lookup for host specific PIL Layout and
 	# setup the corresponing CGgroup configuration
 	PILSETUP=$BBQUE_PILSETUPS/$PILNAME
