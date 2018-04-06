@@ -552,9 +552,8 @@ void ResourceManager::EvtBbqExit() {
 	// Stop applications
 	papp = am.GetFirst(apps_it);
 	for ( ; papp; papp = am.GetNext(apps_it)) {
-		// Terminating the application
 		logger->Warn("TODO: Send application STOP command");
-		// Removing internal data structures
+		am.DisableEXC(papp, true);
 		am.DestroyEXC(papp);
 	}
 
