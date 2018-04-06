@@ -1474,31 +1474,30 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 		return AM_ABORT;
 	}
 
-	// Check if the application is dead, in case unregsiter it
+	// Check if the application is dead, in case unregister it
 	if (CheckEXC(papp, true) != AM_SUCCESS) {
 		logger->Debug("DisableEXC: [%s] termination checked");
 		return AM_SUCCESS;
 	}
 
 	// If required, return application resources to the system view
+	PlatformManager::ExitCode_t result;
 	if (likely(release)) {
 		logger->Debug("DisableEXC: [%s] releasing assigned resources...", papp->StrId());
 		ra.ReleaseResources(papp);
+		PlatformManager & plm(PlatformManager::GetInstance());
+		result = plm.ReclaimResources(papp);
 	}
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
-	auto partition = papp->GetPartition();
-	if (partition != nullptr) {
-		ResourcePartitionValidator &rmv(ResourcePartitionValidator::GetInstance());
-		auto ret = rmv.RemovePartition(*papp->GetTaskGraph(), *partition);
-		bbque_assert(ResourcePartitionValidator::PMV_OK == ret);
-		if (ret != ResourcePartitionValidator::PMV_OK)
-			logger->Warn("DisableEXC: [%s] hw partition release failed", papp->StrId());
-		else
-			logger->Debug("DisableEXC: [%s] hw partition released", papp->StrId());
+	// Destroy the task-graph object
+	if (result == PlatformManager::PLATFORM_OK) {
+		papp->ClearTaskGraph();
+		logger->Debug("DisableEXC: [%s] task-graph cleared", papp->StrId());
 	}
-
-	papp->ClearTaskGraph();
+	else
+		logger->Warn("DisableEXC:  [%s] an error occurred while"
+				" reclaiming resources", papp->StrId());
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 	logger->Info("DisableEXC: [%s] DISABLED", papp->StrId());
