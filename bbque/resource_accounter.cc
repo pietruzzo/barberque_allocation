@@ -881,10 +881,10 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_PutView(
 	assign_per_views.erase(status_view);
 	rsrc_per_views.erase(status_view);
 
-	logger->Debug("PutView: view %ld cleared", status_view);
-	logger->Debug("PutView: %ld resource set and %d assign_map per view "
-			"currently managed",
-			rsrc_per_views.size(), assign_per_views.erase(status_view));
+	logger->Debug("PutView: [%ld] cleared view", status_view);
+	logger->Debug("PutView: [%ld] currently managed {resource sets = %ld, "
+			" assign_map = %d}",
+			status_view, rsrc_per_views.size(), assign_per_views.erase(status_view));
 
 	return RA_SUCCESS;
 }
@@ -899,7 +899,7 @@ br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t status_view) {
 
 	// Do nothing if the token references the system state view
 	if (status_view == sys_view_token) {
-		logger->Debug("SetView: View %ld is already the system state!",
+		logger->Debug("SetView: [%ld] is the system state view yet!",
 			status_view);
 		return sys_view_token;
 	}
@@ -908,7 +908,7 @@ br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t status_view) {
 	// usages of this view and point to
 	AppAssignmentsViewsMap_t::iterator assign_view_it(assign_per_views.find(status_view));
 	if (assign_view_it == assign_per_views.end()) {
-		logger->Fatal("SetView: View %ld unknown", status_view);
+		logger->Fatal("SetView: [%ld] unknown view", status_view);
 		return sys_view_token;
 	}
 
@@ -921,9 +921,10 @@ br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t status_view) {
 	// Put the old view
 	_PutView(old_sys_status_view);
 
-	logger->Info("SetView: View %ld is the new system state view.", sys_view_token);
-	logger->Debug("SetView: %ld resource set and %d assign_map per view currently managed",
-			rsrc_per_views.size(), assign_per_views.erase(status_view));
+	logger->Info("SetView: [%ld] is the new system state view.", sys_view_token);
+	logger->Debug("SetView: [%ld] currently managed {resource sets = %ld,"
+			" assign_map = %d}",
+			sys_view_token, rsrc_per_views.size(), assign_per_views.erase(status_view));
 	return sys_view_token;
 }
 
