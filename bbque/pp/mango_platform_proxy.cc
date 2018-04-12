@@ -110,7 +110,7 @@ MangoPlatformProxy::ExitCode_t MangoPlatformProxy::Setup(AppPtr_t papp) noexcept
 
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::Release(AppPtr_t papp) noexcept {
-	UNUSED(papp);
+	ReclaimResources(papp);
 	return PLATFORM_OK;
 }
 
