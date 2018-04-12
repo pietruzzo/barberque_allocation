@@ -131,8 +131,7 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::Release(AppPtr_t papp) {
 	return PLATFORM_OK;
 }
 
-TestPlatformProxy::ExitCode_t TestPlatformProxy::ReclaimResources(AppPtr_t papp)
-																		 {
+TestPlatformProxy::ExitCode_t TestPlatformProxy::ReclaimResources(AppPtr_t papp) {
 	logger->Info("PLAT TEST: ReclaimResources(%s)", papp->StrId());
 	return PLATFORM_OK;
 }
