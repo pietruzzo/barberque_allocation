@@ -604,7 +604,7 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 		br::RViewToken_t status_view, size_t b_refn) {
 	std::unique_lock<std::recursive_mutex> schedule_ul(schedule.mtx);
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	ResourceAccounter::ExitCode_t booking;
+	ResourceAccounter::ExitCode_t ra_result;
 	AppSPtr_t papp(awm->Owner());
 	logger->Info("ScheduleRequest: %s request for binding @[%d] view=%ld",
 		papp->StrId(), b_refn, status_view);
@@ -634,10 +634,10 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	}
 
 	// Checking for resources availability
-	booking = ra.BookResources(papp, awm->GetSchedResourceBinding(b_refn), status_view);
+	ra_result = ra.BookResources(papp, awm->GetSchedResourceBinding(b_refn), status_view);
 
 	// If resources are not available, unschedule
-	if (booking != ResourceAccounter::RA_SUCCESS) {
+	if (ra_result != ResourceAccounter::RA_SUCCESS) {
 		logger->Debug("ScheduleRequest: unscheduling [%s]...", papp->StrId());
 		Unschedule();
 		return APP_WM_REJECTED;

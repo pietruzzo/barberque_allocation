@@ -59,17 +59,17 @@ public:
 	 * going to be re-scheduled otherwise, it is un-scheduled.
 	 *
 	 * @param awm Next working mode scheduled for the application
-	 * @param tok The token referencing the resources state view
+	 * @param status_view The token referencing the resources state view
 	 * @param bid An optional identifier for the resource binding
 	 *
-	 * @return The method return an exit code representing the decision taken:
+	 * @return The method returns an exit code representing the decision taken:
 	 * APP_SUCCESS if the specified working mode can be scheduled for
 	 * this application, APP_WM_REJECTED if the working mode cannot not be
 	 * scheduled. If the application is currently disabled this call returns
 	 * always APP_DISABLED.
 	 */
 	virtual ExitCode_t ScheduleRequest(AwmPtr_t const & awm,
-			bbque::res::RViewToken_t tok,
+			bbque::res::RViewToken_t status_view,
 			size_t b_refn = 0) = 0;
 
 	/**
