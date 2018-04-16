@@ -157,6 +157,11 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 					papp->Name().c_str(), papp->Pid());
 
 			// Try to allocate resourced for the application
+			if (papp->State() == ba::Application::State_t::RUNNING) {
+				logger->Debug("Skipping already running aplication [%s]",
+					papp->StrId());
+				continue;
+			}
 			err = ServeApp(papp);
 
 			if(err == SCHED_SKIP_APP) {
