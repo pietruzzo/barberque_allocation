@@ -577,35 +577,33 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 
 	papp = am.GetFirst(syncState, apps_it);
 	for ( ; papp; papp = am.GetNext(syncState, apps_it)) {
-
 		if (!policy->DoSync(papp))
 			continue;
-
 		logger->Info("STEP M: SyncPlatform() ===> [%s]", papp->StrId());
 
 		// TODO: reconfigure resources
 		switch (syncState) {
 		case ApplicationStatusIF::STARTING:
 			logger->Debug("STEP M: allocating resources to [%s]", papp->StrId());
-            result = plm.MapResources(papp,
+			result = plm.MapResources(papp,
 					papp->NextAWM()->GetResourceBinding());
 			break;
 		case ApplicationStatusIF::RECONF:
 		case ApplicationStatusIF::MIGREC:
 		case ApplicationStatusIF::MIGRATE:
 			logger->Debug("STEP M: re-mapping resources for [%s]", papp->StrId());
-            result = plm.MapResources(papp,
+			result = plm.MapResources(papp,
 					papp->NextAWM()->GetResourceBinding());
 			break;
 		case ApplicationStatusIF::BLOCKED:
 			logger->Debug("STEP M: reclaiming resources from [%s]", papp->StrId());
-            result = plm.ReclaimResources(papp);
+			result = plm.ReclaimResources(papp);
 			break;
 		default:
 			break;
 		}
 
-        if (result != PlatformManager::PLATFORM_OK) {
+		if (result != PlatformManager::PLATFORM_OK) {
 			logger->Error("STEP M: cannot synchronize application [%s]", papp->StrId());
 			sync_fails_apps.push_back(papp);
 			continue;
@@ -621,7 +619,7 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_SYNCPLAT, sm_tmr, syncState);
 	logger->Debug("STEP M: SyncPlatform() DONE");
 
-    if (at_least_one_success)
+	if (at_least_one_success)
 		return OK;
 
 	return PLATFORM_SYNC_FAILED;
