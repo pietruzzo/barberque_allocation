@@ -662,6 +662,44 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	return APP_SUCCESS;
 }
 
+Application::ExitCode_t Application::ScheduleRequestAsPrev(br::RViewToken_t status_view) {
+	std::unique_lock<std::recursive_mutex> schedule_ul(schedule.mtx);
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ResourceAccounter::ExitCode_t ra_result;
+
+	AppSPtr_t papp(schedule.awm->Owner());
+	logger->Notice(": [%p == %p] ?", papp.get(), this);
+
+	if (papp == nullptr) {
+		logger->Error(": [%s] hey!", papp->StrId());
+		return APP_ABORT;
+	}
+
+	// Application must be already running
+	if (_Running()) {
+		logger->Warn("ScheduleRequestAsPrev: [%s] not in RUNNING state", papp->StrId());
+		return APP_STATUS_NOT_EXP;
+	}
+
+	// Checking resources are still available
+	ra_result = ra.BookResources(
+		papp, schedule.awm->GetResourceBinding(), status_view);
+	if (ra_result != ResourceAccounter::RA_SUCCESS) {
+		logger->Warn("ScheduleRequestAsPrev: [%s] unscheduling...", papp->StrId());
+		Unschedule();
+		return APP_WM_REJECTED;
+	}
+
+	// Set next awm to the previous one
+	schedule.next_awm = schedule.awm;
+	awms.curr_inv     = false;
+	logger->Debug("ScheduleRequestAsPrev: [%s] rescheduled as previously: AWM [%d:%s]...",
+			papp->StrId(), schedule.awm->Id(), schedule.awm->Name().c_str());
+
+	return APP_SUCCESS;
+}
+
+
 /*******************************************************************************
  *  EXC Synchronization
  ******************************************************************************/

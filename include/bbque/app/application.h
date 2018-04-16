@@ -406,6 +406,11 @@ public:
 			size_t b_refn = 0);
 
 	/**
+	 * @see ApplicationConfIF
+	 */
+	ExitCode_t ScheduleRequestAsPrev(br::RViewToken_t status_view);
+
+	/**
 	 * @brief Commit a previously required re-scheduling request
 	 *
 	 * @return APP_SUCCESS on successful update of internal data

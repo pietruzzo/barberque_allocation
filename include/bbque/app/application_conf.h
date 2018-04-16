@@ -73,6 +73,18 @@ public:
 			size_t b_refn = 0) = 0;
 
 	/**
+	 * @brief Re-schedule this application according to previous scheduling
+	 * policy run
+	 *
+	 * @param status_view The token referencing the resources state view
+	 *
+	 * @return The method returns APP_SUCCESS if the application can be
+	 * rescheduled,  APP_STATUS_NOT_EXP if the application is not in "running"
+	 * stats, APP_WM_REJECTED if required resources are no longier available.
+	 */
+	virtual ExitCode_t ScheduleRequestAsPrev(bbque::res::RViewToken_t status_view) = 0;
+
+	/**
 	 * @brief Set the scheduling metrics value
 	 *
 	 * The usage of this method should be in charge of the scheduling policy
