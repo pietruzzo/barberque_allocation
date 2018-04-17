@@ -724,10 +724,15 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		* without allocate the memory returned, since it would return the same bank.
 		*/
 		FindUnitsSets(tg, &tiles, &families_order, &num_sets);
+
+		// TODO: Implement the management of the multiple sets returned
+		num_sets = 1;
+
 		mem_buffers_tiles = new uint32_t*[num_sets];
 		mem_buffers_addr  = new uint32_t*[num_sets];
 		memset(mem_buffers_tiles, 0, num_sets*sizeof(uint32_t *));
 		memset(mem_buffers_addr, 0, num_sets*sizeof(uint32_t *));
+
 		for (unsigned int i = 0; i < num_sets; i++) {
 			// let's find and allocate memory close the tiles obtained for the set
 			mem_buffers_tiles[i] = new uint32_t[num_mem_buffers];
