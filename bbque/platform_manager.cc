@@ -262,6 +262,9 @@ PlatformManager::ExitCode_t PlatformManager::Release(AppPtr_t papp)
 			              papp->Name().c_str(), papp->Pid(), ec);
 			return ec;
 		}
+
+		// The application now it is not local.
+		papp->SetLocal(false);
 	}
 
 #ifdef CONFIG_BBQUE_DIST_MODE
@@ -273,6 +276,9 @@ PlatformManager::ExitCode_t PlatformManager::Release(AppPtr_t papp)
 			              papp->Name().c_str(), papp->Pid(), ec);
 			return ec;
 		}
+
+		// The application now it is not remote.
+		papp->SetRemote(false);
 	}
 #endif
 
@@ -295,9 +301,6 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp)
 			              papp->Name().c_str(), papp->Pid(), ec);
 			return ec;
 		}
-
-		// The application now it is not local.
-		papp->SetLocal(false);
 	}
 
 #ifdef CONFIG_BBQUE_DIST_MODE
@@ -309,9 +312,6 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp)
 			              papp->Name().c_str(), papp->Pid(), ec);
 			return ec;
 		}
-
-		// The application now it is not remote.
-		papp->SetRemote(false);
 	}
 #endif
 
