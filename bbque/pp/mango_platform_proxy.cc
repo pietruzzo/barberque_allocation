@@ -110,6 +110,7 @@ MangoPlatformProxy::ExitCode_t MangoPlatformProxy::Setup(AppPtr_t papp) noexcept
 
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::Release(AppPtr_t papp) noexcept {
+	logger->Info("Release: application [%s]...", papp->StrId());
 	ReclaimResources(papp);
 	return PLATFORM_OK;
 }
@@ -123,8 +124,10 @@ MangoPlatformProxy::ReclaimResources(AppPtr_t papp) noexcept {
 		bbque_assert(ResourcePartitionValidator::PMV_OK == ret);
 		if (ret != ResourcePartitionValidator::PMV_OK)
 			logger->Warn("ReclaimResources: [%s] hw partition release failed", papp->StrId());
-		else
-			logger->Debug("ReclaimResources: [%s] hw partition released", papp->StrId());
+		else {
+			papp->SetPartition(nullptr);
+			logger->Info("ReclaimResources: [%s] hw partition released", papp->StrId());
+		}
 	}
 
 	return PLATFORM_OK;
