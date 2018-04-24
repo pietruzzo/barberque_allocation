@@ -376,7 +376,7 @@ static uint32_t ArchTypeToMangoType(ArchType type, unsigned int nr_thread) {
 			return HN_TILE_FAMILY_TETRAPOD;
 
 		case ArchType::GN:
-			return HN_TILE_FAMILY_NONE;	// In GN emulation case we are not interested in the real time
+			return HN_TILE_FAMILY_GN;	// In GN emulation case we are not interested in the real time
 		// TODO add other architectures
 		default:
 			throw std::runtime_error("Unsupported architecture");
