@@ -305,7 +305,8 @@ protected:
 	inline void NotifyTaskEvents(TaskPtr_t task) {
 		NotifyBuffersEvents(task->OutputBuffers());
 		NotifyBuffersEvents(task->InputBuffers());
-		NotifyEvent(task->Event());
+		if (task->Event() >= 0)
+			NotifyEvent(task->Event());
 	}
 
 	// --------------- BbqueEXC derived functions -------------------- //
