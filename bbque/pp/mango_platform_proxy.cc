@@ -53,13 +53,25 @@ MangoPlatformProxy::MangoPlatformProxy() :
 
 	logger->Debug("Initializing communication with MANGO platform...");
 	int hn_init_err = hn_initialize(filter, UPV_PARTITION_STRATEGY, 1, 0, 0);
+	if(hn_init_err == HN_SUCCEEDED) {
+		logger->Info("HN Daemon connection established.");
+	} else {
+		logger->Fatal("Unable to establish HN daemon connection. Error code: %d", hn_init_err);
+	}
+
 	bbque_assert ( 0 == hn_init_err );
 
 	// We have now to reset the platform
 	// This function call may take several seconds to conclude
 	logger->Debug("Resetting MANGO platform...");
-	hn_reset(0);
-	logger->Info("HN Library successfully initialized");
+
+	int hn_reset_err = hn_reset(0);
+	if(hn_reset_err == HN_SUCCEEDED) {
+		logger->Info("HN Library successfully initialized");
+	} else {
+		logger->Crit("Unable to reset the HN board. Error code: %d", hn_reset_err);
+		// We consider this error non critical and we try to continue
+	}
 
 	// Register our skimmer for the incoming partitions (it actually fills the partition list,
 	// not skim it)
@@ -823,7 +835,15 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 	// TODO: Policy for tile selection
 	for ( auto event : tg.Events()) {
 		uint32_t phy_addr;
-		hn_get_synch_id (&phy_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE);
+
+		int err = hn_get_synch_id (&phy_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE);
+		if (err != HN_SUCCEEDED) {
+			logger->Error("Cannot find sync register for event %d", event.second->Id());
+
+			// TODO we should deallocate the other assigned events?
+			return SK_GENERIC_ERROR;
+	  	}
+
 		logger->Debug("Event %d assigned to ID 0x%x", event.second->Id(), phy_addr);
 		event.second->SetPhysicalAddress(phy_addr);
 	}
@@ -863,7 +883,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 		uint32_t phy_addr = event.second->PhysicalAddress();
 		logger->Debug("Releasing event %d (ID 0x%x)",
 			event.second->Id(), phy_addr);
-		hn_release_synch_id (phy_addr);
+		int err = hn_release_synch_id (phy_addr);
+
+		if(err != HN_SUCCEEDED) {
+			logger->Warn("Unable to release event %d (ID 0x%x)", event.second->Id(), phy_addr);
+		}
 	}
 
 	// release memory
@@ -887,8 +911,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 		uint32_t mem_tile    = partition.GetKernelBank(task.second);
 		auto     ksize       = task.second->Targets()[arch]->BinarySize();
 		auto     ssize       = task.second->Targets()[arch]->StackSize();
-		logger->Debug("Task %d released space for kernel %s [address=0x%x size=%lu]",
-				task.second->Id(), GetStringFromArchType(arch), phy_addr, ksize + ssize);
+		logger->Debug("Task %d released space for kernel %s [bank=%d, address=0x%x size=%lu]",
+				task.second->Id(), GetStringFromArchType(arch), mem_tile, phy_addr, ksize + ssize);
 		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
 		task.second->Targets()[arch]->SetAddress(phy_addr);
 
@@ -925,4 +949,3 @@ MangoPlatformProxy::MangoPartitionSkimmer::MangoPartitionSkimmer(): PartitionSki
 
 }	// namespace pp
 }	// namespace bbque
-
