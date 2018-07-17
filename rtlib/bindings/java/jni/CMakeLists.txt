@@ -21,7 +21,7 @@ set_target_properties(bbque_java_bindings PROPERTIES
 
 target_link_libraries(bbque_java_bindings
   bbque_rtlib
-  ${JNI_LIBRARIES}
+#  ${JNI_LIBRARIES}
   )
 
 install(TARGETS bbque_java_bindings LIBRARY
