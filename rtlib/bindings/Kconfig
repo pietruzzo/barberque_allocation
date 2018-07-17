@@ -8,7 +8,6 @@ config BBQUE_BINDINGS_PYTHON
   Build the module to provide the Python wrapper of the RTLib
 
 config BBQUE_BINDINGS_JAVA
-  depends on TARGET_LINUX_NATIVE
   bool "Java wrapper"
   default n
   ---help---
