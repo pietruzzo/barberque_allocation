@@ -61,7 +61,7 @@ DataManager::DataManager() : Worker(),
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("Publisher setup...");
 	sleep_time = BBQUE_DM_DEFAULT_SLEEP_TIME;
-	Setup("DataManagerPublisher", MODULE_NAMESPACE".pub");
+	Setup(BBQUE_MODULE_NAME("dm.pub"), MODULE_NAMESPACE".pub");
 
 	try {
 		po::options_description opts_desc("Data Manager options");
@@ -199,7 +199,6 @@ void DataManager::SubscriptionHandler() {
 			break;
 		}
 
-
 		// Subscription information
 		Subscription subscription_info(
 			bd::sub_bitset_t(sub_msg.filter),
@@ -238,7 +237,7 @@ void DataManager::SubscriptionHandler() {
 		if (!done)
 			logger->Error("SubscriptionHandler: error during closing socket");
 	}
-	logger->Error("SubscriptionHandler: error during socket receiving");
+	logger->Info("SubscriptionHandler: ENDED");
 }
 
 
@@ -367,6 +366,7 @@ void DataManager::EventHandler() {
 			PublishOnEvent(event);
 		}
 	}
+	logger->Info("EventHandler: ENDED");
 }
 
 void DataManager::PublishOnEvent(status_event_t event){
