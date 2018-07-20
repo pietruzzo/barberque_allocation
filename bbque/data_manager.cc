@@ -182,7 +182,8 @@ void DataManager::SubscriptionHandler() {
 			acceptor.listen();
 			acceptor.accept(*stream.rdbuf());
 		} catch(boost::exception const& ex) {
-			logger->Error("SubscriptionHandler: error during socket receiving");
+			if (!done)
+				logger->Error("SubscriptionHandler: error during socket receiving");
 			break;
 		}
 
@@ -192,8 +193,9 @@ void DataManager::SubscriptionHandler() {
 			client_addr = stream.rdbuf()->remote_endpoint().address().to_string();
 			boost::archive::text_iarchive archive(stream);
 			archive >> sub_msg;
-		} catch(boost::exception const& ex){
-			logger->Error("SubscriptionHandler: error during subscription receiving");
+		} catch(boost::exception const& ex) {
+			if (!done)
+				logger->Error("SubscriptionHandler: error during subscription receiving");
 			break;
 		}
 
@@ -232,8 +234,9 @@ void DataManager::SubscriptionHandler() {
 	// Closing the socket
 	try {
 		acceptor.close();
-	} catch(boost::exception const& ex){	
-		logger->Error("SubscriptionHandler: error during closing socket");
+	} catch(boost::exception const& ex) {
+		if (!done)
+			logger->Error("SubscriptionHandler: error during closing socket");
 	}
 	logger->Error("SubscriptionHandler: error during socket receiving");
 }
