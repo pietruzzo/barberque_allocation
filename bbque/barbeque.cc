@@ -171,16 +171,13 @@ int main(int argc, char *argv[]) {
 		exit_code = EXIT_FAILURE;
 	}
 
-	// Cleaning-up the grill
-
 	// Final greetings
 	if (cm.RunAsDaemon())
-		syslog(LOG_INFO, "BBQ daemon termination [%s]",
+		syslog(LOG_NOTICE, "Goodbye! [%s]",
 				(exit_code == EXIT_FAILURE) ? "FAILURE" : "SUCCESS" );
 	else
-		logger->Info("BBQ termination [%s]",
+		logger->Notice("Goodbye! [%s]",
 				(exit_code == EXIT_FAILURE) ? "FAILURE" : "SUCCESS" );
-
 	closelog();
 	return exit_code;
 }
