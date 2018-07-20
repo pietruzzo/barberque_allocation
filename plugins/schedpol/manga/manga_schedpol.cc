@@ -143,8 +143,6 @@ MangASchedPol::Schedule(
 
 SchedulerPolicyIF::ExitCode_t
 MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
-
-
 	ExitCode_t err, err_relax = SCHED_OK;
 	do {
 		ba::AppCPtr_t  papp;
@@ -281,8 +279,8 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::AllocateArchitectural(ba::AppCPtr_t
 
 		do {	// Select every time the best preferred available architecture
 			if ( i > 0 ) {
-				logger->Warn("I wanted to select architecture %s (%d) available in "
-					     "receipe but the task %i does not support it",
+				logger->Warn("Architecture %s (%d) available in "
+					     "receipe but task %i does not support it",
 					     GetStringFromArchType(preferred_type), preferred_type, task->Id() );
 			}
 			if ( i > requirements.NumArchPreferences() ) {
