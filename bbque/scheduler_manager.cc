@@ -173,18 +173,17 @@ SchedulerManager::Schedule() {
 
 	SetState(State_t::SCHEDULING);  // --> Applications from now in a not consistent state
 	++sched_count;
-	logger->Notice("Scheduling [%d] START, policy [%s]", sched_count, policy->Name());
 
 	// Collecing execution metrics
 	if (sched_count > 1)
 		SM_GET_TIMING(metrics, SM_SCHED_PERIOD, sm_tmr);
-
 	SM_COUNT_EVENT(metrics, SM_SCHED_RUNS);  // Account for actual scheduling runs
 	SM_RESET_TIMING(sm_tmr);                 // Reset timer for policy execution time profiling
 
 	System &sv = System::GetInstance();
-	br::RViewToken_t sched_view_id;
+	br::RViewToken_t sched_view_id;          // Status view to fill with scheduling
 
+	logger->Notice("Scheduling [%d] START, policy [%s]", sched_count, policy->Name());
 	SchedulerPolicyIF::ExitCode result = policy->Schedule(sv, sched_view_id);
 	if (result != SchedulerPolicyIF::SCHED_DONE) {
 		logger->Error("Scheduling [%d] FAILED", sched_count);

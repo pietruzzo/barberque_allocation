@@ -121,7 +121,6 @@ CommandManager::CommandManager() : Worker(),
 	// Setup FIFO channel
 	if (InitFifo() == 0)
 		initialized = true;
-
 	if (!initialized) {
 		logger->Fatal("Command interface initialization FAILED");
 		Terminate();
@@ -312,9 +311,7 @@ int CommandManager::DispatchCommand(int argc, char *argv[]) {
 	}
 
 	return (it->second).pch->CommandsCb(argc, argv);
-
 }
-
 
 
 #ifdef ANDROID
@@ -334,7 +331,6 @@ void CommandManager::ParseCommand(char *cmd_buff) {
 		logger->Debug("Arg%02d: [%s]\n", i, myargv[i]);
 
 	DispatchCommand(myargc, myargv);
-
 }
 
 #else

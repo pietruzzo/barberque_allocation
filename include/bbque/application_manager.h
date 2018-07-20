@@ -154,8 +154,7 @@ public:
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
-	ExitCode_t CheckEXC(AppPid_t pid, uint8_t exc_id,
-			bool release = true);
+	ExitCode_t CheckEXC(AppPid_t pid, uint8_t exc_id, bool release = true);
 
 /*******************************************************************************
  *     Thread-Safe Queue Access Functions
@@ -210,42 +209,46 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications (AppPrio_t prio);
+	bool HasApplications(AppPrio_t prio);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications (ApplicationStatusIF::State_t state);
+	bool HasApplications(ApplicationStatusIF::State_t state);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications (ApplicationStatusIF::SyncState_t state);
+	bool HasApplications(ApplicationStatusIF::SyncState_t state);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications (RTLIB_ProgrammingLanguage_t lang);
+	bool HasApplications(RTLIB_ProgrammingLanguage_t lang);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	uint16_t AppsCount (AppPrio_t prio) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	uint16_t AppsCount (ApplicationStatusIF::State_t state) const;
+	uint16_t AppsCount(AppPrio_t prio) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	uint16_t AppsCount (ApplicationStatusIF::SyncState_t state) const;
+	uint16_t AppsCount(ApplicationStatusIF::State_t state) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	uint16_t AppsCount (RTLIB_ProgrammingLanguage_t lang) const;
+	uint16_t AppsCount(ApplicationStatusIF::SyncState_t state) const;
+
+	/**
+	 * @see ApplicationManagerStatusIF
+	 */
+	uint16_t AppsCount(RTLIB_ProgrammingLanguage_t lang) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF

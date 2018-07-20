@@ -233,10 +233,9 @@ ResourceManager::Setup() {
 
 #ifdef CONFIG_BBQUE_WM
 	//----------- Start the Power Monitor
-    PowerMonitor & wm(PowerMonitor::GetInstance());
-    wm.Start();
+	PowerMonitor & wm(PowerMonitor::GetInstance());
+	wm.Start();
 #endif
-
 	//---------- Start bbque services
 	plm.Start();
 	if (opt_interval)

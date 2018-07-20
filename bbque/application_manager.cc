@@ -114,8 +114,6 @@ ApplicationManager::ApplicationManager() :
     cm.RegisterCommand(MODULE_NAMESPACE CMD_UNREGISTER,
             static_cast<CommandHandler*>(this),
             "Unregister the specified EXC");
-
-
 }
 
 int ApplicationManager::CommandsCb(int argc, char *argv[]) {
@@ -503,55 +501,46 @@ bool ApplicationManager::HasApplications (
 	return !(prio_vec[prio].empty());
 }
 
-bool ApplicationManager::HasApplications (
-		ApplicationStatusIF::State_t state) {
+bool ApplicationManager::HasApplications (ApplicationStatusIF::State_t state) {
 	assert(state < Application::STATE_COUNT);
 	return !(status_vec[state].empty());
 }
 
-bool ApplicationManager::HasApplications (
-		ApplicationStatusIF::SyncState_t state) {
+bool ApplicationManager::HasApplications (ApplicationStatusIF::SyncState_t state) {
 	assert(state < Application::SYNC_STATE_COUNT);
 	return !(sync_vec[state].empty());
 }
 
-bool ApplicationManager::HasApplications (
-		RTLIB_ProgrammingLanguage_t lang) {
+bool ApplicationManager::HasApplications (RTLIB_ProgrammingLanguage_t lang) {
 	assert(lang < RTLIB_LANG_COUNT);
 	return !(lang_vec[lang].empty());
 }
 
-uint16_t ApplicationManager::AppsCount (
-		AppPrio_t prio) const {
+
+uint16_t ApplicationManager::AppsCount (AppPrio_t prio) const {
 	assert(prio < BBQUE_APP_PRIO_LEVELS);
 	return prio_vec[prio].size();
 }
 
-uint16_t ApplicationManager::AppsCount (
-		ApplicationStatusIF::State_t state) const {
+uint16_t ApplicationManager::AppsCount (ApplicationStatusIF::State_t state) const {
 	assert(state < Application::STATE_COUNT);
 	return status_vec[state].size();
 }
 
-uint16_t ApplicationManager::AppsCount (
-		ApplicationStatusIF::SyncState_t state) const {
+uint16_t ApplicationManager::AppsCount (ApplicationStatusIF::SyncState_t state) const {
 	assert(state < Application::SYNC_STATE_COUNT);
 	return sync_vec[state].size();
 }
 
-uint16_t ApplicationManager::AppsCount (
-		RTLIB_ProgrammingLanguage_t lang) const {
+uint16_t ApplicationManager::AppsCount (RTLIB_ProgrammingLanguage_t lang) const {
 	assert(lang < RTLIB_LANG_COUNT);
 	return lang_vec[lang].size();
 }
 
-AppPtr_t ApplicationManager::HighestPrio(
-		ApplicationStatusIF::State_t state) {
+AppPtr_t ApplicationManager::HighestPrio(ApplicationStatusIF::State_t state) {
 	AppPtr_t papp, papp_hp;
 	AppsUidMapIt apps_it;
-
 	assert(state < Application::STATE_COUNT);
-
 	logger->Debug("HighestPrio: looking for highest prio [%s] apps...",
 			ApplicationStatusIF::StateStr(state));
 
@@ -582,9 +571,7 @@ AppPtr_t ApplicationManager::HighestPrio(
 		ApplicationStatusIF::SyncState_t syncState) {
 	AppPtr_t papp, papp_hp;
 	AppsUidMapIt apps_it;
-
 	assert(syncState < Application::SYNC_STATE_COUNT);
-
 	logger->Debug("HighestPrio: looking for highest prio [%s] apps...",
 			ApplicationStatusIF::SyncStateStr(syncState));
 
@@ -1551,10 +1538,7 @@ ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
-	AppPtr_t papp;
-
-	// Find the required EXC
-	papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
 	if (!papp) {
 		logger->Debug("CheckEXC: [%d:*:%d] FAILED: EXC not found", pid, exc_id);
 		return AM_ABORT;

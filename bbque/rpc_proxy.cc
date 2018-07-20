@@ -230,17 +230,14 @@ void RPCProxy::Task() {
 	logger->Info("Task: Fetcher thread STARTED");
 
 	while (!done) {
-
-		logger->Debug("Task: waiting message...");
-
 		// Wait for a new message being ready
+		logger->Debug("Task: waiting message...");
 		size = rpc_channel->RecvMessage(msg);
 		if (size == -EINTR) {
 			SignalPoll();
 			continue;
 		}
 		assert(msg);
-
 		logger->Debug("Task: RX [typ: %2d, sze: %3d]",
 				msg->typ, size);
 
@@ -256,7 +253,6 @@ void RPCProxy::Task() {
 
 		logger->Debug("Task: eq [typ: %2d:%-8s, sze: %3d, inq: %3d]",
 			msg->typ, bl::RPC_MessageStr(msg->typ), size, msg_queue.size());
-
 	}
 
 	logger->Info("Task: Messages fetcher ENDED");

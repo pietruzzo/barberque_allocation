@@ -307,22 +307,22 @@ public:
 	/**
 	 * @brief The number of applications having the given PRIORITY
 	 */
-	virtual uint16_t AppsCount (AppPrio_t prio) const = 0;
+	virtual uint16_t AppsCount(AppPrio_t prio) const = 0;
 
 	/**
 	 * @brief The number of applications in the specified STATE
 	 */
-	virtual uint16_t AppsCount (ApplicationStatusIF::State_t state) const = 0;
+	virtual uint16_t AppsCount(ApplicationStatusIF::State_t state) const = 0;
 
 	/**
 	 * @brief The number of applications in the specified SYNC_STATE
 	 */
-	virtual uint16_t AppsCount (ApplicationStatusIF::SyncState_t state) const = 0;
+	virtual uint16_t AppsCount(ApplicationStatusIF::SyncState_t state) const = 0;
 
 	/**
 	 * @brief The number of applications of the specified language type
 	 */
-	virtual uint16_t AppsCount (RTLIB_ProgrammingLanguage_t lang) const = 0;
+	virtual uint16_t AppsCount(RTLIB_ProgrammingLanguage_t lang) const = 0;
 
 	/**
 	 * @brief One of the highest PRIORITY applications in the the

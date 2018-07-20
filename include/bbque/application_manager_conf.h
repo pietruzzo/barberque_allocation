@@ -207,8 +207,8 @@ public:
 	 * @param release set true to release currently assigned resources in
 	 *                case the check should fails
 	 */
-	virtual ExitCode_t CheckEXC(AppPid_t pid, uint8_t exec_id,
-			bool release = true) = 0;
+	virtual ExitCode_t CheckEXC(
+			AppPid_t pid, uint8_t exec_id, bool release = true) = 0;
 
 };
 
