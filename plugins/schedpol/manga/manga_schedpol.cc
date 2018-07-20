@@ -162,13 +162,14 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 					papp->StrId());
 				continue;
 			}
-			err = ServeApp(papp);
 
-			if(err == SCHED_SKIP_APP) {
+			err = ServeApp(papp);
+			if (err == SCHED_SKIP_APP) {
 				// In this case we have no sufficient memory to start it, the only
 				// one thing to do is to ignore it
-				logger->Notice("Unable to find resource for application %s [pid=%d]", 
+				logger->Warn("Unable to find resource for application %s [pid=%d]",
 					papp->Name().c_str(), papp->Pid());
+				papp->NoSchedule();
 				continue;
 			}
 
@@ -209,7 +210,6 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 	
 	// First of all we have to decide which processor type to assign to each task
 	err = AllocateArchitectural(papp);
-	
 	if (err != SCHED_OK) {
 		logger->Error("Allocate architectural failed");
 		return err;
@@ -263,7 +263,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::AllocateArchitectural(ba::AppCPtr_t
 	if (nullptr == papp->GetTaskGraph()) {
 		logger->Error("TaskGraph not present for application %s [pid=%d]",
 				papp->Name().c_str(), papp->Pid());
-		return SCHED_ERROR;
+		return SCHED_SKIP_APP;
 	}
 
 	for (auto task_pair : papp->GetTaskGraph()->Tasks()) {
