@@ -56,6 +56,7 @@ public:
 	 * @brief Platform specific resources refresh
 	 */
 	virtual ExitCode_t Refresh() override;
+
 	/**
 	 * @brief Platform specific resources release interface.
 	 */
@@ -82,6 +83,12 @@ public:
 	virtual ExitCode_t MapResources(
 		AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
 
+	/**
+	 * @brief Check if the resource is a "high-performance" is single-ISA
+	 * heterogeneous platforms
+	 *
+	 * @return true if so, false otherwise
+	 */
 	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
 
 	/**
@@ -92,11 +99,19 @@ public:
 	 */
 	ExitCode_t LoadPlatformConfig();
 
+	/**
+	 * @brief Get a reference to the local platform proxy
+	 * @return A PlatformProxy reference
+	 */
 	inline PlatformProxy const & GetLocalPlatformProxy() {
 		return *lpp;
 	}
 
 #ifdef CONFIG_BBQUE_DIST_MODE
+	/**
+	 * @brief Get a reference to the remote platform proxy
+	 * @return A PlatformProxy reference
+	 */
 	inline PlatformProxy const & GetRemotePlatformProxy() {
 		return *rpp;
 	}

@@ -28,13 +28,12 @@ const char* TestPlatformProxy::GetHardwareID(int16_t system_id) const {
 }
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::Setup(AppPtr_t papp) {
-	logger->Info("PLAT TEST: Setup(%s)", papp->StrId());
+	logger->Info("Setup: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData() {
-	logger->Info("PLAT TEST: LoadPlatformData()");
-
+	logger->Info("LoadPlatformData...");
 	if (platformLoaded)
 		return PLATFORM_OK;
 
@@ -122,17 +121,17 @@ TestPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) {
 
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::Refresh() {
-	logger->Info("PLAT TEST: Refresh()");
+	logger->Info("Refresh...");
 	return PLATFORM_OK;
 }
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::Release(AppPtr_t papp) {
-	logger->Info("PLAT TEST: Release(%s)", papp->StrId());
+	logger->Info("Release: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::ReclaimResources(AppPtr_t papp) {
-	logger->Info("PLAT TEST: ReclaimResources(%s)", papp->StrId());
+	logger->Info("ReclaimResources: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
@@ -141,7 +140,7 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::MapResources(
 		ResourceAssignmentMapPtr_t pres,bool excl) {
 	(void) pres;
 	(void) excl;
-	logger->Info("PLAT TEST: MapResources(%s)", papp->StrId());
+	logger->Info(" MapResources: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
@@ -155,6 +154,7 @@ bool TestPlatformProxy::IsHighPerformance(
 	UNUSED(path);
 	return true;
 }
+
 
 }	// namespace pp
 }	// namespace bbque

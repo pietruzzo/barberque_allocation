@@ -26,7 +26,7 @@ public:
 	virtual ~LinuxPlatformProxy();
 
 	/**
-	 * @brief Return the Platform specific string identifier
+	 * @brief Return the Linux specific string identifier
 	 */
 	const char* GetPlatformID(int16_t system_id=-1) const noexcept override final;
 
@@ -36,12 +36,12 @@ public:
 	const char* GetHardwareID(int16_t system_id=-1) const noexcept override final;
 
 	/**
-	 * @brief Platform specific resource setup interface.
+	 * @brief Linux specific resource setup interface.
 	 */
 	ExitCode_t Setup(AppPtr_t papp) noexcept override final;
 
 	/**
-	 * @brief Platform specific resources enumeration
+	 * @brief Linux specific resources enumeration
 	 *
 	 * The default implementation of this method loads the TPD, is such a
 	 * function has been enabled
@@ -49,22 +49,22 @@ public:
 	ExitCode_t LoadPlatformData() noexcept override final;
 
 	/**
-	 * @brief Platform specific resources refresh
+	 * @brief Linux specific resources refresh
 	 */
 	ExitCode_t Refresh() noexcept override final;
 
 	/**
-	 * @brief Platform specific resources release interface.
+	 * @brief Linux specific resources release interface.
 	 */
 	ExitCode_t Release(AppPtr_t papp) noexcept override final;
 
 	/**
-	 * @brief Platform specific resource claiming interface.
+	 * @brief Linux specific resource claiming interface.
 	 */
 	ExitCode_t ReclaimResources(AppPtr_t papp) noexcept override final;
 
 	/**
-	 * @brief Platform specific resource binding interface.
+	 * @brief Linux specific resource binding interface.
 	 */
 	ExitCode_t MapResources(
 	        AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;

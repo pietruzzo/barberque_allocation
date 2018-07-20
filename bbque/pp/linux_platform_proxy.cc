@@ -168,8 +168,7 @@ void LinuxPlatformProxy::InitNetworkManagement() {
 	bbque_assert ( 0 == rtnl_open(&network_info.rth_2, 0) );
 	memset(&network_info.kernel_addr, 0, sizeof(network_info.kernel_addr));
 	network_info.kernel_addr.nl_family = AF_NETLINK;
-
-	logger->Debug("NetoworkManagement: sockets to kernel initialized.");
+	logger->Debug("NetworkManagement: sockets to kernel initialized.");
 }
 
 
@@ -456,6 +455,7 @@ void LinuxPlatformProxy::Exit() {
 	proc_listener.Terminate();
 #endif
 }
+
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept {
