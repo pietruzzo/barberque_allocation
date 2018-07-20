@@ -156,7 +156,7 @@ void ProcessListener::Task() {
 	 * otherwise you have a potential security vulnerability.
 	 * recvmsg lets us receive the sender address as well as the data.
 	 */
-	while(true){
+	while (!done) {
 		len = recvmsg (sock, &msghdr, 0);
 		if (len<=0)
 			continue;
