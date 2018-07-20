@@ -304,6 +304,12 @@ public:
 	 */
 	virtual bool HasApplications (RTLIB_ProgrammingLanguage_t lang) = 0;
 
+
+	/**
+	 * @brief The total number of applications
+	 */
+	virtual uint16_t AppsCount() const = 0;
+
 	/**
 	 * @brief The number of applications having the given PRIORITY
 	 */

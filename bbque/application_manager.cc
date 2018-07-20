@@ -516,6 +516,12 @@ bool ApplicationManager::HasApplications (RTLIB_ProgrammingLanguage_t lang) {
 	return !(lang_vec[lang].empty());
 }
 
+uint16_t ApplicationManager::AppsCount() const {
+	uint16_t count = 0;
+	for (uint16_t prio = 0; prio < BBQUE_APP_PRIO_LEVELS; ++prio)
+		count +=  prio_vec[prio].size();
+	return count;
+}
 
 uint16_t ApplicationManager::AppsCount (AppPrio_t prio) const {
 	assert(prio < BBQUE_APP_PRIO_LEVELS);

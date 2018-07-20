@@ -229,6 +229,7 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
+	uint16_t AppsCount() const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
