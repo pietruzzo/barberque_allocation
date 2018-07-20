@@ -7,6 +7,7 @@
 
 namespace bbque {
 namespace pp {
+
 /**
  * @class TestPlatformProxy
  *
@@ -67,7 +68,7 @@ public:
 	virtual void Exit();
 
 
-	bool IsHighPerformance(
+	virtual bool IsHighPerformance(
 			bbque::res::ResourcePathPtr_t const & path) const override;
 
 private:
