@@ -83,7 +83,7 @@ void PlatformManager::Task()
 
 	logger->Info("Platform Manager monitoring thread STARTED");
 
-	while (true) {
+	while (!done) {
 		if (platformEvents.none()) {
 			Wait();
 		}
