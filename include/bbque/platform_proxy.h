@@ -119,6 +119,11 @@ public:
 			AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
 
 	/**
+	 * @brief Graceful closure of the platform proxy
+	 */
+	virtual void Exit() = 0;
+
+	/**
 	 * @brief Check if a resource is flagged as "high-performance".
 	 * This is useful in case of heterogeneous architecture as
 	 * ARM big.LITTLE CPUs.

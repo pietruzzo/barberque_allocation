@@ -450,6 +450,13 @@ LinuxPlatformProxy::ReclaimResources(AppPtr_t papp) noexcept {
 }
 
 
+void LinuxPlatformProxy::Exit() {
+	logger->Debug("Exit: LinuxPP termination...");
+#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+	proc_listener.Terminate();
+#endif
+}
+
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept {
 	ResourceAccounter &ra = ResourceAccounter::GetInstance();

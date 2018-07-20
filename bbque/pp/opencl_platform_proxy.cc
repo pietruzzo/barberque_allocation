@@ -55,11 +55,7 @@ OpenCLPlatformProxy::OpenCLPlatformProxy():
 }
 
 OpenCLPlatformProxy::~OpenCLPlatformProxy() {
-	logger->Debug("Destroying the OpenCL Platform Proxy...");
-	delete platforms;
-	delete devices;
-	device_ids.clear();
-	device_paths.clear();
+
 }
 
 PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData() {
@@ -376,6 +372,14 @@ void OpenCLPlatformProxy::InsertDevicePath(
 
 	pdev_paths = device_paths[r_type];
 	pdev_paths->push_back(rp);
+}
+
+void OpenCLPlatformProxy::Exit() {
+	logger->Debug("Destroying the OpenCL Platform Proxy...");
+	delete platforms;
+	delete devices;
+	device_ids.clear();
+	device_paths.clear();
 }
 
 } // namespace bbque

@@ -69,6 +69,11 @@ public:
 	ExitCode_t MapResources(
 	        AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
 
+	/**
+	 * @brief Linux platform specific termination.
+	 */
+	void Exit() override;
+
 
 	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
 

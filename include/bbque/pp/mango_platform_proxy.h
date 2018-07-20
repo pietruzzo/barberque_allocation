@@ -70,6 +70,11 @@ public:
 	ExitCode_t MapResources(
 	        AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
 
+	/**
+	 * @brief Mango specific termiantion.
+	 */
+	void Exit() override;
+
 
 	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
 

@@ -175,6 +175,13 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
 }
 
 
+void LocalPlatformProxy::Exit() {
+	this->host->Exit();
+	for (auto it=this->aux.begin() ; it < this->aux.end(); it++)
+		(*it)->Exit();
+}
+
+
 bool LocalPlatformProxy::IsHighPerformance(
 		bbque::res::ResourcePathPtr_t const & path) const {
 	if (path->GetID(bbque::res::ResourceType::CPU) >= 0)

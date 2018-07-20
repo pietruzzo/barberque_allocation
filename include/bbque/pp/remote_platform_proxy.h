@@ -63,6 +63,10 @@ public:
 
 	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
 
+	/**
+	 * @brief Platform specific termination.
+	 */
+	virtual void Exit();
 
 	//--- AgentProxy functions
 

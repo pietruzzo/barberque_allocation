@@ -145,6 +145,11 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::MapResources(
 	return PLATFORM_OK;
 }
 
+void TestPlatformProxy::Exit() {
+	logger->Info("Exit: Termination...");
+}
+
+
 bool TestPlatformProxy::IsHighPerformance(
 			bbque::res::ResourcePathPtr_t const & path) const {
 	UNUSED(path);

@@ -81,7 +81,6 @@ MangoPlatformProxy::MangoPlatformProxy() :
 }
 
 MangoPlatformProxy::~MangoPlatformProxy() {
-
 	// first release occupied resources, p.e. allocated memory for peakOS
 	// Hope Partitions are unset correctly too
 	for (auto rsc : allocated_resources_peakos) {
@@ -155,6 +154,24 @@ MangoPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 	// to get the list of partitions and set them
 
 	return PLATFORM_OK;
+}
+
+void MangoPlatformProxy::Exit() {
+	logger->Info("Exit: Termination...");
+	// first release occupied resources, p.e. allocated memory for peakOS
+	// Hope Partitions are unset correctly too
+	for (auto rsc : allocated_resources_peakos) {
+		uint32_t tile_mem = rsc.first;
+		uint32_t addr     = rsc.second;
+		hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE);
+		logger->Info("Exit: Released peakOS memory %d address 0x%08x", tile_mem, addr);
+	}
+
+	// Just clean up stuffs...
+	int hn_err_ret = hn_end();
+	if (hn_err_ret != 0) {
+		logger->Warn("Exit: Error occurred while terminating: %d", hn_err_ret);
+	}
 }
 
 MangoPlatformProxy::ExitCode_t MangoPlatformProxy::Refresh() noexcept {

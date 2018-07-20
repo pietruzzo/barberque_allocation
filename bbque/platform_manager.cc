@@ -438,6 +438,16 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 }
 
 
+void PlatformManager::Exit()
+{
+	logger->Info("Exit: Platform supports termination...");
+	lpp->Exit();
+#ifdef CONFIG_BBQUE_DIST_MODE
+	rpp->Exit();
+#endif
+}
+
+
 bool PlatformManager::IsHighPerformance(
 		bbque::res::ResourcePathPtr_t const & path) const {
 	UNUSED(path);

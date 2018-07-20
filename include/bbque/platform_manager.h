@@ -67,6 +67,11 @@ public:
 	virtual ExitCode_t ReclaimResources(AppPtr_t papp) override;
 
 	/**
+	 * @brief Platform specific termiantion.
+	 */
+	virtual void Exit() override;
+
+	/**
 	 * @brief Bind the specified resources to the specified application.
 	 *
 	 * @param papp The application which resources are assigned

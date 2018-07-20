@@ -111,6 +111,11 @@ public:
 	ExitCode_t MapResources(
 	        ba::AppPtr_t papp, br::ResourceAssignmentMapPtr_t assign_map, bool excl) override final;
 
+	/**
+	 * OpenCL specific termination
+	 */
+	void Exit() override;
+
 
 	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
 
