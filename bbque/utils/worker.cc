@@ -79,7 +79,6 @@ void Worker::_Task() {
 
 	// Run the user defined task
 	Task();
-	logger->Info("Worker[%s]: Terminatated", name.c_str());
 
 	// Unregistering Worker from ResourceManager
 	ResourceManager::Unregister(name);
@@ -120,6 +119,9 @@ void Worker::Notify() {
 
 void Worker::Terminate() {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
+
+	_PreTerminate();
+
 	if (done == true)
 		return;
 
@@ -133,6 +135,7 @@ void Worker::Terminate() {
 	assert(worker_tid != 0);
 	::kill(worker_tid, SIGUSR1);
 
+	_PostTerminate();
 }
 
 bool Worker::Wait() {
@@ -141,6 +144,14 @@ bool Worker::Wait() {
 	// Waiting for an event
 	worker_status_cv.wait(worker_status_ul);
 	return !done;
+}
+
+void Worker::_PreTerminate() {
+	logger->Debug("Worker[%s]: Pre-termination...", name.c_str());
+}
+
+void Worker::_PostTerminate() {
+	logger->Info("Worker[%s]: Terminated", name.c_str());
 }
 
 } /*utils */
