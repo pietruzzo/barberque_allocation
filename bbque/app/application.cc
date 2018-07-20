@@ -347,7 +347,6 @@ void Application::SetSyncState(SyncState_t sync) {
 void Application::SetState(State_t state, SyncState_t sync) {
 	bbque::ApplicationManager &am(bbque::ApplicationManager::GetInstance());
 	AppPtr_t papp = am.GetApplication(Uid());
-
 	logger->Debug("Changing state [%s, %d:%s => %d:%s]",
 			StrId(),
 			_State(), StateStr(_State()),
@@ -407,10 +406,9 @@ Application::ExitCode_t Application::Terminate() {
  ******************************************************************************/
 
 Application::ExitCode_t Application::Enable() {
-	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx, std::defer_lock);
 	logger->Debug("Enabling EXC [%s]...", StrId());
+	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	// Not disabled applications could not be marked as READY
-	state_ul.lock();
 	if (!_Disabled()) {
 		logger->Crit("Trying to enable already enabled application [%s] "
 				"(Error: possible data structure curruption?)",
@@ -433,10 +431,9 @@ Application::ExitCode_t Application::Enable() {
  ******************************************************************************/
 
 Application::ExitCode_t Application::Disable() {
-	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx, std::defer_lock);
-
+	logger->Debug("Disabling EXC [%s]...", StrId());
+	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	// Not disabled applications could not be marked as READY
-	state_ul.lock();
 	if (_Disabled()) {
 		logger->Warn("Trying to disable already disabled application [%s]",
 				StrId());
