@@ -93,6 +93,11 @@ public:
 	 */
 	virtual void SetValue(float sched_metrics) = 0;
 
+	/**
+	 * @brief Do not schedule the application
+	 */
+	virtual void NoSchedule() = 0;
+
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
 	/**

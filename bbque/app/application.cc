@@ -662,6 +662,8 @@ Application::ExitCode_t Application::ScheduleRequest(AwmPtr_t const & awm,
 	return APP_SUCCESS;
 }
 
+
+
 Application::ExitCode_t Application::ScheduleRequestAsPrev(br::RViewToken_t status_view) {
 	std::unique_lock<std::recursive_mutex> schedule_ul(schedule.mtx);
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
@@ -699,6 +701,11 @@ Application::ExitCode_t Application::ScheduleRequestAsPrev(br::RViewToken_t stat
 	return APP_SUCCESS;
 }
 
+void Application::NoSchedule() {
+	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
+	SetState(DISABLED);
+	logger->Debug("Disabling no schedulable application: [%s]", StrId());
+}
 
 /*******************************************************************************
  *  EXC Synchronization
