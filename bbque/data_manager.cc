@@ -173,8 +173,8 @@ void DataManager::SubscriptionHandler() {
 	// Incoming subscription message
 	bbque::stat::subscription_message_t sub_msg;
 	logger->Debug("SubscriptionHandler: ready");
-	for(;;) {
 		
+	while (!done) {
 		ip::tcp::iostream stream;
 
 		// Subscription receiving waiting
@@ -348,7 +348,7 @@ void DataManager::EventHandler() {
 	logger->Info("EventHandler: starting handler..,.[tid=%d]", event_handler_tid);
 	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
 
-	while (true) {
+	while (!done) {
 		std::vector<status_event_t> events_vec;
 		events_lock.lock();
 		while (event_queue.empty())
