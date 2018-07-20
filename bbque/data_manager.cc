@@ -325,7 +325,7 @@ void DataManager::Unsubscribe(SubscriberPtr_t subscr, bool event_based) {
 
 void DataManager::Task() {
 	logger->Debug("Task: starting worker...");
-	while (true) {
+	while (!done) {
 		std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
 		while (subscribers_on_rate.empty())
 			subs_cv.wait(subs_lock);
