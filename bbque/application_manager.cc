@@ -1520,15 +1520,19 @@ ApplicationManager::DisableEXC(AppPid_t pid, uint8_t exc_id, bool release) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
-
 	logger->Debug("CheckEXC: [%s] checking life status...", papp->StrId());
 
-	// Check if the required PID is still alive
-	int dead = kill(papp->Pid(), 0);
+	// Check if the required process is still alive
+	bool dead = false;
+	int ret = kill(papp->Pid(), 0);
+	if (ret != 0) {
+		dead = true;
+		logger->Warn("CheckEXC: Dead process PID=%d", papp->Pid());
+	}
 	logger->Debug("CheckEXC: [%s] is %s",
 			papp->StrId(), dead ? "DEAD" : "still ALIVE");
 
-	// If required, return application resources to the system view
+	// If required, release application resources
 	if (likely(dead && release)) {
 		logger->Debug("CheckEXC: [%s] check => release...", papp->StrId());
 		papp->Disable();
