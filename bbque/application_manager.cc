@@ -1558,6 +1558,20 @@ ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
 }
 
 
+void ApplicationManager::CheckActiveEXCs() {
+	AppsUidMapIt app_it;
+	AppPtr_t papp = GetFirst(ba::ApplicationStatusIF::READY, app_it);
+	for (; papp; papp = GetNext(ba::ApplicationStatusIF::READY, app_it)) {
+		CheckEXC(papp, true);
+	}
+
+	papp = GetFirst(ba::ApplicationStatusIF::RUNNING, app_it);
+	for (; papp; papp = GetNext(ba::ApplicationStatusIF::RUNNING, app_it)) {
+		CheckEXC(papp, true);
+	}
+}
+
+
 /*******************************************************************************
  *  EXC Synchronization
  ******************************************************************************/

@@ -210,6 +210,11 @@ public:
 	virtual ExitCode_t CheckEXC(
 			AppPid_t pid, uint8_t exec_id, bool release = true) = 0;
 
+	/**
+	 * @brief Check the liveness status of all the active execution contexts
+	 */
+	virtual void CheckActiveEXCs() = 0;
+
 };
 
 } // namespace bbque
