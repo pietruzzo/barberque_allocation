@@ -125,9 +125,10 @@ RTLIB_ExitCode_t ApplicationProxy::StopExecutionSync(AppPtr_t papp) {
 			std::defer_lock);
 	conCtxMap_t::iterator it;
 	pconCtx_t pcon;
+
+	auto tid = gettid();
 	bl::rpc_msg_BBQ_STOP_t stop_msg = {
-		// FIXME The token should be defined as the thread id
-		{bl::RPC_BBQ_STOP_EXECUTION, 1234,
+		{bl::RPC_BBQ_STOP_EXECUTION, tid,
 			static_cast<int>(papp->Pid()), papp->ExcId()},
 		{0, 100} // FIXME get a timeout parameter
 	};
@@ -162,7 +163,7 @@ RTLIB_ExitCode_t ApplicationProxy::StopExecutionSync(AppPtr_t papp) {
 
 void ApplicationProxy::StopExecutionTrd(pcmdSn_t pcs) {
 	(void)pcs;
-#if 0
+#if 1
 	pcmdRsp_t pcmdRsp(new cmdRsp_t);
 
 	// Enqueuing the Command Session Handler
@@ -174,7 +175,7 @@ void ApplicationProxy::StopExecutionTrd(pcmdSn_t pcs) {
 	// Run the Command Synchronously
 	pcmdRsp->result = StopExecutionSync(pcs->papp);
 	// Give back the result to the calling thread
-	(pcs->resp_prm).set_value(pcmdRsp);
+	(pcs->resp_prm).set_value(pcmdRsp->result);
 
 	logger->Debug("StopExecutionTrd: [pid=%5d] (%s) END",
 			pcs->pid, pcs->papp->StrId());
@@ -184,7 +185,7 @@ void ApplicationProxy::StopExecutionTrd(pcmdSn_t pcs) {
 RTLIB_ExitCode_t
 ApplicationProxy::StopExecution(AppPtr_t papp) {
 	(void)papp;
-#if 0
+#if 1
 	ApplicationProxy::pcmdSn_t psn;
 
 	// Ensure the application is still active
@@ -192,7 +193,7 @@ ApplicationProxy::StopExecution(AppPtr_t papp) {
 	if (papp->State() >= Application::FINISHED) {
 		logger->Warn("StopExecution: multiple application [%s] stop",
 				papp->Name().c_str());
-		return resp_ftr_t();
+		return RTLIB_OK;
 	}
 
 	// Setup a new command session
@@ -200,9 +201,10 @@ ApplicationProxy::StopExecution(AppPtr_t papp) {
 
 	// Spawn a new Command Executor (passing the future)
 	psn->exe = std::thread(&ApplicationProxy::StopExecutionTrd, this, psn);
+	psn->exe.detach();
 
 	// Return the promise (thus unlocking the executor)
-	return resp_ftr_t((psn->resp_prm).get_future());
+	psn->resp_prm.get_future();
 #endif
 	return RTLIB_OK;
 }
@@ -1651,7 +1653,6 @@ void ApplicationProxy::Task() {
 	logger->Info("Task: Messages dispatcher STARTED");
 
 	while (!done) {
-
 		if (rpc->Poll() < 0)
 			continue;
 
