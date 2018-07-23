@@ -103,7 +103,7 @@ private:
 	std::bitset<MANGO_MAX_MEMORIES> found_memory_banks;
 
 	// the next keeps track of the memory tiles & addresses where peakos has been uploaded
-	std::map<uint32_t, uint32_t> allocated_resources_peakos;
+	std::vector<std::pair<uint32_t, uint32_t>> allocated_resources_peakos;
 
 //-------------------- METHODS
 

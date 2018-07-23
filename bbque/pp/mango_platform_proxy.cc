@@ -234,7 +234,7 @@ MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 		return PLATFORM_LOADING_FAILED;
 	}
 	logger->Debug("Loading PEAK OS in memory id %d [address=0x%x]", tile_memory, base_addr);
-	allocated_resources_peakos[tile_memory] = base_addr;
+	allocated_resources_peakos.push_back(std::make_pair(tile_memory, base_addr));
 
 	logger->Debug("Booting PEAK tile nr=%d [PEAK_OS:%s] [PEAK_PROT:%s]", tile, MANGO_PEAK_OS,
 			MANGO_PEAK_PROTOCOL);
