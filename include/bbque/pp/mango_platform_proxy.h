@@ -89,7 +89,6 @@ private:
 
 //-------------------- ATTRIBUTES
 
-	std::unique_ptr<bu::Logger> logger;
 	bool refreshMode;
 
 	uint32_t num_tiles;
