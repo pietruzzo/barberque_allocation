@@ -273,7 +273,8 @@ stop() {
 		rm -f $BBQUE_PIDFILE $BBQUE_LOCKFILE >/dev/null 2>&1
 	fi
 
-	sudo kill -9 $(pidof barbeque) >/dev/null 2>&1
+	sleep 2
+	sudo kill -SIGTERM $(pidof barbeque) >/dev/null 2>&1
 	bbqued_info "Done."
 
 	exit 0
