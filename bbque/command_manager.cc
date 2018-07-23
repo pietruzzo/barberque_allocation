@@ -274,23 +274,19 @@ int CommandManager::InitFifo() {
 
 void CommandManager::Task() {
 	int ret;
-
-	logger->Info("CMD MNGR: Commands dispatcher STARTED");
+	logger->Info("Task: Commands dispatcher STARTED");
 
 	while (!done) {
-
-		logger->Debug("CMD MNGR: waiting command...");
+		logger->Debug("Task: Waiting command...");
 		ret = ::ppoll(&fifo_poll, 1, NULL, &sigmask);
 		if (ret < 0) {
-			logger->Debug("CMD MNGR: interrupted");
+			logger->Debug("Task: Communication interrupted");
 			continue;
 		}
 
 		DoNextCommand();
-
 	}
-
-	logger->Info("CMD MNGR: Commands dispatcher ENDED");
+	logger->Info("Task: Commands dispatcher terminated");
 }
 
 int CommandManager::DispatchCommand(int argc, char *argv[]) {
