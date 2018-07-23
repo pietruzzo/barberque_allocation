@@ -124,8 +124,7 @@ void Worker::Terminate() {
 
 	if (done == true)
 		return;
-
-	logger->Debug("Worker[%s]: Terminating...", name.c_str());
+	DB(fprintf(stderr, FD("Worker[%s]: Terminating...\n"), name.c_str()));
 	done = true;
 
 	// Notify worker status
@@ -147,11 +146,11 @@ bool Worker::Wait() {
 }
 
 void Worker::_PreTerminate() {
-	logger->Debug("Worker[%s]: Pre-termination...", name.c_str());
+	DB(fprintf(stderr, FD("Worker[%s]: Pre-termination...\n"), name.c_str()));
 }
 
 void Worker::_PostTerminate() {
-	logger->Info("Worker[%s]: Terminated", name.c_str());
+	DB(fprintf(stderr, FI("Worker[%s]: Terminated\n"), name.c_str()));
 }
 
 } /*utils */
