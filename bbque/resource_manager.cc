@@ -301,7 +301,7 @@ void ResourceManager::TerminateWorkers() {
 
 	}
 
-	DB(fprintf(stderr, FD("All workers termianted\n")));
+	DB(fprintf(stderr, FD("All workers terminated\n")));
 }
 
 void ResourceManager::Optimize() {
@@ -559,7 +559,6 @@ void ResourceManager::EvtBbqExit() {
 	// Notify all workers
 	logger->Notice("Stopping all workers...");
 	ResourceManager::TerminateWorkers();
-
 }
 
 int ResourceManager::CommandsCb(int argc, char *argv[]) {
