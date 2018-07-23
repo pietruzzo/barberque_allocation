@@ -23,6 +23,7 @@
 #include "bbque/resource_accounter.h"
 #include "dci/types.h"
 
+#include <atomic>
 #include <list>
 #include <bitset>
 #include <iostream>
@@ -166,6 +167,9 @@ private:
 	/// Resource Accounter instance */
 	ResourceAccounter & ra;
 
+	/// Signal the on going termination of the manager
+	std::atomic<bool> is_terminating;
+
 	/// Server thread managing incoming subscription requests
 	std::thread subscription_server;
 
@@ -303,6 +307,10 @@ private:
 
 
 	void Task();
+
+	void _PreTerminate();
+
+	void _PostTerminate();
 
 };
 

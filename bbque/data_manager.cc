@@ -55,8 +55,9 @@ DataManager & DataManager::GetInstance() {
 }
 
 DataManager::DataManager() : Worker(),
-	cfm(ConfigurationManager::GetInstance()),
-	ra(ResourceAccounter::GetInstance()){
+		cfm(ConfigurationManager::GetInstance()),
+		ra(ResourceAccounter::GetInstance()),
+		is_terminating(false) {
 
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("Publisher setup...");
@@ -89,22 +90,31 @@ DataManager::DataManager() : Worker(),
 }
 
 DataManager::~DataManager() {
+
+}
+
+void DataManager::_PreTerminate() {
+	logger->Debug("Worker[%s]: Pre-termination...", name.c_str());
+	is_terminating = true;
+	{
+		std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
+		std::unique_lock<std::mutex> events_lock(events_mtx);
+		subscribers_on_rate.clear();
+		subscribers_on_event.clear();
+		event_queue.clear();
+		subs_cv.notify_all();
+		event_cv.notify_all();
+	}
 	// Send signal to server
 	assert(subscription_server_tid != 0);
 	::kill(subscription_server_tid, SIGUSR1);
-
 	// Send signal to event handler
 	assert(event_handler_tid != 0);
 	::kill(event_handler_tid, SIGUSR1);
+}
 
-	std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
-	std::unique_lock<std::mutex> events_lock(events_mtx);
-	subscribers_on_rate.clear();
-	subscribers_on_event.clear();
-	event_queue.clear();
+void DataManager::_PostTerminate() {
 
-	logger->Info("DataManager terminating...");
-	Terminate();
 }
 
 void DataManager::PrintSubscribers(){
@@ -163,7 +173,8 @@ void DataManager::SubscriptionHandler() {
 		acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
 		acceptor.bind(endpoint);
 	} catch(boost::exception const& ex){
-		logger->Error("SubscriptionHandler: error during socket creation");
+		if (!done && !is_terminating)
+			logger->Error("SubscriptionHandler: error during socket creation");
 		return;
 	}	
 
@@ -173,7 +184,7 @@ void DataManager::SubscriptionHandler() {
 	// Incoming subscription message
 	bbque::stat::subscription_message_t sub_msg;
 	logger->Debug("SubscriptionHandler: ready");
-		
+
 	while (!done) {
 		ip::tcp::iostream stream;
 
@@ -182,7 +193,7 @@ void DataManager::SubscriptionHandler() {
 			acceptor.listen();
 			acceptor.accept(*stream.rdbuf());
 		} catch(boost::exception const& ex) {
-			if (!done)
+			if (!done && !is_terminating)
 				logger->Error("SubscriptionHandler: error during socket receiving");
 			break;
 		}
@@ -194,7 +205,7 @@ void DataManager::SubscriptionHandler() {
 			boost::archive::text_iarchive archive(stream);
 			archive >> sub_msg;
 		} catch(boost::exception const& ex) {
-			if (!done)
+			if (!done && !is_terminating)
 				logger->Error("SubscriptionHandler: error during subscription receiving");
 			break;
 		}
@@ -234,10 +245,9 @@ void DataManager::SubscriptionHandler() {
 	try {
 		acceptor.close();
 	} catch(boost::exception const& ex) {
-		if (!done)
+		if (!done && !is_terminating)
 			logger->Error("SubscriptionHandler: error during closing socket");
 	}
-	logger->Info("SubscriptionHandler: ENDED");
 }
 
 
@@ -366,7 +376,6 @@ void DataManager::EventHandler() {
 			PublishOnEvent(event);
 		}
 	}
-	logger->Info("EventHandler: ENDED");
 }
 
 void DataManager::PublishOnEvent(status_event_t event){
