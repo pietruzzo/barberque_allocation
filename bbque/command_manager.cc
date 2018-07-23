@@ -128,18 +128,24 @@ CommandManager::CommandManager() : Worker(),
 
 	// Start the command dispatching thread
 	Worker::Start();
-
 }
 
-CommandManager::~CommandManager() {
+void CommandManager::_PreTerminate() {
 	fs::path fifo_path(cmd_fifo_dir);
 	fifo_path /= "/" BBQUE_CMDS_FIFO;
 
 	// Clean-up the command pipe
 	logger->Debug("CMD MNGR: cleaning up FIFO...");
-	::fclose(cmd_fifo);
-	::close(cmd_fifo_fd);
-	::unlink(fifo_path.string().c_str());
+	if (ftell(cmd_fifo) >= 0) {
+		fflush(cmd_fifo);
+		fclose(cmd_fifo);
+	}
+	close(cmd_fifo_fd);
+	unlink(fifo_path.string().c_str());
+}
+
+CommandManager::~CommandManager() {
+
 }
 
 CommandManager & CommandManager::GetInstance() {
@@ -379,11 +385,9 @@ int CommandManager::DoNextCommand() {
 	// Read next command being available
 	result = ::getline(&cmd_buff, &len, cmd_fifo);
 	if (result <= 0) {
-		if (result != EINTR)
+		if (result != EINTR && !done)
 			logger->Error("CMD MNGR: fifo read error");
-		
-	} else {
-
+	} else if (!done) {
 		// Removing trailing "\n"
 		if (cmd_buff[result-1] == '\n')
 			cmd_buff[result-1] = 0;
