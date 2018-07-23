@@ -440,11 +440,11 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 void PlatformManager::Exit()
 {
-	logger->Info("Exit: Platform supports termination...");
 	lpp->Exit();
 #ifdef CONFIG_BBQUE_DIST_MODE
 	rpp->Exit();
 #endif
+	logger->Info("Exit: Platform supports terminated");
 }
 
 
