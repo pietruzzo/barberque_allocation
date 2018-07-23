@@ -242,12 +242,13 @@ start() {
 
 	# Run the daemon
 	bbqued_notice "LOG file: $BBQUE_LOGFILE"
-	bbqued_info "Starting BBQ Daemon..."
+	bbqued_info "Starting the BarbequeRTRM Daemon..."
 	"$BBQUE_BIN" -c $BBQUE_CONF -d
 }
 
 stop() {
 	# Stop the daemon only if there is an instance running
+	bbqued_info "Stopping the BarbequeRTRM Daemon..."
 	if [ -f $BBQUE_PIDFILE ]; then
 		PID=`cat $BBQUE_PIDFILE`
 		sudo kill -SIGINT $PID #>/dev/null 2>&1
@@ -268,11 +269,12 @@ stop() {
 
 	# Clean-up lock and PID files
 	if [ -f $BBQUE_PIDFILE ] || [ -f $BBQUE_LOCKFILE ]; then
-		bbqued_info "Removing runtime data"
+		bbqued_info "Removing runtime data..."
 		rm -f $BBQUE_PIDFILE $BBQUE_LOCKFILE >/dev/null 2>&1
 	fi
 
 	sudo kill -9 $(pidof barbeque) >/dev/null 2>&1
+	bbqued_info "Done."
 
 	exit 0
 }
