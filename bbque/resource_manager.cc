@@ -557,6 +557,10 @@ void ResourceManager::EvtBbqExit() {
 		am.DestroyEXC(papp);
 	}
 
+	// Terminate platforms
+	logger->Notice("Terminating the platform supports...");
+	plm.Exit();
+
 	// Notify all workers
 	logger->Notice("Stopping all workers...");
 	ResourceManager::TerminateWorkers();
