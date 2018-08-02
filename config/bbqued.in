@@ -43,8 +43,6 @@ BBQUE_CGMOUNT="${BBQUE_CGMOUNT:-$CGMOUNT}"
 BBQUE_CGCONFS="${BBQUE_CGCONFS:-$CGCONFS}"
 BBQUE_CGPARSER="${BBQUE_CGPARSER:-$CGPARSER}"
 BBQUE_CGAGENT="${BBQUE_CGAGENT:-$CGAGENT}"
-BBQUE_CG_ENABLED=0
-
 # PIL generator (in case not specified)
 PIL_GENERATE=$SYSROOT"/sbin/bbque-pil-generator"
 
@@ -121,10 +119,8 @@ setup() {
 	# Setup control groups
 	if [ "$1" == "--nocg" ]; then
 		bbqued_notice "Cgroups: DISABLED"
-		BBQUE_CG_ENABLED=0
 		return
 	else
-		BBQUE_CG_ENABLED=1
 		setup_cgroups
 	fi
 }
@@ -255,16 +251,14 @@ stop() {
 	fi
 
 	# Cleaning-up CGroup reservations
-	if [ $BBQUE_CG_ENABLED -eq 1 ]; then
-		if [ -d $BBQUE_CGMOUNT/user.slice/host ]; then
-			bbqued_info "Moving all (user-space) tasks back to ROOT node..."
-			for P in `cat $BBQUE_CGMOUNT/user.slice/host/cgroup.procs`; do
-				echo $P > $BBQUE_CGMOUNT/cgroup.procs 2> /dev/null
-			done
-			sleep 1
-			bbqued_info "Removing applications nodes..."
-			find  $BBQUE_CGMOUNT/user.slice/* -type d -delete
-		fi
+	if [ -d $BBQUE_CGMOUNT/user.slice/host ]; then
+		bbqued_info "Moving all (user-space) tasks back to ROOT node"
+		for P in `cat $BBQUE_CGMOUNT/user.slice/host/cgroup.procs`; do
+			echo $P > $BBQUE_CGMOUNT/cgroup.procs 2> /dev/null
+		done
+		sleep 1
+		bbqued_info "Removing applications nodes"
+		find  $BBQUE_CGMOUNT/user.slice/* -type d -delete
 	fi
 
 	# Clean-up lock and PID files
