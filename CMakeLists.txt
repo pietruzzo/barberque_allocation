@@ -156,7 +156,7 @@ endif (CONFIG_TARGET_LINUX_ARM)
 # Add "Android-Linux" specific flags
 if (CONFIG_TARGET_ANDROID)
 set (BBQUE_TARGET_OS "Android-Linux")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I../../../out/include -D__STDINT_LIMITS -D_GLIBCXX_USE_C99_STDINT_TR1 -D__BIONIC__ -Wno-psabi -march=armv7-a -mtune=xscale -msoft-float -fexceptions -frtti -mthumb -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -DANDROID  -Wa,--noexecstack")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -latomic -I../../../out/include -D__STDINT_LIMITS -D_GLIBCXX_USE_C99_STDINT_TR1 -D__BIONIC__ -Wno-psabi -march=armv7-a -mtune=xscale -msoft-float -fexceptions -frtti -mthumb -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -DANDROID  -Wa,--noexecstack")
 endif (CONFIG_TARGET_ANDROID)
 
 # Add "Mango-Linux" specific flags
@@ -343,6 +343,9 @@ install (DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/api-doc/man/man3
 message ( STATUS )
 message ( STATUS "=====[ BarbequeRTRM - Building System Configuration ]"
                  "===========================" )
+if (CONFIG_TARGET_ANDROID)
+message ( STATUS "Target Android" )
+endif (CONFIG_TARGET_ANDROID)
 message ( STATUS "Version............... ${VERSION}" )
 message ( STATUS "Build Flavor.......... ${BBQUE_BUILD_FLAVOR}" )
 message ( STATUS "   Target............. ${CONFIG_TARGET_NAME} ${CONFIG_TARGET_DESCRIPTION}" )
