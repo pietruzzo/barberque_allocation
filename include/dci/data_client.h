@@ -25,9 +25,6 @@
 #include <mutex>
 #include <condition_variable>
 
-#define BBQUE_DCI_CONNECT_NR_ATTEMPTS  3
-#define BBQUE_DCI_CONNECT_WAIT_S       3
-
 namespace bbque {
 
 using namespace bbque::stat;

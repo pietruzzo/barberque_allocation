@@ -69,22 +69,17 @@ DataClient::ExitCode_t DataClient::Connect() {
 		return DataClient::ExitCode_t::OK;
 	}
 
-	fprintf(stderr, "Connecting... \n");
-	unsigned short nr_attempts = BBQUE_DCI_CONNECT_NR_ATTEMPTS;
+	fprintf(stderr, "Receiver thread initialization...\n");
 	client_thread = std::thread(&DataClient::ClientReceiver, this);
 	client_thread.detach();
-	std::unique_lock<std::mutex> lck(mtx_connection);
-	while (!is_connected && nr_attempts > 0) {
-		cv_connection.wait_for(lck, std::chrono::seconds(BBQUE_DCI_CONNECT_WAIT_S));
-		nr_attempts--;
-		fprintf(stderr, "Connecting... [attempts left: %d]\n", nr_attempts);
-	}
 
+	std::unique_lock<std::mutex> lck(mtx_connection);
+	cv_connection.wait(lck);
 	if (!is_connected) {
-		fprintf(stderr, "Connection failed!\n");
+		fprintf(stderr, "Initialization failed!\n");
 		return DataClient::ExitCode_t::ERR_SERVER_UNREACHABLE;
 	}
-	fprintf(stderr, "Connected\n");
+	fprintf(stderr, "Initialization completed\n");
 	return DataClient::ExitCode_t::OK;
 }
 
@@ -123,9 +118,21 @@ void DataClient::ClientReceiver() {
 
 	// TCP Socket setup
 	try {
-		acceptor.open(endpoint.protocol());
+		boost::system::error_code err;
+		acceptor.open(endpoint.protocol(), err);
+		if (err != boost::system::errc::success){
+			fprintf(stderr, "%s\n", err.message().c_str());
+			client_thread_tid = 0;
+			return;
+		}
+
 		acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
-		acceptor.bind(endpoint);
+		acceptor.bind(endpoint, err);
+		if (err != boost::system::errc::success){
+			fprintf(stderr, "%s\n", err.message().c_str());
+			client_thread_tid = 0;
+			return;
+		}
 	} catch(boost::exception const& ex){
 		fprintf(stderr,"Exception during socket setup\n");
 		client_thread_tid = 0;
