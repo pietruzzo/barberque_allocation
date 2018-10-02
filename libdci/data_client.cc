@@ -59,7 +59,8 @@ DataClient::DataClient(
 }
 
 DataClient::~DataClient() {
-	Disconnect();
+	if (IsConnected())
+		Disconnect();
 }
 
 DataClient::ExitCode_t DataClient::Connect() {
