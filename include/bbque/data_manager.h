@@ -25,7 +25,6 @@
 
 #include <atomic>
 #include <list>
-#include <bitset>
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -41,6 +40,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/list.hpp>
+#include <boost/serialization/bitset.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/asio.hpp>
