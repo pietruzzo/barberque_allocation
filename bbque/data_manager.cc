@@ -217,7 +217,7 @@ void DataManager::SubscriptionHandler() {
 			sub_msg.period_ms);
 
 		// Subscriber
-		SubscriberPtr_t subscriber = std::make_shared<Subscriber>
+		SubscriberPtr_t subscriber = boost::make_shared<Subscriber>
 			(client_addr, (uint32_t) sub_msg.port_num, subscription_info);
 
 		// Logging messages

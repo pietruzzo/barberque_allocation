@@ -38,11 +38,13 @@
 #include <sys/socket.h>
 
 // Boost libraries
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/list.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/asio.hpp>
+
 
 namespace bu = bbque::utils;
 namespace br = bbque::res;
@@ -116,7 +118,7 @@ public:
 using namespace bbque::data;
 using namespace bbque::stat;
 
-using SubscriberPtr_t     = std::shared_ptr<Subscriber>;
+using SubscriberPtr_t     = boost::shared_ptr<Subscriber>;
 using SubscriberPtrList_t = std::list<SubscriberPtr_t>;
 using sockaddr_in_t       = struct sockaddr_in;
 using SubscriberListIt_t  = std::list<SubscriberPtr_t>::iterator;
