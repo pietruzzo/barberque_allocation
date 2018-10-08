@@ -23,6 +23,7 @@
 #include "bbque/utils/utility.h"
 #include "bbque/utils/timer.h"
 #include "bbque/data_manager.h"
+#include "bbque/config.h"
 
 #define DATA_MANAGER_NAMESPACE "bq.dm"
 #define MODULE_NAMESPACE DATA_MANAGER_NAMESPACE
@@ -39,6 +40,7 @@ using namespace bbque::stat;
 using namespace boost::asio;
 using namespace boost::asio::ip;
 using namespace boost::archive;
+using namespace boost::serialization;
 namespace bd = bbque::data;
 namespace br = bbque::res;
 namespace po = boost::program_options;
@@ -63,6 +65,8 @@ DataManager::DataManager() : Worker(),
 	logger->Debug("Publisher setup...");
 	sleep_time = BBQUE_DM_DEFAULT_SLEEP_TIME;
 	Setup(BBQUE_MODULE_NAME("dm.pub"), MODULE_NAMESPACE".pub");
+	archive_path_rate = std::string(BBQUE_DM_ARCHIVE_PREFIX) + "rate";
+	archive_path_event = std::string(BBQUE_DM_ARCHIVE_PREFIX) + "event";
 
 	try {
 		po::options_description opts_desc("Data Manager options");
@@ -74,6 +78,8 @@ DataManager::DataManager() : Worker(),
 	catch(boost::program_options::invalid_option_value ex) {
 		logger->Error("Errors in configuration file [%s]", ex.what());
 	}
+
+	RestoreSubscribers();
 
 	logger->Info("Publisher start...");
 	Start();
@@ -145,6 +151,72 @@ SubscriberPtr_t DataManager::FindSubscriber(
 			return sub;
 	}
 	return nullptr;
+}
+
+void DataManager::CheckpointSubscribers() {
+		logger->Debug("Storing all subscribers...");
+
+		std::ofstream ofs_rate(archive_path_rate);
+		std::ofstream ofs_event(archive_path_event);
+		text_oarchive oa_rate(ofs_rate);
+		text_oarchive oa_event(ofs_event);
+		
+		// Checkpointing subscribers on rate
+		if (!subscribers_on_rate.empty()){
+			oa_rate << subscribers_on_rate;
+			logger->Info("CheckpointSubscribers: subscribers on rate stored");
+		} else {
+			remove(archive_path_rate.c_str());
+		}
+		// Checkpointing subscribers on event
+		if (!subscribers_on_event.empty()){
+			oa_event << subscribers_on_event;
+			logger->Info("CheckpointSubscribers: subscribers on event stored");
+		} else {
+			remove(archive_path_event.c_str());
+		}
+		
+}
+
+void DataManager::RestoreSubscribers(){
+	logger->Debug("Loading all stored subscribers...");
+
+	std::ifstream ifs_rate(archive_path_rate);
+	std::ifstream ifs_event(archive_path_event);
+	// Loading subscribers on rate
+	if (ifs_rate.good()) {
+		try {
+			boost::archive::text_iarchive ia_rate(ifs_rate);
+			ia_rate >> subscribers_on_rate;
+		}
+		catch(std::exception & ex) {
+			logger->Error("RestoreSubscribers: exception [%s]", ex.what());
+			return;
+		}
+				
+		assert(!subscribers_on_rate.empty());
+		logger->Info("RestoreSubscribers: stored subscribers on rate loaded!");
+	} else {
+		logger->Info("RestoreSubscribers: previous subscribers on rate not found!");
+	}
+
+	// Loading subscribers on event
+	if (ifs_event.good()) {
+		try {
+			boost::archive::text_iarchive ia_event(ifs_event);
+			ia_event >> subscribers_on_event;
+		}
+		catch(std::exception & ex) {
+			logger->Error("RestoreSubscribers: exception [%s]", ex.what());
+			return;
+		}
+		
+		assert(!subscribers_on_event.empty());
+		logger->Info("RestoreSubscribers: stored subscribers on event loaded!");
+	} else {
+		logger->Info("RestoreSubscribers: previous subscribers on event not found!");
+	}
+
 }
 
 /*******************************************************************/
@@ -297,6 +369,9 @@ void DataManager::Subscribe(SubscriberPtr_t subscr, bool event_based) {
 		subscribers_on_rate.sort();
 	}
 
+	// Storing the actual subscribers
+	CheckpointSubscribers();
+
 	PrintSubscribers();
 }
 
@@ -326,6 +401,9 @@ void DataManager::Unsubscribe(SubscriberPtr_t subscr, bool event_based) {
 		else
 			logger->Error("Unsubscribe: client not found!");
 	}
+
+	// Storing the actual subscribers
+	CheckpointSubscribers();
 
 	PrintSubscribers();
 }

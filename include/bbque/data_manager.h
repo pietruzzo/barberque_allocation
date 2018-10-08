@@ -26,6 +26,7 @@
 #include <atomic>
 #include <list>
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <chrono>
 #include <mutex>
@@ -52,6 +53,8 @@ namespace br = bbque::res;
 using namespace bbque::stat;
 
 #define MAX_SUB_COMM_FAILURE 5
+
+#define BBQUE_DM_ARCHIVE_PREFIX  BBQUE_PATH_PREFIX"/var/dm_archive_"
 
 namespace bbque {
 namespace data {
@@ -211,6 +214,10 @@ private:
 	/// Mutex to protect concurrent access to the subscribers lists.
 	std::mutex subscribers_mtx;
 
+	/// DM archive paths for subscribers
+	std::string archive_path_rate;
+	std::string archive_path_event;
+
 	/// The thread ID of the subscription server thread
 	pid_t subscription_server_tid;
 
@@ -248,6 +255,17 @@ private:
 	 * @brief Utility method to print all the current subscribers
 	 */
 	void PrintSubscribers();
+
+	/**
+	 * @brief Utility method to store all the current subscribers
+	 * on a local file
+	 */
+	void CheckpointSubscribers();
+
+	/**
+	 * @brief Utility method to load all the stored subscribers
+	 */
+	void RestoreSubscribers();
 
 	/**
 	 * @brief Utility method to build the resource bitset given a resource_path
