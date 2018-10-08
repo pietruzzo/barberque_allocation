@@ -77,6 +77,14 @@ public:
 	sub_bitset_t filter;     /// Type of information to subscribe
 	sub_bitset_t event;      /// Type of events for which receive updates
 	uint16_t     period_ms;  /// Update rate (milliseconds)
+
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version) {
+		(void) version;
+		ar & filter;
+		ar & event;
+		ar & period_ms;
+	}
 };
 
 /**
@@ -110,6 +118,16 @@ public:
 		if (ip_address == other.ip_address && port_num == other.port_num)
 			return true;
 		return false;
+	}
+
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version) {
+		(void) version;
+		ar & ip_address;
+		ar & port_num;
+		ar & subscription;
+		ar & period_deadline_ms;
+		ar & comm_failures;
 	}
 };
 
