@@ -25,6 +25,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#include <boost/asio.hpp>
+
 namespace bbque {
 
 using namespace bbque::stat;
@@ -197,6 +199,9 @@ private:
 
 	/// The client receiver thread tid
 	pid_t client_thread_tid;
+
+	/// The acceptor of the client receiver thread
+	boost::asio::ip::tcp::acceptor *acceptor;
 
 };
 

@@ -36,7 +36,7 @@
 #include <boost/serialization/list.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
-#include <boost/asio.hpp>
+//#include <boost/asio.hpp>
 
 using namespace bbque::stat;
 using namespace boost::asio;
@@ -91,8 +91,15 @@ DataClient::ExitCode_t DataClient::Disconnect() {
 
 	{
 		std::unique_lock<std::mutex> lck(mtx_connection);
-		is_connected = false;
+		fprintf(stderr, "Closing incoming connections...\n");
+		
+		try {
+			acceptor->close();
+			is_connected = false;
 		cv_connection.notify_one();
+		} catch(boost::exception const& ex){
+			fprintf(stderr,"Exception closing the socket\n");
+		}
 	}
 
 	// Kill the connection thread
@@ -114,20 +121,21 @@ void DataClient::ClientReceiver() {
 	io_service ios;
 	ip::tcp::endpoint endpoint =
 		ip::tcp::endpoint(ip::tcp::v4(), client_port);
-	ip::tcp::acceptor acceptor(ios);
+	acceptor = new ip::tcp::acceptor(ios);
+	//ip::tcp::acceptor acceptor(ios);
 
 	// TCP Socket setup
 	try {
 		boost::system::error_code err;
-		acceptor.open(endpoint.protocol(), err);
+		acceptor->open(endpoint.protocol(), err);
 		if (err != boost::system::errc::success){
 			fprintf(stderr, "%s\n", err.message().c_str());
 			client_thread_tid = 0;
 			return;
 		}
 
-		acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
-		acceptor.bind(endpoint, err);
+		acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
+		acceptor->bind(endpoint, err);
 		if (err != boost::system::errc::success){
 			fprintf(stderr, "%s\n", err.message().c_str());
 			client_thread_tid = 0;
@@ -149,8 +157,8 @@ void DataClient::ClientReceiver() {
 		ip::tcp::iostream stream;
 		// Incoming connection management
 		try {
-			acceptor.listen();
-			acceptor.accept(*stream.rdbuf());
+			acceptor->listen();
+			acceptor->accept(*stream.rdbuf());
 		} catch(boost::exception const& ex) {
 			fprintf(stderr,"Exception waiting for incoming replies\n");
 			break;
@@ -168,14 +176,6 @@ void DataClient::ClientReceiver() {
 		// Execute callback function
 		client_callback(stat_msg);
 
-	}
-
-	fprintf(stderr, "Closing incoming connections...\n");
-		
-	try {
-		acceptor.close();
-	} catch(boost::exception const& ex){
-		fprintf(stderr,"Exception closing the socket\n");
 	}
 
 	client_thread_tid = 0;
@@ -211,6 +211,7 @@ DataClient::ExitCode_t DataClient::Subscribe(
 		fprintf(stderr,"Exception during sending subscription\n");
 		return DataClient::ExitCode_t::ERR_UNKNOWN;
 	}
+	server_sock.close();
 
 	return DataClient::ExitCode_t::OK;
 }
