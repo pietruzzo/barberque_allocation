@@ -46,7 +46,6 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/asio.hpp>
 
-
 namespace bu = bbque::utils;
 namespace br = bbque::res;
 
