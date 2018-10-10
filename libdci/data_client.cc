@@ -94,7 +94,7 @@ DataClient::ExitCode_t DataClient::Disconnect() {
 		fprintf(stderr, "Closing incoming connections...\n");
 		
 		try {
-			acceptor->close();
+			acceptor_ptr->close();
 			is_connected = false;
 		cv_connection.notify_one();
 		} catch(boost::exception const& ex){
@@ -121,21 +121,21 @@ void DataClient::ClientReceiver() {
 	io_service ios;
 	ip::tcp::endpoint endpoint =
 		ip::tcp::endpoint(ip::tcp::v4(), client_port);
-	acceptor = new ip::tcp::acceptor(ios);
+	acceptor_ptr = std::make_shared<ip::tcp::acceptor>(ios);
 	//ip::tcp::acceptor acceptor(ios);
 
 	// TCP Socket setup
 	try {
 		boost::system::error_code err;
-		acceptor->open(endpoint.protocol(), err);
+		acceptor_ptr->open(endpoint.protocol(), err);
 		if (err != boost::system::errc::success){
 			fprintf(stderr, "%s\n", err.message().c_str());
 			client_thread_tid = 0;
 			return;
 		}
 
-		acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
-		acceptor->bind(endpoint, err);
+		acceptor_ptr->set_option(ip::tcp::acceptor::reuse_address(true));
+		acceptor_ptr->bind(endpoint, err);
 		if (err != boost::system::errc::success){
 			fprintf(stderr, "%s\n", err.message().c_str());
 			client_thread_tid = 0;
@@ -157,8 +157,8 @@ void DataClient::ClientReceiver() {
 		ip::tcp::iostream stream;
 		// Incoming connection management
 		try {
-			acceptor->listen();
-			acceptor->accept(*stream.rdbuf());
+			acceptor_ptr->listen();
+			acceptor_ptr->accept(*stream.rdbuf());
 		} catch(boost::exception const& ex) {
 			fprintf(stderr,"Exception waiting for incoming replies\n");
 			break;

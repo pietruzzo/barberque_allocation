@@ -201,7 +201,7 @@ private:
 	pid_t client_thread_tid;
 
 	/// The acceptor of the client receiver thread
-	boost::asio::ip::tcp::acceptor *acceptor;
+	std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr;
 
 };
 
