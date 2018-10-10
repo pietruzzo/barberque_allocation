@@ -36,7 +36,6 @@
 #include <boost/serialization/list.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
-//#include <boost/asio.hpp>
 
 using namespace bbque::stat;
 using namespace boost::asio;
