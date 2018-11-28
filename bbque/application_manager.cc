@@ -1749,7 +1749,8 @@ ApplicationManager::ExitCode_t ApplicationManager::Unschedule(
 ApplicationManager::ExitCode_t ApplicationManager::NoSchedule(
 		ba::AppCPtr_t papp) {
 	logger->Debug("NoSchedule: [%s] not scheduled", papp->StrId());
-	return ChangeEXCState(papp, app::Schedulable::DISABLED);
+	return ChangeEXCState(papp,
+		app::Schedulable::SYNC, app::Schedulable::BLOCKED);
 }
 
 ApplicationManager::ExitCode_t
