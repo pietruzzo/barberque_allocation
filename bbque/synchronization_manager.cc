@@ -540,18 +540,14 @@ SynchronizationManager::Sync_PostChange(ApplicationStatusIF::SyncState_t syncSta
 }
 
 
-
 void SynchronizationManager::SyncCommit(AppPtr_t papp) {
-	ResourceAccounter::ExitCode_t ra_result;
+	logger->Debug("SyncCommit: [%s] is in %s/%s", papp->StrId(),
+			papp->StateStr(papp->State()),
+			papp->SyncStateStr(papp->SyncState()));
 
 	// Acquiring the resources for RUNNING Applications
 	if (!papp->Blocking()) {
-		logger->Debug("SyncCommit: [%s] is in %s/%s", papp->StrId(),
-				papp->StateStr(papp->State()),
-				papp->SyncStateStr(papp->SyncState()));
-
-		// Resource acquisition
-		ra_result = ra.SyncAcquireResources(papp);
+		auto ra_result = ra.SyncAcquireResources(papp);
 		if (ra_result != ResourceAccounter::RA_SUCCESS) {
 			logger->Error("SyncCommit: failed for [%s] (ret=%d)",
 					papp->StrId(), ra_result);
@@ -874,12 +870,12 @@ SynchronizationManager::Sync_PlatformForProcesses() {
 }
 
 void SynchronizationManager::SyncCommit(ProcPtr_t proc) {
+	logger->Debug("SyncCommit: [%s] is in %s/%s", proc->StrId(),
+			proc->StateStr(proc->State()),
+			proc->SyncStateStr(proc->SyncState()));
+
 	// Acquiring the resources for RUNNING Applications
 	if (!proc->Blocking()) {
-		logger->Debug("SyncCommit: [%s] is in %s/%s", proc->StrId(),
-				proc->StateStr(proc->State()),
-				proc->SyncStateStr(proc->SyncState()));
-		// Resource acquisition
 		auto ra_result = ra.SyncAcquireResources(proc);
 		if (ra_result != ResourceAccounter::RA_SUCCESS) {
 			logger->Error("SyncCommit: failed for [%s] (ret=%d)",
