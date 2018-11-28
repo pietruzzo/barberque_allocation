@@ -156,7 +156,8 @@ MangASchedPol::Schedule(
 SchedulerPolicyIF::ExitCode_t
 MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 	ExitCode_t err, err_relax = SCHED_OK;
-	do {
+	ApplicationManager & am(ApplicationManager::GetInstance());
+//	do {
 		ba::AppCPtr_t  papp;
 		AppsUidMapIt app_iterator;
 		// Get all the applications @ this priority
@@ -169,17 +170,19 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 			if (err == SCHED_SKIP_APP) {
 				// In this case we have no sufficient memory to start it, the only
 				// one thing to do is to ignore it
-				logger->Warn("ServeApplicationsWithPriority: [%s]: unable to find resources",
+				logger->Warn("ServeApplicationsWithPriority: [%s]: missing information",
 					papp->StrId());
-				ApplicationManager & am(ApplicationManager::GetInstance());
 				am.NoSchedule(papp);
 				continue;
 			}
 			else if (err == SCHED_R_UNAVAILABLE) {
 				// In this case we have no bandwidth feasibility, so we can try to
 				// fairly reduce the bandwidth for non strict applications.
+				logger->Warn("ServeApplicationsWithPriority: [%s]: unable to allocate required resources",
+					papp->StrId());
 				err_relax = RelaxRequirements(priority);
-				break;
+				am.NoSchedule(papp);
+				continue;
 			}
 			else if (err != SCHED_OK) {
 				// It returns  error exit code in case of error.
@@ -190,14 +193,13 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 				     papp->StrId());
 		}
 
-	} while (err == SCHED_R_UNAVAILABLE && err_relax == SCHED_OK);
+//	} while (err == SCHED_R_UNAVAILABLE && err_relax == SCHED_OK);
 
 	return err_relax != SCHED_OK ? err_relax : err;
 }
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noexcept {
 	//TODO: smart policy to reduce the requirements
-
 	UNUSED(priority);
 
 	return SCHED_R_UNAVAILABLE;
@@ -229,7 +231,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 			return ScheduleApplication(papp, partitions);
 		case ResourcePartitionValidator::PMV_SKIMMER_FAIL:
 			logger->Error("ServeApp: at least one skimmer failed unexpectly");
-			return SCHED_ERROR;
+	//		return SCHED_ERROR;
 		case ResourcePartitionValidator::PMV_NO_PARTITION:
 			logger->Warn("ServeApp: no HW partitions available");
 			return DealWithNoPartitionFound(papp);
@@ -292,7 +294,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::CheckHWRequirements(ba::AppCPtr_t p
 
 		if (preferred_type == ArchType_t::NONE) {
 			logger->Error("CheckHWRequirements: no architecture available for task %d", task->Id());
-			return SCHED_SKIP_APP;
+			return SCHED_R_UNAVAILABLE;
 		}
 
 		// TODO We have to select also the number of cores!
@@ -416,7 +418,7 @@ MangASchedPol::ReassignWorkingMode(ba::AppCPtr_t papp) noexcept {
 	auto ret = am.ScheduleRequestAsPrev(papp, sched_status_view);
 	if (ret != ApplicationManager::AM_SUCCESS) {
 		logger->Error("ReassignWorkingMode: [%s] rescheduling failed", papp->StrId());
-		return SCHED_ERROR;
+		return SCHED_SKIP_APP;
 	}
 
 	logger->Info("ReassignWorkingMode: [%s] rescheduling done", papp->StrId());
