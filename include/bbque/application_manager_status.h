@@ -19,6 +19,7 @@
 #define BBQUE_APPLICATION_MANAGER_STATUS_IF_H_
 
 #include "bbque/app/application.h"
+#include "bbque/schedulable_manager.h"
 
 using bbque::app::ApplicationStatusIF;
 using bbque::app::AppPid_t;
@@ -89,10 +90,13 @@ private:
 
 	/** The map to visit */
 	AppsUidMap_t *map = NULL;
+
 	/** An interator on a UIDs map */
 	AppsUidMap_t::iterator it;
+
 	/** A flag to track iterator validity */
 	bool updated = false;
+
 	/** The retantion list on which this has been inserted */
 	AppsUidMapItRetainer_t *ret = NULL;
 
@@ -141,7 +145,7 @@ private:
  * managed, and maps of application descriptors, even querying by scheduling
  * status or priority level.
  */
-class ApplicationManagerStatusIF {
+class ApplicationManagerStatusIF: public SchedulableManager {
 
 public:
 
@@ -151,21 +155,18 @@ public:
 	 * @brief Exit code to return
 	 */
 	enum ExitCode_t {
-		/** Success */
-		AM_SUCCESS = 0,
-		/** Reschedule required */
-		AM_RESCHED_REQUIRED,
-		/** Application Execution Context not found */
-		AM_EXC_NOT_FOUND,
-		/** Error accessing the platform proxy */
-		AM_PLAT_PROXY_ERROR,
-		/** Execution of a method interrupted by an unexpected state in an
-		 * internal data structure state */
-		AM_DATA_CORRUPT,
-		/** Execution of a method interrupted but without critical errors */
-		AM_SKIPPING,
-		/** Method forced to exit */
-		AM_ABORT
+		AM_SUCCESS = 0,           /** Success */
+		AM_RESCHED_REQUIRED,      /** Reschedule required */
+		AM_AWM_NULL,              /** AWM descriptor is null */
+		AM_AWM_NOT_SCHEDULABLE,   /** Not enough resource to assign the AWM */
+		AM_APP_DISABLED,          /** Application in disabled status */
+		AM_EXC_NOT_FOUND,         /** Application Execution Context not found */
+		AM_EXC_INVALID_STATUS,    /** Operation failed due to invalid status */
+		AM_EXC_STATUS_CHANGE_FAILED,  /** Failed change of application status */
+		AM_PLAT_PROXY_ERROR,      /** Error accessing the platform proxy */
+		AM_DATA_CORRUPT,          /** Inconsistency in internal data structures */
+		AM_SKIPPING,              /** Interrupted operation */
+		AM_ABORT                  /** Forced termination */
 	};
 
 	/**
@@ -370,13 +371,6 @@ public:
 	 * @return The maximum integer value for the (lowest) priority level
 	 */
 	virtual app::AppPrio_t LowestPriority() const = 0;
-
-	/**
-	 * @brief Dump a logline to report all applications status
-	 *
-	 * @param verbose print in INFO logleve is ture, in DEBUG if false
-	 */
-	virtual void PrintStatusReport(bool verbose = false) = 0;
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 

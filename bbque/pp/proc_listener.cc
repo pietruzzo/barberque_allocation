@@ -50,7 +50,8 @@ std::string ProcessListener::GetProcName(int pid) {
 	return pname;
 }
 
-ProcessListener::ProcessListener() {
+ProcessListener::ProcessListener():
+		prm(ProcessManager::GetInstance()) {
 	sock = -1;
 	buffSize = getpagesize();
 	buf = new char[buffSize];
@@ -196,6 +197,9 @@ void ProcessListener::Task() {
 				logger->Debug("Event : [ EXEC, pid: %i, name: %s ]",
 					e->event_data.exec.process_pid,
 					GetProcName(e->event_data.exec.process_pid).c_str());
+				prm.NotifyStart(
+					GetProcName(e->event_data.exec.process_pid),
+					e->event_data.exec.process_pid);
 				break;
 			case proc_event::PROC_EVENT_EXIT:
 				logger->Debug("Event : [ EXIT, pid: %i, name: %s, "
@@ -203,6 +207,9 @@ void ProcessListener::Task() {
 					e->event_data.exec.process_pid,
 					GetProcName(e->event_data.exec.process_pid).c_str(),
 					e->event_data.exit.exit_code);
+				prm.NotifyStop(
+					GetProcName(e->event_data.exec.process_pid),
+					e->event_data.exec.process_pid);
 				break;
 			default:
 				break;

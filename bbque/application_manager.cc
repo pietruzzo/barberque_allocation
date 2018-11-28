@@ -111,15 +111,15 @@ ApplicationManager::ApplicationManager() :
 			"Remove an existing EXC Container");
 
 #define CMD_UNREGISTER ".unregister"
-    cm.RegisterCommand(MODULE_NAMESPACE CMD_UNREGISTER,
-            static_cast<CommandHandler*>(this),
-            "Unregister the specified EXC");
+	cm.RegisterCommand(MODULE_NAMESPACE CMD_UNREGISTER,
+	    static_cast<CommandHandler*>(this),
+	    "Unregister the specified EXC");
 }
 
 int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 	ResourceManager &rm(ResourceManager::GetInstance());
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
-    uint32_t pid, prio, eid;
+	uint32_t pid, prio, eid;
 	AppPtr_t papp;
 
 	logger->Debug("Processing command [%s]", argv[0] + cmd_offset);
@@ -132,7 +132,7 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 
 		pid = atoi(argv[1]);
 		eid = atoi(argv[1]+13);
-		logger->Info("EXC [%d:%d] checking for release...", pid, eid);
+		logger->Info("CommandsCb: [%d:%d] checking for release...", pid, eid);
 		CheckEXC(pid, eid);
 		return 0;
 	}
@@ -141,10 +141,10 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 	switch (argv[0][cmd_offset]) {
 	case 'w': // Recipes wiping
 		  // recipes_wipe
-		logger->Debug("Commands: # recipes = %d", recipes.size());
-		logger->Info("Commands: wiping out all the recipes...");
+		logger->Debug("CommandsCb: # recipes = %d", recipes.size());
+		logger->Info("CommandsCb: wiping out all the recipes...");
 		recipes.clear();
-		logger->Debug("Commands: # recipes = %d", recipes.size());
+		logger->Debug("CommandsCb: # recipes = %d", recipes.size());
 		return 0;
 	}
 
@@ -649,7 +649,7 @@ ApplicationManager::GetApplication(AppPid_t pid, uint8_t exc_id) {
 	}\
 
 
-void ApplicationManager::ReportStatusQ(bool verbose) const {
+void ApplicationManager::PrintStatusQ(bool verbose) const {
 
 	// Report on current status queue
 	char report[] = "StateQ: [DIS: 000, RDY: 000, SYC: 000, RUN: 000, FIN: 000]";
@@ -676,7 +676,7 @@ void ApplicationManager::ReportStatusQ(bool verbose) const {
 
 }
 
-void ApplicationManager::ReportSyncQ(bool verbose) const {
+void ApplicationManager::PrintSyncQ(bool verbose) const {
 
 	// Report on current status queue
 	char report[] = "SyncQ:  [STA: 000, REC: 000, M/R: 000, MIG: 000, BLK: 000]";
@@ -711,19 +711,23 @@ ApplicationManager::UpdateStatusMaps(AppPtr_t papp,
 	assert(prev != next);
 
 	// Retrieve the runtime map from the status vector
-	AppsUidMap_t *currStateMap = &(status_vec[prev]);
-	AppsUidMap_t *nextStateMap = &(status_vec[next]);
-	assert(currStateMap != nextStateMap);
+	AppsUidMap_t *curr_state_map = &(status_vec[prev]);
+	AppsUidMap_t *next_state_map = &(status_vec[next]);
+	assert(curr_state_map != next_state_map);
+	logger->Debug("UpdateStatusMap: [%s] moving %s => %s (sync=%s)",
+		papp->StrId(),
+		papp->StateStr(prev),
+		papp->StateStr(next),
+		papp->SyncStateStr(papp->SyncState()));
 
 	// Move it from the current to the next status map
 	// FIXME: maybe we could avoid to enqueue FINISHED EXCs
-	nextStateMap->insert(UidsMapEntry_t(papp->Uid(), papp));
-
+	next_state_map->insert(UidsMapEntry_t(papp->Uid(), papp));
 	UpdateIterators(status_ret[prev], papp);
-	currStateMap->erase(papp->Uid());
+	curr_state_map->erase(papp->Uid());
 
-	ReportStatusQ();
-	ReportSyncQ();
+	PrintStatusQ();
+	PrintSyncQ();
 
 	return AM_SUCCESS;
 }
@@ -782,7 +786,7 @@ inline void BuildStateStr(AppPtr_t papp, char * state_str) {
 	}
 
 
-void ApplicationManager::PrintStatusReport(bool verbose) {
+void ApplicationManager::PrintStatus(bool verbose) {
 	AppsUidMapIt app_it;
 	AppPtr_t papp;
 	char line[80];
@@ -853,40 +857,56 @@ void ApplicationManager::PrintStatusReport(bool verbose) {
 	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV1);
 }
 
+
 ApplicationManager::ExitCode_t
-ApplicationManager::NotifyNewState(AppPtr_t papp, Application::State_t next) {
+ApplicationManager::ChangeEXCState(
+		AppPtr_t papp,
+		app::Schedulable::State_t next_state,
+		app::Schedulable::SyncState_t next_sync) {
 	std::unique_lock<std::mutex> currState_ul(
 			status_mtx[papp->State()], std::defer_lock);
 	std::unique_lock<std::mutex> nextState_ul(
-			status_mtx[next], std::defer_lock);
-
-	logger->Debug("NotifyNewState: updating [%s] state queue [%d:%s => %d:%s]",
+			status_mtx[next_state], std::defer_lock);
+	logger->Debug("ChangeEXCState: [%s] state transition [%d:%s => %d:%s]",
 			papp->StrId(),
 			papp->State(), Application::StateStr(papp->State()),
-			next, Application::StateStr(next));
+			next_state, Application::StateStr(next_state));
 
-	if (papp->State() == next) {
-		// This should never happen
-		assert(papp->State() != next);
+	auto curr_state = papp->State();
+	auto curr_sync  = papp->SyncState();
+
+	// Is there an actual change?
+	if ((curr_state == next_state) && (curr_sync == next_sync)) {
+		logger->Debug("ChangeEXCState: nothing to ho here");
 		return AM_SUCCESS;
 	}
 
-	// Lock curr and next queue
-	// FIXME: unfortunately g++ seem not yet to support the C++0x standard
-	// double locking mechnism provided by std::lock(). Thus we emulate it
-	// there by ensuring to acquire locks alwasy starting from the higher
-	// queue to the lower one.
-	//std::lock(currState_ul, nextState_ul);
-	DOUBLE_LOCK(papp->State(), next);
-
-	if (next != Application::SYNC) {
-		SyncRemove(papp);  // if next state is not SYNC remove the app from the sync map
-	} else {
-		SyncAdd(papp);     // otherwise add to the proper sync map
+	// Update application status
+	auto ret = papp->SetState(next_state, next_sync);
+	if (ret != Application::APP_SUCCESS) {
+		logger->Error("ChangeEXCState: transition not allowed [%d:%s => %d:%s]",
+			papp->StrId(),
+			curr_state, Application::StateStr(curr_state),
+			next_state, Application::StateStr(next_state));
+		return AM_EXC_STATUS_CHANGE_FAILED;
 	}
 
-	return UpdateStatusMaps(papp, papp->State(), next);
+	logger->Debug("ChangeEXCState: updating [%s] state queue [%d:%s => %d:%s]",
+			papp->StrId(),
+			papp->State(), Application::StateStr(papp->State()),
+			next_state, Application::StateStr(next_state));
+
+	// Lock curr and next queue
+	std::lock(currState_ul, nextState_ul);
+	if (next_state != Application::SYNC)
+		RemoveFromSyncMap(papp);  // if next state is not SYNC remove the app from the sync map
+	else
+		AddToSyncMap(papp);     // otherwise add to the proper sync map
+
+	// Update the stable status maps
+	return UpdateStatusMaps(papp, curr_state, next_state);
 }
+
 
 int ApplicationManager::UpdateRuntimeProfiles() {
 	ApplicationProxy & ap(ApplicationProxy::GetInstance());
@@ -1036,11 +1056,12 @@ ApplicationManager::AppsRemove(AppPtr_t papp) {
 		((*it).second)->ExcId() != papp->ExcId()) {
 		++it;
 	}
-	assert(it != range.second);
+
+	// Application/EXC could have been already removed...
 	if (it == range.second) {
-		logger->Crit("AppsRemove: [%s] not found: data structure corruption?",
+		logger->Debug("AppsRemove: [%s] not found: alredy removed?",
 			papp->StrId());
-		return AM_DATA_CORRUPT;
+		return AM_SUCCESS;
 	}
 	apps.erase(it);
 
@@ -1060,8 +1081,8 @@ ApplicationManager::CleanupEXC(AppPtr_t papp) {
 	}
 
 	// Remove platform specific data
-	if (papp->HasPlatformData()) {
-		logger->Warn("CleanupEXC: [%s] missing platform data", papp->StrId());
+	if (papp->ScheduleCount() > 0) {
+		logger->Debug("CleanupEXC: [%s] missing platform data", papp->StrId());
 		pp_result = plm.Release(papp);
 		if (pp_result != PlatformManager::PLATFORM_OK) {
 			logger->Error("CleanupEXC: [%s] cleanup FAILED: platform data error", papp->StrId());
@@ -1095,16 +1116,11 @@ void ApplicationManager::Cleanup() {
 ApplicationManager::ExitCode_t
 ApplicationManager::DestroyEXC(AppPtr_t papp) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	uint32_t timeout = 0;
 	ExitCode_t result;
-
 	logger->Debug("DestroyEXC: destroying descriptor for [%s]...", papp->StrId());
 
-	// Mark the EXC as finished
-	if (papp->Terminate() == Application::APP_FINISHED) {
-		// This EXC has already been (or is going to be) finished
-		return AM_SUCCESS;
-	}
+	// Change status to FINISHED
+	ChangeEXCState(papp, app::Schedulable::FINISHED);
 
 	// Remove execution context form priority and apps maps
 	result = PriorityRemove(papp);
@@ -1125,17 +1141,20 @@ ApplicationManager::DestroyEXC(AppPtr_t papp) {
 	// applications waiting to start, if there are a new optimization run
 	// is scheduled before than the case in which all applications are
 	// runnig.
+	uint32_t timeout = 0;
 	timeout = 100 - (10 * (AppsCount(ApplicationStatusIF::READY) % 5));
 	cleanup_dfr.Schedule(milliseconds(timeout));
 
 	// Ensure resources have been returned to the system view
-	if (papp->CurrentAWM())
+	if (papp->CurrentAWM()) {
+		logger->Debug("DestroyEXC: resources released?");
 		ra.ReleaseResources(papp);
+	}
 
 	logger->Info("DestroyEXC: [%s] FINISHED", papp->StrId());
-	ReportStatusQ();
-	ReportSyncQ();
-	PrintStatusReport();
+	PrintStatusQ();
+	PrintSyncQ();
+	PrintStatus();
 	ra.PrintStatusReport();
 
 	return AM_SUCCESS;
@@ -1418,8 +1437,11 @@ void ApplicationManager::LoadTaskGraphAll() {
 ApplicationManager::ExitCode_t
 ApplicationManager::EnableEXC(AppPtr_t papp) {
 	logger->Debug("EnableEXC: [%s] enabling...", papp->StrId());
-	if (papp->Enable() != Application::APP_SUCCESS) {
-		return AM_ABORT;
+
+	auto ret = ChangeEXCState(papp, app::Schedulable::READY);
+	if (ret != AM_SUCCESS) {
+		logger->Error("EnableEXC: [%s] enabling...", papp->StrId());
+		return ret;
 	}
 
 	logger->Info("EnableEXC: [%s] ENABLED", papp->StrId());
@@ -1454,27 +1476,31 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 			Application::stateStr[papp->State()],
 			Application::syncStateStr[papp->SyncState()]);
 
+	// Scheduling in progress?
 	logger->Debug("DisableEXC: waiting for scheduler manager...");
 	SchedulerManager &sm(SchedulerManager::GetInstance());
 	sm.WaitForReady();
 
+	// System resources registration in progress?
 	logger->Debug("DisableEXC: waiting for resource accounter...");
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ra.SyncWait();
 
-	if (papp->Disable() != Application::APP_SUCCESS) {
-		logger->Debug("DisableEXC: [%s] already disabled");
-		return AM_ABORT;
+	// Update the status to DISABLED
+	auto ret = ChangeEXCState(papp, app::Schedulable::DISABLED);
+	if (ret != AM_SUCCESS) {
+		logger->Error("DisableEXC: [%s] disabling...", papp->StrId());
+		return ret;
 	}
 
 	// Check if the application is dead, in case unregister it
 	if (CheckEXC(papp, true) != AM_SUCCESS) {
-		logger->Debug("DisableEXC: [%s] termination checked");
+		logger->Debug("DisableEXC: [%s] termination checked", papp->StrId());
 		return AM_SUCCESS;
 	}
 
 	// If required, return application resources to the system view
-	PlatformManager::ExitCode_t result;
+	PlatformManager::ExitCode_t result = PlatformManager::PLATFORM_OK;
 	if (likely(release)) {
 		logger->Debug("DisableEXC: [%s] releasing assigned resources...", papp->StrId());
 		ra.ReleaseResources(papp);
@@ -1535,7 +1561,6 @@ ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
 	// If required, release application resources
 	if (likely(dead && release)) {
 		logger->Debug("CheckEXC: [%s] check => release...", papp->StrId());
-		papp->Disable();
 		DestroyEXC(papp);
 		logger->Info("CheckEXC: [%s] RELEASED", papp->StrId());
 	}
@@ -1570,22 +1595,207 @@ void ApplicationManager::CheckActiveEXCs() {
 		CheckEXC(papp, true);
 	}
 }
+/*******************************************************************************
+ *  EXC Scheduling
+ ******************************************************************************/
+
+ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequest(
+		ba::AppCPtr_t papp,
+		ba::AwmPtr_t awm,
+		br::RViewToken_t status_view,
+		size_t b_refn) {
+
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ResourceAccounter::ExitCode_t ra_result;
+	logger->Info("ScheduleRequest: [%s] schedule request for binding @[%d] view=%ld",
+		papp->StrId(), b_refn, status_view);
+
+	// AWM safety check
+	if (!awm) {
+		logger->Crit("ScheduleRequest: [%s] AWM not existing)", papp->StrId());
+		assert(awm);
+		return AM_AWM_NULL;
+	}
+	logger->Debug("ScheduleRequest: [%s] request for scheduling in AWM [%02d:%s]",
+			papp->StrId(), awm->Id(), awm->Name().c_str());
+
+	// App is SYNC/BLOCKED for a previously failed scheduling.
+	// Reset state and syncState for this new attempt.
+	if (papp->Blocking()) {
+		logger->Warn("ScheduleRequest: [%s] request for blocking application",
+			papp->StrId());
+		logger->Warn("ScheduleRequest: [%s] forcing a new state transition",
+			papp->StrId());
+		ChangeEXCState(papp, papp->PreSyncState(), app::Schedulable::SYNC_NONE);
+	}
+
+	// Nothing to schedule if already disabled
+	if (papp->Disabled()) {
+		logger->Error("ScheduleRequest: [%s] already disabled", papp->StrId());
+		return AM_APP_DISABLED;
+	}
+
+	// Checking for resources availability: unschedule if not
+	ra_result = ra.BookResources(
+		papp, awm->GetSchedResourceBinding(b_refn), status_view);
+	if (ra_result != ResourceAccounter::RA_SUCCESS) {
+		logger->Debug("ScheduleRequest: [%s] not enough resources...",
+			papp->StrId());
+		Unschedule(papp);
+		return AM_AWM_NOT_SCHEDULABLE;
+	}
+
+	// Bind the resource set to the working mode
+	awm->SetResourceBinding(status_view, b_refn);
+
+	// Reschedule accordingly to "awm"
+	logger->Debug("ScheduleRequest: (re)scheduling [%s] into AWM [%d:%s]...",
+			papp->StrId(), awm->Id(), awm->Name().c_str());
+	auto ret = Reschedule(papp, awm);
+	if (ret != AM_SUCCESS) {
+		ra.ReleaseResources(papp, status_view);
+		awm->ClearResourceBinding();
+		return ret;
+	}
+
+	// Set next awm
+	papp->SetNextAWM(awm);
+
+	return AM_SUCCESS;
+}
+
+ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequestAsPrev(
+		ba::AppCPtr_t papp,
+		br::RViewToken_t status_view) {
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ResourceAccounter::ExitCode_t ra_result;
+	if (papp == nullptr) {
+		logger->Crit("ScheduleRequestAsPrev: null application pointer");
+		return AM_ABORT;
+	}
+	logger->Debug("ScheduleRequestAsPrev: [%p == %p] ?", papp.get(), this);
+
+	// Application must be already running
+	if (!papp->Running()) {
+		logger->Warn("ScheduleRequestAsPrev: [%s] not in RUNNING state [%s]",
+			papp->StrId(), papp->StateStr(papp->State()));
+		return AM_EXC_INVALID_STATUS;
+	}
+
+	// Checking resources are still available
+	ra_result = ra.BookResources(
+		papp, papp->CurrentAWM()->GetResourceBinding(), status_view);
+	if (ra_result != ResourceAccounter::RA_SUCCESS) {
+		logger->Warn("ScheduleRequestAsPrev: [%s] unscheduling...", papp->StrId());
+		return AM_AWM_NOT_SCHEDULABLE;
+	}
+
+	// Set next awm to the previous one
+	papp->SetNextAWM(papp->CurrentAWM());
+	logger->Debug("ScheduleRequestAsPrev: [%s] rescheduled as previously: AWM [%d -> %d]",
+			papp->StrId(), papp->CurrentAWM()->Id(), papp->NextAWM()->Id());
+
+	return AM_SUCCESS;
+}
+
+
+ApplicationManager::ExitCode_t ApplicationManager::Reschedule(
+		ba::AppCPtr_t papp,
+		ba::AwmPtr_t awm) {
+	// Ready application could be synchronized to start
+	if (papp->State() == app::Schedulable::READY) {
+		logger->Debug("(Re)schedule: [%s] for STARTING", papp->StrId());
+		return SetForSynchronization(papp, app::Schedulable::STARTING);
+	}
+
+	// Otherwise, the application should be running...
+	if (papp->State() != app::Schedulable::RUNNING) {
+		logger->Crit("(Re)schedule: [%s] wrong status {%s/%s}",
+			papp->StrId(),
+			papp->StateStr(papp->State()),
+			papp->SyncStateStr(papp->SyncState()));
+		return AM_ABORT;
+	}
+
+	// Checking if a synchronization is required
+	auto next_sync = papp->NextSyncState(awm);
+		logger->Debug("(Re)schedule: [%s] for %s",
+			papp->StrId(),
+			papp->SyncStateStr(next_sync));
+	if (next_sync == app::Schedulable::SYNC_NONE)
+		return AM_SUCCESS;
+
+	// Request a synchronization for the identified reconfiguration
+	return SetForSynchronization(papp, next_sync);
+}
+
+
+ApplicationManager::ExitCode_t ApplicationManager::Unschedule(
+		ba::AppCPtr_t papp) {
+	// Do nothing if already ready or blocking
+	if ((papp->State() == app::Schedulable::READY) || (papp->Blocking())) {
+		logger->Debug("Unschedule: [%s] current status = {%s/%s})",
+			papp->StrId(),
+			papp->StateStr(papp->State()),
+			papp->SyncStateStr(papp->SyncState()));
+		logger->Debug("Unschedule: [%s] no need further actions",
+			papp->StrId());
+		return AM_SUCCESS;
+	}
+	// Request a synchronization to block the application
+	return SetForSynchronization(papp, app::Schedulable::BLOCKED);
+}
+
+ApplicationManager::ExitCode_t ApplicationManager::NoSchedule(
+		ba::AppCPtr_t papp) {
+	logger->Debug("NoSchedule: [%s] not scheduled", papp->StrId());
+	return ChangeEXCState(papp, app::Schedulable::DISABLED);
+}
+
+ApplicationManager::ExitCode_t
+ApplicationManager::SetForSynchronization(
+		app::AppCPtr_t papp, Application::SyncState_t next_sync) {
+	// Check valid state has beed required
+	if (next_sync >= Application::SYNC_STATE_COUNT) {
+		logger->Crit("SetForSynchronization: [%s] FAILED : invalid sync state [%d]",
+				papp->StrId(), next_sync);
+		assert(next_sync < app::Schedulable::SYNC_STATE_COUNT);
+		return AM_ABORT;
+	}
+	logger->Debug("SetForSynchronization: [%s, %s] requesting synchronization...",
+			papp->StrId(), Application::SyncStateStr(next_sync));
+
+	// Change synchronization state
+	ChangeEXCState(papp, app::Schedulable::SYNC, next_sync);
+	if (!papp->Synching()) {
+		logger->Crit("SetForSynchronization: [%s] FAILED: invalid EXC state [%d]",
+				papp->StrId(), next_sync);
+		assert(papp->Synching());
+		return AM_ABORT;
+	}
+
+	// TODO notify the Resource Manager
+
+	logger->Debug("SetForSynchronization: [%s, %s] completed", papp->StrId(),
+			Application::SyncStateStr(papp->SyncState()));
+
+	return AM_SUCCESS;
+}
 
 
 /*******************************************************************************
  *  EXC Synchronization
  ******************************************************************************/
 
-void
-ApplicationManager::SyncRemove(AppPtr_t papp, Application::SyncState_t state) {
+void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp, Application::SyncState_t state) {
 	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
 	assert(papp);
 	UpdateIterators(sync_ret[state], papp);
 
 	// Get the applications map
 	if (sync_vec[state].erase(papp->Uid())) {
-		logger->Debug("SyncRemove: [%s, %s] removed sync request",
-			papp->StrId(), papp->SyncStateStr());
+		logger->Debug("RemoveFromSyncMap: [%s, %s] removed sync request",
+			papp->StrId(), papp->SyncStateStr(state));
 		return;
 	}
 
@@ -1593,95 +1803,108 @@ ApplicationManager::SyncRemove(AppPtr_t papp, Application::SyncState_t state) {
 	assert(false);
 }
 
-void
-ApplicationManager::SyncRemove(AppPtr_t papp) {
+void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp) {
 	assert(papp);
-	logger->Debug("SyncRemove: [%s] removing sync request ...", papp->StrId());
+	logger->Debug("RemoveFromSyncMap: [%s] removing sync request ...", papp->StrId());
 
 	// Disregard EXCs which are not in SYNC state
 	if (!papp->Synching())
 		return;
 
-	SyncRemove(papp, papp->SyncState());
+	RemoveFromSyncMap(papp, papp->SyncState());
 }
 
-void
-ApplicationManager::SyncAdd(AppPtr_t papp, Application::SyncState_t state) {
+void ApplicationManager::AddToSyncMap(AppPtr_t papp, Application::SyncState_t state) {
 	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
 	assert(papp);
 	sync_vec[state].insert(UidsMapEntry_t(papp->Uid(), papp));
 }
 
-void
-ApplicationManager::SyncAdd(AppPtr_t papp) {
+void ApplicationManager::AddToSyncMap(AppPtr_t papp) {
 	assert(papp);
-	SyncAdd(papp, papp->SyncState());
-	logger->Debug("SyncAdd: [%s, %d:%s] added synchronization request",
-			papp->StrId(), papp->SyncState(), papp->SyncStateStr());
+	AddToSyncMap(papp, papp->SyncState());
+	logger->Debug("AddToSyncMap: [%s, %d:%s] added synchronization request",
+			papp->StrId(),
+			papp->SyncState(),
+			papp->SyncStateStr(papp->SyncState()));
 }
 
-ApplicationManager::ExitCode_t
-ApplicationManager::SyncRequest(AppPtr_t papp, Application::SyncState_t state) {
 
-	logger->Debug("SyncRequest: [%s, %s] requesting synchronization...",
-			papp->StrId(), Application::SyncStateStr(state));
-
-	// The state at this point should be SYNC
-	if (!papp->Synching()) {
-		logger->Crit("SyncRequest: [%s] synchronization request FAILED: invalid EXC state [%d]",
-				papp->StrId(), papp->State());
-		assert(papp->Synching());
-		return AM_ABORT;
-	}
-
-	// Check valid state has beed required
-	if (state >= Application::SYNC_STATE_COUNT) {
-		logger->Crit("SyncRequest: [%s] synchronization request FAILED : invalid sync state [%d]",
-				papp->StrId(), state);
-		assert(state < Application::SYNC_STATE_COUNT);
-		return AM_ABORT;
-	}
-
-	// TODO notify the Resource Manager
-
-	logger->Debug("SyncRequest: [%s, %s] synchronization request is valid", papp->StrId(),
-			Application::SyncStateStr(state));
-
-	return AM_SUCCESS;
-}
 
 ApplicationManager::ExitCode_t
 ApplicationManager::SyncCommit(AppPtr_t papp) {
-
 	logger->Debug("SyncCommit: [%s, %s] synchronization in progress...",
-			papp->StrId(), papp->SyncStateStr());
+			papp->StrId(), papp->SyncStateStr(papp->SyncState()));
+	auto curr_state = papp->State();
+	auto curr_sync  = papp->SyncState();
 
 	// Notify application
-	papp->ScheduleCommit();
+	papp->SyncCommit();
+
+	logger->Debug("SyncCommit: [%s] prev state [%s]...",
+			papp->StrId(), papp->StateStr(papp->PreSyncState()));
+	// Update status maps
+	UpdateStatusMaps(papp, curr_state, papp->State());
+	RemoveFromSyncMap(papp, curr_sync);
 	logger->Debug("SyncCommit: [%s, %s] synchronization COMPLETED",
-			papp->StrId(), papp->SyncStateStr());
+			papp->StrId(), papp->SyncStateStr(papp->SyncState()));
 
 	return AM_SUCCESS;
 }
 
 void ApplicationManager::SyncAbort(AppPtr_t papp) {
 	Application::SyncState_t syncState = papp->SyncState();
-
-	logger->Warn("SyncAbort: [%s, %s] synchronization aborted...",
+	logger->Warn("SyncAbort: [%s, sync_state=%s] synchronization aborted...",
 			papp->StrId(), papp->SyncStateStr(syncState));
 
-	// Notify application
-	papp->ScheduleAbort();
+	// The abort must be performed only for SYNC applications
+	Application::State_t state = papp->State();
+	if (!papp->Synching()) {
+		logger->Error("SyncAbort: [%s, state=%s] (expected SYNC)",
+				papp->StrId(), papp->StateStr(state));
+	}
+
+	// Move to READY map
+	ChangeEXCState(papp, app::Schedulable::READY);
+	logger->Debug("SyncAbort: completed ");
 }
 
-ApplicationManager::ExitCode_t
-ApplicationManager::RunningCommit(AppPtr_t papp) {
-	Application::ExitCode_t app_result;
 
-	app_result = papp->ScheduleContinue();
+ApplicationManager::ExitCode_t
+ApplicationManager::SyncContinue(AppPtr_t papp) {
+	Application::State_t state = papp->State();
+	Application::SyncState_t syncState = papp->SyncState();
+	assert(papp->CurrentAWM()); // This must be called only for RUNNING App/ExC
+	if (papp->State() != app::Schedulable::RUNNING) {
+		logger->Error("SyncContinue: [%s] is not running. State {%s/%s}",
+				papp->StrId(),
+				papp->StateStr(state),
+				papp->SyncStateStr(syncState));
+		assert(papp->State() == app::Schedulable::RUNNING);
+		assert(papp->SyncState() == app::Schedulable::SYNC_NONE);
+		return AM_ABORT;
+	}
+
+	// Return if Next AWN is already blank
+	if (papp->NextAWM() == nullptr)
+		return AM_SUCCESS;
+
+	// AWM current and next must match
+	if (papp->CurrentAWM()->Id() != papp->NextAWM()->Id()) {
+		logger->Error("SyncContinue: [%s] AWMs differs. "
+				"{curr=%d / next=%d}",
+				papp->StrId(),
+				papp->CurrentAWM()->Id(),
+				papp->NextAWM()->Id());
+		return AM_ABORT;
+	}
+
+	// Notify the application
+	auto app_result = papp->SyncContinue();
 	if (app_result != Application::APP_SUCCESS)
 		return AM_ABORT;
 
+	logger->Debug("SyncContinue: completed ");
 	return AM_SUCCESS;
 }
 

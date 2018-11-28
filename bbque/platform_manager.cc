@@ -183,7 +183,7 @@ const char * PlatformManager::GetHardwareID(int16_t system_id) const
 #endif
 }
 
-PlatformManager::ExitCode_t PlatformManager::Setup(AppPtr_t papp)
+PlatformManager::ExitCode_t PlatformManager::Setup(SchedPtr_t papp)
 {
 	logger->Error("Setup called at top-level");
 	// Not implemented at top-level.
@@ -247,13 +247,10 @@ PlatformManager::ExitCode_t PlatformManager::Refresh()
 	return PLATFORM_OK;
 }
 
-PlatformManager::ExitCode_t PlatformManager::Release(AppPtr_t papp)
+PlatformManager::ExitCode_t PlatformManager::Release(SchedPtr_t papp)
 {
-	assert(papp->HasPlatformData());
-	assert(papp->IsLocal() || papp->IsRemote());
-
+	assert(papp->ScheduleCount());
 	ExitCode_t ec;
-
 	if (papp->IsLocal()) {
 		ec = lpp->Release(papp);
 		if (unlikely(ec != PLATFORM_OK)) {
@@ -286,11 +283,9 @@ PlatformManager::ExitCode_t PlatformManager::Release(AppPtr_t papp)
 
 }
 
-PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp)
+PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 {
-	assert(papp->HasPlatformData());
-	assert(papp->IsLocal() || papp->IsRemote());
-
+	assert(papp->ScheduleCount());
 	ExitCode_t ec;
 
 	if (papp->IsLocal()) {
@@ -319,7 +314,7 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(AppPtr_t papp)
 }
 
 PlatformManager::ExitCode_t PlatformManager::MapResources(
-        AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl)
+        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl)
 {
 
 	ExitCode_t ec;
@@ -373,10 +368,6 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 			is_local = true;
 #endif
 
-	// If the application was previously mapped, it means that it must have
-	// platform data loaded
-	assert( !(papp->IsRemote() || papp->IsLocal()) || papp->HasPlatformData() );
-
 	// If first time scheduled locally, we have to setup it
 	if(is_local != papp->IsLocal()) {
 		logger->Debug("Mapping: Application [%s] is local, call LPP Setup", papp->StrId());
@@ -406,12 +397,6 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 		}
 	}
 #endif
-
-	if(!papp->HasPlatformData()) {
-		// At least local or remote was called, so the application
-		// platform data is initialized, mark it!
-		papp->SetPlatformData();
-	}
 
 	// At this time we can actually map the resources
 	if (papp->IsLocal()) {

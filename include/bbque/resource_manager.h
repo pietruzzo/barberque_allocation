@@ -27,6 +27,7 @@
 #include "bbque/platform_manager.h"
 #include "bbque/platform_services.h"
 #include "bbque/plugin_manager.h"
+#include "bbque/process_manager.h"
 #include "bbque/scheduler_manager.h"
 #include "bbque/synchronization_manager.h"
 #include "bbque/profile_manager.h"
@@ -188,6 +189,10 @@ private:
 	MetricsCollector & mc;
 
 	PlatformManager & plm;
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	ProcessManager & prm;
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 
 	CommandManager & cm;
 

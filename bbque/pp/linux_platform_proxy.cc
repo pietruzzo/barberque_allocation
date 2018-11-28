@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2017  Politecnico di Milano
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "bbque/config.h"
 
 #include "bbque/pp/linux_platform_proxy.h"
@@ -88,7 +105,7 @@ LinuxPlatformProxy * LinuxPlatformProxy::GetInstance() {
 LinuxPlatformProxy::LinuxPlatformProxy() :
 	controller("cpuset"),
 	refreshMode(false)
-#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	,
 	proc_listener(ProcessListener::GetInstance())
 #endif
@@ -117,7 +134,7 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 	InitNetworkManagement();
 #endif
 
-#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	proc_listener.Start();
 #endif
 
@@ -351,7 +368,7 @@ const char* LinuxPlatformProxy::GetHardwareID(int16_t system_id) const noexcept 
 	return BBQUE_TARGET_HARDWARE_ID;    // Defined in bbque.conf
 }
 
-LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(AppPtr_t papp) noexcept {
+LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(SchedPtr_t papp) noexcept {
 	ExitCode_t result = PLATFORM_OK;
 	CGroupDataPtr_t pcgd;
 
@@ -409,7 +426,7 @@ void LinuxPlatformProxy::LoadConfiguration() noexcept {
 
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::Release(AppPtr_t papp) noexcept {
+LinuxPlatformProxy::Release(SchedPtr_t papp) noexcept {
 	// Release CGroup plugin data
 	// ... thus releasing the corresponding control group
 	logger->Debug("Release: Reclaiming resources from [%s]", papp->StrId());
@@ -418,7 +435,7 @@ LinuxPlatformProxy::Release(AppPtr_t papp) noexcept {
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::ReclaimResources(AppPtr_t papp) noexcept {
+LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept {
 	RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
 	// FIXME: update once a better SetAttributes support is available
 	//CGroupDataPtr_t pcgd(new CGroupData_t);
@@ -429,8 +446,8 @@ LinuxPlatformProxy::ReclaimResources(AppPtr_t papp) noexcept {
 
 	// Move this app into "silos" CGroup
 	cgroup_set_value_uint64(psilos->pc_cpuset,
-	BBQUE_LINUXPP_PROCS_PARAM,
-	papp->Pid());
+		BBQUE_LINUXPP_PROCS_PARAM,
+		papp->Pid());
 
 	// Configure the CGroup based on resource bindings
 	logger->Notice("ReclaimResources: [%s] => SILOS[%s]",
@@ -451,14 +468,14 @@ LinuxPlatformProxy::ReclaimResources(AppPtr_t papp) noexcept {
 
 void LinuxPlatformProxy::Exit() {
 	logger->Debug("Exit: LinuxPP termination...");
-#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	proc_listener.Terminate();
 #endif
 }
 
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept {
+LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept {
 	ResourceAccounter &ra = ResourceAccounter::GetInstance();
 	RViewToken_t rvt = ra.GetScheduledView();
 
@@ -571,7 +588,7 @@ LinuxPlatformProxy::MapResources(AppPtr_t papp, ResourceAssignmentMapPtr_t pres,
 }
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::SetCGNetworkBandwidth(AppPtr_t papp, CGroupDataPtr_t pcgd,
+LinuxPlatformProxy::SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
 					ResourceAssignmentMapPtr_t pres,
 					RLinuxBindingsPtr_t prlb) {
 	ResourceAccounter &ra = ResourceAccounter::GetInstance();
@@ -660,7 +677,7 @@ LinuxPlatformProxy::MakeNetClass(AppPid_t handle, unsigned rate, int if_index) {
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::GetResourceMapping(
-        AppPtr_t papp,
+        SchedPtr_t papp,
         ResourceAssignmentMapPtr_t assign_map,
         RLinuxBindingsPtr_t prlb,
         BBQUE_RID_TYPE node_id,
@@ -1133,7 +1150,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::GetCGroupData(AppPtr_t papp, CGroupDataPtr_t &pcgd) noexcept {
+LinuxPlatformProxy::GetCGroupData(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept {
 	ExitCode_t result;
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	logger->Warn("Distributed cgroup actuation: cgroup will be written by "
@@ -1330,7 +1347,7 @@ LinuxPlatformProxy::SetupCGroup(
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::BuildAppCG(AppPtr_t papp, CGroupDataPtr_t &pcgd) noexcept {
+LinuxPlatformProxy::BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept {
 	// Build new CGroup data for the specified application
 	pcgd = CGroupDataPtr_t(new CGroupData_t(papp));
 	return BuildCGroup(pcgd);

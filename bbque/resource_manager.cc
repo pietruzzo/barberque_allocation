@@ -140,6 +140,9 @@ ResourceManager::ResourceManager() :
 	bdm(BindingManager::GetInstance()),
 	mc(MetricsCollector::GetInstance()),
 	plm(PlatformManager::GetInstance()),
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	prm(ProcessManager::GetInstance()),
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 	cm(CommandManager::GetInstance()),
 	sm(SchedulerManager::GetInstance()),
 	ym(SynchronizationManager::GetInstance()),
@@ -316,12 +319,19 @@ void ResourceManager::Optimize() {
 	// there are actually active applications
 	if (!plat_event &&
 		!am.HasApplications(Application::READY) &&
-		!am.HasApplications(Application::RUNNING))
+		!am.HasApplications(Application::RUNNING)
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		&&
+		!prm.HasProcesses(Schedulable::READY) &&
+		!prm.HasProcesses(Schedulable::RUNNING)
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+	)
+
 		return;
 	plat_event = false;
 
 	ra.PrintStatusReport();
-	am.PrintStatusReport();
+	am.PrintStatus();
 	logger->Info("Running Optimization...");
 
 	// Account for a new schedule activation
@@ -348,7 +358,7 @@ void ResourceManager::Optimize() {
 	}
 	logger->Info(LNSCHE);
 	logger->Notice("Schedule Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
-	am.PrintStatusReport(true);
+	am.PrintStatus(true);
 
 	// Check if there is at least one application to synchronize
 	if (!am.HasApplications(Application::SYNC)) {
@@ -374,7 +384,7 @@ void ResourceManager::Optimize() {
 		}
 		logger->Info(LNSYNE);
 		ra.PrintStatusReport(0, true);
-		am.PrintStatusReport(true);
+		am.PrintStatus(true);
 		logger->Notice("Sync Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
 
 	}
@@ -490,14 +500,14 @@ void ResourceManager::EvtBbqUsr1() {
 	logger->Info("==========[ Status Queues ]============"
 			"========================================");
 	logger->Info("");
-	am.ReportStatusQ(true);
+	am.PrintStatusQ(true);
 
 	logger->Info("");
 	logger->Info("");
 	logger->Info("==========[ Synchronization Queues ]==="
 			"========================================");
 	logger->Info("");
-	am.ReportSyncQ(true);
+	am.PrintSyncQ(true);
 
 	logger->Notice("");
 	logger->Notice("");
@@ -511,7 +521,7 @@ void ResourceManager::EvtBbqUsr1() {
 	logger->Notice("==========[ EXCs Status ]=============="
 			"========================================");
 	logger->Notice("");
-	am.PrintStatusReport(true);
+	am.PrintStatus(true);
 
 	// Clear the corresponding event flag
 	logger->Notice("");
@@ -587,7 +597,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		logger->Notice("==========[ EXCs Status ]=============="
 				"========================================");
 		logger->Notice("");
-		am.PrintStatusReport(true);
+		am.PrintStatus(true);
 		break;
 
 	case 'q':
@@ -600,7 +610,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		logger->Info("==========[ Status Queues ]============"
 				"========================================");
 		logger->Info("");
-		am.ReportStatusQ(true);
+		am.PrintStatusQ(true);
 		break;
 
 	case 'r':
@@ -628,7 +638,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		logger->Info("==========[ Synchronization Queues ]==="
 				"========================================");
 		logger->Info("");
-		am.ReportSyncQ(true);
+		am.PrintSyncQ(true);
 		break;
 	case 'o':
 		logger->Info("");

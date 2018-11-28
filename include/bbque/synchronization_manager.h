@@ -22,7 +22,7 @@
 #include "bbque/plugin_manager.h"
 #include "bbque/application_proxy.h"
 #include "bbque/platform_manager.h"
-
+#include "bbque/process_manager.h"
 #include "bbque/utils/timer.h"
 #include "bbque/utils/metrics_collector.h"
 
@@ -66,7 +66,7 @@ public:
 	 */
 	typedef enum ExitCode {
 		OK = 0,
-		NO_EXC_IN_SYNC,
+		NOTHING_TO_SYNC,
 		ABORTED,
 		PLATFORM_SYNC_FAILED
 	} ExitCode_t;
@@ -92,7 +92,6 @@ public:
 	 */
 	ExitCode_t SyncSchedule();
 
-
 private:
 
 	/**
@@ -109,7 +108,10 @@ private:
 	ApplicationProxy & ap;
 	MetricsCollector & mc;
 	ResourceAccounter & ra;
-    PlatformManager & plm;
+	PlatformManager & plm;
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	ProcessManager & prm;
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 	System & sv;
 
 	/**
@@ -144,7 +146,9 @@ private:
 
 	static MetricsCollector::MetricsCollection_t metrics[SM_METRICS_COUNT];
 
-	std::list<ba::AppPtr_t> sync_fails_apps;
+	std::list<AppPtr_t> sync_fails_apps;
+
+	std::list<ProcPtr_t> sync_fails_procs;
 
 	/**
 	 * @brief   Build a new instance of the synchronization manager
@@ -160,6 +164,11 @@ private:
 	 * @brief Synchronize platform resources for the specified EXCs
 	 */
 	ExitCode_t Sync_Platform(ApplicationStatusIF::SyncState_t syncState);
+
+	/**
+	 *@brief Actual invocation of platform proxy resource mapping functions
+	 */
+	ExitCode_t MapResources(SchedPtr_t papp);
 
 	/**
 	 * @brief Notify a Pre-Change to the specified EXCs
@@ -184,9 +193,10 @@ private:
 	/**
 	 * @brief Perform the synchronized resource acquisition
 	 *
-	 * @param The App/ExC that have to acquire resources
+	 * @param The application or process that has to acquire resources
 	 */
-	void DoAcquireResources(AppPtr_t);
+	void SyncCommit(AppPtr_t);
+
 
 	/**
 	 * @brief Check fo reshuffling reconfigurations
@@ -217,7 +227,38 @@ private:
 	 * @brief Disable EXCs for which the synchronization has not been
 	 * successfully performed
 	 */
-	void DisableFailedEXC();
+	void DisableFailedApps();
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+
+	/**
+	 * @brief Synchronization of generic processes
+	 */
+	ExitCode_t SyncProcesses();
+
+	/**
+	 * @brief Resource mapping
+	 */
+	ExitCode_t Sync_PlatformForProcesses();
+
+	/**
+	 * @brief Acquire resources and notify status updates
+	 */
+	ExitCode_t Sync_PostChangeForProcesses();
+
+	/**
+	 * @brief Resource acquisition from resource accounter
+	 * @param proc the process descriptor
+	 */
+	void SyncCommit(ProcPtr_t proc);
+
+	/**
+	 * @brief Action for sytnchronization fails
+	 */
+	void DisableFailedProcesses();
+
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+
 };
 
 } // namespace bbque
