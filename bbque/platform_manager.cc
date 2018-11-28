@@ -249,8 +249,13 @@ PlatformManager::ExitCode_t PlatformManager::Refresh()
 
 PlatformManager::ExitCode_t PlatformManager::Release(SchedPtr_t papp)
 {
-	assert(papp->ScheduleCount());
 	ExitCode_t ec;
+	if (papp->ScheduleCount() == 0) {
+		logger->Warn("Release: [%s] not scheduled yet: nothing to release",
+			papp->StrId());
+		return PLATFORM_OK;
+	}
+
 	if (papp->IsLocal()) {
 		ec = lpp->Release(papp);
 		if (unlikely(ec != PLATFORM_OK)) {
@@ -280,14 +285,16 @@ PlatformManager::ExitCode_t PlatformManager::Release(SchedPtr_t papp)
 #endif
 
 	return PLATFORM_OK;
-
 }
 
 PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 {
-	assert(papp->ScheduleCount());
 	ExitCode_t ec;
-
+	if (papp->ScheduleCount() == 0) {
+		logger->Warn("ReclaimResources: [%s] not scheduled yet: nothing to reclaim",
+			papp->StrId());
+		return PLATFORM_OK;
+	}
 	if (papp->IsLocal()) {
 		ec = lpp->ReclaimResources(papp);
 		if (unlikely(ec != PLATFORM_OK)) {
