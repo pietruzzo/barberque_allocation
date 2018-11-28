@@ -229,6 +229,10 @@ Application::ExitCode_t Application::SyncCommit() {
 	}
 
 	assert(_State() == SYNC);
+	if (_State() != SYNC) {
+		logger->Error("SyncCommit: [%s] wrong state <%s>", StrId(), StateStr(_State()));
+		return APP_STATUS_NOT_EXP;
+	}
 
 	// Synchronization state
 	switch(_SyncState()) {
@@ -254,12 +258,9 @@ Application::ExitCode_t Application::SyncCommit() {
 			break;
 
 		case BLOCKED:
-			if (_State() != FINISHED)
-				SetState(READY);
-			else {
-				schedule.awm.reset();
-				schedule.next_awm.reset();
-			}
+			SetState(READY);
+			schedule.awm.reset();
+			schedule.next_awm.reset();
 			break;
 
 		default:
