@@ -52,8 +52,8 @@ ResourcePartitionValidator::LoadPartitions(
 
 	skimmers_lock.lock();
 	if ( skimmers.empty() ) {
-		logger->Warn("No skimmers registered, no action performed.");
 		skimmers_lock.unlock();
+		logger->Warn("No skimmers registered, no action performed.");
 		return PMV_OK;
 	}
 
@@ -81,14 +81,13 @@ ResourcePartitionValidator::LoadPartitions(
 	}
 
 	skimmers_lock.unlock();
+
+	this->failed_skimmer = PartitionSkimmer::SKT_NONE;
 	if ( partitions.empty() ) {
 		logger->Notice("Skimmer %d: no feasible partitions", 
 				(int)skimmer_type);
-		this->failed_skimmer = skimmer_type;
 		return PMV_NO_PARTITION;  // No feasible solution found
 	}
-
-	this->failed_skimmer = PartitionSkimmer::SKT_NONE;
 
 	return PMV_OK;
 }
@@ -125,8 +124,7 @@ ResourcePartitionValidator::RemovePartition(
 	// We have to ensure that no skimmer failed for any reasons before this call.
 //	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
 	if (failed_skimmer != PartitionSkimmer::SKT_NONE) {
-		logger->Error("Skimmer failed [!]");
-		return PMV_OK;
+		logger->Error("Skimmer [%d] failure reported", failed_skimmer);
 	}
 
 	std::lock_guard<std::mutex> curr_lock(skimmers_lock);
