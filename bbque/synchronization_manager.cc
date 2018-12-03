@@ -639,10 +639,10 @@ SynchronizationManager::ExitCode_t
 SynchronizationManager::SyncApps(ApplicationStatusIF::SyncState_t syncState) {
 	ExitCode_t result;
 
-	if (syncState == ApplicationStatusIF::SYNC_NONE) {
-		logger->Warn("Synchronization FAILED (Error: empty EXCs list)");
+	if (!am.HasApplications(syncState)) {
+		logger->Warn("SyncApps: no adaptive applications");
 		assert(syncState != ApplicationStatusIF::SYNC_NONE);
-		return OK;
+		return NOTHING_TO_SYNC;
 	}
 
 #ifdef CONFIG_BBQUE_YM_SYNC_FORCE
