@@ -21,6 +21,10 @@
 #include "bbque/application_manager.h"
 #include "bbque/resource_accounter.h"
 
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+#include "bbque/process_manager.h"
+#endif
+
 namespace ba = bbque::app;
 namespace br = bbque::res;
 
@@ -158,7 +162,31 @@ public:
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 	}
 
-	/// .............................: RESOURCES :............................
+
+	/**************************************************************************
+	 *  Schedulables management                                               *
+	 **************************************************************************/
+
+	inline bool HasSchedulables(ba::Schedulable::State_t state) {
+		return (am.HasApplications(state)
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+			|| prm.HasProcesses(state)
+#endif
+		);
+	}
+
+	inline bool HasSchedulables(ba::Schedulable::SyncState_t sync_state) {
+		return (am.HasApplications(sync_state)
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+			|| prm.HasProcesses(sync_state)
+#endif
+		);
+	}
+
+
+	/**************************************************************************
+	 *  Resource management                                                   *
+	 **************************************************************************/
 
 	/**
 	 * @see ResourceAccounterStatusIF::Available()
@@ -304,11 +332,19 @@ private:
 	/** ResourceAccounter instance */
 	ResourceAccounterConfIF & ra;
 
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	ProcessManager & prm;
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+
 	/** Constructor */
 	System() :
 		am(ApplicationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance()) {
-	}
+		ra(ResourceAccounter::GetInstance())
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		,
+		prm(ProcessManager::GetInstance())
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+	{ }
 };
 
 
