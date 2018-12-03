@@ -361,7 +361,12 @@ void ResourceManager::Optimize() {
 	am.PrintStatus(true);
 
 	// Check if there is at least one application to synchronize
-	if (!am.HasApplications(Application::SYNC)) {
+	if (!am.HasApplications(Application::SYNC)
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		&&
+		!prm.HasProcesses(Schedulable::SYNC)
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+	) {
 		logger->Debug("NO EXC in SYNC state, synchronization not required");
 		RM_COUNT_EVENT(metrics, RM_SCHED_EMPTY);
 	} else {
