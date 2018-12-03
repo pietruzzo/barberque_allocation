@@ -250,6 +250,25 @@ bool ProcessManager::HasProcesses(app::Schedulable::State_t state) {
 	return !state_procs[state].empty();
 }
 
+bool ProcessManager::HasProcesses(app::Schedulable::SyncState_t sync_state) {
+	std::unique_lock<std::mutex> u_lock(proc_mutex);
+	if (state_procs[app::Schedulable::SYNC].empty()) {
+		return false;
+	}
+
+	for (auto & it_sync: state_procs[app::Schedulable::SYNC]) {
+		auto & proc(it_sync.second);
+		logger->Debug("HasProcesses: [%s] state=%s sync=%s",
+			proc->StrId(),
+			proc->StateStr(proc->State()),
+			proc->SyncStateStr(proc->SyncState()));
+		if (proc->SyncState() == sync_state)
+			return true;
+	}
+
+	return false;
+}
+
 ProcPtr_t ProcessManager::GetFirst(app::Schedulable::State_t state, ProcessMapIterator & it) {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	auto & state_map(state_procs[state]);
@@ -346,8 +365,10 @@ ProcessManager::ExitCode_t ProcessManager::ScheduleRequest(
 		return ret;
 	}
 
-	logger->Debug("ScheduleRequest: [%s, %s] completed",
-			proc->StrId(), proc->SyncStateStr(proc->SyncState()));
+	logger->Debug("ScheduleRequest: [%s] <%s / %s> completed",
+		proc->StrId(),
+		proc->StateStr(proc->State()),
+		proc->SyncStateStr(proc->SyncState()));
 	return SUCCESS;
 }
 

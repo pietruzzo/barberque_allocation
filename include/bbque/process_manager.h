@@ -106,9 +106,17 @@ public:
 
 	/**
 	 * @brief Check if there are processes in a given state
+	 * @param state a stable state
 	 * @return true if yes, fals for not
 	 */
 	bool HasProcesses(app::Schedulable::State_t state);
+
+	/**
+	 * @brief Check if there are processes in a given synchronization state
+	 * @param sync_state a synchronization state
+	 * @return true if yes, fals for not
+	 */
+	bool HasProcesses(app::Schedulable::SyncState_t sync_state);
 
 	/**
 	 * @brief Get the first process in the map
