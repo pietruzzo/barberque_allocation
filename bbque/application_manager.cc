@@ -890,7 +890,10 @@ ApplicationManager::ChangeEXCState(
 		AddToSyncMap(papp);     // otherwise add to the proper sync map
 
 	// Update the stable status maps
-	return UpdateStatusMaps(papp, curr_state, next_state);
+	auto am_ret = UpdateStatusMaps(papp, curr_state, next_state);
+	PrintStatusQ();
+	PrintSyncQ();
+	return am_ret;
 }
 
 
@@ -1797,15 +1800,29 @@ void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp) {
 	logger->Debug("RemoveFromSyncMap: [%s] removing sync request ...", papp->StrId());
 
 	// Disregard EXCs which are not in SYNC state
-	if (!papp->Synching())
+	if (!papp->Synching()) {
+		logger->Debug("RemoveFromSyncMap: [%s] inconsistent state: %s/%s ...",
+			papp->StrId(),
+			papp->StateStr(papp->State()),
+			papp->SyncStateStr(papp->SyncState()));
 		return;
+	}
 
 	RemoveFromSyncMap(papp, papp->SyncState());
+	PrintSyncQ();
 }
 
 void ApplicationManager::AddToSyncMap(AppPtr_t papp, Application::SyncState_t state) {
-	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
 	assert(papp);
+	// Disregard EXCs which are not in SYNC state
+	if (!papp->Synching()) {
+		logger->Debug("RemoveFromSyncMap: [%s] inconsistent state: %s/%s ...",
+			papp->StrId(),
+			papp->StateStr(papp->State()),
+			papp->SyncStateStr(papp->SyncState()));
+		return;
+	}
+	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
 	sync_vec[state].insert(UidsMapEntry_t(papp->Uid(), papp));
 }
 
@@ -1816,6 +1833,7 @@ void ApplicationManager::AddToSyncMap(AppPtr_t papp) {
 			papp->StrId(),
 			papp->SyncState(),
 			papp->SyncStateStr(papp->SyncState()));
+	PrintSyncQ();
 }
 
 
@@ -1835,13 +1853,17 @@ ApplicationManager::SyncCommit(AppPtr_t papp) {
 	UpdateStatusMaps(papp, curr_state, papp->State());
 	RemoveFromSyncMap(papp, curr_sync);
 
-	if (papp->State() == ba::Schedulable::FINISHED) {
-		logger->Debug("SyncCommit: [%s, %s] destroying EXC...",
-			papp->StrId(), papp->SyncStateStr(papp->SyncState()));
+	if (papp->Finished()) {
+		logger->Debug("SyncCommit: [%s] [%s/%s] destroying EXC...",
+			papp->StrId(),
+			papp->StateStr(papp->State()),
+			papp->SyncStateStr(papp->SyncState()));
 		DestroyEXC(papp);
 	}
-	logger->Debug("SyncCommit: [%s, %s] synchronization COMPLETED",
-			papp->StrId(), papp->SyncStateStr(papp->SyncState()));
+	logger->Debug("SyncCommit: [%s] [%s/%s] synchronization COMPLETED",
+			papp->StrId(),
+			papp->StateStr(papp->State()),
+			papp->SyncStateStr(papp->SyncState()));
 
 	return AM_SUCCESS;
 }
