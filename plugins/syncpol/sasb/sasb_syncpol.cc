@@ -89,7 +89,13 @@ char const *SasbSyncPol::Name() {
 ba::Schedulable::SyncState_t SasbSyncPol::step1(
 			bbque::System & sv) {
 
-	logger->Debug("STEP 1.0: Running => Blocked");
+	logger->Debug("STEP 1.0: Running => Disabled");
+	if (sv.HasSchedulables(ba::Schedulable::DISABLED)) {
+		status = STEP11;
+		return ba::\\:Schedulable::DISABLED;
+	}
+
+	logger->Debug("STEP 1.1: Running => Blocked");
 	if (sv.HasSchedulables(ba::Schedulable::BLOCKED))
 		return ba::Schedulable::BLOCKED;
 
@@ -213,6 +219,7 @@ ba::Schedulable::SyncState_t SasbSyncPol::GetApplicationsQueue(
 	for( ; status<=STEP40 && !do_sync; ++status) {
 		switch(status) {
 		case STEP10:
+		case STEP11:
 			syncState = step1(sv);
 			if (syncState != ba::Schedulable::SYNC_NONE)
 				do_sync = true;
@@ -274,6 +281,7 @@ bool SasbSyncPol::DoSync(AppPtr_t papp) {
 	// STEP 1
 	// Blocked applications are always authorized
 	case STEP10:
+	case STEP11:
 		return true;
 
 	// STEP 2
@@ -308,7 +316,7 @@ bool SasbSyncPol::DoSync(AppPtr_t papp) {
 		;
 	};
 
-	if (papp->CurrentAWM()) {
+	if (papp->CurrentAWM() && papp->NextAWM()) {
 		logger->Debug("Checking [%s] @ step [%d]: sync_state [%d], curr_awm [%02d], next_awm [%02d] => %s",
 				papp->StrId(),
 				status,
@@ -317,7 +325,8 @@ bool SasbSyncPol::DoSync(AppPtr_t papp) {
 				papp->NextAWM()->Id(),
 				reconf ? "SYNC" : "SKYP"
 			    );
-	} else {
+	}
+	else if (papp->NextAWM()) {
 		logger->Debug("Checking [%s] @ step [%d]: sync_state [%d], curr_awm [--], next_awm [%02d] => %s",
 				papp->StrId(),
 				status,
@@ -325,6 +334,15 @@ bool SasbSyncPol::DoSync(AppPtr_t papp) {
 				papp->NextAWM()->Id(),
 				reconf ? "SYNC" : "SKYP"
 			    );
+	}
+	else {
+		logger->Debug("Checking [%s] @ step [%d]: sync_state [%d] => %s",
+				papp->StrId(),
+				status,
+				papp->SyncState(),
+				reconf ? "SYNC" : "SKYP"
+			    );
+
 	}
 
 	return reconf;

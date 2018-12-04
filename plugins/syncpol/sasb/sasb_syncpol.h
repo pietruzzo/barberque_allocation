@@ -82,6 +82,7 @@ private:
 
 	typedef enum syncState {
 		STEP10 = 0,
+		STEP11,
 		STEP21,
 		STEP22,
 		STEP23,
