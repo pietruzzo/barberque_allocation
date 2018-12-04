@@ -209,7 +209,7 @@ public:
 	 */
 	ExitCode_t NoSchedule(ProcPtr_t proc) {
 		return ChangeState(proc,
-			Schedulable::DISABLED, Schedulable::BLOCKED);
+			Schedulable::SYNC, Schedulable::BLOCKED);
 	}
 
 /*******************************************************************************
