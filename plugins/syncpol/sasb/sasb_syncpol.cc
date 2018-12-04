@@ -92,7 +92,7 @@ ba::Schedulable::SyncState_t SasbSyncPol::step1(
 	logger->Debug("STEP 1.0: Running => Disabled");
 	if (sv.HasSchedulables(ba::Schedulable::DISABLED)) {
 		status = STEP11;
-		return ba::\\:Schedulable::DISABLED;
+		return ba::Schedulable::DISABLED;
 	}
 
 	logger->Debug("STEP 1.1: Running => Blocked");
