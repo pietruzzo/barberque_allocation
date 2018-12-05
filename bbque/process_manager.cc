@@ -221,16 +221,19 @@ void ProcessManager::NotifyStop(std::string const & name, app::AppPid_t pid) {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 
 	// Remove from the status maps...
-	ProcPtr_t ending_proc;
+	ProcPtr_t ending_proc = nullptr;
 	for (auto state_it = state_procs.begin(); state_it != state_procs.end(); ++state_it) {
 		auto & state_map(*state_it);
 		auto proc_it = state_map.find(pid);
 		if (proc_it != state_map.end()) {
 			ending_proc = proc_it->second;
-			state_map.erase(proc_it);
-			logger->Debug("NotifyStop: [%s: %d] removed from map",
-				name.c_str(), pid);
+			break;
 		}
+	}
+
+	if (ending_proc == nullptr) {
+		logger->Warn("NotifyStop: process PID=<%> not managed", pid);
+		return;
 	}
 
 	auto ret = ChangeState(ending_proc,
