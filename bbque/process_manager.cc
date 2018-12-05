@@ -201,8 +201,11 @@ void ProcessManager::NotifyStart(std::string const & name, app::AppPid_t pid) {
 	logger->Info("NotifyStart: scheduling required for [%s: %d]", name.c_str(), pid);
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	managed_procs[name].pid_set->emplace(pid);
-	state_procs[app::Schedulable::READY].emplace(
-		pid, std::make_shared<Process>(name, pid));
+
+	ProcPtr_t new_proc = std::make_shared<Process>(name, pid);
+	new_proc->SetState(Schedulable::READY);
+	state_procs[app::Schedulable::READY].emplace(pid, new_proc);
+
 	// Trigger a re-scheduling
 	ResourceManager & rm(ResourceManager::GetInstance());
 	rm.NotifyEvent(ResourceManager::BBQ_OPTS);
