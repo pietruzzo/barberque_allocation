@@ -275,24 +275,32 @@ bool ProcessManager::HasProcesses(app::Schedulable::SyncState_t sync_state) {
 	return false;
 }
 
-ProcPtr_t ProcessManager::GetFirst(app::Schedulable::State_t state, ProcessMapIterator & it) {
+ProcPtr_t ProcessManager::GetFirst(app::Schedulable::State_t state, ProcessMapIterator & map_it) {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
-	auto & state_map(state_procs[state]);
-	it = state_map.begin();
-	if (it == state_map.end())
-		return nullptr;
-	return it->second;
+	map_it.Init(state_procs[state], state_retain[state]);
+	logger->Debug("GetFirst: > map=[@%p] ret=[%p] it=[%p]",
+		map_it.map, map_it.ret, map_it.it);
+	if (map_it.End())
+		return ProcPtr_t();
+
+	ProcPtr_t proc = map_it.Get();
+	map_it.Retain(); // Add iterator to the retainers list
+	logger->Debug("GetFirst: > ADD retained processes iterator [@%p => %d]",
+			&(map_it.it), proc->Pid());
+	return proc;
 }
 
-ProcPtr_t ProcessManager::GetNext(app::Schedulable::State_t state, ProcessMapIterator & it) {
+ProcPtr_t ProcessManager::GetNext(app::Schedulable::State_t state, ProcessMapIterator & map_it) {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
-	auto & state_map(state_procs[state]);
-	if (it == state_map.end())
-		return nullptr;
-	it++;
-	if (it == state_map.end())
-		return nullptr;
-	return it->second;
+	map_it++;
+	if (map_it.End()) {
+		map_it.Release();  // Release the iterator retainer
+		logger->Debug("GetNext: < DEL retained processes iterator [@%p => %d]",
+				&(map_it.it));
+		return ProcPtr_t();
+	}
+	ProcPtr_t proc = map_it.Get();
+	return proc;
 }
 
 
@@ -472,6 +480,7 @@ ProcessManager::ExitCode_t ProcessManager::SyncCommit(ProcPtr_t proc) {
 			if (proc_it != state_map.end()) {
 				logger->Debug("SyncCommit: [%s: %d] removing from map...",
 					proc->Name().c_str(), proc->Pid());
+				UpdateIterators(state_retain[Schedulable::FINISHED], proc);
 				state_map.erase(proc_it);
 			}
 		}
@@ -515,7 +524,8 @@ ProcessManager::ExitCode_t ProcessManager::ChangeState(
 		Schedulable::SyncState_t next_sync) {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 
-	auto & from_map(state_procs[proc->State()]);
+	Schedulable::State_t from_state = proc->State();
+	auto & from_map(state_procs[from_state]);
 	auto proc_it = from_map.find(proc->Pid());
 	if (proc_it == from_map.end()) {
 		logger->Warn("ChangeState: process PID=%d not found in state=%s)",
@@ -531,6 +541,7 @@ ProcessManager::ExitCode_t ProcessManager::ChangeState(
 	else {
 		auto & to_map(state_procs[to_state]);
 		to_map.emplace(proc->Pid(), proc);
+		UpdateIterators(state_retain[from_state], proc);
 		from_map.erase(proc_it);
 	}
 
@@ -547,6 +558,28 @@ ProcessManager::ExitCode_t ProcessManager::ChangeState(
 
 	return SUCCESS;
 }
+
+void ProcessManager::UpdateIterators(
+		ProcessMapIteratorRetainer_t & ret,
+		ProcPtr_t proc) {
+	ProcessMapIteratorRetainer_t::iterator it;
+	ProcessMapIterator * m_it;
+	logger->Debug("Checking [%d] iterators...", ret.size());
+	// Lookup for iterators on the specified map which pointes to the
+	// specified process
+	for (it = ret.begin(); it != ret.end(); ++it) {
+		m_it = (*it);
+		// Ignore iterators not pointing to the application of interest
+		if (m_it->it->first != proc->Pid())
+			continue;
+
+		// Update the iterator position one step backward
+		logger->Debug("~ Updating iterator [@%p => %d]",
+			m_it->it, proc->Uid());
+		m_it->Update(); // Move the iterator forward
+	}
+}
+
 
 } // namespace bbque
 

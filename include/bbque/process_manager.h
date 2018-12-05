@@ -29,13 +29,14 @@
 #include "bbque/command_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
+#include "bbque/utils/map_iterator.h"
 
 namespace bbque {
 
 using ProcPtr_t    = std::shared_ptr<app::Process>;
 using ProcessMap_t = std::map<app::AppPid_t, ProcPtr_t>;
-//using ProcessMapIterator = MapIterator<ProcPtr_t>;
-using ProcessMapIterator = ProcessMap_t::iterator;
+using ProcessMapIterator = utils::MapIterator<ProcPtr_t>;
+using ProcessMapIteratorRetainer_t = utils::MapIteratorRetainer_t<ProcPtr_t>;
 
 using namespace app;
 
@@ -274,6 +275,9 @@ private:
 	/** State vectors of the managed processes */
 	std::vector<ProcessMap_t> state_procs;
 
+	/** Retainers for the thread-safe manipulation of map iterators */
+	ProcessMapIteratorRetainer_t state_retain[Schedulable::STATE_COUNT];
+
 	/**
 	 * @brief Constructor
 	 */
@@ -301,6 +305,11 @@ private:
 	 * @brief Help for the schedule request command
 	 */
 	void CommandManageSetScheduleHelp() const;
+
+	/**
+	 * @brief Update the iterators when an element must be removed
+	 */
+	void UpdateIterators(ProcessMapIteratorRetainer_t & ret, ProcPtr_t proc);
 
 };
 
