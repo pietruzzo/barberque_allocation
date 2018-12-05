@@ -751,21 +751,22 @@ SynchronizationManager::SyncSchedule() {
 			return result;
 		}
 
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		// Synchronization of generic processes
+		result = SyncProcesses();
+		if ((result != NOTHING_TO_SYNC) && (result != OK)) {
+			logger->Warn("SyncSchedule: session=%d FAILED, aborting "
+				"during processes synchronization...", sync_count);
+			ra.SyncAbort();
+			DisableFailedApps();
+			return result;
+		}
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+
 		// Next set of applications to synchronize (if any)
 		syncState = policy->GetApplicationsQueue(sv);
 	}
 
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	// Synchronization of generic processes
-	result = SyncProcesses();
-	if ((result != NOTHING_TO_SYNC) && (result != OK)) {
-		logger->Warn("SyncSchedule: session=%d FAILED, aborting "
-			"during processes synchronization...", sync_count);
-		ra.SyncAbort();
-		DisableFailedApps();
-		return result;
-	}
-#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 
 	// FIXME at this point ALL apps must be committed and the sync queues
 	// empty, this should be checked probably here before to commit the
