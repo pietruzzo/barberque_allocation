@@ -286,8 +286,6 @@ bool ProcessManager::HasProcesses(app::Schedulable::SyncState_t sync_state) {
 ProcPtr_t ProcessManager::GetFirst(app::Schedulable::State_t state, ProcessMapIterator & map_it) {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	map_it.Init(state_procs[state], state_retain[state]);
-	logger->Debug("GetFirst: > map=[@%p] ret=[%p] it=[%p]",
-		map_it.map, map_it.ret, map_it.it);
 	if (map_it.End())
 		return ProcPtr_t();
 
