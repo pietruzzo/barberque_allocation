@@ -95,11 +95,11 @@ public:
 	void NotifyStart(std::string const & name, app::AppPid_t pid);
 
 	/**
-	 * @brief Notify the start of a process/program
+	 * @brief Notify the termination of a process/program
 	 * @param name the binary name
 	 * @param pid the process id
 	 */
-	void NotifyStop(std::string const & name, app::AppPid_t pid);
+	void NotifyExit(std::string const & name, app::AppPid_t pid);
 
 /*******************************************************************************
  *     Map iterations

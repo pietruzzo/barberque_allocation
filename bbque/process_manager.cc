@@ -212,9 +212,9 @@ void ProcessManager::NotifyStart(std::string const & name, app::AppPid_t pid) {
 }
 
 
-void ProcessManager::NotifyStop(std::string const & name, app::AppPid_t pid) {
+void ProcessManager::NotifyExit(std::string const & name, app::AppPid_t pid) {
 	if (!IsToManage(name)) {
-	//	logger->Debug("NotifyStop: %s not managed", name.c_str());
+		//logger->Debug("NotifyExit: %s not managed", name.c_str());
 		return;
 	}
 	logger->Debug("NotifyStop: process [%s: %d] terminated", name.c_str(), pid);
@@ -232,14 +232,15 @@ void ProcessManager::NotifyStop(std::string const & name, app::AppPid_t pid) {
 	}
 
 	if (ending_proc == nullptr) {
-		logger->Warn("NotifyStop: process PID=<%> not managed", pid);
+		logger->Warn("NotifyExit: process PID=<%> not found", pid);
 		return;
 	}
 
+	// Status change
 	auto ret = ChangeState(ending_proc,
 		app::Schedulable::FINISHED, app::Schedulable::SYNC_NONE);
 	if (ret != SUCCESS) {
-		logger->Crit("(Re)schedule: [%s] FAILED: state=%s sync=%s",
+		logger->Crit("(NotifyExit: [%s] FAILED: state=%s sync=%s",
 			ending_proc->StrId(),
 			ending_proc->StateStr(ending_proc->State()),
 			ending_proc->SyncStateStr(ending_proc->SyncState()));

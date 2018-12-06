@@ -207,7 +207,7 @@ void ProcessListener::Task() {
 					e->event_data.exec.process_pid,
 					GetProcName(e->event_data.exec.process_pid).c_str(),
 					e->event_data.exit.exit_code);
-				prm.NotifyStop(
+				prm.NotifyExit(
 					GetProcName(e->event_data.exec.process_pid),
 					e->event_data.exec.process_pid);
 				break;
