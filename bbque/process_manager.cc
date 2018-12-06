@@ -217,16 +217,23 @@ void ProcessManager::NotifyExit(std::string const & name, app::AppPid_t pid) {
 		//logger->Debug("NotifyExit: %s not managed", name.c_str());
 		return;
 	}
-	logger->Debug("NotifyStop: process [%s: %d] terminated", name.c_str(), pid);
-	std::unique_lock<std::mutex> u_lock(proc_mutex);
+	logger->Debug("NotifyExit: [%s] is a managed program", name.c_str());
+	NotifyExit(pid);
+}
 
-	// Remove from the status maps...
+
+void ProcessManager::NotifyExit(app::AppPid_t pid) {
+	std::unique_lock<std::mutex> u_lock(proc_mutex);
+	logger->Debug("NotifyExit: process PID=<%d> terminated?", pid);
+
+	// Retrive from the status maps...
 	ProcPtr_t ending_proc = nullptr;
 	for (auto state_it = state_procs.begin(); state_it != state_procs.end(); ++state_it) {
 		auto & state_map(*state_it);
 		auto proc_it = state_map.find(pid);
 		if (proc_it != state_map.end()) {
 			ending_proc = proc_it->second;
+			logger->Debug("NotifyExit: process PID=<%d> found", pid);
 			break;
 		}
 	}

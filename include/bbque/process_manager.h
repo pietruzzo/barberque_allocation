@@ -101,6 +101,8 @@ public:
 	 */
 	void NotifyExit(std::string const & name, app::AppPid_t pid);
 
+	void NotifyExit(app::AppPid_t pid);
+
 /*******************************************************************************
  *     Map iterations
  ******************************************************************************/
