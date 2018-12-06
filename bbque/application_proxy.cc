@@ -19,6 +19,7 @@
 
 #include "bbque/config.h"
 #include "bbque/application_manager.h"
+#include "bbque/process_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/resource_manager.h"
 #include "bbque/modules_factory.h"
@@ -58,6 +59,11 @@ ApplicationProxy::ApplicationProxy():
 		abort();
 	}
 
+#define CMD_APP_TERMINATED ".terminated"
+	CommandManager & cm(CommandManager::GetInstance());
+	cm.RegisterCommand(MODULE_NAMESPACE CMD_APP_TERMINATED,
+	    static_cast<CommandHandler*>(this),
+	    "Unregister the specified EXC");
 	// Spawn the command dispatching thread
 	Worker::Start();
 }
@@ -1666,6 +1672,32 @@ void ApplicationProxy::Task() {
 
 	logger->Info("Task: Messages dispatcher ENDED");
 }
+
+
+int ApplicationProxy::CommandsCb(int argc, char *argv[]) {
+
+	// Manage external application termination
+	if (0 == strcmp(argv[0], MODULE_NAMESPACE CMD_APP_TERMINATED)) {
+		if (argc < 2) {
+		    logger->Error("Releasing EXC FAILED: no pid/eid provided in unregister signal.");
+		    return -1;
+		}
+		uint32_t pid = atoi(argv[1]);
+		uint32_t eid = atoi(argv[1]+13);
+		logger->Info("CommandsCb: [%d:%d] checking for release...", pid, eid);
+		ApplicationManager &am(ApplicationManager::GetInstance());
+		am.CheckEXC(pid, eid);
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		logger->Info("Process?");
+		ProcessManager &prm(ProcessManager::GetInstance());
+		prm.NotifyExit(pid);
+#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+		return 0;
+	}
+
+	return 0;
+}
+
 
 } // namespace bbque
 

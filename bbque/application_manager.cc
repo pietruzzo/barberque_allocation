@@ -110,10 +110,7 @@ ApplicationManager::ApplicationManager() :
 			static_cast<CommandHandler*>(this),
 			"Remove an existing EXC Container");
 
-#define CMD_UNREGISTER ".unregister"
-	cm.RegisterCommand(MODULE_NAMESPACE CMD_UNREGISTER,
-	    static_cast<CommandHandler*>(this),
-	    "Unregister the specified EXC");
+
 }
 
 int ApplicationManager::CommandsCb(int argc, char *argv[]) {
@@ -123,19 +120,6 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 	AppPtr_t papp;
 
 	logger->Debug("Processing command [%s]", argv[0] + cmd_offset);
-
-	if (0 == strcmp(argv[0], MODULE_NAMESPACE CMD_UNREGISTER)) {
-		if (argc < 2) {
-		    logger->Error("Releasing EXC FAILED: no pid/eid provided in unregister signal.");
-		    return -1;
-		}
-
-		pid = atoi(argv[1]);
-		eid = atoi(argv[1]+13);
-		logger->Info("CommandsCb: [%d:%d] checking for release...", pid, eid);
-		CheckEXC(pid, eid);
-		return 0;
-	}
 
 	cmd_offset = ::strlen(MODULE_NAMESPACE) + sizeof("recipes_");
 	switch (argv[0][cmd_offset]) {
