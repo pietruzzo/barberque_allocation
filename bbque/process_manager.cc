@@ -223,8 +223,8 @@ void ProcessManager::NotifyExit(std::string const & name, app::AppPid_t pid) {
 
 
 void ProcessManager::NotifyExit(app::AppPid_t pid) {
+	logger->Debug("NotifyExit: process PID=<%d> check...", pid);
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
-	logger->Debug("NotifyExit: process PID=<%d> terminated?", pid);
 
 	// Retrive from the status maps...
 	ProcPtr_t ending_proc = nullptr;
@@ -240,13 +240,13 @@ void ProcessManager::NotifyExit(app::AppPid_t pid) {
 	u_lock.unlock();
 
 	if (ending_proc == nullptr) {
-		logger->Warn("NotifyExit: process PID=<%> not found", pid);
+		logger->Warn("NotifyExit: process PID=<%d> not found", pid);
 		return;
 	}
 
 	// Status change
 	auto ret = ChangeState(ending_proc,
-		app::Schedulable::FINISHED, app::Schedulable::SYNC_NONE);
+		app::Schedulable::SYNC, app::Schedulable::DISABLED);
 	if (ret != SUCCESS) {
 		logger->Crit("(NotifyExit: [%s] FAILED: state=%s sync=%s",
 			ending_proc->StrId(),
@@ -462,7 +462,7 @@ ProcessManager::ExitCode_t ProcessManager::Unschedule(ProcPtr_t proc) {
 ProcessManager::ExitCode_t ProcessManager::SyncCommit(ProcPtr_t proc) {
 	ProcessManager::ExitCode_t ret = PROCESS_WRONG_STATE;
 	// SYNC -> RUNNING
-	if (proc->Synching() && !proc->Blocking()) {
+	if (proc->Synching() && !proc->Blocking() && !proc->Disabled()) {
 		logger->Debug("SyncCommit: [%s] changing to RUNNING...", proc->StrId());
 		ret = ChangeState(proc, Schedulable::RUNNING, Schedulable::SYNC_NONE);
 	}
@@ -478,9 +478,9 @@ ProcessManager::ExitCode_t ProcessManager::SyncCommit(ProcPtr_t proc) {
 			return PROCESS_SCHED_REQ_REJECTED;
 		}
 	}
-	// FINISHED -> <remove>
-	else if (proc->State() == Schedulable::FINISHED) {
-		logger->Debug("SyncCommit: [%s] releasing FINISHED...", proc->StrId());
+	// DISABLED -> <remove>
+	else if (proc->Disabled()) {
+		logger->Debug("SyncCommit: [%s] releasing DISABLED...", proc->StrId());
 		for (auto state_it = state_procs.begin(); state_it != state_procs.end(); ++state_it) {
 			auto & state_map(*state_it);
 			auto proc_it = state_map.find(proc->Pid());
