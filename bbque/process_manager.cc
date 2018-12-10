@@ -501,8 +501,20 @@ ProcessManager::ExitCode_t ProcessManager::SyncCommit(ProcPtr_t proc) {
 }
 
 ProcessManager::ExitCode_t ProcessManager::SyncAbort(ProcPtr_t proc) {
-	logger->Debug("SyncAbort: [%s] changing to DISABLED...", proc->StrId());
-	auto ret = ChangeState(proc, Schedulable::DISABLED);
+	logger->Debug("SyncAbort: [%s] changing status...", proc->StrId());
+
+	ExitCode_t ret;
+	if (kill(proc->Pid(), 0) == 0) {
+		// if alive... give new scheduling attempts
+		logger->Debug("SyncAbort: [%s] still alive...", proc->StrId());
+		ret = ChangeState(proc, Schedulable::READY);
+	}
+	else {
+		// if dead... set disabled for resources release
+		logger->Debug("SyncAbort: [%s] is dead...", proc->StrId());
+		ret = ChangeState(proc, Schedulable::SYNC, Schedulable::DISABLED);
+	}
+
 	if (ret != SUCCESS) {
 		logger->Error("SyncAbort: [%s] failed (state=%s)",
 			proc->StrId(), proc->StateStr(proc->State()));
