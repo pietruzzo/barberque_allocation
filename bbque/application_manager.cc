@@ -1471,36 +1471,13 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 		return ret;
 	}
 
-	if (!release)
+	// TODO release option became useless
+	if (!release) {
+		logger->Info("DisableEXC: [%s] DISABLED without release", papp->StrId());
 		return ret;
-
-	// System resources registration or synchronization in progress?
-	logger->Debug("DisableEXC: waiting for resource accounter...");
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	ra.SyncWait();
-
-	// If required, return application resources to the system view
-	PlatformManager::ExitCode_t result = PlatformManager::PLATFORM_OK;
-	if (likely(release)) {
-		logger->Debug("DisableEXC: [%s] releasing assigned resources...", papp->StrId());
-		ra.ReleaseResources(papp);
-		PlatformManager & plm(PlatformManager::GetInstance());
-		result = plm.ReclaimResources(papp);
 	}
 
-#if 0
-	// Destroy the task-graph object
-	if (result == PlatformManager::PLATFORM_OK) {
-		papp->ClearTaskGraph();
-		logger->Debug("DisableEXC: [%s] task-graph cleared", papp->StrId());
-	}
-	else
-		logger->Warn("DisableEXC:  [%s] an error occurred while"
-				" reclaiming resources", papp->StrId());
-#endif // CONFIG_BBQUE_TG_PROG_MODEL
-
-	logger->Info("DisableEXC: [%s] DISABLED", papp->StrId());
-
+	logger->Info("DisableEXC: [%s] DISABLED with release", papp->StrId());
 	return AM_SUCCESS;
 }
 
