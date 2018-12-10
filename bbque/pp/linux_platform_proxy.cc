@@ -525,13 +525,12 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 	result = SetCGNetworkBandwidth(papp, pcgd, pres, prlb);
 	if (PLATFORM_OK != result) {
-		logger->Warn("Unable to enforce Network Bandwidth [%d],"
+		logger->Warn("MapResources: unable to enforce Network Bandwidth [%d],"
 			     " ignoring...", result);
 	}
 
 #endif
 
-	logger->Debug("MapResources: CGroup resource mapping DONE!");
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	logger->Debug("MapResources: Distributed actuation: retrieving masks and ranking");
@@ -573,7 +572,7 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 
 	}
 
-	logger->Debug("SetCGNetworkBandwidth: [%d] pes %s (isolated %s), mems %s",
+	logger->Debug("MapResources: [%d] pes %s (isolated %s), mems %s",
 			papp->Pid(),
 			proc_elements.ToString().c_str(),
 			proc_elements_exclusive.ToString().c_str(),
@@ -942,7 +941,6 @@ uint64_t LinuxPlatformProxy::GetNetIFBandwidth(const std::string &ifname) const 
 }
 
 
-
 void LinuxPlatformProxy::InitPowerInfo(
 		const char * resourcePath,
 		BBQUE_RID_TYPE core_id) {
@@ -1011,8 +1009,6 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::InitCGroups() noexcept {
 	free(mount_path);
 
 	return PLATFORM_OK;
-
-
 }
 
 LinuxPlatformProxy::ExitCode_t
@@ -1175,7 +1171,6 @@ LinuxPlatformProxy::GetCGroupData(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexce
 	papp->SetPluginData(pcgd);
 
 	return PLATFORM_OK;
-
 }
 
 LinuxPlatformProxy::ExitCode_t
@@ -1299,7 +1294,6 @@ LinuxPlatformProxy::SetupCGroup(
 	} else {
 		logger->Warn("SetupCGroup: CFS quota enforcement not supported by the kernel");
 	}
-
 #endif
 
 	/**********************************************************************
