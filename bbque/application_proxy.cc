@@ -1683,11 +1683,19 @@ int ApplicationProxy::CommandsCb(int argc, char *argv[]) {
 		uint32_t eid = atoi(argv[1]+13);
 		logger->Info("CommandsCb: [%d:%d] checking for release...", pid, eid);
 		ApplicationManager &am(ApplicationManager::GetInstance());
-		am.CheckEXC(pid, eid);
+		auto ret = am.CheckEXC(pid, eid);
+		if (ret == ApplicationManager::AM_EXC_NOT_FOUND) {
+			logger->Debug("CommandsCb: [%d:%d] not found", pid, eid);
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		ProcessManager &prm(ProcessManager::GetInstance());
-		prm.NotifyExit(pid);
+			ProcessManager &prm(ProcessManager::GetInstance());
+			prm.NotifyExit(pid);
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+		}
+		else {
+			// Notify a stop event only if the application was managed
+			ResourceManager &rm(ResourceManager::GetInstance());
+			rm.NotifyEvent(ResourceManager::EXC_STOP);
+		}
 		return 0;
 	}
 
