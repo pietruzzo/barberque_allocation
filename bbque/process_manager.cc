@@ -298,6 +298,7 @@ ProcPtr_t ProcessManager::GetFirst(app::Schedulable::State_t state, ProcessMapIt
 }
 
 ProcPtr_t ProcessManager::GetNext(app::Schedulable::State_t state, ProcessMapIterator & map_it) {
+	UNUSED(state);
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	map_it++;
 	if (map_it.End()) {
