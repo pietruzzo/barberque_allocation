@@ -881,7 +881,6 @@ ApplicationManager::ChangeEXCState(
 	// Update the stable status maps
 	auto am_ret = UpdateStatusMaps(papp, curr_state, next_state);
 	PrintStatusQ();
-	PrintSyncQ();
 	return am_ret;
 }
 
@@ -1119,7 +1118,7 @@ ApplicationManager::DestroyEXC(AppPtr_t papp) {
 		return result;
 
 	// This is a simple cleanup triggering policy based on the
-	// number of applications READY to run.
+	// number of applications FINISHED.
 	// When an EXC is destroyed we check for the presence of READY
 	// applications waiting to start, if there are a new optimization run
 	// is scheduled before than the case in which all applications are
@@ -1135,8 +1134,6 @@ ApplicationManager::DestroyEXC(AppPtr_t papp) {
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 	logger->Info("DestroyEXC: [%s] FINISHED", papp->StrId());
-	PrintStatusQ();
-	PrintSyncQ();
 	PrintStatus();
 	ra.PrintStatusReport();
 
@@ -1748,16 +1745,25 @@ ApplicationManager::SetForSynchronization(
  ******************************************************************************/
 
 void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp, Application::SyncState_t state) {
+	logger->Debug("RemoveFromSyncMap: [%s] removing sync [%s] request ...",
+		papp->StrId(), ba::Schedulable::SyncStateStr(state));
 	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
 	assert(papp);
 	UpdateIterators(sync_ret[state], papp);
+
+	logger->Debug("RemoveFromSyncMap: [%s] removing sync [%s] after request ...",
+		papp->StrId(), ba::Schedulable::SyncStateStr(state));
 
 	// Get the applications map
 	if (sync_vec[state].erase(papp->Uid())) {
 		logger->Debug("RemoveFromSyncMap: [%s, %s] removed sync request",
 			papp->StrId(), papp->SyncStateStr(state));
+		PrintSyncQ();
 		return;
 	}
+	logger->Crit("RemoveFromSyncMap: [%s, %s] should not arrive here!",
+		papp->StrId(), papp->SyncStateStr(state));
+
 
 	// We should never got there
 	assert(false);
@@ -1766,6 +1772,7 @@ void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp, Application::SyncState
 void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp) {
 	assert(papp);
 	logger->Debug("RemoveFromSyncMap: [%s] removing sync request ...", papp->StrId());
+	PrintSyncQ();
 
 	// Disregard EXCs which are not in SYNC state
 	if (!papp->Synching()) {
@@ -1777,14 +1784,18 @@ void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp) {
 	}
 
 	RemoveFromSyncMap(papp, papp->SyncState());
-	PrintSyncQ();
 }
 
 void ApplicationManager::AddToSyncMap(AppPtr_t papp, Application::SyncState_t state) {
 	assert(papp);
 	// Disregard EXCs which are not in SYNC state
+	logger->Debug("AddToSyncMap: [%s] state: %s/%s removing from map...",
+		papp->StrId(),
+		papp->StateStr(papp->State()),
+		papp->SyncStateStr(papp->SyncState()));
+
 	if (!papp->Synching()) {
-		logger->Debug("RemoveFromSyncMap: [%s] inconsistent state: %s/%s ...",
+		logger->Debug("AddToSyncMap: [%s] inconsistent state: %s/%s ...",
 			papp->StrId(),
 			papp->StateStr(papp->State()),
 			papp->SyncStateStr(papp->SyncState()));
