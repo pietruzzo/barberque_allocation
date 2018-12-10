@@ -620,7 +620,8 @@ SynchronizationManager::MapResources(SchedPtr_t papp) {
 		break;
 	}
 
-	if (result != PlatformManager::PLATFORM_OK) {
+	if (result != PlatformManager::PLATFORM_OK
+			&& (kill(papp->Pid(), 0) == 0)) {
 		logger->Error("Step M: failure occurred in resource mapping");
 		return PLATFORM_SYNC_FAILED;
 	}
@@ -810,8 +811,10 @@ SynchronizationManager::SyncProcesses() {
 	// Perform resource mapping
 	logger->Debug("SyncProcesses: platform mapping...");
 	ExitCode_t result = Sync_PlatformForProcesses();
-	if (result != OK)
+	if (result != OK) {
+		logger->Debug("SyncProcesses: exit code: %d", result);
 		return result;
+	}
 	// Commit changes
 	logger->Debug("SyncProcesses: post-change commit...");
 	return Sync_PostChangeForProcesses();
