@@ -154,6 +154,9 @@ GridBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	// Amount of processing resources to assign
 	std::string resource_path_str("sys.cpu.pe");
 	uint64_t resource_slot_size = sys->ResourceTotal(resource_path_str) / slots;
+	logger->Debug("Assign: <%s> total = %lu slot_size=%d",
+		resource_path_str.c_str(), sys->ResourceTotal(resource_path_str),
+		resource_slot_size);
 	uint64_t resource_amount =
 			(sys->ApplicationLowestPriority() - papp->Priority() + 1)
 				* resource_slot_size;
