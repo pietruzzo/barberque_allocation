@@ -156,11 +156,7 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 		}
 
 		EnableEXC(papp);
-
-		// Notify the ResourceManager for a new application willing to start
-		logger->Debug("Notifing ResourceManager...");
 		rm.NotifyEvent(ResourceManager::EXC_START);
-
 		return 0;
 
 	case 'd': // Container del
@@ -184,18 +180,12 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 
 		DisableEXC(papp, true);
 		DestroyEXC(papp);
-
-		// Notify the ResourceManager for a new application willing to start
-		logger->Debug("Notifing ResourceManager...");
 		rm.NotifyEvent(ResourceManager::EXC_STOP);
-
 		return 0;
-    }
+	}
 
-
-    logger->Error("Command [%s] not supported by this module", argv[0]);
+	logger->Error("Command [%s] not supported by this module", argv[0]);
 	return -1;
-
 }
 
 
@@ -863,7 +853,7 @@ ApplicationManager::ChangeEXCState(
 
 	// Is there an actual change?
 	if ((curr_state == next_state) && (curr_sync == next_sync)) {
-		logger->Debug("ChangeEXCState: nothing to ho here");
+		logger->Debug("ChangeEXCState: nothing to do here");
 		return AM_SUCCESS;
 	}
 
@@ -1547,7 +1537,7 @@ ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
 		logger->Warn("CheckEXC: Dead process PID=%d", papp->Pid());
 	}
 	logger->Debug("CheckEXC: [%s] is %s",
-			papp->StrId(), dead ? "DEAD" : "still ALIVE");
+		papp->StrId(), dead ? "DEAD" : "still ALIVE");
 
 	// If required, release application resources
 	if (likely(dead && release)) {
