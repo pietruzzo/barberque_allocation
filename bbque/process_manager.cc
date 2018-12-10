@@ -237,6 +237,7 @@ void ProcessManager::NotifyExit(app::AppPid_t pid) {
 			break;
 		}
 	}
+	u_lock.unlock();
 
 	if (ending_proc == nullptr) {
 		logger->Warn("NotifyExit: process PID=<%> not found", pid);
