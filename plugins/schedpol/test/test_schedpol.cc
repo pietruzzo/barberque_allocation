@@ -252,6 +252,7 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc) {
 
 SchedulerPolicyIF::ExitCode_t
 TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
+	ApplicationManager & am(ApplicationManager::GetInstance());
 
 	if (papp == nullptr) {
 		logger->Error("AssignWorkingMode: null application descriptor!");
@@ -274,21 +275,22 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	BindingMap_t & bindings(bdm.GetBindingDomains());
 	auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
 	for (BBQUE_RID_TYPE cpu_id: cpu_ids) {
-		logger->Info("AssingWorkingMode: binding attempt CPU id = %d", cpu_id);
+		logger->Info("AssingWorkingMode: [%s] binding attempt CPU id = %d",
+			papp->StrId(), cpu_id);
 
 		// CPU binding
 		auto ref_num = DoCPUBinding(pawm, cpu_id);
 		if (ref_num < 0) {
-			logger->Error("AssingWorkingMode: CPU binding to [%d] failed", cpu_id);
+			logger->Error("AssingWorkingMode: [%s] CPU binding to <%d> failed",
+				papp->StrId(), cpu_id);
 			continue;
 		}
 
 		// Schedule request
-		ApplicationManager & am(ApplicationManager::GetInstance());
 		ApplicationManager::ExitCode_t am_ret;
 		am_ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
 		if (am_ret != ApplicationManager::AM_SUCCESS) {
-			logger->Error("AssignWorkingMode: schedule request failed for [%d]",
+			logger->Error("AssignWorkingMode: [%s] schedule request failed",
 				papp->StrId());
 			continue;
 		}
@@ -318,7 +320,8 @@ int32_t TestSchedPol::DoCPUBinding(
 	for (auto & pe_id: pe_ids) {
 		pes.Set(pe_id);
 		ref_num = pawm->BindResource(resource_path, pes, ref_num);
-		logger->Info("AssignWorkingMode: binding refn: %d", ref_num);
+		logger->Info("DoCPUBinding: [%s] binding refn: %d",
+			pawm->StrId(), ref_num);
 		++pe_count;
 		if (pe_count == CPU_QUOTA_TO_ALLOCATE / 100) break;
 	}
@@ -331,7 +334,8 @@ int32_t TestSchedPol::DoCPUBinding(
 void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
 	auto task_graph = papp->GetTaskGraph();
 	if (task_graph == nullptr) {
-		logger->Warn("[%s] No task-graph to map", papp->StrId());
+		logger->Warn("AssignWorkingMode: [%s] no task-graph to map",
+			papp->StrId());
 		return;
 	}
 
