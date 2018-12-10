@@ -188,7 +188,7 @@ SchedulerPolicyIF::ExitCode_t GridBalanceSchedPol::BindWorkingModesAndSched() {
 		logger->Info("Bind: [%s] binding and scheduling...",
 			sched_entity->papp->StrId());
 		uint64_t req_amount = sched_entity->pawm->RequestedAmount(proc_path);
-		size_t num_procs = req_amount > 100 ? ceil(req_amount / 100) : 1;
+		size_t num_procs = req_amount > 100 ? ceil(float(req_amount) / 100.0) : 1;
 		logger->Debug("Bind: [%s] <sys.cpu.pe>=%d => num_procs=%d",
 			sched_entity->papp->StrId(), req_amount, num_procs);
 
