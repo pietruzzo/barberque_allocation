@@ -1535,7 +1535,7 @@ ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
 	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
 	if (!papp) {
 		logger->Debug("CheckEXC: [%d:*:%d] FAILED: EXC not found", pid, exc_id);
-		return AM_ABORT;
+		return AM_EXC_NOT_FOUND;
 	}
 
 	return CheckEXC(papp, release);
