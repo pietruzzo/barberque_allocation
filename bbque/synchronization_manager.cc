@@ -745,27 +745,25 @@ SynchronizationManager::SyncSchedule() {
 		return ABORTED;
 	}
 
-	// Synchronize the adaptive applications/EXC in order of status as
-	// returned by the policy
 	while (syncState != ApplicationStatusIF::SYNC_NONE) {
+		// Synchronize the adaptive applications/EXC in order of status
+		// as returned by the policy
 		result = SyncApps(syncState);
 		if ((result != NOTHING_TO_SYNC) && (result != OK)) {
-			logger->Warn("SyncSchedule: session=%d FAILED, aborting "
-				"during adaptive applications synchronization...", sync_count);
-			ra.SyncAbort();
-			DisableFailedApps();
-			return result;
+			logger->Warn("SyncSchedule: session %d: not possible "
+				"to sync <%s> application...",
+				sync_count, app::Schedulable::SyncStateStr(syncState));
+			continue;
 		}
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 		// Synchronization of generic processes
 		result = SyncProcesses();
 		if ((result != NOTHING_TO_SYNC) && (result != OK)) {
-			logger->Warn("SyncSchedule: session=%d FAILED, aborting "
-				"during processes synchronization...", sync_count);
-			ra.SyncAbort();
-			DisableFailedApps();
-			return result;
+			logger->Warn("SyncSchedule: session %d: not possible "
+				"to sync <%s> process...",
+				sync_count, app::Schedulable::SyncStateStr(syncState));
+			continue;
 		}
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 
@@ -773,16 +771,11 @@ SynchronizationManager::SyncSchedule() {
 		syncState = policy->GetApplicationsQueue(sv);
 	}
 
-
-	// FIXME at this point ALL apps must be committed and the sync queues
-	// empty, this should be checked probably here before to commit the
-	// system view
-
 	// Commit the resource accounter synchronized session
 	raResult = ra.SyncCommit();
 	if (raResult != ResourceAccounter::RA_SUCCESS) {
-		logger->Fatal("SyncSchedule: session=%d resource accounting commit failed", sync_count);
-		DisableFailedApps();
+		logger->Fatal("SyncSchedule: session=%d resource accounting commit failed",
+			sync_count);
 		return ABORTED;
 	}
 	SM_GET_TIMING(metrics, SM_SYNCP_TIME, syncp_tmr); // Overall SyncP execution time
