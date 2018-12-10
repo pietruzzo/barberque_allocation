@@ -1685,7 +1685,6 @@ int ApplicationProxy::CommandsCb(int argc, char *argv[]) {
 		ApplicationManager &am(ApplicationManager::GetInstance());
 		am.CheckEXC(pid, eid);
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		logger->Info("Process?");
 		ProcessManager &prm(ProcessManager::GetInstance());
 		prm.NotifyExit(pid);
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
