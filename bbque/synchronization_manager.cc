@@ -792,7 +792,8 @@ void SynchronizationManager::DisableFailedApps() {
 	for (auto papp: sync_fails_apps) {
 		logger->Warn("DisableFailedApps: disabling [%s] due to failure",
 				papp->StrId());
-		am.DisableEXC(papp);
+		if (!papp->Disabled())
+			am.DisableEXC(papp);
 	}
 }
 
