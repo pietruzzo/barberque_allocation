@@ -179,7 +179,6 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 		}
 
 		DisableEXC(papp, true);
-		DestroyEXC(papp);
 		rm.NotifyEvent(ResourceManager::EXC_STOP);
 		return 0;
 	}
