@@ -1468,11 +1468,17 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 		return ret;
 	}
 
-	// TODO release option became useless
+	// Release should be performed if the application is actually dead
 	if (!release) {
 		logger->Info("DisableEXC: [%s] DISABLED without release", papp->StrId());
 		return ret;
 	}
+
+	logger->Debug("DisableEXC: [%s] releasing assigned resources...", papp->StrId());
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	ra.ReleaseResources(papp);
+	PlatformManager & plm(PlatformManager::GetInstance());
+	plm.ReclaimResources(papp);
 
 	logger->Info("DisableEXC: [%s] DISABLED with release", papp->StrId());
 	return AM_SUCCESS;

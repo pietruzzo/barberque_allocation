@@ -600,9 +600,11 @@ SynchronizationManager::MapResources(SchedPtr_t papp) {
 				papp->NextAWM()->GetResourceBinding());
 		break;
 	case Schedulable::BLOCKED:
-	case Schedulable::DISABLED:
 		logger->Debug("STEP M: reclaiming resources from [%s]", papp->StrId());
 		result = plm.ReclaimResources(papp);
+		break;
+	case Schedulable::DISABLED:
+		logger->Debug("STEP M: do nothing for disabled [%s]", papp->StrId());
 		break;
 	default:
 		logger->Warn("Step M: suspect wrong sync status (%s) for [%s]",
