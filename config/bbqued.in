@@ -99,6 +99,9 @@ setup() {
 		mkdir -p $BRTRW/lock
 		mkdir -p $BRTRW/run
 		chown $SUDO_USER:$SUDO_USER $BRTRW -R
+	else
+		# Remove previously remained application fifo
+		rm -r $BRTRW/bbque/bbque_[0-9]*_*
 	fi
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
