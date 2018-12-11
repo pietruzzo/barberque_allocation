@@ -781,11 +781,14 @@ SynchronizationManager::SyncSchedule() {
 
 void SynchronizationManager::DisableFailedApps() {
 	for (auto papp: sync_fails_apps) {
-		logger->Warn("DisableFailedApps: disabling [%s] due to failure",
+		logger->Warn("DisableFailedApps: checking [%s] after sync failure",
+			papp->StrId());
+		if (!am.CheckEXC(papp, true)) {
+			logger->Warn("DisableFailedApps: [%s] is alive",
 				papp->StrId());
-		if (!papp->Disabled())
-			am.DisableEXC(papp);
+		}
 	}
+	sync_fails_apps.clear();
 }
 
 
