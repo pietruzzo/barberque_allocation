@@ -163,6 +163,7 @@ public:
 		AM_EXC_NOT_FOUND,         /** Application Execution Context not found */
 		AM_EXC_INVALID_STATUS,    /** Operation failed due to invalid status */
 		AM_EXC_STATUS_CHANGE_FAILED,  /** Failed change of application status */
+		AM_EXC_STATUS_CHANGE_NONE,    /** Nothing done in change of application status request */
 		AM_PLAT_PROXY_ERROR,      /** Error accessing the platform proxy */
 		AM_DATA_CORRUPT,          /** Inconsistency in internal data structures */
 		AM_SKIPPING,              /** Interrupted operation */

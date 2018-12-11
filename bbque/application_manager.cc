@@ -1463,8 +1463,8 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 
 	// Update the status to DISABLED
 	auto ret = ChangeEXCState(papp, app::Schedulable::SYNC, app::Schedulable::DISABLED);
-	if (ret != AM_SUCCESS) {
-		logger->Error("DisableEXC: [%s] disabling...", papp->StrId());
+	if (ret == AM_EXC_STATUS_CHANGE_NONE) {
+		logger->Warn("DisableEXC: [%s] already disabled", papp->StrId());
 		return ret;
 	}
 
