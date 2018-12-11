@@ -1683,19 +1683,32 @@ int ApplicationProxy::CommandsCb(int argc, char *argv[]) {
 		uint32_t eid = atoi(argv[1]+13);
 		logger->Info("CommandsCb: [%d:%d] checking for release...", pid, eid);
 		ApplicationManager &am(ApplicationManager::GetInstance());
-		auto ret = am.CheckEXC(pid, eid);
-		if (ret == ApplicationManager::AM_EXC_NOT_FOUND) {
-			logger->Debug("CommandsCb: [%d:%d] not found", pid, eid);
+		auto papp = am.GetApplication(pid, eid);
+		if (papp) {
+			// Do nothing if already terminated (via RTLIB RPC)
+			if (papp->Disabled() || papp->Finished()) {
+				logger->Debug("CommandsCb: [%s] already in status [%s/%s]",
+					papp->StrId(),
+					Application::stateStr[papp->State()],
+					Application::syncStateStr[papp->SyncState()]);
+				return 1;
+			}
+
+			// If dead, notify the resource manager
+			bool is_alive = am.CheckEXC(papp);
+			logger->Debug("CommandsCb: [%d:%d] alive: %d", pid, eid, is_alive);
+			if (!is_alive) {
+				ResourceManager &rm(ResourceManager::GetInstance());
+				rm.NotifyEvent(ResourceManager::EXC_STOP);
+			}
+		}
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		else {
+			logger->Debug("CommandsCb: [%d:%d] should be a process...", pid, eid);
 			ProcessManager &prm(ProcessManager::GetInstance());
 			prm.NotifyExit(pid);
+		}
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
-		}
-		else {
-			// Notify a stop event only if the application was managed
-			ResourceManager &rm(ResourceManager::GetInstance());
-			rm.NotifyEvent(ResourceManager::EXC_STOP);
-		}
 		return 0;
 	}
 
