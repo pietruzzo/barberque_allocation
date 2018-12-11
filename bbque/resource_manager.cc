@@ -678,8 +678,10 @@ void ResourceManager::ControlLoop() {
 	double period;
 
 	// Wait for a new event
-	if (!pendingEvts.any())
+	while (!pendingEvts.any()) {
+		logger->Debug("Control Loop: no events");
 		pendingEvts_cv.wait(pendingEvts_ul);
+	}
 
 	if (done == true) {
 		logger->Warn("Control Loop: returning");
