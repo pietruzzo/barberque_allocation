@@ -682,6 +682,7 @@ ApplicationManager::UpdateStatusMaps(AppPtr_t papp,
 
 	assert(papp);
 	assert(prev != next);
+	PrintStatusQ();
 
 	// Retrieve the runtime map from the status vector
 	AppsUidMap_t *curr_state_map = &(status_vec[prev]);
@@ -700,8 +701,6 @@ ApplicationManager::UpdateStatusMaps(AppPtr_t papp,
 	curr_state_map->erase(papp->Uid());
 
 	PrintStatusQ();
-	PrintSyncQ();
-
 	return AM_SUCCESS;
 }
 
@@ -880,7 +879,6 @@ ApplicationManager::ChangeEXCState(
 
 	// Update the stable status maps
 	auto am_ret = UpdateStatusMaps(papp, curr_state, next_state);
-	PrintStatusQ();
 	return am_ret;
 }
 
@@ -1076,9 +1074,11 @@ ApplicationManager::CleanupEXC(AppPtr_t papp) {
 	uids_ul.lock();
 	UpdateIterators(uids_ret, papp);
 	uids.erase(papp->Uid());
+	PrintStatusQ();
+	PrintSyncQ();
 	uids_ul.unlock();
-	logger->Info("CleanupEXC: [%s] cleaned up", papp->StrId());
 
+	logger->Info("CleanupEXC: [%s] cleaned up", papp->StrId());
 	return AM_SUCCESS;
 }
 
@@ -1751,6 +1751,7 @@ void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp, Application::SyncState
 	assert(papp);
 	UpdateIterators(sync_ret[state], papp);
 
+	PrintSyncQ();
 	logger->Debug("RemoveFromSyncMap: [%s] removing sync [%s] after request ...",
 		papp->StrId(), ba::Schedulable::SyncStateStr(state));
 
@@ -1772,7 +1773,6 @@ void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp, Application::SyncState
 void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp) {
 	assert(papp);
 	logger->Debug("RemoveFromSyncMap: [%s] removing sync request ...", papp->StrId());
-	PrintSyncQ();
 
 	// Disregard EXCs which are not in SYNC state
 	if (!papp->Synching()) {
