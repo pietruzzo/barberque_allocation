@@ -744,6 +744,8 @@ SynchronizationManager::SyncSchedule() {
 			logger->Warn("SyncSchedule: session %d: not possible "
 				"to sync <%s> application...",
 				sync_count, app::Schedulable::SyncStateStr(syncState));
+
+			syncState = policy->GetApplicationsQueue(sv);
 			continue;
 		}
 
@@ -754,6 +756,7 @@ SynchronizationManager::SyncSchedule() {
 			logger->Warn("SyncSchedule: session %d: not possible "
 				"to sync <%s> process...",
 				sync_count, app::Schedulable::SyncStateStr(syncState));
+			syncState = policy->GetApplicationsQueue(sv);
 			continue;
 		}
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
