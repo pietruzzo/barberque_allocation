@@ -1433,11 +1433,10 @@ void ApplicationProxy::RpcExcSchedule(prqsSn_t prqs) {
 
 	// Notify the ResourceManager for a new application willing to start
 	logger->Debug("RpcExcSchedule: Notifying ResourceManager...");
-	rm.NotifyEvent(ResourceManager::EXC_START);
+	rm.NotifyEvent(ResourceManager::BBQ_OPTS);
 
 	// Sending ACK response to application
 	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
-
 }
 
 void ApplicationProxy::RpcAppPair(prqsSn_t prqs) {
