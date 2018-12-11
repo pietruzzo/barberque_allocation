@@ -226,6 +226,12 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 		papp  = (*resp_it).first;
 		presp = (*resp_it).second;
 #endif
+		// Jumping meanwhile disabled applications
+		if (papp->Disabled()) {
+			logger->Debug("STEP 1: ignoring disabled EXC [%s]",
+					papp->StrId());
+			continue;
+		}
 
 		Sync_PreChange_Check_EXC_Response(papp, presp);
 
@@ -253,36 +259,26 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 
 void SynchronizationManager::Sync_PreChange_Check_EXC_Response(
 		AppPtr_t papp,
-		ApplicationProxy::pPreChangeRsp_t presp) const {
+		ApplicationProxy::pPreChangeRsp_t presp) {
 
 	SynchronizationPolicyIF::ExitCode_t syncp_result;
-
-	// Jumping meanwhile disabled applications
-	if (papp->Disabled()) {
-		logger->Debug("STEP 1: ignoring disabled EXC [%s]",
-				papp->StrId());
-		return;
-	}
 
 // Pre-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
 	RTLIB_ExitCode_t result;
 	logger->Debug("STEP 1: .... (wait) .... [%s]", papp->StrId());
+
+	// Send RTLIB Sync-PreChange message
 	result = ap.SyncP_PreChange_GetResult(presp);
-
-
 	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
-		logger->Warn("STEP 1: <---- TIMEOUT -- [%s]",
-				papp->StrId());
-		// Disabling not responding applications
-		am.DisableEXC(papp, false);
+		logger->Warn("STEP 1: <---- TIMEOUT -- [%s]", papp->StrId());
+		sync_fails_apps.push_back(papp);
 		return;
 	}
 
 	if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
-		logger->Warn("STEP 1: <------ WERROR -- [%s]",
-				papp->StrId());
-		am.DisableEXC(papp, false);
+		logger->Warn("STEP 1: <------ WERROR -- [%s]", papp->StrId());
+		sync_fails_apps.push_back(papp);
 		return;
 	}
 
@@ -353,7 +349,6 @@ SynchronizationManager::Sync_SyncChange(
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
 		// Mapping the response future for responses collection
 		rsp_map.insert(RspMapEntry_t(papp, presp));
-
 	}
 
 	// Collecting EXC responses
@@ -362,8 +357,14 @@ SynchronizationManager::Sync_SyncChange(
 		papp  = (*resp_it).first;
 		presp = (*resp_it).second;
 #endif
+		// Jumping meanwhile disabled applications
+		if (papp->Disabled()) {
+			logger->Debug("STEP 2: ignoring disabled EXC [%s]",
+					papp->StrId());
+			continue;
+		}
 
-	Sync_SyncChange_Check_EXC_Response(papp, presp);
+		Sync_SyncChange_Check_EXC_Response(papp, presp);
 
 // Sync-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
@@ -384,40 +385,30 @@ SynchronizationManager::Sync_SyncChange(
 	return OK;
 }
 
-void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(AppPtr_t papp,
-								ApplicationProxy::pSyncChangeRsp_t presp) const {
-
-	// Jumping meanwhile disabled applications
-	if (papp->Disabled()) {
-		logger->Debug("STEP 2: ignoring disabled EXC [%s]",
-				papp->StrId());
-		return;
-	}
+void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(
+		AppPtr_t papp,
+		ApplicationProxy::pSyncChangeRsp_t presp) {
 
 // Sync-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
 	RTLIB_ExitCode_t result;
-
 	logger->Debug("STEP 2: .... (wait) .... [%s]", papp->StrId());
+
+	// Send RTLIB Sync-Change message
 	result = ap.SyncP_SyncChange_GetResult(presp);
-
-
 	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
 		logger->Warn("STEP 2: <---- TIMEOUT -- [%s]",
 				papp->StrId());
-		// Disabling not responding applications
-		am.DisableEXC(papp, false);
-		// Accounting for syncpoints missed
+		sync_fails_apps.push_back(papp);
 		SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
 		return;
 	}
 
 	if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
-		logger->Warn("STEP 1: <------ WERROR -- [%s]",
+		logger->Warn("STEP 2: <------ WERROR -- [%s]",
 				papp->StrId());
-		// Disabling not responding applications
-		am.DisableEXC(papp, false);
 		// Accounting for syncpoints missed
+		sync_fails_apps.push_back(papp);
 		SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
 		return;
 	}
