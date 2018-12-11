@@ -855,6 +855,9 @@ ApplicationManager::ChangeEXCState(
 		return AM_SUCCESS;
 	}
 
+	// Lock to protect status maps...
+	std::lock(currState_ul, nextState_ul);
+
 	// Update application status
 	auto ret = papp->SetState(next_state, next_sync);
 	if (ret != Application::APP_SUCCESS) {
@@ -870,12 +873,13 @@ ApplicationManager::ChangeEXCState(
 			curr_state, Application::StateStr(curr_state),
 			papp->State(), Application::StateStr(papp->State()));
 
-	// Lock curr and next queue
-	std::lock(currState_ul, nextState_ul);
-	if (next_state != Application::SYNC)
+	// Update the sync status maps (if it is the case)
+	if ((curr_state == Application::SYNC) && (next_state != Application::SYNC)) {
 		RemoveFromSyncMap(papp);  // if next state is not SYNC remove the app from the sync map
-	else
+	}
+	else if ((curr_state != Application::SYNC) && (next_state == Application::SYNC)) {
 		AddToSyncMap(papp);     // otherwise add to the proper sync map
+	}
 
 	// Update the stable status maps
 	auto am_ret = UpdateStatusMaps(papp, curr_state, next_state);
@@ -1831,10 +1835,21 @@ ApplicationManager::SyncCommit(AppPtr_t papp) {
 	papp->SyncCommit();
 	logger->Debug("SyncCommit: [%s] prev state [%s]...",
 			papp->StrId(), papp->StateStr(papp->PreSyncState()));
+
 	// Update status maps
+	std::unique_lock<std::mutex> currState_ul(
+			status_mtx[curr_state], std::defer_lock);
+	std::unique_lock<std::mutex> nextState_ul(
+			status_mtx[papp->State()], std::defer_lock);
+	std::lock(currState_ul, nextState_ul);
 	UpdateStatusMaps(papp, curr_state, papp->State());
+	currState_ul.unlock();
+	nextState_ul.unlock();
+
+	// Remove from the sync map
 	RemoveFromSyncMap(papp, curr_sync);
 
+	// If FINISHED we can destroy the EXC descriptor
 	if (papp->Finished()) {
 		logger->Debug("SyncCommit: [%s] [%s/%s] destroying EXC...",
 			papp->StrId(),
