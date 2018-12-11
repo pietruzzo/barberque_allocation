@@ -318,6 +318,7 @@ void ResourceManager::Optimize() {
 	SchedulerManager::ExitCode_t schedResult;
 	static bu::Timer optimization_tmr;
 	double period;
+	bool active_apps = true;
 
 	// If the optimization has been triggered by a platform event (BBQ_PLAT) the policy must be
 	// executed anyway. To the contrary, if it is an application event (BBQ_OPTS) check if
@@ -330,40 +331,44 @@ void ResourceManager::Optimize() {
 		!prm.HasProcesses(Schedulable::READY) &&
 		!prm.HasProcesses(Schedulable::RUNNING)
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
-	)
+	) {
+		logger->Debug("Optimize: nothing to schedule...");
+		active_apps = false;
+	}
 
-		return;
 	plat_event = false;
 
-	ra.PrintStatusReport();
-	am.PrintStatus();
-	logger->Info("Running Optimization...");
+	if (active_apps) {
+		ra.PrintStatusReport();
+		am.PrintStatus();
+		logger->Info("Optimize: lauching scheduler...");
 
-	// Account for a new schedule activation
-	RM_COUNT_EVENT(metrics, RM_SCHED_TOTAL);
-	RM_GET_PERIOD(metrics, RM_SCHED_PERIOD, period);
+		// Account for a new schedule activation
+		RM_COUNT_EVENT(metrics, RM_SCHED_TOTAL);
+		RM_GET_PERIOD(metrics, RM_SCHED_PERIOD, period);
 
-	//--- Scheduling
-	logger->Info(LNSCHB);
-	optimization_tmr.start();
-	schedResult = sm.Schedule();
-	optimization_tmr.stop();
-	switch(schedResult) {
-	case SchedulerManager::MISSING_POLICY:
-	case SchedulerManager::FAILED:
-		logger->Warn("Schedule FAILED (Error: scheduling policy failed)");
-		RM_COUNT_EVENT(metrics, RM_SCHED_FAILED);
-		return;
-	case SchedulerManager::DELAYED:
-		logger->Error("Schedule DELAYED");
-		RM_COUNT_EVENT(metrics, RM_SCHED_DELAYED);
-		return;
-	default:
-		assert(schedResult == SchedulerManager::DONE);
+		//--- Scheduling
+		logger->Info(LNSCHB);
+		optimization_tmr.start();
+		schedResult = sm.Schedule();
+		optimization_tmr.stop();
+		switch(schedResult) {
+		case SchedulerManager::MISSING_POLICY:
+		case SchedulerManager::FAILED:
+			logger->Warn("Schedule FAILED (Error: scheduling policy failed)");
+			RM_COUNT_EVENT(metrics, RM_SCHED_FAILED);
+			return;
+		case SchedulerManager::DELAYED:
+			logger->Error("Schedule DELAYED");
+			RM_COUNT_EVENT(metrics, RM_SCHED_DELAYED);
+			return;
+		default:
+			assert(schedResult == SchedulerManager::DONE);
+		}
+		logger->Info(LNSCHE);
+		logger->Notice("Schedule Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
+		am.PrintStatus(true);
 	}
-	logger->Info(LNSCHE);
-	logger->Notice("Schedule Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
-	am.PrintStatus(true);
 
 	// Check if there is at least one application to synchronize
 	if (!am.HasApplications(Application::SYNC)
@@ -372,7 +377,7 @@ void ResourceManager::Optimize() {
 		!prm.HasProcesses(Schedulable::SYNC)
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 	) {
-		logger->Debug("NO EXC in SYNC state, synchronization not required");
+		logger->Debug("Optimize: no applications in SYNC state");
 		RM_COUNT_EVENT(metrics, RM_SCHED_EMPTY);
 	} else {
 		// Account for a new synchronizaiton activation
@@ -396,7 +401,6 @@ void ResourceManager::Optimize() {
 		ra.PrintStatusReport(0, true);
 		am.PrintStatus(true);
 		logger->Notice("Sync Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
-
 	}
 
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
