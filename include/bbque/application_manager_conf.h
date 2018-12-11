@@ -192,8 +192,10 @@ public:
 	 * @param papp The pointer to the EXC to check
 	 * @param release set true to release currently assigned resources in
 	 *                case the check should fails
+	 *
+	 * @return true if the application is still alive, false otherwise
 	 */
-	virtual ExitCode_t CheckEXC(AppPtr_t papp, bool release = true) = 0;
+	virtual bool CheckEXC(AppPtr_t papp, bool release = true) = 0;
 
 	/**
 	 * @brief Check the specified EXC
@@ -206,8 +208,10 @@ public:
 	 * @param exc_id the Execution Context ID to enable
 	 * @param release set true to release currently assigned resources in
 	 *                case the check should fails
+	 *
+	 * @return true if the application is still alive, false otherwise
 	 */
-	virtual ExitCode_t CheckEXC(
+	virtual bool CheckEXC(
 			AppPid_t pid, uint8_t exec_id, bool release = true) = 0;
 
 	/**

@@ -1498,8 +1498,7 @@ ApplicationManager::DisableEXC(AppPid_t pid, uint8_t exc_id, bool release) {
  *  EXC Checking
  ******************************************************************************/
 
-ApplicationManager::ExitCode_t
-ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
+bool ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
 	logger->Debug("CheckEXC: [%s] checking life status...", papp->StrId());
 
 	// Check if the required process is still alive
@@ -1515,20 +1514,19 @@ ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
 	// If already disabled, remove from the map of finished
 	if (papp->Finished()) {
 		logger->Warn("CheckEXC: [%s] destroying descriptor", papp->StrId());
-		return DestroyEXC(papp);
+		DestroyEXC(papp);
 	}
 
 	// If not alredy disabled, chnage status for resources release
 	if (likely(dead && release)) {
 		logger->Debug("CheckEXC: [%s] disabling...", papp->StrId());
-		return DisableEXC(papp);
+		DisableEXC(papp, release);
 	}
 
-	return AM_SUCCESS;
+	return !dead;
 }
 
-ApplicationManager::ExitCode_t
-ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
+bool ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
 	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
 	if (!papp) {
 		logger->Debug("CheckEXC: [%d:*:%d] FAILED: EXC not found", pid, exc_id);
@@ -1860,8 +1858,8 @@ void ApplicationManager::SyncAbort(AppPtr_t papp) {
 	}
 
 	// Move to READY map if still alive
-	auto ret = CheckEXC(papp, false);
-	if (ret == AM_SUCCESS)
+	bool is_alive = CheckEXC(papp, false);
+	if (is_alive)
 		ChangeEXCState(papp, app::Schedulable::READY);
 	else
 		ChangeEXCState(papp, app::Schedulable::FINISHED);

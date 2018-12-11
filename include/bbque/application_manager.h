@@ -149,12 +149,12 @@ public:
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
-	ExitCode_t CheckEXC(AppPtr_t papp, bool release = true);
+	bool CheckEXC(AppPtr_t papp, bool release = true);
 
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
-	ExitCode_t CheckEXC(AppPid_t pid, uint8_t exc_id, bool release = true);
+	bool CheckEXC(AppPid_t pid, uint8_t exc_id, bool release = true);
 
 	/**
 	 * @see ApplicationManagerConfIF
