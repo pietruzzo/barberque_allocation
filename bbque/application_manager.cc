@@ -1517,14 +1517,13 @@ bool ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
 	logger->Debug("CheckEXC: [%s] is %s",
 		papp->StrId(), dead ? "DEAD" : "still ALIVE");
 
-	// If already disabled, remove from the map of finished
+	// If already finished, remove from the map of finished
 	if (papp->Finished()) {
 		logger->Warn("CheckEXC: [%s] destroying descriptor", papp->StrId());
 		DestroyEXC(papp);
 	}
-
-	// If not alredy disabled, chnage status for resources release
-	if (likely(dead && release)) {
+	// If not alredy finished, change status for resources release
+	else if (dead && release && !papp->Disabled()) {
 		logger->Debug("CheckEXC: [%s] disabling...", papp->StrId());
 		DisableEXC(papp, release);
 	}
