@@ -313,7 +313,6 @@ void ResourceManager::TerminateWorkers() {
 }
 
 void ResourceManager::Optimize() {
-	std::unique_lock<std::mutex> pendingEvts_ul(pendingEvts_mtx);
 	SynchronizationManager::ExitCode_t syncResult;
 	SchedulerManager::ExitCode_t schedResult;
 	static bu::Timer optimization_tmr;
