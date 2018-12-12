@@ -1398,7 +1398,7 @@ void ApplicationProxy::RpcExcStop(prqsSn_t prqs) {
 
 	// Disabling the EXC from the ApplicationManager
 	result = am.DisableEXC(pcon->app_pid, pmsg_hdr->exc_id, true);
-	if (result != ApplicationManager::AM_SUCCESS) {
+	if (result == ApplicationManager::AM_EXC_STATUS_CHANGE_FAILED) {
 		logger->Error("RpcExcStop: EXC [pid: %d, exc: %d] stop FAILED",
 			pcon->app_pid, pmsg_hdr->exc_id);
 		RpcNAK(pcon, pmsg_hdr, bl::RPC_EXC_RESP, RTLIB_EXC_DISABLE_FAILED);
