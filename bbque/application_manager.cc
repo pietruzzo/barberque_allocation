@@ -995,34 +995,28 @@ AppPtr_t ApplicationManager::CreateEXC(
 
 ApplicationManager::ExitCode_t
 ApplicationManager::PriorityRemove(AppPtr_t papp) {
-	std::unique_lock<std::mutex> prio_ul(prio_mtx[papp->Priority()]);
-
 	logger->Debug("PriorityRemove: releasing [%s] from PRIORITY map...", papp->StrId());
+	std::unique_lock<std::mutex> prio_ul(prio_mtx[papp->Priority()]);
 	UpdateIterators(prio_ret[papp->Priority()], papp);
 	prio_vec[papp->Priority()].erase(papp->Uid());
-
 	return AM_SUCCESS;
 }
 
 ApplicationManager::ExitCode_t
 ApplicationManager::StatusRemove(AppPtr_t papp) {
-	std::unique_lock<std::mutex> status_ul(status_mtx[papp->State()]);
-
 	logger->Debug("StatusRemove: releasing [%s] from STATUS map...", papp->StrId());
+	std::unique_lock<std::mutex> status_ul(status_mtx[papp->State()]);
 	UpdateIterators(status_ret[papp->State()], papp);
 	status_vec[papp->State()].erase(papp->Uid());
-
 	return AM_SUCCESS;
 }
 
 ApplicationManager::ExitCode_t
 ApplicationManager::LangRemove(AppPtr_t papp) {
-	std::unique_lock<std::mutex> lang_ul(lang_mtx[papp->Language()]);
-
 	logger->Debug("LangRemove: releasing [%s] from LANGUAGE map...", papp->StrId());
+	std::unique_lock<std::mutex> lang_ul(lang_mtx[papp->Language()]);
 	UpdateIterators(lang_ret[papp->Language()], papp);
 	lang_vec[papp->Language()].erase(papp->Uid());
-
 	return AM_SUCCESS;
 }
 
@@ -1057,6 +1051,7 @@ ApplicationManager::CleanupEXC(AppPtr_t papp) {
 	PlatformManager::ExitCode_t pp_result;
 	ExitCode_t am_result;
 
+	// Remove application description from its status map
 	am_result = StatusRemove(papp);
 	if (am_result != AM_SUCCESS) {
 		logger->Error("CleanupEXC: [%s] cleanup FAILED: status map error", papp->StrId());
@@ -1075,13 +1070,14 @@ ApplicationManager::CleanupEXC(AppPtr_t papp) {
 
 	logger->Debug("CleanupEXC: [%s] cleaning up from UIDs map...", papp->StrId());
 
+	// Remove application descriptor from UIDs map
 	uids_ul.lock();
 	UpdateIterators(uids_ret, papp);
 	uids.erase(papp->Uid());
-	PrintStatusQ();
-	PrintSyncQ();
 	uids_ul.unlock();
 
+	PrintStatusQ();
+	PrintSyncQ();
 	logger->Info("CleanupEXC: [%s] cleaned up", papp->StrId());
 	return AM_SUCCESS;
 }
@@ -1122,11 +1118,7 @@ ApplicationManager::DestroyEXC(AppPtr_t papp) {
 		return result;
 
 	// This is a simple cleanup triggering policy based on the
-	// number of applications FINISHED.
-	// When an EXC is destroyed we check for the presence of READY
-	// applications waiting to start, if there are a new optimization run
-	// is scheduled before than the case in which all applications are
-	// running.
+	// number of applications FINISHED
 	uint32_t timeout = 0;
 	timeout = 100 - (10 * (AppsCount(Schedulable::FINISHED) % 5));
 	cleanup_dfr.Schedule(milliseconds(timeout));
@@ -1226,8 +1218,6 @@ ApplicationManager::SetConstraintsEXC(AppPid_t pid, uint8_t exc_id,
 
 ApplicationManager::ExitCode_t
 ApplicationManager::ClearConstraintsEXC(AppPtr_t papp) {
-
-	// Releaseing the contraints for this execution context
 	logger->Debug("ClearConstraintsEXC: [%s] clearing constraints...", papp->StrId());
 	papp->ClearWorkingModeConstraints();
 
@@ -1236,17 +1226,13 @@ ApplicationManager::ClearConstraintsEXC(AppPtr_t papp) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::ClearConstraintsEXC(AppPid_t pid, uint8_t exc_id) {
-	// Find the required EXC
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("ClearConstraintsEXC: [%d:*:%d] clear FAILED: EXC not found", pid, exc_id);
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
-
-	// Release all constraints for this EXC
 	return ClearConstraintsEXC(papp);
-
 }
 
 
@@ -1284,25 +1270,25 @@ ApplicationManager::IsReschedulingRequired(
 		AppPid_t pid,
 		uint8_t exc_id,
 		struct app::RuntimeProfiling_t &rt_prof) {
-	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
-		logger->Warn("IsReschedulingRequired: [%d:*:%d] check for rescheduling FAILED: EXC not found",
+		logger->Warn("IsReschedulingRequired: [%d:*:%d] "
+			"check for rescheduling FAILED: EXC not found",
 			pid, exc_id);
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
 	return IsReschedulingRequired(papp, rt_prof);
-
 }
 
 
 ApplicationManager::ExitCode_t
 ApplicationManager::GetRuntimeProfile(
 		AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t &profile) {
-	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
-		logger->Warn("GetRuntimeProfile: [%d:*:%d] profiling not available: EXC not found",
-			pid, exc_id);
+		logger->Warn("GetRuntimeProfile: [%d:*:%d] profiling not available:"
+			" EXC not found", pid, exc_id);
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
@@ -1312,10 +1298,10 @@ ApplicationManager::GetRuntimeProfile(
 ApplicationManager::ExitCode_t
 ApplicationManager::SetRuntimeProfile(
 		AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t profile) {
-	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
-		logger->Warn("SetRuntimeProfile: [%d:*:%d] profiling setting FAILED: EXC not found",
-			pid, exc_id);
+		logger->Warn("SetRuntimeProfile: [%d:*:%d] profiling setting FAILED: "
+			"EXC not found", pid, exc_id);
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
@@ -1434,7 +1420,6 @@ ApplicationManager::EnableEXC(AppPtr_t papp) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::EnableEXC(AppPid_t pid, uint8_t exc_id) {
-	// Find the required EXC
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("EnableEXC: [%d:*:%d] enabling FAILED: not found", pid, exc_id);
@@ -1490,10 +1475,7 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::DisableEXC(AppPid_t pid, uint8_t exc_id, bool release) {
-	AppPtr_t papp;
-
-	// Find the required EXC
-	papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("DisableEXC: [%d:*:%d] FAILED: EXC not found", pid, exc_id);
 		assert(papp);
@@ -1536,7 +1518,7 @@ bool ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
 }
 
 bool ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
-	AppPtr_t papp = GetApplication(Application::Uid(pid, exc_id));
+	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Debug("CheckEXC: [%d:*:%d] FAILED: EXC not found", pid, exc_id);
 		return AM_EXC_NOT_FOUND;
