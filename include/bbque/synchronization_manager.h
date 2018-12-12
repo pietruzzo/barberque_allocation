@@ -18,6 +18,9 @@
 #ifndef BBQUE_SYNCHRONIZATION_MANAGER_H_
 #define BBQUE_SYNCHRONIZATION_MANAGER_H_
 
+
+#include <set>
+
 #include "bbque/config.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/application_proxy.h"
@@ -146,9 +149,9 @@ private:
 
 	static MetricsCollector::MetricsCollection_t metrics[SM_METRICS_COUNT];
 
-	std::list<AppPtr_t> sync_fails_apps;
+	std::set<AppPtr_t> sync_fails_apps;
 
-	std::list<ProcPtr_t> sync_fails_procs;
+	std::set<ProcPtr_t> sync_fails_procs;
 
 	/**
 	 * @brief   Build a new instance of the synchronization manager

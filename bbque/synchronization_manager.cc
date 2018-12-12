@@ -272,13 +272,13 @@ void SynchronizationManager::Sync_PreChange_Check_EXC_Response(
 	result = ap.SyncP_PreChange_GetResult(presp);
 	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
 		logger->Warn("STEP 1: <---- TIMEOUT -- [%s]", papp->StrId());
-		sync_fails_apps.push_back(papp);
+		sync_fails_apps.insert(papp);
 		return;
 	}
 
 	if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
 		logger->Warn("STEP 1: <------ WERROR -- [%s]", papp->StrId());
-		sync_fails_apps.push_back(papp);
+		sync_fails_apps.insert(papp);
 		return;
 	}
 
@@ -399,7 +399,7 @@ void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(
 	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
 		logger->Warn("STEP 2: <---- TIMEOUT -- [%s]",
 				papp->StrId());
-		sync_fails_apps.push_back(papp);
+		sync_fails_apps.insert(papp);
 		SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
 		return;
 	}
@@ -408,7 +408,7 @@ void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(
 		logger->Warn("STEP 2: <------ WERROR -- [%s]",
 				papp->StrId());
 		// Accounting for syncpoints missed
-		sync_fails_apps.push_back(papp);
+		sync_fails_apps.insert(papp);
 		SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
 		return;
 	}
@@ -495,7 +495,13 @@ SynchronizationManager::Sync_PostChange(ApplicationStatusIF::SyncState_t syncSta
 		if (!policy->DoSync(papp))
 			continue;
 
-		// Perform resource acquisition or synchronize termination
+		// Skip failed synchronizations
+		if (sync_fails_apps.find(papp) != sync_fails_apps.end()) {
+			logger->Warn("STEP 4: <------ skipping [%s]", papp->StrId());
+			continue;
+		}
+
+		// Commit changes if everything went fine
 		SyncCommit(papp);
 		logger->Info("STEP 4: <--------- OK -- [%s]", papp->StrId());
 		excs++;
@@ -559,7 +565,7 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 		result = MapResources(papp);
 		if (result != SynchronizationManager::OK) {
 			logger->Error("STEP M.1: cannot synchronize application [%s]", papp->StrId());
-			sync_fails_apps.push_back(papp);
+			sync_fails_apps.insert(papp);
 			continue;
 		}
 		else
@@ -855,7 +861,7 @@ SynchronizationManager::Sync_PlatformForProcesses() {
 		result = MapResources(proc);
 		if (result != SynchronizationManager::OK) {
 			logger->Error("STEP M.2: cannot synchronize application [%s]", proc->StrId());
-			sync_fails_procs.push_back(proc);
+			sync_fails_procs.insert(proc);
 			continue;
 		}
 		else
