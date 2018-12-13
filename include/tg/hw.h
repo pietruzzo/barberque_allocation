@@ -46,7 +46,7 @@ typedef struct Bandwidth_t {
 } Bandwidth_t;
 
 inline ArchType GetArchTypeFromString(std::string const & str) {
-	std::string arch_str(UpperString(str));
+	std::string arch_str(utils::UpperString(str));
 	switch(ConstHashString(arch_str.c_str())) {
 		case ConstHashString("GN"):
 			return ArchType::GN;

@@ -459,7 +459,7 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<>  *_xml_elem) {
 			logger->Debug("LoadTasksRequirements: hw_prefs=%s", read_attrib.c_str());
 
 			std::list<std::string> archs;
-			SplitString(read_attrib, archs, ",");
+			bu::SplitString(read_attrib, archs, ",");
 			for(auto const & s: archs) {
 				ArchType type = GetArchTypeFromString(s);
 				if (type == ArchType::NONE) {

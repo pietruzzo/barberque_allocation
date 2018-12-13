@@ -23,6 +23,8 @@
 
 namespace bbque {
 
+namespace utils {
+
 /**
  * @brief Split a text into separate strings
  */
@@ -47,5 +49,10 @@ inline std::string UpperString(std::string const & in_str) {
 }
 
 }
+
+
+} // namespace utils
+
+} // namespace bbque
 
 #endif // BBQUE_STRING_UTILS_H_
