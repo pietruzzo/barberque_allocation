@@ -1379,6 +1379,9 @@ void ApplicationProxy::RpcExcStop(prqsSn_t prqs) {
 	logger->Info("RpcExcStop: Stopping EXC [app: %s, pid: %d, exc: %d]",
 			pcon->app_name, pcon->app_pid, pmsg_hdr->exc_id);
 
+	// If there is an optimization in progress, wait...
+	rm.WaitForReady();
+
 	// Disabling the EXC from the ApplicationManager
 	result = am.DisableEXC(pcon->app_pid, pmsg_hdr->exc_id, true);
 	if (result == ApplicationManager::AM_EXC_STATUS_CHANGE_FAILED) {
