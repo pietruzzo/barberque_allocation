@@ -683,6 +683,11 @@ ApplicationManager::UpdateStatusMaps(AppPtr_t papp,
 	assert(papp);
 	assert(prev != next);
 	PrintStatusQ();
+	std::unique_lock<std::mutex> currState_ul(
+			status_mtx[prev], std::defer_lock);
+	std::unique_lock<std::mutex> nextState_ul(
+			status_mtx[next], std::defer_lock);
+	std::lock(currState_ul, nextState_ul);
 
 	// Retrieve the runtime map from the status vector
 	AppsUidMap_t *curr_state_map = &(status_vec[prev]);
@@ -837,10 +842,7 @@ ApplicationManager::ChangeEXCState(
 		AppPtr_t papp,
 		app::Schedulable::State_t next_state,
 		app::Schedulable::SyncState_t next_sync) {
-	std::unique_lock<std::mutex> currState_ul(
-			status_mtx[papp->State()], std::defer_lock);
-	std::unique_lock<std::mutex> nextState_ul(
-			status_mtx[next_state], std::defer_lock);
+
 	logger->Debug("ChangeEXCState: [%s] state transition [%d:%s => %d:%s]",
 			papp->StrId(),
 			papp->State(), Application::StateStr(papp->State()),
@@ -854,9 +856,6 @@ ApplicationManager::ChangeEXCState(
 		logger->Debug("ChangeEXCState: nothing to do here");
 		return AM_SUCCESS;
 	}
-
-	// Lock to protect status maps...
-	std::lock(currState_ul, nextState_ul);
 
 	// Update application status
 	auto ret = papp->SetState(next_state, next_sync);
@@ -1819,14 +1818,7 @@ ApplicationManager::SyncCommit(AppPtr_t papp) {
 			papp->StrId(), papp->StateStr(papp->PreSyncState()));
 
 	// Update status maps
-	std::unique_lock<std::mutex> currState_ul(
-			status_mtx[curr_state], std::defer_lock);
-	std::unique_lock<std::mutex> nextState_ul(
-			status_mtx[papp->State()], std::defer_lock);
-	std::lock(currState_ul, nextState_ul);
 	UpdateStatusMaps(papp, curr_state, papp->State());
-	currState_ul.unlock();
-	nextState_ul.unlock();
 
 	// Remove from the sync map
 	RemoveFromSyncMap(papp, curr_sync);
