@@ -284,6 +284,23 @@ void ResourceManager::Unregister(std::string const & name) {
 	workers_cv.notify_one();
 }
 
+void ResourceManager::WaitForReady() {
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	while (!is_ready) {
+		logger->Debug("WaitForReady: an optimization is in progress...");
+		status_cv.wait(status_ul);
+	}
+}
+
+void ResourceManager::SetReady(bool value) {
+	std::unique_lock<std::mutex> status_ul(status_mtx);
+	is_ready = value;
+	if (value) {
+		status_cv.notify_all();
+		logger->Notice("SetReady: optimization terminated");
+	}
+}
+
 void ResourceManager::TerminateWorkers() {
 	std::unique_lock<std::mutex> workers_ul(workers_mtx);
 	std::chrono::milliseconds timeout = std::chrono::milliseconds(300);

@@ -153,6 +153,11 @@ public:
 	static void Unregister(std::string const & name);
 
 
+	/**
+	 * @brief Allows external module to wait for the RM to be ready
+	 */
+	void WaitForReady();
+
 private:
 
 	/**
@@ -212,11 +217,23 @@ private:
 	em::EventManager & em;
 #endif
 
+	/**
+	 * @ brief Events to be managed
+	 */
 	std::bitset<EVENTS_COUNT> pendingEvts;
 
 	std::mutex pendingEvts_mtx;
 
 	std::condition_variable pendingEvts_cv;
+
+	/**
+	 * @ brief If not ready, an optimization is in progress
+	 */
+	bool is_ready = true;
+
+	std::mutex status_mtx;
+
+	std::condition_variable status_cv;
 
 	/**
 	 * @brief The map of regitered Worker
@@ -319,8 +336,15 @@ private:
 	 */
 	std::atomic<bool> plat_event;
 
+
 	// By default we use an event based activation of optimizations
 #define BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL 0
+
+	/**
+	 * @brief Set to ready or not ready, depending on having an optimization in
+	 * progress or not
+	 */
+	void SetReady(bool value);
 
 	/**
 	 * @brief   Run on optimization cycle (i.e. Schedule and Synchronization)
