@@ -218,18 +218,19 @@ void ResourceAccounter::PrintAppDetails(
 			break;
 		}
 
+
 		// Skip finished applications
 		if (papp->State() == Application::FINISHED) {
 			logger->Debug("[pid=%d, uid=%d, state=%s] skipped",
 				papp->Pid(), app_uid, Application::StateStr(papp->State()));
-			break;
+			continue;
 		}
 
 		// Warning: unfinished application without AWM...
 		if (!papp->CurrentAWM()) {
 			logger->Warn("[pid=%d, uid=%d, state=%s] no working mode",
 				papp->Pid(), app_uid, Application::StateStr(papp->State()));
-			break;
+			continue;
 		}
 
 		// Build the row to print
