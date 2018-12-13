@@ -78,9 +78,7 @@ ApplicationProxy & ApplicationProxy::GetInstance() {
 }
 
 bl::rpc_msg_type_t ApplicationProxy::GetNextMessage(pchMsg_t & pChMsg) {
-
 	rpc->RecvMessage(pChMsg);
-
 	logger->Debug("GetNextMessage: RX [typ: %d, pid: %d]",
 			pChMsg->typ, pChMsg->app_pid);
 
@@ -546,7 +544,6 @@ ApplicationProxy::SyncP_PreChangeRecv(pcmdSn_t pcs,
 
 RTLIB_ExitCode_t
 ApplicationProxy::SyncP_PreChange(pcmdSn_t pcs, pPreChangeRsp_t presp) {
-
 	assert(pcs);
 	assert(presp);
 
@@ -573,7 +570,6 @@ ApplicationProxy::SyncP_PreChange(pcmdSn_t pcs, pPreChangeRsp_t presp) {
 
 void
 ApplicationProxy::SyncP_PreChangeTrd(pPreChangeRsp_t presp) {
-
 	// Enqueuing the Command Session Handler
 	EnqueueHandler(presp->pcs);
 
@@ -590,7 +586,6 @@ ApplicationProxy::SyncP_PreChangeTrd(pPreChangeRsp_t presp) {
 RTLIB_ExitCode_t
 ApplicationProxy::SyncP_PreChange(AppPtr_t papp, pPreChangeRsp_t presp) {
 	RTLIB_ExitCode_t result = RTLIB_OK;
-
 	assert(papp);
 	assert(presp);
 
@@ -699,7 +694,8 @@ ApplicationProxy::SyncP_SyncChangeRecv(pcmdSn_t pcs,
 	if (!pcs->pmsg) {
 		logger->Debug("SyncP_SyncChangeRecv: waiting for response, Timeout: %d[ms]",
 			BBQUE_SYNCP_TIMEOUT);
-		ready = (pcs->resp_cv).wait_for(resp_ul, std::chrono::milliseconds(BBQUE_SYNCP_TIMEOUT));
+		ready = (pcs->resp_cv).wait_for(
+				resp_ul, std::chrono::milliseconds(BBQUE_SYNCP_TIMEOUT));
 		if (ready == std::cv_status::timeout) {
 			logger->Warn("SyncP_SyncChangeRecv: response TIMEOUT");
 			pcs->pmsg = NULL;
@@ -726,7 +722,6 @@ ApplicationProxy::SyncP_SyncChangeRecv(pcmdSn_t pcs,
 
 RTLIB_ExitCode_t
 ApplicationProxy::SyncP_SyncChange(pcmdSn_t pcs, pSyncChangeRsp_t presp) {
-
 	assert(pcs);
 	assert(presp);
 
@@ -881,7 +876,6 @@ ApplicationProxy::SyncP_DoChange(pcmdSn_t pcs, pDoChangeRsp_t presp) {
 		return presp->result;
 
 	return RTLIB_OK;
-
 }
 
 RTLIB_ExitCode_t
@@ -991,7 +985,6 @@ ApplicationProxy::SyncP_PostChangeRecv(pcmdSn_t pcs,
 
 RTLIB_ExitCode_t
 ApplicationProxy::SyncP_PostChange(pcmdSn_t pcs, pPostChangeRsp_t presp) {
-
 	assert(pcs);
 	assert(presp);
 
@@ -1047,12 +1040,10 @@ ApplicationProxy::GetCommandSession(rpc_msg_header_t *pmsg_hdr)  {
 	}
 
 	pcs = (*it).second;
-
 	logger->Debug("APPs PRX: Command session get [%05d] for [%s]",
 			pcs->pid, pcs->papp->StrId());
 
 	return pcs;
-
 }
 
 void
@@ -1076,7 +1067,6 @@ ApplicationProxy::ReleaseCommandSession(pcmdSn_t pcs)  {
 
 	logger->Debug("ReleaseCommandSession: dequeing command session [%05d] for [%s], "
 			"[qcount: %d]", pcs->pid, pcs->papp->StrId(), cmdSnMap.size());
-
 }
 
 void ApplicationProxy::CompleteTransaction(pchMsg_t & pmsg) {
@@ -1107,7 +1097,6 @@ void ApplicationProxy::CompleteTransaction(pchMsg_t & pmsg) {
 	// Notify command session
 	std::unique_lock<std::mutex> resp_ul(pcs->resp_mtx);
 	(pcs->resp_cv).notify_one();
-
 }
 
 
@@ -1149,7 +1138,6 @@ void ApplicationProxy::RpcACK(pconCtx_t pcon, rpc_msg_header_t *pmsg_hdr,
 	resp.hdr.typ = type;
 	resp.result = RTLIB_OK;
 	rpc->SendMessage(pcon->pd, &resp.hdr, (size_t)RPC_PKT_SIZE(resp));
-
 }
 
 void ApplicationProxy::RpcNAK(pconCtx_t pcon, rpc_msg_header_t *pmsg_hdr,
@@ -1163,7 +1151,6 @@ void ApplicationProxy::RpcNAK(pconCtx_t pcon, rpc_msg_header_t *pmsg_hdr,
 	resp.hdr.typ = type;
 	resp.result = error;
 	rpc->SendMessage(pcon->pd, &resp.hdr, (size_t)RPC_PKT_SIZE(resp));
-
 }
 
 void ApplicationProxy::RpcExcRegister(prqsSn_t prqs) {
@@ -1200,7 +1187,6 @@ void ApplicationProxy::RpcExcRegister(prqsSn_t prqs) {
 
 	// Sending ACK response to application
 	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
-
 }
 
 void ApplicationProxy::RpcExcUnregister(prqsSn_t prqs) {
@@ -1231,7 +1217,6 @@ void ApplicationProxy::RpcExcUnregister(prqsSn_t prqs) {
 
 	// Sending ACK response to application
 	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
-
 }
 
 void ApplicationProxy::RpcExcSet(prqsSn_t prqs) {
@@ -1302,7 +1287,6 @@ void ApplicationProxy::RpcExcClear(prqsSn_t prqs) {
 
 	// Sending ACK response to application
 	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
-
 }
 
 void ApplicationProxy::RpcExcRuntimeProfileNotify(prqsSn_t prqs) {
@@ -1374,7 +1358,6 @@ void ApplicationProxy::RpcExcStart(prqsSn_t prqs) {
 
 	// Sending ACK response to application
 	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
-
 }
 
 void ApplicationProxy::RpcExcStop(prqsSn_t prqs) {
@@ -1411,7 +1394,6 @@ void ApplicationProxy::RpcExcStop(prqsSn_t prqs) {
 
 	// Sending ACK response to the RTLib
 	RpcACK(pcon, pmsg_hdr, bl::RPC_EXC_RESP);
-
 }
 
 void ApplicationProxy::RpcExcSchedule(prqsSn_t prqs) {
@@ -1651,12 +1633,12 @@ void ApplicationProxy::ProcessRequest(pchMsg_t & pmsg) {
 void ApplicationProxy::Task() {
 	bl::rpc_msg_type_t msgType;
 	pchMsg_t pmsg;
-
 	logger->Info("Task: Messages dispatcher STARTED");
 
 	while (!done) {
 		if (rpc->Poll() < 0)
 			continue;
+		logger->Debug("Task: new incoming message from RTLIB");
 
 		msgType = GetNextMessage(pmsg);
 		if (msgType > bl::RPC_EXC_MSGS_COUNT) {
