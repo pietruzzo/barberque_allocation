@@ -248,14 +248,13 @@ ResourceManager::Setup() {
 }
 
 void ResourceManager::NotifyEvent(controlEvent_t evt) {
-	std::unique_lock<std::mutex> pendingEvts_ul(pendingEvts_mtx, std::defer_lock);
-
 	// Ensure we have a valid event
+	logger->Debug("NotifyEvent: received event = %d", evt);
 	assert(evt<EVENTS_COUNT);
 
 	// Set the corresponding event flag
+	std::unique_lock<std::mutex> pendingEvts_ul(pendingEvts_mtx, std::defer_lock);
 	pendingEvts.set(evt);
-	logger->Debug("NotifyEvent: received event = %d", evt);
 
 	// Notify the control loop (just if it is sleeping)
 	if (pendingEvts_ul.try_lock()) {
@@ -263,7 +262,7 @@ void ResourceManager::NotifyEvent(controlEvent_t evt) {
 		pendingEvts_cv.notify_one();
 	}
 	else {
-		logger->Debug("NotifyEvent: not notifying %d", evt);
+		logger->Debug("NotifyEvent: NOT notifying %d", evt);
 	}
 }
 
