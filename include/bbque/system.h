@@ -167,6 +167,14 @@ public:
 	 *  Schedulables management                                               *
 	 **************************************************************************/
 
+	inline uint32_t SchedulablesCount(ba::Schedulable::State_t state) {
+		return (am.AppsCount(state)
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+			+ prm.ProcessesCount(state)
+#endif
+		);
+	}
+
 	inline bool HasSchedulables(ba::Schedulable::State_t state) {
 		return (am.HasApplications(state)
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
