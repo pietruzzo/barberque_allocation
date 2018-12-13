@@ -177,17 +177,26 @@ void ResourceAccounter::PrintStatusReport(
 	// For each resource get the used amount
 	for (auto & resource_ptr: resource_set) {
 		uint8_t len = 0;
+
+		// Attribute for online/offline resource status
 		char online = 'I';
 		if (resource_ptr->IsOffline())
 			online  = 'O';
 
+		// Append '%' if resource is a processing element (core)
+		bool percent = resource_ptr->Type() == br::ResourceType::PROC_ELEMENT;
+
+		// Build the resource amount string
 		len += sprintf(rsrc_text_row + len, "| %-27s %c : %11s | ",
 				resource_ptr->Path().c_str(), online,
-				PrettyFormat(resource_ptr->Used(status_view)));
+				bu::GetValueUnitStr(
+					resource_ptr->Used(status_view), percent).c_str());
 		len += sprintf(rsrc_text_row + len, "%11s | ",
-				PrettyFormat(resource_ptr->Unreserved()));
+				bu::GetValueUnitStr(
+					resource_ptr->Unreserved(), percent).c_str());
 		len += sprintf(rsrc_text_row + len, "%11s |",
-				PrettyFormat(resource_ptr->Total()));
+				bu::GetValueUnitStr(
+					resource_ptr->Total(), percent).c_str());
 		PRINT_NOTICE_IF_VERBOSE(verbose, rsrc_text_row);
 
 		// Print details about how usage is partitioned among applications
@@ -242,7 +251,7 @@ void ResourceAccounter::PrintAppDetails(
 				papp->StrId(),
 				papp->Priority(),
 				papp->CurrentAWM()->Id(),
-				PrettyFormat(app_usage),
+				bu::GetValueUnitStr(app_usage, true).c_str(),
 				"", "");
 		PRINT_NOTICE_IF_VERBOSE(verbose, app_text_row);
 	}
