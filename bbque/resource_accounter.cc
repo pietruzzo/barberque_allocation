@@ -139,20 +139,6 @@ void ResourceAccounter::WaitForPlatformReady() {
  *                   LOGGER REPORTS                                     *
  ************************************************************************/
 
-// This is just a local utility function to format in a human readable
-// format resources amounts.
-static char *PrettyFormat(float value) {
-	char radix[] = {'0', '3', '6', '9'};
-	static char str[] = "1024.000e+0";
-	uint8_t i = 0;
-	while (value > 1023 && i < 3) {
-		value /= 1024;
-		++i;
-	}
-	snprintf(str, sizeof(str), "%8.3fe+%c", value, radix[i]);
-	return str;
-}
-
 void ResourceAccounter::PrintStatusReport(
 		br::RViewToken_t status_view, bool verbose) const {
 	//                        +--------- 22 ------------+     +-- 11 ---+   +-- 11 ---+   +-- 11 ---+
