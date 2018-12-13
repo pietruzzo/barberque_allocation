@@ -107,19 +107,35 @@ public:
  *     Map iterations
  ******************************************************************************/
 
+
+	/**
+	 * @brief Check if there are managed processes
+	 * @return true if yes, false for not
+	 */
+	bool HasProcesses() const;
+
 	/**
 	 * @brief Check if there are processes in a given state
 	 * @param state a stable state
-	 * @return true if yes, fals for not
+	 * @return true if yes, false for not
 	 */
-	bool HasProcesses(app::Schedulable::State_t state);
+	bool HasProcesses(app::Schedulable::State_t state) const;
 
 	/**
 	 * @brief Check if there are processes in a given synchronization state
 	 * @param sync_state a synchronization state
-	 * @return true if yes, fals for not
+	 * @return true if yes, false for not
 	 */
-	bool HasProcesses(app::Schedulable::SyncState_t sync_state);
+	bool HasProcesses(app::Schedulable::SyncState_t sync_state) const;
+
+
+	/**
+	 * @brief Get a process descriptor
+	 * @param pid the ID number
+	 * @return A pointer to a process descriptor
+	 */
+	ProcPtr_t const GetProcess(app::AppPid_t pid) const;
+
 
 	/**
 	 * @brief Get the first process in the map
@@ -270,6 +286,9 @@ private:
 
 	/** Mutex to protect processes maps */
 	mutable std::mutex proc_mutex;
+
+	/** Map with pointers to all the managed processes */
+	std::map<app::AppPid_t, ProcPtr_t> all_procs;
 
 	/** The set containing the names of the managed processes */
 	std::map<std::string, ProcessInstancesInfo> managed_procs;

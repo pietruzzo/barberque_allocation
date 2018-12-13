@@ -202,9 +202,11 @@ void ProcessManager::NotifyStart(std::string const & name, app::AppPid_t pid) {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	managed_procs[name].pid_set->emplace(pid);
 
+	// Creat a new process descriptor and enqueue it
 	ProcPtr_t new_proc = std::make_shared<Process>(name, pid);
 	new_proc->SetState(Schedulable::READY);
 	state_procs[app::Schedulable::READY].emplace(pid, new_proc);
+	all_procs.emplace(pid, new_proc);
 
 	// Trigger a re-scheduling
 	ResourceManager & rm(ResourceManager::GetInstance());
@@ -260,12 +262,17 @@ void ProcessManager::NotifyExit(app::AppPid_t pid) {
 }
 
 
-bool ProcessManager::HasProcesses(app::Schedulable::State_t state) {
+bool ProcessManager::HasProcesses() const {
+	std::unique_lock<std::mutex> u_lock(proc_mutex);
+	return !all_procs.empty();
+}
+
+bool ProcessManager::HasProcesses(app::Schedulable::State_t state) const {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	return !state_procs[state].empty();
 }
 
-bool ProcessManager::HasProcesses(app::Schedulable::SyncState_t sync_state) {
+bool ProcessManager::HasProcesses(app::Schedulable::SyncState_t sync_state) const {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	if (state_procs[app::Schedulable::SYNC].empty()) {
 		return false;
@@ -282,6 +289,19 @@ bool ProcessManager::HasProcesses(app::Schedulable::SyncState_t sync_state) {
 	}
 
 	return false;
+}
+
+
+ProcPtr_t const ProcessManager::GetProcess(AppPid_t pid) const {
+	std::unique_lock<std::mutex> u_lock(proc_mutex);
+	auto it = all_procs.find(pid);
+	if (it != all_procs.end()) {
+		return it->second;
+	}
+	else {
+		logger->Debug("GetProcess: not process found with PID=%d", pid);
+	}
+	return ProcPtr_t();
 }
 
 ProcPtr_t ProcessManager::GetFirst(app::Schedulable::State_t state, ProcessMapIterator & map_it) {
@@ -492,6 +512,8 @@ ProcessManager::ExitCode_t ProcessManager::SyncCommit(ProcPtr_t proc) {
 				state_map.erase(proc_it);
 			}
 		}
+		// remove from the global map
+		all_procs.erase(proc->Pid());
 	}
 
 	if (ret != SUCCESS) {
