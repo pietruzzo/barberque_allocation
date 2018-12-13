@@ -29,10 +29,10 @@
 #include <string>
 #include <sstream>
 
-#include "bbque/app/working_mode.h"
-#include "bbque/res/resource_path.h"
 #include "bbque/application_manager.h"
-
+#include "bbque/app/working_mode.h"
+#include "bbque/process_manager.h"
+#include "bbque/res/resource_path.h"
 
 #undef  MODULE_CONFIG
 #define MODULE_CONFIG "ResourceAccounter"
@@ -212,12 +212,23 @@ void ResourceAccounter::PrintAppDetails(
 		auto const & app_usage(app.second);
 
 		// Get the App/EXC descriptor
-		auto papp(am.GetApplication(app_uid));
+		ba::SchedPtr_t papp(am.GetApplication(app_uid));
 		if (papp == nullptr) {
 			logger->Debug("[uid=%d] no application found", app_uid);
-			break;
 		}
 
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		// Get the process descriptor if we failed with AM
+		if (papp == nullptr) {
+			ProcessManager & prm(ProcessManager::GetInstance());
+			papp = prm.GetProcess(app_uid);
+			if (papp == nullptr) {
+				logger->Debug("[pid=%d] no process found", app_uid);
+			}
+		}
+#endif
+		if (papp == nullptr)
+			continue;
 
 		// Skip finished applications
 		if (papp->State() == Application::FINISHED) {
