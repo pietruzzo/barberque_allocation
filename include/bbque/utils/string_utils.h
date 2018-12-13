@@ -28,7 +28,7 @@ namespace utils {
 /**
  * @brief Split a text into separate strings
  */
-inline void SplitString(
+static inline void SplitString(
 	std::string const & str, std::list<std::string> & lst, std::string const sep = ".") {
 	size_t _e, _b = 0;
 	while ((_e = str.find_first_of(sep, _b)) != std::string::npos) {
@@ -41,7 +41,7 @@ inline void SplitString(
 /**
  * @brief Convert a string into uppercase
  */
-inline std::string UpperString(std::string const & in_str) {
+static inline std::string UpperString(std::string const & in_str) {
 	std::string out_str;
 	for (auto & c: in_str)
 		out_str += std::toupper(c);
