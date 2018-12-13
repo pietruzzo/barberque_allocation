@@ -336,6 +336,8 @@ void ResourceManager::Optimize() {
 	double period;
 	bool active_apps = true;
 
+	SetReady(false);
+
 	// If the optimization has been triggered by a platform event (BBQ_PLAT) the policy must be
 	// executed anyway. To the contrary, if it is an application event (BBQ_OPTS) check if
 	// there are actually active applications
@@ -373,10 +375,12 @@ void ResourceManager::Optimize() {
 		case SchedulerManager::FAILED:
 			logger->Warn("Schedule FAILED (Error: scheduling policy failed)");
 			RM_COUNT_EVENT(metrics, RM_SCHED_FAILED);
+			SetReady(true);
 			return;
 		case SchedulerManager::DELAYED:
 			logger->Error("Schedule DELAYED");
 			RM_COUNT_EVENT(metrics, RM_SCHED_DELAYED);
+			SetReady(true);
 			return;
 		default:
 			assert(schedResult == SchedulerManager::DONE);
@@ -433,7 +437,7 @@ void ResourceManager::Optimize() {
 #else
 	logger->Debug("Scheduling profiling disabled");
 #endif
-
+	SetReady(true);
 }
 
 void ResourceManager::EvtExcStart() {
