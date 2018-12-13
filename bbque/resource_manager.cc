@@ -697,6 +697,9 @@ void ResourceManager::ControlLoop() {
 		if (!pendingEvts[evt-1])
 			continue;
 
+		// Resetting event
+		pendingEvts.reset(evt-1);
+
 		// Account for a new event
 		RM_COUNT_EVENT(metrics, RM_EVT_TOTAL);
 		RM_GET_PERIOD(metrics, RM_EVT_PERIOD, period);
@@ -752,12 +755,7 @@ void ResourceManager::ControlLoop() {
 		default:
 			logger->Crit("Unhandled event [%d]", evt-1);
 		}
-
-		// Resetting event
-		pendingEvts.reset(evt-1);
-
 	}
-
 }
 
 ResourceManager::ExitCode_t
