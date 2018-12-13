@@ -847,7 +847,6 @@ ApplicationManager::ChangeEXCState(
 			papp->StrId(),
 			papp->State(), Application::StateStr(papp->State()),
 			next_state, Application::StateStr(next_state));
-
 	auto curr_state = papp->State();
 	auto curr_sync  = papp->SyncState();
 
@@ -867,22 +866,28 @@ ApplicationManager::ChangeEXCState(
 		return AM_EXC_STATUS_CHANGE_FAILED;
 	}
 
-	logger->Debug("ChangeEXCState: [%s] updating state queue [%d:%s => %d:%s]",
+	// Update the sync status maps (if it is the case)
+	logger->Debug("ChangeEXCState: [%s] updating sync queue? [%d:%s => %d:%s]",
 			papp->StrId(),
 			curr_state, Application::StateStr(curr_state),
 			papp->State(), Application::StateStr(papp->State()));
-
-	// Update the sync status maps (if it is the case)
-	if ((curr_state == Application::SYNC) && (next_state != Application::SYNC)) {
-		RemoveFromSyncMap(papp);  // if next state is not SYNC remove the app from the sync map
+	if (curr_state == Application::SYNC) {
+		RemoveFromSyncMap(papp, curr_sync);
 	}
-	else if ((curr_state != Application::SYNC) && (next_state == Application::SYNC)) {
-		AddToSyncMap(papp);     // otherwise add to the proper sync map
+	if (next_state == Application::SYNC) {
+		AddToSyncMap(papp);
 	}
 
 	// Update the stable status maps
-	auto am_ret = UpdateStatusMaps(papp, curr_state, next_state);
-	return am_ret;
+	if (curr_state != papp->State()) {
+		logger->Debug("ChangeEXCState: [%s] updating state queue [%d:%s => %d:%s]",
+				papp->StrId(),
+				curr_state, Application::StateStr(curr_state),
+				papp->State(), Application::StateStr(papp->State()));
+		return UpdateStatusMaps(papp, curr_state, next_state);
+	}
+
+	return AM_SUCCESS;
 }
 
 
