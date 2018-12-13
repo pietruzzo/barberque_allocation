@@ -88,7 +88,7 @@ br::ResourceAssignmentPtr_t WorkingMode::AddResourceRequest(
 	else
 		abs_str_path = str_path;
 
-	logger->Info("AddResourceRequest: %s adding <%s> ", str_id, abs_str_path.c_str());
+	logger->Debug("AddResourceRequest: %s adding <%s> ", str_id, abs_str_path.c_str());
 	auto resource_path = ra.GetPath(abs_str_path);
 	if (resource_path == nullptr) {
 		logger->Error("AddResourceRequest: %s '%s' invalid path string",

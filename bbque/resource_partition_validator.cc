@@ -47,7 +47,7 @@ ResourcePartitionValidator::ExitCode_t
 ResourcePartitionValidator::LoadPartitions(
 		const TaskGraph &tg, std::list<Partition> &partitions) {
 
-	logger->Notice("Initial partitions nr. %d", partitions.size());
+	logger->Info("Initial partitions nr. %d", partitions.size());
 	PartitionSkimmer::SkimmerType_t skimmer_type = PartitionSkimmer::SkimmerType_t::SKT_NONE;
 
 	skimmers_lock.lock();
@@ -84,8 +84,7 @@ ResourcePartitionValidator::LoadPartitions(
 
 	this->failed_skimmer = PartitionSkimmer::SKT_NONE;
 	if ( partitions.empty() ) {
-		logger->Notice("Skimmer %d: no feasible partitions", 
-				(int)skimmer_type);
+		logger->Warn("Skimmer %d: no feasible partitions", (int)skimmer_type);
 		return PMV_NO_PARTITION;  // No feasible solution found
 	}
 
@@ -96,7 +95,7 @@ ResourcePartitionValidator::ExitCode_t
 ResourcePartitionValidator::PropagatePartition(
 		TaskGraph &tg, const Partition &partition) const noexcept {
 
-	logger->Notice("Propagating partition id=%d", partition.GetId());
+	logger->Info("Propagating partition id=%d", partition.GetId());
 	// We have to ensure that no skimmer failed for any reasons before this call.
 	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
 	std::lock_guard<std::mutex> curr_lock(skimmers_lock);
@@ -107,7 +106,7 @@ ResourcePartitionValidator::PropagatePartition(
 		PartitionSkimmerPtr_t skimmer = s->second; 
 		PartitionSkimmer::ExitCode_t err = skimmer->SetPartition(tg, partition);
 		if ( PartitionSkimmer::SK_OK != err ) {
-			logger->Fatal("Skimmer failed to set partition [type=%d] [priority=%d] "
+			logger->Error("Skimmer failed to set partition [type=%d] [priority=%d] "
 				      "[err=%d]", skimmer->GetType(), s->first, err);
 			return PMV_GENERIC_ERROR;
 		}
@@ -120,7 +119,7 @@ ResourcePartitionValidator::RemovePartition(
 		const TaskGraph &tg,
 		const Partition &partition) const noexcept {
 
-	logger->Notice("Removing partition id=%d", partition.GetId());
+	logger->Info("Removing partition id=%d", partition.GetId());
 	// We have to ensure that no skimmer failed for any reasons before this call.
 //	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
 	if (failed_skimmer != PartitionSkimmer::SKT_NONE) {
@@ -135,7 +134,7 @@ ResourcePartitionValidator::RemovePartition(
 		PartitionSkimmerPtr_t skimmer = s->second;
 		PartitionSkimmer::ExitCode_t err = skimmer->UnsetPartition(tg, partition);
 		if ( PartitionSkimmer::SK_OK != err ) {
-			logger->Fatal("Skimmer failed to unset partition [type=%d] [priority=%d] "
+			logger->Error("Skimmer failed to unset partition [type=%d] [priority=%d] "
 				      "[err=%d]", skimmer->GetType(), s->first, err);
 			return PMV_GENERIC_ERROR;
 		}
