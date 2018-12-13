@@ -17,6 +17,9 @@
 #define MANGO_MEMORY_COUNT_START     10
 #define MANGO_PEAKOS_FILE_SIZE       256*1024*1024
 
+extern uint32_t hn_cluster;
+extern uint32_t hn_handler;
+
 namespace bb = bbque;
 namespace br = bbque::res;
 namespace po = boost::program_options;
@@ -53,7 +56,7 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	filter.core = 999;
 
 	logger->Debug("Initializing communication with MANGO platform...");
-	int hn_init_err = hn_initialize(filter, UPV_PARTITION_STRATEGY, 1, 0, 0);
+	int hn_init_err = hn_initialize(filter, UPV_PARTITION_STRATEGY, 1, 0, 0, &hn_handler);
 	if(hn_init_err == HN_SUCCEEDED) {
 		logger->Info("HN Daemon connection established.");
 	} else {
@@ -66,7 +69,7 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	// This function call may take several seconds to conclude
 	logger->Debug("Resetting MANGO platform...");
 
-	int hn_reset_err = hn_reset(0);
+	int hn_reset_err = hn_reset(0, hn_cluster, hn_handler);
 	if(hn_reset_err == HN_SUCCEEDED) {
 		logger->Info("HN Library successfully initialized");
 	} else {
@@ -87,12 +90,12 @@ MangoPlatformProxy::~MangoPlatformProxy() {
 	for (auto rsc : allocated_resources_peakos) {
 		uint32_t tile_mem = rsc.first;
 		uint32_t addr     = rsc.second;
-		hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE);
+		hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE, hn_cluster, hn_handler);
 		logger->Info("Released peakOS memory %d address 0x%08x", tile_mem, addr);
 	}
 
 	// Just clean up stuffs...
-	int hn_err_ret = hn_end();
+	int hn_err_ret = hn_end(hn_handler);
 	bbque_assert(0 == hn_err_ret);
 
 }
@@ -166,14 +169,14 @@ void MangoPlatformProxy::Exit() {
 	// Stop HW counter monitors
 	hn_tile_info_t tile_info;
 	for (uint_fast32_t i=0; i < num_tiles; i++) {
-		int err = hn_get_tile_info(i, &tile_info);
+		int err = hn_get_tile_info(i, &tile_info, hn_cluster, hn_handler);
 		if (HN_SUCCEEDED != err) {
 			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
 			continue;
 		}
 #ifdef CONFIG_BBQUE_PM_MANGO
 		if (tile_info.unit_family == HN_TILE_FAMILY_PEAK) {
-			err = hn_stats_monitor_configure_tile(i, 0);
+			err = hn_stats_monitor_configure_tile(i, 0, hn_cluster, hn_handler);
 			if (err == 0)
 				logger->Error("Stopping monitor on tile nr=%d", i);
 			else
@@ -187,12 +190,12 @@ void MangoPlatformProxy::Exit() {
 	for (auto rsc : allocated_resources_peakos) {
 		uint32_t tile_mem = rsc.first;
 		uint32_t addr     = rsc.second;
-		hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE);
+		hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE, hn_cluster, hn_handler);
 		logger->Info("Exit: Released peakOS memory %d address 0x%08x", tile_mem, addr);
 	}
 
 	// Just clean up stuffs...
-	int hn_err_ret = hn_end();
+	int hn_err_ret = hn_end(hn_handler);
 	if (hn_err_ret != 0) {
 		logger->Warn("Exit: Error occurred while terminating: %d", hn_err_ret);
 	}
@@ -208,14 +211,14 @@ MangoPlatformProxy::ExitCode_t MangoPlatformProxy::Refresh() noexcept {
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::LoadPlatformData() noexcept {
 	// Get the number of tiles
-	int err = hn_get_num_tiles(&this->num_tiles, &this->num_tiles_x, &this->num_tiles_y);
+	int err = hn_get_num_tiles(&this->num_tiles, &this->num_tiles_x, &this->num_tiles_y, hn_cluster, hn_handler);
 	if ( HN_SUCCEEDED != err ) {
 		logger->Fatal("Unable to get the number of tiles [err=%d]", err);
 		return PLATFORM_INIT_FAILED;
 	}
 
 	// Get the number of VNs
-	err = hn_get_num_vns(&this->num_vns);
+	err = hn_get_num_vns(&this->num_vns, hn_cluster, hn_handler);
 	if ( HN_SUCCEEDED != err ) {
 		logger->Fatal("Unable to get the number of VNs [err=%d]", err);
 		return PLATFORM_INIT_FAILED;
@@ -246,13 +249,13 @@ MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 
 	// TODO: This is currently managed by the internal HN find memory, however, we have
 	//	 to replace this with an hook to the MemoryManager here.
-	int err = hn_find_memory(tile, req_size, &tile_memory, &base_addr);
+	int err = hn_find_memory(tile, req_size, &tile_memory, &base_addr, hn_cluster, hn_handler);
 	if (HN_SUCCEEDED != err) {
 		logger->Error("BootTiles_PEAK: Unable to get memory for tile nr=%d", tile);
 		return PLATFORM_LOADING_FAILED;
 	}
 
-	err = hn_allocate_memory(tile_memory, base_addr, req_size);
+	err = hn_allocate_memory(tile_memory, base_addr, req_size, hn_cluster, hn_handler);
 	if (HN_SUCCEEDED != err) {
 		logger->Error("BootTiles_PEAK: Unable to allocate memory for tile nr=%d", tile);
 		return PLATFORM_LOADING_FAILED;
@@ -262,7 +265,7 @@ MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
 
 	logger->Debug("Booting PEAK tile nr=%d [PEAK_OS:%s] [PEAK_PROT:%s]", tile, MANGO_PEAK_OS,
 			MANGO_PEAK_PROTOCOL);
-	err = hn_boot_unit(tile, tile_memory, base_addr, MANGO_PEAK_PROTOCOL, MANGO_PEAK_OS);
+	err = hn_boot_unit(tile, tile_memory, base_addr, MANGO_PEAK_PROTOCOL, MANGO_PEAK_OS, hn_cluster, hn_handler);
 	if (HN_SUCCEEDED != err) {
 		logger->Error("Unable to boot PEAK tile nr=%d", tile);
 		return PLATFORM_LOADING_FAILED;
@@ -275,7 +278,7 @@ MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::BootTiles() noexcept {
 	hn_tile_info_t tile_info;
 	for (uint_fast32_t i=0; i < num_tiles; i++) {
-		int err = hn_get_tile_info(i, &tile_info);
+		int err = hn_get_tile_info(i, &tile_info, hn_cluster, hn_handler);
 		if (HN_SUCCEEDED != err) {
 			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
 			return PLATFORM_INIT_FAILED;
@@ -290,9 +293,9 @@ MangoPlatformProxy::BootTiles() noexcept {
 
 #ifdef CONFIG_BBQUE_PM_MANGO
 			// Enable monitoring stuff
-			err = hn_stats_monitor_configure_tile(i, 1);
+			err = hn_stats_monitor_configure_tile(i, 1, hn_cluster, hn_handler);
 			if (err == 0) {
-				err = hn_stats_monitor_set_polling_period(monitor_period_len);
+				err = hn_stats_monitor_set_polling_period(monitor_period_len, hn_cluster, hn_handler);
 				if (err == 0)
 					logger->Info("Monitoring period set for tile nr=%d", i);
 				else
@@ -325,7 +328,7 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 	for (uint_fast32_t i=0; i < num_tiles; i++) {
 		// First of all get the information of tiles from HN library
 		hn_tile_info_t tile_info;
-		int err = hn_get_tile_info(i, &tile_info);
+		int err = hn_get_tile_info(i, &tile_info, hn_cluster, hn_handler);
 		if (HN_SUCCEEDED != err) {
 			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
 			return PLATFORM_INIT_FAILED;
@@ -397,7 +400,7 @@ MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
 	// ResourceAccounter methods, but this is faster)
 	found_memory_banks.set(mem_id);
 	uint32_t memory_size;
-	int err = hn_get_memory_size(tile_id, &memory_size);
+	int err = hn_get_memory_size(tile_id, &memory_size, hn_cluster, hn_handler);
 	if (HN_SUCCEEDED != err) {
 		logger->Fatal("Unable to get memory information of tile nr.%d, memory id %d [error=%d].",
 			      tile_id, mem_id, err);
@@ -567,7 +570,7 @@ static void FindUnitsSets(
 			t.second->GetAssignedArch(), t.second->GetThreadCount());
 	}
 
-	int res = hn_find_units_sets(0, num_tiles, tiles_family, tiles, families_order, nsets);
+	int res = hn_find_units_sets(0, num_tiles, tiles_family, tiles, families_order, nsets, hn_cluster, hn_handler);
 	delete tiles_family;
 	if (res != HN_SUCCEEDED)
 		throw std::runtime_error("Unable to find units sets");
@@ -620,13 +623,13 @@ static void FindAndAllocateMemory(
 			// FIXME Better to allocate the buffer close to the tiles the unit that are using it will be mapped on
 			tile = tiles_set[0];
 		}
-		int res = hn_find_memory(tile, mem_buffers_size[i], &mem_buffers_tiles[i], &mem_buffers_addr[i]);
+		int res = hn_find_memory(tile, mem_buffers_size[i], &mem_buffers_tiles[i], &mem_buffers_addr[i], hn_cluster, hn_handler);
 		if (res != HN_SUCCEEDED) {
 			delete mem_buffers_size;
 			throw std::runtime_error("Unable to find memory");
 		}
 
-		res = hn_allocate_memory(mem_buffers_tiles[i], mem_buffers_addr[i], mem_buffers_size[i]);
+		res = hn_allocate_memory(mem_buffers_tiles[i], mem_buffers_addr[i], mem_buffers_size[i], hn_cluster, hn_handler);
 		if (res != HN_SUCCEEDED) {
 			delete mem_buffers_size;
 			throw std::runtime_error("Unable to allocate memory");
@@ -726,7 +729,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(
 		buffer.second->SetPhysicalAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_allocate_memory(memory_bank, phy_addr, buffer.second->Size()) != HN_SUCCEEDED) {
+		if (hn_allocate_memory(memory_bank, phy_addr, buffer.second->Size(), hn_cluster, hn_handler) != HN_SUCCEEDED) {
 			return SK_GENERIC_ERROR;
 		}
 	}
@@ -743,8 +746,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(
 		task.second->Targets()[arch]->SetAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_allocate_memory(mem_tile, phy_addr, ksize + ssize) != HN_SUCCEEDED) {
-		  return SK_GENERIC_ERROR;
+		if (hn_allocate_memory(mem_tile, phy_addr, ksize + ssize, hn_cluster, hn_handler) != HN_SUCCEEDED) {
+			return SK_GENERIC_ERROR;
 		}
 	}
 
@@ -871,7 +874,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 					hn_release_memory(
 							mem_buffers_tiles[i][j],
 							mem_buffers_addr[i][j],
-							mem_buffers_size[j]);
+							mem_buffers_size[j],
+                                                        hn_cluster, hn_handler);
 				delete mem_buffers_tiles[i];
 			}
 			delete mem_buffers_tiles;
@@ -912,7 +916,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 		uint32_t phy_addr;
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		int err = hn_get_synch_id (&phy_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE);
+		int err = hn_get_synch_id (&phy_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE, hn_cluster, hn_handler);
 		if (err != HN_SUCCEEDED) {
 			logger->Error("SetPartition: cannot find sync register for event %d",
 				event.second->Id());
@@ -938,7 +942,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 	}
 
 	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-	if (hn_reserve_units_set(num_tiles, units) != HN_SUCCEEDED) {
+	if (hn_reserve_units_set(num_tiles, units, hn_cluster, hn_handler) != HN_SUCCEEDED) {
 		err = SK_GENERIC_ERROR;
 	}
 	delete units;
@@ -962,7 +966,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 			event.second->Id(), phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		int err = hn_release_synch_id (phy_addr);
+		int err = hn_release_synch_id (phy_addr, hn_cluster, hn_handler);
 		if(err != HN_SUCCEEDED) {
 			logger->Warn("UnsetPartition: unable to release event %d (ID 0x%x)",
 				event.second->Id(), phy_addr);
@@ -980,7 +984,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 		buffer.second->SetPhysicalAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_release_memory(memory_bank, phy_addr, size) != HN_SUCCEEDED) {
+		if (hn_release_memory(memory_bank, phy_addr, size, hn_cluster, hn_handler) != HN_SUCCEEDED) {
 			ret = SK_GENERIC_ERROR;
 		}
 	}
@@ -998,7 +1002,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 		task.second->Targets()[arch]->SetAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_release_memory(mem_tile, phy_addr, ksize + ssize) != HN_SUCCEEDED) {
+		if (hn_release_memory(mem_tile, phy_addr, ksize + ssize, hn_cluster, hn_handler) != HN_SUCCEEDED) {
 			ret = SK_GENERIC_ERROR;
 		}
 	}
@@ -1016,7 +1020,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 	}
 
 	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-	if (hn_release_units_set(num_tiles, units) != HN_SUCCEEDED) {
+	if (hn_release_units_set(num_tiles, units, hn_cluster, hn_handler) != HN_SUCCEEDED) {
 		ret = SK_GENERIC_ERROR;
 	}
 	delete units;

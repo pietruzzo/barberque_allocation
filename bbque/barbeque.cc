@@ -33,6 +33,9 @@
 
 #define MODULE_NAMESPACE "bq"
 
+uint32_t hn_cluster = 0;
+uint32_t hn_handler;
+
 namespace bb = bbque;
 namespace bp = bbque::plugins;
 namespace bu = bbque::utils;
