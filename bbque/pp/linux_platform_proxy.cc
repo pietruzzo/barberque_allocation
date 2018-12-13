@@ -429,7 +429,7 @@ LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::Release(SchedPtr_t papp) noexcept {
 	// Release CGroup plugin data
 	// ... thus releasing the corresponding control group
-	logger->Debug("Release: Reclaiming resources from [%s]", papp->StrId());
+	logger->Debug("Release: releasing platform-specific data [%s]", papp->StrId());
 	papp->ClearPluginData(LINUX_PP_NAMESPACE);
 	return PLATFORM_OK;
 }
