@@ -679,10 +679,14 @@ void ApplicationManager::PrintSyncQ(bool verbose) const {
 ApplicationManager::ExitCode_t
 ApplicationManager::UpdateStatusMaps(AppPtr_t papp,
 		Application::State_t prev, Application::State_t next) {
-
-	assert(papp);
-	assert(prev != next);
 	PrintStatusQ();
+	assert(papp);
+	if (prev == next) {
+		logger->Debug("UpdateStatusMaps: %s => %s (nothing to do)",
+			papp->StateStr(prev), papp->StateStr(next));
+		return AM_EXC_STATUS_CHANGE_NONE;
+	}
+
 	std::unique_lock<std::mutex> currState_ul(
 			status_mtx[prev], std::defer_lock);
 	std::unique_lock<std::mutex> nextState_ul(
