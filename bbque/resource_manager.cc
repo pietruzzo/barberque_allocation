@@ -350,6 +350,9 @@ void ResourceManager::Optimize() {
 	if (active_apps) {
 		ra.PrintStatusReport();
 		am.PrintStatus();
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		prm.PrintStatus(true);
+#endif
 		logger->Info("Optimize: lauching scheduler...");
 
 		// Account for a new schedule activation
@@ -377,6 +380,11 @@ void ResourceManager::Optimize() {
 		}
 		logger->Notice("Schedule Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
 		am.PrintStatus(true);
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		prm.PrintStatus(true);
+#endif
+
+
 	}
 
 	// Check if there is at least one application to synchronize
@@ -406,6 +414,9 @@ void ResourceManager::Optimize() {
 		}
 		ra.PrintStatusReport(0, true);
 		am.PrintStatus(true);
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		prm.PrintStatus(true);
+#endif
 		logger->Notice("Sync Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
 	}
 
@@ -542,6 +553,9 @@ void ResourceManager::EvtBbqUsr1() {
 			"========================================");
 	logger->Notice("");
 	am.PrintStatus(true);
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	prm.PrintStatus(true);
+#endif
 
 	// Clear the corresponding event flag
 	logger->Notice("");
@@ -618,6 +632,9 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 				"========================================");
 		logger->Notice("");
 		am.PrintStatus(true);
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		prm.PrintStatus(true);
+#endif
 		break;
 
 	case 'q':
