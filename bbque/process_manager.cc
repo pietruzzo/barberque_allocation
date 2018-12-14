@@ -21,11 +21,13 @@
 #include "bbque/app/working_mode.h"
 #include "bbque/process_manager.h"
 #include "bbque/resource_manager.h"
+#include "bbque/utils/schedlog.h"
 
 #define MODULE_NAMESPACE "bq.prm"
 #define MODULE_CONFIG    "ProcessManager"
 
 #define PRM_MAX_ARG_LENGTH 15
+#define PRM_TABLE_TITLE "|                    Processes status                                     |"
 
 using namespace bbque::app;
 
@@ -303,6 +305,7 @@ ProcPtr_t const ProcessManager::GetProcess(AppPid_t pid) const {
 	}
 	return ProcPtr_t();
 }
+
 
 ProcPtr_t ProcessManager::GetFirst(app::Schedulable::State_t state, ProcessMapIterator & map_it) {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
@@ -621,6 +624,26 @@ void ProcessManager::UpdateIterators(
 		m_it->Update(); // Move the iterator forward
 	}
 }
+
+
+void ProcessManager::PrintStatus(bool verbose) {
+	std::unique_lock<std::mutex> u_lock(proc_mutex);
+	char line[80];
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_DIV1);
+	PRINT_NOTICE_IF_VERBOSE(verbose, PRM_TABLE_TITLE);
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_DIV2);
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_HEAD);
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_DIV2);
+
+	for (auto & proc_it: all_procs) {
+		ProcPtr_t & proc(proc_it.second);
+		utils::SchedLog::BuildSchedStateLine(proc, line, 80);
+		PRINT_NOTICE_IF_VERBOSE(verbose, line);
+	}
+
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_DIV1);
+}
+
 
 
 } // namespace bbque

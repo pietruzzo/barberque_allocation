@@ -258,6 +258,13 @@ public:
 	 */
 	ExitCode_t SyncContinue(ProcPtr_t proc);
 
+	/**
+	 * @brief Dump a logline to report all processes status
+	 *
+	 * @param verbose print in INFO logleve is ture, in DEBUG if false
+	 */
+	void PrintStatus(bool verbose);
+
 
 private:
 
