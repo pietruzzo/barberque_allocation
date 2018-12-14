@@ -273,8 +273,10 @@ private:
 			sched_req = std::make_shared<app::Process::ScheduleRequest>();
 			pid_set   = std::make_shared<PidSet_t>();
 		}
-		app::Process::ScheduleRequestPtr_t sched_req; // Scheduling request
-		PidSetPtr_t pid_set;                          // Set of PIDs of active process instances
+		// Scheduling request
+		app::Process::ScheduleRequestPtr_t sched_req;
+		// Set of PIDs of active process instances
+		PidSetPtr_t pid_set;
 	};
 
 	/** The logger used by the application manager */
