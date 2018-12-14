@@ -15,39 +15,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_SCHEDULABLE_MANAGER_H_
-#define BBQUE_SCHEDULABLE_MANAGER_H_
-
+#ifndef BBQUE_SCHEDLOG_H_
+#define BBQUE_SCHEDLOG_H_
 
 #include "bbque/app/schedulable.h"
 
+#define HM_TABLE_DIV1 "==========================================================================="
+#define HM_TABLE_DIV2 "|------------------+------------+-------------+-------------|-------------|"
+#define HM_TABLE_HEAD "|      APP:EXC     | STATE/SYNC |     CURRENT |        NEXT | AWM_NAME    |"
+
+#define PRINT_NOTICE_IF_VERBOSE(verbose, text)\
+	if (verbose)\
+		logger->Notice(text);\
+	else\
+		DB(\
+		logger->Debug(text);\
+		);
+
 namespace bbque {
 
+namespace utils {
 
-class SchedulableManager {
+
+class SchedLog {
 
 public:
 
-	/**
-	 * @brief Dump a logline to report on current Status queue counts
-	 */
-	virtual void PrintStatusQ(bool verbose = false) const = 0;
+	static void BuildSchedStateLine(
+			app::SchedPtr_t, char * state_line, size_t len);
 
-	/**
-	 * @brief Dump a logline to report on current Status queue counts
-	 */
-	virtual void PrintSyncQ(bool verbose = false) const = 0;
+protected:
 
-	/**
-	 * @brief Dump a logline to report all applications status
-	 *
-	 * @param verbose print in INFO logleve is ture, in DEBUG if false
-	 */
-	virtual void PrintStatus(bool verbose = false) = 0;
+	static void BuildStateStr(
+			app::SchedPtr_t papp, char * state_str, size_t len);
 
 };
 
+} // namespace utils
+
 } // namespace bbque
 
-#endif // BBQUE_SCHEDULABLE_MANAGER_H_
+#endif // BBQUE_SCHEDLOG_H_
 

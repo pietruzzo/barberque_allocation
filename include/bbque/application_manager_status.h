@@ -19,7 +19,6 @@
 #define BBQUE_APPLICATION_MANAGER_STATUS_IF_H_
 
 #include "bbque/app/application.h"
-#include "bbque/schedulable_manager.h"
 
 using bbque::app::ApplicationStatusIF;
 using bbque::app::AppPid_t;
@@ -145,7 +144,7 @@ private:
  * managed, and maps of application descriptors, even querying by scheduling
  * status or priority level.
  */
-class ApplicationManagerStatusIF: public SchedulableManager {
+class ApplicationManagerStatusIF {
 
 public:
 
