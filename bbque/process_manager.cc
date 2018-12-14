@@ -481,7 +481,7 @@ ProcessManager::ExitCode_t ProcessManager::Unschedule(ProcPtr_t proc) {
  ******************************************************************************/
 
 ProcessManager::ExitCode_t ProcessManager::SyncCommit(ProcPtr_t proc) {
-	ProcessManager::ExitCode_t ret = PROCESS_WRONG_STATE;
+	ProcessManager::ExitCode_t ret = SUCCESS;
 	// SYNC -> RUNNING
 	if (proc->Synching() && !proc->Blocking() && !proc->Disabled()) {
 		logger->Debug("SyncCommit: [%s] changing to RUNNING...", proc->StrId());
