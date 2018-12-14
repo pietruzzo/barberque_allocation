@@ -108,6 +108,11 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Init() {
 	logger->Debug("Init: loading the applications task graphs");
 	fut_tg = std::async(std::launch::async, &System::LoadTaskGraphs, sys);
 
+	// Applications count
+	nr_apps = sys->SchedulablesCount(ba::Schedulable::READY);
+	nr_apps += sys->SchedulablesCount(ba::Schedulable::RUNNING);
+	logger->Debug("Init: nr. active applications = %d", nr_apps);
+
 	return SCHED_OK;
 }
 
@@ -190,6 +195,7 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::ScheduleProcesses() {
 	// Running applications
 	proc = prm.GetFirst(ba::Schedulable::RUNNING, proc_it);
 	for (; proc; proc = prm.GetNext(ba::Schedulable::RUNNING, proc_it)) {
+		proc->CurrentAWM()->ClearResourceRequests();
 		ret = AssignWorkingMode(proc);
 		if (ret != SCHED_OK) {
 			logger->Error("ScheduleProcesses: error in RUNNING");
@@ -213,11 +219,10 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc) {
 	ba::AwmPtr_t pawm = proc->CurrentAWM();
 	if (pawm == nullptr) {
 		pawm = std::make_shared<ba::WorkingMode>(99,"Run-time", 1, proc);
-		// Resource request addition
-		pawm->AddResourceRequest(
-			"sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-			br::ResourceAssignment::Policy::BALANCED);
 	}
+	// Resource request addition
+	pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
+		br::ResourceAssignment::Policy::BALANCED);
 
 	// Look for the first available CPU
 	BindingManager & bdm(BindingManager::GetInstance());
@@ -264,11 +269,11 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	if (pawm == nullptr) {
 		pawm = std::make_shared<ba::WorkingMode>(
 				papp->WorkingModes().size(),"Run-time", 1, papp);
-		// Resource request addition
-		pawm->AddResourceRequest(
-			"sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-			br::ResourceAssignment::Policy::BALANCED);
 	}
+
+	// Resource request addition
+	pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
+		br::ResourceAssignment::Policy::BALANCED);
 
 	// Look for the first available CPU
 	BindingManager & bdm(BindingManager::GetInstance());

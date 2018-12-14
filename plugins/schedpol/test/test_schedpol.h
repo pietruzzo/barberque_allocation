@@ -101,6 +101,8 @@ private:
 
 	std::set<BBQUE_RID_TYPE> pe_ids;
 
+	uint32_t nr_apps;
+
 	/**
 	 * @brief Constructor
 	 *
