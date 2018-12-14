@@ -62,14 +62,6 @@
 #define RM_GET_PERIOD(METRICS, INDEX, PERIOD) \
 	mc.PeriodSample(METRICS[INDEX].mh, PERIOD);
 
-#define LNSCHB "::::::::::::::::::::: SCHEDULE START ::::::::::::::::::::::::"
-#define LNSCHE ":::::::::::::::::::::  SCHEDULE END  ::::::::::::::::::::::::"
-#define LNSYNB "**********************  SYNC START  *************************"
-#define LNSYNF "*********************  SYNC FAILED  *************************"
-#define LNSYNE "***********************  SYNC END  **************************"
-#define LNPROB "~~~~~~~~~~~~~~~~~~~  PROFILING START  ~~~~~~~~~~~~~~~~~~~~~~~"
-#define LNPROE "~~~~~~~~~~~~~~~~~~~~  PROFILING END  ~~~~~~~~~~~~~~~~~~~~~~~~"
-
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 namespace bp = bbque::plugins;
@@ -365,7 +357,6 @@ void ResourceManager::Optimize() {
 		RM_GET_PERIOD(metrics, RM_SCHED_PERIOD, period);
 
 		//--- Scheduling
-		logger->Info(LNSCHB);
 		optimization_tmr.start();
 		schedResult = sm.Schedule();
 		optimization_tmr.stop();
@@ -384,7 +375,6 @@ void ResourceManager::Optimize() {
 		default:
 			assert(schedResult == SchedulerManager::DONE);
 		}
-		logger->Info(LNSCHE);
 		logger->Notice("Schedule Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
 		am.PrintStatus(true);
 	}
@@ -406,17 +396,14 @@ void ResourceManager::Optimize() {
 			logger->Notice("Schedule Run-time: %9.3f[ms]", period);
 
 		//--- Synchronization
-		logger->Info(LNSYNB);
 		optimization_tmr.start();
 		syncResult = ym.SyncSchedule();
 		optimization_tmr.stop();
 		if (syncResult != SynchronizationManager::OK) {
-			logger->Warn(LNSYNF);
 			RM_COUNT_EVENT(metrics, RM_SYNCH_FAILED);
 			// FIXME here we should implement some counter-meaure to
 			// ensure consistency
 		}
-		logger->Info(LNSYNE);
 		ra.PrintStatusReport(0, true);
 		am.PrintStatus(true);
 		logger->Notice("Sync Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
