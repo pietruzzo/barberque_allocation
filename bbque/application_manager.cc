@@ -34,28 +34,16 @@
 #include "bbque/cpp11/chrono.h"
 #include "bbque/resource_partition_validator.h"
 #include "bbque/utils/assert.h"
-
-#define APPLICATION_MANAGER_NAMESPACE "bq.am"
-#define MODULE_NAMESPACE APPLICATION_MANAGER_NAMESPACE
-
-// The prefix for configuration file attributes
-#define MODULE_CONFIG "ApplicationManager"
+#include "bbque/utils/schedlog.h"
 
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
-#define RP_DIV1 "=========================================================================="
-#define RP_DIV2 "|------------------+------------+-------------+-------------|-------------|"
-#define RP_HEAD "|      APP:EXC     | STATE/SYNC |     CURRENT |        NEXT | AWM_NAME    |"
+#define APPLICATION_MANAGER_NAMESPACE "bq.am"
+#define MODULE_CONFIG                 "ApplicationManager"
+#define MODULE_NAMESPACE APPLICATION_MANAGER_NAMESPACE
 
-#define PRINT_NOTICE_IF_VERBOSE(verbose, text)\
-	if (verbose)\
-		logger->Notice(text);\
-	else\
-		DB(\
-		logger->Debug(text);\
-		);
-
+#define AM_TABLE_TITLE "|                    Applications status                                  |"
 
 namespace ba = bbque::app;
 namespace br = bbque::res;
@@ -109,8 +97,6 @@ ApplicationManager::ApplicationManager() :
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_CONTAINER_DEL,
 			static_cast<CommandHandler*>(this),
 			"Remove an existing EXC Container");
-
-
 }
 
 int ApplicationManager::CommandsCb(int argc, char *argv[]) {
@@ -713,131 +699,25 @@ ApplicationManager::UpdateStatusMaps(AppPtr_t papp,
 	return AM_SUCCESS;
 }
 
-inline void BuildStateStr(AppPtr_t papp, char * state_str) {
-	ApplicationStatusIF::State_t state;
-	ApplicationStatusIF::SyncState_t sync_state;
-	char st_str[] = "   ";
-	char sy_str[] = "   ";
-
-	state = papp->State();
-	sync_state = papp->SyncState();
-
-	// Sched state
-	switch (state) {
-	case ApplicationStatusIF::NEW:
-		strncpy(st_str, "NEW", 3); break;
-	case ApplicationStatusIF::READY:
-		strncpy(st_str, "RDY", 3); break;
-	case ApplicationStatusIF::RUNNING:
-		strncpy(st_str, "RUN", 3); break;
-	case ApplicationStatusIF::FINISHED:
-		strncpy(st_str, "FIN", 3); break;
-	default:
-		// SYNC
-		strncpy(st_str, "SYN", 3); break;
-	}
-
-	// Sync state
-	switch (sync_state) {
-	case ApplicationStatusIF::STARTING:
-		strncpy(sy_str, "STA", 3); break;
-	case ApplicationStatusIF::RECONF:
-		strncpy(sy_str, "RCF", 3); break;
-	case ApplicationStatusIF::MIGREC:
-		strncpy(sy_str, "MCF", 3); break;
-	case ApplicationStatusIF::MIGRATE:
-		strncpy(sy_str, "MGR", 3); break;
-	case ApplicationStatusIF::BLOCKED:
-		strncpy(sy_str, "BLK", 3); break;
-	case ApplicationStatusIF::DISABLED:
-		strncpy(st_str, "DIS", 3); break;
-	default:
-		// SYNC_NONE
-		strncpy(sy_str, "---", 3); break;
-	}
-
-	snprintf(state_str, 10, " %s %s ", st_str, sy_str);
-}
-
-
-#define GET_OBJ_RESOURCE(awm, r_type, r_bset) \
-	r_type = br::ResourceType::GPU; \
-	r_bset = awm->BindingSet(r_type); \
-	if (r_bset.Count() == 0) { \
-		r_type = br::ResourceType::CPU; \
-		r_bset = awm->BindingSet(r_type); \
-	}
-
 
 void ApplicationManager::PrintStatus(bool verbose) {
 	AppsUidMapIt app_it;
 	AppPtr_t papp;
 	char line[80];
-	char state_str[10];
-	char binding_str[10];
-	char curr_awm_set[15]  = "";
-	char next_awm_set[15]  = "";
-	char curr_awm_name[12] = "";
-	br::ResourceType r_type;
-	br::ResourceBitset r_bset;
-
-	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV1);
-	PRINT_NOTICE_IF_VERBOSE(verbose, RP_HEAD);
-	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV2);
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_DIV1);
+	PRINT_NOTICE_IF_VERBOSE(verbose, AM_TABLE_TITLE);
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_DIV2);
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_HEAD);
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_DIV2);
 
 	papp = GetFirst(app_it);
 	while (papp) {
-		ba::AwmPtr_t const & awm(papp->CurrentAWM());
-		ba::AwmPtr_t const & next_awm(papp->NextAWM());
-
-		// Reset AWM name (default for EXCs not running)
-		strncpy(curr_awm_name, "-", sizeof(curr_awm_name));
-		strncpy(curr_awm_set,  "-", sizeof(curr_awm_set));
-		strncpy(next_awm_set,  "-", sizeof(next_awm_set));
-
-		// Current AWM
-		if (awm) {
-			GET_OBJ_RESOURCE(awm, r_type, r_bset);
-			// MIGRATE case => must see previous set of the same AWM
-			if ((awm == next_awm) &&
-				((awm->BindingChanged(br::ResourceType::GPU)) ||
-					(awm->BindingChanged(br::ResourceType::CPU)))) {
-				r_bset = awm->BindingSetPrev(r_type);
-			}
-			else {
-				r_bset = awm->BindingSet(r_type);
-			}
-
-			// Binding string
-			snprintf(binding_str, sizeof(binding_str), "%s{%s}",
-					br::GetResourceTypeString(r_type),
-					r_bset.ToStringCG().c_str());
-			snprintf(curr_awm_set,  sizeof(curr_awm_set), "%02d:%s",
-					awm->Id(), binding_str);
-			snprintf(curr_awm_name, sizeof(curr_awm_name), "%s",
-					awm->Name().c_str());
-		}
-
-		// Next AWM
-		if (next_awm) {
-			GET_OBJ_RESOURCE(next_awm, r_type, r_bset);
-			snprintf(binding_str, sizeof(binding_str), "%s{%s}",
-					br::GetResourceTypeString(r_type),
-					r_bset.ToStringCG().c_str());
-			snprintf(next_awm_set, 12, "%02d:%s", next_awm->Id(), binding_str);
-		}
-
-		// State/Sync
-		BuildStateStr(papp, state_str);
-		snprintf(line, 80, "| %16s | %10s | %11s | %11s | %-11s |",
-				papp->StrId(), state_str, curr_awm_set, next_awm_set, curr_awm_name);
-
-		// Print the row
+		utils::SchedLog::BuildSchedStateLine(papp, line, 80);
 		PRINT_NOTICE_IF_VERBOSE(verbose, line);
 		papp = GetNext(app_it);
 	}
 
-	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV1);
+	PRINT_NOTICE_IF_VERBOSE(verbose, HM_TABLE_DIV1);
 }
 
 
