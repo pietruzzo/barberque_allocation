@@ -33,23 +33,16 @@
 #include "bbque/app/working_mode.h"
 #include "bbque/process_manager.h"
 #include "bbque/res/resource_path.h"
+#include "bbque/utils/schedlog.h"
 
 #undef  MODULE_CONFIG
 #define MODULE_CONFIG "ResourceAccounter"
 
-#define RP_DIV1 " ========================================================================="
-#define RP_DIV2 "|-------------------------------+-------------+---------------------------|"
-#define RP_DIV3 "|                               :             |             |             |"
-#define RP_HEAD "|   RESOURCES                   |     USED    |  UNRESERVED |     TOTAL   |"
+#define RA_DIV1 "==========================================================================="
+#define RA_DIV2 "|------------------------------+-----+-----------+------------+-----------|"
+#define RA_HEAD "|   RESOURCES              I/O | MOD |   USED    | UNRESERVED |   TOTAL   |"
+#define RA_DIV3 "|                                    :           |            |           |"
 
-
-#define PRINT_NOTICE_IF_VERBOSE(verbose, text)\
-	if (verbose)\
-		logger->Notice(text);\
-	else\
-		DB(\
-		logger->Debug(text);\
-		);
 
 namespace ba = bbque::app;
 namespace br = bbque::res;
@@ -141,22 +134,23 @@ void ResourceAccounter::WaitForPlatformReady() {
 
 void ResourceAccounter::PrintStatusReport(
 		br::RViewToken_t status_view, bool verbose) const {
-	//                        +--------- 22 ------------+     +-- 11 ---+   +-- 11 ---+   +-- 11 ---+
-	char rsrc_text_row[] = "| sys0.cpu0.mem0              I : 1234.123e+1 | 1234.123e+1 | 1234.123e+1 |";
+
+	// Row string
+	char rsrc_text_row[] = RA_DIV3;
 
 	// Print the head of the report table
 	if (verbose) {
 		logger->Notice("Report on state view: %ld", status_view);
-		logger->Notice(RP_DIV1);
-		logger->Notice(RP_HEAD);
-		logger->Notice(RP_DIV2);
+		logger->Notice(RA_DIV1);
+		logger->Notice(RA_HEAD);
+		logger->Notice(RA_DIV2);
 	}
 	else {
 		DB(
 		logger->Debug("Report on state view: %ld", status_view);
-		logger->Debug(RP_DIV1);
-		logger->Debug(RP_HEAD);
-		logger->Debug(RP_DIV2);
+		logger->Debug(RA_DIV1);
+		logger->Debug(RA_HEAD);
+		logger->Debug(RA_DIV2);
 		);
 	}
 
@@ -172,34 +166,40 @@ void ResourceAccounter::PrintStatusReport(
 		// Append '%' if resource is a processing element (core)
 		bool percent = resource_ptr->Type() == br::ResourceType::PROC_ELEMENT;
 
+		// Resource model [xxx]
+		char model[] = "   ";
+		strncpy(model, resource_ptr->Model().c_str(), 3);
+
 		// Build the resource amount string
-		len += sprintf(rsrc_text_row + len, "| %-27s %c : %11s | ",
-				resource_ptr->Path().c_str(), online,
+		// ...USED
+		len += sprintf(rsrc_text_row + len, "| %-26s %c | %3s | %9s | ",
+				resource_ptr->Path().c_str(),
+				online, model,
 				bu::GetValueUnitStr(
 					resource_ptr->Used(status_view), percent).c_str());
-		len += sprintf(rsrc_text_row + len, "%11s | ",
+		// UNRESERVED
+		len += sprintf(rsrc_text_row + len, "%10s | ",
 				bu::GetValueUnitStr(
 					resource_ptr->Unreserved(), percent).c_str());
-		len += sprintf(rsrc_text_row + len, "%11s |",
+		// TOTAL
+		len += sprintf(rsrc_text_row + len, "%9s |",
 				bu::GetValueUnitStr(
 					resource_ptr->Total(), percent).c_str());
 		PRINT_NOTICE_IF_VERBOSE(verbose, rsrc_text_row);
 
 		// Print details about how usage is partitioned among applications
-		if (resource_ptr->Used(status_view)> 0)
+		if (resource_ptr->Used(status_view) > 0)
 			PrintAppDetails(resource_ptr, status_view, verbose);
 	}
 
-	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV1);
+	PRINT_NOTICE_IF_VERBOSE(verbose, RA_DIV1);
 }
 
 void ResourceAccounter::PrintAppDetails(
 		br::ResourcePtr_t resource_ptr,
 		br::RViewToken_t status_view,
 		bool verbose) const {
-	//                           +----- 15 ----+             +-- 11 ---+  +--- 13 ----+ +--- 13 ----+
-	char app_text_row[] = "|     12345:exc_01:01,P01,AWM01 : 1234.123e+1 |             |             |";
-
+	char app_text_row[] = "| - 12345:exc_01:01,P01,AWM01      :  xxx.xx G |             |  xxx.xx G |";
 	if (resource_ptr == nullptr) {
 		logger->Warn("Null resource descriptor passed");
 		return;
@@ -245,16 +245,16 @@ void ResourceAccounter::PrintAppDetails(
 		}
 
 		// Build the row to print
-		sprintf(app_text_row, "| %19s,P%02d,AWM%02d : %11s |%13s|%13s|",
+		sprintf(app_text_row, "|  - %15s,P%02d,AWM%02d       : %9s | %10s | %10s|",
 				papp->StrId(),
 				papp->Priority(),
 				papp->CurrentAWM()->Id(),
 				bu::GetValueUnitStr(app_usage, true).c_str(),
-				"", "");
+				" ", " ");
 		PRINT_NOTICE_IF_VERBOSE(verbose, app_text_row);
 	}
 	// Print a separator line
-	PRINT_NOTICE_IF_VERBOSE(verbose, RP_DIV3);
+	PRINT_NOTICE_IF_VERBOSE(verbose, RA_DIV3);
 }
 
 
