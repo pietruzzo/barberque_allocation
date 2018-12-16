@@ -101,7 +101,7 @@ setup() {
 		chown $SUDO_USER:$SUDO_USER $BRTRW -R
 	else
 		# Remove previously remained application fifo
-		rm -r $BRTRW/bbque/bbque_[0-9]*_*
+		rm -rf $BRTRW/bbque/bbque_[0-9]*_*
 	fi
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
@@ -148,7 +148,7 @@ gen_platform_descr() {
 }
 
 setup_cgroups() {
-	bbque_notice "Cgroup initialization..."
+	bbqued_notice "Cgroup initialization..."
 	# Lookup for host specific PIL Layout and
 	# setup the corresponing CGgroup configuration
 	PILSETUP=$BBQUE_PILSETUPS/$PILNAME
