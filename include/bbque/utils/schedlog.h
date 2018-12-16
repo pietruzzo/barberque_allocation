@@ -41,6 +41,10 @@ class SchedLog {
 
 public:
 
+	static void BuildProgressBar(
+			uint64_t used, uint64_t total, char * prog_bar,
+			uint8_t len, char symbol='=');
+
 	static void BuildSchedStateLine(
 			app::SchedPtr_t, char * state_line, size_t len);
 

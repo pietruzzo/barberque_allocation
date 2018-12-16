@@ -26,6 +26,18 @@ namespace bbque {
 namespace utils {
 
 
+void SchedLog::BuildProgressBar(
+			uint64_t used,
+			uint64_t total,
+			char * prog_bar,
+			uint8_t len,
+			char symbol) {
+	uint8_t nr_bars = ((float) used / total) * len;
+	memset(prog_bar, ' ', len);
+	for (int i = 0; i < nr_bars; ++i)
+		prog_bar[i] = symbol;
+}
+
 void SchedLog::BuildStateStr(
 			app::SchedPtr_t sched_ptr,
 			char * state_str,
@@ -148,3 +160,4 @@ void SchedLog::BuildSchedStateLine(
 } // namespace utils
 
 } // namespace bbque
+
