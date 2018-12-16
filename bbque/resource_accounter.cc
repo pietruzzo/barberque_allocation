@@ -38,10 +38,10 @@
 #undef  MODULE_CONFIG
 #define MODULE_CONFIG "ResourceAccounter"
 
-#define RA_DIV1 "==========================================================================="
-#define RA_DIV2 "|------------------------------+-----+-----------+------------+-----------|"
-#define RA_HEAD "|   RESOURCES              I/O | MOD |   USED    | UNRESERVED |   TOTAL   |"
-#define RA_DIV3 "|                                    :           |            |           |"
+#define RA_DIV1 "============================================================================"
+#define RA_DIV2 "|------------------------------+-----+-----------+------------+------------|"
+#define RA_HEAD "|   RESOURCES              I/O | MOD |   USED    | UNRESERVED |    TOTAL   |"
+#define RA_DIV3 "|                                    |           |            |            |"
 
 
 namespace ba = bbque::app;
@@ -182,7 +182,7 @@ void ResourceAccounter::PrintStatusReport(
 				bu::GetValueUnitStr(
 					resource_ptr->Unreserved(), percent).c_str());
 		// TOTAL
-		len += sprintf(rsrc_text_row + len, "%9s |",
+		len += sprintf(rsrc_text_row + len, "%10s |",
 				bu::GetValueUnitStr(
 					resource_ptr->Total(), percent).c_str());
 		PRINT_NOTICE_IF_VERBOSE(verbose, rsrc_text_row);
@@ -199,7 +199,7 @@ void ResourceAccounter::PrintAppDetails(
 		br::ResourcePtr_t resource_ptr,
 		br::RViewToken_t status_view,
 		bool verbose) const {
-	char app_text_row[] = "| - 12345:exc_01:01,P01,AWM01      :  xxx.xx G |             |  xxx.xx G |";
+	char app_text_row[] = RA_DIV3;
 	if (resource_ptr == nullptr) {
 		logger->Warn("Null resource descriptor passed");
 		return;
@@ -244,13 +244,19 @@ void ResourceAccounter::PrintAppDetails(
 			continue;
 		}
 
+#define RA_PROGRESS_BAR_LEN 22
+		char prog_bar[RA_PROGRESS_BAR_LEN];
+		utils::SchedLog::BuildProgressBar(
+				app_usage, resource_ptr->Total(), prog_bar,
+				RA_PROGRESS_BAR_LEN, '*');
+
 		// Build the row to print
-		sprintf(app_text_row, "|  - %15s,P%02d,AWM%02d       : %9s | %10s | %10s|",
+		sprintf(app_text_row, "|  - %15s,P%02d,AWM%02d       : %9s : %-23s |",
 				papp->StrId(),
 				papp->Priority(),
 				papp->CurrentAWM()->Id(),
 				bu::GetValueUnitStr(app_usage, true).c_str(),
-				" ", " ");
+				prog_bar);
 		PRINT_NOTICE_IF_VERBOSE(verbose, app_text_row);
 	}
 	// Print a separator line
