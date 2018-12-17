@@ -322,11 +322,13 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::CheckHWRequirements(ba::AppCPtr_t p
 
 
 SchedulerPolicyIF::ExitCode_t
-MangASchedPol::ScheduleApplication(ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept {
+MangASchedPol::ScheduleApplication(
+		ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept {
 	// Order the HW resources partition
 	auto ret = SortPartitions(papp, partitions);
 	if (ret != SCHED_OK) {
-		logger->Error("ScheduleApplication: [%s] partition ordering failed", papp->StrId());
+		logger->Error("ScheduleApplication: [%s] partition ordering failed",
+			papp->StrId());
 		return ret;
 	}
 
