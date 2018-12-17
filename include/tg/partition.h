@@ -41,7 +41,8 @@ public:
 	/**
 	 * \brief The constructor of a new partition (the id must be unique for each TaskGraph)
 	 */
-	Partition(uint32_t id) : id(id) { }
+	Partition(uint32_t id, uint32_t c_id=0) :
+		id(id), cluster_id(c_id) { }
 
 	virtual ~Partition() {}
 
@@ -50,6 +51,14 @@ public:
 	 */
 	inline uint32_t GetId() const noexcept {
 		return this->id;
+	}
+
+	/**
+	 * \brief Getter method for the unique identifier of the HW cluster
+	 * including the partition
+	 */
+	inline uint32_t GetClusterId() const noexcept {
+		return this->cluster_id;
 	}
 
 	/**
@@ -206,6 +215,7 @@ public:
 
 private:
 	const uint32_t id;	/** The internal identifier returned by HN library */
+	uint32_t cluster_id;	/** The HW cluster (id) to which the partition belongs */
 	int_fast8_t mm_score;	/** The score index [0;100] provided by the MemoryManager */
 	int_fast8_t pm_score;	/** The score index [0;100] provided by the PowerManager */
 
