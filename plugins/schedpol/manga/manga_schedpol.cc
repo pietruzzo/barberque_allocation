@@ -230,7 +230,9 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 	}
 
 	// Get the list of possible HW partitions
-	rmv_err = rmv.LoadPartitions(*papp->GetTaskGraph(), partitions);
+	// TODO: Iterate over all the available clusters?
+	uint32_t hw_cluster_id = 0;
+	rmv_err = rmv.LoadPartitions(*papp->GetTaskGraph(), partitions, hw_cluster_id);
 	switch(rmv_err) {
 		case ResourcePartitionValidator::PMV_OK:
 			logger->Debug("ServeApp: HW partitions successfully retrieved");
