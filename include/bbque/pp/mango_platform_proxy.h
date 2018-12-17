@@ -124,7 +124,9 @@ private:
 	public:
 		MangoPartitionSkimmer();
 		virtual ExitCode_t Skim(
-					const TaskGraph &tg, std::list<Partition>&) noexcept override final;
+					const TaskGraph &tg,
+					std::list<Partition>&,
+					uint32_t hw_cluster_id) noexcept override final;
 		virtual ExitCode_t SetPartition(
 					TaskGraph &tg,
 					const Partition &partition) noexcept override final;

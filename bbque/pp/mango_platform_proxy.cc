@@ -549,6 +549,7 @@ static hn_st_request_t FillReq(const TaskGraph &tg) __attribute__((unused)) {
  */
 static void FindUnitsSets(
 		const TaskGraph &tg,
+		uint32_t hw_cluster_id,
 		unsigned int ***tiles,
 		unsigned int ***families_order,
 		unsigned int *nsets) {
@@ -569,7 +570,8 @@ static void FindUnitsSets(
 			t.second->GetAssignedArch(), t.second->GetThreadCount());
 	}
 
-	int res = hn_find_units_sets(0, num_tiles, tiles_family, tiles, families_order, nsets, hn_cluster);
+	int res = hn_find_units_sets(0, num_tiles, tiles_family, tiles, families_order, nsets,
+					hw_cluster_id);
 	delete tiles_family;
 	if (res != HN_SUCCEEDED)
 		throw std::runtime_error("Unable to find units sets");
@@ -580,6 +582,7 @@ static void FindUnitsSets(
  */
 static void FindAndAllocateMemory(
 		const TaskGraph &tg,
+		uint32_t hw_cluster_id,
 		unsigned int *tiles_set,
         unsigned int *mem_buffers_tiles,
         unsigned int *mem_buffers_addr) {
@@ -622,13 +625,15 @@ static void FindAndAllocateMemory(
 			// FIXME Better to allocate the buffer close to the tiles the unit that are using it will be mapped on
 			tile = tiles_set[0];
 		}
-		int res = hn_find_memory(tile, mem_buffers_size[i], &mem_buffers_tiles[i], &mem_buffers_addr[i], hn_cluster);
+		int res = hn_find_memory(tile, mem_buffers_size[i], &mem_buffers_tiles[i], &mem_buffers_addr[i],
+					hw_cluster_id);
 		if (res != HN_SUCCEEDED) {
 			delete mem_buffers_size;
 			throw std::runtime_error("Unable to find memory");
 		}
 
-		res = hn_allocate_memory(mem_buffers_tiles[i], mem_buffers_addr[i], mem_buffers_size[i], hn_cluster);
+		res = hn_allocate_memory(mem_buffers_tiles[i], mem_buffers_addr[i], mem_buffers_size[i],
+					hw_cluster_id);
 		if (res != HN_SUCCEEDED) {
 			delete mem_buffers_size;
 			throw std::runtime_error("Unable to allocate memory");
@@ -669,6 +674,7 @@ static Partition GetPartition(const TaskGraph &tg, hn_st_response_t *res, int pa
 */
 static Partition GetPartition(
 		const TaskGraph &tg,
+		unsigned int hw_cluster_id,
 		unsigned int *tiles,
 		unsigned int *families_order,
 		unsigned int *mem_buffers_tiles,
@@ -681,12 +687,15 @@ static Partition GetPartition(
 	bool *tile_mapped = new bool[tasks_size];
 	std::fill_n(tile_mapped, tasks_size, false);
 
-	Partition part(partition_id);
+	// The partition has a cluster scope
+	Partition part(partition_id, hw_cluster_id);
+
 	// FIXME UPV -> POLIMI do it in a more efficient way if required
 	//       We have to map the task to a tile according to its family type
 	for (int j=0; j < tasks_size; j++) {
 		uint32_t family = ArchTypeToMangoType(
-			it_task->second->GetAssignedArch(), it_task->second->GetThreadCount());
+			it_task->second->GetAssignedArch(),
+			it_task->second->GetThreadCount());
 
 		// look for the family type of the task
 		int k = 0;
@@ -699,7 +708,8 @@ static Partition GetPartition(
 		// we are always going to find an unmapped tile as the sets provided by
 		// hn_find_units_sets hnlib function return sets of task_size tiles
 		part.MapTask(it_task->second, tiles[k],
-				mem_buffers_tiles[buff_size + j], mem_buffers_addr[buff_size + j]);
+				mem_buffers_tiles[buff_size + j],
+				mem_buffers_addr[buff_size + j]);
 		it_task++;
 	}
 
@@ -719,6 +729,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(
 		const TaskGraph &tg,
 		const Partition &partition) noexcept {
 
+	uint32_t hw_cluster_id = partition.GetClusterId();
+
 	for ( auto buffer : tg.Buffers()) {
 		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
 		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
@@ -728,7 +740,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(
 		buffer.second->SetPhysicalAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_allocate_memory(memory_bank, phy_addr, buffer.second->Size(), hn_cluster) != HN_SUCCEEDED) {
+		if (hn_allocate_memory(
+			memory_bank, phy_addr, buffer.second->Size(), hw_cluster_id) != HN_SUCCEEDED) {
 			return SK_GENERIC_ERROR;
 		}
 	}
@@ -745,7 +758,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(
 		task.second->Targets()[arch]->SetAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_allocate_memory(mem_tile, phy_addr, ksize + ssize, hn_cluster) != HN_SUCCEEDED) {
+		if (hn_allocate_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id) != HN_SUCCEEDED) {
 			return SK_GENERIC_ERROR;
 		}
 	}
@@ -756,7 +769,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		const TaskGraph &tg,
-		std::list<Partition>&part_list) noexcept {
+		std::list<Partition>&part_list,
+		uint32_t hw_cluster_id) noexcept {
 	unsigned int num_mem_buffers = tg.BufferCount() + tg.TaskCount();
 	ExitCode_t res               = SK_OK;
 	auto it_task                 = tg.Tasks().begin();
@@ -809,7 +823,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		* without allocate the memory returned, since it would return the same bank.
 		*/
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		FindUnitsSets(tg, &tiles, &families_order, &num_sets);
+		FindUnitsSets(tg, hw_cluster_id, &tiles, &families_order, &num_sets);
 
 		// TODO: Implement the management of the multiple sets returned
 		num_sets = 1;
@@ -823,7 +837,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 			// let's find and allocate memory close the tiles obtained for the set
 			mem_buffers_tiles[i] = new uint32_t[num_mem_buffers];
 			mem_buffers_addr[i]  = new uint32_t[num_mem_buffers];
-			FindAndAllocateMemory(tg, tiles[i], mem_buffers_tiles[i], mem_buffers_addr[i]);
+			FindAndAllocateMemory(tg, hw_cluster_id, tiles[i],
+				mem_buffers_tiles[i], mem_buffers_addr[i]);
 		}
 	}
 	catch (const std::runtime_error &err) {
@@ -840,8 +855,12 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		} else {
 			// Fill the partition vector with the partitions returned by HN library
 			for (unsigned int i=0; i < num_sets; i++) {
-				Partition part = GetPartition(tg, tiles[i], families_order[i],
-						      mem_buffers_tiles[i], mem_buffers_addr[i], i);
+				Partition part = GetPartition(
+							tg, hw_cluster_id,
+							tiles[i], families_order[i],
+							mem_buffers_tiles[i],
+							mem_buffers_addr[i],
+							i); // partition id
 				part_list.push_back(part);
 			}
 		}
@@ -874,7 +893,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 							mem_buffers_tiles[i][j],
 							mem_buffers_addr[i][j],
 							mem_buffers_size[j],
-                                                        hn_cluster);
+                                                        hw_cluster_id);
 				delete mem_buffers_tiles[i];
 			}
 			delete mem_buffers_tiles;
@@ -897,9 +916,14 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 		TaskGraph &tg,
 		const Partition &partition) noexcept {
 
+	// Set the HW cluster including the mapped resources
+	uint32_t hw_cluster_id = partition.GetClusterId();
+	tg.SetCluster(hw_cluster_id);
+
 	// We set the mapping of buffers-addresses based on the selected partition
 	ExitCode_t err = SetAddresses(tg, partition);
 
+	// Set the assigned processor (for each task)
 	for ( auto task : tg.Tasks()) {
 		auto tile_id = partition.GetUnit(task.second);
 		task.second->SetMappedProcessor(tile_id);
@@ -915,7 +939,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 		uint32_t phy_addr;
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		int err = hn_get_synch_id (&phy_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE, hn_cluster);
+		int err = hn_get_synch_id (&phy_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE,
+				hw_cluster_id);
 		if (err != HN_SUCCEEDED) {
 			logger->Error("SetPartition: cannot find sync register for event %d",
 				event.second->Id());
@@ -928,7 +953,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 		event.second->SetPhysicalAddress(phy_addr);
 	}
 
-	// allocate units
+	// Reserve the units (processors)
 	unsigned int num_tiles = tg.TaskCount();
 	uint32_t *units = new uint32_t[num_tiles];
 	int i = 0;
@@ -941,7 +966,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 	}
 
 	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-	if (hn_reserve_units_set(num_tiles, units, hn_cluster) != HN_SUCCEEDED) {
+	if (hn_reserve_units_set(num_tiles, units, hw_cluster_id) != HN_SUCCEEDED) {
 		err = SK_GENERIC_ERROR;
 	}
 	delete units;
@@ -955,6 +980,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 		const Partition &partition) noexcept {
 
 	uint32_t part_id = partition.GetId();
+	uint32_t hw_cluster_id = partition.GetClusterId();
+
 	ExitCode_t ret = SK_OK;
 	logger->Debug("UnsetPartition: deallocating partition [id=%d]...", part_id);
 
@@ -965,7 +992,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 			event.second->Id(), phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		int err = hn_release_synch_id (phy_addr, hn_cluster);
+		int err = hn_release_synch_id (phy_addr, hw_cluster_id);
 		if(err != HN_SUCCEEDED) {
 			logger->Warn("UnsetPartition: unable to release event %d (ID 0x%x)",
 				event.second->Id(), phy_addr);
@@ -983,7 +1010,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 		buffer.second->SetPhysicalAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_release_memory(memory_bank, phy_addr, size, hn_cluster) != HN_SUCCEEDED) {
+		if (hn_release_memory(memory_bank, phy_addr, size, hw_cluster_id) != HN_SUCCEEDED) {
 			ret = SK_GENERIC_ERROR;
 		}
 	}
@@ -1001,7 +1028,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 		task.second->Targets()[arch]->SetAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_release_memory(mem_tile, phy_addr, ksize + ssize, hn_cluster) != HN_SUCCEEDED) {
+		if (hn_release_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id) != HN_SUCCEEDED) {
 			ret = SK_GENERIC_ERROR;
 		}
 	}
@@ -1019,7 +1046,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 	}
 
 	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-	if (hn_release_units_set(num_tiles, units, hn_cluster) != HN_SUCCEEDED) {
+	if (hn_release_units_set(num_tiles, units, hw_cluster_id) != HN_SUCCEEDED) {
 		ret = SK_GENERIC_ERROR;
 	}
 	delete units;

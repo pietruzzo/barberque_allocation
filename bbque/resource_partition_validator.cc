@@ -45,7 +45,9 @@ void ResourcePartitionValidator::RegisterSkimmer(
 
 ResourcePartitionValidator::ExitCode_t
 ResourcePartitionValidator::LoadPartitions(
-		const TaskGraph &tg, std::list<Partition> &partitions) {
+		const TaskGraph &tg,
+		std::list<Partition> &partitions,
+		uint32_t hw_cluster_id) {
 
 	logger->Info("Initial partitions nr. %d", partitions.size());
 	PartitionSkimmer::SkimmerType_t skimmer_type = PartitionSkimmer::SkimmerType_t::SKT_NONE;
@@ -66,7 +68,7 @@ ResourcePartitionValidator::LoadPartitions(
 		logger->Debug("Executing skimmer [type=%d] [priority=%d]",
 			(int)skimmer_type, priority);
 
-		PartitionSkimmer::ExitCode_t ret = skimmer->Skim(tg, partitions);
+		PartitionSkimmer::ExitCode_t ret = skimmer->Skim(tg, partitions, hw_cluster_id);
 		if (ret != PartitionSkimmer::SK_OK) {
 			logger->Error("Skimmer %d [priority=%d] FAILED [err=%d]", 
 				(int)skimmer_type, priority, ret);
