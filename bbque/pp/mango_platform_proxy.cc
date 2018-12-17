@@ -349,7 +349,8 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 			pd_t::ProcessingElement pe(i , 0, 100, pd_t::PartitionType_t::MDEV);
 			pe.SetPrefix(mt.GetPath());
 			mt.AddProcessingElement(pe);
-			ra.RegisterResource(pe.GetPath(), "", 100);
+			auto rsrc_ptr = ra.RegisterResource(pe.GetPath(), "", 100);
+			rsrc_ptr->SetModel(hn_to_str_unit_family(tile_info.unit_family));
 		}
 
 #ifdef CONFIG_BBQUE_WM
