@@ -101,10 +101,9 @@ public:
 	inline void SetThreadCount(int nr_threads) { thread_count = nr_threads; }
 
 
-
 	/**
 	 * \brief Set the processor assigned to the task
-	 * \param processor_id Identification number of the processing unit
+	 * \param p_id Identification number of the processing unit
 	 */
 	inline void SetMappedProcessor(int p_id) { processor_id = p_id; }
 
