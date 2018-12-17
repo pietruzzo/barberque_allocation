@@ -111,6 +111,18 @@ public:
 		application_id = app_id;
 	}
 
+	/**
+	 * \brief Set the cluster (id) the assigned resources belongs to
+	 * \param c_id Identification number of the cluster
+	 */
+	inline void SetCluster(int c_id) { cluster_id = c_id; }
+
+	/**
+	 * \brief Get the cluster (id) the assigned resources belongs to
+	 * \return The identification number of the cluster
+	 */
+	inline int GetCluster() const { return cluster_id; }
+
 
 	/**
 	 * \brief Check if it is successfully initialized
@@ -243,6 +255,9 @@ private:
 	/*** Initialization and validation status ***/
 	bool is_valid = false;
 
+	/*** The HW cluster to which the mapped resources come from ***/
+	uint32_t cluster_id = 0;
+
 	/*** Task objects ***/
 	TaskMap_t tasks;
 
@@ -264,6 +279,7 @@ private:
 	        ar & boost::serialization::base_object<Profilable>(*this);
 		ar & application_id;
 		ar & is_valid;
+		ar & cluster_id;
 		ar & tasks;
 		ar & buffers;
 		ar & events;
