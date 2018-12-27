@@ -879,13 +879,13 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 	}
 
 	// let's deallocate memory created in the hn_find_units_sets hnlib function
-	if (tiles != NULL) {
+	if (tiles != nullptr) {
 		for (unsigned int i = 0; i < num_sets; i++)
 			free(tiles[i]);
 		free(tiles);
 	}
 
-	if (families_order != NULL) {
+	if (families_order != nullptr) {
 		for (unsigned int i = 0; i < num_sets; i++)
 			free(families_order[i]);
 		free(families_order);
@@ -893,7 +893,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 
 	// let's deallocate memory created in this method
 	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-	if (mem_buffers_tiles != NULL) {
+	if (mem_buffers_tiles != nullptr) {
 		for (unsigned int i = 0; i < num_sets; i++)
 			if (mem_buffers_tiles[i] != NULL) {
 				// TRICK we allocated memory banks when finding them in
@@ -911,7 +911,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 			delete mem_buffers_tiles;
 	}
 
-	if (mem_buffers_addr != NULL) {
+	if (mem_buffers_addr != nullptr) {
 		for (unsigned int i = 0; i < num_sets; i++)
 			if (mem_buffers_addr[i] != NULL)
 				delete mem_buffers_addr[i];
