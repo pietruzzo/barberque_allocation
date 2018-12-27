@@ -579,7 +579,8 @@ static void FindUnitsSets(
 			" [libhn suspect corruption]");
 		return;
 	}
-	delete tiles_family;
+
+	delete[] tiles_family;
 	if (res != HN_SUCCEEDED)
 		throw std::runtime_error("Unable to find units sets");
 }
@@ -635,14 +636,14 @@ static void FindAndAllocateMemory(
 		int res = hn_find_memory(tile, mem_buffers_size[i], &mem_buffers_tiles[i], &mem_buffers_addr[i],
 					hw_cluster_id);
 		if (res != HN_SUCCEEDED) {
-			delete mem_buffers_size;
+			delete[] mem_buffers_size;
 			throw std::runtime_error("Unable to find memory");
 		}
 
 		res = hn_allocate_memory(mem_buffers_tiles[i], mem_buffers_addr[i], mem_buffers_size[i],
 					hw_cluster_id);
 		if (res != HN_SUCCEEDED) {
-			delete mem_buffers_size;
+			delete[] mem_buffers_size;
 			throw std::runtime_error("Unable to allocate memory");
 		}
 	}
@@ -652,7 +653,8 @@ static void FindAndAllocateMemory(
 			" [libhn suspect corruption]");
 		return;
 	}
-	delete mem_buffers_size;
+
+	delete[] mem_buffers_size;
 }
 
 /**
@@ -993,7 +995,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 			" [libhn suspect corruption]");
 		return SK_GENERIC_ERROR;
 	}
-	delete units;
+	delete[] units;
 
 	return err;
 }
@@ -1079,7 +1081,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 			" [libhn suspect corruption]");
 		return SK_GENERIC_ERROR;
 	}
-	delete units;
+
+	delete[] units;
 
 	return ret;
 }
