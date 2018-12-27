@@ -573,6 +573,12 @@ static void FindUnitsSets(
 
 	int res = hn_find_units_sets(0, num_tiles, tiles_family, tiles, families_order, nsets,
 					hw_cluster_id);
+
+	if (tiles_family == nullptr) {
+		logger->Warn("FindUnitsSets: unexpected null pointer (tiles_family)"
+			" [libhn suspect corruption]");
+		return;
+	}
 	delete tiles_family;
 	if (res != HN_SUCCEEDED)
 		throw std::runtime_error("Unable to find units sets");
@@ -641,6 +647,11 @@ static void FindAndAllocateMemory(
 		}
 	}
 
+	if (mem_buffers_size == nullptr) {
+		logger->Warn("FindAndAllocateMemory: unexpected null pointer: mem_buffers_size"
+			" [libhn suspect corruption]");
+		return;
+	}
 	delete mem_buffers_size;
 }
 
@@ -907,7 +918,13 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 			delete mem_buffers_addr;
 	}
 
-	delete mem_buffers_size;
+	if (mem_buffers_size != nullptr) {
+		delete[] mem_buffers_size;
+	}
+	else {
+		logger->Warn("MangoPartitionSkimmer: unexpected null pointer: mem_buffers_size"
+			" [libhn suspect corruption]");
+	}
 
 	return res;
 }
@@ -969,6 +986,12 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
 	if (hn_reserve_units_set(num_tiles, units, hw_cluster_id) != HN_SUCCEEDED) {
 		err = SK_GENERIC_ERROR;
+	}
+
+	if (units == nullptr) {
+		logger->Warn("SetPartition: unexpected null pointer: units"
+			" [libhn suspect corruption]");
+		return SK_GENERIC_ERROR;
 	}
 	delete units;
 
@@ -1049,6 +1072,12 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
 	if (hn_release_units_set(num_tiles, units, hw_cluster_id) != HN_SUCCEEDED) {
 		ret = SK_GENERIC_ERROR;
+	}
+
+	if (units == nullptr) {
+		logger->Warn("UnsetPartition: unexpected null pointer: units"
+			" [libhn suspect corruption]");
+		return SK_GENERIC_ERROR;
 	}
 	delete units;
 
