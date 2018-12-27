@@ -17,12 +17,9 @@
 #define MANGO_MEMORY_COUNT_START     10
 #define MANGO_PEAKOS_FILE_SIZE       256*1024*1024
 
-extern uint32_t hn_cluster;
-
 namespace bb = bbque;
 namespace br = bbque::res;
 namespace po = boost::program_options;
-
 
 namespace bbque {
 namespace pp {
@@ -54,26 +51,38 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	filter.tile = 999;
 	filter.core = 999;
 
-	logger->Debug("Initializing communication with MANGO platform...");
+	logger->Info("MangoPlatformProxy: initializing communication with HN daemon...");
 	int hn_init_err = hn_initialize(filter, UPV_PARTITION_STRATEGY, 1, 0, 0);
-	if(hn_init_err == HN_SUCCEEDED) {
-		logger->Info("HN Daemon connection established.");
+	if (hn_init_err == HN_SUCCEEDED) {
+		logger->Info("MangoPlatformProxy: HN daemon connection established");
 	} else {
-		logger->Fatal("Unable to establish HN daemon connection. Error code: %d", hn_init_err);
+		logger->Fatal("MangoPlatformProxy: unable to establish HN daemon connection"
+			"[error=%d]", hn_init_err);
 	}
 
 	bbque_assert ( 0 == hn_init_err );
 
-	// We have now to reset the platform
-	// This function call may take several seconds to conclude
-	logger->Debug("Resetting MANGO platform...");
+	// Get the number of clusters
+	int err = hn_get_num_clusters(&this->num_clusters);
+	if ( HN_SUCCEEDED != err ) {
+		logger->Fatal("MangoPlatformProxy: unable to get the number of clusters "
+			"[error=%d]", err);
+	}
+	logger->Info("MangoPlatformProxy: nr. of clusters: %d", num_clusters);
 
-	int hn_reset_err = hn_reset(0, hn_cluster);
-	if(hn_reset_err == HN_SUCCEEDED) {
-		logger->Info("HN Library successfully initialized");
-	} else {
-		logger->Crit("Unable to reset the HN board. Error code: %d", hn_reset_err);
-		// We consider this error non critical and we try to continue
+	// Reset the platform (cluster by cluster)
+	for (uint32_t cluster_id=0; cluster_id < this->num_clusters; ++cluster_id) {
+		logger->Debug("MangoPlatformProxy: resetting cluster=<%d>...", cluster_id);
+		// This function call may take several seconds to conclude
+		int hn_reset_err = hn_reset(0, cluster_id);
+		if (hn_reset_err == HN_SUCCEEDED) {
+			logger->Info("MangoPlatformProxy: HN cluster=<%d> successfully initialized",
+				cluster_id);
+		} else {
+			logger->Crit("MangoPlatformProxy: unable to reset the HN cluster=%d"
+				" [error= %d]", cluster_id, hn_reset_err);
+			// We consider this error non critical and we try to continue
+		}
 	}
 
 	// Register our skimmer for the incoming partitions (it actually fills the partition list,
@@ -81,22 +90,11 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	// Priority of 100 means the maximum priority, this is the first skimmer to be executed
 	ResourcePartitionValidator &rmv = ResourcePartitionValidator::GetInstance();
 	rmv.RegisterSkimmer(std::make_shared<MangoPartitionSkimmer>() , 100);
+	logger->Info("MangoPlatformProxy: partition skimmer registered");
 }
 
 MangoPlatformProxy::~MangoPlatformProxy() {
-	// first release occupied resources, p.e. allocated memory for peakOS
-	// Hope Partitions are unset correctly too
-	for (auto rsc : allocated_resources_peakos) {
-		uint32_t tile_mem = rsc.first;
-		uint32_t addr     = rsc.second;
-		hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE, hn_cluster);
-		logger->Info("Released peakOS memory %d address 0x%08x", tile_mem, addr);
-	}
-
-	// Just clean up stuffs...
-	int hn_err_ret = hn_end();
-	bbque_assert(0 == hn_err_ret);
-
+	logger->Info("MangoPlatformProxy: nothing left to be done");
 }
 
 
@@ -166,31 +164,40 @@ void MangoPlatformProxy::Exit() {
 	logger->Info("Exit: Termination...");
 
 	// Stop HW counter monitors
-	hn_tile_info_t tile_info;
-	for (uint_fast32_t i=0; i < num_tiles; i++) {
-		int err = hn_get_tile_info(i, &tile_info, hn_cluster);
-		if (HN_SUCCEEDED != err) {
-			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
-			continue;
+	for (uint32_t cluster_id=0; cluster_id < this->num_clusters; ++cluster_id) {
+		hn_tile_info_t tile_info;
+		for (uint_fast32_t tile_id=0; tile_id < num_tiles; tile_id++) {
+			int err = hn_get_tile_info(tile_id, &tile_info, cluster_id);
+			if (HN_SUCCEEDED != err) {
+				logger->Fatal("Exit: unable to get the info for cluster=<%d> tile=<%d>",
+					cluster_id, tile_id);
+				continue;
+			}
+	#ifdef CONFIG_BBQUE_PM_MANGO
+			logger->Info("Exit: disabling monitors...");
+			if (tile_info.unit_family == HN_TILE_FAMILY_PEAK) {
+				err = hn_stats_monitor_configure_tile(tile_id, 0, cluster_id);
+				if (err == 0)
+					logger->Info("Exit: stopping monitor for cluster=<%d> tile=<%d>",
+						cluster_id, tile_id);
+				else
+					logger->Error("Error while stopping monitor for cluster=<%d> tile=<%d>",
+						cluster_id, tile_id);
+			}
+	#endif
 		}
-#ifdef CONFIG_BBQUE_PM_MANGO
-		if (tile_info.unit_family == HN_TILE_FAMILY_PEAK) {
-			err = hn_stats_monitor_configure_tile(i, 0, hn_cluster);
-			if (err == 0)
-				logger->Error("Stopping monitor on tile nr=%d", i);
-			else
-				logger->Error("Unable to enable profiling on tile nr=%d", i);
-		}
-#endif
 	}
 
-	// first release occupied resources, p.e. allocated memory for peakOS
-	// Hope Partitions are unset correctly too
-	for (auto rsc : allocated_resources_peakos) {
-		uint32_t tile_mem = rsc.first;
-		uint32_t addr     = rsc.second;
-		hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE, hn_cluster);
-		logger->Info("Exit: Released peakOS memory %d address 0x%08x", tile_mem, addr);
+	// First release occupied resources, i.e., allocated memory for peakOS
+	// ...hope partitions are correctly unset too
+	for (uint32_t cluster_id=0; cluster_id < this->num_clusters; ++cluster_id) {
+		for (auto rsc : allocated_resources_peakos) {
+			uint32_t tile_mem = rsc.first;
+			uint32_t addr     = rsc.second;
+			hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE, cluster_id);
+			logger->Info("Exit: cluster=<%d> "
+				"released PEAK OS memory %d address 0x%08x", cluster_id, tile_mem, addr);
+		}
 	}
 
 	// Just clean up stuffs...
@@ -209,110 +216,137 @@ MangoPlatformProxy::ExitCode_t MangoPlatformProxy::Refresh() noexcept {
 
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::LoadPlatformData() noexcept {
-	// Get the number of tiles
-	int err = hn_get_num_tiles(&this->num_tiles, &this->num_tiles_x, &this->num_tiles_y, hn_cluster);
-	if ( HN_SUCCEEDED != err ) {
-		logger->Fatal("Unable to get the number of tiles [err=%d]", err);
+	int err = -1;
+
+	// Load platform data for each available HN cluster
+	for (uint32_t cluster_id=0; cluster_id < this->num_clusters; ++cluster_id) {
+		// Get the number of tiles
+		err = hn_get_num_tiles(&this->num_tiles, &this->num_tiles_x, &this->num_tiles_y, cluster_id);
+		if ( HN_SUCCEEDED != err ) {
+			logger->Fatal("LoadPlatformData: unable to get the number of tiles [error=%d]", err);
+			return PLATFORM_INIT_FAILED;
+		}
+
+		// Get the number of VNs
+		err = hn_get_num_vns(&this->num_vns, cluster_id);
+		if ( HN_SUCCEEDED != err ) {
+			logger->Fatal("LoadPlatformData: unable to get the number of VNs [error=%d]", err);
+			return PLATFORM_INIT_FAILED;
+		}
+
+		logger->Info("LoadPlatformData: cluster=<%d>: num_tiles=%d (%dx%d) num_vns=%d.",
+				cluster_id,
+				this->num_tiles, this->num_tiles_x, this->num_tiles_y,
+				this->num_vns);
+
+		// Now we have to register the tiles to the PlatformDescription and ResourceAccounter
+		ExitCode_t pp_err = RegisterTiles(cluster_id);
+		if (PLATFORM_OK != pp_err) {
+			return pp_err;
+		}
+
+		// The tiles should now be booted by Barbeque using the PeakOS image
+		pp_err = BootTiles(cluster_id);
+		if (PLATFORM_OK != pp_err) {
+			return pp_err;
+		}
+	}
+
+	if (err < 0) {
+		logger->Info("LoadPlatformData: some error occurred [error=%d]", err);
 		return PLATFORM_INIT_FAILED;
-	}
-
-	// Get the number of VNs
-	err = hn_get_num_vns(&this->num_vns, hn_cluster);
-	if ( HN_SUCCEEDED != err ) {
-		logger->Fatal("Unable to get the number of VNs [err=%d]", err);
-		return PLATFORM_INIT_FAILED;
-	}
-	logger->Info("Found a total of %d tiles (%dx%d) and %d VNs.", this->num_tiles,
-			this->num_tiles_x, this->num_tiles_y, this->num_vns);
-
-	// Now we have to register the tiles to the PlatformDescription and ResourceAccounter
-	ExitCode_t pp_err = RegisterTiles();
-	if (PLATFORM_OK != pp_err) {
-		return pp_err;
-	}
-
-	// The tiles should now be booted by Barbeque using the PeakOS image
-	pp_err = BootTiles();
-	if (PLATFORM_OK != pp_err) {
-		return pp_err;
 	}
 
 	return PLATFORM_OK;
 }
 
 MangoPlatformProxy::ExitCode_t
-MangoPlatformProxy::BootTiles_PEAK(int tile) noexcept {
+MangoPlatformProxy::BootTiles_PEAK(uint32_t cluster_id, int tile_id) noexcept {
 	uint32_t req_size = MANGO_PEAKOS_FILE_SIZE;
 	uint32_t tile_memory;	// This will be filled with the memory id
 	uint32_t base_addr;	    // This is the starting address selected
 
 	// TODO: This is currently managed by the internal HN find memory, however, we have
 	//	 to replace this with an hook to the MemoryManager here.
-	int err = hn_find_memory(tile, req_size, &tile_memory, &base_addr, hn_cluster);
+	int err = hn_find_memory(tile_id, req_size, &tile_memory, &base_addr, cluster_id);
 	if (HN_SUCCEEDED != err) {
-		logger->Error("BootTiles_PEAK: Unable to get memory for tile nr=%d", tile);
+		logger->Error("BootTiles_PEAK: unable to get memory for tile=%d", tile_id);
 		return PLATFORM_LOADING_FAILED;
 	}
 
-	err = hn_allocate_memory(tile_memory, base_addr, req_size, hn_cluster);
+	// Allocate memory for PEAK OS
+	logger->Debug("BootTiles_PEAK: cluster=<%d> tile=<%d> allocating memory [BASE_ADDR=0x%x SIZE=%d]...",
+		cluster_id, tile_id, base_addr, req_size);
+	err = hn_allocate_memory(tile_memory, base_addr, req_size, cluster_id);
 	if (HN_SUCCEEDED != err) {
-		logger->Error("BootTiles_PEAK: Unable to allocate memory for tile nr=%d", tile);
+		logger->Error("BootTiles_PEAK: unable to allocate memory for tile=%d", tile_id);
 		return PLATFORM_LOADING_FAILED;
 	}
-	logger->Debug("Loading PEAK OS in memory id %d [address=0x%x]", tile_memory, base_addr);
+
+	// Load PEAK OK
+	logger->Debug("BootTiles_PEAK: loading PEAK OS in memory id=%d [address=0x%x]...",
+		tile_memory, base_addr);
 	allocated_resources_peakos.push_back(std::make_pair(tile_memory, base_addr));
 
-	logger->Debug("Booting PEAK tile nr=%d [PEAK_OS:%s] [PEAK_PROT:%s]", tile, MANGO_PEAK_OS,
-			MANGO_PEAK_PROTOCOL);
-	err = hn_boot_unit(tile, tile_memory, base_addr, MANGO_PEAK_PROTOCOL, MANGO_PEAK_OS, hn_cluster);
+	err = hn_boot_unit(tile_id, tile_memory, base_addr, MANGO_PEAK_PROTOCOL, MANGO_PEAK_OS, cluster_id);
 	if (HN_SUCCEEDED != err) {
-		logger->Error("Unable to boot PEAK tile nr=%d", tile);
+		logger->Error("BootTiles_PEAK: unable to boot PEAK tile=%d", tile_id);
 		return PLATFORM_LOADING_FAILED;
 	}
+	logger->Info("BootTiles_PEAK: cluster=<%d> tile=<%d> [PEAK_OS:%s] [PEAK_PROT:%s] booted",
+		cluster_id, tile_id, MANGO_PEAK_OS, MANGO_PEAK_PROTOCOL);
 
 	return PLATFORM_OK;
 }
 
 MangoPlatformProxy::ExitCode_t
-MangoPlatformProxy::BootTiles() noexcept {
+MangoPlatformProxy::BootTiles(uint32_t cluster_id) noexcept {
 	hn_tile_info_t tile_info;
-	for (uint_fast32_t i=0; i < num_tiles; i++) {
-		int err = hn_get_tile_info(i, &tile_info, hn_cluster);
+	for (uint_fast32_t tile_id=0; tile_id < num_tiles; tile_id++) {
+		int err = hn_get_tile_info(tile_id, &tile_info, cluster_id);
 		if (HN_SUCCEEDED != err) {
-			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
+			logger->Fatal("BootTiles: unable to get info from tile=<%d> [error=%d].",
+				tile_id, err);
 			return PLATFORM_INIT_FAILED;
 		}
 
 		if (tile_info.unit_family == HN_TILE_FAMILY_PEAK) {
-			err = BootTiles_PEAK(i);
+			err = BootTiles_PEAK(cluster_id, tile_id);
 			if (PLATFORM_OK != err) {
-				logger->Error("Unable to boot tile nr=%d", i);
+				logger->Error("BootTiles: unable to boot cluster=<%d> tile=<%d>",
+					cluster_id, tile_id);
 				return PLATFORM_INIT_FAILED;
 			}
-
 #ifdef CONFIG_BBQUE_PM_MANGO
 			// Enable monitoring stuff
-			err = hn_stats_monitor_configure_tile(i, 1, hn_cluster);
+			logger->Debug("BootTiles: cluster=<%d> tile=<%d> configuring monitors...",
+				cluster_id, tile_id);
+			err = hn_stats_monitor_configure_tile(tile_id, 1, cluster_id);
 			if (err == 0) {
 				err = hn_stats_monitor_set_polling_period(monitor_period_len);
 				if (err == 0)
-					logger->Info("Monitoring period set for tile nr=%d", i);
+					logger->Info("BootTiles: cluster=<%d> tile=<%d> "
+						"set monitoring period=%dms",
+						cluster_id, tile_id, monitor_period_len);
 				else
-					logger->Error("Monitoring period set failed for tile nr=%d", i);
+					logger->Error("BootTiles: cluster=<%d> tile=<%d> "
+						"set monitoring period failed",
+						cluster_id, tile_id);
 			}
 			else
-				logger->Error("Unable to enable profiling on tile nr=%d", i);
+				logger->Error("BootTiles: cluster=<%d> tile=<%d> unable to enable "
+					"profiling", cluster_id, tile_id);
 #endif
 		}
+		logger->Info("BootTiles: cluster=<%d> tile=<%d> initialized", cluster_id, tile_id);
 	}
-
-	logger->Info("All tiles successfully booted.");
+	logger->Info("BootTiles: cluster=<%d> all tiles successfully booted", cluster_id);
 
 	return PLATFORM_OK;
 }
 
 MangoPlatformProxy::ExitCode_t
-MangoPlatformProxy::RegisterTiles() noexcept {
+MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 	typedef PlatformDescription pd_t;	// Just for convenience
 
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
@@ -324,30 +358,40 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 	monitor_period_len = wm.GetPeriodLengthMs();
 #endif
 
-	for (uint_fast32_t i=0; i < num_tiles; i++) {
+	for (uint_fast32_t tile_id=0; tile_id < num_tiles; tile_id++) {
 		// First of all get the information of tiles from HN library
 		hn_tile_info_t tile_info;
-		int err = hn_get_tile_info(i, &tile_info, hn_cluster);
+		int err = hn_get_tile_info(tile_id, &tile_info, cluster_id);
 		if (HN_SUCCEEDED != err) {
-			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
+			logger->Fatal("RegisterTiles: unable to get info about "
+				"cluster=<%d> tile=<%d> [error=%d]",
+				cluster_id, tile_id, err);
 			return PLATFORM_INIT_FAILED;
 		}
 
-		logger->Info("Loading tile %d of family %s and model %s...", i,
+		logger->Info("RegisterTiles: cluster=<%d> tile={id=%d family=%s model=%s}",
+			cluster_id, tile_id,
 			hn_to_str_unit_family(tile_info.unit_family),
 			hn_to_str_unit_model(tile_info.unit_model));
 
-		MangoTile mt(i,
+		MangoTile mt(tile_id,
 			(MangoTile::MangoUnitFamily_t)(tile_info.unit_family),
 			(MangoTile::MangoUnitModel_t)(tile_info.unit_model));
 		sys.AddAccelerator(mt);
-		mt.SetPrefix(sys.GetPath());
+
+		// Map the HN cluster to resource of type "GROUP"
+		std::string group_id(".");
+		group_id += std::string(GetResourceTypeString(br::ResourceType::GROUP));
+		group_id += std::to_string(cluster_id);
+		mt.SetPrefix(sys.GetPath() + group_id);
 
 		// For each tile, we register how many PE how may cores the accelerator has, this
 		// will simplify the tracking of ResourceAccounter resources
 		for (int i=0; i < MangoTile::GetCoreNr(mt.GetFamily(), mt.GetModel()); i++) {
 			pd_t::ProcessingElement pe(i , 0, 100, pd_t::PartitionType_t::MDEV);
 			pe.SetPrefix(mt.GetPath());
+			logger->Debug("RegisterTiles: cluster=<%d> tile=<%d> core=<%d>: path=%s",
+				cluster_id, tile_id, i, pe.GetPath().c_str());
 			mt.AddProcessingElement(pe);
 			auto rsrc_ptr = ra.RegisterResource(pe.GetPath(), "", 100);
 			rsrc_ptr->SetModel(hn_to_str_unit_family(tile_info.unit_family));
@@ -359,7 +403,7 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 		// information
 		std::string acc_pe_path(mt.GetPath() + ".pe0");
 		wm.Register(acc_pe_path);
-		logger->Debug("InitPowerInfo: [%s] registered for monitoring",
+		logger->Debug("RegisterTiles: [%s] registered for power monitoring",
 			acc_pe_path.c_str());
 #endif
 
@@ -367,10 +411,12 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 		// retrieved, we have to iterate over all tiles and search memories
 		unsigned int mem_attached = tile_info.memory_attached;
 		if (mem_attached != 0) {
+			logger->Debug("RegisterTiles: cluster=<%d> tile=<%d>: mem_attached=%d",
+				cluster_id, tile_id, mem_attached);
 			// Register the memory attached if present and if not already registered
 			// Fixed mem_id to tile_id, it can be only a memory controller attached to a mango tile
 			// So, the mem_id equals to the tile_id, since the HN does not set IDs for memories
-			ExitCode_t reg_err = RegisterMemoryBank(i, i);
+			ExitCode_t reg_err = RegisterMemoryBank(cluster_id, tile_id, tile_id);
 			if (reg_err) {
 				return reg_err;
 			}
@@ -385,11 +431,15 @@ MangoPlatformProxy::RegisterTiles() noexcept {
 }
 
 MangoPlatformProxy::ExitCode_t
-MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
+MangoPlatformProxy::RegisterMemoryBank(
+		uint32_t cluster_id,
+		int tile_id,
+		int mem_id) noexcept {
 	typedef PlatformDescription pd_t;	// Just for convenience
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
-	logger->Debug("Registering tile %d, memory id %d", tile_id, mem_id);
+	logger->Debug("RegisterMemoryBank: cluster=<%d> tile=<%d> memory=<%d>",
+		cluster_id, tile_id, mem_id);
 	bbque_assert(mem_id > -1 && mem_id < MANGO_MAX_MEMORIES);
 	if (found_memory_banks.test(mem_id)) {
 		// We have already registered this memory, nothing to do
@@ -400,10 +450,11 @@ MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
 	// ResourceAccounter methods, but this is faster)
 	found_memory_banks.set(mem_id);
 	uint32_t memory_size;
-	int err = hn_get_memory_size(tile_id, &memory_size, hn_cluster);
+	int err = hn_get_memory_size(tile_id, &memory_size, cluster_id);
 	if (HN_SUCCEEDED != err) {
-		logger->Fatal("Unable to get memory information of tile nr.%d, memory id %d [error=%d].",
-			      tile_id, mem_id, err);
+		logger->Fatal("RegisterMemoryBank: cluster=<%d> tile=<%d> memory=<%d>: "
+			"missing information on memory node [error=%d]",
+			cluster_id, tile_id, mem_id, err);
 		return PLATFORM_INIT_FAILED;
 	}
 
@@ -415,9 +466,11 @@ MangoPlatformProxy::RegisterMemoryBank(int tile_id, int mem_id) noexcept {
 	// TODO: this is very ugly
 	pd_t::Memory mem(MANGO_MEMORY_COUNT_START + mem_id, memory_size);
 	mem.SetPrefix(sys.GetPath());
+	logger->Debug("RegisterMemoryBank: memory id=<%d> path=<%s>", tile_id, mem.GetPath().c_str());
+
 	sys.AddMemory(std::make_shared<pd_t::Memory>(mem));
 	ra.RegisterResource(mem.GetPath(), "", memory_size);
-	logger->Info("Registered memory id=%d size=%u", tile_id, memory_size);
+	logger->Info("RegisterMemoryBank: memory id=<%d> size=%u", tile_id, memory_size);
 
 	return PLATFORM_OK;
 }

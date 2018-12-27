@@ -93,6 +93,7 @@ private:
 
 	bool refreshMode;
 
+	uint32_t num_clusters;
 	uint32_t num_tiles;
 	uint32_t num_tiles_x;
 	uint32_t num_tiles_y;
@@ -114,10 +115,10 @@ private:
 
 	MangoPlatformProxy();
 
-	ExitCode_t BootTiles() noexcept;
-	ExitCode_t BootTiles_PEAK(int tile) noexcept;
-	ExitCode_t RegisterTiles() noexcept;
-	ExitCode_t RegisterMemoryBank (int tile_id, int mem_id) noexcept;
+	ExitCode_t BootTiles(uint32_t cluster_id) noexcept;
+	ExitCode_t BootTiles_PEAK(uint32_t cluster_id, int tile_id) noexcept;
+	ExitCode_t RegisterTiles(uint32_t cluster_id) noexcept;
+	ExitCode_t RegisterMemoryBank (uint32_t cluster_id, int tile_id, int mem_id) noexcept;
 
 
 	class MangoPartitionSkimmer : public PartitionSkimmer {
