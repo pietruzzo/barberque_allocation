@@ -359,12 +359,11 @@ void PowerMonitor::ManageRequest(
 
 	// Check and execute the trigger (i.e., the trigger function or the
 	// schedule the optimization request)
-	logger->Debug("Before check trigger is armed: %d",trigger->IsArmed());
+//	logger->Debug("ManageRequest: (before) trigger armed: %d",trigger->IsArmed());
 	bool request_to_send = trigger->Check(curr_value);
-	logger->Debug("After check trigger is armed: %d",trigger->IsArmed());
-
+//	logger->Debug("ManageRequest: (after)  trigger armed: %d",trigger->IsArmed());
 	if (request_to_send) {
-		logger->Info("Trigger: <InfoType: %d> current = %d, threshold = %u [m=%0.f]",
+		logger->Info("ManageRequest: trigger <InfoType: %d> current = %d, threshold = %u [m=%0.f]",
 				info_type, curr_value, trigger->threshold_high, trigger->margin);
 		auto trigger_func = trigger->GetActionFunction();
 		if (trigger_func) {
