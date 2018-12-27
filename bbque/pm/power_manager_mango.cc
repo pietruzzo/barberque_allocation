@@ -19,32 +19,41 @@
 
 #include "bbque/pm/power_manager_mango.h"
 
-extern uint32_t hn_cluster;
-extern uint32_t hn_handler;
-
 using namespace bbque::res;
 
 namespace bbque {
 
 MangoPowerManager::MangoPowerManager() {
 	logger->Info("MangoPowerManager initialization...");
-//	memset(&tile_stats, 0, sizeof(hn_tile_stats_t));
+	uint32_t num_tiles[3]; // 0: total, 1:X, 2:Y
 
-	int err = hn_get_num_tiles(&num_tiles[0], &num_tiles[1], &num_tiles[2], hn_cluster);
-	if (err == HN_SUCCEEDED) {
-		tiles_info.resize(num_tiles[0]);
-		tiles_stats.resize(num_tiles[0]);
-	}
-	else {
-		logger->Fatal("Unable to get the number of MANGO tiles [error=%d].", err);
-		return;
+	// Get the number of clusters
+	int err = hn_get_num_clusters(&this->num_clusters);
+	if ( HN_SUCCEEDED != err ) {
+		logger->Fatal("MangoPowerMonitor: unable to get the number of clusters "
+			"[error=%d]", err);
 	}
 
-	for (uint_fast32_t i = 0; i < num_tiles[0]; i++) {
-		int err = hn_get_tile_info(i, &tiles_info[i], hn_cluster);
-		if (HN_SUCCEEDED != err) {
-			logger->Fatal("Unable to get the tile nr.%d [error=%d].", i, err);
+	// Initialize per-cluster tile info...
+	for (uint32_t cluster_id=0; cluster_id < this->num_clusters; ++cluster_id) {
+		int err = hn_get_num_tiles(&num_tiles[0], &num_tiles[1], &num_tiles[2], cluster_id);
+		if (err == HN_SUCCEEDED) {
+			tiles_info[cluster_id].resize(num_tiles[0]);
+			tiles_stats[cluster_id].resize(num_tiles[0]);
+		}
+		else {
+			logger->Fatal("Unable to get the number of MANGO tiles [error=%d].", err);
 			return;
+		}
+
+		for (uint_fast32_t tile_id = 0; tile_id < num_tiles[0]; tile_id++) {
+			int err = hn_get_tile_info(tile_id, &tiles_info[cluster_id][tile_id], cluster_id);
+			if (HN_SUCCEEDED != err) {
+				logger->Fatal("MangoPowerMonitor: unable to get info for "
+					"cluster=<%d> tile=<%d> [error=%d].",
+					cluster_id, tile_id, err);
+				return;
+			}
 		}
 	}
 }
@@ -52,44 +61,57 @@ MangoPowerManager::MangoPowerManager() {
 
 PowerManager::PMResult
 MangoPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
+
+	// HN cluster
+	int32_t cluster_id = rp->GetID(br::ResourceType::GROUP);
+	if (cluster_id < 0) {
+		logger->Warn("GetLoad: no cluster ID, using 0 by default");
+		cluster_id = 0;
+	}
+
+	// Tile
 	uint32_t tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
-/*
-	uint32_t core_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
-	if (hn_get_tile_stats(tile_id, &tile_stats) != 0) {
-		logger->Warn("GetLoad: error in HN library call...");
-		return PMResult::ERR_UNKNOWN;
+	if (tiles_info[cluster_id][tile_id].unit_family == HN_TILE_FAMILY_PEAK) {
+		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a PEAK processor",
+			cluster_id, tile_id);
+		return GetLoadPEAK(cluster_id, tile_id, 0, perc); // core_id not supported
 	}
-	perc = tile_stats.unit_utilization;
-*/
-	if (tiles_info[tile_id].unit_family == HN_TILE_FAMILY_PEAK) {
-		logger->Debug("GetLoad: tile id=%d is a PEAK processor", tile_id);
-		return GetLoadPEAK(tile_id, 0, perc); // core_id not supported
-	}
-	else
+	else {
+		logger->Debug("GetLoad: cluster=<%d> tile=<%d> familiy=%s",
+			cluster_id, tile_id,
+			hn_to_str_unit_family(tiles_info[cluster_id][tile_id].unit_family));
 		perc = 0;
+	}
 	return PMResult::OK;
 }
 
 
 PowerManager::PMResult
-MangoPowerManager::GetLoadPEAK(uint32_t tile_id, uint32_t core_id, uint32_t & perc) {
+MangoPowerManager::GetLoadPEAK(
+		uint32_t cluster_id,
+		uint32_t tile_id,
+		uint32_t core_id,
+		uint32_t & perc) {
+
 	hn_stats_monitor_t * curr_stats = new hn_stats_monitor_t;
 	uint32_t nr_cores = 0;
-	uint32_t err = hn_stats_monitor_read(tile_id, &nr_cores, &curr_stats, hn_cluster);
+	uint32_t err = hn_stats_monitor_read(tile_id, &nr_cores, &curr_stats, cluster_id);
 	if (err == 0 && (curr_stats != nullptr)) {
 		float cycles_ratio =
-			float(curr_stats->core_cycles - tiles_stats[tile_id].core_cycles) /
-				(curr_stats->timestamp - tiles_stats[tile_id].timestamp);
-		tiles_stats[tile_id] = *curr_stats;
+			float(curr_stats->core_cycles - tiles_stats[cluster_id][tile_id].core_cycles) /
+				(curr_stats->timestamp - tiles_stats[cluster_id][tile_id].timestamp);
+		tiles_stats[cluster_id][tile_id] = *curr_stats;
 		perc = cycles_ratio * 100;
-		logger->Debug("GetLoadPEAK: tile id=%d [cores=%d]: ts=%ld tics_sleep=%d core_cycles=%d load=%d",
-			tile_id, nr_cores,
+		logger->Debug("GetLoadPEAK: cluster=<%d> tile=<%d> [cores=%d]: "
+			"ts=%ld tics_sleep=%d core_cycles=%d load=%d",
+			cluster_id, tile_id, nr_cores,
 			curr_stats->timestamp, curr_stats->tics_sleep, curr_stats->core_cycles,
 			perc);
 	}
 	else {
 		perc = 0;
-		logger->Error("GetLoadPEAK: tile id=%d, error=%d", tile_id, err);
+		logger->Error("GetLoadPEAK: cluster=<%d> tile=<%d> [error=%d]",
+			cluster_id, tile_id, err);
 	}
 
 	delete curr_stats;
@@ -99,13 +121,23 @@ MangoPowerManager::GetLoadPEAK(uint32_t tile_id, uint32_t core_id, uint32_t & pe
 
 PowerManager::PMResult
 MangoPowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius) {
+	// HN cluster
+	int32_t cluster_id = rp->GetID(br::ResourceType::GROUP);
+	if (cluster_id < 0) {
+		logger->Warn("GetLoad: no cluster ID, using 0 by default");
+		cluster_id = 0;
+	}
+
+	// Tile
 	uint32_t tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
 	float temp = 0;
-	int err = hn_get_tile_temperature(tile_id, &temp, hn_cluster);
+	int err = hn_get_tile_temperature(tile_id, &temp, cluster_id);
 	if (err != 0) {
-		logger->Error("GetTemperature: tile id=%d, error=%d", tile_id, err);
+		logger->Error("GetTemperature: cluster=<%d> tile=<%d>  [error=%d]",
+			cluster_id, tile_id, err);
 		return PMResult::ERR_UNKNOWN;
 	}
+
 	celsius = static_cast<uint32_t>(temp);
 	return PMResult::OK;
 }

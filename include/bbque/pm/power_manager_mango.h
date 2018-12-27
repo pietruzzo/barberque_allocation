@@ -166,21 +166,23 @@ public:
 
 protected:
 
-//	hn_tile_stats_t tile_stats;
-
 	/// Dimensions of the MANGO platform
-	uint32_t num_tiles[3]; // 0: total, 1:X, 2:Y
+	uint32_t num_clusters;
 
 	/// Runtime counter statistics of a MANGO tiles
-	std::vector<hn_stats_monitor_t> tiles_stats;
+	std::map<uint32_t, std::vector<hn_stats_monitor_t>> tiles_stats;
 
 	/// Overall MANGO tiles information
-	std::vector<hn_tile_info_t> tiles_info;
+	std::map<uint32_t, std::vector<hn_tile_info_t>> tiles_info;
 
 	/**
 	 * @brief Current load estimation for PEAK processors
 	 */
-	PMResult GetLoadPEAK(uint32_t tile_id, uint32_t core_id, uint32_t & perc);
+	PMResult GetLoadPEAK(
+		uint32_t cluster_id,
+		uint32_t tile_id,
+		uint32_t core_id,
+		uint32_t & perc);
 
 };
 
