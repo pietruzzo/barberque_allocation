@@ -238,8 +238,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 			logger->Debug("ServeApp: HW partitions successfully retrieved");
 			return ScheduleApplication(papp, partitions);
 		case ResourcePartitionValidator::PMV_SKIMMER_FAIL:
-			logger->Error("ServeApp: at least one skimmer failed unexpectly");
-	//		return SCHED_ERROR;
+			logger->Warn("ServeApp: at least one skimmer failed");
 		case ResourcePartitionValidator::PMV_NO_PARTITION:
 			logger->Warn("ServeApp: no HW partitions available");
 			return DealWithNoPartitionFound(papp);
