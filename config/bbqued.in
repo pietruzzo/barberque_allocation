@@ -99,10 +99,9 @@ setup() {
 		mkdir -p $BRTRW/lock
 		mkdir -p $BRTRW/run
 		chown $SUDO_USER:$SUDO_USER $BRTRW -R
-	else
-		# Remove previously remained application fifo
-		rm -rf $BRTRW/bbque/bbque_[0-9]*_*
 	fi
+
+	bbqued_info "Application task-graph location: $BRATG"
 
 	# Set the pil file name (hardware ID if selected, hostame otherwise)
 	bbqued_info "Checking platform description file..."
@@ -260,7 +259,7 @@ stop() {
 			echo $P > $BBQUE_CGMOUNT/cgroup.procs 2> /dev/null
 		done
 		sleep 1
-		bbqued_info "Removing applications nodes"
+		bbqued_info "Removing applications nodes..."
 		find  $BBQUE_CGMOUNT/user.slice/* -type d -delete
 	fi
 
@@ -272,8 +271,30 @@ stop() {
 
 	sleep 2
 	sudo kill -SIGTERM $(pidof barbeque) >/dev/null 2>&1
-	bbqued_info "Done."
+	bbqued_notice "BarbequeRTRM daemon terminated"
 
+	# Remove previously remained application fifo
+	fifocount=`ls -l $BRTRW/bbque/bbque_[0-9]*_* 2> /dev/null | wc -l`
+	if [ $fifocount -gt 0 ]; then
+		bbqued_info "Removing "$fifocount" lost FIFOs..."
+		rm -rf $BRTRW/bbque/bbque_[0-9]*_*
+	fi
+
+	# Remove lost task-graphs
+	tgcount=`ls -l $BRATG/TG_[0-9]*:[aA-zZ]* 2> /dev/null | wc -l`
+	if [ $tgcount -gt 0 ]; then
+		bbqued_info "Removing "$tgcount" lost-taskgraphs..."
+		rm -rf $BRATG/TG_[0-9]*:[aA-zZ]*
+	fi
+
+	#Remove lost task-graph semaphores
+	semcount=`ls -l /dev/shm/sem.[0-9]*.[aA-zZ]* 2> /dev/null | wc -l`
+	if [ $semcount -gt 0 ]; then
+		bbqued_info "Removing $semcount lost semaphores..."
+		rm -rf /dev/shm/sem.[0-9]*.[aA-zZ]*
+	fi
+
+	bbqued_notice "Done."
 	exit 0
 }
 
