@@ -92,6 +92,7 @@ MangoPowerManager::GetLoadPEAK(
 		uint32_t tile_id,
 		uint32_t core_id,
 		uint32_t & perc) {
+	UNUSED(core_id);
 
 	hn_stats_monitor_t * curr_stats = new hn_stats_monitor_t;
 	uint32_t nr_cores = 0;
