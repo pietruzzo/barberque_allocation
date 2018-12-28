@@ -174,7 +174,7 @@ void MangoPlatformProxy::Exit() {
 				continue;
 			}
 	#ifdef CONFIG_BBQUE_PM_MANGO
-			logger->Info("Exit: disabling monitors...");
+			logger->Debug("Exit: disabling monitors...");
 			if (tile_info.unit_family == HN_TILE_FAMILY_PEAK) {
 				err = hn_stats_monitor_configure_tile(tile_id, 0, cluster_id);
 				if (err == 0)
