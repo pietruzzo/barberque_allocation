@@ -356,14 +356,40 @@ public:
 			br::ResourceBitset const & filter_mask,
 			int32_t prev_refn = -1);
 
+	/**
+	 * @brief Add missing resource requests to a resource assignment map
+	 *
+	 * @param bound_map The resource assignment map (already bound) with
+	 * missing requests
+	 *
+	 * @return The number of missing resources added
+	 */
+	uint32_t AddMissingResourceRequests(
+			br::ResourceAssignmentMapPtr_t bound_map);
 
-	br::ResourceAssignmentMap_t const * GetSourceAndOutBindingMaps(
+	/**
+	 * @brief Retrieve the source and the destination map of resource
+	 * assignments
+	 *
+	 * @param out_map The map to fill with bound resource assignments
+	 * @param prev_refn The reference number to retrieve later this binding
+	 *
+	 * @return A pointer to a source map for resource requests or
+	 * previously bound resource requests
+	 */
+	br::ResourceAssignmentMap_t * GetSourceAndOutBindingMaps(
 			br::ResourceAssignmentMapPtr_t & out_map,
 			int32_t prev_refn);
 
-
+	/**
+	 * @brief Save a resource assignment map aming the bindings
+	 *
+	 * @param bound_map The resource assignment map
+	 * @param prev_refn The reference number to retrieve later this binding
+	 *
+	 * @return The reference number of the binding
+	 */
 	int32_t StoreBinding(br::ResourceAssignmentMapPtr_t, int32_t prev_refn);
-
 
 	/**
 	 * @see WorkingModeStatusIF

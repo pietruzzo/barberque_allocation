@@ -181,7 +181,7 @@ int32_t WorkingMode::BindResource(
 	logger->Debug("BindResource: %s owner is %s", str_id, owner->StrId());
 
 	br::ResourceAssignmentMapPtr_t out_map = nullptr;
-	br::ResourceAssignmentMap_t const * source_map =
+	br::ResourceAssignmentMap_t * source_map =
 		GetSourceAndOutBindingMaps(out_map, prev_refn);
 	if (!source_map || !out_map) {
 		logger->Error("BindingResource: source map = @%p", source_map);
@@ -189,6 +189,7 @@ int32_t WorkingMode::BindResource(
 		return -1;
 	}
 
+	// Do the binding
 	br::ResourceBinder::Bind(*source_map, r_type, source_id, out_id, out_map,
 			filter_rtype, filter_mask);
 	if (out_map->empty()) {
@@ -196,6 +197,7 @@ int32_t WorkingMode::BindResource(
 		return -1;
 	}
 
+	// Save the result of the binding
 	int32_t refn = StoreBinding(out_map, prev_refn);
 	logger->Debug("BindResource: %s R{%-3s} map size = %d [refn = %d]",
 			str_id, br::GetResourceTypeString(r_type),
@@ -212,7 +214,7 @@ int32_t WorkingMode::BindResource(
 		resource_path->ToString().c_str(), filter_mask.ToString().c_str());
 
 	br::ResourceAssignmentMapPtr_t out_map = nullptr;
-	br::ResourceAssignmentMap_t const * source_map =
+	br::ResourceAssignmentMap_t * source_map =
 		GetSourceAndOutBindingMaps(out_map, prev_refn);
 	if (!source_map || !out_map) {
 		logger->Error("BindingResource: source map = @%p", source_map);
@@ -233,16 +235,47 @@ int32_t WorkingMode::BindResource(
 }
 
 
-br::ResourceAssignmentMap_t const * WorkingMode::GetSourceAndOutBindingMaps(
+uint32_t WorkingMode::AddMissingResourceRequests(
+		br::ResourceAssignmentMapPtr_t bound_map) {
+
+	uint32_t diff_size = resources.requested.size() - bound_map->size();
+
+	for (auto & r_entry: resources.requested) {
+		bool matched = false;
+		// Look for missing requests in the already bound map
+		for (auto & b_entry: *bound_map) {
+			if (r_entry.first->Compare(*b_entry.first) != br::ResourcePath::NOT_EQUAL) {
+				matched = true;
+				logger->Debug("AddMissingResourceRequests: skipping a match: "
+					"<%s>", b_entry.first->ToString().c_str());
+				break;
+			}
+		}
+
+		// Missing request detected?
+		if (!matched) {
+			logger->Debug("AddMissingResourceRequests: adding missing <%s>... ",
+				r_entry.first->ToString().c_str());
+			bound_map->emplace(r_entry.first, r_entry.second);
+		}
+	}
+
+	return diff_size;
+}
+
+
+br::ResourceAssignmentMap_t * WorkingMode::GetSourceAndOutBindingMaps(
 		br::ResourceAssignmentMapPtr_t & out_map,
 		int32_t prev_refn) {
 
 	if (prev_refn < 0) {
+		// First binding
 		logger->Debug("BindResource: first binding");
 		out_map = std::make_shared<br::ResourceAssignmentMap_t>();
 		return &resources.requested;
 	}
 	else {
+		// Resuming already performed bindings...
 		logger->Debug("BindResource: resuming binding @[%d]", prev_refn);
 		out_map = GetSchedResourceBinding(prev_refn);
 		if (!out_map) {
@@ -250,6 +283,15 @@ br::ResourceAssignmentMap_t const * WorkingMode::GetSourceAndOutBindingMaps(
 				prev_refn);
 			return nullptr;
 		}
+
+		// Check that the source map contains all the requests. This check is
+		// necessary since a policy may have added further requests after
+		// performing some bindings
+		if (out_map->size() != resources.requested.size()) {
+			uint32_t miss_count = AddMissingResourceRequests(out_map);
+			logger->Debug("BindResource: added %d missed requests", miss_count);
+		}
+
 		return out_map.get();
 	}
 }
@@ -263,10 +305,12 @@ int32_t WorkingMode::StoreBinding(
 	if (prev_refn < 0) {
 		refn = 0;
 		resources.sched_bindings.push_back(out_map);
+		logger->Debug("StoreBinding: first binding stored");
 	}
 	else if (prev_refn < (int32_t) resources.sched_bindings.size()) {
 		refn = prev_refn;
 		resources.sched_bindings[refn] = out_map;
+		logger->Debug("StoreBinding: updated binding stored");
 	}
 	else
 		logger->Error("StoreBinding: out of range reference number [%d]",
