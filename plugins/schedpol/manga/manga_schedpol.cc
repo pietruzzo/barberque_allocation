@@ -95,16 +95,37 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::Init() {
 	}
 	logger->Debug("Init: resources state view token: %ld", sched_status_view);
 
+
 	// Get the amount of processing elements from each accelerator
 	if (pe_per_acc.empty()) {
-		BindingManager & bdm(BindingManager::GetInstance());
-		BindingMap_t & bindings(bdm.GetBindingDomains());
-		auto acc_binding_info = bindings[br::ResourceType::ACCELERATOR];
-		for (br::ResourcePtr_t const & acc_rsrc: acc_binding_info->resources) {
-			std::string pe_resource_path(std::string("sys.") + acc_rsrc->Name() + std::string(".pe"));
-			pe_per_acc[acc_rsrc->ID()] = sys->ResourceTotal(pe_resource_path) / 100 ;
-			logger->Debug("Init: <%s> #proc_element=%d",
-				pe_resource_path.c_str(), pe_per_acc[acc_rsrc->ID()]);
+
+		// Get the number of HN clusters (groups)
+		auto groups = sys->GetResources("sys.grp");
+		logger->Debug("Init: # clusters: %d", groups.size());
+		for (auto & hn_cluster: groups) {
+			// Cluster info
+			auto cluster_id = hn_cluster->ID();
+			std::string cluster_path(
+				std::string("sys.grp") + std::to_string(cluster_id));
+
+			// Nr. of accelerators
+			std::string acc_path(cluster_path + std::string(".acc"));
+			logger->Debug("Init: accelerators path: <%s>", acc_path.c_str());
+			auto accs = sys->GetResources(acc_path);
+			pe_per_acc.emplace(cluster_id, std::vector<uint32_t>(accs.size()));
+			logger->Debug("Init: cluster=<%d>: # accelerators %d",
+				cluster_id, accs.size());
+
+			// Nr. of cores per accelerator
+			for (br::ResourcePtr_t const & acc: accs) {
+				std::string pe_binding_path(
+					acc_path + std::to_string(acc->ID()) + std::string(".pe"));
+				logger->Debug("Init: binding resource path: <%s>", pe_binding_path.c_str());
+
+				pe_per_acc[cluster_id][acc->ID()] = sys->ResourceTotal(pe_binding_path) / 100 ;
+				logger->Debug("Init: <%s> #proc_element=%d",
+					pe_binding_path.c_str(), pe_per_acc[cluster_id][acc->ID()]);
+			}
 		}
 	}
 
@@ -135,9 +156,8 @@ MangASchedPol::Schedule(
 		logger->Debug("Schedule: serving applications with priority %d", priority);
 		ExitCode_t err = ServeApplicationsWithPriority(priority);
 		if (err == SCHED_R_UNAVAILABLE) {
-			// We have finished the resources, suspend all other apps and returns
-			// gracefully
-			// TODO: Suspend apps
+			// We have finished the resources, suspend all other
+			// apps and returns gracefully
 			result = SCHED_DONE;
 			break;
 		} else if (err != SCHED_OK) {
@@ -388,32 +408,61 @@ MangASchedPol::SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_
 	auto tg = papp->GetTaskGraph();
 	for (auto task : tg->Tasks()) {
 		// if thread count not specified, assign all the available cores
-		logger->Debug(" * Task %d thread_count = %d",
+		logger->Debug("SelectWorkingMode: task=%d thread_count=%d",
 			task.first, task.second->GetThreadCount());
-		if (task.second->GetThreadCount() <= 0)
-			nr_cores = pe_per_acc[selected_partition.GetUnit(task.second)];
-		pawm->AddResourceRequest("sys.acc.pe", 100 * nr_cores,
+		if (task.second->GetThreadCount() <= 0) {
+			nr_cores = pe_per_acc
+				[selected_partition.GetClusterId()]
+				[selected_partition.GetUnit(task.second)];
+			logger->Debug("SelectWorkingMode: task=%d nr_cores=%d",
+				task.first, nr_cores);
+		}
+
+		// Resource request of processing resources
+		pawm->AddResourceRequest("sys.grp.acc.pe", 100 * nr_cores,
 				br::ResourceAssignment::Policy::BALANCED);
-		// Resource binding: tasks to tiles
+
+		// Resource Binding: HN cluster (group)
+		ref_num = pawm->BindResource(
+				br::ResourceType::GROUP, R_ID_ANY,
+				selected_partition.GetClusterId(),
+				ref_num);
+
+		// Resource binding: HN tile (accelerator)
 		ref_num = pawm->BindResource(
 				br::ResourceType::ACCELERATOR, R_ID_ANY,
 				selected_partition.GetUnit(task.second),
 				ref_num);
-		logger->Info(" * Task %d -> tile %d",
-				task.first, selected_partition.GetUnit(task.second));
+		logger->Debug("SelectedWorkingMode: task=%d -> cluster=<%d> tile=<%d>",
+				task.first,
+				selected_partition.GetClusterId(),
+				selected_partition.GetUnit(task.second));
 	}
 
+	// Get all the assigned memory banks and amount
+	br::ResourceBitset mem_bank_ids;
+	uint64_t mem_req_amount = 0;
 	for (auto buff : tg->Buffers()) {
-		pawm->AddResourceRequest("sys.mem", buff.second->Size(),
-				br::ResourceAssignment::Policy::SEQUENTIAL);
-		// Resource binding: buffers to memory banks
-		ref_num = pawm->BindResource(
-				br::ResourceType::MEMORY, R_ID_ANY,
-				selected_partition.GetMemoryBank(buff.second),
-				ref_num);
-		logger->Info(" * Buffer %d -> memory bank %d (to fix)", buff.first,
-				selected_partition.GetMemoryBank(buff.second));
+		mem_req_amount += buff.second->Size();
+		uint32_t mem_target_id = 10 + selected_partition.GetMemoryBank(buff.second);
+		mem_bank_ids.Set(mem_target_id);
+		logger->Debug("SelectWorkingMode: buffer=%d -> memory bank %d (id=%d)",
+			buff.first,
+			selected_partition.GetMemoryBank(buff.second),
+			mem_target_id);
 	}
+
+	// Resource request for memory
+	pawm->AddResourceRequest("sys.mem", mem_req_amount,
+				br::ResourceAssignment::Policy::SEQUENTIAL);
+
+	// Resource binding: buffers to memory banks
+	logger->Debug("SelectWorkingMode: binding memory node: %s",
+		mem_bank_ids.ToString().c_str());
+	ref_num = pawm->BindResource(
+			br::ResourceType::MEMORY, R_ID_ANY, R_ID_ANY,
+			ref_num,
+			br::ResourceType::MEMORY, &mem_bank_ids);
 
 	// Update the accounting of resources
 	ApplicationManager & am(ApplicationManager::GetInstance());
