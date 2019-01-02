@@ -232,9 +232,6 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noe
 }
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexcept {
-	SchedulerPolicyIF::ExitCode_t err;
-	ResourcePartitionValidator::ExitCode_t rmv_err;
-	std::list<Partition> partitions;
 
 	// Try to allocate resourced for the application
 	if (papp->Running()) {
@@ -243,42 +240,78 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 	}
 
 	// First of all we have to decide which processor type to assign to each task
-	err = CheckHWRequirements(papp);
+	auto err = CheckHWRequirements(papp);
 	if (err != SCHED_OK) {
 		logger->Warn("ServeApp: [%s] not schedulable", papp->StrId());
 		return err;
 	}
 
-	// Get the list of possible HW partitions
-	// TODO: Iterate over all the available clusters?
-	uint32_t hw_cluster_id = 0;
-	rmv_err = rmv.LoadPartitions(*papp->GetTaskGraph(), partitions, hw_cluster_id);
-	switch(rmv_err) {
-		case ResourcePartitionValidator::PMV_OK:
-			logger->Debug("ServeApp: HW partitions successfully retrieved");
-			return ScheduleApplication(papp, partitions);
-		case ResourcePartitionValidator::PMV_SKIMMER_FAIL:
-			logger->Warn("ServeApp: at least one skimmer failed");
-		case ResourcePartitionValidator::PMV_NO_PARTITION:
-			logger->Warn("ServeApp: no HW partitions available");
-			return DealWithNoPartitionFound(papp);
-		default:
-			// Ehi what's happened here?
-			logger->Fatal("ServeApp: unexpected error while retrieving partitions");
-			return SCHED_ERROR;
+	uint32_t curr_cluster_id = 0;
+	uint32_t nr_clusters = pe_per_acc.size();
+	logger->Debug("ServeApp: [%s] HN clusters available = %d",
+		papp->StrId(), nr_clusters);
+	assert (nr_clusters > 0);
+	if (nr_clusters <= 0) {
+		logger->Fatal("ServeApp: no HW clusters available: platform not initialized?",
+			papp->StrId());
+		return SCHED_ERROR;
 	}
+
+	// HN clusters
+	std::list<Partition> partitions;
+	for (; curr_cluster_id < nr_clusters; curr_cluster_id++) {
+		logger->Debug("ServeApp: [%s] looking for a partition in HN cluster %d",
+			papp->StrId(), curr_cluster_id);
+
+		// Look for resource allocation partitions
+		auto rmv_err = rmv.LoadPartitions(*papp->GetTaskGraph(), partitions, curr_cluster_id);
+		switch(rmv_err) {
+			case ResourcePartitionValidator::PMV_OK:
+				logger->Debug("ServeApp: [%s] HW partitions found: %d "
+					"[HN cluster %d]",
+					papp->StrId(), partitions.size(), curr_cluster_id);
+				err = ScheduleApplication(papp, partitions);
+				break;
+			case ResourcePartitionValidator::PMV_SKIMMER_FAIL:
+				logger->Warn("ServeApp: [%s] at least one skimmer failed"
+					"[HN cluster %d]",
+					papp->StrId(), curr_cluster_id);
+			case ResourcePartitionValidator::PMV_NO_PARTITION:
+				logger->Warn("ServeApp: [%s] no HW partitions available"
+					"[HN cluster %d]",
+					papp->StrId(), curr_cluster_id);
+				err = DealWithNoPartitionFound(papp);
+				break;
+			default:
+				// Ehi what's happened here?
+				logger->Fatal("ServeApp: [%s] unexpected error while retrieving"
+					" partitions", papp->StrId());
+				return SCHED_ERROR;
+		}
+
+		char errstr[3];
+		err == SCHED_OK ? errstr="OK": errstr="!";
+		logger->Debug("ServeApp: [%s] error=%d [%s]", papp->StrId(), err, errstr);
+		if (err == SCHED_SKIP_APP || err == SCHED_OK) {
+			return err;
+		}
+	}
+
+	return err;
 }
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::DealWithNoPartitionFound(ba::AppCPtr_t papp) noexcept {
 	UNUSED(papp);
 	switch(rmv.GetLastFailed()) {
-		// In this case we can try to reduce the allocated bandwidth
 		case PartitionSkimmer::SKT_MANGO_HN:
-			return SCHED_R_UNAVAILABLE;
-		// Strict thermal constraints must not violated
-		case PartitionSkimmer::SKT_MANGO_POWER_MANAGER:	
-		// We have no sufficient memory to run the app
+			// In this case we can try to reduce the allocated
+			// bandwidth
 		case PartitionSkimmer::SKT_MANGO_MEMORY_MANAGER:
+			// We have no sufficient memory to run the application
+			return SCHED_R_UNAVAILABLE;
+		case PartitionSkimmer::SKT_MANGO_POWER_MANAGER:	
+			// Strict thermal constraints must not violated - do
+			// not schedule the application
 		default:
 			return SCHED_SKIP_APP;
 	}
@@ -365,6 +398,8 @@ MangASchedPol::ScheduleApplication(
 			papp->SetPartition(std::make_shared<Partition>(selected_partition));
 			auto pret = rmv.PropagatePartition(*tg, selected_partition);
 			if (pret != ResourcePartitionValidator::ExitCode_t::PMV_OK) {
+				logger->Debug("ScheduleApplication: partition propagation"
+					" failed [error=%d]", pret);
 				return SCHED_SKIP_APP;
 			}
 			break;
