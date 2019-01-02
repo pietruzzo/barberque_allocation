@@ -289,9 +289,11 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 				return SCHED_ERROR;
 		}
 
-		char errstr[3];
-		err == SCHED_OK ? errstr="OK": errstr="!";
-		logger->Debug("ServeApp: [%s] error=%d [%s]", papp->StrId(), err, errstr);
+		char okstr[]="OK";
+		char errstr[]="!";
+		char * estr;
+		err != SCHED_OK ? estr=errstr : estr=okstr;
+		logger->Debug("ServeApp: [%s] error=%d [%s]", papp->StrId(), err, estr);
 		if (err == SCHED_SKIP_APP || err == SCHED_OK) {
 			return err;
 		}
@@ -407,9 +409,10 @@ MangASchedPol::ScheduleApplication(
 	}
 
 	// Update task-graph info
-	logger->Debug("ScheduleApplication: [%s] updating task-graph mapping...", papp->StrId());
+	logger->Debug("ScheduleApplication: [%s] updating task-graph mapping...",
+		papp->StrId());
 	papp->SetTaskGraph(tg);
-	return SCHED_OK;
+	return ret;
 }
 
 
