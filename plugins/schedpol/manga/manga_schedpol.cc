@@ -482,7 +482,7 @@ MangASchedPol::SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_
 	uint64_t mem_req_amount = 0;
 	for (auto buff : tg->Buffers()) {
 		mem_req_amount += buff.second->Size();
-		uint32_t mem_target_id = 10 + selected_partition.GetMemoryBank(buff.second);
+		uint32_t mem_target_id = selected_partition.GetMemoryBank(buff.second);
 		mem_bank_ids.Set(mem_target_id);
 		logger->Debug("SelectWorkingMode: buffer=%d -> memory bank %d (id=%d)",
 			buff.first,
@@ -491,7 +491,7 @@ MangASchedPol::SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_
 	}
 
 	// Resource request for memory
-	pawm->AddResourceRequest("sys.mem", mem_req_amount,
+	pawm->AddResourceRequest("mem", mem_req_amount,
 				br::ResourceAssignment::Policy::SEQUENTIAL);
 
 	// Resource binding: buffers to memory banks
