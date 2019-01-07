@@ -14,7 +14,6 @@
 #include <libhn/hn.h>
 
 #define BBQUE_MANGOPP_PLATFORM_ID    "org.mango"
-#define MANGO_MEMORY_COUNT_START     10
 #define MANGO_PEAKOS_FILE_SIZE       256*1024*1024
 
 namespace bb = bbque;
@@ -383,7 +382,8 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 		std::string group_id(".");
 		group_id += std::string(GetResourceTypeString(br::ResourceType::GROUP));
 		group_id += std::to_string(cluster_id);
-		mt.SetPrefix(sys.GetPath() + group_id);
+		std::string group_prefix(sys.GetPath() + group_id);
+		mt.SetPrefix(group_prefix);
 
 		// For each tile, we register how many PE how may cores the accelerator has, this
 		// will simplify the tracking of ResourceAccounter resources
@@ -414,9 +414,12 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 			logger->Debug("RegisterTiles: cluster=<%d> tile=<%d>: mem_attached=%d",
 				cluster_id, tile_id, mem_attached);
 			// Register the memory attached if present and if not already registered
-			// Fixed mem_id to tile_id, it can be only a memory controller attached to a mango tile
-			// So, the mem_id equals to the tile_id, since the HN does not set IDs for memories
-			ExitCode_t reg_err = RegisterMemoryBank(cluster_id, tile_id, tile_id);
+			// Fixed mem_id to tile_id, it can be only a memory
+			// controller attached to a mango tile. So, the mem_id
+			// equals to the tile_id, since the HN does not set IDs
+			// for memories
+			ExitCode_t reg_err = RegisterMemoryBank(
+						group_prefix, cluster_id, tile_id, tile_id);
 			if (reg_err) {
 				return reg_err;
 			}
@@ -432,6 +435,7 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::RegisterMemoryBank(
+		std::string const & group_prefix,
 		uint32_t cluster_id,
 		int tile_id,
 		int mem_id) noexcept {
@@ -461,11 +465,11 @@ MangoPlatformProxy::RegisterMemoryBank(
 	pd_t &pd = pli->getPlatformInfo();
 	pd_t::System &sys = pd.GetLocalSystem();
 
-	// In order to distinguish the system memory with the accelerator memory we start counting
-	// the memory from MANGO_MEMORY_COUNT_START (10).
-	// TODO: this is very ugly
-	pd_t::Memory mem(MANGO_MEMORY_COUNT_START + mem_id, memory_size);
-	mem.SetPrefix(sys.GetPath());
+	// HN memory banks are under the "sys.grp" scope (group_prefix), so
+	// they are distinguished w.r.t to the memory banks accessed by CPU
+	// code
+	pd_t::Memory mem(mem_id, memory_size);
+	mem.SetPrefix(group_prefix);
 	logger->Debug("RegisterMemoryBank: memory id=<%d> path=<%s>", tile_id, mem.GetPath().c_str());
 
 	sys.AddMemory(std::make_shared<pd_t::Memory>(mem));

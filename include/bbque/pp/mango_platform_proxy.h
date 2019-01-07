@@ -118,7 +118,9 @@ private:
 	ExitCode_t BootTiles(uint32_t cluster_id) noexcept;
 	ExitCode_t BootTiles_PEAK(uint32_t cluster_id, int tile_id) noexcept;
 	ExitCode_t RegisterTiles(uint32_t cluster_id) noexcept;
-	ExitCode_t RegisterMemoryBank (uint32_t cluster_id, int tile_id, int mem_id) noexcept;
+	ExitCode_t RegisterMemoryBank(
+			std::string const & group_prefix,
+			uint32_t cluster_id, int tile_id, int mem_id) noexcept;
 
 
 	class MangoPartitionSkimmer : public PartitionSkimmer {
