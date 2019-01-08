@@ -31,6 +31,8 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 		RTLIB_Services_t * rtlib):
 	BbqueEXC(name, recipe, rtlib),
 	app_name(name) {
+
+	app_name.resize(RTLIB_APP_NAME_LENGTH-1);
 }
 
 
@@ -42,6 +44,8 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 	BbqueEXC(name, recipe, rtlib),
 	app_name(name),
 	task_graph(tg) {
+
+	app_name.resize(RTLIB_APP_NAME_LENGTH-1);
 }
 
 
@@ -91,8 +95,9 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraph(std::shared_
 
 ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraphPaths() {
 	try {
-		tg_file_path = BBQUE_TG_FILE_PREFIX + std::string(GetUniqueID_String());
-		std::string tg_str(GetUniqueID_String());
+		std::string app_suffix(std::string(GetUniqueID_String()).substr(0, 6) + app_name);
+		tg_file_path = BBQUE_TG_FILE_PREFIX + app_suffix;
+		std::string tg_str(app_suffix);
 		std::replace(tg_str.begin(), tg_str.end(), ':', '.');
 		tg_sem_path  = "/" + tg_str;
 		logger->Info("Task-graph [uid=%d] file:<%s>  sem:<%s> ", GetUniqueID(),
@@ -104,7 +109,6 @@ ExecutionSynchronizer::ExitCode ExecutionSynchronizer::SetTaskGraphPaths() {
 				GetUniqueID(), tg_sem_path.c_str(), errno);
 		}
 		logger->Info("Semaphore open");
-
 	}
 	catch (std::exception & ex) {
 		logger->Error("Error while creating serialization file name");
