@@ -326,12 +326,28 @@
 /**
  * @brief The type used to represent UIDs
  *
- * The UID is a unique identifier for each BabrequeRTRM managed application.
+ * The UID is a unique identifier for each BarbequeRTRM managed application.
  * This defines the type used to represent this identifiers.
  */
 #define BBQUE_UID_TYPE uint32_t
 
 #define BBQUE_RID_TYPE int16_t
+
+
+/**
+ * @brief The maximum length for an "application" name
+ *
+ * Name of the applications
+ */
+#define RTLIB_APP_NAME_LENGTH ${CONFIG_BBQUE_RTLIB_APP_NAME_LENGTH}
+
+/**
+ * The maximum length for an "execution context" name
+ *
+ * Each application spawns 1+ Execution Context; hence, each EXC must have
+ * its own name.
+ */
+#define RTLIB_EXC_NAME_LENGTH ${CONFIG_BBQUE_RTLIB_APP_NAME_LENGTH}
 
 /**
  * @brief The runtime profile forward rearm time

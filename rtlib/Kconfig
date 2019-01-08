@@ -26,6 +26,12 @@ config BBQUE_RPC_TIMEOUT
   The amount of time (in seconds) after which a not responding application
   must be considered disabled.
 
+config BBQUE_RTLIB_APP_NAME_LENGTH
+  int "Application Name Length"
+  default 32
+  ---help---
+  The length of the string representing the name of the application
+
 config BBQUE_RTLIB_MONITORS
   bool "Monitor library (AS-RTM)"
   default n
