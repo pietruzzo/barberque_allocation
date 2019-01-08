@@ -386,10 +386,14 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Register(pRegisteredEXC_t prec)
 			RTLIB_LANG_UNDEF
 		}
 	};
-	::strncpy(rf_EXC_REGISTER.pyl.exc_name, prec->name.c_str(),
-		RTLIB_EXC_NAME_LENGTH);
-	::strncpy(rf_EXC_REGISTER.pyl.recipe, prec->parameters.recipe,
-		RTLIB_EXC_NAME_LENGTH);
+	// EXC and Recipe name: we need a null-termination character to
+	// properly separate two char[] fields
+	memset(rf_EXC_REGISTER.pyl.exc_name, '\0', RTLIB_EXC_NAME_LENGTH);
+	strncpy(rf_EXC_REGISTER.pyl.exc_name, prec->name.c_str(),
+		RTLIB_EXC_NAME_LENGTH-1);
+	memset(rf_EXC_REGISTER.pyl.recipe, '\0', RTLIB_EXC_NAME_LENGTH);
+	strncpy(rf_EXC_REGISTER.pyl.recipe, prec->parameters.recipe,
+		RTLIB_EXC_NAME_LENGTH-1);
 	rf_EXC_REGISTER.pyl.lang = prec->parameters.language;
 	logger->Debug("Registering EXC [%d:%d:%s:%d]...",
 		rf_EXC_REGISTER.pyl.hdr.app_pid,
