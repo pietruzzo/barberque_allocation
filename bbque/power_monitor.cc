@@ -452,8 +452,8 @@ void  PowerMonitor::SampleResourcesStatus(
 					ExecuteTrigger(rsrc, info_type);
 			}
 
-			logger->Debug("[T%d] sampling <%s> ", thd_id, (log_i + i_values).c_str());
-			logger->Debug("[T%d] sampling <%s> ", thd_id, (log_m + m_values).c_str());
+			logger->Debug("[T%d] sampling %s ", thd_id, (log_i + i_values).c_str());
+			logger->Debug("[T%d] sampling %s ", thd_id, (log_m + m_values).c_str());
 			if (wm_info.log_enabled) {
 				DataLogWrite(r_path, i_values);
 			}
