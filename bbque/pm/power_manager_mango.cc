@@ -71,13 +71,32 @@ MangoPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
 
 	// Tile
 	uint32_t tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
-	if (tiles_info[cluster_id][tile_id].unit_family == HN_TILE_FAMILY_PEAK) {
+
+	// Architecture type
+	switch (tiles_info[cluster_id][tile_id].unit_family) {
+	case HN_TILE_FAMILY_PEAK:
 		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a PEAK processor",
 			cluster_id, tile_id);
 		return GetLoadPEAK(cluster_id, tile_id, 0, perc); // core_id not supported
-	}
-	else {
-		logger->Debug("GetLoad: cluster=<%d> tile=<%d> familiy=%s",
+	case HN_TILE_FAMILY_NUPLUS:
+		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a NUPLUS processor",
+			cluster_id, tile_id);
+		hn_nuplus_get_utilization(tile_id, &perc, cluster_id);
+		break;
+/*
+	case HN_TILE_FAMILY_DCT:
+		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a DCT accelerator",
+			cluster_id, tile_id);
+		hn_dct_get_utilization(tile_id, &perc, cluster_id);
+		break;
+	case HN_TILE_FAMILY_TETRAPOD:
+		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a TETRAPOD accelerator",
+			cluster_id, tile_id);
+		hn_tetrapod_get_utilization(tile_id, &perc, cluster_id);
+		break;
+*/
+	default:
+		logger->Debug("GetLoad: cluster=<%d> tile=<%d> family=%s",
 			cluster_id, tile_id,
 			hn_to_str_unit_family(tiles_info[cluster_id][tile_id].unit_family));
 		perc = 0;
