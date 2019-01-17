@@ -631,6 +631,9 @@ res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_pat
 			case res::ResourceType::SYSTEM:
 				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_SYS;
 				break;
+			case res::ResourceType::GROUP:
+				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_GRP;
+				break;
 			case res::ResourceType::CPU:
 			case res::ResourceType::GPU:
 			case res::ResourceType::ACCELERATOR:
@@ -662,7 +665,7 @@ void DataManager::UpdateData(){
 	res_stats.clear();
 	for (auto & resource_ptr : resource_set) {
 		br::ResourcePathPtr_t resource_path = ra.GetPath(resource_ptr->Path());
-		logger->Debug("UpdateData: <%ld>: used=%d  unreserved=%d total=%d",
+		logger->Debug("UpdateData: <%lu>: used=%lu  unreserved=%lu total=%lu",
 			BuildResourceBitset(resource_path),
 			resource_ptr->Used(),
 			resource_ptr->Unreserved(),
@@ -681,7 +684,8 @@ void DataManager::UpdateData(){
 
 		resource_status_t temp_res;
 		temp_res.id = BuildResourceBitset(resource_path);
-		temp_res.occupancy = static_cast<uint8_t>(resource_ptr->Used());
+		temp_res.occupancy = static_cast<uint8_t>(
+			(float(resource_ptr->Used()) / resource_ptr->Total()) * 100 );
 #ifdef CONFIG_BBQUE_PM
 		temp_res.load = static_cast<uint8_t>(
 			resource_ptr->GetPowerInfo(PowerManager::InfoType::LOAD, br::Resource::ValueType::INSTANT));

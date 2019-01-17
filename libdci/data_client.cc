@@ -228,6 +228,14 @@ const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 	outstr << GetResourceTypeString(ResourceType::SYSTEM)
 		<< std::to_string(sys_bitset.to_ulong());
 
+	/* Retrieving the group ID */
+	std::bitset<BBQUE_DCI_LEN_RES> grp_bitset =
+		RangeBitset<BBQUE_DCI_OFFSET_GRP,
+					(BBQUE_DCI_OFFSET_GRP + BBQUE_DCI_LEN_GRP)>(res_bitset);
+	grp_bitset = (grp_bitset >> BBQUE_DCI_OFFSET_GRP);
+	outstr << GetResourceTypeString(ResourceType::GROUP)
+		<< std::to_string(grp_bitset.to_ulong());
+
 	/* Retrieving unit TYPE */
 	std::bitset<BBQUE_DCI_LEN_RES> unit_bitset =
 		RangeBitset<BBQUE_DCI_OFFSET_UNIT_TYPE,
