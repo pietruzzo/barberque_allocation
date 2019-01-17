@@ -126,7 +126,7 @@ public:
 	 * @param bitset The bitset to convert
 	 * @return A pointer to the char string
 	 */
-	static const char * GetResourcePathString(res_bitset_t bitset);
+	static std::string GetResourcePathString(res_bitset_t bitset);
 
 private:
 

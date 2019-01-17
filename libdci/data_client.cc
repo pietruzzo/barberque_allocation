@@ -216,7 +216,7 @@ DataClient::ExitCode_t DataClient::Subscribe(
 }
 
 
-const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
+std::string DataClient::GetResourcePathString(res_bitset_t bitset) {
 	std::string resource_path, unit_type_str;
 	std::ostringstream outstr;
 	std::bitset<BBQUE_DCI_LEN_RES> res_bitset(bitset);
@@ -233,7 +233,7 @@ const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 		RangeBitset<BBQUE_DCI_OFFSET_GRP,
 					(BBQUE_DCI_OFFSET_GRP + BBQUE_DCI_LEN_GRP)>(res_bitset);
 	grp_bitset = (grp_bitset >> BBQUE_DCI_OFFSET_GRP);
-	outstr << GetResourceTypeString(ResourceType::GROUP)
+	outstr << "." << GetResourceTypeString(ResourceType::GROUP)
 		<< std::to_string(grp_bitset.to_ulong());
 
 	/* Retrieving unit TYPE */
@@ -286,7 +286,7 @@ const char * DataClient::GetResourcePathString(res_bitset_t bitset) {
 	}
 
 	resource_path = outstr.str();
-	return resource_path.c_str();
+	return resource_path;
 }
 
 } // namespace bbque
