@@ -19,6 +19,7 @@
 #define BBQUE_DATA_MANAGER_H_
 
 #include "bbque/utils/worker.h"
+#include "bbque/application_manager.h"
 #include "bbque/configuration_manager.h"
 #include "bbque/resource_accounter.h"
 #include "dci/types.h"
@@ -180,14 +181,17 @@ public:
 
 private:
 
-	/// The logger used by the application manager */
+	/// The logger used by the application manager
 	std::unique_ptr<bu::Logger> logger;
 
-	/// Configuration manager instance */
+	/// Configuration manager instance
 	ConfigurationManager & cfm;
 
-	/// Resource Accounter instance */
+	/// Resource Accounter instance
 	ResourceAccounter & ra;
+
+	/// Application Manager instance
+	ApplicationManager & am;
 
 	/// Signal the on going termination of the manager
 	std::atomic<bool> is_terminating;

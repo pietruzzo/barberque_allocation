@@ -59,6 +59,7 @@ DataManager & DataManager::GetInstance() {
 DataManager::DataManager() : Worker(),
 		cfm(ConfigurationManager::GetInstance()),
 		ra(ResourceAccounter::GetInstance()),
+		am(ApplicationManager::GetInstance()),
 		is_terminating(false) {
 
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
@@ -696,6 +697,11 @@ void DataManager::UpdateData(){
 #endif // CONFIG_BBQUE_PM
 		res_stats.push_back(temp_res);
 	}
+
+	// Updating application status
+	num_applications = am.AppsCount();
+
+	// TODO per-application information
 }
 
 } // namespace bbque
