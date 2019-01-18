@@ -435,6 +435,10 @@ void ResourceManager::Optimize() {
 	logger->Debug("Scheduling profiling disabled");
 #endif
 	SetReady(true);
+
+#ifdef CONFIG_BBQUE_DM
+	dm.NotifyUpdate(stat::EVT_SCHEDULING);
+#endif
 }
 
 void ResourceManager::EvtExcStart() {
