@@ -81,7 +81,7 @@ MangoPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
 	case HN_TILE_FAMILY_NUPLUS:
 		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a NUPLUS processor",
 			cluster_id, tile_id);
-		hn_nuplus_get_utilization(tile_id, &perc, cluster_id);
+//		hn_nuplus_get_utilization(tile_id, &perc, cluster_id);
 		break;
 /*
 	case HN_TILE_FAMILY_DCT:
