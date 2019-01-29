@@ -484,7 +484,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRelease() {
 	"-------+---------+---------------------------------------+----------------------------------------"
 
 #define LIBPMS_PROF_TABLE_HEADER \
-	"| Task |    N    |           Completion time (us)        |           Throughput (CPS)            |"
+	"| Task |    N    |           Completion time (ms)        |           Throughput (CPS)            |"
 
 #define LIBPMS_APP_TABLE_HEADER \
 	"| Application    |           Completion time (ms)        |        Avg.  Throughput (CPS)         |"
@@ -504,11 +504,11 @@ void ExecutionSynchronizer::PrintProfilingData() const {
 		auto & task_id = rt_entry.first;
 		auto & ctime   = rt_entry.second->ctime;
 		auto & throughput = rt_entry.second->throughput;
-		logger->Info("| %4d | %7d | %8.0f %8.0f %8.0f %8.0f   | %8.2f %8.2f %8.2f %8.2f   |",
+		logger->Info("| %4d | %7d | %8.2f %8.2f %8.2f %8.2f   | %8.2f %8.2f %8.2f %8.2f   |",
 			task_id, count(ctime.acc),
-			min(ctime.acc), max(ctime.acc), mean(ctime.acc), variance(ctime.acc),
+			min(ctime.acc)/1e3, max(ctime.acc)/1e3, mean(ctime.acc)/1e3, variance(ctime.acc)/1e6,
 			min(throughput.acc)/100.0, max(throughput.acc)/100.0,
-			mean(throughput.acc)/100.0, variance(throughput.acc)/100.0
+			mean(throughput.acc)/100.0, variance(throughput.acc)/1e4
 		);
 	}
 
@@ -519,10 +519,15 @@ void ExecutionSynchronizer::PrintProfilingData() const {
 	if (total_ctime == 0)
 		total_ctime = GetExecutionTimeMs();
 
+	std::string trunc_app_name(app_name);
+	if (trunc_app_name.size() > 14)
+		trunc_app_name = app_name.substr(0, 14);
+
 	logger->Info(LIBPMS_PROF_TABLE_DIV);
 	logger->Info(LIBPMS_APP_TABLE_HEADER);
 	logger->Info(LIBPMS_PROF_TABLE_DIV2);
-	logger->Info("| %-14s |  %34d   | %35.2f   |", app_name.c_str(), total_ctime, final_throughput / 100.0);
+	logger->Info("| %-14s |  %34d   | %35.2f   |",
+		trunc_app_name.c_str(), total_ctime, final_throughput / 100.0);
 	logger->Info(LIBPMS_PROF_TABLE_DIV);
 }
 
