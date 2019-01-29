@@ -471,8 +471,61 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRelease() {
 		logger->Info("onRelease: Monitoring thread joined");
 	}
 
+	PrintProfilingData();
+
 	return RTLIB_OK;
 }
+
+
+#define LIBPMS_PROF_TABLE_DIV \
+	"=======+=========+=======================================+========================================"
+
+#define LIBPMS_PROF_TABLE_DIV2 \
+	"-------+---------+---------------------------------------+----------------------------------------"
+
+#define LIBPMS_PROF_TABLE_HEADER \
+	"| Task |    N    |           Completion time (us)        |           Throughput (CPS)            |"
+
+#define LIBPMS_APP_TABLE_HEADER \
+	"| Application    |           Completion time (ms)        |        Avg.  Throughput (CPS)         |"
+
+#define LIBPMS_PROF_TABLE_HEADER2 \
+	"|      |         |     min      max      avg     var     |     min      max      avg     var     |"
+
+void ExecutionSynchronizer::PrintProfilingData() const {
+	logger->Info(LIBPMS_PROF_TABLE_DIV);
+	logger->Info(LIBPMS_PROF_TABLE_HEADER);
+	logger->Info(LIBPMS_PROF_TABLE_DIV2);
+	logger->Info(LIBPMS_PROF_TABLE_HEADER2);
+	logger->Info(LIBPMS_PROF_TABLE_DIV);
+
+	// Per task
+	for (auto & rt_entry: tasks.runtime) {
+		auto & task_id = rt_entry.first;
+		auto & ctime   = rt_entry.second->ctime;
+		auto & throughput = rt_entry.second->throughput;
+		logger->Info("| %4d | %7d | %8.0f %8.0f %8.0f %8.0f   | %8.2f %8.2f %8.2f %8.2f   |",
+			task_id, count(ctime.acc),
+			min(ctime.acc), max(ctime.acc), mean(ctime.acc), variance(ctime.acc),
+			min(throughput.acc)/100.0, max(throughput.acc)/100.0,
+			mean(throughput.acc)/100.0, variance(throughput.acc)/100.0
+		);
+	}
+
+	// Overall
+	uint32_t total_ctime;
+	uint16_t final_throughput;
+	task_graph->GetProfiling(final_throughput, total_ctime);
+	if (total_ctime == 0)
+		total_ctime = GetExecutionTimeMs();
+
+	logger->Info(LIBPMS_PROF_TABLE_DIV);
+	logger->Info(LIBPMS_APP_TABLE_HEADER);
+	logger->Info(LIBPMS_PROF_TABLE_DIV2);
+	logger->Info("| %-14s |  %34d   | %35.2f   |", app_name.c_str(), total_ctime, final_throughput / 100.0);
+	logger->Info(LIBPMS_PROF_TABLE_DIV);
+}
+
 
 // ---------------------------------------------------------------------------//
 

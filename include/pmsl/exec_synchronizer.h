@@ -312,6 +312,11 @@ protected:
 			NotifyEvent(task->Event());
 	}
 
+	/**
+	 * \brief Print a report of the profiled application timings
+	 */
+	void PrintProfilingData() const;
+
 	// --------------- BbqueEXC derived functions -------------------- //
 
 
@@ -344,6 +349,8 @@ protected:
 			tasks.runtime[t->Id()]->is_running = false;
 		}
 	}
+
+	// --------------------------------------------------------------- //
 };
 
 } // namespace bbque
