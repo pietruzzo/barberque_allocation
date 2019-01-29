@@ -201,13 +201,16 @@ protected:
 
 	struct TaskProfiling {
 		bbque::utils::Timer timer;
-		accumulator_set<double, features<tag::mean, tag::variance>> acc;
+		accumulator_set<
+			double,
+			features<tag::mean, tag::min, tag::max, tag::variance>> acc;
 	};
 
 	struct RuntimeInfo {
 		std::atomic<bool> is_running;
 		std::thread  monitor_thr;
-		TaskProfiling profile;
+		TaskProfiling ctime;
+		TaskProfiling throughput;
 
 		RuntimeInfo(bool _run): is_running(_run) {}
 	};

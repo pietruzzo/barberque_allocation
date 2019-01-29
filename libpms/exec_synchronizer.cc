@@ -317,8 +317,8 @@ void ExecutionSynchronizer::TaskProfiler(uint32_t task_id) noexcept {
 	}
 
 	auto & event(evit->second);
-	auto & prof_data = tasks.runtime[task_id]->profile;
-	prof_data.timer.start();
+	auto & ctime = tasks.runtime[task_id]->ctime;
+	ctime.timer.start();
 	double t_curr, t_start, t_finish;
 
 	// Synchronize the profiling timing according to the events (write)
@@ -326,14 +326,14 @@ void ExecutionSynchronizer::TaskProfiler(uint32_t task_id) noexcept {
 	logger->Info("[Task %2d] profiling started", task_id);
 	while (tasks.runtime[task_id]->is_running) {
 		std::unique_lock<std::mutex> ev_lock(event->mx);
-		t_start  = prof_data.timer.getElapsedTimeUs();
+		t_start  = ctime.timer.getElapsedTimeUs();
 		event->cv.wait(ev_lock);
-		t_finish = prof_data.timer.getElapsedTimeUs();
+		t_finish = ctime.timer.getElapsedTimeUs();
 		t_curr = t_finish - t_start;
-		prof_data.acc(t_curr);
+		ctime.acc(t_curr);
 		logger->Debug("[Task %d] timing current = %.2f us", task_id, t_curr);
 	}
-	prof_data.timer.stop();
+	ctime.timer.stop();
 	logger->Info("[Task %2d] profiling stopped", task_id);
 }
 
@@ -430,21 +430,33 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRun() {
 RTLIB_ExitCode_t ExecutionSynchronizer::onMonitor() {
 
 	for (auto & rt_entry: tasks.runtime) {
-		auto & prof_data(rt_entry.second->profile);
+		// Task completion time
+		auto & ctime(rt_entry.second->ctime);
+		logger->Info("onMonitor: [Task %2d] execution time  = %.2f us (mean)",
+			rt_entry.first, mean(ctime.acc));
 
-		uint16_t task_tput =
-			static_cast<uint16_t>(1e6 / (mean(prof_data.acc)));
-		logger->Info("onMonitor: [Task %2d] timing mean=%.2fus",
-			rt_entry.first, mean(prof_data.acc));
-		task_graph->GetTask(rt_entry.first)->SetProfiling(task_tput*100, 0);
+		// Task throughput: multiple by 100 for the decimal part (divide when read)
+		auto & throughput(rt_entry.second->throughput);
+		uint16_t task_throughput =
+			static_cast<uint16_t>((1e6 / (mean(ctime.acc))) * 100);
+		logger->Info("onMonitor: [Task %2d] throughput      = %.2f CPS",
+			rt_entry.first, task_throughput);
+
+		throughput.acc(task_throughput);
+		task_graph->GetTask(rt_entry.first)->SetProfiling(
+				task_throughput, mean(ctime.acc));
 	}
 
-	logger->Info("onMonitor: Task-graph throughput: CPS:=%.2f", GetCPS());
-	task_graph->SetProfiling(GetCPS()*100, 0);
+	auto tg_throughput = GetCPS() * 100;
+	auto tg_time = GetExecutionTimeMs();
+	logger->Info("onMonitor: Task-graph throughput     = %.2f CPS", tg_throughput);
+	logger->Info("onMonitor: Task-graph execution time = %d ms", tg_time);
+	task_graph->SetProfiling(tg_throughput, tg_time);
 	SendTaskGraphToRM();
 
 	return RTLIB_OK;
 }
+
 
 RTLIB_ExitCode_t ExecutionSynchronizer::onRelease() {
 
