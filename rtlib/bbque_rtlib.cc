@@ -179,6 +179,10 @@ static void rtlib_utils_start_pcounters_monitoring(RTLIB_EXCHandler_t exc_handle
 	rpc->StartPCountersMonitoring(exc_handler);
 }
 
+static uint32_t rtlib_utils_get_ctime_ms(RTLIB_EXCHandler_t exc_handler) {
+	return rpc->GetExecutionTimeMs(exc_handler);
+}
+
 /*******************************************************************************
  *    Cycles Per Second (CPS) and Jobs Per Secon (JPS) Control Support
  ******************************************************************************/
@@ -291,6 +295,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	rtlib_services.Utils.MonitorPerfCounters =
 		rtlib_utils_start_pcounters_monitoring;
 	// Cycles Time Control interface
+	rtlib_services.CPS.ExecTime_ms = rtlib_utils_get_ctime_ms;
 	rtlib_services.CPS.Set = rtlib_cps_set;
 	rtlib_services.CPS.Get = rtlib_cps_get;
 	rtlib_services.CPS.SetGoal = rtlib_cps_goal_set;

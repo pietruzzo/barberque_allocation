@@ -709,6 +709,16 @@ typedef float (*RTLIB_CPS_Get)(
 	RTLIB_EXCHandler_t exc_handler);
 
 /**
+ * @brief Get the measured execution time
+ * @ingroup rtlib_sec03_plain_cps
+ *
+ * @return the measured execution time
+ */
+typedef uint32_t (*RTLIB_CPS_GetExecTime)(
+	RTLIB_EXCHandler_t exc_handler);
+
+
+/**
  * @brief Get the measured Jobs Per Seconds (JPS)
  * @ingroup rtlib_sec03_plain_cps
  *
@@ -1159,6 +1169,7 @@ struct RTLIB_Services {
 		RTLIB_CPS_Get Get;
 		RTLIB_CPS_Goal_Set SetGoal;
 		RTLIB_CPS_CTimeUs SetMinCycleTime_us;
+		RTLIB_CPS_GetExecTime ExecTime_ms;
 	} CPS;
 
 	/* Cycles Time Control interface */

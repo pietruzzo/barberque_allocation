@@ -344,6 +344,11 @@ RTLIB_ExitCode_t BbqueEXC::SetMinimumCycleTimeUs(uint32_t min_cycle_time_us)
 	return rtlib->CPS.SetMinCycleTime_us(exc_handler, min_cycle_time_us);
 }
 
+uint32_t BbqueEXC::GetExecutionTimeMs() const
+{
+	return rtlib->CPS.ExecTime_ms(exc_handler);
+}
+
 RTLIB_ExitCode_t BbqueEXC::UpdateJPC(int jpc)
 {
 	return rtlib->JPS.UpdateJPC(exc_handler, jpc);
