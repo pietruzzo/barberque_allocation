@@ -659,7 +659,7 @@ res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_pat
 }
 
 void DataManager::UpdateData(){
-	logger->Debug("UpdateData: Updating Resources data...");
+	logger->Debug("UpdateData: resources status...");
 
 	// Taking data from Resource accounter and Power Manager
 	std::set<br::ResourcePtr_t> resource_set = ra.GetResourceSet();
@@ -702,126 +702,107 @@ void DataManager::UpdateData(){
 		res_stats.push_back(temp_res);
 	}
 
-	logger->Debug("UpdateData: Updating Applications data...");
-
+	logger->Debug("UpdateData: applications status...");
+	app_stats.clear();
 
 	PlatformManager & pm(PlatformManager::GetInstance());
-	// Updating application list status
 	num_applications = am.AppsCount(ApplicationStatusIF::RUNNING);
 
 	// Per-application information
 	AppsUidMapIt app_it;
-	AppPtr_t app_ptr;
-
-	app_stats.clear();
-
-	app_ptr = am.GetFirst(ApplicationStatusIF::RUNNING, app_it);
+	AppPtr_t app_ptr = am.GetFirst(ApplicationStatusIF::RUNNING, app_it);
 
 	while(app_ptr != nullptr){
 		app_status_t temp_app;
 
-		// Getting application PID
-		temp_app.id = app_ptr->Pid();
-		// Getting application name
+		temp_app.id   = app_ptr->Pid();
 		temp_app.name = app_ptr->Name();
-
-		// Getting application current AWM
 		auto temp_awm = app_ptr->CurrentAWM();
-		logger->Debug("UpdateData: CurrentAWM <%s:%d>", 
+		logger->Debug("UpdateData: current AWM = <%s:%d>",
 			temp_awm->Name().c_str(), temp_awm->Id());
 
-		// Getting application resource assignment
+		// Application resource assignment
 		res::ResourceAssignmentMapPtr_t temp_res_bind_ptr = 
 			temp_awm->GetResourceBinding();
 		
 		auto & temp_res_bind = *(temp_res_bind_ptr.get());
 		std::list<res_bitset_t> app_res_list;
 		uint32_t res_counter = 0;
-		// Getting resource bitset for all assigned resource of the application
+		uint32_t mapped_sys_id;
+
+		// Resource bitset for all the assigned resources
 		for(auto bind : temp_res_bind){
 			res::ResourcePtrList_t res_list = bind.second->GetResourcesList();
-			logger->Debug("UpdateData: ResPath:<%s>", bind.first->ToString().c_str());
+			logger->Debug("UpdateData: resource request = <%s>", bind.first->ToString().c_str());
 			for(auto res : res_list){
 				auto app_res_path = ra.GetPath(res->Path());
+				mapped_sys_id = app_res_path->GetID(res::ResourceType::SYSTEM);
 				app_res_list.push_back(BuildResourceBitset(app_res_path));
-				logger->Debug("UpdateData: Res <%s>", res->Path().c_str());
+				logger->Debug("UpdateData: resource mapped = <%s>", res->Path().c_str());
 				res_counter++;
 			}
-				
 		}
-		// Getting number of assigned resources
+
+		// Getting the assigned resources
 		temp_app.n_mapping = res_counter;
-		// Adding assigned resource list to the application information
-		temp_app.mapping = app_res_list;
+		temp_app.mapping   = app_res_list;
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
-		// Per-task information
-		// Getting the task graph
-		auto temp_tg = app_ptr->GetTaskGraph();
-		// Getting the number of task of the application
-		temp_app.n_task = temp_tg->TaskCount();	
 
+		// Per-task information
+		auto temp_tg = app_ptr->GetTaskGraph();
+		temp_app.n_task = temp_tg->TaskCount();	
 		logger->Debug("UpdateData: <%s-%s>: n_task=%d", 
 			temp_app.name.c_str(), app_ptr->StrId(), temp_app.n_task);
 
-		// Getting the list of task of the application
+		// List of tasks
 		auto tasks_map = temp_tg->Tasks();
-		// Getting the local system
-		int mapped_sys = strtol(pm.GetPlatformID(), nullptr, 0);
-		// Getting the TG allocated cluster
 		int mapped_cluster = temp_tg->GetCluster();
 
-		// Filling information of each task
 		for(auto task : tasks_map){
-			TaskPtr_t task_ptr = task.second;
 			task_status_t temp_task;
 
-			// Getting the task id
+			// Task Id
+			TaskPtr_t task_ptr = task.second;
 			temp_task.id = task_ptr->Id();
 
-			// Getting the throughput and completion_time performance metrics
+			// Performance data
 			task_ptr->GetProfiling(temp_task.throughput, temp_task.completion_time);
-			logger->Debug("UpdateData: Performance profile: THR=%d, CT=%d",
+			logger->Debug("UpdateData: performance { THR=%d, CT=%d }",
 				temp_task.throughput, temp_task.completion_time);
 
-			// Getting the allocated processing unit
+			// Resource mapping
 			int mapped_proc = task_ptr->GetMappedProcessor();
+			temp_task.n_threads = task_ptr->GetMappedCores(); // # threads
 
-			// Getting the number of threads
-			temp_task.n_threads = task_ptr->GetMappedCores();
-
-			// Getting the complete resource path of the allocated resource
+			// Build complete resource path
 			std::string assigned_res_path = 
 				FindResourceAssigned(temp_awm->GetResourceBinding(),
-					mapped_sys, mapped_cluster, mapped_proc);
+					mapped_sys_id, mapped_cluster, mapped_proc);
 			if(assigned_res_path.size() != 0){
 				br::ResourcePathPtr_t mapping_path = ra.GetPath(assigned_res_path);
 				logger->Debug("UpdateData: Task <%d>:<%s>", 
 				temp_task.id, assigned_res_path.c_str());
-
-				// Building the allocated resource bitset
 				temp_task.mapping = BuildResourceBitset(mapping_path);
 			} else {
-				logger->Error("UpdateData: No resource find for the task");
+				logger->Error("UpdateData: no resource assignment found for task %d",
+					temp_task.id);
 			}
 			
-			// Adding task info to the application info
 			temp_app.tasks.push_back(temp_task);
 		}
 #endif
-		// Adding application info to the list
 		app_stats.push_back(temp_app);
 
 		app_ptr = am.GetNext(ApplicationStatusIF::RUNNING, app_it);
 	}
 
-	logger->Info("UpdateData: Data Updated...");
-
+	logger->Info("UpdateData: completed");
 }
 
 std::string DataManager::FindResourceAssigned(
 	res::ResourceAssignmentMapPtr_t res_map_ptr, 
-	int mapped_sys,
+	int mapped_sys_id,
 	int mapped_cluster,
 	int mapped_proc) const{
 
@@ -830,11 +811,10 @@ std::string DataManager::FindResourceAssigned(
 		res::ResourcePtrList_t res_list = bind.second->GetResourcesList();
 		for(auto res : res_list){
 			auto res_path = ra.GetPath(res->Path());
-			if(res_path->GetID(res::ResourceType::SYSTEM) == mapped_sys &&
-				res_path->GetID(res::ResourceType::GROUP) == mapped_cluster &&
-				res_path->GetID(res_path->Type(-1)) == mapped_proc){
+			if (res_path->GetID(res::ResourceType::GROUP) == mapped_cluster &&
+					res_path->GetID(res_path->Type(-1)) == mapped_proc){
 				std::string res_path_str(std::string("sys")
-							+ std::to_string(mapped_sys)
+							+ std::to_string(mapped_sys_id)
 							+".grp"
 							+ std::to_string(mapped_cluster)
 							+ "." 
@@ -848,3 +828,4 @@ std::string DataManager::FindResourceAssigned(
 }
 
 } // namespace bbque
+
