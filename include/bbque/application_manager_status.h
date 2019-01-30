@@ -174,7 +174,7 @@ public:
 	 *
 	 * Each time a module requires to visit the UID applications map, should
 	 * use a pair of methods which ensure a proper handling of the container
-	 * iterator. Indeed, for efficincy purposes, all the Barbeque containers
+	 * iterator. Indeed, for efficiency purposes, all the Barbeque containers
 	 * are mutable and use fine-grained locking to better exploit the
 	 * framework parallelism.
 	 * Visiting a container requires to get its elements using a pair of
