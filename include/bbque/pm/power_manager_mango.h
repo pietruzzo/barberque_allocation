@@ -183,6 +183,13 @@ protected:
 		uint32_t tile_id,
 		uint32_t core_id,
 		uint32_t & perc);
+	/**
+	 * @brief Current load estimation for NUPLUS processor
+	 */
+	PMResult GetLoadNUP(
+		uint32_t cluster_id,
+		uint32_t tile_id,
+		uint32_t & perc);
 
 };
 

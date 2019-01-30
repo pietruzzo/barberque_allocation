@@ -71,6 +71,7 @@ MangoPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
 
 	// Tile
 	uint32_t tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
+	hn_stats_monitor_t * nuplus_stats = new hn_stats_monitor_t;
 
 	// Architecture type
 	switch (tiles_info[cluster_id][tile_id].unit_family) {
@@ -81,8 +82,7 @@ MangoPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
 	case HN_TILE_FAMILY_NUPLUS:
 		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a NUPLUS processor",
 			cluster_id, tile_id);
-//		hn_nuplus_get_utilization(tile_id, &perc, cluster_id);
-		break;
+		return GetLoadNUP(cluster_id, tile_id, perc);
 /*
 	case HN_TILE_FAMILY_DCT:
 		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a DCT accelerator",
@@ -131,6 +131,32 @@ MangoPowerManager::GetLoadPEAK(
 	else {
 		perc = 0;
 		logger->Error("GetLoadPEAK: cluster=<%d> tile=<%d> [error=%d]",
+			cluster_id, tile_id, err);
+	}
+
+	delete curr_stats;
+	return PMResult::OK;
+}
+
+PowerManager::PMResult
+MangoPowerManager::GetLoadNUP(
+		uint32_t cluster_id,
+		uint32_t tile_id,
+		uint32_t & perc) {
+
+	hn_stats_monitor_t * curr_stats = new hn_stats_monitor_t;
+	uint32_t err = hn_nuplus_stats_read(tile_id, curr_stats, cluster_id);
+	if (err == 0 && (curr_stats != nullptr)) {
+		perc = (uint32_t) curr_stats->core_cpi;
+		logger->Debug("GetLoadNUP: cluster=<%d> tile=<%d>: "
+			"ts=%ld tics_sleep=%d core_cycles=%d load=%d",
+			cluster_id, tile_id,
+			curr_stats->timestamp, curr_stats->tics_sleep, curr_stats->core_cycles,
+			perc);
+	}
+	else {
+		perc = 0;
+		logger->Error("GetLoadNUP: cluster=<%d> tile=<%d> [error=%d]",
 			cluster_id, tile_id, err);
 	}
 
