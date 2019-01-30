@@ -705,7 +705,6 @@ void DataManager::UpdateData(){
 	logger->Debug("UpdateData: applications status...");
 	app_stats.clear();
 
-	PlatformManager & pm(PlatformManager::GetInstance());
 	num_applications = am.AppsCount(ApplicationStatusIF::RUNNING);
 
 	// Per-application information
