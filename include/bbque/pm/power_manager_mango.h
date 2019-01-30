@@ -126,11 +126,7 @@ public:
 	 * @brief Power usage coming from sensors or models
 	 */
 	PMResult GetPowerUsage(
-			br::ResourcePathPtr_t const & rp, uint32_t & mwatt) override {
-		UNUSED(rp);
-		mwatt = 0;
-		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
+			br::ResourcePathPtr_t const & rp, uint32_t & mwatt) override;
 
 	/* ===========   Performance/power states  =========== */
 

@@ -153,6 +153,7 @@ MangoPowerManager::GetLoadNUP(
 			cluster_id, tile_id,
 			curr_stats->timestamp, curr_stats->tics_sleep, curr_stats->core_cycles,
 			perc);
+		tiles_stats[cluster_id][tile_id] = *curr_stats;
 	}
 	else {
 		perc = 0;
@@ -185,6 +186,29 @@ MangoPowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsiu
 	}
 
 	celsius = static_cast<uint32_t>(temp);
+	return PMResult::OK;
+}
+
+PowerManager::PMResult
+MangoPowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t & mwatt) {
+
+	// HN cluster
+	int32_t cluster_id = rp->GetID(br::ResourceType::GROUP);
+	if (cluster_id < 0) {
+		logger->Warn("GetPowerUsage: no cluster ID, using 0 by default");
+		cluster_id = 0;
+	}
+
+	// Tile
+	uint32_t tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
+
+	// Architecture type
+	if (tiles_info[cluster_id][tile_id].unit_family != HN_TILE_FAMILY_NUPLUS) {
+		mwatt = 0;
+		return PMResult::ERR_API_NOT_SUPPORTED;
+	}
+
+	mwatt = static_cast<uint32_t>(tiles_stats[cluster_id][tile_id].power_est);
 	return PMResult::OK;
 }
 
