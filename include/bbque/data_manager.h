@@ -346,9 +346,19 @@ private:
 	ExitCode_t Push(SubscriberPtr_t sub);
 
 	/**
-	 * @brief Update the content of resource and application data information
+	 * @brief Update the content data information
 	 */
 	void UpdateData();
+
+	/**
+	 * @brief Update the content of resources data information
+	 */
+	void UpdateResourcesData();
+
+	/**
+	 * @brief Update the content of applications data information
+	 */
+	void UpdateApplicationsData();
 
 	/**
 	 * @brief Server to handle the subscription/unsubscription requests

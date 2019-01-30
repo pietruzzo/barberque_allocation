@@ -659,6 +659,15 @@ res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_pat
 }
 
 void DataManager::UpdateData(){
+	
+	UpdateResourcesData();
+
+	UpdateApplicationsData();
+
+	logger->Info("UpdateData: completed");
+}
+
+void DataManager::UpdateResourcesData(){
 	logger->Debug("UpdateData: resources status...");
 
 	// Taking data from Resource accounter and Power Manager
@@ -701,7 +710,10 @@ void DataManager::UpdateData(){
 #endif // CONFIG_BBQUE_PM
 		res_stats.push_back(temp_res);
 	}
+}
 
+void DataManager::UpdateApplicationsData(){
+	
 	logger->Debug("UpdateData: applications status...");
 	app_stats.clear();
 
@@ -716,8 +728,10 @@ void DataManager::UpdateData(){
 
 		temp_app.id   = app_ptr->Pid();
 		temp_app.name = app_ptr->Name();
+		temp_app.state = app_ptr->State();
 		auto temp_awm = app_ptr->CurrentAWM();
-		logger->Debug("UpdateData: current AWM = <%s:%d>",
+		logger->Debug("UpdateData: app = <%d>, state = <%s>, current AWM = <%s:%d>",
+			temp_app.id, ApplicationStatusIF::StateStr(app_ptr->State()), 
 			temp_awm->Name().c_str(), temp_awm->Id());
 
 		// Application resource assignment
@@ -795,8 +809,6 @@ void DataManager::UpdateData(){
 
 		app_ptr = am.GetNext(ApplicationStatusIF::RUNNING, app_it);
 	}
-
-	logger->Info("UpdateData: completed");
 }
 
 std::string DataManager::FindResourceAssigned(
