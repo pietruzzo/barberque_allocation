@@ -89,6 +89,7 @@ struct app_status_t { // 32 Byte min
 		ar & tasks;
 		ar & n_mapping;
 		ar & mapping;
+		ar & state;
 	}
 	/* Struct fields */
 	uint64_t id;            /// Identification number
@@ -97,6 +98,7 @@ struct app_status_t { // 32 Byte min
 	std::list<task_status_t> tasks; /// Per-task information
 	uint32_t n_mapping;		/// Number of mapped resources
 	std::list<res_bitset_t> mapping;  /// Task mappings
+	uint8_t state;			/// State of the application
 };
 
 struct resource_status_t { // 15 Byte
