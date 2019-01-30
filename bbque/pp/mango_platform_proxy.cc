@@ -802,6 +802,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(
 
 	uint32_t hw_cluster_id = partition.GetClusterId();
 
+	// Assign a memory area to buffers
 	for ( auto buffer : tg.Buffers()) {
 		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
 		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
@@ -817,6 +818,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(
 		}
 	}
 
+	// Assign a memory area to kernels (executable and stack)
 	for ( auto task : tg.Tasks()) {
 		auto arch = task.second->GetAssignedArch();
 		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
@@ -857,8 +859,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 
 	bbque_assert(part_list.empty());
 
-	// Let's get the required memory size per kernel
-	logger->Debug("Request summary:");
+	// Let's get the required memory size per kernel (executable + stack)
+	logger->Debug("MangoPartitionSkimmer: request summary: ");
 	for (size_t i = 0; i < tasks_size; i++) {
 		auto arch = it_task->second->GetAssignedArch();
 		uint32_t unit_family = ArchTypeToMangoType(arch,
@@ -882,30 +884,27 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 	bbque_assert(it_buff == tg.Buffers().end());
 
 	try {
-		// Find resources for TG
+		// Let's try to find the partitions that satisfy the task-graph
+		// requirements
 		// It may generate exception if the architecture is not supported
 		// (in that case we should not be here ;-))
-		logger->Debug("Finding resources for TG");
+		logger->Debug("MangoPartitionSkimmer: looking for HN resources...");
 
-		/*
-		* Let's try to find the partitions that satisfy the TG.
-		* First, find different sets of units
-		* Next, find and reserve memory for every set. We cannot call hn_find_memory more than once
-		* without allocate the memory returned, since it would return the same bank.
-		*/
+		// - Find different sets of resources (partitions)
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
 		FindUnitsSets(tg, hw_cluster_id, &tiles, &families_order, &num_sets);
+		logger->Debug("MangoPartitionSkimmer: HN returned %d available sets", num_sets);
 
-		// TODO: Implement the management of the multiple sets returned
-		num_sets = 1;
-
+		// - Find and reserve memory for every set. We cannot call
+		//   hn_find_memory more than once without allocate the memory
+		//   returned, since it would return the same bank
 		mem_buffers_tiles = new uint32_t*[num_sets];
 		mem_buffers_addr  = new uint32_t*[num_sets];
 		memset(mem_buffers_tiles, 0, num_sets*sizeof(uint32_t *));
 		memset(mem_buffers_addr, 0, num_sets*sizeof(uint32_t *));
 
 		for (unsigned int i = 0; i < num_sets; i++) {
-			// let's find and allocate memory close the tiles obtained for the set
+			// Find and allocate memory close the tiles/units in the set
 			mem_buffers_tiles[i] = new uint32_t[num_mem_buffers];
 			mem_buffers_addr[i]  = new uint32_t[num_mem_buffers];
 			FindAndAllocateMemory(tg, hw_cluster_id, tiles[i],
@@ -918,12 +917,12 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 	}
 
 	if (res == SK_OK) {
-		logger->Debug("Found %d partitions", num_sets);
-
-		// No feasible partition found
 		if ( num_sets == 0 ) {
+			// No feasible partition found
+			logger->Warn("MangoPartitionSkimmer: no feasible partitions");
 			res = SK_NO_PARTITION;
-		} else {
+		}
+		else {
 			// Fill the partition vector with the partitions returned by HN library
 			for (unsigned int i=0; i < num_sets; i++) {
 				Partition part = GetPartition(
