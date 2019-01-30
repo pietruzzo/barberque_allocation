@@ -73,15 +73,18 @@ PowerMonitor::PowerMonitor():
 		cfm(ConfigurationManager::GetInstance()),
 		optimize_dfr("wm.opt", std::bind(&PowerMonitor::SendOptimizationRequest, this)) {
 
-	// Get a logger module
+	// Initialization
 	logger = bu::Logger::GetLogger(POWER_MONITOR_NAMESPACE);
 	assert(logger);
 	logger->Info("PowerMonitor initialization...");
 	Init();
 
-	uint32_t temp_crit = 0, temp_crit_arm = 0, power_cons = 0, power_cons_arm = 0, 
-			batt_level = 0, batt_rate = 0;
-	float  temp_margin = 0.05, power_margin = 0.05, batt_rate_margin = 0.05;
+	// Configuration options
+	uint32_t temp_crit  = 0, temp_crit_arm  = 0;
+	uint32_t power_cons = 0, power_cons_arm = 0;
+	uint32_t batt_level = 0, batt_rate = 0;
+
+	float temp_margin = 0.05, power_margin = 0.05, batt_rate_margin = 0.05;
 	std::string temp_trig, power_trig, batt_trig;
 
 	try {
@@ -94,11 +97,11 @@ PowerMonitor::PowerMonitor():
 		LOAD_CONFIG_OPTION("temp.threshold_low", uint32_t, temp_crit_arm, 0);
 		LOAD_CONFIG_OPTION("temp.margin", float, temp_margin, 0.05);
 		LOAD_CONFIG_OPTION("power.trigger", std::string, power_trig, "");
-		LOAD_CONFIG_OPTION("power.threshold_high", uint32_t, power_cons, 0);
+		LOAD_CONFIG_OPTION("power.threshold_high", uint32_t, power_cons, 150000);
 		LOAD_CONFIG_OPTION("power.threshold_low", uint32_t, power_cons_arm, 0);
 		LOAD_CONFIG_OPTION("power.margin", float, power_margin, 0.05);
 		LOAD_CONFIG_OPTION("batt.trigger", std::string, batt_trig, "");
-		LOAD_CONFIG_OPTION("batt.threshold_level", uint32_t, batt_level, 0);
+		LOAD_CONFIG_OPTION("batt.threshold_level", uint32_t, batt_level, 15);
 		LOAD_CONFIG_OPTION("batt.threshold_rate",  uint32_t, batt_rate,  0);
 		LOAD_CONFIG_OPTION("batt.margin_rate", float, batt_rate_margin, 0.05);
 		LOAD_CONFIG_OPTION("nr_threads", uint16_t, nr_threads, 1);
@@ -155,21 +158,21 @@ PowerMonitor::PowerMonitor():
 	triggers[PowerManager::InfoType::ENERGY] = tgf.GetTrigger(batt_trig);
 	triggers[PowerManager::InfoType::ENERGY]->threshold_high  = batt_level;
 
-	logger->Info("====================================================================");
-	logger->Info("| THRESHOLDS             | VALUE      | MARGIN  |      TRIGGER     |");
-	logger->Info("+------------------------+------------+---------+------------------+");
-	logger->Info("| Temperature            | %5d C    | %6.0f%%  | %16s |",
+	logger->Info("=====================================================================");
+	logger->Info("| THRESHOLDS             | VALUE       | MARGIN  |      TRIGGER     |");
+	logger->Info("+------------------------+-------------+---------+------------------+");
+	logger->Info("| Temperature            | %6d C    | %6.0f%%  | %16s |",
 		triggers[PowerManager::InfoType::TEMPERATURE]->threshold_high /1000,
 		triggers[PowerManager::InfoType::TEMPERATURE]->margin * 100, temp_trig.c_str());
-	logger->Info("| Power consumption      | %5d mW   | %6.0f%%  | %16s |",
+	logger->Info("| Power consumption      | %6d mW   | %6.0f%%  | %16s |",
 		triggers[PowerManager::InfoType::POWER]->threshold_high,
 		triggers[PowerManager::InfoType::POWER]->margin * 100, power_trig.c_str());
-	logger->Info("| Battery discharge rate | %5d %%/h  | %6.0f%% | %16s |",
+	logger->Info("| Battery discharge rate | %6d %%/h  | %6.0f%% | %16s |",
 		triggers[PowerManager::InfoType::CURRENT]->threshold_high,
 		triggers[PowerManager::InfoType::CURRENT]->margin * 100, batt_trig.c_str());
-	logger->Info("| Battery charge level   | %5d %c/100|  %6s | %16s |",
+	logger->Info("| Battery charge level   | %6d %c/100|  %6s | %16s |",
 		triggers[PowerManager::InfoType::ENERGY]->threshold_high, '%', "-", batt_trig.c_str());
-	logger->Info("====================================================================");
+	logger->Info("=====================================================================");
 
 	// Staus of the optimization policy execution request
 	opt_request_sent = false;
