@@ -311,7 +311,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::DealWithNoPartitionFound(ba::AppCPt
 		case PartitionSkimmer::SKT_MANGO_MEMORY_MANAGER:
 			// We have no sufficient memory to run the application
 			return SCHED_R_UNAVAILABLE;
-		case PartitionSkimmer::SKT_MANGO_POWER_MANAGER:	
+		case PartitionSkimmer::SKT_MANGO_POWER_MANAGER:
 			// Strict thermal constraints must not violated - do
 			// not schedule the application
 		default:
@@ -330,8 +330,8 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::CheckHWRequirements(ba::AppCPtr_t p
 	for (auto task_pair : papp->GetTaskGraph()->Tasks()) {
 		auto task = task_pair.second;
 		const auto requirements = papp->GetTaskRequirements(task->Id());
-	
-		uint_fast8_t i=0; 
+
+		uint_fast8_t i=0;
 		ArchType_t preferred_type;
 		const auto targets = task->Targets();
 
@@ -353,7 +353,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::CheckHWRequirements(ba::AppCPtr_t p
 			}
 			preferred_type = requirements.ArchPreference(i);
 			i++;
-		} while(targets.find(preferred_type) == targets.end());
+		} while (targets.find(preferred_type) == targets.end());
 
 		if (preferred_type == ArchType_t::NONE) {
 			logger->Error("CheckHWRequirements: [%s] no architecture available for task %d",
@@ -373,7 +373,6 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::CheckHWRequirements(ba::AppCPtr_t p
 		task->SetAssignedBandwidth( requirements.GetAssignedBandwidth() );
 	}
 	return SCHED_OK;
-
 }
 
 
@@ -440,7 +439,7 @@ MangASchedPol::SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_
 	int32_t ref_num = -1;
 
 	// Now I will update the Resource Accounter in order to trace the resource allocation
-	// This has no effect in the platform resource assignment, since the effective 
+	// This has no effect in the platform resource assignment, since the effective
 	// assignment was performed (by the platform proxy) during the PropagatePartition
 	uint32_t nr_cores = 1;
 	auto tg = papp->GetTaskGraph();
