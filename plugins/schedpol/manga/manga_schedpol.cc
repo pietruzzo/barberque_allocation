@@ -319,6 +319,115 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::DealWithNoPartitionFound(ba::AppCPt
 	}
 }
 
+
+std::string ArchMappingString(TaskMap_t & task_map) {
+	std::string mapping_opt_str;
+	for (auto & t_entry: task_map) {
+		auto & t_id = t_entry.first;
+		mapping_opt_str += "arch mapping = { " + std::to_string(t_id) + ":"
+			+ GetStringFromArchType(t_entry.second->GetAssignedArch())
+			+ " ";
+	}
+	mapping_opt_str += "}";
+	return mapping_opt_str;
+}
+
+SchedulerPolicyIF::ExitCode_t MangASchedPol::InitTaskGraphMappingOptions(
+		ba::AppCPtr_t papp) noexcept {
+
+	if (nullptr == papp->GetTaskGraph()) {
+		logger->Error("InitTaskGraphMappingOptions: [%s] task-graph not available",
+			papp->StrId());
+		return SCHED_SKIP_APP;
+	}
+
+	auto & task_map = papp->GetTaskGraph()->Tasks();
+	for (auto & task_pair: task_map) {
+		auto & task = task_pair.second;
+		const auto & task_reqs = papp->GetTaskRequirements(task->Id());
+
+		if (task_reqs.NumArchPreferences() == 0) {
+			logger->Error("InitTaskGraphMappingOptions: [%s] task %d"
+				" has no target architecture - check the recipe",
+				papp->StrId(), task->Id());
+			return SCHED_SKIP_APP;
+		}
+		logger->Debug("InitTaskGraphMappingOptions: [%s] task %d"
+			" has %d arch options",
+			papp->StrId(), task->Id(), task_reqs.NumArchPreferences());
+
+
+		// Target processor architecture
+		auto target_unit_arch = task_reqs.ArchPreference(0);
+		logger->Debug("InitTaskGraphMappingOptions: [%s] task %d "
+				"target [arch=%s (%d)] option",
+			papp->StrId(), task->Id(),
+			GetStringFromArchType(target_unit_arch),
+			target_unit_arch);
+		task->SetAssignedArch(target_unit_arch);
+
+		// Interconnect bandwidth requirements
+		logger->Debug("InitTaskGraphMappingOptions: [%s] task %d "
+			"ctime=%dms bandwidth: in=%d, out=%d (Kbps)",
+			papp->StrId(), task->Id(),
+			task_reqs.CompletionTime(),
+			task_reqs.GetAssignedBandwidth().in_kbps,
+			task_reqs.GetAssignedBandwidth().out_kbps);
+		task->SetAssignedBandwidth(task_reqs.GetAssignedBandwidth());
+	}
+
+	logger->Debug("InitTaskGraphMappingOptions: %s", ArchMappingString(task_map).c_str());
+
+	return SCHED_OK;
+}
+
+SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
+		ba::AppCPtr_t papp,
+		std::vector<int> & arch_index,
+		uint32_t task_id) {
+	auto & task_map = papp->GetTaskGraph()->Tasks();
+	ExitCode_t ret = SCHED_OK;
+
+	// if the task id does not exist we reached the end
+	if (task_map.find(task_id) == task_map.end()) {
+		logger->Warn("NextTaskGraphMappingOption: task_id=%d"
+			" not valid - more mapping options?",
+			task_id);
+		return SCHED_ERROR;
+	}
+
+	auto & curr_task = task_map[task_id];
+	auto & arch_id = arch_index[task_id];
+	const auto & task_reqs = papp->GetTaskRequirements(task_id);
+	logger->Debug("NextTaskGraphMappingOption: task_id=%d: current arch=%d [%s]",
+		task_id, arch_id,
+		GetStringFromArchType(task_reqs.ArchPreference(arch_id)));
+
+	// Next architecture option
+	if (size_t(arch_id) <= (task_reqs.NumArchPreferences()-2)) {
+		arch_id++;
+		curr_task->SetAssignedArch(task_reqs.ArchPreference(arch_id));
+		logger->Debug("NextTaskGraphMappingOption: task_id=%d: next arch=%d [%s]",
+			task_id, arch_index[task_id],
+			GetStringFromArchType(task_reqs.ArchPreference(arch_id)));
+	}
+	// Last option of current task => 'carry' effect
+	else {
+		logger->Debug("NextTaskGraphMappingOption: task_id=%d: arch %d >= %d",
+			task_id, arch_id, (task_reqs.NumArchPreferences()-2));
+
+		arch_index[task_id] = 0;
+		task_id++;
+		logger->Debug("NextTaskGraphMappingOption: task_id=%d next...", task_id);
+		ret = NextTaskGraphMappingOption(papp, arch_index, task_id);
+	}
+
+	logger->Debug("NextTaskGraphMappingOption: %s", ArchMappingString(task_map).c_str());
+
+	return ret;
+}
+
+
 SchedulerPolicyIF::ExitCode_t MangASchedPol::CheckHWRequirements(ba::AppCPtr_t papp) noexcept {
 	// Trivial allocation policy: we select always the best one for the receipe
 	// TODO: a smart one

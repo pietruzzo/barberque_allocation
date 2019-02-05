@@ -22,6 +22,7 @@
 #include <future>
 #include <list>
 #include <memory>
+#include <vector>
 
 #include "bbque/configuration_manager.h"
 #include "bbque/plugins/plugin.h"
@@ -124,6 +125,13 @@ private:
 	ExitCode_t RelaxRequirements(int priority) noexcept;
 
 	ExitCode_t CheckHWRequirements(ba::AppCPtr_t papp) noexcept;
+
+	ExitCode_t InitTaskGraphMappingOptions(ba::AppCPtr_t papp) noexcept;
+
+	ExitCode_t NextTaskGraphMappingOption(
+			ba::AppCPtr_t papp,
+			std::vector<int> & arch_index,
+			uint32_t task_id=0);
 
 	ExitCode_t DealWithNoPartitionFound(ba::AppCPtr_t papp) noexcept; 
 
