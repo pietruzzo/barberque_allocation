@@ -148,6 +148,14 @@ MangASchedPol::Schedule(
 	Init();
 	fut_tg.get();
 
+	uint32_t nr_clusters = pe_per_acc.size();
+	logger->Debug("Schedule: HN clusters available = %d", nr_clusters);
+	assert (nr_clusters > 0);
+	if (nr_clusters <= 0) {
+		logger->Fatal("Schedule: no HW clusters available: platform not initialized?");
+		return SCHED_ERROR;
+	}
+
 	for (AppPrio_t priority = 0; priority <= sys->ApplicationLowestPriority(); priority++) {
 		// Checking if there are applications at this priority
 		if (!sys->HasApplications(priority))
@@ -177,49 +185,48 @@ SchedulerPolicyIF::ExitCode_t
 MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 	ExitCode_t err, err_relax = SCHED_OK;
 	ApplicationManager & am(ApplicationManager::GetInstance());
-//	do {
-		ba::AppCPtr_t  papp;
-		AppsUidMapIt app_iterator;
-		// Get all the applications @ this priority
-		papp = sys->GetFirstWithPrio(priority, app_iterator);
-		for (; papp; papp = sys->GetNextWithPrio(priority, app_iterator)) {
-			logger->Debug("ServeApplicationsWithPriority: [%s]: looking for resources...",
-					papp->StrId());
+	ba::AppCPtr_t  papp;
+	AppsUidMapIt app_iterator;
 
-			if (papp->Disabled()) {
-				logger->Debug("ServeApplicationsWithPriority: [%s] disabled. Skip...",
-					papp->StrId());
-				continue;
-			}
+	// Get all the applications @ this priority
+	papp = sys->GetFirstWithPrio(priority, app_iterator);
+	for (; papp; papp = sys->GetNextWithPrio(priority, app_iterator)) {
+		logger->Debug("ServeApplicationsWithPriority: [%s]: looking for resources...",
+				papp->StrId());
 
-			err = ServeApp(papp);
-			if (err == SCHED_SKIP_APP) {
-				// In this case we have no sufficient memory to start it, the only
-				// one thing to do is to ignore it
-				logger->Warn("ServeApplicationsWithPriority: [%s]: missing information",
-					papp->StrId());
-				am.NoSchedule(papp);
-				continue;
-			}
-			else if (err == SCHED_R_UNAVAILABLE) {
-				// In this case we have no bandwidth feasibility, so we can try to
-				// fairly reduce the bandwidth for non strict applications.
-				logger->Warn("ServeApplicationsWithPriority: [%s]: unable to allocate required resources",
-					papp->StrId());
-				err_relax = RelaxRequirements(priority);
-				am.NoSchedule(papp);
-				continue;
-			}
-			else if (err != SCHED_OK) {
-				// It returns  error exit code in case of error.
-				return err;
-			}
-
-			logger->Info("ServeApplicationsWithPriority: [%s] successfully scheduled",
-				     papp->StrId());
+		// Skip disabled
+		if (papp->Disabled()) {
+			logger->Debug("ServeApplicationsWithPriority: [%s] disabled. Skip...",
+				papp->StrId());
+			continue;
 		}
 
-//	} while (err == SCHED_R_UNAVAILABLE && err_relax == SCHED_OK);
+		err = ServeApp(papp);
+		if (err == SCHED_SKIP_APP) {
+			// In this case we have no sufficient memory to start it, the only
+			// one thing to do is to ignore it
+			logger->Warn("ServeApplicationsWithPriority: [%s]: missing information",
+				papp->StrId());
+			am.NoSchedule(papp);
+			continue;
+		}
+		else if (err == SCHED_R_UNAVAILABLE) {
+			// In this case we have no bandwidth feasibility, so we can try to
+			// fairly reduce the bandwidth for non strict applications.
+			logger->Warn("ServeApplicationsWithPriority: [%s]: unable to allocate required resources",
+				papp->StrId());
+			err_relax = RelaxRequirements(priority);
+			am.NoSchedule(papp);
+			continue;
+		}
+		else if (err != SCHED_OK) {
+			// It returns  error exit code in case of error.
+			return err;
+		}
+
+		logger->Info("ServeApplicationsWithPriority: [%s] successfully scheduled",
+			     papp->StrId());
+	}
 
 	return err_relax != SCHED_OK ? err_relax : err;
 }
@@ -248,14 +255,6 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 
 	uint32_t curr_cluster_id = 0;
 	uint32_t nr_clusters = pe_per_acc.size();
-	logger->Debug("ServeApp: [%s] HN clusters available = %d",
-		papp->StrId(), nr_clusters);
-	assert (nr_clusters > 0);
-	if (nr_clusters <= 0) {
-		logger->Fatal("ServeApp: no HW clusters available: platform not initialized?",
-			papp->StrId());
-		return SCHED_ERROR;
-	}
 
 	// HN clusters
 	std::list<Partition> partitions;
