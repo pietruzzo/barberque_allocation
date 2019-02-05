@@ -247,11 +247,15 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 	}
 
 	// First of all we have to decide which processor type to assign to each task
-	auto err = CheckHWRequirements(papp);
+	auto err = InitTaskGraphMappingOptions(papp);
 	if (err != SCHED_OK) {
 		logger->Warn("ServeApp: [%s] not schedulable", papp->StrId());
 		return err;
 	}
+
+	// Initialize vector for task mapping exploration
+	uint32_t first_task_id = papp->GetTaskGraph()->Tasks().begin()->first;
+	std::vector<int> arch_index(papp->GetTaskGraph()->TaskCount()+1, 0);
 
 	uint32_t curr_cluster_id = 0;
 	uint32_t nr_clusters = pe_per_acc.size();
@@ -269,6 +273,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 				logger->Debug("ServeApp: [%s] HW partitions found: %d "
 					"[HN cluster %d]",
 					papp->StrId(), partitions.size(), curr_cluster_id);
+				// Partitions available schedule the application
 				err = ScheduleApplication(papp, partitions);
 				break;
 			case ResourcePartitionValidator::PMV_SKIMMER_FAIL:
@@ -279,7 +284,10 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 				logger->Warn("ServeApp: [%s] no HW partitions available"
 					"[HN cluster %d]",
 					papp->StrId(), curr_cluster_id);
-				err = DealWithNoPartitionFound(papp);
+				//err = DealWithNoPartitionFound(papp);
+				// Try another resource mapping
+				err = NextTaskGraphMappingOption(papp, arch_index, first_task_id);
+				if (err == SCHED_R_UNAVAILABLE) continue;
 				break;
 			default:
 				// Ehi what's happened here?
@@ -355,7 +363,6 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::InitTaskGraphMappingOptions(
 			" has %d arch options",
 			papp->StrId(), task->Id(), task_reqs.NumArchPreferences());
 
-
 		// Target processor architecture
 		auto target_unit_arch = task_reqs.ArchPreference(0);
 		logger->Debug("InitTaskGraphMappingOptions: [%s] task %d "
@@ -384,6 +391,13 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 		ba::AppCPtr_t papp,
 		std::vector<int> & arch_index,
 		uint32_t task_id) {
+
+	if (papp->GetTaskGraph() == nullptr) {
+		logger->Error("NextTaskGraphMappingOption: [%s] task-graph missing."
+			" Corrupted?", papp->StrId());
+		return SCHED_SKIP_APP;
+	}
+
 	auto & task_map = papp->GetTaskGraph()->Tasks();
 	ExitCode_t ret = SCHED_OK;
 
@@ -392,7 +406,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 		logger->Warn("NextTaskGraphMappingOption: task_id=%d"
 			" not valid - more mapping options?",
 			task_id);
-		return SCHED_ERROR;
+		return SCHED_R_UNAVAILABLE;
 	}
 
 	auto & curr_task = task_map[task_id];
