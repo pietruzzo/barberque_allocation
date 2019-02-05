@@ -859,22 +859,35 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 
 	bbque_assert(part_list.empty());
 
-	// Let's get the required memory size per kernel (executable + stack)
 	logger->Debug("MangoPartitionSkimmer: request summary: ");
 	for (size_t i = 0; i < tasks_size; i++) {
+		// Kernel binary available for the assigned processor type?
 		auto arch = it_task->second->GetAssignedArch();
-		uint32_t unit_family = ArchTypeToMangoType(arch,
-				               it_task->second->GetThreadCount());
-		auto ksize = it_task->second->Targets()[arch]->BinarySize();
-		auto ssize = it_task->second->Targets()[arch]->StackSize();
-		mem_buffers_size[buff_size + i] = ksize + ssize;
-		it_task++;
+		auto const & arch_it = it_task->second->Targets().find(arch);
+		if (arch_it == it_task->second->Targets().end()) {
+			logger->Error("MangoPartitionSkimmer: arch=%s "
+				"binary not available",
+				GetStringFromArchType(arch));
+			delete[] mem_buffers_size;
+			return SK_NO_PARTITION;
+		}
+		// MANGO architecture family...
+		uint32_t unit_family = ArchTypeToMangoType(
+				arch, it_task->second->GetThreadCount());
 		logger->Debug("  -> Computing Resource %d, HN type %s",
 			i, hn_to_str_unit_family(unit_family));
+
+		// Required memory amount per-kernel (executable + stack)
+		auto ksize = arch_it->second->BinarySize();
+		auto ssize = arch_it->second->StackSize();
+		mem_buffers_size[buff_size + i] = ksize + ssize;
+
+		// Next task
+		it_task++;
 	}
 	bbque_assert(it_task == tg.Tasks().end());
 
-	// Let's get the required memory size per buffer
+	// Required memory amount per-buffer
 	for (size_t i = 0; i < buff_size; i++) {
 		uint32_t mem_size = it_buff->second->Size();
 		mem_buffers_size[i] = mem_size;
