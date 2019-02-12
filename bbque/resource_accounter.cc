@@ -336,8 +336,14 @@ bool ResourceAccounter::ExistResource(ResourcePathPtr_t resource_path_ptr) const
 ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath) {
 	auto rp_it = r_paths.find(strpath);
 	if (rp_it == r_paths.end()) {
-		logger->Debug("GetPath: No resource path object for <%s>", strpath.c_str());
+		// Create a new resource path object
+		logger->Debug("GetPath: no resource path object for <%s>", strpath.c_str());
 		auto new_path = std::make_shared<br::ResourcePath>(strpath);
+		if (new_path == nullptr) {
+			logger->Error("GetPath: <%s> is a not valid path", strpath.c_str());
+			return nullptr;
+		}
+		// ...it must actually refer to a registered resource
 		if (ExistResource(new_path)) {
 			r_paths.emplace(strpath, new_path);
 			logger->Debug("GetPath: resource path object for <%s> added", strpath.c_str());
