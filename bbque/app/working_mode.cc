@@ -399,6 +399,8 @@ void WorkingMode::UpdateBindingInfo(
 }
 
 void WorkingMode::ClearResourceBinding() {
+	if (resources.sync_bindings == nullptr)
+		return;
 	resources.sync_bindings->clear();
 	for (int r_type_index = 0; r_type_index < R_TYPE_COUNT; ++r_type_index) {
 		br::ResourceType r_type = static_cast<br::ResourceType>(r_type_index);
