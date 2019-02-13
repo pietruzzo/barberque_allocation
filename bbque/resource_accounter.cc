@@ -235,14 +235,16 @@ void ResourceAccounter::PrintAppDetails(
 		// Skip finished applications
 		if (papp->State() == Application::FINISHED) {
 			logger->Debug("[pid=%d, uid=%d, state=%s] skipped",
-				papp->Pid(), app_uid, Application::StateStr(papp->State()));
+				papp->Pid(), app_uid,
+				Application::StateStr(papp->State()));
 			continue;
 		}
 
 		// Warning: unfinished application without AWM...
 		if (!papp->CurrentAWM()) {
 			logger->Warn("[pid=%d, uid=%d, state=%s] no working mode",
-				papp->Pid(), app_uid, Application::StateStr(papp->State()));
+				papp->Pid(), app_uid,
+				Application::StateStr(papp->State()));
 			continue;
 		}
 
@@ -1215,14 +1217,14 @@ ResourceAccounter::IncBookingCounts(
 		ba::SchedPtr_t const & papp,
 		br::RViewToken_t status_view) {
 	ResourceAccounter::ExitCode_t result;
-	logger->Debug("Booking: getting the assigned amount from view [%ld]...",
+	logger->Debug("IncBooking: getting the assigned amount from view [%ld]...",
 		status_view);
 
 	// Get the set of resources referenced in the view
 	auto rsrc_view(rsrc_per_views.find(status_view));
 	assert(rsrc_view != rsrc_per_views.end());
 	if (rsrc_view == rsrc_per_views.end()) {
-		logger->Fatal("Booking: invalid resource state view token [%ld]",
+		logger->Fatal("IncBooking: invalid resource state view token [%ld]",
 			status_view);
 		return RA_ERR_MISS_VIEW;
 	}
@@ -1232,7 +1234,7 @@ ResourceAccounter::IncBookingCounts(
 	// referenced by 'status_view').
 	AppAssignmentsMapPtr_t apps_assign;
 	if (GetAppAssignmentsByView(status_view, apps_assign) == RA_ERR_MISS_VIEW) {
-		logger->Fatal("Booking: no applications using resource in state view "
+		logger->Fatal("IncBooking: no applications using resource in state view "
 				"[%ld]", status_view);
 		return RA_ERR_MISS_APP;
 	}
@@ -1240,7 +1242,7 @@ ResourceAccounter::IncBookingCounts(
 	// Each application can hold just one resource assignments set
 	auto app_assign_map_it(apps_assign->find(papp->Uid()));
 	if (app_assign_map_it != apps_assign->end()) {
-		logger->Warn("Booking: [%s] currently using a resource set yet",
+		logger->Warn("IncBooking: [%s] currently using a resource set yet",
 				papp->StrId());
 		return RA_ERR_APP_USAGES;
 	}
@@ -1249,33 +1251,35 @@ ResourceAccounter::IncBookingCounts(
 	for (auto & ru_entry: *(assign_map.get())) {
 		br::ResourcePathPtr_t const & rsrc_path(ru_entry.first);
 		br::ResourceAssignmentPtr_t & r_assign(ru_entry.second);
-		logger->Debug("Booking: [%s] requires resource <%s>: % " PRIu64 " ",
-				papp->StrId(), rsrc_path->ToString().c_str(), r_assign->GetAmount());
+		logger->Debug("IncBooking: [%s] requires resource <%s>: % " PRIu64 " ",
+				papp->StrId(),
+				rsrc_path->ToString().c_str(), r_assign->GetAmount());
 
 		// Do booking for the current resource request
 		result = DoResourceBooking(papp, r_assign, status_view, rsrc_set);
 		if (result != RA_SUCCESS)  {
-			logger->Crit("Booking: unexpected fail! <%s> "
+			logger->Crit("IncBooking: [%s] unexpected fail! <%s> "
 					"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "]",
-				rsrc_path->ToString().c_str(), r_assign->GetAmount(),
+				papp->StrId(),
+				rsrc_path->ToString().c_str(),
+				r_assign->GetAmount(),
 				Available(rsrc_path, MIXED, status_view, papp),
 				Total(rsrc_path, MIXED));
-			// Print the report table of the resource assignments
-			PrintStatusReport(status_view);
 		}
 
 		assert(result == RA_SUCCESS);
-		logger->Info("Booking: R<%s> SUCCESS "
+		logger->Debug("IncBooking: [%s] R<%s> SUCCESS "
 				"[U:%" PRIu64 " | A:%" PRIu64 " | T:%" PRIu64 "]"
 				" view=[%ld]",
-				rsrc_path->ToString().c_str(), r_assign->GetAmount(),
-				Available(rsrc_path, MIXED, status_view, papp),
-				Total(rsrc_path, MIXED), status_view);
+			papp->StrId(),
+			rsrc_path->ToString().c_str(), r_assign->GetAmount(),
+			Available(rsrc_path, MIXED, status_view, papp),
+			Total(rsrc_path, MIXED), status_view);
 	}
 
 	apps_assign->emplace(papp->Uid(), assign_map);
-	logger->Debug("Booking: [%s] now holds %d resources - view=[%ld]",
-			papp->StrId(), assign_map->size(), status_view);
+	logger->Debug("IncBooking: [%s] now holds %d resource(s) - view=[%ld]",
+		papp->StrId(), assign_map->size(), status_view);
 
 	return RA_SUCCESS;
 }
