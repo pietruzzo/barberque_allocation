@@ -889,7 +889,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_PutView(
 	// Get the resource set using the referenced view
 	ResourceViewsMap_t::iterator rviews_it(rsrc_per_views.find(status_view));
 	if (rviews_it == rsrc_per_views.end()) {
-		logger->Error("PutView: cannot find resource view token %ld", status_view);
+		logger->Warn("PutView: cannot find resource view token %ld", status_view);
 		return RA_ERR_MISS_VIEW;
 	}
 
