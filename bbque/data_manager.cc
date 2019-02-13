@@ -162,7 +162,7 @@ void DataManager::CheckpointSubscribers() {
 		std::ofstream ofs_event(archive_path_event);
 		text_oarchive oa_rate(ofs_rate);
 		text_oarchive oa_event(ofs_event);
-		
+
 		// Checkpointing subscribers on rate
 		if (!subscribers_on_rate.empty()){
 			oa_rate << subscribers_on_rate;
@@ -177,7 +177,7 @@ void DataManager::CheckpointSubscribers() {
 		} else {
 			remove(archive_path_event.c_str());
 		}
-		
+
 }
 
 void DataManager::RestoreSubscribers(){
@@ -195,7 +195,7 @@ void DataManager::RestoreSubscribers(){
 			logger->Error("RestoreSubscribers: exception [%s]", ex.what());
 			return;
 		}
-				
+
 		assert(!subscribers_on_rate.empty());
 		logger->Info("RestoreSubscribers: stored subscribers on rate loaded!");
 	} else {
@@ -212,7 +212,7 @@ void DataManager::RestoreSubscribers(){
 			logger->Error("RestoreSubscribers: exception [%s]", ex.what());
 			return;
 		}
-		
+
 		assert(!subscribers_on_event.empty());
 		logger->Info("RestoreSubscribers: stored subscribers on event loaded!");
 	} else {
@@ -232,7 +232,7 @@ void DataManager::SubscriptionHandler() {
 	subscription_server_tid = gettid();
 	logger->Info("SubscriptionHandler: starting server [tid=%d]... ",
 		subscription_server_tid);
-	
+
 	// Local address settings
 	io_service ios;
 	ip::tcp::endpoint endpoint =
@@ -250,7 +250,7 @@ void DataManager::SubscriptionHandler() {
 		if (!done && !is_terminating)
 			logger->Error("SubscriptionHandler: error during socket creation");
 		return;
-	}	
+	}
 
 	/* ----------------------------------------------------------- */
 	/* ------------------ Subscription handling ------------------ */
@@ -494,11 +494,11 @@ void DataManager::PublishOnRate(){
 	ExitCode_t result;
 	utils::Timer tmr;
 	std::list<SubscriberPtr_t> push_list;
-	
+
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
 	tmp_sleep_time = subscribers_on_rate.back()->subscription.period_ms;
 	UpdateData(); // Update resources and applications data
-	
+
 	subs_lock.lock();
 	tmr.start();
 
@@ -659,7 +659,7 @@ res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_pat
 }
 
 void DataManager::UpdateData(){
-	
+
 	UpdateResourcesData();
 
 	UpdateApplicationsData();
@@ -713,7 +713,7 @@ void DataManager::UpdateResourcesData(){
 }
 
 void DataManager::UpdateApplicationsData(){
-	
+
 	logger->Debug("UpdateData: applications status...");
 	app_stats.clear();
 
@@ -731,13 +731,13 @@ void DataManager::UpdateApplicationsData(){
 		temp_app.state = app_ptr->State();
 		auto temp_awm = app_ptr->CurrentAWM();
 		logger->Debug("UpdateData: app = <%d>, state = <%s>, current AWM = <%s:%d>",
-			temp_app.id, ApplicationStatusIF::StateStr(app_ptr->State()), 
+			temp_app.id, ApplicationStatusIF::StateStr(app_ptr->State()),
 			temp_awm->Name().c_str(), temp_awm->Id());
 
 		// Application resource assignment
-		res::ResourceAssignmentMapPtr_t temp_res_bind_ptr = 
+		res::ResourceAssignmentMapPtr_t temp_res_bind_ptr =
 			temp_awm->GetResourceBinding();
-		
+
 		auto & temp_res_bind = *(temp_res_bind_ptr.get());
 		std::list<res_bitset_t> app_res_list;
 		uint32_t res_counter = 0;
@@ -764,8 +764,8 @@ void DataManager::UpdateApplicationsData(){
 
 		// Per-task information
 		auto temp_tg = app_ptr->GetTaskGraph();
-		temp_app.n_task = temp_tg->TaskCount();	
-		logger->Debug("UpdateData: <%s-%s>: n_task=%d", 
+		temp_app.n_task = temp_tg->TaskCount();
+		logger->Debug("UpdateData: <%s-%s>: n_task=%d",
 			temp_app.name.c_str(), app_ptr->StrId(), temp_app.n_task);
 
 		// List of tasks
@@ -812,7 +812,7 @@ void DataManager::UpdateApplicationsData(){
 }
 
 std::string DataManager::FindResourceAssigned(
-	res::ResourceAssignmentMapPtr_t res_map_ptr, 
+	res::ResourceAssignmentMapPtr_t res_map_ptr,
 	int mapped_sys_id,
 	int mapped_cluster,
 	int mapped_proc) const{
@@ -828,7 +828,7 @@ std::string DataManager::FindResourceAssigned(
 							+ std::to_string(mapped_sys_id)
 							+".grp"
 							+ std::to_string(mapped_cluster)
-							+ "." 
+							+ "."
 							+ br::GetResourceTypeString(res_path->Type(-1))
 							+ std::to_string(mapped_proc));
 				return res_path_str;
