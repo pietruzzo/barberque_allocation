@@ -1190,7 +1190,6 @@ void ApplicationProxy::RpcExcRegister(prqsSn_t prqs) {
 }
 
 void ApplicationProxy::RpcExcUnregister(prqsSn_t prqs) {
-	ApplicationManager &am(ApplicationManager::GetInstance());
 	pchMsg_t pchMsg = prqs->pmsg;
 	rpc_msg_header_t * pmsg_hdr = pchMsg;
 	bl::rpc_msg_EXC_UNREGISTER_t * pmsg_pyl =
@@ -1211,7 +1210,9 @@ void ApplicationProxy::RpcExcUnregister(prqsSn_t prqs) {
 			pmsg_hdr->exc_id, pmsg_pyl->exc_name);
 
 	// Unregister the EXC from the ApplicationManager
+//	ApplicationManager &am(ApplicationManager::GetInstance());
 //	am.DestroyEXC(pcon->app_pid, pmsg_hdr->exc_id);
+
 	// FIXME we should deliver the error code to the application
 	// This is tracked by Issues tiket #10
 
