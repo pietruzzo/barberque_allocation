@@ -165,7 +165,7 @@ void ResourceAccounter::PrintStatusReport(
 			online  = 'O';
 
 		// Append '%' if resource is a processing element (core)
-		bool percent = resource_ptr->Type() == br::ResourceType::PROC_ELEMENT;
+		bool percent = (resource_ptr->Type() == br::ResourceType::PROC_ELEMENT);
 
 		// Resource model [xxx]
 		char model[] = "   ";
@@ -190,7 +190,7 @@ void ResourceAccounter::PrintStatusReport(
 
 		// Print details about how usage is partitioned among applications
 		if (resource_ptr->Used(status_view) > 0)
-			PrintAppDetails(resource_ptr, status_view, verbose);
+			PrintAppDetails(resource_ptr, percent, status_view, verbose);
 	}
 
 	PRINT_NOTICE_IF_VERBOSE(verbose, RA_DIV1);
@@ -198,6 +198,7 @@ void ResourceAccounter::PrintStatusReport(
 
 void ResourceAccounter::PrintAppDetails(
 		br::ResourcePtr_t resource_ptr,
+		bool percent,
 		br::RViewToken_t status_view,
 		bool verbose) const {
 	char app_text_row[] = RA_DIV3;
@@ -256,7 +257,7 @@ void ResourceAccounter::PrintAppDetails(
 				papp->StrId(),
 				papp->Priority(),
 				papp->CurrentAWM()->Id(),
-				bu::GetValueUnitStr(app_usage, true).c_str(),
+				bu::GetValueUnitStr(app_usage, percent).c_str(),
 				prog_bar);
 		PRINT_NOTICE_IF_VERBOSE(verbose, app_text_row);
 	}

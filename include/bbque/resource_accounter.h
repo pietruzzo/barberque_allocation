@@ -284,11 +284,13 @@ public:
 	 * applications/EXCs
 	 *
 	 * @param resource_ptr The resource description pointer
+	 * @param percent Resource assignment as percentage
 	 * @param status_view The token referencing the resource state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
 	void PrintAppDetails(
-	        br::ResourcePtr_t resource_ptr, br::RViewToken_t status_view, bool verbose) const;
+	        br::ResourcePtr_t resource_ptr, bool percent,
+		br::RViewToken_t status_view, bool verbose) const;
 
 	/**
 	 * @brief Print the number of registered resources for each type
