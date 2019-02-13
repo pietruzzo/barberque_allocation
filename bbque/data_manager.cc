@@ -789,19 +789,25 @@ void DataManager::UpdateApplicationsData(){
 			temp_task.n_threads = task_ptr->GetMappedCores(); // # threads
 
 			// Build complete resource path
-			std::string assigned_res_path = 
+			std::string assigned_res_path =
 				FindResourceAssigned(temp_awm->GetResourceBinding(),
 					mapped_sys_id, mapped_cluster, mapped_proc);
 			if(assigned_res_path.size() != 0){
 				br::ResourcePathPtr_t mapping_path = ra.GetPath(assigned_res_path);
-				logger->Debug("UpdateData: Task <%d>:<%s>", 
-				temp_task.id, assigned_res_path.c_str());
-				temp_task.mapping = BuildResourceBitset(mapping_path);
+				if (mapping_path == nullptr) {
+					logger->Warn("UpdateData: <%s> is not a valid path",
+						assigned_res_path.c_str());
+				}
+				else {
+					logger->Debug("UpdateData: Task <%d>:<%s>",
+					temp_task.id, assigned_res_path.c_str());
+					temp_task.mapping = BuildResourceBitset(mapping_path);
+				}
 			} else {
 				logger->Error("UpdateData: no resource assignment found for task %d",
 					temp_task.id);
 			}
-			
+
 			temp_app.tasks.push_back(temp_task);
 		}
 #endif
