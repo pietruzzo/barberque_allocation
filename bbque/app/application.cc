@@ -693,6 +693,7 @@ Application::ExitCode_t Application::LoadTaskGraph() {
 		return APP_TG_SEM_ERROR;
 	}
 
+	logger->Debug("LoadTaskGraph: waiting on task-graph semaphore...");
 	if (sem_wait(tg_sem) != 0) {
 		logger->Error("LoadTaskGraph: wait on semaphore failed [errno=%d]", errno);
 		return APP_TG_SEM_ERROR;
@@ -705,11 +706,13 @@ Application::ExitCode_t Application::LoadTaskGraph() {
 		return APP_TG_FILE_ERROR;
 	}
 
+	logger->Debug("LoadTaskGraph: building the task-graph...");
 	if (task_graph == nullptr) {
 		task_graph = std::make_shared<TaskGraph>();
 		logger->Info("LoadTaskGraph: loading from scratch...");
 	}
 
+	logger->Debug("LoadTaskGraph: task-graph de-serialization...");
 	try {
 		boost::archive::text_iarchive ia(ifs);
 		ia >> *task_graph;
