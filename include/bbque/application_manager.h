@@ -302,7 +302,7 @@ public:
 	 * @param papp The application/EXC to schedule
 	 * @param awm Next working mode scheduled for the application
 	 * @param status_view The token referencing the resources state view
-	 * @param bid An optional identifier for the resource binding
+	 * @param b_refn An optional identifier for the resource binding
 	 *
 	 * @return The method returns an exit code representing the decision taken:
 	 * AM_SUCCESS if the specified working mode can be scheduled for
@@ -327,6 +327,16 @@ public:
 	 */
 	ExitCode_t ScheduleRequestAsPrev(
 		app::AppCPtr_t papp, br::RViewToken_t status_view);
+
+	/**
+	 * @brief Abort a schedule request
+	 *
+	 * @param papp The application to unschedule
+	 * @param status_view The token referencing the resources state view
+	 */
+	ExitCode_t ScheduleRequestAbort(
+		app::AppCPtr_t papp,
+		br::RViewToken_t status_view);
 
 	/**
 	 * @brief Configure this application to switch to the specified AWM

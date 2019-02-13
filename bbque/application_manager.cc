@@ -1531,6 +1531,36 @@ ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequestAsPrev(
 	return AM_SUCCESS;
 }
 
+ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequestAbort(
+		ba::AppCPtr_t papp,
+		br::RViewToken_t status_view) {
+
+	logger->Info("ScheduleRequestAbort: [%s] abort schedule request [view=%ld]",
+		papp->StrId(), status_view);
+
+	// AWM safety check
+	if (!papp->NextAWM()) {
+		logger->Crit("ScheduleRequestAbort: [%s] AWM not existing)", papp->StrId());
+		return AM_AWM_NULL;
+	}
+
+	// Undo resource booking
+	logger->Debug("ScheduleRequestAbort: [%s] undoing resource booking...", papp->StrId());
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ra.ReleaseResources(papp, status_view);
+
+	// Unschedule
+	logger->Debug("ScheduleRequestAbort: [%s] unscheduling...", papp->StrId());
+	auto ret = Unschedule(papp);
+	if (ret == AM_SUCCESS) {
+		papp->SetNextAWM(nullptr);
+		return ret;
+	}
+
+	logger->Error("ScheduleRequestAbort: [%s] error=%d...", papp->StrId(), ret);
+	return ret;
+}
+
 
 ApplicationManager::ExitCode_t ApplicationManager::Reschedule(
 		ba::AppCPtr_t papp,
