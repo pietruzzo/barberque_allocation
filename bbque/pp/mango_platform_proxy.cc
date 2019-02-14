@@ -689,62 +689,51 @@ static void FindAndAllocateMemory(
 			tile = tiles_set[i - filled_buffers];
 		} else {
 			// for input and output buffers.
-			// FIXME Better to allocate the buffer close to the tiles the unit that are using it will be mapped on
+			// FIXME Better to allocate the buffer close to the
+			// tiles the unit that are using it will be mapped on
 			tile = tiles_set[0];
 		}
-		int res = hn_find_memory(tile, mem_buffers_size[i], &mem_buffers_tiles[i], &mem_buffers_addr[i],
-					hw_cluster_id);
+
+		logger->Debug("FindMemoryAddresses: find "
+				"cluster=%d tile=%d, buffer=%d, mem_buffer_size=%d",
+			hw_cluster_id, tile, i, mem_buffers_size[i]);
+
+		// Find a memory space for allocating the buffer or kernel
+		int res = hn_find_memory(
+				tile, mem_buffers_size[i],
+				&mem_buffers_tiles[i], &mem_buffers_addr[i],
+				hw_cluster_id);
 		if (res != HN_SUCCEEDED) {
-			delete[] mem_buffers_size;
-			throw std::runtime_error("Unable to find memory");
+			logger->Error("FindMemoryAddresses: unable to find memory");
+			return false;
 		}
 
-		res = hn_allocate_memory(mem_buffers_tiles[i], mem_buffers_addr[i], mem_buffers_size[i],
-					hw_cluster_id);
+		// TRICK we allocated memory areas when finding them, in order
+		// to get different areas (see try above),
+		// Next, when setting the partition it will be allocated again
+		res = hn_allocate_memory(
+				mem_buffers_tiles[i], mem_buffers_addr[i],
+				mem_buffers_size[i],
+				hw_cluster_id);
 		if (res != HN_SUCCEEDED) {
-			delete[] mem_buffers_size;
-			throw std::runtime_error("Unable to allocate memory");
+			logger->Error("FindMemoryAddresses: unable to allocate memory");
+			return false;
 		}
+
+		logger->Debug("FindMemoryAddresses: found tile=%d allocation address=%p",
+			mem_buffers_tiles[i], mem_buffers_addr[i]);
 	}
 
 	if (mem_buffers_size == nullptr) {
-		logger->Warn("FindAndAllocateMemory: unexpected null pointer: mem_buffers_size"
+		logger->Warn("FindMemoryAddresses: unexpected null pointer: mem_buffers_size"
 			" [libhn suspect corruption]");
-		return;
+		return false;
 	}
 
 	delete[] mem_buffers_size;
+	return true;
 }
 
-/**
- * @brief This function convert a TG + HN response to a Partition object used in Barbeque
- */
-/*
-static Partition GetPartition(const TaskGraph &tg, hn_st_response_t *res, int partition_id) noexcept {
-
-	auto it_task  = tg.Tasks().begin();
-	int tasks_size = tg.Tasks().size();
-	auto it_buff  = tg.Buffers().begin();
-	int buff_size = tg.Buffers().size();
-
-	Partition part(partition_id);
-
-	for (int j=0; j < tasks_size; j++) {
-		part.MapTask(it_task->second, res->comp_rsc_tiles[j],
-			res->mem_buffers_tiles[buff_size +j], res->mem_buffers_addr[buff_size + j]);
-		it_task++;
-	}
-	bbque_assert(it_task == tg.Tasks().end());
-
-	for (int j=0; j < buff_size; j++) {
-		part.MapBuffer(it_buff->second, res->mem_buffers_tiles[j], res->mem_buffers_addr[j]);
-		it_buff++;
-	}
-	bbque_assert(it_buff == tg.Buffers().end());
-
-	return part;
-}
-*/
 static Partition GetPartition(
 		const TaskGraph &tg,
 		unsigned int hw_cluster_id,
