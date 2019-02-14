@@ -209,7 +209,8 @@ void Application::SetNextAWM(AwmPtr_t awm) {
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	schedule.next_awm = awm;
 	awms.curr_inv = false;
-	logger->Debug("SetNewAWM: next_awm=%d", schedule.next_awm->Id());
+	logger->Debug("SetNewAWM: [%s] next_awm = %d",
+		StrId(), schedule.next_awm->Id());
 }
 
 /*******************************************************************************
@@ -677,44 +678,46 @@ uint64_t Application::GetResourceRequestStat(
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
 Application::ExitCode_t Application::LoadTaskGraph() {
-	logger->Info("LoadTaskGraph: loading [path:%s sem=%s]...",
-		tg_path.c_str(), tg_sem_name.c_str());
+	logger->Debug("LoadTaskGraph: [%s] getting task-graph information...", StrId());
 
 	if (tg_sem == nullptr) {
+		logger->Info("LoadTaskGraph: [%s] loading [path:%s sem=%s]...",
+			StrId(), tg_path.c_str(), tg_sem_name.c_str());
 		tg_sem = sem_open(tg_sem_name.c_str(), O_RDWR);
 		if (errno != 0) {
-			logger->Crit("LoadTaskGraph: Error while opening semaphore [errno=%d]: %s",
-				errno, strerror(errno));
+			logger->Crit("LoadTaskGraph: [%s] error while opening semaphore [errno=%d]: %s",
+				StrId(), errno, strerror(errno));
 			return APP_TG_SEM_ERROR;
 		}
 	}
 
 	if (tg_sem == SEM_FAILED) {
-		logger->Warn("LoadTaskGraph: task-graph not available on the application side");
+		logger->Warn("LoadTaskGraph: [%s] task-graph not available on the application side",
+			StrId());
 		return APP_TG_SEM_ERROR;
 	}
 
-	logger->Debug("LoadTaskGraph: waiting on task-graph semaphore...");
+	logger->Debug("LoadTaskGraph: [%s] waiting on task-graph semaphore...", StrId());
 	if (sem_wait(tg_sem) != 0) {
-		logger->Error("LoadTaskGraph: wait on semaphore failed [errno=%d]: %s",
-			errno, strerror(errno));
+		logger->Error("LoadTaskGraph: [%s] wait on semaphore failed [errno=%d]: %s",
+			StrId(), errno, strerror(errno));
 		return APP_TG_SEM_ERROR;
 	}
 
 	std::ifstream ifs(tg_path);
 	if (!ifs.good()) {
-		logger->Warn("LoadTaskGraph: task-graph not provided");
+		logger->Warn("LoadTaskGraph: [%s] task-graph not provided", StrId());
 		sem_post(tg_sem);
 		return APP_TG_FILE_ERROR;
 	}
 
-	logger->Debug("LoadTaskGraph: building the task-graph...");
+	logger->Debug("LoadTaskGraph: [%s] building the task-graph...", StrId());
 	if (task_graph == nullptr) {
 		task_graph = std::make_shared<TaskGraph>();
-		logger->Info("LoadTaskGraph: loading from scratch...");
+		logger->Info("LoadTaskGraph: [%s] loading from scratch...", StrId());
 	}
 
-	logger->Debug("LoadTaskGraph: task-graph de-serialization...");
+	logger->Debug("LoadTaskGraph: [%s] task-graph de-serialization...", StrId());
 	try {
 		boost::archive::text_iarchive ia(ifs);
 		ia >> *task_graph;
@@ -731,15 +734,25 @@ Application::ExitCode_t Application::LoadTaskGraph() {
 
 
 void Application::UpdateTaskGraph() {
-	if (tg_sem == nullptr)
+	if (tg_sem == nullptr) {
+		logger->Warn("UpdateTaskGraph: [%s] task-graph is null", StrId());
 		return;
-	sem_wait(tg_sem);
+	}
 
-	std::ofstream ofs(tg_path);
-	boost::archive::text_oarchive oa(ofs);
-	oa << *task_graph;
+	sem_wait(tg_sem);
+	try {
+		std::ofstream ofs(tg_path);
+		boost::archive::text_oarchive oa(ofs);
+		oa << *task_graph;
+	}
+	catch(std::exception & ex) {
+		logger->Error("UpdateTaskGraph: [%s] exception [%s]",
+			StrId(), ex.what());
+	}
 	sem_post(tg_sem);
-	logger->Debug("Task-graph sent back");
+
+	logger->Debug("UpdateTaskGraph: [%s] task-graph sent back to "
+		"programming library", StrId());
 }
 
 #endif //CONFIG_BBQUE_TG_PROG_MODEL
