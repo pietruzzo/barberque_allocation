@@ -133,18 +133,30 @@ bool ExecutionSynchronizer::CheckTaskGraph(std::shared_ptr<TaskGraph> tg) noexce
 
 void ExecutionSynchronizer::SendTaskGraphToRM() {
 	sem_wait(tg_sem);
-	std::ofstream ofs(tg_file_path);
-	boost::archive::text_oarchive oa(ofs);
-	oa << *(this->task_graph);
+	try {
+		std::ofstream ofs(tg_file_path);
+		boost::archive::text_oarchive oa(ofs);
+		oa << *(this->task_graph);
+	}
+	catch(std::exception & ex) {
+		logger->Error("Task-graph serialization error: %s",
+			ex.what());
+	}
 	sem_post(tg_sem);
 	logger->Info("Task-graph sent for resource allocation");
 }
 
 void ExecutionSynchronizer::RecvTaskGraphFromRM() {
 	sem_wait(tg_sem);
-	std::ifstream ifs(tg_file_path);
-	boost::archive::text_iarchive ia(ifs);
-	ia >> *(this->task_graph);
+	try {
+		std::ifstream ifs(tg_file_path);
+		boost::archive::text_iarchive ia(ifs);
+		ia >> *(this->task_graph);
+	}
+	catch(std::exception & ex) {
+		logger->Error("Task-graph de-serialization error: %s",
+			ex.what());
+	}
 	sem_post(tg_sem);
 	logger->Info("Task-graph restored after resource allocation");
 }
