@@ -515,25 +515,36 @@ MangASchedPol::ScheduleApplication(
 	for (auto & selected_partition: partitions) {
 		logger->Debug("ScheduleApplication: [%s] selecting AWM for partition %d",
 			papp->StrId(), selected_partition.GetId());
+
+		// Set a working mode an perform a schedule request
 		auto ret = SelectWorkingMode(papp, selected_partition);
 		if (ret == SCHED_OK) {
 			logger->Debug("ScheduleApplication: [%s] selected partition %d",
 				papp->StrId(), selected_partition.GetId());
+
+			// Assign a resource partition of the MANGO platform
 			papp->SetPartition(std::make_shared<Partition>(selected_partition));
+
+			// Make the change effective
 			auto pret = rmv.PropagatePartition(*tg, selected_partition);
 			if (pret != ResourcePartitionValidator::ExitCode_t::PMV_OK) {
-				logger->Debug("ScheduleApplication: partition propagation"
+				logger->Error("ScheduleApplication: partition propagation"
 					" failed [error=%d]", pret);
-				return SCHED_SKIP_APP;
+				// Abort the the schedule request
+				ApplicationManager & am(ApplicationManager::GetInstance());
+				am.ScheduleRequestAbort(papp, sched_status_view);
+				ret = SCHED_SKIP_APP;
 			}
-			break;
+			else{
+				// Update task-graph info
+				logger->Debug("ScheduleApplication: [%s] updating task-graph mapping...",
+					papp->StrId());
+				papp->SetTaskGraph(tg);
+				return SCHED_OK;
+			}
 		}
 	}
 
-	// Update task-graph info
-	logger->Debug("ScheduleApplication: [%s] updating task-graph mapping...",
-		papp->StrId());
-	papp->SetTaskGraph(tg);
 	return ret;
 }
 
