@@ -198,7 +198,7 @@ MangASchedPol::Schedule(
 
 SchedulerPolicyIF::ExitCode_t
 MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
-	ExitCode_t err, err_relax = SCHED_OK;
+	ExitCode_t err = SCHED_OK;
 	ApplicationManager & am(ApplicationManager::GetInstance());
 	ba::AppCPtr_t  papp;
 	AppsUidMapIt app_iterator;
@@ -242,7 +242,6 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 			// fairly reduce the bandwidth for non strict applications.
 			logger->Warn("ServeApplicationsWithPriority: [%s]: unable to allocate required resources",
 				papp->StrId());
-			err_relax = RelaxRequirements(priority);
 			am.NoSchedule(papp);
 			err = SCHED_OK;
 		}
@@ -254,7 +253,7 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 		}
 	}
 
-	return err_relax != SCHED_OK ? err_relax : err;
+	return err;
 }
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noexcept {
