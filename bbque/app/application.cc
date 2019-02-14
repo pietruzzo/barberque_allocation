@@ -683,7 +683,8 @@ Application::ExitCode_t Application::LoadTaskGraph() {
 	if (tg_sem == nullptr) {
 		tg_sem = sem_open(tg_sem_name.c_str(), O_RDWR);
 		if (errno != 0) {
-			logger->Crit("LoadTaskGraph: Error while opening semaphore [errno=%d]", errno);
+			logger->Crit("LoadTaskGraph: Error while opening semaphore [errno=%d]: %s",
+				errno, strerror(errno));
 			return APP_TG_SEM_ERROR;
 		}
 	}
@@ -695,7 +696,8 @@ Application::ExitCode_t Application::LoadTaskGraph() {
 
 	logger->Debug("LoadTaskGraph: waiting on task-graph semaphore...");
 	if (sem_wait(tg_sem) != 0) {
-		logger->Error("LoadTaskGraph: wait on semaphore failed [errno=%d]", errno);
+		logger->Error("LoadTaskGraph: wait on semaphore failed [errno=%d]: %s",
+			errno, strerror(errno));
 		return APP_TG_SEM_ERROR;
 	}
 
