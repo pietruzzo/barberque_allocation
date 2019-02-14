@@ -284,6 +284,7 @@ void ResourceManager::WaitForReady() {
 }
 
 void ResourceManager::SetReady(bool value) {
+	logger->Debug("SetReady: %s", value ? "true": "false");
 	std::unique_lock<std::mutex> status_ul(status_mtx);
 	is_ready = value;
 	if (value) {
