@@ -610,7 +610,7 @@ static void FindUnitsSets(
 		uint32_t hw_cluster_id,
 		unsigned int ***tiles,
 		unsigned int ***families_order,
-		unsigned int *nsets) {
+		unsigned int *num_sets) {
 
 	int num_tiles = tg.TaskCount();
 	unsigned int *tiles_family = new unsigned int[num_tiles];  // FIXME UPV -> POLIMI static memory better ?
@@ -628,8 +628,9 @@ static void FindUnitsSets(
 			t.second->GetAssignedArch(), t.second->GetThreadCount());
 	}
 
-	int res = hn_find_units_sets(0, num_tiles, tiles_family, tiles, families_order, nsets,
-					hw_cluster_id);
+	int res = hn_find_units_sets(0,
+			num_tiles, tiles_family, tiles, families_order,
+			num_sets, hw_cluster_id);
 
 	if (tiles_family == nullptr) {
 		logger->Warn("FindUnitsSets: unexpected null pointer (tiles_family)"
@@ -655,7 +656,7 @@ static void FindAndAllocateMemory(
 	// We request the number of shared buffer + the number of task, since we have to load also
 	// the kernels in memory
 	int num_mem_buffers = tg.BufferCount() + tg.TaskCount();
-	unsigned int *mem_buffers_size = new unsigned int[num_mem_buffers]; // FIXME UPV -> POLIMI, static mem better?
+	unsigned int *mem_buffers_size = new unsigned int[num_mem_buffers];
 
 	int i=0;
 	for (auto b : tg.Buffers()) {
@@ -667,7 +668,7 @@ static void FindAndAllocateMemory(
 
 	// We now register the mapping task-buffer and we allocate a per-task buffer to allocate the
 	// kernel image.
-	// The bandwitdth is not currently managed by the HN library, so we use only a boolean value
+	// The bandwidth is not currently managed by the HN library, so we use only a boolean value
 	// to indicate that the buffer uses that task and vice versa.
 	i=0;
 	for (auto t : tg.Tasks()) {
@@ -680,6 +681,7 @@ static void FindAndAllocateMemory(
 		i++;
 	}
 
+	// Find and pre-allocate memory space for kernels and buffers
 	for (i = 0; i < num_mem_buffers; i++) {
 		unsigned int tile = 0;
 		if (i >= filled_buffers) {
@@ -750,7 +752,8 @@ static Partition GetPartition(
 		unsigned int *families_order,
 		unsigned int *mem_buffers_tiles,
 		unsigned int *mem_buffers_addr,
-        int partition_id) noexcept {
+		int partition_id) noexcept {
+
 	auto it_task      = tg.Tasks().begin();
 	int tasks_size    = tg.Tasks().size();
 	auto it_buff      = tg.Buffers().begin();
@@ -760,6 +763,8 @@ static Partition GetPartition(
 
 	// The partition has a cluster scope
 	Partition part(partition_id, hw_cluster_id);
+	logger->Debug("GetPartition: id=%d filling mapping information",
+		partition_id);
 
 	// FIXME UPV -> POLIMI do it in a more efficient way if required
 	//       We have to map the task to a tile according to its family type
@@ -859,13 +864,13 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 
 	bbque_assert(part_list.empty());
 
-	logger->Debug("MangoPartitionSkimmer: request summary: ");
+	logger->Debug("Skim: request summary: ");
 	for (size_t i = 0; i < tasks_size; i++) {
 		// Kernel binary available for the assigned processor type?
 		auto arch = it_task->second->GetAssignedArch();
 		auto const & arch_it = it_task->second->Targets().find(arch);
 		if (arch_it == it_task->second->Targets().end()) {
-			logger->Error("MangoPartitionSkimmer: arch=%s "
+			logger->Error("Skim: arch=%s "
 				"binary not available",
 				GetStringFromArchType(arch));
 			delete[] mem_buffers_size;
@@ -901,12 +906,12 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		// requirements
 		// It may generate exception if the architecture is not supported
 		// (in that case we should not be here ;-))
-		logger->Debug("MangoPartitionSkimmer: looking for HN resources...");
+		logger->Debug("Skim: looking for HN resources...");
 
 		// - Find different sets of resources (partitions)
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
 		FindUnitsSets(tg, hw_cluster_id, &tiles, &families_order, &num_sets);
-		logger->Debug("MangoPartitionSkimmer: HN returned %d available sets", num_sets);
+		logger->Debug("Skim: HN returned %d available sets", num_sets);
 
 		// - Find and reserve memory for every set. We cannot call
 		//   hn_find_memory more than once without allocate the memory
@@ -999,7 +1004,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		delete[] mem_buffers_size;
 	}
 	else {
-		logger->Warn("MangoPartitionSkimmer: unexpected null pointer: mem_buffers_size"
+		logger->Warn("Skim: unexpected null pointer: mem_buffers_size"
 			" [libhn suspect corruption]");
 	}
 
