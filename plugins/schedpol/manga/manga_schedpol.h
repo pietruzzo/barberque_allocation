@@ -122,10 +122,6 @@ private:
 
 	ExitCode_t ServeApp(ba::AppCPtr_t papp) noexcept;
 
-	ExitCode_t RelaxRequirements(int priority) noexcept;
-
-	ExitCode_t CheckHWRequirements(ba::AppCPtr_t papp) noexcept;
-
 	ExitCode_t InitTaskGraphMappingOptions(ba::AppCPtr_t papp) noexcept;
 
 	ExitCode_t NextTaskGraphMappingOption(

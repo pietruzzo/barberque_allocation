@@ -257,12 +257,6 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 	return err;
 }
 
-SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noexcept {
-	//TODO: smart policy to reduce the requirements
-	UNUSED(priority);
-
-	return SCHED_R_UNAVAILABLE;
-}
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexcept {
 	ExitCode_t err = SCHED_OK;
@@ -471,63 +465,6 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 
 	logger->Debug("NextTaskGraphMappingOption: %s", ArchMappingString(task_map).c_str());
 	return ret;
-}
-
-
-SchedulerPolicyIF::ExitCode_t MangASchedPol::CheckHWRequirements(ba::AppCPtr_t papp) noexcept {
-	// Trivial allocation policy: we select always the best one for the receipe
-	// TODO: a smart one
-	if (nullptr == papp->GetTaskGraph()) {
-		logger->Error("CheckHWRequirements: [%s] task-graph not available", papp->StrId());
-		return SCHED_SKIP_APP;
-	}
-
-	for (auto task_pair : papp->GetTaskGraph()->Tasks()) {
-		auto task = task_pair.second;
-		const auto requirements = papp->GetTaskRequirements(task->Id());
-
-		uint_fast8_t i=0;
-		ArchType_t preferred_type;
-		const auto targets = task->Targets();
-
-		for ( auto targ : task->Targets() ) {
-			logger->Debug("CheckHRequirements: [%s] task %d available [arch=%s (%d)]",
-				papp->StrId(), task->Id(),
-				GetStringFromArchType(targ.first), targ.first);
-		}
-
-		do {	// Select every time the best preferred available architecture
-			if ( i > 0 ) {
-				logger->Warn("CheckHWRequirements: [%s] architecture %s (%d) available in "
-					"recipe but task %i does not support it",
-					papp->StrId(),
-					GetStringFromArchType(preferred_type), preferred_type, task->Id());
-			}
-			if ( i > requirements.NumArchPreferences() ) {
-				break;
-			}
-			preferred_type = requirements.ArchPreference(i);
-			i++;
-		} while (targets.find(preferred_type) == targets.end());
-
-		if (preferred_type == ArchType_t::NONE) {
-			logger->Error("CheckHWRequirements: [%s] no architecture available for task %d",
-				papp->StrId(), task->Id());
-			return SCHED_R_UNAVAILABLE;
-		}
-
-		// TODO We have to select also the number of cores!
-
-		logger->Info("CheckHWRequirements: [%s] task %d preliminary assignment "
-			"[arch=%s (%d), in_bw=%d, out_bw=%d]",
-			papp->StrId(),
-			task->Id(), GetStringFromArchType(preferred_type), preferred_type,
-			requirements.GetAssignedBandwidth().in_kbps,
-			requirements.GetAssignedBandwidth().out_kbps);
-		task->SetAssignedArch( preferred_type );
-		task->SetAssignedBandwidth( requirements.GetAssignedBandwidth() );
-	}
-	return SCHED_OK;
 }
 
 
