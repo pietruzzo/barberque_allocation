@@ -535,13 +535,17 @@ MangASchedPol::ScheduleApplication(
 				am.ScheduleRequestAbort(papp, sched_status_view);
 				ret = SCHED_R_UNAVAILABLE;
 			}
-			else{
+			else {
 				// Update task-graph info
 				logger->Debug("ScheduleApplication: [%s] updating task-graph mapping...",
 					papp->StrId());
 				papp->SetTaskGraph(tg);
 				return SCHED_OK;
 			}
+		}
+		else if (ret != SCHED_R_UNAVAILABLE) {
+			logger->Warn("ScheduleApplication: [%s] not schedulable");
+			break;
 		}
 	}
 
@@ -640,13 +644,26 @@ MangASchedPol::SelectWorkingMode(
 	// Update the accounting of resources with a schedule request
 	ApplicationManager & am(ApplicationManager::GetInstance());
 	auto ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
-	if (ret != ApplicationManager::AM_SUCCESS) {
-		logger->Error("SelectWorkingMode: [%s] schedule request failed", papp->StrId());
+	if (ret == ApplicationManager::AM_SUCCESS) {
+		logger->Info("SelectWorkingMode: [%s] schedule request accepted", papp->StrId());
+		return SCHED_OK;
+	}
+	else if ((ret == ApplicationManager::AM_APP_BLOCKING) ||
+			(ret == ApplicationManager::AM_APP_DISABLED)) {
+		logger->Error("SelectWorkingMode: [%s] schedule request for blocking/disabled",
+			papp->StrId());
+		return SCHED_SKIP_APP;
+	}
+	else if (ret == ApplicationManager::AM_AWM_NOT_SCHEDULABLE) {
+		logger->Error("SelectWorkingMode: [%s] schedule request not allocable",
+			papp->StrId());
+		return SCHED_R_UNAVAILABLE;
+	}
+	else {
+		logger->Error("SelectWorkingMode: [%s] schedule request unexpected error",
+			papp->StrId());
 		return SCHED_ERROR;
 	}
-
-	logger->Info("SelectWorkingMode: [%s] schedule request accepted", papp->StrId());
-	return SCHED_OK;
 }
 
 
