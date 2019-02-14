@@ -37,7 +37,7 @@ ResourcePartitionValidator::ResourcePartitionValidator():
 void ResourcePartitionValidator::RegisterSkimmer(
 		PartitionSkimmerPtr_t skimmer, int priority) noexcept {
 	std::lock_guard<std::mutex> curr_lock(skimmers_lock);
-	logger->Notice("Registered skimmer with priority=%i", priority);
+	logger->Notice("RegisterSkimmer: skimmer with priority=%i", priority);
 	skimmers.insert(
 		std::pair<int,PartitionSkimmerPtr_t> (priority, skimmer));
 }
@@ -49,13 +49,13 @@ ResourcePartitionValidator::LoadPartitions(
 		std::list<Partition> &partitions,
 		uint32_t hw_cluster_id) {
 
-	logger->Info("Initial partitions nr. %d", partitions.size());
+	logger->Debug("LoadPartitions: initial size=%d", partitions.size());
 	PartitionSkimmer::SkimmerType_t skimmer_type = PartitionSkimmer::SkimmerType_t::SKT_NONE;
 
 	skimmers_lock.lock();
 	if ( skimmers.empty() ) {
 		skimmers_lock.unlock();
-		logger->Warn("No skimmers registered, no action performed.");
+		logger->Warn("LoadPartitions: no skimmers registered, no action performed.");
 		return PMV_OK;
 	}
 
@@ -63,14 +63,14 @@ ResourcePartitionValidator::LoadPartitions(
 	// priority
 	for (auto s = skimmers.rbegin(); s != skimmers.rend(); ++s) {
 		int priority = s->first;
-		PartitionSkimmerPtr_t skimmer = s->second; 
-		skimmer_type = skimmer->GetType(); 
-		logger->Debug("Executing skimmer [type=%d] [priority=%d]",
+		PartitionSkimmerPtr_t skimmer = s->second;
+		skimmer_type = skimmer->GetType();
+		logger->Debug("LoadPartitions: executing skimmer [type=%d] [priority=%d]",
 			(int)skimmer_type, priority);
 
 		PartitionSkimmer::ExitCode_t ret = skimmer->Skim(tg, partitions, hw_cluster_id);
 		if (ret != PartitionSkimmer::SK_OK) {
-			logger->Error("Skimmer %d [priority=%d] FAILED [err=%d]", 
+			logger->Error("LoadPartitions: skimmer %d [priority=%d] FAILED [err=%d]",
 				(int)skimmer_type, priority, ret);
 			this->failed_skimmer = skimmer_type;
 			skimmers_lock.unlock();
@@ -86,7 +86,8 @@ ResourcePartitionValidator::LoadPartitions(
 
 	this->failed_skimmer = PartitionSkimmer::SKT_NONE;
 	if ( partitions.empty() ) {
-		logger->Warn("Skimmer %d: no feasible partitions", (int)skimmer_type);
+		logger->Warn("LoadPartitions: skimmer %d: "
+			"no feasible partitions", (int)skimmer_type);
 		return PMV_NO_PARTITION;  // No feasible solution found
 	}
 
@@ -97,7 +98,7 @@ ResourcePartitionValidator::ExitCode_t
 ResourcePartitionValidator::PropagatePartition(
 		TaskGraph &tg, const Partition &partition) const noexcept {
 
-	logger->Info("Propagating partition id=%d", partition.GetId());
+	logger->Info("PropagatePartition: setting partition id=%d", partition.GetId());
 	// We have to ensure that no skimmer failed for any reasons before this call.
 	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
 	std::lock_guard<std::mutex> curr_lock(skimmers_lock);
@@ -105,7 +106,7 @@ ResourcePartitionValidator::PropagatePartition(
 	// Just propagate the selected partition to all registered partition skimmer. They should
 	// not fail for any reason, since they have already skimmed the partitions.
 	for (auto s = skimmers.rbegin(); s != skimmers.rend(); ++s) {
-		PartitionSkimmerPtr_t skimmer = s->second; 
+		PartitionSkimmerPtr_t skimmer = s->second;
 		PartitionSkimmer::ExitCode_t err = skimmer->SetPartition(tg, partition);
 		if ( PartitionSkimmer::SK_OK != err ) {
 			logger->Error("Skimmer failed to set partition [type=%d] [priority=%d] "
@@ -121,7 +122,7 @@ ResourcePartitionValidator::RemovePartition(
 		const TaskGraph &tg,
 		const Partition &partition) const noexcept {
 
-	logger->Info("Removing partition id=%d", partition.GetId());
+	logger->Info("RemovePartition: removing partition id=%d", partition.GetId());
 	// We have to ensure that no skimmer failed for any reasons before this call.
 //	bbque_assert(failed_skimmer == PartitionSkimmer::SKT_NONE);
 	if (failed_skimmer != PartitionSkimmer::SKT_NONE) {
