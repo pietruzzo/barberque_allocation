@@ -265,6 +265,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noe
 }
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexcept {
+	ExitCode_t err = SCHED_OK;
 
 	// Running applications must be rescheduled as is
 	if (papp->Running()) {
@@ -272,64 +273,68 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 		return ReassignWorkingMode(papp);
 	}
 
-	// First of all we have to decide which processor type to assign to each task
-	auto err = InitTaskGraphMappingOptions(papp);
-	if (err != SCHED_OK) {
-		logger->Warn("ServeApp: [%s] not schedulable", papp->StrId());
-		return err;
-	}
-
-	// Initialize vector for task mapping exploration
-	uint32_t first_task_id = papp->GetTaskGraph()->Tasks().begin()->first;
-	std::vector<int> arch_index(papp->GetTaskGraph()->TaskCount()+1, 0);
-
 	uint32_t curr_cluster_id = 0;
 	uint32_t nr_clusters = pe_per_acc.size();
 
-	// HN clusters
-	std::list<Partition> partitions;
 	for (; curr_cluster_id < nr_clusters; curr_cluster_id++) {
 		logger->Debug("ServeApp: [%s] looking for a partition in HN cluster %d",
 			papp->StrId(), curr_cluster_id);
 
-		// Look for resource allocation partitions
-		auto rmv_err = rmv.LoadPartitions(*papp->GetTaskGraph(), partitions, curr_cluster_id);
-		switch(rmv_err) {
-			case ResourcePartitionValidator::PMV_OK:
-				logger->Debug("ServeApp: [%s] HW partitions found: %d "
-					" [HN cluster=%d]",
+		// First of all we have to decide which processor type to assign to each task
+		err = InitTaskGraphMappingOptions(papp);
+		if (err != SCHED_OK) {
+			logger->Warn("ServeApp: [%s] not schedulable", papp->StrId());
+			return err;
+		}
+
+		// Initialize vector for task mapping exploration
+		uint32_t first_task_id = papp->GetTaskGraph()->Tasks().begin()->first;
+		std::vector<int> arch_index(papp->GetTaskGraph()->TaskCount()+1, 0);
+
+		// HN clusters
+		std::list<Partition> partitions;
+
+		// Iterate over the resource mapping options
+		for (; err != SCHED_OPT_OVER; err = NextTaskGraphMappingOption(papp, arch_index, first_task_id)) {
+
+			// Look for resource allocation partitions
+			auto rmv_err = rmv.LoadPartitions(*papp->GetTaskGraph(), partitions, curr_cluster_id);
+			if (rmv_err == ResourcePartitionValidator::PMV_OK) {
+				logger->Debug("ServeApp: [%s] HW partitions found: %d  [HN cluster=%d]",
 					papp->StrId(), partitions.size(), curr_cluster_id);
-				// Partitions available schedule the application
+
+				// Try to schedule the application, by allocating one of them
 				err = ScheduleApplication(papp, partitions);
-				break;
-			case ResourcePartitionValidator::PMV_SKIMMER_FAIL:
-				logger->Warn("ServeApp: [%s] at least one skimmer failed"
+				if (err == SCHED_R_UNAVAILABLE) {
+					logger->Debug("ServeApp: [%s] trying another mapping [HN cluster=%d]",
+						papp->StrId(), curr_cluster_id);
+					continue;
+				}
+				logger->Debug("ServeApp: [%s] scheduled [HN cluster=%d]",
+					papp->StrId(), curr_cluster_id);
+				return err;
+			}
+			// No partitions found for the current resource mappinf option
+			else if (rmv_err == ResourcePartitionValidator::PMV_SKIMMER_FAIL) {
+				logger->Debug("ServeApp: [%s] at least one skimmer failed"
 					" [HN cluster=%d]",
 					papp->StrId(), curr_cluster_id);
-			case ResourcePartitionValidator::PMV_NO_PARTITION:
-				logger->Warn("ServeApp: [%s] no HW partitions available"
+			}
+			else if (rmv_err == ResourcePartitionValidator::PMV_NO_PARTITION) {
+				logger->Debug("ServeApp: [%s] no HW partitions available"
 					" [HN cluster=%d]",
 					papp->StrId(), curr_cluster_id);
-				//err = DealWithNoPartitionFound(papp);
-				// Try another resource mapping
-				err = NextTaskGraphMappingOption(papp, arch_index, first_task_id);
-				if (err == SCHED_R_UNAVAILABLE) continue;
-				break;
-			default:
+			}
+			else {
 				// Ehi what's happened here?
 				logger->Fatal("ServeApp: [%s] unexpected error while retrieving"
 					" partitions", papp->StrId());
 				return SCHED_ERROR;
+			}
 		}
 
-		char okstr[]="OK";
-		char errstr[]="!";
-		char * estr;
-		err != SCHED_OK ? estr=errstr : estr=okstr;
-		logger->Debug("ServeApp: [%s] error=%d [%s]", papp->StrId(), err, estr);
-		if (err == SCHED_SKIP_APP || err == SCHED_OK) {
-			return err;
-		}
+		// Not schedulable resource mapping options
+		err = SCHED_R_UNAVAILABLE;
 	}
 
 	return err;
@@ -431,10 +436,10 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 
 	// if the task id does not exist we reached the end
 	if (task_map.find(task_id) == task_map.end()) {
-		logger->Warn("NextTaskGraphMappingOption: task_id=%d"
+		logger->Debug("NextTaskGraphMappingOption: task_id=%d"
 			" not valid - more mapping options? (nr_tasks=%d)",
 			task_id, task_map.size());
-		return SCHED_R_UNAVAILABLE;
+		return SCHED_OPT_OVER;
 	}
 
 	auto & curr_task = task_map[task_id];

@@ -58,6 +58,7 @@ public:
 		SCHED_R_NOT_FOUND,     /** Looking for not existing resource */
 		SCHED_R_UNAVAILABLE,   /** Not enough available resources */
 		SCHED_SKIP_APP,        /** Skip the applicaton (disabled or already running) */
+		SCHED_OPT_OVER,        /** No more static options to explore */
 		SCHED_ERROR_INIT,      /** Error during initialization */
 		SCHED_ERROR_VIEW,      /** Error in using the resource state view */
 		SCHED_ERROR            /** Unexpected error */
