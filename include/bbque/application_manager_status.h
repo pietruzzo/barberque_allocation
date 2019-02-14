@@ -158,6 +158,7 @@ public:
 		AM_RESCHED_REQUIRED,      /** Reschedule required */
 		AM_AWM_NULL,              /** AWM descriptor is null */
 		AM_AWM_NOT_SCHEDULABLE,   /** Not enough resource to assign the AWM */
+		AM_APP_BLOCKING,          /** Trying to schedule a blocking application */
 		AM_APP_DISABLED,          /** Application in disabled status */
 		AM_EXC_NOT_FOUND,         /** Application Execution Context not found */
 		AM_EXC_INVALID_STATUS,    /** Operation failed due to invalid status */
