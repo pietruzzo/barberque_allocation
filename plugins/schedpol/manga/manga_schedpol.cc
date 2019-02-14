@@ -349,6 +349,8 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::InitTaskGraphMappingOptions(
 	}
 
 	auto & task_map = papp->GetTaskGraph()->Tasks();
+	logger->Debug("InitTaskGraphMappingOptions: nr_tasks=%d", task_map.size());
+
 	for (auto & task_pair: task_map) {
 		auto & task = task_pair.second;
 		const auto & task_reqs = papp->GetTaskRequirements(task->Id());
@@ -404,8 +406,8 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 	// if the task id does not exist we reached the end
 	if (task_map.find(task_id) == task_map.end()) {
 		logger->Warn("NextTaskGraphMappingOption: task_id=%d"
-			" not valid - more mapping options?",
-			task_id);
+			" not valid - more mapping options? (nr_tasks=%d)",
+			task_id, task_map.size());
 		return SCHED_R_UNAVAILABLE;
 	}
 
@@ -436,7 +438,6 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 	}
 
 	logger->Debug("NextTaskGraphMappingOption: %s", ArchMappingString(task_map).c_str());
-
 	return ret;
 }
 
@@ -541,16 +542,17 @@ SchedulerPolicyIF::ExitCode_t
 MangASchedPol::SortPartitions(ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept {
 	UNUSED(papp);
 	bbque_assert(partitions.size() > 0);
-	logger->Debug("SortPartitions: sorting the list of partitions... (TODO)");
+	logger->Warn("SortPartitions: sorting the list of partitions... (TODO)");
 	// TODO: Intelligent policy. For the demo just select the first
 	// partition
-	logger->Warn("SortPartitions: just pick the first available partition");
 	return SCHED_OK;
 }
 
 
 SchedulerPolicyIF::ExitCode_t
-MangASchedPol::SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_partition) noexcept {
+MangASchedPol::SelectWorkingMode(
+		ba::AppCPtr_t papp,
+		const Partition & selected_partition) noexcept {
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	if (pawm == nullptr) {
@@ -560,9 +562,10 @@ MangASchedPol::SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_
 	logger->Info("SelectWorkingMode: [%s] partition mapping...", papp->StrId());
 	int32_t ref_num = -1;
 
-	// Now I will update the Resource Accounter in order to trace the resource allocation
+	// Now we will update the Resource Accounter in order to trace the resource allocation
 	// This has no effect in the platform resource assignment, since the effective
 	// assignment was performed (by the platform proxy) during the PropagatePartition
+
 	uint32_t nr_cores = 1;
 	auto tg = papp->GetTaskGraph();
 	for (auto task : tg->Tasks()) {
@@ -581,7 +584,7 @@ MangASchedPol::SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_
 		pawm->AddResourceRequest("sys.grp.acc.pe", 100 * nr_cores,
 				br::ResourceAssignment::Policy::BALANCED);
 
-		// Resource Binding: HN cluster (group)
+		// Resource binding: HN cluster (group)
 		ref_num = pawm->BindResource(
 				br::ResourceType::GROUP, R_ID_ANY,
 				selected_partition.GetClusterId(),
@@ -592,7 +595,7 @@ MangASchedPol::SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_
 				br::ResourceType::ACCELERATOR, R_ID_ANY,
 				selected_partition.GetUnit(task.second),
 				ref_num);
-		logger->Debug("SelectedWorkingMode: task=%d -> cluster=<%d> tile=<%d>",
+		logger->Debug("SelectWorkingMode: task=%d -> cluster=<%d> tile=<%d>",
 				task.first,
 				selected_partition.GetClusterId(),
 				selected_partition.GetUnit(task.second));
@@ -623,7 +626,7 @@ MangASchedPol::SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_
 			ref_num,
 			br::ResourceType::MEMORY, &mem_bank_ids);
 
-	// Update the accounting of resources
+	// Update the accounting of resources with a schedule request
 	ApplicationManager & am(ApplicationManager::GetInstance());
 	auto ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
 	if (ret != ApplicationManager::AM_SUCCESS) {

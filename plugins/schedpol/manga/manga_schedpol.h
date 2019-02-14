@@ -139,7 +139,8 @@ private:
 
 	ExitCode_t SortPartitions(ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept;
 
-	ExitCode_t SelectWorkingMode(ba::AppCPtr_t papp, const Partition & selected_partition) noexcept;
+	ExitCode_t SelectWorkingMode(
+			ba::AppCPtr_t papp, const Partition & selected_partition) noexcept;
 
 	ExitCode_t ReassignWorkingMode(ba::AppCPtr_t papp) noexcept;
 
