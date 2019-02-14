@@ -141,7 +141,7 @@ SchedulerPolicyIF::ExitCode_t
 MangASchedPol::Schedule(
 		System & system,
 		RViewToken_t & status_view) {
-	SchedulerPolicyIF::ExitCode_t result = SCHED_DONE;
+	SchedulerPolicyIF::ExitCode_t err, result = SCHED_DONE;
 
 	// Class providing query functions for applications and resources
 	sys = &system;
@@ -156,13 +156,28 @@ MangASchedPol::Schedule(
 		return SCHED_ERROR;
 	}
 
+	// Re-assing resources to running applications: no reconfiguration
+	// supported by MANGO platform
+	bbque::app::AppCPtr_t papp;
+	AppsUidMapIt app_it;
+	papp = sys->GetFirstRunning(app_it);
+	for (; papp; papp = sys->GetNextReady(app_it)) {
+		logger->Debug("Schedule: [%s] is RUNNING -> rescheduling", papp->StrId());
+		err = ServeApp(papp);
+		if (err == SCHED_ERROR) {
+			logger->Crit("Schedule: [%s] unexpected error [err=%d]",
+				papp->StrId(), err);
+			return SCHED_ERROR;
+		}
+	}
+
 	for (AppPrio_t priority = 0; priority <= sys->ApplicationLowestPriority(); priority++) {
 		// Checking if there are applications at this priority
 		if (!sys->HasApplications(priority))
 			continue;
 
 		logger->Debug("Schedule: serving applications with priority %d", priority);
-		ExitCode_t err = ServeApplicationsWithPriority(priority);
+		err = ServeApplicationsWithPriority(priority);
 		if (err == SCHED_R_UNAVAILABLE) {
 			// We have finished the resources, suspend all other
 			// apps and returns gracefully
@@ -191,24 +206,36 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 	// Get all the applications @ this priority
 	papp = sys->GetFirstWithPrio(priority, app_iterator);
 	for (; papp; papp = sys->GetNextWithPrio(priority, app_iterator)) {
-		logger->Debug("ServeApplicationsWithPriority: [%s]: looking for resources...",
+		logger->Debug("ServeApplicationsWithPriority: [%s] looking for resources...",
 				papp->StrId());
 
 		// Skip disabled
 		if (papp->Disabled()) {
-			logger->Debug("ServeApplicationsWithPriority: [%s] disabled. Skip...",
+			logger->Debug("ServeApplicationsWithPriority: [%s] DISABLED: skip...",
+				papp->StrId());
+			continue;
+		}
+
+		// Skip already scheduled running applications
+		if (papp->Running()) {
+			logger->Debug("ServeApplicationsWithPriority: [%s] RUNNING: skip...",
 				papp->StrId());
 			continue;
 		}
 
 		err = ServeApp(papp);
-		if (err == SCHED_SKIP_APP) {
+		if (err == SCHED_OK) {
+			logger->Info("ServeApplicationsWithPriority: [%s] successfully scheduled",
+				papp->StrId());
+			break;
+		}
+		else if (err == SCHED_SKIP_APP) {
 			// In this case we have no sufficient memory to start it, the only
 			// one thing to do is to ignore it
-			logger->Warn("ServeApplicationsWithPriority: [%s]: missing information",
+			logger->Warn("ServeApplicationsWithPriority: [%s] missing information",
 				papp->StrId());
 			am.NoSchedule(papp);
-			continue;
+			err = SCHED_OK;
 		}
 		else if (err == SCHED_R_UNAVAILABLE) {
 			// In this case we have no bandwidth feasibility, so we can try to
@@ -217,15 +244,14 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 				papp->StrId());
 			err_relax = RelaxRequirements(priority);
 			am.NoSchedule(papp);
-			continue;
+			err = SCHED_OK;
 		}
 		else if (err != SCHED_OK) {
 			// It returns  error exit code in case of error.
+			logger->Error("ServeApplicationsWithPriority: [%s]: unexpected error [err=%d]",
+				papp->StrId(), err);
 			return err;
 		}
-
-		logger->Info("ServeApplicationsWithPriority: [%s] successfully scheduled",
-			     papp->StrId());
 	}
 
 	return err_relax != SCHED_OK ? err_relax : err;
