@@ -223,6 +223,7 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 			continue;
 		}
 
+		// Assign working mode and set platform partition
 		err = ServeApp(papp);
 		if (err == SCHED_OK) {
 			logger->Info("ServeApplicationsWithPriority: [%s] successfully scheduled",
@@ -265,7 +266,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::RelaxRequirements(int priority) noe
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexcept {
 
-	// Try to allocate resourced for the application
+	// Running applications must be rescheduled as is
 	if (papp->Running()) {
 		logger->Debug("ServeApp: [%s] is RUNNING -> rescheduling", papp->StrId());
 		return ReassignWorkingMode(papp);
@@ -296,18 +297,18 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 		switch(rmv_err) {
 			case ResourcePartitionValidator::PMV_OK:
 				logger->Debug("ServeApp: [%s] HW partitions found: %d "
-					"[HN cluster %d]",
+					" [HN cluster=%d]",
 					papp->StrId(), partitions.size(), curr_cluster_id);
 				// Partitions available schedule the application
 				err = ScheduleApplication(papp, partitions);
 				break;
 			case ResourcePartitionValidator::PMV_SKIMMER_FAIL:
 				logger->Warn("ServeApp: [%s] at least one skimmer failed"
-					"[HN cluster %d]",
+					" [HN cluster=%d]",
 					papp->StrId(), curr_cluster_id);
 			case ResourcePartitionValidator::PMV_NO_PARTITION:
 				logger->Warn("ServeApp: [%s] no HW partitions available"
-					"[HN cluster %d]",
+					" [HN cluster=%d]",
 					papp->StrId(), curr_cluster_id);
 				//err = DealWithNoPartitionFound(papp);
 				// Try another resource mapping
@@ -569,7 +570,7 @@ MangASchedPol::ScheduleApplication(
 			}
 		}
 		else if (ret != SCHED_R_UNAVAILABLE) {
-			logger->Warn("ScheduleApplication: [%s] not schedulable");
+			logger->Warn("ScheduleApplication: [%s] not schedulable", papp->StrId());
 			break;
 		}
 	}
