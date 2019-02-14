@@ -785,6 +785,8 @@ static Partition GetPartition(
 		it_buff++;
 	}
 	bbque_assert(it_buff == tg.Buffers().end());
+	logger->Debug("GetPartition: id=%d mapping information filled",
+		partition_id);
 
 	return part;
 }
@@ -912,7 +914,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		// - Find different sets of resources (partitions)
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
 		FindUnitsSets(tg, hw_cluster_id, &tiles, &families_order, &num_sets);
-		logger->Debug("Skim: HN returned %d available sets", num_sets);
+		logger->Debug("Skim: HN returned %d available units sets (partitions)",
+			num_sets);
 
 		// - Find and reserve memory for every set. We cannot call
 		//   hn_find_memory more than once without allocate the memory
@@ -923,7 +926,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		memset(mem_buffers_addr, 0, num_sets*sizeof(uint32_t *));
 
 		for (unsigned int i = 0; i < num_sets; i++) {
-			logger->Debug("Skim: set id=%d...", i);
+			logger->Debug("Skim: partition id=%d...", i);
 			mem_buffers_tiles[i] = new uint32_t[num_mem_buffers];
 			mem_buffers_addr[i]  = new uint32_t[num_mem_buffers];
 
@@ -931,7 +934,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 			bool mem_ret = FindMemoryAddresses(tg, hw_cluster_id, tiles[i],
 					mem_buffers_tiles[i], mem_buffers_addr[i]);
 			if (!mem_ret) {
-				logger->Warn("Skim: returned after %d filled sets", i);
+				logger->Warn("Skim: filled %d (out of %d) partitions",
+					i, num_sets);
 				if (i == 0) {
 					throw std::runtime_error(
 						"Skim: "
@@ -946,6 +950,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 					mem_buffers_tiles[i], mem_buffers_addr[i],
 					i); // partition id
 			part_list.push_back(part);
+			logger->Debug("Skim: partition id=%d added to the list", i);
 		}
 
 		// Release the pre-allocation of the memory areas
