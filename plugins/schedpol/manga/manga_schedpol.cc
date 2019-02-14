@@ -616,30 +616,36 @@ MangASchedPol::SelectWorkingMode(
 				selected_partition.GetUnit(task.second));
 	}
 
-	// Get all the assigned memory banks and amount
-	br::ResourceBitset mem_bank_ids;
-	uint64_t mem_req_amount = 0;
+	// Amount of memory to allocate per bank
+	std::map<uint32_t, uint64_t> mem_req_amount;
+
+	// Accouting of memory resources
 	for (auto buff : tg->Buffers()) {
-		mem_req_amount += buff.second->Size();
-		uint32_t mem_target_id = selected_partition.GetMemoryBank(buff.second);
-		mem_bank_ids.Set(mem_target_id);
+		uint32_t mem_bank_id = selected_partition.GetMemoryBank(buff.second);
+		mem_req_amount[mem_bank_id] += buff.second->Size();
 		logger->Debug("SelectWorkingMode: buffer=%d -> memory bank %d (id=%d)",
 			buff.first,
 			selected_partition.GetMemoryBank(buff.second),
-			mem_target_id);
+			mem_bank_id);
 	}
 
-	// Resource request for memory
-	pawm->AddResourceRequest("mem", mem_req_amount,
-				br::ResourceAssignment::Policy::SEQUENTIAL);
+	for (auto &mem_entry: mem_req_amount) {
+		auto & mem_bank_id = mem_entry.first;
+		auto & mem_amount  = mem_entry.second;
 
-	// Resource binding: buffers to memory banks
-	logger->Debug("SelectWorkingMode: binding memory node: %s",
-		mem_bank_ids.ToString().c_str());
-	ref_num = pawm->BindResource(
-			br::ResourceType::MEMORY, R_ID_ANY, R_ID_ANY,
-			ref_num,
-			br::ResourceType::MEMORY, &mem_bank_ids);
+		// Resource request for memory (set the bank id yet)
+		std::string mem_path("sys.grp.mem");
+		mem_path += std::to_string(mem_bank_id);
+		pawm->AddResourceRequest(mem_path, mem_amount);
+		logger->Debug("SelectWorkingMode: memory bank %d (requested=%d)",
+			mem_bank_id, mem_amount);
+
+		// Resource binding: HN cluster (group) needed only
+		ref_num = pawm->BindResource(
+				br::ResourceType::GROUP, R_ID_ANY,
+				selected_partition.GetClusterId(),
+				ref_num);
+	}
 
 	// Update the accounting of resources with a schedule request
 	ApplicationManager & am(ApplicationManager::GetInstance());
