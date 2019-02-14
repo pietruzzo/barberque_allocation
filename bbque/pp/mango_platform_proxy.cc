@@ -646,7 +646,7 @@ static void FindUnitsSets(
 /**
  * @brief This function gets a set of memories for the buffers in the TG
  */
-static void FindAndAllocateMemory(
+static bool FindMemoryAddresses(
 		const TaskGraph &tg,
 		uint32_t hw_cluster_id,
 		unsigned int *tiles_set,
@@ -790,44 +790,56 @@ static Partition GetPartition(
 }
 
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
-MangoPlatformProxy::MangoPartitionSkimmer::SetAddresses(
+MangoPlatformProxy::MangoPartitionSkimmer::AssignMemory(
 		const TaskGraph &tg,
 		const Partition &partition) noexcept {
 
 	uint32_t hw_cluster_id = partition.GetClusterId();
 
 	// Assign a memory area to buffers
-	for ( auto buffer : tg.Buffers()) {
+	for (auto & buffer: tg.Buffers()) {
 		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
 		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
-		logger->Debug("Buffer %d is located at memory id %d [address=0x%x]",
-				buffer.second->Id(), memory_bank, phy_addr);
+
 		buffer.second->SetMemoryBank(memory_bank);
 		buffer.second->SetPhysicalAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_allocate_memory(
-			memory_bank, phy_addr, buffer.second->Size(), hw_cluster_id) != HN_SUCCEEDED) {
+		int res = hn_allocate_memory(
+			memory_bank, phy_addr, buffer.second->Size(), hw_cluster_id);
+		if (res != HN_SUCCEEDED) {
+			logger->Error("AssignMemory: error while allocating space for"
+				"buffer id=%d size=%lu [bank=%d address=%p error=%d]",
+				buffer.second->Id(), buffer.second->Size(),
+				memory_bank, phy_addr, res);
 			return SK_GENERIC_ERROR;
 		}
+		logger->Info("AssignMemory: buffer id=%d allocated at memory id=%d [address=0x%x]",
+				buffer.second->Id(), memory_bank, phy_addr);
 	}
 
 	// Assign a memory area to kernels (executable and stack)
-	for ( auto task : tg.Tasks()) {
+	for (auto & task: tg.Tasks()) {
 		auto arch = task.second->GetAssignedArch();
 		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
 		uint32_t mem_tile    = partition.GetKernelBank(task.second);
 		auto     ksize       = task.second->Targets()[arch]->BinarySize();
 		auto     ssize       = task.second->Targets()[arch]->StackSize();
-		logger->Debug("Task %d allocated space for kernel %s [mem_id=%u address=0x%x size=%lu]",
-				task.second->Id(), GetStringFromArchType(arch), mem_tile, phy_addr, ksize + ssize);
 		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
 		task.second->Targets()[arch]->SetAddress(phy_addr);
 
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_allocate_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id) != HN_SUCCEEDED) {
+		int res = hn_allocate_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id);
+		if (res != HN_SUCCEEDED) {
+			logger->Error("AssignMemory: error while allocating space for"
+				" kernel id=%d size=%d [bank=%d address=%p error=%d]",
+				task.second->Id(), ksize + ssize, mem_tile, phy_addr, res);
 			return SK_GENERIC_ERROR;
 		}
+		logger->Info("AssignMemory: task id=%d kernel for %s size=%lu "
+			"allocated [mem_id=%u address=%p]",
+			task.second->Id(), GetStringFromArchType(arch),
+			ksize + ssize, mem_tile, phy_addr);
 	}
 
 	return SK_OK;
@@ -837,7 +849,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		const TaskGraph &tg,
 		std::list<Partition>&part_list,
-		uint32_t hw_cluster_id) noexcept {
+		uint32_t hw_cluster_id) {
 	unsigned int num_mem_buffers = tg.BufferCount() + tg.TaskCount();
 	ExitCode_t res               = SK_OK;
 	auto it_task                 = tg.Tasks().begin();
@@ -911,36 +923,64 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		memset(mem_buffers_addr, 0, num_sets*sizeof(uint32_t *));
 
 		for (unsigned int i = 0; i < num_sets; i++) {
-			// Find and allocate memory close the tiles/units in the set
+			logger->Debug("Skim: set id=%d...", i);
 			mem_buffers_tiles[i] = new uint32_t[num_mem_buffers];
 			mem_buffers_addr[i]  = new uint32_t[num_mem_buffers];
-			FindAndAllocateMemory(tg, hw_cluster_id, tiles[i],
-				mem_buffers_tiles[i], mem_buffers_addr[i]);
+
+			// Find and allocate memory close the tiles/units in the set
+			bool mem_ret = FindMemoryAddresses(tg, hw_cluster_id, tiles[i],
+					mem_buffers_tiles[i], mem_buffers_addr[i]);
+			if (!mem_ret) {
+				logger->Warn("Skim: returned after %d filled sets", i);
+				if (i == 0) {
+					throw std::runtime_error(
+						"Skim: "
+						"unable to find available memory");
+				}
+				break;
+			}
+
+			// Set partition information and append to list
+			Partition part = GetPartition(
+					tg, hw_cluster_id, tiles[i], families_order[i],
+					mem_buffers_tiles[i], mem_buffers_addr[i],
+					i); // partition id
+			part_list.push_back(part);
+		}
+
+		// Release the pre-allocation of the memory areas
+		for (unsigned int i = 0; i < num_sets; i++) {
+			if (i < part_list.size()) {
+				logger->Debug("Skim: partition id=%d releasing...", i);
+				for (unsigned int j = 0; j < num_mem_buffers; j++) {
+					std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
+					int res = hn_release_memory(
+						mem_buffers_tiles[i][j], mem_buffers_addr[i][j],
+						mem_buffers_size[j], hw_cluster_id);
+					if (res != HN_SUCCEEDED) {
+						logger->Error("Skim: "
+							"tile=%d address=%p size=%d release error",
+							mem_buffers_tiles[i][j],
+							mem_buffers_addr[i][j],
+							mem_buffers_size[j]);
+					}
+					else {
+						logger->Debug("Skim: "
+							"tile=%d address=%p size=%d released",
+							mem_buffers_tiles[i][j],
+							mem_buffers_addr[i][j],
+							mem_buffers_size[j]);
+					}
+				}
+			}
+
+			delete[] mem_buffers_tiles[i];
+			delete[] mem_buffers_addr[i];
 		}
 	}
 	catch (const std::runtime_error &err) {
-		logger->Error("MangoPartitionSkimmer: %s", err.what());
+		logger->Error("Skim: %s", err.what());
 		res = SK_NO_PARTITION;
-	}
-
-	if (res == SK_OK) {
-		if ( num_sets == 0 ) {
-			// No feasible partition found
-			logger->Warn("MangoPartitionSkimmer: no feasible partitions");
-			res = SK_NO_PARTITION;
-		}
-		else {
-			// Fill the partition vector with the partitions returned by HN library
-			for (unsigned int i=0; i < num_sets; i++) {
-				Partition part = GetPartition(
-							tg, hw_cluster_id,
-							tiles[i], families_order[i],
-							mem_buffers_tiles[i],
-							mem_buffers_addr[i],
-							i); // partition id
-				part_list.push_back(part);
-			}
-		}
 	}
 
 	// let's deallocate memory created in the hn_find_units_sets hnlib function
@@ -959,33 +999,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 	}
 
 	// let's deallocate memory created in this method
-	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
 	if (mem_buffers_tiles != nullptr) {
-		for (unsigned int i = 0; i < num_sets; i++) {
-			if (mem_buffers_tiles[i] != NULL) {
-				// TRICK we allocated memory banks when finding them in
-				// order to get different banks (see try above), so now
-				// it is the right moment to release them.
-				// Next, When setting the partition it will be allocated again
-				for (unsigned int j = 0; j < num_mem_buffers; j++) {
-					hn_release_memory(
-							mem_buffers_tiles[i][j],
-							mem_buffers_addr[i][j],
-							mem_buffers_size[j],
-                                                        hw_cluster_id);
-				}
-				delete[] mem_buffers_tiles[i];
-			}
-		}
 		delete[] mem_buffers_tiles;
 	}
 
 	if (mem_buffers_addr != nullptr) {
-		for (unsigned int i = 0; i < num_sets; i++) {
-			if (mem_buffers_addr[i] != NULL) {
-				delete[] mem_buffers_addr[i];
-			}
-		}
 		delete[] mem_buffers_addr;
 	}
 
@@ -1010,7 +1028,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 	tg.SetCluster(hw_cluster_id);
 
 	// We set the mapping of buffers-addresses based on the selected partition
-	ExitCode_t err = SetAddresses(tg, partition);
+	ExitCode_t err = AssignMemory(tg, partition);
 
 	// Set the assigned processor (for each task)
 	for ( auto task : tg.Tasks()) {

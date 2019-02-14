@@ -129,7 +129,7 @@ private:
 		virtual ExitCode_t Skim(
 					const TaskGraph &tg,
 					std::list<Partition>&,
-					uint32_t hw_cluster_id) noexcept override final;
+					uint32_t hw_cluster_id) override final;
 		virtual ExitCode_t SetPartition(
 					TaskGraph &tg,
 					const Partition &partition) noexcept override final;
@@ -137,7 +137,7 @@ private:
 					const TaskGraph &tg,
 					const Partition &partition) noexcept override final;
 
-		ExitCode_t SetAddresses(const TaskGraph &tg, const Partition &partition) noexcept;
+		ExitCode_t AssignMemory(const TaskGraph &tg, const Partition &partition) noexcept;
 	private:
 		std::unique_ptr<bu::Logger> logger;
 		std::recursive_mutex hn_mutex;

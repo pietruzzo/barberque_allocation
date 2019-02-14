@@ -60,7 +60,7 @@ public:
 	 * @brief This abstract method should remove a subset of partitions (eventually all) from
 	 * 	  the list passed. The method can also eventually add partitions.
 	 */
-	virtual ExitCode_t Skim(const TaskGraph &tg, std::list<Partition>& partitions, uint32_t hw_cluster_id) noexcept = 0;
+	virtual ExitCode_t Skim(const TaskGraph &tg, std::list<Partition>& partitions, uint32_t hw_cluster_id) = 0;
 
 	/**
 	 * @brief This abstract method is called when the policy finally decides which partition is
