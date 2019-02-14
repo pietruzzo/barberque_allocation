@@ -241,14 +241,14 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 		else if (err == SCHED_R_UNAVAILABLE) {
 			// In this case we have no bandwidth feasibility, so we can try to
 			// fairly reduce the bandwidth for non strict applications.
-			logger->Warn("ServeApplicationsWithPriority: [%s]: unable to allocate required resources",
+			logger->Warn("ServeApplicationsWithPriority: [%s] not enough resources",
 				papp->StrId());
 			am.NoSchedule(papp);
 			err = SCHED_OK;
 		}
 		else if (err != SCHED_OK) {
 			// It returns  error exit code in case of error.
-			logger->Error("ServeApplicationsWithPriority: [%s]: unexpected error [err=%d]",
+			logger->Error("ServeApplicationsWithPriority: [%s] unexpected error [err=%d]",
 				papp->StrId(), err);
 			return err;
 		}
@@ -269,7 +269,8 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 
 	// Running applications must be rescheduled as is
 	if (papp->Running()) {
-		logger->Debug("ServeApp: [%s] is RUNNING -> rescheduling", papp->StrId());
+		logger->Debug("ServeApp: [%s] is RUNNING -> re-assign working mode",
+			papp->StrId());
 		return ReassignWorkingMode(papp);
 	}
 
@@ -688,12 +689,12 @@ MangASchedPol::SelectWorkingMode(
 	}
 	else if ((ret == ApplicationManager::AM_APP_BLOCKING) ||
 			(ret == ApplicationManager::AM_APP_DISABLED)) {
-		logger->Error("SelectWorkingMode: [%s] schedule request for blocking/disabled",
+		logger->Debug("SelectWorkingMode: [%s] schedule request for blocking/disabled",
 			papp->StrId());
 		return SCHED_SKIP_APP;
 	}
 	else if (ret == ApplicationManager::AM_AWM_NOT_SCHEDULABLE) {
-		logger->Error("SelectWorkingMode: [%s] schedule request not allocable",
+		logger->Debug("SelectWorkingMode: [%s] schedule request not allocable",
 			papp->StrId());
 		return SCHED_R_UNAVAILABLE;
 	}
