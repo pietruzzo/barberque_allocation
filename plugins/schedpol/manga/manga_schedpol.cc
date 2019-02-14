@@ -533,7 +533,7 @@ MangASchedPol::ScheduleApplication(
 				// Abort the the schedule request
 				ApplicationManager & am(ApplicationManager::GetInstance());
 				am.ScheduleRequestAbort(papp, sched_status_view);
-				ret = SCHED_SKIP_APP;
+				ret = SCHED_R_UNAVAILABLE;
 			}
 			else{
 				// Update task-graph info
