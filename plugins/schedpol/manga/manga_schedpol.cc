@@ -600,6 +600,7 @@ MangASchedPol::SelectWorkingMode(
 		pawm = std::make_shared<ba::WorkingMode>(
 				papp->WorkingModes().size(),"Run-time", 1, papp);
 	}
+	pawm->ClearResourceBinding();
 	logger->Info("SelectWorkingMode: [%s] partition mapping...", papp->StrId());
 	int32_t ref_num = -1;
 
