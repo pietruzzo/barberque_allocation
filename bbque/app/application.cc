@@ -722,14 +722,15 @@ Application::ExitCode_t Application::LoadTaskGraph() {
 		boost::archive::text_iarchive ia(ifs);
 		ia >> *task_graph;
 		sem_post(tg_sem);
+		logger->Info("LoadTaskGraph: [%s] task-graph loaded", StrId());
+		return APP_SUCCESS;
 	}
 	catch(std::exception & ex) {
-		logger->Error("LoadTaskGraph: exception [%s]", ex.what());
+		logger->Error("LoadTaskGraph: [%s] exception [%s]",
+			StrId(), ex.what());
+		sem_post(tg_sem);
 		return APP_TG_FILE_ERROR;
 	}
-
-	logger->Info("LoadTaskGraph: task-graph loaded");
-	return APP_SUCCESS;
 }
 
 
