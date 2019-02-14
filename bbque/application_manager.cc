@@ -1460,6 +1460,7 @@ ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequest(
 		logger->Warn("ScheduleRequest: [%s] forcing a new state transition",
 			papp->StrId());
 		ChangeEXCState(papp, papp->PreSyncState(), app::Schedulable::SYNC_NONE);
+		return AM_APP_BLOCKING;
 	}
 
 	// Nothing to schedule if already disabled
