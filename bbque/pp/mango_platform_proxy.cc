@@ -873,8 +873,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		auto arch = it_task->second->GetAssignedArch();
 		auto const & arch_it = it_task->second->Targets().find(arch);
 		if (arch_it == it_task->second->Targets().end()) {
-			logger->Error("Skim: arch=%s "
-				"binary not available",
+			logger->Warn("Skim: arch=%s binary not available",
 				GetStringFromArchType(arch));
 			delete[] mem_buffers_size;
 			return SK_NO_PARTITION;

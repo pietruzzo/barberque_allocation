@@ -226,9 +226,9 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 		// Assign working mode and set platform partition
 		err = ServeApp(papp);
 		if (err == SCHED_OK) {
+			// Everything OK
 			logger->Info("ServeApplicationsWithPriority: [%s] successfully scheduled",
 				papp->StrId());
-			break;
 		}
 		else if (err == SCHED_SKIP_APP) {
 			// In this case we have no sufficient memory to start it, the only
