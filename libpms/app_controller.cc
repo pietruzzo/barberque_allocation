@@ -27,7 +27,7 @@ ApplicationController::ApplicationController(std::string _name, std::string _rec
 
 	bbque::utils::Logger::SetConfigurationFile(BBQUE_APP_CONFIG_FILE);
 	logger = bbque::utils::Logger::GetLogger(BBQUE_APP_CTRL_MODULE);
-	logger->Notice("[%s] controller created", app_name.c_str());
+	logger->Info("[%s] controller created", app_name.c_str());
 }
 
 ApplicationController::ExitCode ApplicationController::Init() noexcept {

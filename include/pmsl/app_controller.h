@@ -119,7 +119,7 @@ public:
 	inline void WaitForTermination() noexcept {
 		if (exec_sync == nullptr) return;
 		exec_sync->WaitCompletion();
-		logger->Notice("[%s] closing the controller...", app_name.c_str());
+		logger->Info("[%s] closing the controller...", app_name.c_str());
 	}
 
 private:

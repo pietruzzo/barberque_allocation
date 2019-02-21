@@ -505,18 +505,18 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onRelease() {
 	"|      |         |     min      max      avg     var     |     min      max      avg     var     |"
 
 void ExecutionSynchronizer::PrintProfilingData() const {
-	logger->Info(LIBPMS_PROF_TABLE_DIV);
-	logger->Info(LIBPMS_PROF_TABLE_HEADER);
-	logger->Info(LIBPMS_PROF_TABLE_DIV2);
-	logger->Info(LIBPMS_PROF_TABLE_HEADER2);
-	logger->Info(LIBPMS_PROF_TABLE_DIV);
+	logger->Notice(LIBPMS_PROF_TABLE_DIV);
+	logger->Notice(LIBPMS_PROF_TABLE_HEADER);
+	logger->Notice(LIBPMS_PROF_TABLE_DIV2);
+	logger->Notice(LIBPMS_PROF_TABLE_HEADER2);
+	logger->Notice(LIBPMS_PROF_TABLE_DIV);
 
 	// Per task
 	for (auto & rt_entry: tasks.runtime) {
 		auto & task_id = rt_entry.first;
 		auto & ctime   = rt_entry.second->ctime;
 		auto & throughput = rt_entry.second->throughput;
-		logger->Info("| %4d | %7d | %8.2f %8.2f %8.2f %8.2f   | %8.2f %8.2f %8.2f %8.2f   |",
+		logger->Notice("| %4d | %7d | %8.2f %8.2f %8.2f %8.2f   | %8.2f %8.2f %8.2f %8.2f   |",
 			task_id, count(ctime.acc),
 			min(ctime.acc)/1e3, max(ctime.acc)/1e3, mean(ctime.acc)/1e3, variance(ctime.acc)/1e6,
 			min(throughput.acc)/100.0, max(throughput.acc)/100.0,
@@ -535,12 +535,12 @@ void ExecutionSynchronizer::PrintProfilingData() const {
 	if (trunc_app_name.size() > 14)
 		trunc_app_name = app_name.substr(0, 14);
 
-	logger->Info(LIBPMS_PROF_TABLE_DIV);
-	logger->Info(LIBPMS_APP_TABLE_HEADER);
-	logger->Info(LIBPMS_PROF_TABLE_DIV2);
-	logger->Info("| %-14s |  %34d   | %35.2f   |",
+	logger->Notice(LIBPMS_PROF_TABLE_DIV);
+	logger->Notice(LIBPMS_APP_TABLE_HEADER);
+	logger->Notice(LIBPMS_PROF_TABLE_DIV2);
+	logger->Notice("| %-14s |  %34d   | %35.2f   |",
 		trunc_app_name.c_str(), total_ctime, final_throughput / 100.0);
-	logger->Info(LIBPMS_PROF_TABLE_DIV);
+	logger->Notice(LIBPMS_PROF_TABLE_DIV);
 }
 
 
