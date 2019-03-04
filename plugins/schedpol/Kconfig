@@ -85,8 +85,13 @@ choice
 
   config BBQUE_SCHEDPOL_DEFAULT_MANGA
     depends on TARGET_LINUX_MANGO
-    bool "MangA"
+    bool "ManGA"
     select BBQUE_SCHEDPOL_MANGA
+
+  config BBQUE_SCHEDPOL_DEFAULT_MANGAV2
+    depends on TARGET_LINUX_MANGO
+    bool "ManGAv2"
+    select BBQUE_SCHEDPOL_MANGAV2
 
 endchoice
 
@@ -98,3 +103,4 @@ source barbeque/plugins/schedpol/perdetemp/Kconfig
 source barbeque/plugins/schedpol/contrex/Kconfig
 source barbeque/plugins/schedpol/cloves/Kconfig
 source barbeque/plugins/schedpol/manga/Kconfig
+source barbeque/plugins/schedpol/mangav2/Kconfig

@@ -1,6 +1,6 @@
-config BBQUE_SCHEDPOL_MANGA
+config BBQUE_SCHEDPOL_MANGAV2
+  bool "ManGAv2"
   depends on TARGET_LINUX_MANGO
-  bool "ManGA"
   default n
   ---help---
   Description...
