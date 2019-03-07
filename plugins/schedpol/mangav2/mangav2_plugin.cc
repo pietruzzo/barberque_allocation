@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014  Politecnico di Milano
+ * Copyright (C) 2019  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,27 +22,29 @@
 namespace bp = bbque::plugins;
 
 extern "C"
-int32_t PF_exitFunc() {
-  return 0;
+int32_t PF_exitFunc()
+{
+	return 0;
 }
 
 extern "C"
-PF_ExitFunc PF_initPlugin(const PF_PlatformServices * params) {
-  int res = 0;
+PF_ExitFunc PF_initPlugin(const PF_PlatformServices * params)
+{
+	int res = 0;
 
-  PF_RegisterParams rp;
-  rp.version.major = 1;
-  rp.version.minor = 0;
-  rp.programming_language = PF_LANG_CPP;
+	PF_RegisterParams rp;
+	rp.version.major = 1;
+	rp.version.minor = 0;
+	rp.programming_language = PF_LANG_CPP;
 
-  // Registering the module
-  rp.CreateFunc  = bp::ManGAv2SchedPol::Create;
-  rp.DestroyFunc = bp::ManGAv2SchedPol::Destroy;
-  res = params->RegisterObject((const char *) MODULE_NAMESPACE, &rp);
-  if (res < 0)
-    return NULL;
+	// Registering the module
+	rp.CreateFunc  = bp::ManGAv2SchedPol::Create;
+	rp.DestroyFunc = bp::ManGAv2SchedPol::Destroy;
+	res = params->RegisterObject((const char *) MODULE_NAMESPACE, &rp);
+	if (res < 0)
+		return NULL;
 
-  return PF_exitFunc;
+	return PF_exitFunc;
 
 }
 PLUGIN_INIT(PF_initPlugin);

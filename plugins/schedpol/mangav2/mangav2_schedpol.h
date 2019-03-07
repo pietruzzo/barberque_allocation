@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016  Politecnico di Milano
+ * Copyright (C) 2019  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <list>
+#include <future>
 #include <memory>
 
 #include "bbque/configuration_manager.h"
@@ -38,7 +39,10 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 class LoggerIF;
 
@@ -47,7 +51,8 @@ class LoggerIF;
  *
  * ManGAv2 scheduler policy registered as a dynamic C++ plugin.
  */
-class ManGAv2SchedPol: public SchedulerPolicyIF {
+class ManGAv2SchedPol: public SchedulerPolicyIF
+{
 
 public:
 
@@ -59,7 +64,7 @@ public:
 	static void * Create(PF_ObjectParams *);
 
 	/**
-	 * @brief Destroy the mangav2 plugin 
+	 * @brief Destroy the mangav2 plugin
 	 */
 	static int32_t Destroy(void *);
 
@@ -94,6 +99,11 @@ private:
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
+	/** Future for task-graph loading synchronization */
+	std::future<void> fut_tg;
+
+	/** Number of cores per accelerator (and group/cluster) */
+	std::map<uint32_t, std::vector<uint32_t>> pe_per_acc;
 
 	/**
 	 * @brief Constructor
@@ -107,6 +117,22 @@ private:
 	 * @brief Optional initialization member function
 	 */
 	ExitCode_t Init();
+
+	ExitCode_t SchedulePriority(bbque::app::AppPrio_t priority);
+
+	ExitCode_t EvalMappingAlternatives(bbque::app::AppCPtr_t papp);
+
+	ExitCode_t CheckMappingFeasibility(
+	    bbque::app::AppCPtr_t papp, std::shared_ptr<Partition> partition);
+
+	bbque::app::AwmPtr_t SelectWorkingMode(
+	    bbque::app::AppCPtr_t papp,
+	    std::shared_ptr<Partition> partition,
+	    int & ref_num);
+
+	ExitCode_t ScheduleApplication(
+	    bbque::app::AppCPtr_t papp, bbque::app::AwmPtr_t pawm, int ref_num);
+
 };
 
 } // namespace plugins
