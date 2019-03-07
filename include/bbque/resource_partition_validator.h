@@ -30,28 +30,30 @@
 
 namespace bu = bbque::utils;
 
-namespace bbque {
+namespace bbque
+{
 
 /**
  * @class PartitionSkimmer
  *
  * @brief The interface for declaration of a PartitionSkimmer object.
  */
-class PartitionSkimmer {
+class PartitionSkimmer
+{
 
 public:
 
 	typedef enum SkimmerType_t {
-		SKT_NONE = 0,
-		SKT_MANGO_HN,
-		SKT_MANGO_MEMORY_MANAGER,
-		SKT_MANGO_POWER_MANAGER
+	    SKT_NONE = 0,
+	    SKT_MANGO_HN,
+	    SKT_MANGO_MEMORY_MANAGER,
+	    SKT_MANGO_POWER_MANAGER
 	} SkimmerType_t;
 
 	typedef enum ExitCode_t {
-		SK_OK = 0,
-		SK_GENERIC_ERROR,
-		SK_NO_PARTITION
+	    SK_OK = 0,
+	    SK_GENERIC_ERROR,
+	    SK_NO_PARTITION
 	} ExitCode_t;
 
 	virtual ~PartitionSkimmer() { }
@@ -81,7 +83,9 @@ public:
 	/**
 	 * @brief Return the type of the skimmer
 	 */
-	SkimmerType_t GetType() { return type; }
+	SkimmerType_t GetType() {
+		return type;
+	}
 
 private:
 
@@ -96,15 +100,16 @@ typedef std::shared_ptr<PartitionSkimmer> PartitionSkimmerPtr_t;
  * @brief Provides the list of available partitions, validating them across the registered callback
  *	  function.
  */
-class ResourcePartitionValidator {
+class ResourcePartitionValidator
+{
 
 public:
 
 	typedef enum ExitCode_t {
-		PMV_OK = 0,
-		PMV_GENERIC_ERROR,
-		PMV_NO_PARTITION,
-		PMV_SKIMMER_FAIL
+	    PMV_OK = 0,
+	    PMV_GENERIC_ERROR,
+	    PMV_NO_PARTITION,
+	    PMV_SKIMMER_FAIL
 	} ExitCode_t;
 
 
@@ -117,12 +122,12 @@ public:
 	virtual ~ResourcePartitionValidator()  {};
 
 	/**
-	 * @brief Load the feasible partitions according to registered callbacks. 
+	 * @brief Load the feasible partitions according to registered callbacks.
 	 *
 	 */
 	ExitCode_t LoadPartitions(
-			const TaskGraph &tg, std::list<Partition> &partitions,
-			uint32_t hw_cluster_id);
+	    const TaskGraph &tg, std::list<Partition> &partitions,
+	    uint32_t hw_cluster_id);
 
 
 	/**
@@ -134,11 +139,11 @@ public:
 	/**
 	 * @brief If LoadPartitions failed with `PMV_NO_PARTITION` or `PMV_SKIMMER_FAIL`, this
 	 * 	  method returns the skimmer that have not found a list of feasible partitions or
-	 *	  fails to skim it. 
+	 *	  fails to skim it.
 	 * @note  If the LoadPartitions is never called or returned with other
 	 *	  value the return of this method is undefined.
 	 */
-	inline PartitionSkimmer::SkimmerType_t GetLastFailed() const noexcept { 
+	inline PartitionSkimmer::SkimmerType_t GetLastFailed() const noexcept {
 		return failed_skimmer;
 	}
 
@@ -173,4 +178,3 @@ private:
 }
 
 #endif // BBQUE_RESOURCE_MAPPING_VALIDATOR_H_
-
