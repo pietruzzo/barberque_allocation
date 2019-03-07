@@ -36,9 +36,11 @@
 namespace bu = bbque::utils;
 namespace br = bbque::res;
 
-namespace bbque {
+namespace bbque
+{
 
-namespace res {
+namespace res
+{
 class ResourcePath;
 typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
 }
@@ -46,7 +48,8 @@ typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
 using bbque::res::ResourcePathPtr_t;
 using bbque::res::ResourceType;
 
-namespace app {
+namespace app
+{
 
 // Forward declarations
 class Application;
@@ -86,18 +89,20 @@ typedef std::shared_ptr<AppPluginData_t> AppPluginDataPtr_t;
  * one recipe, but a single instance must specify the one upon which base its
  * execution.
  */
-class Recipe: public bu::ExtraDataContainer {
+class Recipe: public bu::ExtraDataContainer
+{
 
-friend class Application;
+	friend class Application;
 
 public:
 	/**
 	 * @class MappingData
 	 * @brief Resource mapping info associated to a task or a buffer
 	 */
-	class MappingData {
+	class MappingData
+	{
 	public:
-		MappingData(){}
+		MappingData() {}
 		MappingData(ResourceType _t, uint32_t _id, uint32_t _f):
 			type(_t), id(_id), freq_khz(_f)
 		{}
@@ -111,7 +116,8 @@ public:
 	 * @class TaskGraphMapping
 	 * @brief Design-time profiled task-graph mapping
 	 */
-	class TaskGraphMapping {
+	class TaskGraphMapping
+	{
 	public:
 		uint32_t exec_time_ms;  /// Profiled execution time
 		uint32_t power_mw;      /// Power consumption
@@ -164,7 +170,7 @@ public:
 	 * @param value The user QoS value of the working mode
 	 */
 	AwmPtr_t const AddWorkingMode(uint8_t id, std::string const & name,
-					uint8_t value);
+	                              uint8_t value);
 
 	/**
 	 * @brief Return an application working mode object by specifying
@@ -290,8 +296,8 @@ private:
 
 	/** AWM attribute type flag */
 	enum AwmAttrType_t {
-		VALUE,
-		CONFIG_TIME
+	    VALUE,
+	    CONFIG_TIME
 	};
 
 	/**
