@@ -15,8 +15,10 @@
 // UPV -> POLIMI there could be as much memories as tiles in MANGO
 #define MANGO_MAX_MEMORIES 256
 
-namespace bbque {
-namespace pp {
+namespace bbque
+{
+namespace pp
+{
 
 
 
@@ -70,7 +72,7 @@ public:
 	 * @brief Mango specific resource binding interface.
 	 */
 	ExitCode_t MapResources(
-	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
+	    SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
 
 	/**
 	 * @brief Mango specific termiantion.
@@ -84,7 +86,7 @@ public:
 	 * @brief Mango specific resource claiming interface.
 	 */
 	ExitCode_t LoadPartitions(SchedPtr_t papp) noexcept;
-	
+
 
 private:
 //-------------------- CONSTS
@@ -119,23 +121,27 @@ private:
 	ExitCode_t BootTiles_PEAK(uint32_t cluster_id, int tile_id) noexcept;
 	ExitCode_t RegisterTiles(uint32_t cluster_id) noexcept;
 	ExitCode_t RegisterMemoryBank(
-			std::string const & group_prefix,
-			uint32_t cluster_id, int tile_id, int mem_id) noexcept;
+	    std::string const & group_prefix,
+	    uint32_t cluster_id, int tile_id, int mem_id) noexcept;
 
 
-	class MangoPartitionSkimmer : public PartitionSkimmer {
+	class MangoPartitionSkimmer : public PartitionSkimmer
+	{
 	public:
 		MangoPartitionSkimmer();
+
 		virtual ExitCode_t Skim(
-					const TaskGraph &tg,
-					std::list<Partition>&,
-					uint32_t hw_cluster_id) override final;
+		    const TaskGraph & tg,
+		    std::list<Partition> &,
+		    uint32_t hw_cluster_id) override final;
+
 		virtual ExitCode_t SetPartition(
-					TaskGraph &tg,
-					const Partition &partition) noexcept override final;
+		    TaskGraph & tg,
+		    const Partition & partition) noexcept override final;
+
 		virtual ExitCode_t UnsetPartition(
-					const TaskGraph &tg,
-					const Partition &partition) noexcept override final;
+		    const TaskGraph & tg,
+		    const Partition & partition) noexcept override final;
 
 		ExitCode_t AssignMemory(const TaskGraph &tg, const Partition &partition) noexcept;
 	private:

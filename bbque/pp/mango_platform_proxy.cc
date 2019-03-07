@@ -20,8 +20,14 @@ namespace bb = bbque;
 namespace br = bbque::res;
 namespace po = boost::program_options;
 
-namespace bbque {
-namespace pp {
+namespace bbque
+{
+namespace pp
+{
+
+/****************************************************************************
+ *  Static functions                                                        *
+ ****************************************************************************/
 
 std::unique_ptr<bu::Logger> logger;
 
@@ -56,7 +62,7 @@ MangoPlatformProxy::MangoPlatformProxy() :
 		logger->Info("MangoPlatformProxy: HN daemon connection established");
 	} else {
 		logger->Fatal("MangoPlatformProxy: unable to establish HN daemon connection"
-			"[error=%d]", hn_init_err);
+		              "[error=%d]", hn_init_err);
 	}
 
 	bbque_assert ( 0 == hn_init_err );
@@ -65,7 +71,7 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	int err = hn_get_num_clusters(&this->num_clusters);
 	if ( HN_SUCCEEDED != err ) {
 		logger->Fatal("MangoPlatformProxy: unable to get the number of clusters "
-			"[error=%d]", err);
+		              "[error=%d]", err);
 	}
 	logger->Info("MangoPlatformProxy: nr. of clusters: %d", num_clusters);
 
@@ -76,10 +82,10 @@ MangoPlatformProxy::MangoPlatformProxy() :
 		int hn_reset_err = hn_reset(0, cluster_id);
 		if (hn_reset_err == HN_SUCCEEDED) {
 			logger->Info("MangoPlatformProxy: HN cluster=<%d> successfully initialized",
-				cluster_id);
+			             cluster_id);
 		} else {
 			logger->Crit("MangoPlatformProxy: unable to reset the HN cluster=%d"
-				" [error= %d]", cluster_id, hn_reset_err);
+			             " [error= %d]", cluster_id, hn_reset_err);
 			// We consider this error non critical and we try to continue
 		}
 	}
@@ -92,23 +98,27 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	logger->Info("MangoPlatformProxy: partition skimmer registered");
 }
 
-MangoPlatformProxy::~MangoPlatformProxy() {
+MangoPlatformProxy::~MangoPlatformProxy()
+{
 	logger->Info("MangoPlatformProxy: nothing left to be done");
 }
 
 
-const char* MangoPlatformProxy::GetPlatformID(int16_t system_id) const noexcept {
+const char* MangoPlatformProxy::GetPlatformID(int16_t system_id) const noexcept
+{
 	UNUSED(system_id);
 	return BBQUE_MANGOPP_PLATFORM_ID;
 }
 
-const char* MangoPlatformProxy::GetHardwareID(int16_t system_id) const noexcept {
+const char* MangoPlatformProxy::GetHardwareID(int16_t system_id) const noexcept
+{
 	UNUSED(system_id);
 	return BBQUE_TARGET_HARDWARE_ID;    // Defined in bbque.conf
 }
 
 bool MangoPlatformProxy::IsHighPerformance(
-		bbque::res::ResourcePathPtr_t const & path) const {
+    bbque::res::ResourcePathPtr_t const & path) const
+{
 	UNUSED(path);
 	return false;
 }
@@ -134,22 +144,25 @@ MangoPlatformProxy::ReclaimResources(SchedPtr_t sched) noexcept {
 		ResourcePartitionValidator &rmv(ResourcePartitionValidator::GetInstance());
 		auto ret = rmv.RemovePartition(*papp->GetTaskGraph(), *partition);
 		bbque_assert(ResourcePartitionValidator::PMV_OK == ret);
-		if (ret != ResourcePartitionValidator::PMV_OK)
+		if (ret != ResourcePartitionValidator::PMV_OK) {
 			logger->Warn("ReclaimResources: [%s] hw partition release failed", papp->StrId());
-		else {
+		} else {
 			papp->SetPartition(nullptr);
 			logger->Info("ReclaimResources: [%s] hw partition released", papp->StrId());
 		}
-	}
-	else
+	} else
 		logger->Warn("ReclaimResources: [%s] no partition to release", papp->StrId());
+
+
+	// Release resources by navigating the task graph...
+
 	return PLATFORM_OK;
 }
 
 
 MangoPlatformProxy::ExitCode_t
-MangoPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept {
-	UNUSED(papp);
+MangoPlatformProxy::MapResources(
+    SchedPtr_t psched, ResourceAssignmentMapPtr_t pres, bool excl) noexcept {
 	UNUSED(pres);
 	UNUSED(excl);
 
@@ -159,7 +172,10 @@ MangoPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 	return PLATFORM_OK;
 }
 
-void MangoPlatformProxy::Exit() {
+
+
+void MangoPlatformProxy::Exit()
+{
 	logger->Info("Exit: Termination...");
 
 	// Stop HW counter monitors
@@ -169,21 +185,21 @@ void MangoPlatformProxy::Exit() {
 			int err = hn_get_tile_info(tile_id, &tile_info, cluster_id);
 			if (HN_SUCCEEDED != err) {
 				logger->Fatal("Exit: unable to get the info for cluster=<%d> tile=<%d>",
-					cluster_id, tile_id);
+				              cluster_id, tile_id);
 				continue;
 			}
-	#ifdef CONFIG_BBQUE_PM_MANGO
+#ifdef CONFIG_BBQUE_PM_MANGO
 			logger->Debug("Exit: disabling monitors...");
 			if (tile_info.unit_family == HN_TILE_FAMILY_PEAK) {
 				err = hn_stats_monitor_configure_tile(tile_id, 0, cluster_id);
 				if (err == 0)
 					logger->Info("Exit: stopping monitor for cluster=<%d> tile=<%d>",
-						cluster_id, tile_id);
+					             cluster_id, tile_id);
 				else
 					logger->Error("Error while stopping monitor for cluster=<%d> tile=<%d>",
-						cluster_id, tile_id);
+					              cluster_id, tile_id);
 			}
-	#endif
+#endif
 		}
 	}
 
@@ -195,7 +211,7 @@ void MangoPlatformProxy::Exit() {
 			uint32_t addr     = rsc.second;
 			hn_release_memory(tile_mem, addr, MANGO_PEAKOS_FILE_SIZE, cluster_id);
 			logger->Info("Exit: cluster=<%d> "
-				"released PEAK OS memory %d address 0x%08x", cluster_id, tile_mem, addr);
+			             "released PEAK OS memory %d address 0x%08x", cluster_id, tile_mem, addr);
 		}
 	}
 
@@ -234,9 +250,9 @@ MangoPlatformProxy::LoadPlatformData() noexcept {
 		}
 
 		logger->Info("LoadPlatformData: cluster=<%d>: num_tiles=%d (%dx%d) num_vns=%d.",
-				cluster_id,
-				this->num_tiles, this->num_tiles_x, this->num_tiles_y,
-				this->num_vns);
+		             cluster_id,
+		             this->num_tiles, this->num_tiles_x, this->num_tiles_y,
+		             this->num_vns);
 
 		// Now we have to register the tiles to the PlatformDescription and ResourceAccounter
 		ExitCode_t pp_err = RegisterTiles(cluster_id);
@@ -313,28 +329,27 @@ MangoPlatformProxy::BootTiles(uint32_t cluster_id) noexcept {
 			err = BootTiles_PEAK(cluster_id, tile_id);
 			if (PLATFORM_OK != err) {
 				logger->Error("BootTiles: unable to boot cluster=<%d> tile=<%d>",
-					cluster_id, tile_id);
+				              cluster_id, tile_id);
 				return PLATFORM_INIT_FAILED;
 			}
 #ifdef CONFIG_BBQUE_PM_MANGO
 			// Enable monitoring stuff
 			logger->Debug("BootTiles: cluster=<%d> tile=<%d> configuring monitors...",
-				cluster_id, tile_id);
+			              cluster_id, tile_id);
 			err = hn_stats_monitor_configure_tile(tile_id, 1, cluster_id);
 			if (err == 0) {
 				err = hn_stats_monitor_set_polling_period(monitor_period_len);
 				if (err == 0)
 					logger->Info("BootTiles: cluster=<%d> tile=<%d> "
-						"set monitoring period=%dms",
-						cluster_id, tile_id, monitor_period_len);
+					             "set monitoring period=%dms",
+					             cluster_id, tile_id, monitor_period_len);
 				else
 					logger->Error("BootTiles: cluster=<%d> tile=<%d> "
-						"set monitoring period failed",
-						cluster_id, tile_id);
-			}
-			else
+					              "set monitoring period failed",
+					              cluster_id, tile_id);
+			} else
 				logger->Error("BootTiles: cluster=<%d> tile=<%d> unable to enable "
-					"profiling", cluster_id, tile_id);
+				              "profiling", cluster_id, tile_id);
 #endif
 		}
 		logger->Info("BootTiles: cluster=<%d> tile=<%d> initialized", cluster_id, tile_id);
@@ -363,19 +378,19 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 		int err = hn_get_tile_info(tile_id, &tile_info, cluster_id);
 		if (HN_SUCCEEDED != err) {
 			logger->Fatal("RegisterTiles: unable to get info about "
-				"cluster=<%d> tile=<%d> [error=%d]",
-				cluster_id, tile_id, err);
+			"cluster=<%d> tile=<%d> [error=%d]",
+			cluster_id, tile_id, err);
 			return PLATFORM_INIT_FAILED;
 		}
 
 		logger->Info("RegisterTiles: cluster=<%d> tile={id=%d family=%s model=%s}",
-			cluster_id, tile_id,
-			hn_to_str_unit_family(tile_info.unit_family),
-			hn_to_str_unit_model(tile_info.unit_model));
+		             cluster_id, tile_id,
+		             hn_to_str_unit_family(tile_info.unit_family),
+		             hn_to_str_unit_model(tile_info.unit_model));
 
 		MangoTile mt(tile_id,
-			(MangoTile::MangoUnitFamily_t)(tile_info.unit_family),
-			(MangoTile::MangoUnitModel_t)(tile_info.unit_model));
+		             (MangoTile::MangoUnitFamily_t)(tile_info.unit_family),
+		             (MangoTile::MangoUnitModel_t)(tile_info.unit_model));
 		sys.AddAccelerator(mt);
 
 		// Map the HN cluster to resource of type "GROUP"
@@ -391,7 +406,7 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 			pd_t::ProcessingElement pe(i , 0, 100, pd_t::PartitionType_t::MDEV);
 			pe.SetPrefix(mt.GetPath());
 			logger->Debug("RegisterTiles: cluster=<%d> tile=<%d> core=<%d>: path=%s",
-				cluster_id, tile_id, i, pe.GetPath().c_str());
+			              cluster_id, tile_id, i, pe.GetPath().c_str());
 			mt.AddProcessingElement(pe);
 			auto rsrc_ptr = ra.RegisterResource(pe.GetPath(), "", 100);
 			rsrc_ptr->SetModel(hn_to_str_unit_family(tile_info.unit_family));
@@ -404,7 +419,7 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 		std::string acc_pe_path(mt.GetPath() + ".pe0");
 		wm.Register(acc_pe_path);
 		logger->Debug("RegisterTiles: [%s] registered for power monitoring",
-			acc_pe_path.c_str());
+		              acc_pe_path.c_str());
 #endif
 
 		// Let now register the memories. Unfortunately, memories are not easy to be
@@ -412,14 +427,14 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 		unsigned int mem_attached = tile_info.memory_attached;
 		if (mem_attached != 0) {
 			logger->Debug("RegisterTiles: cluster=<%d> tile=<%d>: mem_attached=%d",
-				cluster_id, tile_id, mem_attached);
+			              cluster_id, tile_id, mem_attached);
 			// Register the memory attached if present and if not already registered
 			// Fixed mem_id to tile_id, it can be only a memory
 			// controller attached to a mango tile. So, the mem_id
 			// equals to the tile_id, since the HN does not set IDs
 			// for memories
 			ExitCode_t reg_err = RegisterMemoryBank(
-						group_prefix, cluster_id, tile_id, tile_id);
+			                         group_prefix, cluster_id, tile_id, tile_id);
 			if (reg_err) {
 				return reg_err;
 			}
@@ -435,10 +450,10 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::RegisterMemoryBank(
-		std::string const & group_prefix,
-		uint32_t cluster_id,
-		int tile_id,
-		int mem_id) noexcept {
+    std::string const & group_prefix,
+    uint32_t cluster_id,
+    int tile_id,
+    int mem_id) noexcept {
 	typedef PlatformDescription pd_t;	// Just for convenience
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
@@ -457,8 +472,8 @@ MangoPlatformProxy::RegisterMemoryBank(
 	int err = hn_get_memory_size(tile_id, &memory_size, cluster_id);
 	if (HN_SUCCEEDED != err) {
 		logger->Fatal("RegisterMemoryBank: cluster=<%d> tile=<%d> memory=<%d>: "
-			"missing information on memory node [error=%d]",
-			cluster_id, tile_id, mem_id, err);
+		"missing information on memory node [error=%d]",
+		cluster_id, tile_id, mem_id, err);
 		return PLATFORM_INIT_FAILED;
 	}
 
@@ -847,11 +862,17 @@ MangoPlatformProxy::MangoPartitionSkimmer::AssignMemory(
 	return SK_OK;
 }
 
+
+/****************************************************************************
+ *  MANGO Partition Skimmer                                                 *
+ ****************************************************************************/
+
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::Skim(
-		const TaskGraph &tg,
-		std::list<Partition>&part_list,
-		uint32_t hw_cluster_id) {
+    const TaskGraph &tg,
+    std::list<Partition>&part_list,
+    uint32_t hw_cluster_id)
+{
 	unsigned int num_mem_buffers = tg.BufferCount() + tg.TaskCount();
 	ExitCode_t res               = SK_OK;
 	auto it_task                 = tg.Tasks().begin();
@@ -874,15 +895,15 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		auto const & arch_it = it_task->second->Targets().find(arch);
 		if (arch_it == it_task->second->Targets().end()) {
 			logger->Warn("Skim: arch=%s binary not available",
-				GetStringFromArchType(arch));
+			             GetStringFromArchType(arch));
 			delete[] mem_buffers_size;
 			return SK_NO_PARTITION;
 		}
 		// MANGO architecture family...
-		uint32_t unit_family = ArchTypeToMangoType(
-				arch, it_task->second->GetThreadCount());
+		uint32_t unit_family = ArchTypeToMangoFamily(
+		                           arch, it_task->second->GetThreadCount());
 		logger->Debug("  -> Computing Resource %d, HN type %s",
-			i, hn_to_str_unit_family(unit_family));
+		              i, hn_to_str_unit_family(unit_family));
 
 		// Required memory amount per-kernel (executable + stack)
 		auto ksize = arch_it->second->BinarySize();
@@ -914,7 +935,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
 		FindUnitsSets(tg, hw_cluster_id, &tiles, &families_order, &num_sets);
 		logger->Debug("Skim: HN returned %d available units sets (partitions)",
-			num_sets);
+		              num_sets);
 
 		// - Find and reserve memory for every set. We cannot call
 		//   hn_find_memory more than once without allocate the memory
@@ -930,24 +951,32 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 			mem_buffers_addr[i]  = new uint32_t[num_mem_buffers];
 
 			// Find and allocate memory close the tiles/units in the set
-			bool mem_ret = FindMemoryAddresses(tg, hw_cluster_id, tiles[i],
-					mem_buffers_tiles[i], mem_buffers_addr[i]);
+			bool mem_ret = FindMemoryAddresses(
+			                   tg,
+			                   hw_cluster_id,
+			                   tiles[i],
+			                   mem_buffers_tiles[i],
+			                   mem_buffers_addr[i]);
 			if (!mem_ret) {
 				logger->Warn("Skim: filled %d (out of %d) partitions",
-					i, num_sets);
+				             i, num_sets);
 				if (i == 0) {
 					throw std::runtime_error(
-						"Skim: "
-						"unable to find available memory");
+					    "Skim: "
+					    "unable to find available memory");
 				}
 				break;
 			}
 
 			// Set partition information and append to list
 			Partition part = GetPartition(
-					tg, hw_cluster_id, tiles[i], families_order[i],
-					mem_buffers_tiles[i], mem_buffers_addr[i],
-					i); // partition id
+			                     tg,
+			                     hw_cluster_id,
+			                     tiles[i],
+			                     families_order[i],
+			                     mem_buffers_tiles[i],
+			                     mem_buffers_addr[i],
+			                     i); // partition id
 			part_list.push_back(part);
 			logger->Debug("Skim: partition id=%d added to the list", i);
 		}
@@ -959,21 +988,22 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 				for (unsigned int j = 0; j < num_mem_buffers; j++) {
 					std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
 					int res = hn_release_memory(
-						mem_buffers_tiles[i][j], mem_buffers_addr[i][j],
-						mem_buffers_size[j], hw_cluster_id);
+					              mem_buffers_tiles[i][j],
+					              mem_buffers_addr[i][j],
+					              mem_buffers_size[j],
+					              hw_cluster_id);
 					if (res != HN_SUCCEEDED) {
 						logger->Error("Skim: "
-							"tile=%d address=%p size=%d release error",
-							mem_buffers_tiles[i][j],
-							mem_buffers_addr[i][j],
-							mem_buffers_size[j]);
-					}
-					else {
+						              "tile=%d address=%p size=%d release error",
+						              mem_buffers_tiles[i][j],
+						              mem_buffers_addr[i][j],
+						              mem_buffers_size[j]);
+					} else {
 						logger->Debug("Skim: "
-							"tile=%d address=%p size=%d released",
-							mem_buffers_tiles[i][j],
-							mem_buffers_addr[i][j],
-							mem_buffers_size[j]);
+						              "tile=%d address=%p size=%d released",
+						              mem_buffers_tiles[i][j],
+						              mem_buffers_addr[i][j],
+						              mem_buffers_size[j]);
 					}
 				}
 			}
@@ -981,8 +1011,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 			delete[] mem_buffers_tiles[i];
 			delete[] mem_buffers_addr[i];
 		}
-	}
-	catch (const std::runtime_error &err) {
+	} catch (const std::runtime_error &err) {
 		logger->Error("Skim: %s", err.what());
 		res = SK_NO_PARTITION;
 	}
@@ -1013,10 +1042,9 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 
 	if (mem_buffers_size != nullptr) {
 		delete[] mem_buffers_size;
-	}
-	else {
+	} else {
 		logger->Warn("Skim: unexpected null pointer: mem_buffers_size"
-			" [libhn suspect corruption]");
+		             " [libhn suspect corruption]");
 	}
 
 	return res;
@@ -1024,8 +1052,8 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
-		TaskGraph &tg,
-		const Partition &partition) noexcept {
+    TaskGraph & tg,
+    const Partition & partition) noexcept {
 
 	// Set the HW cluster including the mapped resources
 	uint32_t hw_cluster_id = partition.GetClusterId();
