@@ -53,13 +53,14 @@ class Application;
 class WorkingMode;
 
 /** Shared pointer to Working Mode descriptor */
-typedef std::shared_ptr<WorkingMode> AwmPtr_t;
+using AwmPtr_t = std::shared_ptr<WorkingMode>;
 /** Vector of shared pointer to WorkingMode*/
-typedef std::vector<AwmPtr_t> AwmPtrVect_t;
+using AwmPtrVect_t = std::vector<AwmPtr_t>;
 /** Shared pointer to Constraint object */
-typedef std::shared_ptr<br::ResourceConstraint> ConstrPtr_t;
+using ConstrPtr_t = std::shared_ptr<br::ResourceConstraint>;
 /** Map of Constraints pointers, with the resource path as key*/
-typedef std::map<ResourcePathPtr_t, ConstrPtr_t> ConstrMap_t;
+using ConstrMap_t = std::map<ResourcePathPtr_t, ConstrPtr_t>;
+
 
 /**
  * @brief Attribute structure for plugin specific data
@@ -118,6 +119,8 @@ public:
 		std::map<uint32_t, MappingData> tasks;
 		std::map<uint32_t, MappingData> buffers;
 	};
+
+	using TaskGraphMappingsMap_t = std::map<uint32_t, TaskGraphMapping>;
 
 	/*
 	 * @brief Constructor
@@ -282,7 +285,7 @@ private:
 	std::map<uint32_t, TaskRequirements> tg_reqs;
 
 	/** Design-time task graph mappings */
-	std::map<uint32_t, TaskGraphMapping> tg_mappings;
+	TaskGraphMappingsMap_t tg_mappings;
 
 
 	/** AWM attribute type flag */
