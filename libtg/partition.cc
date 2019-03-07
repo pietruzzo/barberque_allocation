@@ -22,14 +22,23 @@
 namespace bbque {
 
 
-	int Partition::GetMemoryBank(BufferPtr_t buff) const {
+int Partition::GetMemoryBank(BufferPtr_t buff) const
+{
+	try {
 		return buffers_map.at(buff->Id());	// It returns out_of_range exception if not present
+	} catch (std::exception & ex) {
+		return -1;
 	}
+}
 
-
-	int Partition::GetUnit(TaskPtr_t task) const {
-		return tasks_map.at(task->Id());	// It returns out_of_range exception if not present
+int Partition::GetUnit(TaskPtr_t task) const
+{
+	try {
+		return tasks_map.at(task->Id());
+	} catch (std::exception & ex) {
+		return -1;
 	}
+}
 
 	uint32_t Partition::GetBufferAddress(BufferPtr_t buff) const {
 		return buffers_addr_map.at(buff->Id());
