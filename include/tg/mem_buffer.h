@@ -22,14 +22,16 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
-namespace bbque {
+namespace bbque
+{
 
 /**
  * \class Buffer
  * \brief This class represents a memory buffer from which one or more
  * tasks can read or write into
  */
-class Buffer {
+class Buffer
+{
 
 public:
 
@@ -58,17 +60,23 @@ public:
 	/**
 	 * \brief Identification number
 	 */
-	inline uint32_t Id() const { return id; }
+	inline uint32_t Id() const {
+		return id;
+	}
 
 	/**
 	 * \brief Size of the buffer
 	 */
-	inline size_t Size() const { return size_in_bytes; }
+	inline size_t Size() const {
+		return size_in_bytes;
+	}
 
 	/**
 	 * \brief Physical address
 	 */
-	inline uint32_t PhysicalAddress() const { return phy_addr; }
+	inline uint32_t PhysicalAddress() const {
+		return phy_addr;
+	}
 
 	/**
 	 * \brief Set the physical address
@@ -155,13 +163,17 @@ public:
 	 * purposes
 	 * \return The event id number
 	 */
-	inline uint32_t Event() const { return event_id; }
+	inline uint32_t Event() const {
+		return event_id;
+	}
 
 	/**
 	 * \brief Sert the event associated to the buffer
 	 * \param id The event id number
 	 */
-	inline void SetEvent(uint32_t id) { event_id = id; }
+	inline void SetEvent(uint32_t id) {
+		event_id = id;
+	}
 
 
 private:
