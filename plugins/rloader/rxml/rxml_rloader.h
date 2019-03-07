@@ -203,9 +203,9 @@ private:
 	 * all the tasks or the buffers
 	 */
 	void LoadMappingData(
-			rapidxml::xml_node<> * obj_elem,
-			std::string const & obj_name,
-			std::map<uint32_t, ba::Recipe::MappingData> mapping_map);
+	    rapidxml::xml_node<> * obj_elem,
+	    std::string const & obj_name,
+	    std::map<uint32_t, ba::Recipe::MappingData> & mapping_map);
 
 
 	/**
