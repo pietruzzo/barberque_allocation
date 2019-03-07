@@ -124,6 +124,7 @@ private:
 	    std::string const & group_prefix,
 	    uint32_t cluster_id, int tile_id, int mem_id) noexcept;
 
+	ExitCode_t SetProcessorArchInfo(TaskGraph & tg) noexcept;
 
 	class MangoPartitionSkimmer : public PartitionSkimmer
 	{
@@ -143,7 +144,6 @@ private:
 		    const TaskGraph & tg,
 		    const Partition & partition) noexcept override final;
 
-		ExitCode_t AssignMemory(const TaskGraph &tg, const Partition &partition) noexcept;
 	private:
 		std::unique_ptr<bu::Logger> logger;
 		std::recursive_mutex hn_mutex;

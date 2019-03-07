@@ -31,7 +31,437 @@ namespace pp
 
 std::unique_ptr<bu::Logger> logger;
 
-MangoPlatformProxy * MangoPlatformProxy::GetInstance() {
+
+
+/* It follows some static local function not member of any class: we selected this approach in order
+   to avoid to add the hn.h in the header file mango_platform_proxy.h. This was done in order to
+   avoid the pollution of the global namespace of Barbeque with all the mess of the HN library.
+   This is definetely not elegant, so maybe we want to FIXME this in the future. */
+
+/**
+ * @brief From the TG we have the information of threads number and the architecture type, but
+ *	  we have to pass in aggregated form to the HN library, so this function will convert
+ *	  to HN library type
+ */
+static uint32_t ArchTypeToMangoFamily(ArchType type, unsigned int nr_thread)
+{
+	UNUSED(nr_thread);
+
+	switch (type) {
+	case ArchType::PEAK:
+		return HN_TILE_FAMILY_PEAK;
+	case ArchType::NUPLUS:
+		return HN_TILE_FAMILY_NUPLUS;
+	case ArchType::DCT:
+		return HN_TILE_FAMILY_DCT;
+	case ArchType::TETRAPOD:
+		return HN_TILE_FAMILY_TETRAPOD;
+
+	case ArchType::GN:
+		return HN_TILE_FAMILY_GN;	// In GN emulation case we are not interested in the real time
+		// TODO add other architectures
+	default:
+		throw std::runtime_error("Unsupported architecture");
+	}
+}
+
+static ArchType MangoFamilyToArchType(int mango_arch_type)
+{
+	switch (mango_arch_type) {
+	case HN_TILE_FAMILY_PEAK:
+		return ArchType::PEAK;
+	case HN_TILE_FAMILY_NUPLUS:
+		return ArchType::NUPLUS;
+	case HN_TILE_FAMILY_DCT:
+		return ArchType::DCT;
+	case HN_TILE_FAMILY_TETRAPOD:
+		return ArchType::TETRAPOD;
+
+	case HN_TILE_FAMILY_GN:
+		return ArchType::GN;
+		// TODO add other architectures
+	default:
+		throw std::runtime_error("Unsupported architecture");
+	}
+}
+
+/**
+ * @brief This function gets sets of units for running the tasks in the TG
+ */
+static void FindUnitsSets(
+    const TaskGraph &tg,
+    uint32_t hw_cluster_id,
+    unsigned int ***tiles,
+    unsigned int ***families_order,
+    unsigned int *num_sets)
+{
+	int num_tiles = tg.TaskCount();
+	unsigned int *tiles_family = new unsigned int[num_tiles];
+
+	// Fill the computing resources requested
+	int i=0;
+	for (auto t : tg.Tasks()) {
+#ifndef CONFIG_LIBMANGO_GN
+		if (t.second->GetAssignedArch() == ArchType::GN) {
+			logger->Error("Tile id=%i is of type GN but BarbequeRTRM is not "
+			              "compiled in GN emulation mode."
+			              "This will probably lead to an allocation failure.", i);
+		}
+#endif
+		tiles_family[i++] = ArchTypeToMangoFamily(
+		                        t.second->GetAssignedArch(),
+		                        t.second->GetThreadCount());
+	}
+
+	int res = hn_find_units_sets(
+	              0, num_tiles, tiles_family, tiles, families_order,num_sets,
+	              hw_cluster_id);
+
+	if (tiles_family == nullptr) {
+		logger->Warn("FindUnitsSets: unexpected null pointer (tiles_family)"
+		             " [libhn suspect corruption]");
+		return;
+	}
+
+	delete[] tiles_family;
+	if (res != HN_SUCCEEDED)
+		throw std::runtime_error("FindUnitsSets: Unable to find units sets");
+}
+
+
+static bool ReleaseProcessingUnits(const TaskGraph & tg, const Partition & partition)
+{
+	uint32_t hw_cluster_id = partition.GetClusterId();
+
+	// Release units
+	unsigned int num_tiles = tg.TaskCount();
+	uint32_t *units = new uint32_t[num_tiles];
+	int i = 0;
+	for (auto task : tg.Tasks()) {
+		auto arch = task.second->GetAssignedArch();
+		units[i] = partition.GetUnit(task.second);
+		logger->Debug("ReleaseProcessingUnits: task %d released tile %u for kernel %s",
+		              task.second->Id(), units[i], GetStringFromArchType(arch));
+		i++;
+	}
+
+	if (hn_release_units_set(num_tiles, units, hw_cluster_id) != HN_SUCCEEDED) {
+		logger->Error("ReleaseProcessingUnits: error while releasing the units set");
+		return false;
+	}
+
+	if (units == nullptr) {
+		logger->Fatal("ReleaseProcessingUnits: unexpected null pointer: units"
+		              " [libhn suspect corruption]");
+		return false;
+	}
+
+	delete[] units;
+
+	return true;
+}
+
+
+/**
+ * @brief This function gets a set of memories for the buffers in the TG
+ */
+static bool FindMemoryAddresses(
+    const TaskGraph &tg,
+    uint32_t hw_cluster_id,
+    unsigned int *tiles_set,
+    unsigned int *mem_buffers_tiles,
+    unsigned int *mem_buffers_addr)
+{
+
+	// We request the number of shared buffer + the number of task, since we have
+	// to load also the kernels in memory
+	int num_mem_buffers = tg.BufferCount() + tg.TaskCount();
+	unsigned int *mem_buffers_size = new unsigned int[num_mem_buffers];
+
+	int i=0;
+	for (auto b : tg.Buffers()) {
+		bbque_assert(i < num_mem_buffers);
+		mem_buffers_size[i++] = b.second->Size();
+	}
+
+	int filled_buffers = i;
+
+	// We now register the mapping task-buffer and we allocate a per-task buffer
+	// to allocate the kernel image.
+	// The bandwidth is not currently managed by the HN library, so we use only
+	// a boolean value to indicate that the buffer uses that task and vice versa.
+	i=0;
+	for (auto t : tg.Tasks()) {
+		// Extra buffer for kernel and stack memory
+		auto arch =  t.second->GetAssignedArch();
+		auto ksize = t.second->Targets()[arch]->BinarySize();
+		auto ssize = t.second->Targets()[arch]->StackSize();
+		int kimage_index = filled_buffers + i;
+		mem_buffers_size[kimage_index] = ksize + ssize;
+		i++;
+	}
+
+	// Find and pre-allocate memory space for kernels and buffers
+	for (i = 0; i < num_mem_buffers; i++) {
+		unsigned int tile = 0;
+		if (i >= filled_buffers) {
+			// Let's set the kernel buffer close to the tile where the task will run on
+			tile = tiles_set[i - filled_buffers];
+		} else {
+			// for input and output buffers.
+			// FIXME Better to allocate the buffer close to the
+			// tiles the unit that are using it will be mapped on
+			tile = tiles_set[0];
+		}
+
+		logger->Debug("FindMemoryAddresses: find "
+		              "cluster=%d tile=%d, buffer=%d, mem_buffer_size=%d",
+		              hw_cluster_id, tile, i, mem_buffers_size[i]);
+
+		// Find a memory space for allocating the buffer or kernel
+		int res = hn_find_memory(
+		              tile,
+		              mem_buffers_size[i],
+		              &mem_buffers_tiles[i],
+		              &mem_buffers_addr[i],
+		              hw_cluster_id);
+		if (res != HN_SUCCEEDED) {
+			logger->Error("FindMemoryAddresses: unable to find memory");
+			return false;
+		}
+
+		// TRICK we allocated memory areas when finding them, in order
+		// to get different areas (see try above),
+		// Next, when setting the partition it will be allocated again
+		res = hn_allocate_memory(
+		          mem_buffers_tiles[i],
+		          mem_buffers_addr[i],
+		          mem_buffers_size[i],
+		          hw_cluster_id);
+		if (res != HN_SUCCEEDED) {
+			logger->Error("FindMemoryAddresses: unable to allocate memory");
+			return false;
+		}
+
+		logger->Debug("FindMemoryAddresses: found tile=%d allocation address=%p",
+		              mem_buffers_tiles[i], mem_buffers_addr[i]);
+	}
+
+	if (mem_buffers_size == nullptr) {
+		logger->Warn("FindMemoryAddresses: unexpected null pointer: mem_buffers_size"
+		             " [libhn suspect corruption]");
+		return false;
+	}
+
+	delete[] mem_buffers_size;
+	return true;
+}
+
+static Partition GetPartition(
+    const TaskGraph &tg,
+    unsigned int hw_cluster_id,
+    unsigned int *tiles,
+    unsigned int *families_order,
+    unsigned int *mem_buffers_tiles,
+    unsigned int *mem_buffers_addr,
+    int partition_id) noexcept {
+
+	auto it_task      = tg.Tasks().begin();
+	int tasks_size    = tg.Tasks().size();
+	auto it_buff      = tg.Buffers().begin();
+	int buff_size     = tg.Buffers().size();
+	bool *tile_mapped = new bool[tasks_size];
+	std::fill_n(tile_mapped, tasks_size, false);
+
+	// The partition has a cluster scope
+	Partition part(partition_id, hw_cluster_id);
+	logger->Debug("GetPartition: id=%d filling mapping information", partition_id);
+
+	// FIXME UPV -> POLIMI do it in a more efficient way if required
+	//       We have to map the task to a tile according to its family type
+	for (int j=0; j < tasks_size; j++) {
+		uint32_t family = ArchTypeToMangoFamily(
+		    it_task->second->GetAssignedArch(),
+		    it_task->second->GetThreadCount());
+
+		// look for the family type of the task
+		int k = 0;
+		for (k = 0; k < tasks_size; k++) {
+			if ((families_order[k] == family) && (!tile_mapped[k])) {
+				tile_mapped[k] = true;
+				break;
+			}
+		}
+		// we are always going to find an unmapped tile as the sets provided by
+		// hn_find_units_sets hnlib function return sets of task_size tiles
+		part.MapTask(it_task->second, tiles[k],
+		             mem_buffers_tiles[buff_size + j],
+		             mem_buffers_addr[buff_size + j]);
+		it_task++;
+	}
+
+	delete[] tile_mapped;
+	bbque_assert(it_task == tg.Tasks().end());
+	for (int j=0; j < buff_size; j++) {
+		part.MapBuffer(it_buff->second, mem_buffers_tiles[j], mem_buffers_addr[j]);
+		it_buff++;
+	}
+	bbque_assert(it_buff == tg.Buffers().end());
+	logger->Debug("GetPartition: id=%d mapping information filled",
+	              partition_id);
+
+	return part;
+}
+
+
+static bool AssignMemory(
+    const TaskGraph &tg,
+    const Partition &partition) noexcept {
+
+	uint32_t hw_cluster_id = partition.GetClusterId();
+
+	// Assign a memory area to buffers
+	for (auto & buffer: tg.Buffers()) {
+		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
+		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
+
+		buffer.second->SetMemoryBank(memory_bank);
+		buffer.second->SetPhysicalAddress(phy_addr);
+
+		int res = hn_allocate_memory(
+		    memory_bank, phy_addr, buffer.second->Size(), hw_cluster_id);
+		if (res != HN_SUCCEEDED) {
+			logger->Error("AssignMemory: error while allocating space for "
+			"buffer id=%d size=%lu [bank=%d address=%p error=%d]",
+			buffer.second->Id(),
+			buffer.second->Size(),
+			memory_bank,
+			phy_addr,
+			res);
+			return false;
+		}
+		logger->Info("AssignMemory: buffer id=%d allocated at memory id=%d [address=0x%x]",
+		             buffer.second->Id(), memory_bank, phy_addr);
+	}
+
+	// Assign a memory area to kernels (executable and stack)
+	for (auto & task: tg.Tasks()) {
+		auto arch = task.second->GetAssignedArch();
+		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
+		uint32_t mem_tile    = partition.GetKernelBank(task.second);
+		auto     ksize       = task.second->Targets()[arch]->BinarySize();
+		auto     ssize       = task.second->Targets()[arch]->StackSize();
+		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
+		task.second->Targets()[arch]->SetAddress(phy_addr);
+
+		int res = hn_allocate_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id);
+		if (res != HN_SUCCEEDED) {
+			logger->Error("AssignMemory: error while allocating space for"
+			              " kernel id=%d size=%d [bank=%d address=%p error=%d]",
+			              task.second->Id(), ksize + ssize, mem_tile, phy_addr, res);
+			return false;
+		}
+		logger->Info("AssignMemory: task id=%d kernel for %s size=%lu "
+		             "allocated [mem_id=%u address=%p]",
+		             task.second->Id(), GetStringFromArchType(arch),
+		             ksize + ssize, mem_tile, phy_addr);
+	}
+
+	// Now, we have to ask for the location in TileReg of events
+	// TODO: Manage the UNIZG case
+	// TODO: what to do in case of failure?
+	// TODO: Policy for tile selection
+	for ( auto event : tg.Events()) {
+		uint32_t phy_addr;
+		int err = hn_get_synch_id (&phy_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE,
+		                           hw_cluster_id);
+		if (err != HN_SUCCEEDED) {
+			logger->Error("AssignMemory: cannot find sync register for event %d",
+			              event.second->Id());
+
+			// TODO we should deallocate the other assigned events?
+			return false;
+		}
+
+		logger->Debug("AssignMemory: event %d assigned to ID 0x%x", event.second->Id(), phy_addr);
+		event.second->SetPhysicalAddress(phy_addr);
+	}
+
+	return true;
+}
+
+
+static bool ReleaseMemory(
+    const TaskGraph &tg,
+    const Partition &partition) noexcept {
+
+	uint32_t hw_cluster_id = partition.GetClusterId();
+
+	// Release events reservation
+	for ( const auto &event : tg.Events()) {
+		bbque_assert(event.second);
+		uint32_t phy_addr = event.second->PhysicalAddress();
+		logger->Debug("ReleaseMemory: releasing event %d (ID 0x%x)",
+		event.second->Id(), phy_addr);
+
+		int err = hn_release_synch_id (phy_addr, hw_cluster_id);
+		if(err != HN_SUCCEEDED) {
+			logger->Error("ReleaseMemory: unable to release event %d (ID 0x%x)",
+			event.second->Id(), phy_addr);
+			return false;
+		}
+	}
+
+	// Release memory buffers
+	for ( auto buffer : tg.Buffers()) {
+		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
+		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
+		uint32_t size        = buffer.second->Size();;
+		logger->Debug("ReleaseMemory: buffer %d is released at bank %d [address=0x%x]",
+		              buffer.second->Id(), memory_bank, phy_addr);
+		buffer.second->SetMemoryBank(memory_bank);
+		buffer.second->SetPhysicalAddress(phy_addr);
+
+		if (hn_release_memory(memory_bank, phy_addr, size, hw_cluster_id) != HN_SUCCEEDED) {
+			logger->Error("ReleaseMemory: error while releasing buffer %d",
+			              buffer.second->Id());
+			return false;
+		}
+	}
+
+	// Release kernel binary memory areas
+	for ( auto task : tg.Tasks()) {
+		auto arch = task.second->GetAssignedArch();
+		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
+		uint32_t mem_tile    = partition.GetKernelBank(task.second);
+		auto     ksize       = task.second->Targets()[arch]->BinarySize();
+		auto     ssize       = task.second->Targets()[arch]->StackSize();
+		logger->Debug("ReleaseMemory: task %d released space for kernel %s"
+		              " [bank=%d, address=0x%x size=%lu]",
+		              task.second->Id(),
+		              GetStringFromArchType(arch),
+		              mem_tile, phy_addr, ksize + ssize);
+		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
+		task.second->Targets()[arch]->SetAddress(phy_addr);
+
+		if (hn_release_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id) != HN_SUCCEEDED) {
+			logger->Error("ReleaseMemory: error while releasing task %d",
+			              task.second->Id());
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+
+/****************************************************************************
+ *  MANGO Platform Proxy                                                    *
+ ****************************************************************************/
+
+MangoPlatformProxy * MangoPlatformProxy::GetInstance()
+{
 	static MangoPlatformProxy * instance;
 	if (instance == nullptr)
 		instance = new MangoPlatformProxy();
@@ -166,8 +596,68 @@ MangoPlatformProxy::MapResources(
 	UNUSED(pres);
 	UNUSED(excl);
 
-	// This method is empty and this is unusual in Barbeque, however in Mango we use Skimmers
-	// to get the list of partitions and set them
+	ba::AppPtr_t papp(static_cast<ba::Application *>(psched.get()));
+
+	// This method is empty and this is unusual in BarbequeRTRM, however in
+	// MANGO we use skimmers to get the list of partitions and set them
+	if (papp->GetPartition() != nullptr) {
+		logger->Debug("MapResources: [%s] already performed via partition skimmer", papp->StrId());
+		return PLATFORM_OK;
+	}
+
+	auto tg = papp->GetTaskGraph();
+	if (tg == nullptr) {
+		logger->Error("MapResources: [%s] task-graph corrupted?", papp->StrId());
+		return PLATFORM_MAPPING_FAILED;
+	}
+
+	// Set the architecture type for each assigned processor
+	ExitCode_t ret = SetProcessorArchInfo(*tg);
+	if (ret != PLATFORM_OK) {
+		logger->Error("MapResources: [%s] failed while getting processor architecture", papp->StrId());
+		return ret;
+	}
+
+	// Retrieve available units from HN library
+	uint32_t hw_cluster_id        = tg->GetCluster();
+	unsigned int ** tiles          = nullptr;
+	unsigned int ** families_order = nullptr;
+	unsigned int num_sets         = 0;
+	FindUnitsSets(*tg, hw_cluster_id, &tiles, &families_order, &num_sets);
+
+	// Fill memory addressess
+	unsigned int * mem_buffers_tiles;
+	unsigned int * mem_buffers_addr;
+
+
+
+
+	// Send back to the application library the mapped task-graph
+	papp->SetTaskGraph(tg);
+
+
+	return PLATFORM_OK;
+}
+
+
+MangoPlatformProxy::ExitCode_t
+MangoPlatformProxy::SetProcessorArchInfo(TaskGraph & tg) noexcept {
+	uint32_t cluster_id = tg.GetCluster();
+
+	for (auto task_entry : tg.Tasks()) {
+		hn_tile_info_t tile_info;
+		int err = hn_get_tile_info(
+		    task_entry.second->GetMappedProcessor(),
+		    &tile_info,
+		    cluster_id);
+		if (err != HN_SUCCEEDED) {
+			logger->Error("SetProcessorArchInfo: cannot retrieve tile info");
+			return PLATFORM_GENERIC_ERROR;
+		}
+
+		auto arch = MangoFamilyToArchType(tile_info.unit_family);
+		task_entry.second->SetAssignedArch(arch);
+	}
 
 	return PLATFORM_OK;
 }
@@ -291,7 +781,7 @@ MangoPlatformProxy::BootTiles_PEAK(uint32_t cluster_id, int tile_id) noexcept {
 
 	// Allocate memory for PEAK OS
 	logger->Debug("BootTiles_PEAK: cluster=<%d> tile=<%d> allocating memory [BASE_ADDR=0x%x SIZE=%d]...",
-		cluster_id, tile_id, base_addr, req_size);
+	cluster_id, tile_id, base_addr, req_size);
 	err = hn_allocate_memory(tile_memory, base_addr, req_size, cluster_id);
 	if (HN_SUCCEEDED != err) {
 		logger->Error("BootTiles_PEAK: unable to allocate memory for tile=%d", tile_id);
@@ -300,7 +790,7 @@ MangoPlatformProxy::BootTiles_PEAK(uint32_t cluster_id, int tile_id) noexcept {
 
 	// Load PEAK OK
 	logger->Debug("BootTiles_PEAK: loading PEAK OS in memory id=%d [address=0x%x]...",
-		tile_memory, base_addr);
+	tile_memory, base_addr);
 	allocated_resources_peakos.push_back(std::make_pair(tile_memory, base_addr));
 
 	err = hn_boot_unit(tile_id, tile_memory, base_addr, MANGO_PEAK_PROTOCOL, MANGO_PEAK_OS, cluster_id);
@@ -309,7 +799,7 @@ MangoPlatformProxy::BootTiles_PEAK(uint32_t cluster_id, int tile_id) noexcept {
 		return PLATFORM_LOADING_FAILED;
 	}
 	logger->Info("BootTiles_PEAK: cluster=<%d> tile=<%d> [PEAK_OS:%s] [PEAK_PROT:%s] booted",
-		cluster_id, tile_id, MANGO_PEAK_OS, MANGO_PEAK_PROTOCOL);
+	cluster_id, tile_id, MANGO_PEAK_OS, MANGO_PEAK_PROTOCOL);
 
 	return PLATFORM_OK;
 }
@@ -321,7 +811,7 @@ MangoPlatformProxy::BootTiles(uint32_t cluster_id) noexcept {
 		int err = hn_get_tile_info(tile_id, &tile_info, cluster_id);
 		if (HN_SUCCEEDED != err) {
 			logger->Fatal("BootTiles: unable to get info from tile=<%d> [error=%d].",
-				tile_id, err);
+			tile_id, err);
 			return PLATFORM_INIT_FAILED;
 		}
 
@@ -458,7 +948,7 @@ MangoPlatformProxy::RegisterMemoryBank(
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	logger->Debug("RegisterMemoryBank: cluster=<%d> tile=<%d> memory=<%d>",
-		cluster_id, tile_id, mem_id);
+	cluster_id, tile_id, mem_id);
 	bbque_assert(mem_id > -1 && mem_id < MANGO_MAX_MEMORIES);
 	if (found_memory_banks.test(mem_id)) {
 		// We have already registered this memory, nothing to do
@@ -495,36 +985,6 @@ MangoPlatformProxy::RegisterMemoryBank(
 }
 
 
-/* It follows some static local function not member of any class: we selected this approach in order
-   to avoid to add the hn.h in the header file mango_platform_proxy.h. This was done in order to
-   avoid the pollution of the global namespace of Barbeque with all the mess of the HN library.
-   This is definetely not elegant, so maybe we want to FIXME this in the future. */
-
-/**
- * @brief From the TG we have the information of threads number and the architecture type, but
- *	  we have to pass in aggregated form to the HN library, so this function will convert
- *	  to HN library type
- */
-static uint32_t ArchTypeToMangoType(ArchType type, unsigned int nr_thread) {
-	UNUSED(nr_thread);
-
-	switch (type) {
-		case ArchType::PEAK:
-			return HN_TILE_FAMILY_PEAK;
-		case ArchType::NUPLUS:
-			return HN_TILE_FAMILY_NUPLUS;
-		case ArchType::DCT:
-			return HN_TILE_FAMILY_DCT;
-		case ArchType::TETRAPOD:
-			return HN_TILE_FAMILY_TETRAPOD;
-
-		case ArchType::GN:
-			return HN_TILE_FAMILY_GN;	// In GN emulation case we are not interested in the real time
-		// TODO add other architectures
-		default:
-			throw std::runtime_error("Unsupported architecture");
-	}
-}
 
 /**
  * @brief This function basically converts a TaskGraph object in the request struct of HN library
@@ -552,7 +1012,7 @@ static hn_st_request_t FillReq(const TaskGraph &tg) __attribute__((unused)) {
 	// Fill the computing resources requested
 	i=0;
 	for (auto t : tg.Tasks()) {
-		req.comp_rsc_types[i++] = ArchTypeToMangoType(t.second->GetAssignedArch(),
+		req.comp_rsc_types[i++] = ArchTypeToMangoFamily(t.second->GetAssignedArch(),
 							      t.second->GetThreadCount());
 	}
 
@@ -610,257 +1070,6 @@ static hn_st_request_t FillReq(const TaskGraph &tg) __attribute__((unused)) {
 	return req;
 }
 */
-
-
-/****************************************************************************
- *  MANGO Partition Skimmer                                                 *
- ****************************************************************************/
-
-
-/**
- * @brief This function gets sets of units for running the tasks in the TG
- */
-static void FindUnitsSets(
-		const TaskGraph &tg,
-		uint32_t hw_cluster_id,
-		unsigned int ***tiles,
-		unsigned int ***families_order,
-		unsigned int *num_sets) {
-
-	int num_tiles = tg.TaskCount();
-	unsigned int *tiles_family = new unsigned int[num_tiles];  // FIXME UPV -> POLIMI static memory better ?
-
-	// Fill the computing resources requested
-	int i=0;
-	for (auto t : tg.Tasks()) {
-#ifndef CONFIG_LIBMANGO_GN
-		if (t.second->GetAssignedArch() == ArchType::GN) {
-			logger->Error("Tile %i is of type GN but BarbequeRTRM is not compiled in GN emulation mode."
-			"This will probably lead to an allocation failure.", i);
-		}
-#endif
-		tiles_family[i++] = ArchTypeToMangoType(
-			t.second->GetAssignedArch(), t.second->GetThreadCount());
-	}
-
-	int res = hn_find_units_sets(0,
-			num_tiles, tiles_family, tiles, families_order,
-			num_sets, hw_cluster_id);
-
-	if (tiles_family == nullptr) {
-		logger->Warn("FindUnitsSets: unexpected null pointer (tiles_family)"
-			" [libhn suspect corruption]");
-		return;
-	}
-
-	delete[] tiles_family;
-	if (res != HN_SUCCEEDED)
-		throw std::runtime_error("Unable to find units sets");
-}
-
-/**
- * @brief This function gets a set of memories for the buffers in the TG
- */
-static bool FindMemoryAddresses(
-		const TaskGraph &tg,
-		uint32_t hw_cluster_id,
-		unsigned int *tiles_set,
-        unsigned int *mem_buffers_tiles,
-        unsigned int *mem_buffers_addr) {
-
-	// We request the number of shared buffer + the number of task, since we have to load also
-	// the kernels in memory
-	int num_mem_buffers = tg.BufferCount() + tg.TaskCount();
-	unsigned int *mem_buffers_size = new unsigned int[num_mem_buffers];
-
-	int i=0;
-	for (auto b : tg.Buffers()) {
-		bbque_assert(i < num_mem_buffers);
-		mem_buffers_size[i++] = b.second->Size();
-	}
-
-	int filled_buffers = i;
-
-	// We now register the mapping task-buffer and we allocate a per-task buffer to allocate the
-	// kernel image.
-	// The bandwidth is not currently managed by the HN library, so we use only a boolean value
-	// to indicate that the buffer uses that task and vice versa.
-	i=0;
-	for (auto t : tg.Tasks()) {
-		// Extra buffer for kernel and stack memory
-		auto arch =  t.second->GetAssignedArch();
-		auto ksize = t.second->Targets()[arch]->BinarySize();
-		auto ssize = t.second->Targets()[arch]->StackSize();
-		int kimage_index = filled_buffers + i;
-		mem_buffers_size[kimage_index] = ksize + ssize;
-		i++;
-	}
-
-	// Find and pre-allocate memory space for kernels and buffers
-	for (i = 0; i < num_mem_buffers; i++) {
-		unsigned int tile = 0;
-		if (i >= filled_buffers) {
-			// Let's set the kernel buffer close to the tile where the task will run on
-			tile = tiles_set[i - filled_buffers];
-		} else {
-			// for input and output buffers.
-			// FIXME Better to allocate the buffer close to the
-			// tiles the unit that are using it will be mapped on
-			tile = tiles_set[0];
-		}
-
-		logger->Debug("FindMemoryAddresses: find "
-				"cluster=%d tile=%d, buffer=%d, mem_buffer_size=%d",
-			hw_cluster_id, tile, i, mem_buffers_size[i]);
-
-		// Find a memory space for allocating the buffer or kernel
-		int res = hn_find_memory(
-				tile, mem_buffers_size[i],
-				&mem_buffers_tiles[i], &mem_buffers_addr[i],
-				hw_cluster_id);
-		if (res != HN_SUCCEEDED) {
-			logger->Error("FindMemoryAddresses: unable to find memory");
-			return false;
-		}
-
-		// TRICK we allocated memory areas when finding them, in order
-		// to get different areas (see try above),
-		// Next, when setting the partition it will be allocated again
-		res = hn_allocate_memory(
-				mem_buffers_tiles[i], mem_buffers_addr[i],
-				mem_buffers_size[i],
-				hw_cluster_id);
-		if (res != HN_SUCCEEDED) {
-			logger->Error("FindMemoryAddresses: unable to allocate memory");
-			return false;
-		}
-
-		logger->Debug("FindMemoryAddresses: found tile=%d allocation address=%p",
-			mem_buffers_tiles[i], mem_buffers_addr[i]);
-	}
-
-	if (mem_buffers_size == nullptr) {
-		logger->Warn("FindMemoryAddresses: unexpected null pointer: mem_buffers_size"
-			" [libhn suspect corruption]");
-		return false;
-	}
-
-	delete[] mem_buffers_size;
-	return true;
-}
-
-static Partition GetPartition(
-		const TaskGraph &tg,
-		unsigned int hw_cluster_id,
-		unsigned int *tiles,
-		unsigned int *families_order,
-		unsigned int *mem_buffers_tiles,
-		unsigned int *mem_buffers_addr,
-		int partition_id) noexcept {
-
-	auto it_task      = tg.Tasks().begin();
-	int tasks_size    = tg.Tasks().size();
-	auto it_buff      = tg.Buffers().begin();
-	int buff_size     = tg.Buffers().size();
-	bool *tile_mapped = new bool[tasks_size];
-	std::fill_n(tile_mapped, tasks_size, false);
-
-	// The partition has a cluster scope
-	Partition part(partition_id, hw_cluster_id);
-	logger->Debug("GetPartition: id=%d filling mapping information",
-		partition_id);
-
-	// FIXME UPV -> POLIMI do it in a more efficient way if required
-	//       We have to map the task to a tile according to its family type
-	for (int j=0; j < tasks_size; j++) {
-		uint32_t family = ArchTypeToMangoType(
-			it_task->second->GetAssignedArch(),
-			it_task->second->GetThreadCount());
-
-		// look for the family type of the task
-		int k = 0;
-		for (k = 0; k < tasks_size; k++) {
-			if ((families_order[k] == family) && (!tile_mapped[k])) {
-				tile_mapped[k] = true;
-				break;
-			}
-		}
-		// we are always going to find an unmapped tile as the sets provided by
-		// hn_find_units_sets hnlib function return sets of task_size tiles
-		part.MapTask(it_task->second, tiles[k],
-				mem_buffers_tiles[buff_size + j],
-				mem_buffers_addr[buff_size + j]);
-		it_task++;
-	}
-
-	delete[] tile_mapped;
-	bbque_assert(it_task == tg.Tasks().end());
-	for (int j=0; j < buff_size; j++) {
-		part.MapBuffer(it_buff->second, mem_buffers_tiles[j], mem_buffers_addr[j]);
-		it_buff++;
-	}
-	bbque_assert(it_buff == tg.Buffers().end());
-	logger->Debug("GetPartition: id=%d mapping information filled",
-		partition_id);
-
-	return part;
-}
-
-MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
-MangoPlatformProxy::MangoPartitionSkimmer::AssignMemory(
-		const TaskGraph &tg,
-		const Partition &partition) noexcept {
-
-	uint32_t hw_cluster_id = partition.GetClusterId();
-
-	// Assign a memory area to buffers
-	for (auto & buffer: tg.Buffers()) {
-		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
-		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
-
-		buffer.second->SetMemoryBank(memory_bank);
-		buffer.second->SetPhysicalAddress(phy_addr);
-
-		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		int res = hn_allocate_memory(
-			memory_bank, phy_addr, buffer.second->Size(), hw_cluster_id);
-		if (res != HN_SUCCEEDED) {
-			logger->Error("AssignMemory: error while allocating space for"
-				"buffer id=%d size=%lu [bank=%d address=%p error=%d]",
-				buffer.second->Id(), buffer.second->Size(),
-				memory_bank, phy_addr, res);
-			return SK_GENERIC_ERROR;
-		}
-		logger->Info("AssignMemory: buffer id=%d allocated at memory id=%d [address=0x%x]",
-				buffer.second->Id(), memory_bank, phy_addr);
-	}
-
-	// Assign a memory area to kernels (executable and stack)
-	for (auto & task: tg.Tasks()) {
-		auto arch = task.second->GetAssignedArch();
-		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
-		uint32_t mem_tile    = partition.GetKernelBank(task.second);
-		auto     ksize       = task.second->Targets()[arch]->BinarySize();
-		auto     ssize       = task.second->Targets()[arch]->StackSize();
-		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
-		task.second->Targets()[arch]->SetAddress(phy_addr);
-
-		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		int res = hn_allocate_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id);
-		if (res != HN_SUCCEEDED) {
-			logger->Error("AssignMemory: error while allocating space for"
-				" kernel id=%d size=%d [bank=%d address=%p error=%d]",
-				task.second->Id(), ksize + ssize, mem_tile, phy_addr, res);
-			return SK_GENERIC_ERROR;
-		}
-		logger->Info("AssignMemory: task id=%d kernel for %s size=%lu "
-			"allocated [mem_id=%u address=%p]",
-			task.second->Id(), GetStringFromArchType(arch),
-			ksize + ssize, mem_tile, phy_addr);
-	}
-
-	return SK_OK;
-}
 
 
 /****************************************************************************
@@ -1060,36 +1269,18 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 	tg.SetCluster(hw_cluster_id);
 
 	// We set the mapping of buffers-addresses based on the selected partition
-	ExitCode_t err = AssignMemory(tg, partition);
+	bool is_ok = AssignMemory(tg, partition);
+	if (!is_ok) {
+		logger->Error("SetPartition: memory assignment failed");
+		return SK_GENERIC_ERROR;
+	}
 
 	// Set the assigned processor (for each task)
 	for ( auto task : tg.Tasks()) {
 		auto tile_id = partition.GetUnit(task.second);
 		task.second->SetMappedProcessor(tile_id);
 		logger->Debug("SetPartition: task %d mapped to processor (tile) %d",
-			task.second->Id(), tile_id);
-	}
-
-	// Now, we have to ask for the location in TileReg of events
-	// TODO: Manage the UNIZG case
-	// TODO: what to do in case of failure?
-	// TODO: Policy for tile selection
-	for ( auto event : tg.Events()) {
-		uint32_t phy_addr;
-
-		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		int err = hn_get_synch_id (&phy_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE,
-				hw_cluster_id);
-		if (err != HN_SUCCEEDED) {
-			logger->Error("SetPartition: cannot find sync register for event %d",
-				event.second->Id());
-
-			// TODO we should deallocate the other assigned events?
-			return SK_GENERIC_ERROR;
-	  	}
-
-		logger->Debug("SetPartition: event %d assigned to ID 0x%x", event.second->Id(), phy_addr);
-		event.second->SetPhysicalAddress(phy_addr);
+		task.second->Id(), tile_id);
 	}
 
 	// Reserve the units (processors)
@@ -1100,18 +1291,18 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 		auto arch = task.second->GetAssignedArch();
 		units[i]  = partition.GetUnit(task.second);
 		logger->Debug("SetPartition: task %d reserved a unit at tile %u for kernel %s",
-				task.second->Id(), units[i], GetStringFromArchType(arch));
+		task.second->Id(), units[i], GetStringFromArchType(arch));
 		i++;
 	}
 
+	ExitCode_t err;
 	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
 	if (hn_reserve_units_set(num_tiles, units, hw_cluster_id) != HN_SUCCEEDED) {
+		logger->Error("SetPartition: units reservation failed");
 		err = SK_GENERIC_ERROR;
-	}
-
-	if (units == nullptr) {
-		logger->Warn("SetPartition: unexpected null pointer: units"
-			" [libhn suspect corruption]");
+	} else if (units == nullptr) {
+		logger->Fatal("SetPartition: unexpected null pointer: units"
+		" [libhn suspect corruption]");
 		return SK_GENERIC_ERROR;
 	}
 	delete[] units;
@@ -1121,89 +1312,25 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 
 MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
-		const TaskGraph &tg,
-		const Partition &partition) noexcept {
+    const TaskGraph & tg,
+    const Partition & partition) noexcept {
 
 	uint32_t part_id = partition.GetId();
-	uint32_t hw_cluster_id = partition.GetClusterId();
+	logger->Debug("UnsetPartition: [id=%d] deallocating partition...", part_id);
 
-	ExitCode_t ret = SK_OK;
-	logger->Debug("UnsetPartition: deallocating partition [id=%d]...", part_id);
-
-	for ( const auto &event : tg.Events()) {
-		bbque_assert(event.second);
-		uint32_t phy_addr = event.second->PhysicalAddress();
-		logger->Debug("UnsetPartition: releasing event %d (ID 0x%x)",
-			event.second->Id(), phy_addr);
-
-		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		int err = hn_release_synch_id (phy_addr, hw_cluster_id);
-		if(err != HN_SUCCEEDED) {
-			logger->Warn("UnsetPartition: unable to release event %d (ID 0x%x)",
-				event.second->Id(), phy_addr);
-		}
-	}
-
-	// release memory
-	for ( auto buffer : tg.Buffers()) {
-		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
-		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
-		uint32_t size        = buffer.second->Size();;
-		logger->Debug("UnsetPartition: buffer %d is released at bank %d [address=0x%x]",
-				buffer.second->Id(), memory_bank, phy_addr);
-		buffer.second->SetMemoryBank(memory_bank);
-		buffer.second->SetPhysicalAddress(phy_addr);
-
-		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_release_memory(memory_bank, phy_addr, size, hw_cluster_id) != HN_SUCCEEDED) {
-			ret = SK_GENERIC_ERROR;
-		}
-	}
-
-	for ( auto task : tg.Tasks()) {
-		auto arch = task.second->GetAssignedArch();
-		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
-		uint32_t mem_tile    = partition.GetKernelBank(task.second);
-		auto     ksize       = task.second->Targets()[arch]->BinarySize();
-		auto     ssize       = task.second->Targets()[arch]->StackSize();
-		logger->Debug("UnsetPartition: task %d released space for kernel %s"
-				" [bank=%d, address=0x%x size=%lu]",
-				task.second->Id(), GetStringFromArchType(arch), mem_tile, phy_addr, ksize + ssize);
-		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
-		task.second->Targets()[arch]->SetAddress(phy_addr);
-
-		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		if (hn_release_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id) != HN_SUCCEEDED) {
-			ret = SK_GENERIC_ERROR;
-		}
-	}
-
-	// release units
-	unsigned int num_tiles = tg.TaskCount();
-	uint32_t *units = new uint32_t[num_tiles];
-	int i = 0;
-	for ( auto task : tg.Tasks()) {
-		auto arch = task.second->GetAssignedArch();
-		units[i] = partition.GetUnit(task.second);
-		logger->Debug("UnsetPartition: task %d released tile %u for kernel %s",
-				task.second->Id(), units[i], GetStringFromArchType(arch));
-		i++;
-	}
-
-	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-	if (hn_release_units_set(num_tiles, units, hw_cluster_id) != HN_SUCCEEDED) {
-		ret = SK_GENERIC_ERROR;
-	}
-
-	if (units == nullptr) {
-		logger->Warn("UnsetPartition: unexpected null pointer: units"
-			" [libhn suspect corruption]");
+	bool is_ok = ReleaseMemory(tg, partition);
+	if (!is_ok) {
+		logger->Error("UnsetPartition: [id=%d] error while releasing memory", part_id);
 		return SK_GENERIC_ERROR;
 	}
 
-	delete[] units;
+	is_ok = ReleaseProcessingUnits(tg, partition);
+	if (!is_ok) {
+		logger->Error("UnsetPartition: [id=%d] error while releasing kernels space", part_id);
+		return SK_GENERIC_ERROR;
+	}
 
-	return ret;
+	return SK_OK;
 }
 
 MangoPlatformProxy::MangoPartitionSkimmer::MangoPartitionSkimmer(): PartitionSkimmer(SKT_MANGO_HN)
