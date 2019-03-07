@@ -27,14 +27,16 @@
 #include "bbque/utils/assert.h"
 #include "tg/task_graph.h"
 
-namespace bbque {
+namespace bbque
+{
 
 /**
  * \brief This class represents a partition of available resources that can be assigned to an entire
  *	  TaskGraph. This type of object is generally retrieved from the platform proxy through the
  *	  PlatformProxy
  */
-class Partition {
+class Partition
+{
 
 public:
 
@@ -51,14 +53,6 @@ public:
 	 */
 	inline uint32_t GetId() const noexcept {
 		return this->id;
-	}
-
-	/**
-	 * \brief Getter method for the unique identifier of the HW cluster
-	 * including the partition
-	 */
-	inline uint32_t GetClusterId() const noexcept {
-		return this->cluster_id;
 	}
 
 	/**
@@ -123,6 +117,20 @@ public:
 		this->buffers_addr_map[buff->Id()] = addr;
 	}
 
+	/**
+	 * \brief Getter method for the unique identifier of the HW cluster
+	 * including the partition
+	 */
+	inline uint32_t GetClusterId() const noexcept {
+		return this->cluster_id;
+	}
+
+	/**
+	 * \brief Setter method for the unique identifier of the HW cluster
+	 * including the partition
+	 */
+	inline void SetClusterId(uint32_t new_id) noexcept {
+		this->cluster_id = new_id;
 	}
 
 	/**
@@ -171,7 +179,7 @@ public:
 	}
 
 
-/* ******************* ITERATORS ******************* */
+	/* ******************* ITERATORS ******************* */
 
 	typedef std::map<int,int>::const_iterator map_citerator_t;
 
@@ -222,7 +230,7 @@ private:
 	int_fast8_t pm_score;	/** The score index [0;100] provided by the PowerManager */
 
 	std::shared_ptr<TaskGraph> tg;	/** The pointer to the associated TaskGraph */
-	
+
 	std::map<int, int> tasks_map;
 	std::map<int, int> buffers_map;
 	std::map<int, int> kernels_addr_map;

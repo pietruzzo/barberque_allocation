@@ -19,8 +19,8 @@
 #include "tg/partition.h"
 #include "bbque/utils/utility.h"
 
-namespace bbque {
-
+namespace bbque
+{
 
 int Partition::GetMemoryBank(BufferPtr_t buff) const
 {
@@ -40,16 +40,19 @@ int Partition::GetUnit(TaskPtr_t task) const
 	}
 }
 
-	uint32_t Partition::GetBufferAddress(BufferPtr_t buff) const {
-		return buffers_addr_map.at(buff->Id());
-	}
+uint32_t Partition::GetBufferAddress(BufferPtr_t buff) const
+{
+	return buffers_addr_map.at(buff->Id());
+}
 
-	uint32_t Partition::GetKernelAddress(TaskPtr_t task) const {
-		return kernels_addr_map.at(task->Id());
-	}
+uint32_t Partition::GetKernelAddress(TaskPtr_t task) const
+{
+	return kernels_addr_map.at(task->Id());
+}
 
-	uint32_t Partition::GetKernelBank(TaskPtr_t task) const {
-		return kernels_bank_map.at(task->Id());
-	}
+uint32_t Partition::GetKernelBank(TaskPtr_t task) const
+{
+	return kernels_bank_map.at(task->Id());
+}
 
 }
