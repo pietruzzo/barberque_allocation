@@ -81,7 +81,9 @@ public:
 	/**
 	 * \brief Memory ID
 	 */
-	inline uint32_t MemoryBank() const { return mem_bank; }
+	inline int MemoryBank() const {
+		return mem_bank;
+	}
 
 	/**
 	 * \brief Set the physical address
@@ -167,9 +169,10 @@ private:
 	uint32_t id;
 
 	uint32_t phy_addr;
-	uint32_t mem_bank;
 
 	size_t size_in_bytes;
+
+	uint32_t mem_bank = -1;
 
 
 	std::list<uint32_t> writer_tasks;
@@ -187,8 +190,8 @@ private:
 		(void) version;
 		ar & id;
 		ar & phy_addr;
-		ar & mem_bank;
 		ar & size_in_bytes;
+		ar & mem_bank;
 		ar & writer_tasks;
 		ar & reader_tasks;
 		ar & event_id;
