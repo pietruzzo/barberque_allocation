@@ -225,8 +225,20 @@ public:
 	 * @param id Mapping choice number
 	 * @return A TaskGraphMapping structure
 	 */
-	inline TaskGraphMapping & GetTaskGraphMapping(uint32_t id) {
-		return tg_mappings[id];
+	inline TaskGraphMapping GetTaskGraphMapping(uint32_t id) const {
+		TaskGraphMapping mapping_opt;
+		try {
+			mapping_opt = tg_mappings.at(id);
+		} catch(std::exception & ex) { }
+		return mapping_opt;
+	}
+
+	/**
+	 * @brief Get the map of all the task-graph mappings
+	 * @return A map of ids and TaskGraphMapping data structures
+	 */
+	inline TaskGraphMappingsMap_t const & GetTaskGraphMappingAll() const {
+		return tg_mappings;
 	}
 
 	/**
