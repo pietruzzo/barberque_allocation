@@ -107,10 +107,10 @@ public:
 	 * \param mem_bank The memory bank assigned to the kernel image
 	 * \param addr     The memory address assigned to the kernel image
 	 */
-	inline void MapTask(TaskPtr_t task, int unit, uint32_t mem_bank, uint32_t addr) noexcept {
-		this->tasks_map.emplace(task->Id(), unit);
-		this->kernels_addr_map.emplace(task->Id(), addr);
-		this->kernels_bank_map.emplace(task->Id(), mem_bank);
+	inline void MapTask(TaskPtr_t task, int unit, uint32_t mem_bank, uint32_t addr) {
+		this->tasks_map[task->Id()] = unit;
+		this->kernels_addr_map[task->Id()] = addr;
+		this->kernels_bank_map[task->Id()] = mem_bank;
 	}
 
 	/**
@@ -118,9 +118,11 @@ public:
 	 * \param unit     The id of the memory bank
 	 * \param addr     The memory address assigned to the kernel image
 	 */
-	inline void MapBuffer(BufferPtr_t buff, int mem_bank, uint32_t addr) noexcept {
-		this->buffers_map.emplace(buff->Id(), mem_bank);
-		this->buffers_addr_map.emplace(buff->Id(), addr);
+	inline void MapBuffer(BufferPtr_t buff, int mem_bank, uint32_t addr) {
+		this->buffers_map[buff->Id()]  = mem_bank;
+		this->buffers_addr_map[buff->Id()] = addr;
+	}
+
 	}
 
 	/**
