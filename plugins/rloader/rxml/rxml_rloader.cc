@@ -39,7 +39,10 @@ namespace br = bbque::res;
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 
 /** Set true it means the plugin has read its options in the config file*/
@@ -52,7 +55,8 @@ std::string RXMLRecipeLoader::recipe_dir = "";
 po::variables_map xmlrloader_opts_value;
 
 
-RXMLRecipeLoader::RXMLRecipeLoader() {
+RXMLRecipeLoader::RXMLRecipeLoader()
+{
 	// Get a logger
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
@@ -60,10 +64,12 @@ RXMLRecipeLoader::RXMLRecipeLoader() {
 	logger->Debug("Built RXML RecipeLoader object @%p", (void*)this);
 }
 
-RXMLRecipeLoader::~RXMLRecipeLoader() {
+RXMLRecipeLoader::~RXMLRecipeLoader()
+{
 }
 
-bool RXMLRecipeLoader::Configure(PF_ObjectParams * params) {
+bool RXMLRecipeLoader::Configure(PF_ObjectParams * params)
+{
 
 	if (configured)
 		return true;
@@ -71,9 +77,9 @@ bool RXMLRecipeLoader::Configure(PF_ObjectParams * params) {
 	// Declare the supported options
 	po::options_description xmlrloader_opts_desc("RXML Recipe Loader Options");
 	xmlrloader_opts_desc.add_options()
-		(MODULE_CONFIG".recipe_dir", po::value<std::string>
-		 (&recipe_dir)->default_value(BBQUE_PATH_PREFIX "/" BBQUE_PATH_RECIPES),
-		 "recipes folder")
+	(MODULE_CONFIG".recipe_dir", po::value<std::string>
+	 (&recipe_dir)->default_value(BBQUE_PATH_PREFIX "/" BBQUE_PATH_RECIPES),
+	 "recipes folder")
 	;
 
 	// Get configuration params
@@ -88,17 +94,17 @@ bool RXMLRecipeLoader::Configure(PF_ObjectParams * params) {
 	sd.response = &data_out;
 
 	int32_t response =
-		params->platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
+	    params->platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
 
 	if (response!=PF_SERVICE_DONE)
 		return false;
 
 	if (daemonized)
 		syslog(LOG_INFO, "Using RXMLRecipeLoader recipe folder [%s]",
-				recipe_dir.c_str());
+		       recipe_dir.c_str());
 	else
 		fprintf(stdout, FI("Using RXMLRecipeLoader recipe folder [%s]\n"),
-				recipe_dir.c_str());
+		        recipe_dir.c_str());
 
 	return true;
 }
@@ -106,14 +112,16 @@ bool RXMLRecipeLoader::Configure(PF_ObjectParams * params) {
 
 // =======================[ Static plugin interface ]=========================
 
-void * RXMLRecipeLoader::Create(PF_ObjectParams *params) {
+void * RXMLRecipeLoader::Create(PF_ObjectParams *params)
+{
 	if (!Configure(params))
 		return nullptr;
 
 	return new RXMLRecipeLoader();
 }
 
-int32_t RXMLRecipeLoader::Destroy(void *plugin) {
+int32_t RXMLRecipeLoader::Destroy(void *plugin)
+{
 	if (!plugin)
 		return -1;
 	delete (RXMLRecipeLoader *)plugin;
@@ -124,8 +132,9 @@ int32_t RXMLRecipeLoader::Destroy(void *plugin) {
 // =======================[ MODULE INTERFACE ]================================
 
 RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
-		std::string const & _recipe_name,
-		RecipePtr_t _recipe) {
+    std::string const & _recipe_name,
+    RecipePtr_t _recipe)
+{
 	RecipeLoaderIF::ExitCode_t result = RL_SUCCESS;
 	rapidxml::xml_document<> doc;
 	rapidxml::xml_node<> * root_node = nullptr;
@@ -171,10 +180,10 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 			logger->Debug("Recipe version = %s", version_id.c_str());
 			sscanf(version_id.c_str(), "%d.%d", &maj, &min);
 			if (maj < RECIPE_MAJOR_VERSION ||
-					(maj >= RECIPE_MAJOR_VERSION && min < RECIPE_MINOR_VERSION)) {
+			    (maj >= RECIPE_MAJOR_VERSION && min < RECIPE_MINOR_VERSION)) {
 				logger->Error("Recipe version mismatch (REQUIRED %d.%d). "
-					"Found %d.%d", RECIPE_MAJOR_VERSION, RECIPE_MINOR_VERSION,
-					maj, min);
+				              "Found %d.%d", RECIPE_MAJOR_VERSION, RECIPE_MINOR_VERSION,
+				              maj, min);
 				result = RL_VERSION_MISMATCH;
 				throw std::runtime_error("Recipe version mismatch");
 			}
@@ -201,7 +210,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 
 			// Application Working Modes
 			result = LoadWorkingModes(pp_node);
-			if (result != RL_SUCCESS){
+			if (result != RL_SUCCESS) {
 				throw std::runtime_error("LoadWorkingModes failed.");
 			}
 
@@ -212,7 +221,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 			LoadConstraints(pp_node);
 			LoadPluginsData<ba::RecipePtr_t>(recipe_ptr, pp_node);
 
-		} catch(rapidxml::parse_error ex){
+		} catch(rapidxml::parse_error ex) {
 			logger->Error(ex.what());
 			result = RL_ABORTED;
 			throw std::runtime_error("XML parsing failed.");
@@ -232,7 +241,8 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 }
 
 
-rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xml_elem) {
+rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xml_elem)
+{
 	rapidxml::xml_node<> * pp_elem = nullptr;
 	rapidxml::xml_node<> * pp_last = nullptr;
 #ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
@@ -241,7 +251,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 	std::string sys_platform_hw;
 	std::string platform_id;
 	std::string platform_hw;
-    PlatformManager & plm = PlatformManager::GetInstance();
+	PlatformManager & plm = PlatformManager::GetInstance();
 	bool id_matched  = false;
 #endif
 
@@ -261,18 +271,18 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 		// Plaform hardware (optional)
 		sys_platform_hw.assign(plm.GetHardwareID());
 		logger->Info("Platform: system ID=%s HW=%s",
-				sys_platform_id, sys_platform_hw.c_str());
+		             sys_platform_id, sys_platform_hw.c_str());
 
 		// Look for the platform section matching the system platform id
 		while (pp_elem) {
 			platform_id = loadAttribute("id", true, pp_elem);
 			platform_hw = loadAttribute("hw", false, pp_elem);
 			logger->Info("Platform: search ID=%s HW=%s",
-					platform_id.c_str(), platform_hw.c_str());
+			             platform_id.c_str(), platform_hw.c_str());
 
 			// Keep track of the "generic" platform section (if any)
 			if (!pp_gen_elem
-					&& (platform_id.compare(PLATFORM_ID_GENERIC) ==	0)) {
+			    && (platform_id.compare(PLATFORM_ID_GENERIC) ==	0)) {
 				pp_gen_elem = pp_elem;
 				logger->Debug("Platform: found a generic section");
 				pp_elem = pp_elem->next_sibling("platform", 0, true);
@@ -284,12 +294,12 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 				pp_last = pp_elem;
 				id_matched = true;
 				logger->Debug("Platform: found a ID match: %s",
-					platform_id.c_str());
+				              platform_id.c_str());
 				// Hardware (SoC) check required?
 				if ((platform_hw.size() > 1)
-						&& (platform_hw.compare(sys_platform_hw) == 0)) {
+				    && (platform_hw.compare(sys_platform_hw) == 0)) {
 					logger->Debug("Platform: found a HW match: %s",
-						platform_hw.c_str());
+					              platform_hw.c_str());
 					break;
 				}
 			}
@@ -300,12 +310,12 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 		// has been found the 'generic' section
 		if (!id_matched && pp_gen_elem) {
 			logger->Warn("Platform: mismatch. Section '%s' will be parsed",
-					PLATFORM_ID_GENERIC);
+			             PLATFORM_ID_GENERIC);
 			return pp_gen_elem;
 		}
 
 		logger->Info("Platform: best matching = [%s:%s]",
-			platform_id.c_str(), platform_hw.c_str());
+		             platform_id.c_str(), platform_hw.c_str());
 #else
 		logger->Warn("TPD enabled: no platform ID check performed");
 #endif
@@ -318,7 +328,8 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 	return pp_last;
 }
 
-std::time_t RXMLRecipeLoader::LastModifiedTime(std::string const & _name) {
+std::time_t RXMLRecipeLoader::LastModifiedTime(std::string const & _name)
+{
 	boost::filesystem::path p(recipe_dir + "/" + _name + ".recipe");
 	return boost::filesystem::last_write_time(p);
 }
@@ -326,7 +337,8 @@ std::time_t RXMLRecipeLoader::LastModifiedTime(std::string const & _name) {
 
 //========================[ Working modes ]===================================
 
-RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node<>  *_xml_elem) {
+RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node<>  *_xml_elem)
+{
 	uint8_t result = __RSRC_SUCCESS;
 	unsigned int wm_id;
 	unsigned int wm_value;
@@ -357,30 +369,29 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node
 			// The awm ID must be unique!
 			if (recipe_ptr->GetWorkingMode(wm_id)) {
 				logger->Error("AWM {%d:%s} error: Double ID found %d",
-						wm_id, wm_name.c_str(), wm_id);
+				              wm_id, wm_name.c_str(), wm_id);
 				return RL_FORMAT_ERROR;
 			}
 			logger->Debug("LoadWorkingMode: adding ID=%d name=%s value=%d ...",
-				wm_id, wm_name.c_str(), wm_value);
+			              wm_id, wm_name.c_str(), wm_value);
 
 			// Add a new working mode (IDs MUST be numbered from 0 to N)
 			AwmPtr_t awm(recipe_ptr->AddWorkingMode(
-						wm_id, wm_name,	static_cast<uint8_t> (wm_value)));
+			                 wm_id, wm_name,	static_cast<uint8_t> (wm_value)));
 			if (!awm) {
 				logger->Error("AWM {%d:%s} error: Wrong ID specified %d",
-						wm_id, wm_name.c_str(), wm_id);
+				              wm_id, wm_name.c_str(), wm_id);
 				return RL_FORMAT_ERROR;
 			}
 
 			// Configuration time
 			if (wm_config_time > 0) {
 				logger->Info("AWM {%d:%s} setting configuration time: %d",
-						wm_id, wm_name.c_str(), wm_config_time);
+				             wm_id, wm_name.c_str(), wm_config_time);
 				awm->SetRecipeConfigTime(wm_config_time);
-			}
-			else
+			} else
 				logger->Warn("AWM {%d:%s} no configuration time provided",
-						wm_id, wm_name.c_str());
+				             wm_id, wm_name.c_str());
 
 			// Load resource assignments of the working mode
 			resources_elem = awm_elem->first_node("resources", 0, false);
@@ -390,7 +401,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node
 				return RL_FORMAT_ERROR;
 			else if (result & __RSRC_WEAK_LOAD) {
 				logger->Warn("AWM {%d:%s} weak load detected: skipping",
-						wm_id, wm_name.c_str());
+				             wm_id, wm_name.c_str());
 				awm_elem = awm_elem->next_sibling("awm", 0, false);
 				continue;
 			}
@@ -414,8 +425,9 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node
 // =======================[ Task-graph ]=======================================
 
 
-void RXMLRecipeLoader::LoadTaskGraphInfo(rapidxml::xml_node<> *_xml_elem) {
-		rapidxml::xml_node<> * tg_elem = nullptr;
+void RXMLRecipeLoader::LoadTaskGraphInfo(rapidxml::xml_node<> *_xml_elem)
+{
+	rapidxml::xml_node<> * tg_elem = nullptr;
 
 	try {
 		// <tg>
@@ -436,7 +448,8 @@ void RXMLRecipeLoader::LoadTaskGraphInfo(rapidxml::xml_node<> *_xml_elem) {
 }
 
 
-void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<> *_xml_elem) {
+void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<> *_xml_elem)
+{
 	rapidxml::xml_node<> * reqs_elem = nullptr;
 	rapidxml::xml_node<> * task_elem  = nullptr;
 	std::string read_attrib;
@@ -498,12 +511,12 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<> *_xml_elem) {
 			}
 
 			logger->Info("LoadTasksRequirements: <T%2d>: tput=%.2f ctime=%dms"
-				" in_bw=%dKbps, out_bw=%dKbps #hw=<%d>", id,
-				recipe_ptr->GetTaskRequirements(id).Throughput(),
-				recipe_ptr->GetTaskRequirements(id).CompletionTime(),
-				recipe_ptr->GetTaskRequirements(id).InBandwidth(),
-				recipe_ptr->GetTaskRequirements(id).OutBandwidth(),
-				recipe_ptr->GetTaskRequirements(id).NumArchPreferences());
+			             " in_bw=%dKbps, out_bw=%dKbps #hw=<%d>", id,
+			             recipe_ptr->GetTaskRequirements(id).Throughput(),
+			             recipe_ptr->GetTaskRequirements(id).CompletionTime(),
+			             recipe_ptr->GetTaskRequirements(id).InBandwidth(),
+			             recipe_ptr->GetTaskRequirements(id).OutBandwidth(),
+			             recipe_ptr->GetTaskRequirements(id).NumArchPreferences());
 
 			task_elem = task_elem->next_sibling("task", 0, false);
 		}
@@ -515,21 +528,22 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<> *_xml_elem) {
 }
 
 
-void RXMLRecipeLoader::LoadTaskGraphMappings(rapidxml::xml_node<> *_xml_elem) {
-		rapidxml::xml_node<> * mappings_elem = nullptr;
-		rapidxml::xml_node<> * map_elem = nullptr;
-		std::string read_attrib;
-		ba::Recipe::TaskGraphMapping mapping;
+void RXMLRecipeLoader::LoadTaskGraphMappings(rapidxml::xml_node<> *_xml_elem)
+{
+	rapidxml::xml_node<> * mappings_elem = nullptr;
+	rapidxml::xml_node<> * map_elem = nullptr;
+	std::string read_attrib;
+	ba::Recipe::TaskGraphMapping mapping;
 
 	logger->Debug("LoadTaskGraphMappings: loading children of <%s>...",
-			_xml_elem->name());
+	              _xml_elem->name());
 
 	try {
 		// <mappings>
 		mappings_elem = _xml_elem->first_node("mappings", 0, false);
 		if (mappings_elem == nullptr) {
 			logger->Warn("LoadTaskGraphMappings: missing <mappings> section "
-				"under <%s>", _xml_elem->name());
+			             "under <%s>", _xml_elem->name());
 			return;
 		}
 		CheckMandatoryNode(mappings_elem, "mappings", _xml_elem);
@@ -550,17 +564,17 @@ void RXMLRecipeLoader::LoadTaskGraphMappings(rapidxml::xml_node<> *_xml_elem) {
 			// <mapping ... exec_time_ms=...>
 			read_attrib  = loadAttribute("exec_time_ms", true, map_elem);
 			logger->Debug("LoadTaskGraphMappings: exec_time_ms=%s",
-					read_attrib.c_str());
+			              read_attrib.c_str());
 			mapping.exec_time_ms = atoi(read_attrib.c_str());
 			// <mapping ... power_mw=...>
 			read_attrib  = loadAttribute("power_mw", false, map_elem);
 			logger->Debug("LoadTaskGraphMappings: power_mw=%s",
-					read_attrib.c_str());
+			              read_attrib.c_str());
 			mapping.power_mw = atoi(read_attrib.c_str());
 			// <mapping ... mem_bw=...>
 			read_attrib  = loadAttribute("mem_bw", false, map_elem);
 			logger->Debug("LoadTaskGraphMappings: power_bw=%s",
-					read_attrib.c_str());
+			              read_attrib.c_str());
 			mapping.mem_bw = atoi(read_attrib.c_str());
 
 			// Load the set of design-time mapping choices
@@ -577,16 +591,17 @@ void RXMLRecipeLoader::LoadTaskGraphMappings(rapidxml::xml_node<> *_xml_elem) {
 }
 
 void RXMLRecipeLoader::LoadTaskGraphMapping(
-			rapidxml::xml_node<> *_xml_elem,
-			ba::Recipe::TaskGraphMapping & mapping) {
-		rapidxml::xml_node<> * tasks_elem = nullptr;
-		rapidxml::xml_node<> * task_elem = nullptr;
-		rapidxml::xml_node<> * buffs_elem = nullptr;
-		rapidxml::xml_node<> * buff_elem = nullptr;
-		std::string read_attrib;
+    rapidxml::xml_node<> *_xml_elem,
+    ba::Recipe::TaskGraphMapping & mapping)
+{
+	rapidxml::xml_node<> * tasks_elem = nullptr;
+	rapidxml::xml_node<> * task_elem = nullptr;
+	rapidxml::xml_node<> * buffs_elem = nullptr;
+	rapidxml::xml_node<> * buff_elem = nullptr;
+	std::string read_attrib;
 
 	logger->Debug("LoadTaskGraphMapping: loading children of <%s>...",
-			_xml_elem->name());
+	              _xml_elem->name());
 
 	try {
 		// <tasks>
@@ -632,9 +647,10 @@ void RXMLRecipeLoader::LoadTaskGraphMapping(
 
 
 void RXMLRecipeLoader::LoadMappingData(
-			rapidxml::xml_node<> * obj_elem,
-			std::string const & obj_name,
-			std::map<uint32_t, ba::Recipe::MappingData> mapping_map) {
+    rapidxml::xml_node<> * obj_elem,
+    std::string const & obj_name,
+    std::map<uint32_t, ba::Recipe::MappingData> & mapping_map)
+{
 	rapidxml::xml_attribute<> * attribute = nullptr;
 
 	while (obj_elem) {
@@ -648,18 +664,17 @@ void RXMLRecipeLoader::LoadMappingData(
 			if (strncmp(attribute->name(), "freq_khz", 9) == 0) {
 				map_data.freq_khz = atoi(attribute->value());
 				logger->Debug("LoadMappingData: freq_khz=%d",
-						map_data.freq_khz);
-			}
-			else {
+				              map_data.freq_khz);
+			} else {
 				auto r_type = bbque::res::GetResourceTypeFromString(
-					attribute->name());
+				                  attribute->name());
 				logger->Debug("LoadMappingData: attribute '%s'...",
-						attribute->name());
+				              attribute->name());
 				if (r_type != br::ResourceType::UNDEFINED) {
 					map_data.type = r_type;
 					map_data.id   = atoi(attribute->value());
 					logger->Debug("LoadMappingData: mapping to '%s'...",
-						attribute->value());
+					              attribute->value());
 				}
 			}
 		}
@@ -673,8 +688,9 @@ void RXMLRecipeLoader::LoadMappingData(
 // =======================[ Resources ]=======================================
 
 uint8_t RXMLRecipeLoader::LoadResources(rapidxml::xml_node<> * _xml_elem,
-		AwmPtr_t & _wm,
-		std::string const & _curr_path = "") {
+                                        AwmPtr_t & _wm,
+                                        std::string const & _curr_path = "")
+{
 	uint8_t result = __RSRC_SUCCESS;
 	std::string res_path;
 	rapidxml::xml_node<> * res_elem = nullptr;
@@ -715,14 +731,15 @@ uint8_t RXMLRecipeLoader::LoadResources(rapidxml::xml_node<> * _xml_elem,
 
 
 uint8_t RXMLRecipeLoader::AppendToWorkingMode(AwmPtr_t & wm,
-		std::string const & _res_path,
-		uint64_t _res_usage) {
+        std::string const & _res_path,
+        uint64_t _res_usage)
+{
 	// Add the resource usage to the working mode,
 	// return a "weak load" code if some resources are missing
 	auto preq = wm->AddResourceRequest(_res_path, _res_usage);
 	if (preq == nullptr) {
 		logger->Warn("'%s' recipe: resource '%s' not available",
-				recipe_ptr->Path().c_str(), _res_path.c_str());
+		             recipe_ptr->Path().c_str(), _res_path.c_str());
 		return __RSRC_WEAK_LOAD;
 	}
 	return __RSRC_SUCCESS;
@@ -730,9 +747,10 @@ uint8_t RXMLRecipeLoader::AppendToWorkingMode(AwmPtr_t & wm,
 
 
 uint8_t RXMLRecipeLoader::GetResourceAttributes(
-		rapidxml::xml_node<> * _res_elem,
-		AwmPtr_t & _wm,
-		std::string & _res_path) {
+    rapidxml::xml_node<> * _res_elem,
+    AwmPtr_t & _wm,
+    std::string & _res_path)
+{
 	uint64_t res_usage = 0;
 	std::string res_units;
 	std::string res_id;
@@ -762,7 +780,7 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(
 	// The usage requested must be > 0
 	if (!(attribute_usage == 0) && res_usage <= 0) {
 		logger->Error("Resource ""%s"": usage value not valid (%" PRIu64 ")",
-				_res_path.c_str(), res_usage);
+		              _res_path.c_str(), res_usage);
 		return __RSRC_FORMAT_ERR;
 	}
 
@@ -783,7 +801,8 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(
 
 template<class T>
 void RXMLRecipeLoader::LoadPluginsData(T _container,
-		rapidxml::xml_node<> * _xml_node) {
+                                       rapidxml::xml_node<> * _xml_node)
+{
 	rapidxml::xml_node<> * plugins_node = nullptr;
 	rapidxml::xml_node<> * plug_node = nullptr;
 
@@ -791,7 +810,7 @@ void RXMLRecipeLoader::LoadPluginsData(T _container,
 	// Section tag for plugin specific data. This can be included into the
 	// <application> section and into the <awm> section.
 	plugins_node = _xml_node->first_node("plugins", 0, true);
-	if (plugins_node == 0){
+	if (plugins_node == 0) {
 		return;
 	}
 
@@ -811,7 +830,8 @@ void RXMLRecipeLoader::LoadPluginsData(T _container,
 
 template<class T>
 void RXMLRecipeLoader::ParsePluginTag(T _container,
-		rapidxml::xml_node<> * _plug_node) {
+                                      rapidxml::xml_node<> * _plug_node)
+{
 	rapidxml::xml_node<> * plugdata_node = nullptr;
 	std::string name;
 
@@ -835,13 +855,14 @@ void RXMLRecipeLoader::ParsePluginTag(T _container,
 
 template<class T>
 void RXMLRecipeLoader::GetPluginData(T _container,
-		rapidxml::xml_node<> * plugdata_node,
-		std::string const & _plug_name) {
+                                     rapidxml::xml_node<> * plugdata_node,
+                                     std::string const & _plug_name)
+{
 
 	try {
 		// Set the plugin data
 		ba::AppPluginDataPtr_t pattr(new ba::AppPluginData_t(
-			_plug_name, plugdata_node->name()));
+		                                 _plug_name, plugdata_node->name()));
 		pattr->str = plugdata_node->value();
 		_container->SetPluginData(pattr);
 
@@ -853,7 +874,8 @@ void RXMLRecipeLoader::GetPluginData(T _container,
 
 // =======================[ Constraints ]=====================================
 
-void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node) {
+void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node)
+{
 	rapidxml::xml_node<> * constr_elem = nullptr;
 	rapidxml::xml_node<> * con_elem    = nullptr;
 	std::string constraint_type;
@@ -884,11 +906,9 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node) {
 			// Add the constraint
 			if (constraint_type.compare("L") == 0) {
 				recipe_ptr->AddConstraint(resource, value, 0);
-			}
-			else if (constraint_type.compare("U") == 0) {
+			} else if (constraint_type.compare("U") == 0) {
 				recipe_ptr->AddConstraint(resource, 0, value);
-			}
-			else {
+			} else {
 				logger->Warn("Constraint: unknown bound type");
 				continue;
 			}
@@ -906,9 +926,10 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node) {
 // =======================[ Utils ]=======================================
 
 void RXMLRecipeLoader::CheckMandatoryNode (
-	 rapidxml::xml_node<> * _nodeToCheck,
-	 const char * _nodeToCheckName,
-	 rapidxml::xml_node<> * _nodeParent) {
+    rapidxml::xml_node<> * _nodeToCheck,
+    const char * _nodeToCheckName,
+    rapidxml::xml_node<> * _nodeParent)
+{
 
 	if (_nodeParent == nullptr) {
 		std::string exception_message("Null parent node");
@@ -921,17 +942,18 @@ void RXMLRecipeLoader::CheckMandatoryNode (
 
 	//Throwing an exception if the mandatory node doesn't exist
 	if (_nodeToCheck == 0) {
-	std::string exception_message("The mandatory node doesn't exist in this"
-			"recipe. The node name is: " + child_name +"."
-			"The parent name is: " + parent_name);
-	throw rapidxml::parse_error(exception_message.c_str(), _nodeParent);
+		std::string exception_message("The mandatory node doesn't exist in this"
+		                              "recipe. The node name is: " + child_name +"."
+		                              "The parent name is: " + parent_name);
+		throw rapidxml::parse_error(exception_message.c_str(), _nodeParent);
 	}
 }
 
 
 std::string RXMLRecipeLoader::loadAttribute(const char * _nameAttribute,
-		bool mandatory,
-		rapidxml::xml_node<> * _node) {
+        bool mandatory,
+        rapidxml::xml_node<> * _node)
+{
 	rapidxml::xml_attribute<> * attribute;
 
 	attribute = _node->first_attribute(_nameAttribute, 0, true);
@@ -939,9 +961,9 @@ std::string RXMLRecipeLoader::loadAttribute(const char * _nameAttribute,
 		std::string node_name(_node->name());
 		std::string attribute_name(_nameAttribute);
 		std::string exception_message("The mandatory attribute doesn't"
-				"exist in this node. The attribute name is: "
-				+ attribute_name +" . The node name is: " + node_name);
-	throw rapidxml::parse_error(exception_message.c_str(), _node);
+		                              "exist in this node. The attribute name is: "
+		                              + attribute_name +" . The node name is: " + node_name);
+		throw rapidxml::parse_error(exception_message.c_str(), _node);
 	} else if (attribute == 0) {
 		return "0";
 	}

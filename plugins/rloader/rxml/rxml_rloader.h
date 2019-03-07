@@ -42,7 +42,10 @@ using bbque::utils::ExtraDataContainer;
 // Parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 // Return code for internal purpose
 #define __RSRC_SUCCESS 		0x0
@@ -57,7 +60,8 @@ namespace bbque { namespace plugins {
  *
  * @brief RXML library based recipe loader plugin
  */
-class RXMLRecipeLoader: public RecipeLoaderIF {
+class RXMLRecipeLoader: public RecipeLoaderIF
+{
 
 public:
 
@@ -153,9 +157,9 @@ private:
 	 * expected section tag
 	 */
 	uint8_t LoadResources(
-			rapidxml::xml_node<> * xml_elem,
-			AwmPtr_t & wm,
-			std::string const & res_path);
+	    rapidxml::xml_node<> * xml_elem,
+	    AwmPtr_t & wm,
+	    std::string const & res_path);
 
 
 	/**
@@ -189,8 +193,8 @@ private:
 	 * @param mapping the mapping object to fill
 	 */
 	void LoadTaskGraphMapping(
-			rapidxml::xml_node<> *_xml_elem,
-			ba::Recipe::TaskGraphMapping & mapping);
+	    rapidxml::xml_node<> *_xml_elem,
+	    ba::Recipe::TaskGraphMapping & mapping);
 
 	/**
 	 * @brief Parse the section containing a design-time resource
@@ -218,9 +222,9 @@ private:
 	 * @return An internal error code
 	 */
 	uint8_t AppendToWorkingMode(
-			AwmPtr_t & wm,
-			std::string const & res_path,
-			uint64_t res_usage);
+	    AwmPtr_t & wm,
+	    std::string const & res_path,
+	    uint64_t res_usage);
 
 	/**
 	 * @brief Parse the resource data from the xml element and add the
@@ -231,9 +235,9 @@ private:
 	 * @param res_path Resource path
 	 */
 	uint8_t GetResourceAttributes(
-			rapidxml::xml_node<> * res_elem,
-			AwmPtr_t & wm,
-			std::string & res_path);
+	    rapidxml::xml_node<> * res_elem,
+	    AwmPtr_t & wm,
+	    std::string & res_path);
 
 	/**
 	 * @brief Parse the section containing plugins specific data for the
@@ -256,8 +260,8 @@ private:
 	 */
 	template<class T>
 	void ParsePluginTag(
-			T container,
-			rapidxml::xml_node<> * _plug_node);
+	    T container,
+	    rapidxml::xml_node<> * _plug_node);
 
 	/**
 	 * @brief Parse the data nested under <plugin>
@@ -269,9 +273,9 @@ private:
 	 */
 	template<class T>
 	void GetPluginData(
-			T _container,
-			rapidxml::xml_node<> * plugdata_node,
-			std::string const & _plug_name);
+	    T _container,
+	    rapidxml::xml_node<> * plugdata_node,
+	    std::string const & _plug_name);
 
 	/**
 	 * @brief Parse the section containing constraints assertions
@@ -292,9 +296,9 @@ private:
 	* @throw parse_error when the node is missing
 	*/
 	void CheckMandatoryNode(
-			rapidxml::xml_node<> * nodeToCheck,
-			const char * nodeToCheckName,
-			rapidxml::xml_node<> * nodeFather);
+	    rapidxml::xml_node<> * nodeToCheck,
+	    const char * nodeToCheckName,
+	    rapidxml::xml_node<> * nodeFather);
 
 	/**
 	* @brief Function used to load an attribute value from a node
@@ -304,9 +308,9 @@ private:
 	* @param node The node from which load the attribute
 	*/
 	std::string loadAttribute(
-			const char * _nameAttribute,
-			bool mandatory,
-			rapidxml::xml_node<> * node);
+	    const char * _nameAttribute,
+	    bool mandatory,
+	    rapidxml::xml_node<> * node);
 };
 
 } // namespace plugins
