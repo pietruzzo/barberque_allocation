@@ -417,6 +417,84 @@ static bool ReleaseMemory(const TaskGraph &tg) noexcept {
 }
 
 
+/**
+ * @brief The function returns the id of the unit set matching the mapping option
+ * selected by the scheduling policy
+ * @param tg the application task-graph with the mapping information
+ * @param unit_sets the set of units (processors) mappings available at runtime
+ * @param num_sets the number of runtime units mappings
+ * @return the id of the unit mapping set, or -1 in case of fail
+ */
+static int GetCoherentUnitSet(
+    TaskGraph & tg, unsigned int ** unit_sets, unsigned int num_sets)
+{
+	int nr_tasks = tg.TaskCount();
+	logger->Debug("GetCoherentUnitSet: nr_tasks=%d", nr_tasks);
+
+	for (unsigned int i=0; i < num_sets; ++i) {
+		int j=0;
+		for (auto & task_entry: tg.Tasks()) {
+			auto task_id = task_entry.first;
+			auto & task  = task_entry.second;
+			logger->Debug("GetCoherentUnitSet: [set=%d] task=%d -> proc=%d [=%d?]",
+			              i, task_id,
+			              unit_sets[i][j],
+			              task->GetMappedProcessor());
+			if (unit_sets[i][j] != (int) task->GetMappedProcessor()) {
+				logger->Debug("GetCoherentUnitSet: scheduled mapping not in set %d", i);
+				break;
+			}
+			++j;
+		}
+		if (j == nr_tasks) {
+			logger->Debug("GetCoherentUnitSet: scheduled mapping matches set %d", i);
+			return j;
+		}
+	}
+
+	logger->Error("GetCoherentUnitSet: no matching for the scheduled mapping");
+	return -1;
+}
+
+
+static int ReserveProcessingUnits(TaskGraph & tg)
+{
+	uint32_t hw_cluster_id = tg.GetCluster();
+	unsigned int num_sets  = 0;
+	unsigned int ** units_sets     = nullptr;
+	unsigned int ** families_order = nullptr;
+
+	// Retrieve available units from HN library
+	FindUnitsSets(tg, hw_cluster_id, &units_sets, &families_order, &num_sets);
+	if (num_sets < 1) {
+		logger->Error("ReserveProcessingUnits: no units sets available");
+		return -1;
+	}
+	logger->Debug("ReserveProcessingUnits: returned %d possible unit sets", num_sets);
+
+	// One of the sets must be coherent w.r.t to the task mapping selected
+	// by the policy
+	int unit_set_id = GetCoherentUnitSet(tg, units_sets, num_sets);
+	if (unit_set_id < 0) {
+		logger->Warn("ReserveProcessingUnits: mapping option not available");
+		return -2;
+	}
+	logger->Debug("ReserveProcessingUnits: mapping option set=%d", unit_set_id);
+
+
+	// Reserve units
+	int num_tiles = tg.TaskCount();
+	int err = hn_reserve_units_set(num_tiles, units_sets[unit_set_id], hw_cluster_id);
+	if (err != HN_SUCCEEDED) {
+		logger->Error("ReserveProcessingUnits: units reservation failed [err=%d]", err);
+		return -3;
+	}
+	logger->Debug("ReserveProcessingUnits: units reservation done");
+
+	return 0;
+}
+
+
 static bool ReleaseProcessingUnits(const TaskGraph & tg)
 {
 	uint32_t hw_cluster_id = tg.GetCluster();
