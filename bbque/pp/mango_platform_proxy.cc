@@ -364,29 +364,28 @@ static bool ReleaseMemory(const TaskGraph &tg) noexcept {
 	uint32_t hw_cluster_id = tg.GetCluster();
 
 	// Release events reservation
-	for ( const auto &event : tg.Events()) {
+	for (auto & event: tg.Events()) {
 		bbque_assert(event.second);
 		uint32_t phy_addr = event.second->PhysicalAddress();
-		logger->Debug("ReleaseMemory: releasing event %d (ID 0x%x)",
-		event.second->Id(), phy_addr);
+		logger->Debug("ReleaseMemory: releasing event %d (ID 0x%x)", event.second->Id(), phy_addr);
 
-		int err = hn_release_synch_id (phy_addr, hw_cluster_id);
-		if(err != HN_SUCCEEDED) {
-			logger->Error("ReleaseMemory: unable to release event %d (ID 0x%x)",
-			event.second->Id(), phy_addr);
+		int err = hn_release_synch_id(phy_addr, hw_cluster_id);
+		if (err != HN_SUCCEEDED) {
+			logger->Error("ReleaseMemory: unable to release event %d (ID 0x%x)", event.second->Id(), phy_addr);
 			return false;
 		}
 	}
 
 	// Release memory buffers
-	for ( auto buffer : tg.Buffers()) {
+	for (auto & buffer: tg.Buffers()) {
 		uint32_t memory_bank = buffer.second->MemoryBank();
 		uint32_t phy_addr    = buffer.second->PhysicalAddress();
 		uint32_t size        = buffer.second->Size();;
 		logger->Debug("ReleaseMemory: buffer %d is released at bank %d [address=0x%x]",
 		              buffer.second->Id(), memory_bank, phy_addr);
 
-		if (hn_release_memory(memory_bank, phy_addr, size, hw_cluster_id) != HN_SUCCEEDED) {
+		int err = hn_release_memory(memory_bank, phy_addr, size, hw_cluster_id);
+		if (err != HN_SUCCEEDED) {
 			logger->Error("ReleaseMemory: error while releasing buffer %d",
 			              buffer.second->Id());
 			return false;
@@ -394,7 +393,7 @@ static bool ReleaseMemory(const TaskGraph &tg) noexcept {
 	}
 
 	// Release kernel binary memory areas
-	for ( auto task : tg.Tasks()) {
+	for (auto & task: tg.Tasks()) {
 		auto arch = task.second->GetAssignedArch();
 		uint32_t phy_addr    = task.second->Targets()[arch]->Address();
 		uint32_t mem_tile    = task.second->Targets()[arch]->MemoryBank();
@@ -406,7 +405,8 @@ static bool ReleaseMemory(const TaskGraph &tg) noexcept {
 		              GetStringFromArchType(arch),
 		              mem_tile, phy_addr, ksize + ssize);
 
-		if (hn_release_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id) != HN_SUCCEEDED) {
+		int err = hn_release_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id);
+		if (err!= HN_SUCCEEDED) {
 			logger->Error("ReleaseMemory: error while releasing task %d",
 			              task.second->Id());
 			return false;
