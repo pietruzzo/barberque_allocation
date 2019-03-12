@@ -129,39 +129,6 @@ static void FindUnitsSets(
 }
 
 
-static bool ReleaseProcessingUnits(const TaskGraph & tg, const Partition & partition)
-{
-	uint32_t hw_cluster_id = partition.GetClusterId();
-
-	// Release units
-	unsigned int num_tiles = tg.TaskCount();
-	uint32_t *units = new uint32_t[num_tiles];
-	int i = 0;
-	for (auto task : tg.Tasks()) {
-		auto arch = task.second->GetAssignedArch();
-		units[i] = partition.GetUnit(task.second);
-		logger->Debug("ReleaseProcessingUnits: task %d released tile %u for kernel %s",
-		              task.second->Id(), units[i], GetStringFromArchType(arch));
-		i++;
-	}
-
-	if (hn_release_units_set(num_tiles, units, hw_cluster_id) != HN_SUCCEEDED) {
-		logger->Error("ReleaseProcessingUnits: error while releasing the units set");
-		return false;
-	}
-
-	if (units == nullptr) {
-		logger->Fatal("ReleaseProcessingUnits: unexpected null pointer: units"
-		              " [libhn suspect corruption]");
-		return false;
-	}
-
-	delete[] units;
-
-	return true;
-}
-
-
 /**
  * @brief This function gets a set of memories for the buffers in the TG
  */
@@ -391,11 +358,10 @@ static bool AssignMemory(
 }
 
 
-static bool ReleaseMemory(
-    const TaskGraph &tg,
-    const Partition &partition) noexcept {
 
-	uint32_t hw_cluster_id = partition.GetClusterId();
+static bool ReleaseMemory(const TaskGraph &tg) noexcept {
+
+	uint32_t hw_cluster_id = tg.GetCluster();
 
 	// Release events reservation
 	for ( const auto &event : tg.Events()) {
@@ -414,13 +380,11 @@ static bool ReleaseMemory(
 
 	// Release memory buffers
 	for ( auto buffer : tg.Buffers()) {
-		uint32_t memory_bank = partition.GetMemoryBank(buffer.second);
-		uint32_t phy_addr    = partition.GetBufferAddress(buffer.second);
+		uint32_t memory_bank = buffer.second->MemoryBank();
+		uint32_t phy_addr    = buffer.second->PhysicalAddress();
 		uint32_t size        = buffer.second->Size();;
 		logger->Debug("ReleaseMemory: buffer %d is released at bank %d [address=0x%x]",
 		              buffer.second->Id(), memory_bank, phy_addr);
-		buffer.second->SetMemoryBank(memory_bank);
-		buffer.second->SetPhysicalAddress(phy_addr);
 
 		if (hn_release_memory(memory_bank, phy_addr, size, hw_cluster_id) != HN_SUCCEEDED) {
 			logger->Error("ReleaseMemory: error while releasing buffer %d",
@@ -432,8 +396,8 @@ static bool ReleaseMemory(
 	// Release kernel binary memory areas
 	for ( auto task : tg.Tasks()) {
 		auto arch = task.second->GetAssignedArch();
-		uint32_t phy_addr    = partition.GetKernelAddress(task.second);
-		uint32_t mem_tile    = partition.GetKernelBank(task.second);
+		uint32_t phy_addr    = task.second->Targets()[arch]->Address();
+		uint32_t mem_tile    = task.second->Targets()[arch]->MemoryBank();
 		auto     ksize       = task.second->Targets()[arch]->BinarySize();
 		auto     ssize       = task.second->Targets()[arch]->StackSize();
 		logger->Debug("ReleaseMemory: task %d released space for kernel %s"
@@ -441,8 +405,6 @@ static bool ReleaseMemory(
 		              task.second->Id(),
 		              GetStringFromArchType(arch),
 		              mem_tile, phy_addr, ksize + ssize);
-		task.second->Targets()[arch]->SetMemoryBank(mem_tile);
-		task.second->Targets()[arch]->SetAddress(phy_addr);
 
 		if (hn_release_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id) != HN_SUCCEEDED) {
 			logger->Error("ReleaseMemory: error while releasing task %d",
@@ -455,6 +417,39 @@ static bool ReleaseMemory(
 }
 
 
+static bool ReleaseProcessingUnits(const TaskGraph & tg)
+{
+	uint32_t hw_cluster_id = tg.GetCluster();
+
+	// Release units
+	unsigned int num_tiles = tg.TaskCount();
+	uint32_t * units = new uint32_t[num_tiles];
+	int i = 0;
+	for (auto task : tg.Tasks()) {
+		auto arch = task.second->GetAssignedArch();
+		units[i]  = task.second->GetMappedProcessor();
+		logger->Debug("ReleaseProcessingUnits: task %d released tile %u for kernel %s",
+		              task.second->Id(), units[i], GetStringFromArchType(arch));
+		i++;
+	}
+
+	bool ret = true;
+	int err = hn_release_units_set(num_tiles, units, hw_cluster_id);
+	if (err != HN_SUCCEEDED) {
+		logger->Error("ReleaseProcessingUnits: error while releasing the units set [err=%d]", err);
+		ret = false;
+	}
+
+	if (units == nullptr) {
+		logger->Fatal("ReleaseProcessingUnits: unexpected null pointer: units"
+		              " [libhn suspect corruption]");
+		ret = false;
+	}
+
+	delete[] units;
+
+	return ret;
+}
 
 /****************************************************************************
  *  MANGO Platform Proxy                                                    *
@@ -1176,7 +1171,6 @@ MangoPlatformProxy::MangoPartitionSkimmer::ExitCode_t
 MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
     TaskGraph & tg,
     const Partition & partition) noexcept {
-
 	// Set the HW cluster including the mapped resources
 	uint32_t hw_cluster_id = partition.GetClusterId();
 	tg.SetCluster(hw_cluster_id);
@@ -1231,13 +1225,13 @@ MangoPlatformProxy::MangoPartitionSkimmer::UnsetPartition(
 	uint32_t part_id = partition.GetId();
 	logger->Debug("UnsetPartition: [id=%d] deallocating partition...", part_id);
 
-	bool is_ok = ReleaseMemory(tg, partition);
+	bool is_ok = ReleaseMemory(tg);
 	if (!is_ok) {
 		logger->Error("UnsetPartition: [id=%d] error while releasing memory", part_id);
 		return SK_GENERIC_ERROR;
 	}
 
-	is_ok = ReleaseProcessingUnits(tg, partition);
+	is_ok = ReleaseProcessingUnits(tg);
 	if (!is_ok) {
 		logger->Error("UnsetPartition: [id=%d] error while releasing kernels space", part_id);
 		return SK_GENERIC_ERROR;
