@@ -358,6 +358,111 @@ static bool AssignMemory(
 }
 
 
+/**
+ * @brief This function gets a set of memories for the buffers in the TG
+ */
+static bool ReserveMemory(const TaskGraph &tg)
+{
+	uint32_t hw_cluster_id = tg.GetCluster();
+	uint32_t mem_bank;
+	uint32_t start_addr;
+
+	// Get the memory space amount required for allocating the buffers
+	for (auto & b: tg.Buffers()) {
+		auto & buffer = b.second;
+		// find...
+		uint32_t tile_id = 0;
+		logger->Debug("ReserveMemory: buffer=%d finding space "
+		              "(scheduled on mem=%d)...",
+		              b.first, buffer->MemoryBank());
+		int ret = hn_find_memory(
+		              tile_id,
+		              buffer->Size(),
+		              &mem_bank,
+		              &start_addr,
+		              hw_cluster_id);
+		if (ret != HN_SUCCEEDED) {
+			logger->Error("ReserveMemory: not memory for buffer=%d [err=%d]",
+			              b.first, ret);
+			return false;
+		}
+
+		// assign...
+		logger->Debug("ReserveMemory: buffer=%d allocating space...", b.first);
+		ret = hn_allocate_memory(mem_bank, start_addr, buffer->Size(), hw_cluster_id);
+		if (ret != HN_SUCCEEDED) {
+			logger->Error("ReserveMemory: an error occurred while allocating"
+			              " memory for buffer=%d [err=%d]", b.first, ret);
+			return false;
+		}
+		logger->Debug("ReserveMemory: buffer=%d <size=%d> -> [mem:%d, addr=0x%x]",
+		              b.first, buffer->Size(), mem_bank, start_addr);
+
+		// set task-graph information
+		buffer->SetMemoryBank(mem_bank);
+		buffer->SetPhysicalAddress(start_addr);
+	}
+
+	// Get the memory space amount required for allocating the kernel
+	// binaries and related stacks
+	for (auto & t: tg.Tasks()) {
+		auto & task = t.second;
+		auto arch       = task->GetAssignedArch();
+		auto bin_size   = task->Targets()[arch]->BinarySize();
+		auto stack_size = task->Targets()[arch]->StackSize();
+
+		// find...
+		uint32_t tile_id = task->GetMappedProcessor();
+		logger->Debug("ReserveMemory: task=%d finding space for binary and stack",
+		              t.first);
+		int ret = hn_find_memory(
+		              tile_id,
+		              bin_size + stack_size,
+		              &mem_bank,
+		              &start_addr,
+		              hw_cluster_id);
+
+		if (ret != HN_SUCCEEDED) {
+			logger->Error("ReserveMemory: not memory for task=%d [err=%d]",
+			              t.first, ret);
+			return false;
+		}
+
+		// assign...
+		logger->Debug("ReserveMemory: task=%d allocating space...", t.first);
+		ret = hn_allocate_memory(mem_bank, start_addr, bin_size + stack_size, hw_cluster_id);
+		if (ret != HN_SUCCEEDED) {
+			logger->Error("ReserveMemory: an error occurred while allocating"
+			              " memory for task=%d [err=%d]", t.first, ret);
+			return false;
+		}
+		logger->Debug("ReserveMemory: task=%d <size=%d> -> [mem:%d, addr=0x%x]",
+		              t.first, bin_size + stack_size, mem_bank, start_addr);
+
+		// set task-graph information
+		task->Targets()[arch]->SetMemoryBank(mem_bank);
+		task->Targets()[arch]->SetAddress(start_addr);
+	}
+
+	// Allocate memory space for the events
+	for (auto & e: tg.Events()) {
+		auto & event(e.second);
+		int err = hn_get_synch_id(
+		              &start_addr, 0, HN_READRESET_INCRWRITE_REG_TYPE, hw_cluster_id);
+		if (err != HN_SUCCEEDED) {
+			logger->Error("ReserveMemory: event=%d no sync register available",
+			              event->Id());
+			return false;
+		}
+
+		logger->Debug("ReserveMemory: event=%d assigned to ID 0x%x",
+		              event->Id(), start_addr);
+		event->SetPhysicalAddress(start_addr);
+	}
+
+	return true;
+}
+
 
 static bool ReleaseMemory(const TaskGraph &tg) noexcept {
 
