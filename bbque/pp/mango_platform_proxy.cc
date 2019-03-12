@@ -791,10 +791,9 @@ MangoPlatformProxy::MapResources(
 	UNUSED(pres);
 	UNUSED(excl);
 
-	ba::AppPtr_t papp(static_cast<ba::Application *>(psched.get()));
+	auto papp = static_cast<ba::Application *>(psched.get());
 
-	// This method is empty and this is unusual in BarbequeRTRM, however in
-	// MANGO we use skimmers to get the list of partitions and set them
+	// If we have a partition assigned, nothing must be done (ManGA policy version1)
 	if (papp->GetPartition() != nullptr) {
 		logger->Debug("MapResources: [%s] already performed via partition skimmer", papp->StrId());
 		return PLATFORM_OK;
@@ -813,23 +812,26 @@ MangoPlatformProxy::MapResources(
 		return ret;
 	}
 
-	// Retrieve available units from HN library
-	uint32_t hw_cluster_id        = tg->GetCluster();
-	unsigned int ** tiles          = nullptr;
-	unsigned int ** families_order = nullptr;
-	unsigned int num_sets         = 0;
-	FindUnitsSets(*tg, hw_cluster_id, &tiles, &families_order, &num_sets);
+	// Reserve processing units
+	int err = ReserveProcessingUnits(*tg);
+	if (err < 0) {
+		logger->Error("MapResources: [%s] failed while reserving processing units", papp->StrId());
+		return PLATFORM_MAPPING_FAILED;
+	}
+	logger->Info("MapResources: [%s] processing units reserved", papp->StrId());
 
-	// Fill memory addressess
-	unsigned int * mem_buffers_tiles;
-	unsigned int * mem_buffers_addr;
-
-
+	// Reserve memory
+	bool retm = ReserveMemory(*tg);
+	if (!retm) {
+		logger->Error("MapResources: [%s] failed while reserving memory space", papp->StrId());
+		return PLATFORM_MAPPING_FAILED;
+	}
+	logger->Info("MapResources: [%s] memory space reserved", papp->StrId());
 
 
 	// Send back to the application library the mapped task-graph
 	papp->SetTaskGraph(tg);
-
+	logger->Info("MapResources: [%s] task-graph mapping updated", papp->StrId());
 
 	return PLATFORM_OK;
 }
