@@ -563,10 +563,13 @@ MangoPlatformProxy::Release(SchedPtr_t papp) noexcept {
 
 MangoPlatformProxy::ExitCode_t
 MangoPlatformProxy::ReclaimResources(SchedPtr_t sched) noexcept {
+
 	ba::AppCPtr_t papp = std::dynamic_pointer_cast<ba::Application>(sched);
+
 	auto partition = papp->GetPartition();
 	if (partition != nullptr) {
 		ResourcePartitionValidator &rmv(ResourcePartitionValidator::GetInstance());
+
 		auto ret = rmv.RemovePartition(*papp->GetTaskGraph(), *partition);
 		bbque_assert(ResourcePartitionValidator::PMV_OK == ret);
 		if (ret != ResourcePartitionValidator::PMV_OK) {
@@ -575,11 +578,25 @@ MangoPlatformProxy::ReclaimResources(SchedPtr_t sched) noexcept {
 			papp->SetPartition(nullptr);
 			logger->Info("ReclaimResources: [%s] hw partition released", papp->StrId());
 		}
-	} else
-		logger->Warn("ReclaimResources: [%s] no partition to release", papp->StrId());
+		return PLATFORM_OK;
+	}
 
+	logger->Warn("ReclaimResources: [%s] no partition to release", papp->StrId());
+	auto tg = papp->GetTaskGraph();
 
 	// Release resources by navigating the task graph...
+	int err = ReleaseProcessingUnits(*tg);
+	if (err < 0) {
+		logger->Error("ReclaimResources: [%s] failed while reserving processing units", papp->StrId());
+		return PLATFORM_MAPPING_FAILED;
+	}
+
+	// Reserve memory
+	bool retm = ReleaseMemory(*tg);
+	if (!retm) {
+		logger->Error("ReclaimResources: [%s] failed while reserving memory space", papp->StrId());
+		return PLATFORM_MAPPING_FAILED;
+	}
 
 	return PLATFORM_OK;
 }
