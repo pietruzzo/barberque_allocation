@@ -1088,7 +1088,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 	size_t tasks_size            = tg.Tasks().size();
 	auto it_buff                 = tg.Buffers().begin();
 	size_t buff_size             = tg.Buffers().size();
-	uint32_t **tiles             = NULL;
+	uint32_t **units_sets        = NULL;
 	uint32_t **families_order    = NULL;
 	uint32_t **mem_buffers_tiles = NULL;
 	uint32_t **mem_buffers_addr  = NULL;
@@ -1142,7 +1142,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 
 		// - Find different sets of resources (partitions)
 		std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-		FindUnitsSets(tg, hw_cluster_id, &tiles, &families_order, &num_sets);
+		FindUnitsSets(tg, hw_cluster_id, &units_sets, &families_order, &num_sets);
 		logger->Debug("Skim: HN returned %d available units sets (partitions)",
 		              num_sets);
 
@@ -1163,7 +1163,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 			bool mem_ret = FindMemoryAddresses(
 			                   tg,
 			                   hw_cluster_id,
-			                   tiles[i],
+			                   units_sets[i],
 			                   mem_buffers_tiles[i],
 			                   mem_buffers_addr[i]);
 			if (!mem_ret) {
@@ -1181,7 +1181,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 			Partition part = GetPartition(
 			                     tg,
 			                     hw_cluster_id,
-			                     tiles[i],
+			                     units_sets[i],
 			                     families_order[i],
 			                     mem_buffers_tiles[i],
 			                     mem_buffers_addr[i],
@@ -1226,11 +1226,11 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 	}
 
 	// let's deallocate memory created in the hn_find_units_sets hnlib function
-	if (tiles != nullptr) {
+	if (units_sets != nullptr) {
 		for (unsigned int i = 0; i < num_sets; i++) {
-			free(tiles[i]);
+			free(units_sets[i]);
 		}
-		free(tiles);
+		free(units_sets);
 	}
 
 	if (families_order != nullptr) {
