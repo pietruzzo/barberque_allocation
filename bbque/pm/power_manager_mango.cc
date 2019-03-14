@@ -237,6 +237,29 @@ MangoPowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsiu
 	return PMResult::OK;
 }
 
+
+PowerManager::PMResult
+MangoPowerManager::GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) {
+
+	// HN cluster
+	int32_t cluster_id = rp->GetID(br::ResourceType::GROUP);
+	if (cluster_id < 0) {
+		logger->Warn("GetClockFrequency: no cluster ID, using 0 by default");
+		cluster_id = 0;
+	}
+
+	// Tile
+	int tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
+	if (tile_id < 0) {
+		logger->Warn("GetClockFrequency: no tiles of type ACCELERATOR");
+		return PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
+	khz = tiles_stats[cluster_id][tile_id][0].frequency / 1e3;
+	return PMResult::OK;
+}
+
+
 PowerManager::PMResult
 MangoPowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t & mwatt) {
 

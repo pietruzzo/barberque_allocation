@@ -64,11 +64,7 @@ public:
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) override {
-		UNUSED(rp);
-		UNUSED(khz);
-		return PMResult::ERR_API_NOT_SUPPORTED;
-	}
+	PMResult GetClockFrequency(ResourcePathPtr_t const & rp, uint32_t &khz) override;
 
 	/**
 	 * @see class PowerManager
