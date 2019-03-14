@@ -545,7 +545,7 @@ static int GetCoherentUnitSet(
 			              i, task_id,
 			              unit_sets[i][j],
 			              task->GetMappedProcessor());
-			if (unit_sets[i][j] != (int) task->GetMappedProcessor()) {
+			if (unit_sets[i][j] != (unsigned int) task->GetMappedProcessor()) {
 				logger->Debug("GetCoherentUnitSet: scheduled mapping not in set %d", i);
 				break;
 			}
