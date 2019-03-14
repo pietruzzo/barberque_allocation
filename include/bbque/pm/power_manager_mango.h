@@ -146,8 +146,8 @@ public:
 	PMResult GetPerformanceStatesCount(
 			br::ResourcePathPtr_t const & rp, uint32_t &count) override {
 		UNUSED(rp);
-		count = 0;
-		return PMResult::ERR_API_NOT_SUPPORTED;
+		count = 1;
+		return PMResult::OK;
 	}
 
 	/**
