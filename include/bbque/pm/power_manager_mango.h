@@ -166,7 +166,7 @@ protected:
 	uint32_t num_clusters;
 
 	/// Runtime counter statistics of a MANGO tiles
-	std::map<uint32_t, std::vector<hn_stats_monitor_t>> tiles_stats;
+	std::map<uint32_t, std::vector<std::vector<hn_stats_monitor_t>>> tiles_stats;
 
 	/// Overall MANGO tiles information
 	std::map<uint32_t, std::vector<hn_tile_info_t>> tiles_info;

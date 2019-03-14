@@ -34,25 +34,56 @@ MangoPowerManager::MangoPowerManager() {
 			"[error=%d]", err);
 	}
 
+	hn_stats_monitor_t * curr_stats[2];
+
 	// Initialize per-cluster tile info...
 	for (uint32_t cluster_id=0; cluster_id < this->num_clusters; ++cluster_id) {
 		int err = hn_get_num_tiles(&num_tiles[0], &num_tiles[1], &num_tiles[2], cluster_id);
 		if (err == HN_SUCCEEDED) {
 			tiles_info[cluster_id].resize(num_tiles[0]);
 			tiles_stats[cluster_id].resize(num_tiles[0]);
+			logger->Info("MangoPowerMonitor: cluster=%d includes %d tiles",
+				cluster_id, num_tiles[0]);
 		}
 		else {
-			logger->Fatal("Unable to get the number of MANGO tiles [error=%d].", err);
+			logger->Fatal("MangoPowerMonitor: number of MANGO tiles missing [err=%d].", err);
 			return;
 		}
 
-		for (uint_fast32_t tile_id = 0; tile_id < num_tiles[0]; tile_id++) {
+		for (uint_fast32_t tile_id = 0; tile_id < num_tiles[0]; ++tile_id) {
+
+			// Static information
 			int err = hn_get_tile_info(tile_id, &tiles_info[cluster_id][tile_id], cluster_id);
 			if (HN_SUCCEEDED != err) {
 				logger->Fatal("MangoPowerMonitor: unable to get info for "
 					"cluster=<%d> tile=<%d> [error=%d].",
 					cluster_id, tile_id, err);
 				return;
+			}
+
+			// First counters values for initialization
+			uint32_t nr_cores = 0;
+			err = hn_stats_monitor_read(tile_id, &nr_cores, curr_stats, cluster_id);
+			if (err == 0 && (curr_stats != nullptr)) {
+				// Per tile...
+				tiles_stats[cluster_id][tile_id].resize(nr_cores);
+				logger->Debug("MangoPowerMonitor: cluster=<%d> tile=<%d> nr_cores=%d",
+						cluster_id, tile_id, nr_cores);
+
+				// Per core...
+				for (uint32_t core_id = 0; core_id < nr_cores; ++core_id) {
+					logger->Debug("MangoPowerMonitor: cluster=<%d> tile=<%d> core=<&d>"
+						" initialization...",
+						cluster_id, tile_id, core_id);
+					tiles_stats[cluster_id][tile_id][core_id] = *curr_stats[core_id];
+					free(curr_stats[core_id]);
+				}
+			}
+			else {
+				nr_cores = 1;
+				tiles_stats[cluster_id][tile_id].resize(nr_cores);
+				logger->Warn("MangoPowerMonitor: cluster=<%d> tile=<%d> nr_cores=%d fake",
+						cluster_id, tile_id, nr_cores);
 			}
 		}
 	}
@@ -70,8 +101,18 @@ MangoPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
 	}
 
 	// Tile
-	uint32_t tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
-	hn_stats_monitor_t * nuplus_stats = new hn_stats_monitor_t;
+	int tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
+	if (tile_id < 0) {
+		logger->Warn("GetLoad: no tiles of type ACCELERATOR");
+		return PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
+	// Core
+	int core_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
+	if (core_id < 0) {
+		logger->Warn("GetLoad: no id for PROC_ELEMENT");
+		return PMResult::ERR_RSRC_INVALID_PATH;
+	}
 
 	// Architecture type
 	switch (tiles_info[cluster_id][tile_id].unit_family) {
@@ -111,22 +152,27 @@ MangoPowerManager::GetLoadPEAK(
 		uint32_t tile_id,
 		uint32_t core_id,
 		uint32_t & perc) {
-	UNUSED(core_id);
 
-	hn_stats_monitor_t * curr_stats = new hn_stats_monitor_t;
 	uint32_t nr_cores = 0;
-	uint32_t err = hn_stats_monitor_read(tile_id, &nr_cores, &curr_stats, cluster_id);
+	hn_stats_monitor_t * curr_stats[2];
+
+	uint32_t err = hn_stats_monitor_read(tile_id, &nr_cores, curr_stats, cluster_id);
 	if (err == 0 && (curr_stats != nullptr)) {
+
 		float cycles_ratio =
-			float(curr_stats->core_cycles - tiles_stats[cluster_id][tile_id].core_cycles) /
-				(curr_stats->timestamp - tiles_stats[cluster_id][tile_id].timestamp);
-		tiles_stats[cluster_id][tile_id] = *curr_stats;
+			float(curr_stats[core_id]->core_cycles - tiles_stats[cluster_id][tile_id][core_id].core_cycles) /
+			       (curr_stats[core_id]->timestamp - tiles_stats[cluster_id][tile_id][core_id].timestamp);
+
+		tiles_stats[cluster_id][tile_id][core_id] = *curr_stats[core_id];
 		perc = cycles_ratio * 100;
-		logger->Debug("GetLoadPEAK: cluster=<%d> tile=<%d> [cores=%d]: "
+		logger->Debug("GetLoadPEAK: cluster=<%d> tile=<%d> core=<%d>: "
 			"ts=%ld tics_sleep=%d core_cycles=%d load=%d",
-			cluster_id, tile_id, nr_cores,
-			curr_stats->timestamp, curr_stats->tics_sleep, curr_stats->core_cycles,
+			cluster_id, tile_id, core_id,
+			curr_stats[core_id]->timestamp,
+			curr_stats[core_id]->tics_sleep,
+			curr_stats[core_id]->core_cycles,
 			perc);
+		free(curr_stats[core_id]);
 	}
 	else {
 		perc = 0;
@@ -134,7 +180,6 @@ MangoPowerManager::GetLoadPEAK(
 			cluster_id, tile_id, err);
 	}
 
-	delete curr_stats;
 	return PMResult::OK;
 }
 
@@ -150,10 +195,13 @@ MangoPowerManager::GetLoadNUP(
 		perc = (uint32_t) curr_stats->core_cpi;
 		logger->Debug("GetLoadNUP: cluster=<%d> tile=<%d>: "
 			"ts=%ld tics_sleep=%d core_cycles=%d load=%d",
-			cluster_id, tile_id,
-			curr_stats->timestamp, curr_stats->tics_sleep, curr_stats->core_cycles,
+			cluster_id,
+			tile_id,
+			curr_stats->timestamp,
+			curr_stats->tics_sleep,
+			curr_stats->core_cycles,
 			perc);
-		tiles_stats[cluster_id][tile_id] = *curr_stats;
+		tiles_stats[cluster_id][tile_id][0] = *curr_stats;
 	}
 	else {
 		perc = 0;
@@ -200,7 +248,25 @@ MangoPowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t & mw
 	}
 
 	// Tile
-	uint32_t tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
+	int tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
+	if (tile_id < 0) {
+		logger->Warn("GetPowerUsage: no tiles of type ACCELERATOR");
+		return PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
+	// Core
+	int core_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
+	if (core_id < 0) {
+		logger->Warn("GetLoad: no id for PROC_ELEMENT");
+		return PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
+	logger->Info("GetPowerUsage: cluster=<%d> tile=<%d> [%s]: "
+		"power_factor=%.2f perf_factor=%.2f",
+		cluster_id, tile_id,
+		hn_to_str_unit_family(tiles_info[cluster_id][tile_id].unit_family),
+		tiles_info[cluster_id][tile_id].power_factor,
+		tiles_info[cluster_id][tile_id].performance_factor);
 
 	// Architecture type
 	if (tiles_info[cluster_id][tile_id].unit_family != HN_TILE_FAMILY_NUPLUS) {
