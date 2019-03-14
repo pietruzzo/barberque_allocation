@@ -116,10 +116,12 @@ MangoPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
 
 	// Architecture type
 	switch (tiles_info[cluster_id][tile_id].unit_family) {
+
 	case HN_TILE_FAMILY_PEAK:
-		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a PEAK processor",
-			cluster_id, tile_id);
-		return GetLoadPEAK(cluster_id, tile_id, 0, perc); // core_id not supported
+		logger->Debug("GetLoad: cluster=<%d> tile=<%d> core=<%d> is a PEAK processor",
+			cluster_id, tile_id, core_id);
+		return GetLoadPEAK(cluster_id, tile_id, core_id, perc);
+
 	case HN_TILE_FAMILY_NUPLUS:
 		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a NUPLUS processor",
 			cluster_id, tile_id);
@@ -216,15 +218,21 @@ MangoPowerManager::GetLoadNUP(
 
 PowerManager::PMResult
 MangoPowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius) {
+
 	// HN cluster
 	int32_t cluster_id = rp->GetID(br::ResourceType::GROUP);
 	if (cluster_id < 0) {
-		logger->Warn("GetLoad: no cluster ID, using 0 by default");
+		logger->Warn("GetTemperature: no cluster ID, using 0 by default");
 		cluster_id = 0;
 	}
 
 	// Tile
-	uint32_t tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
+	int tile_id = rp->GetID(br::ResourceType::ACCELERATOR);
+	if (tile_id < 0) {
+		logger->Warn("GetTemperature: no tiles of type ACCELERATOR");
+		return PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
 	float temp = 0;
 	int err = hn_get_tile_temperature(tile_id, &temp, cluster_id);
 	if (err != 0) {
