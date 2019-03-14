@@ -300,12 +300,23 @@ MangoPowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t & mw
 		tiles_info[cluster_id][tile_id].performance_factor);
 
 	// Architecture type
-	if (tiles_info[cluster_id][tile_id].unit_family != HN_TILE_FAMILY_NUPLUS) {
-		mwatt = 0;
-		return PMResult::ERR_API_NOT_SUPPORTED;
+	switch (tiles_info[cluster_id][tile_id].unit_family) {
+
+	case HN_TILE_FAMILY_NUPLUS:
+		logger->Debug("GetPowerUsage: cluster=<%d> tile=<%d>: NU+ processor",
+			cluster_id, tile_id);
+		mwatt = static_cast<uint32_t>(tiles_stats[cluster_id][tile_id][core_id].power_est);
+		return PMResult::OK;
+
+	case HN_TILE_FAMILY_PEAK:
+		mwatt = static_cast<uint32_t>(tiles_info[cluster_id][tile_id].power_factor * 1e3);
+		return PMResult::OK;
+
+	default:
+		mwatt = static_cast<uint32_t>(tiles_info[cluster_id][tile_id].power_factor * 1e3);
+		return PMResult::OK;
 	}
 
-	mwatt = static_cast<uint32_t>(tiles_stats[cluster_id][tile_id].power_est);
 	return PMResult::OK;
 }
 
