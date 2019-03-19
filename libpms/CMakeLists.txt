@@ -55,10 +55,11 @@ install (TARGETS ${TARGET_NAME} LIBRARY
 		COMPONENT BarbequeSynclib)
 
 # Default recipes
-install (FILES generic.recipe
-		DESTINATION ${BBQUE_PATH_RECIPES})
-install (FILES generic_manga.recipe
-		DESTINATION ${BBQUE_PATH_RECIPES})
+#install (DIRECTORY . DESTINATION ${BBQUE_PATH_RECIPES} FILES_MATCHING PATTERN "*.recipe")
+install (FILES recipes/generic.recipe
+	       recipes/generic_manga.recipe
+	       recipes/test_manga.recipe
+	 DESTINATION ${BBQUE_PATH_RECIPES})
 
 # Configuration file
 install (FILES "${PROJECT_BINARY_DIR}/libpms/config/libpms.conf"
