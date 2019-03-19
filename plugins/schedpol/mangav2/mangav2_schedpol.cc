@@ -491,20 +491,20 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::ScheduleApplication(
 	ApplicationManager & am(ApplicationManager::GetInstance());
 	auto ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
 	if (ret == ApplicationManager::AM_SUCCESS) {
-		logger->Info("SelectWorkingMode: [%s] schedule request accepted",
+		logger->Info("ScheduleApplication: [%s] schedule request accepted",
 		             papp->StrId());
 		return SCHED_OK;
 	} else if ((ret == ApplicationManager::AM_APP_BLOCKING) ||
 	           (ret == ApplicationManager::AM_APP_DISABLED)) {
-		logger->Debug("SelectWorkingMode: [%s] schedule request for blocking/disabled",
+		logger->Debug("ScheduleApplication: [%s] schedule request for blocking/disabled",
 		              papp->StrId());
 		return SCHED_SKIP_APP;
 	} else if (ret == ApplicationManager::AM_AWM_NOT_SCHEDULABLE) {
-		logger->Debug("SelectWorkingMode: [%s] schedule request not allocable",
+		logger->Debug("ScheduleApplication: [%s] schedule request not allocable",
 		              papp->StrId());
 		return SCHED_R_UNAVAILABLE;
 	} else {
-		logger->Error("SelectWorkingMode: [%s] schedule request unexpected error",
+		logger->Error("ScheduleApplication: [%s] schedule request unexpected error",
 		              papp->StrId());
 		return SCHED_ERROR;
 	}
