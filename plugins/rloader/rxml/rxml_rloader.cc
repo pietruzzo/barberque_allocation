@@ -655,27 +655,34 @@ void RXMLRecipeLoader::LoadMappingData(
 
 	while (obj_elem) {
 		ba::Recipe::MappingData map_data;
-		// <task/buffer id=...>
-		attribute = obj_elem->first_attribute("id", 0, true);
-		uint32_t obj_id = atoi(attribute->value());
-		logger->Debug("LoadMappingData: %s id=%d", obj_name.c_str(), obj_id);
 
-		while((attribute = attribute->next_attribute()) != nullptr) {
-			if (strncmp(attribute->name(), "freq_khz", 9) == 0) {
+		uint32_t obj_id = 9000;
+
+		for (attribute = obj_elem->first_attribute();
+		     attribute != nullptr;
+		     attribute = attribute->next_attribute()) {
+			logger->Debug("LoadMappingData: %s=%s",
+			              attribute->name(), attribute->value());
+
+			// <task/buffer id=...>
+			if (strncmp(attribute->name(), "id", 2) == 0) {
+				map_data.id = atoi(attribute->value());
+				obj_id = map_data.id;
+				continue;
+			}
+
+			if (strncmp(attribute->name(), "freq_khz", 8) == 0) {
 				map_data.freq_khz = atoi(attribute->value());
-				logger->Debug("LoadMappingData: freq_khz=%d",
-				              map_data.freq_khz);
+				continue;
+			}
+
+			auto r_type = bbque::res::GetResourceTypeFromString(attribute->name());
+			if (r_type != br::ResourceType::UNDEFINED) {
+				map_data.type = r_type;
+				map_data.id   = atoi(attribute->value());
 			} else {
-				auto r_type = bbque::res::GetResourceTypeFromString(
-				                  attribute->name());
-				logger->Debug("LoadMappingData: attribute '%s'...",
+				logger->Error("LoadMappingData: unknown attribute '%s'",
 				              attribute->name());
-				if (r_type != br::ResourceType::UNDEFINED) {
-					map_data.type = r_type;
-					map_data.id   = atoi(attribute->value());
-					logger->Debug("LoadMappingData: mapping to '%s'...",
-					              attribute->value());
-				}
 			}
 		}
 
