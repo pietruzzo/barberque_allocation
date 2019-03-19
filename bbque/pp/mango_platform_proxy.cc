@@ -104,7 +104,7 @@ static void FindUnitsSets(
 #ifndef CONFIG_LIBMANGO_GN
 		if (t.second->GetAssignedArch() == ArchType::GN) {
 			logger->Error("Tile id=%i is of type GN but BarbequeRTRM is not "
-			              "compiled in GN emulation mode."
+			              "compiled in GN emulation mode. "
 			              "This will probably lead to an allocation failure.", i);
 		}
 #endif
@@ -298,7 +298,7 @@ static bool AssignMemory(
 		int res = hn_allocate_memory(
 		    memory_bank, phy_addr, buffer.second->Size(), hw_cluster_id);
 		if (res != HN_SUCCEEDED) {
-			logger->Error("AssignMemory: error while allocating space for "
+			logger->Error("AssignMemory: error while allocating space for"
 			"buffer id=%d size=%lu [bank=%d address=%p error=%d]",
 			buffer.second->Id(),
 			buffer.second->Size(),
@@ -307,7 +307,7 @@ static bool AssignMemory(
 			res);
 			return false;
 		}
-		logger->Info("AssignMemory: buffer id=%d allocated at memory id=%d [address=0x%x]",
+		logger->Info("AssignMemory: buffer id=%d allocated at memory id=%d [address=%p]",
 		             buffer.second->Id(), memory_bank, phy_addr);
 	}
 
@@ -350,7 +350,8 @@ static bool AssignMemory(
 			return false;
 		}
 
-		logger->Debug("AssignMemory: event %d assigned to ID 0x%x", event.second->Id(), phy_addr);
+		logger->Debug("AssignMemory: event %d assigned to ID %p",
+		              event.second->Id(), phy_addr);
 		event.second->SetPhysicalAddress(phy_addr);
 	}
 
@@ -371,7 +372,7 @@ static bool ReserveMemory(const TaskGraph &tg)
 	for (auto & b: tg.Buffers()) {
 		auto & buffer = b.second;
 		// find...
-		uint32_t tile_id = 0;
+		uint32_t tile_id = 0; // TODO: find the right tile to look for
 		logger->Debug("ReserveMemory: buffer=%d finding space "
 		              "(scheduled on mem=%d)...",
 		              b.first, buffer->MemoryBank());
@@ -395,7 +396,7 @@ static bool ReserveMemory(const TaskGraph &tg)
 			              " memory for buffer=%d [err=%d]", b.first, ret);
 			return false;
 		}
-		logger->Debug("ReserveMemory: buffer=%d <size=%d> -> [mem:%d, addr=0x%x]",
+		logger->Debug("ReserveMemory: buffer=%d <size=%d> -> [mem:%d, addr=%p]",
 		              b.first, buffer->Size(), mem_bank, start_addr);
 
 		// set task-graph information
@@ -436,7 +437,7 @@ static bool ReserveMemory(const TaskGraph &tg)
 			              " memory for task=%d [err=%d]", t.first, ret);
 			return false;
 		}
-		logger->Debug("ReserveMemory: task=%d <size=%d> -> [mem:%d, addr=0x%x]",
+		logger->Debug("ReserveMemory: task=%d <size=%d> -> [mem:%d, addr=%p]",
 		              t.first, bin_size + stack_size, mem_bank, start_addr);
 
 		// set task-graph information
@@ -455,7 +456,7 @@ static bool ReserveMemory(const TaskGraph &tg)
 			return false;
 		}
 
-		logger->Debug("ReserveMemory: event=%d assigned to ID 0x%x",
+		logger->Debug("ReserveMemory: event=%d assigned to address=%p",
 		              event->Id(), start_addr);
 		event->SetPhysicalAddress(start_addr);
 	}
@@ -472,13 +473,14 @@ static bool ReleaseMemory(const TaskGraph &tg) noexcept {
 	for (auto & event: tg.Events()) {
 		bbque_assert(event.second);
 		uint32_t phy_addr = event.second->PhysicalAddress();
-		logger->Debug("ReleaseMemory: releasing event %d (ID 0x%x)", event.second->Id(), phy_addr);
 
 		int err = hn_release_synch_id(phy_addr, hw_cluster_id);
 		if (err != HN_SUCCEEDED) {
-			logger->Error("ReleaseMemory: unable to release event %d (ID 0x%x)", event.second->Id(), phy_addr);
+			logger->Error("ReleaseMemory: unable to release event=%d (addr=%p)",
+			event.second->Id(), phy_addr);
 			return false;
 		}
+		logger->Debug("ReleaseMemory: released event=%d (addr=%p)", event.second->Id(), phy_addr);
 	}
 
 	// Release memory buffers
@@ -486,15 +488,15 @@ static bool ReleaseMemory(const TaskGraph &tg) noexcept {
 		uint32_t memory_bank = buffer.second->MemoryBank();
 		uint32_t phy_addr    = buffer.second->PhysicalAddress();
 		uint32_t size        = buffer.second->Size();;
-		logger->Debug("ReleaseMemory: buffer %d is released at bank %d [address=0x%x]",
-		              buffer.second->Id(), memory_bank, phy_addr);
 
 		int err = hn_release_memory(memory_bank, phy_addr, size, hw_cluster_id);
 		if (err != HN_SUCCEEDED) {
-			logger->Error("ReleaseMemory: error while releasing buffer %d",
+			logger->Error("ReleaseMemory: error while releasing buffer=%d",
 			              buffer.second->Id());
 			return false;
 		}
+		logger->Debug("ReleaseMemory: buffer=%d is released at bank %d [address=%p]",
+		              buffer.second->Id(), memory_bank, phy_addr);
 	}
 
 	// Release kernel binary memory areas
@@ -504,18 +506,18 @@ static bool ReleaseMemory(const TaskGraph &tg) noexcept {
 		uint32_t mem_tile    = task.second->Targets()[arch]->MemoryBank();
 		auto     ksize       = task.second->Targets()[arch]->BinarySize();
 		auto     ssize       = task.second->Targets()[arch]->StackSize();
-		logger->Debug("ReleaseMemory: task %d released space for kernel %s"
-		              " [bank=%d, address=0x%x size=%lu]",
-		              task.second->Id(),
-		              GetStringFromArchType(arch),
-		              mem_tile, phy_addr, ksize + ssize);
 
 		int err = hn_release_memory(mem_tile, phy_addr, ksize + ssize, hw_cluster_id);
 		if (err!= HN_SUCCEEDED) {
-			logger->Error("ReleaseMemory: error while releasing task %d",
+			logger->Error("ReleaseMemory: error while releasing task=%d",
 			              task.second->Id());
 			return false;
 		}
+		logger->Debug("ReleaseMemory: task=%d released space for kernel %s"
+		              " [bank=%d, address=%p size=%lu]",
+		              task.second->Id(),
+		              GetStringFromArchType(arch),
+		              mem_tile, phy_addr, ksize + ssize);
 	}
 
 	return true;
@@ -773,6 +775,7 @@ MangoPlatformProxy::ReclaimResources(SchedPtr_t sched) noexcept {
 		logger->Error("ReclaimResources: [%s] failed while reserving processing units", papp->StrId());
 		return PLATFORM_MAPPING_FAILED;
 	}
+	logger->Info("ReclaimResources: [%s] processing units released", papp->StrId());
 
 	// Reserve memory
 	bool retm = ReleaseMemory(*tg);
@@ -780,6 +783,7 @@ MangoPlatformProxy::ReclaimResources(SchedPtr_t sched) noexcept {
 		logger->Error("ReclaimResources: [%s] failed while reserving memory space", papp->StrId());
 		return PLATFORM_MAPPING_FAILED;
 	}
+	logger->Info("ReclaimResources: [%s] memory released", papp->StrId());
 
 	return PLATFORM_OK;
 }
