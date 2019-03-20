@@ -557,25 +557,29 @@ void RXMLRecipeLoader::LoadTaskGraphMappings(rapidxml::xml_node<> *_xml_elem)
 		CheckMandatoryNode(map_elem, "mapping", mappings_elem);
 		while (map_elem) {
 			logger->Debug("LoadTaskGraphMappings: loading mapping...");
+
 			// <mapping id=...>
 			read_attrib  = loadAttribute("id", true, map_elem);
-			logger->Debug("LoadTaskGraphMappings: id=%s", read_attrib.c_str());
 			uint32_t id = atoi(read_attrib.c_str());
+
 			// <mapping ... exec_time_ms=...>
 			read_attrib  = loadAttribute("exec_time_ms", true, map_elem);
-			logger->Debug("LoadTaskGraphMappings: exec_time_ms=%s",
-			              read_attrib.c_str());
 			mapping.exec_time_ms = atoi(read_attrib.c_str());
+
 			// <mapping ... power_mw=...>
 			read_attrib  = loadAttribute("power_mw", false, map_elem);
-			logger->Debug("LoadTaskGraphMappings: power_mw=%s",
-			              read_attrib.c_str());
 			mapping.power_mw = atoi(read_attrib.c_str());
+
 			// <mapping ... mem_bw=...>
 			read_attrib  = loadAttribute("mem_bw", false, map_elem);
-			logger->Debug("LoadTaskGraphMappings: power_bw=%s",
-			              read_attrib.c_str());
 			mapping.mem_bw = atoi(read_attrib.c_str());
+
+			logger->Debug("LoadTaskGraphMappings: id=%d "
+				"exec_power_bw=%d power_mw=%d mem_bw=%d",
+				id,
+				mapping.exec_time_ms,
+				mapping.power_mw,
+				mapping.mem_bw);
 
 			// Load the set of design-time mapping choices
 			LoadTaskGraphMapping(map_elem, mapping);
@@ -655,14 +659,15 @@ void RXMLRecipeLoader::LoadMappingData(
 
 	while (obj_elem) {
 		ba::Recipe::MappingData map_data;
-
+		std::string map_log;
 		uint32_t obj_id = 9000;
 
 		for (attribute = obj_elem->first_attribute();
 		     attribute != nullptr;
 		     attribute = attribute->next_attribute()) {
-			logger->Debug("LoadMappingData: %s=%s",
-			              attribute->name(), attribute->value());
+
+			map_log += std::string(attribute->name()) + "="
+				+ std::string(attribute->value()) + " ";
 
 			// <task/buffer id=...>
 			if (strncmp(attribute->name(), "id", 2) == 0) {
@@ -685,6 +690,8 @@ void RXMLRecipeLoader::LoadMappingData(
 				              attribute->name());
 			}
 		}
+
+		logger->Debug("LoadMappingData: %s", map_log.c_str());
 
 		mapping_map[obj_id] = map_data;
 		obj_elem = obj_elem->next_sibling(obj_name.c_str(), 0, false);
