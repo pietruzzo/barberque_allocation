@@ -323,17 +323,24 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 		// Check if the mapping is feasible in at least one platform cluster
 		ret = CheckMappingFeasibility(papp, partition);
 		if (ret == SCHED_OK) {
-			logger->Info("EvalMappingAlternatives: [%s] id=%d is feasible",
+			logger->Info("EvalMappingAlternatives: [%s] mapping [id=%d] is feasible",
 			             papp->StrId(),
 			             m.first);
 			//		papp->SetPartition(partition);
 			return ret;
 		} else if (ret == SCHED_ERROR) {
-			logger->Error("EvalMappingAlternatives: [%s] id=%d interrupted",
+			logger->Error("EvalMappingAlternatives: [%s] mapping [id=%d] interrupted",
 			              papp->StrId(),
 			              m.first);
 			return ret;
 		}
+		else {
+			logger->Debug("EvalMappingAlternatives: [%s] mapping [id=%d] not applicable."
+				     " Trying next option...",
+			              papp->StrId(),
+			              m.first);
+		}
+
 		// if here... try with the next mapping option
 	}
 
@@ -345,11 +352,15 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
     bbque::app::AppCPtr_t papp,
     std::shared_ptr<Partition> partition)
 {
-	// Iterate over all the HN clusters
-	uint32_t curr_cluster_id = 0;
-	uint32_t nr_clusters = pe_per_acc.size();
+	ExitCode_t ret = SCHED_ERROR;
 
-	for (; curr_cluster_id < nr_clusters; curr_cluster_id++) {
+	// Iterate over all the HN clusters
+	uint32_t nr_clusters = pe_per_acc.size();
+	logger->Debug("CheckMappingFeasibility [%s] nr. of clusters on the platform: %d",
+	              papp->StrId(),
+		      nr_clusters);
+
+	for (uint32_t curr_cluster_id = 0; curr_cluster_id < nr_clusters; curr_cluster_id++) {
 		logger->Debug("CheckMappingFeasibility: [%s] checking availability "
 		              "in cluster=%d",
 		              papp->StrId(), curr_cluster_id);
@@ -371,7 +382,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
 		}
 
 		// Schedule request
-		ExitCode_t ret = ScheduleApplication(papp, pawm, ref_num);
+		ret = ScheduleApplication(papp, pawm, ref_num);
 		if (ret != SCHED_R_UNAVAILABLE) {
 			logger->Debug("CheckMappingFeasibility [%s] terminated",
 			              papp->StrId());
@@ -379,9 +390,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
 		}
 	}
 
-	logger->Error("CheckMappingFeasibility [%s] no clusters on the platform",
-	              papp->StrId());
-	return SCHED_ERROR;
+	return ret;
 }
 
 
