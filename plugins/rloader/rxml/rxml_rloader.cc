@@ -671,8 +671,7 @@ void RXMLRecipeLoader::LoadMappingData(
 
 			// <task/buffer id=...>
 			if (strncmp(attribute->name(), "id", 2) == 0) {
-				map_data.id = atoi(attribute->value());
-				obj_id = map_data.id;
+				obj_id = atoi(attribute->value());
 				continue;
 			}
 
