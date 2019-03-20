@@ -453,7 +453,6 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<> *_xml_elem)
 	rapidxml::xml_node<> * reqs_elem = nullptr;
 	rapidxml::xml_node<> * task_elem  = nullptr;
 	std::string read_attrib;
-	logger->Debug("LoadTasksRequirements: loading children of <%s>...", _xml_elem->name());
 
 	try {
 		reqs_elem = _xml_elem->first_node("reqs", 0, true);
@@ -535,9 +534,6 @@ void RXMLRecipeLoader::LoadTaskGraphMappings(rapidxml::xml_node<> *_xml_elem)
 	std::string read_attrib;
 	ba::Recipe::TaskGraphMapping mapping;
 
-	logger->Debug("LoadTaskGraphMappings: loading children of <%s>...",
-	              _xml_elem->name());
-
 	try {
 		// <mappings>
 		mappings_elem = _xml_elem->first_node("mappings", 0, false);
@@ -604,9 +600,6 @@ void RXMLRecipeLoader::LoadTaskGraphMapping(
 	rapidxml::xml_node<> * buff_elem = nullptr;
 	std::string read_attrib;
 
-	logger->Debug("LoadTaskGraphMapping: loading children of <%s>...",
-	              _xml_elem->name());
-
 	try {
 		// <tasks>
 		tasks_elem = _xml_elem->first_node("tasks", 0, true);
@@ -659,7 +652,7 @@ void RXMLRecipeLoader::LoadMappingData(
 
 	while (obj_elem) {
 		ba::Recipe::MappingData map_data;
-		std::string map_log;
+		std::string map_log(obj_name + " ");
 		uint32_t obj_id = 9000;
 
 		for (attribute = obj_elem->first_attribute();
