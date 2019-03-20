@@ -292,8 +292,8 @@ MangoPowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t & mw
 		return PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
-	logger->Info("GetPowerUsage: cluster=<%d> tile=<%d> [%s]: "
-		"power_factor=%.2f perf_factor=%.2f",
+	logger->Debug("GetPowerUsage: cluster=<%d> tile=<%d> [%s]: "
+		"power_fact=%.2f perf_fact=%.2f",
 		cluster_id, tile_id,
 		hn_to_str_unit_family(tiles_info[cluster_id][tile_id].unit_family),
 		tiles_info[cluster_id][tile_id].power_factor,
