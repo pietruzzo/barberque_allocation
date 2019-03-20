@@ -219,7 +219,10 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::SchedulePriority(
 		if (ret != SCHED_OK) {
 			logger->Warn("SchedulePriority: [%s] not schedulable",
 			             papp->StrId());
-			// TODO: do not schedule
+			// Do not schedule
+			ApplicationManager & am(ApplicationManager::GetInstance());
+			am.NoSchedule(papp);
+			ret = SCHED_OK;
 		}
 	}
 
