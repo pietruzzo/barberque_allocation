@@ -88,7 +88,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 	std::string token_path(MODULE_NAMESPACE);
 	++status_view_count;
 	token_path.append(std::to_string(status_view_count));
-	logger->Debug("Init: Require a new resource state view [%s]",
+	logger->Debug("Init: getting new resource state view token from <%s>",
 	              token_path.c_str());
 
 	// Get a fresh resource status view
@@ -110,6 +110,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 		auto clusters = sys->GetResources("sys.grp");
 		logger->Debug("Init: # clusters: %d", clusters.size());
 		for (auto & hn_cluster: clusters) {
+
 			// Cluster info
 			auto cluster_id = hn_cluster->ID();
 			std::string cluster_path(
@@ -235,6 +236,8 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 	ExitCode_t ret = ExitCode_t::SCHED_OK;
 
 	// Optionally add an ordering criteria here...
+	logger->Debug("EvalMappingAlternatives: [%s] nr. mapping options = %d",
+		papp->StrId(), recipe->GetTaskGraphMappingAll().size());
 
 	for (auto & m: recipe->GetTaskGraphMappingAll()) {
 		logger->Info("EvalMappingAlternatives: [%s] id=%d "
