@@ -155,28 +155,27 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Schedule(
 
 	// Re-assing resources to running applications: no reconfiguration
 	// supported by MANGO platform
-	/*
+	ExitCode_t result;
+	bbque::app::AppCPtr_t papp;
+	AppsUidMapIt app_it;
 
-		bbque::app::AppCPtr_t papp;
-		AppsUidMapIt app_it;
-		papp = sys->GetFirstRunning(app_it);
-		for (; papp; papp = sys->GetNextReady(app_it)) {
-			logger->Debug("Schedule: [%s] is RUNNING -> rescheduling", papp->StrId());
-			err = ServeApp(papp);
-			if (err == SCHED_ERROR) {
-				logger->Crit("Schedule: [%s] unexpected error [err=%d]",
-				             papp->StrId(), err);
-				return SCHED_ERROR;
-			}
+	papp = sys->GetFirstRunning(app_it);
+	for (; papp; papp = sys->GetNextReady(app_it)) {
+		logger->Debug("Schedule: [%s] is RUNNING -> rescheduling", papp->StrId());
+		result = ReassignWorkingMode(papp);
+		if (result == SCHED_ERROR) {
+			logger->Crit("Schedule: [%s] unexpected error [err=%d]",
+				     papp->StrId(), result);
+			return SCHED_ERROR;
 		}
-	*/
+	}
 
 	for (AppPrio_t priority = 0; priority <= sys->ApplicationLowestPriority(); priority++) {
 		if (!sys->HasApplications(priority))
 			continue;
 
 		logger->Debug("Schedule: serving applications with priority %d", priority);
-		ExitCode_t result = SchedulePriority(priority);
+		result = SchedulePriority(priority);
 		if (result == SCHED_ERROR) {
 			logger->Error("Schedule: error occurred while scheduling priority %d",
 			              priority);
@@ -225,6 +224,21 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::SchedulePriority(
 	}
 
 	return ExitCode_t::SCHED_OK;
+}
+
+
+SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::ReassignWorkingMode(
+    bbque::app::AppCPtr_t papp)
+{
+	ApplicationManager & am(ApplicationManager::GetInstance());
+	auto ret = am.ScheduleRequestAsPrev(papp, sched_status_view);
+	if (ret != ApplicationManager::AM_SUCCESS) {
+		logger->Error("ReassignWorkingMode: [%s] rescheduling failed", papp->StrId());
+		return SCHED_SKIP_APP;
+	}
+
+	logger->Info("ReassignWorkingMode: [%s] rescheduling done", papp->StrId());
+	return SCHED_OK;
 }
 
 

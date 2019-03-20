@@ -120,6 +120,8 @@ private:
 
 	ExitCode_t SchedulePriority(bbque::app::AppPrio_t priority);
 
+	ExitCode_t ReassignWorkingMode(bbque::app::AppCPtr_t papp);
+
 	ExitCode_t EvalMappingAlternatives(bbque::app::AppCPtr_t papp);
 
 	ExitCode_t CheckMappingFeasibility(
