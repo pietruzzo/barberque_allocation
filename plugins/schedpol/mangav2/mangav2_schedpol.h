@@ -27,6 +27,7 @@
 #include "bbque/plugins/plugin.h"
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/scheduler_manager.h"
+#include "tg/hw.h"
 
 #define SCHEDULER_POLICY_NAME "mangav2"
 
@@ -104,6 +105,8 @@ private:
 
 	/** Number of cores per accelerator (and group/cluster) */
 	std::map<uint32_t, std::vector<uint32_t>> pe_per_acc;
+
+	std::map<uint32_t, std::vector<ArchType>> arch_per_acc;
 
 	/**
 	 * @brief Constructor

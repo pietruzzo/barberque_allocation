@@ -121,6 +121,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 			logger->Debug("Init: accelerators path: <%s>", acc_path.c_str());
 			auto accs = sys->GetResources(acc_path);
 			pe_per_acc.emplace(cluster_id, std::vector<uint32_t>(accs.size()));
+			arch_per_acc.emplace(cluster_id, std::vector<ArchType>(accs.size()));
 			logger->Debug("Init: cluster=<%d>: # accelerators %d",
 			              cluster_id, accs.size());
 
@@ -131,11 +132,17 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 				logger->Debug("Init: binding resource path: <%s>",
 				              pe_binding_path.c_str());
 
-				pe_per_acc[cluster_id][acc->ID()] =
-				    sys->ResourceTotal(pe_binding_path) / 100 ;
-				logger->Debug("Init: <%s> #proc_element=%d",
+				auto rsrc_pes = sys->GetResources(pe_binding_path);
+				auto & first_pe = rsrc_pes.front();
+
+				pe_per_acc[cluster_id][acc->ID()] = rsrc_pes.size();
+				logger->Debug("Init: <%s> #proc_element=%d arch=%s",
 				              pe_binding_path.c_str(),
-				              pe_per_acc[cluster_id][acc->ID()]);
+				              pe_per_acc[cluster_id][acc->ID()],
+					      first_pe->Model().c_str());
+
+				arch_per_acc[cluster_id][acc->ID()] =
+					GetArchTypeFromString(first_pe->Model());
 			}
 		}
 	}
@@ -274,6 +281,8 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 			return SCHED_ERROR;
 		}
 
+		bool task_mapping_succeeded = false;
+
 		// Task mapping
 		for (auto const & task_mapping: m.second.tasks) {
 			auto & task_id = task_mapping.first;
@@ -287,15 +296,42 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 				continue;
 			}
 
-
 			if (mapping_info.type == bbque::res::ResourceType::ACCELERATOR) {
+				// get the mango architecture
+				auto curr_arch = arch_per_acc[0][mapping_info.id];
 				logger->Debug("EvalMappingAlternatives: [%s] "
-				              "task=%d => [acc=%d]",
-				              papp->StrId(), task->Id(), mapping_info.id);
+				              "task=%d => [acc=%d arch: %s]",
+					papp->StrId(), task_id,
+					mapping_info.id,
+					GetStringFromArchType(curr_arch));
+
+				// check the supported architectures
+				auto & target_archs = task->Targets();
+				if (target_archs.find(curr_arch) == target_archs.end()) {
+					logger->Debug("EvalMappingAlternatives: [%s] "
+						      "task=%d => [acc=%d arch: %s] missing kernel binary...",
+						papp->StrId(),
+						task->Id(),
+						mapping_info.id,
+						GetStringFromArchType(curr_arch));
+					task_mapping_succeeded = false;
+					break;
+				}
+
+				// assign the processor
 				task->SetMappedProcessor(mapping_info.id);
 				partition->MapTask(task, mapping_info.id, 0, 0);
+				task_mapping_succeeded = true;
+
 				// TODO: frequency setting ...
 			}
+		}
+
+		if (!task_mapping_succeeded) {
+			logger->Debug("EvalMappingAlternatives: [%s] id=%d skipping..",
+				papp->StrId(),
+				m.first);
+			continue;
 		}
 
 		// Buffer mapping
