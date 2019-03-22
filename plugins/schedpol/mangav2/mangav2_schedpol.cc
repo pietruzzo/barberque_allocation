@@ -402,7 +402,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
 		int32_t ref_num;
 		auto pawm = SelectWorkingMode(papp, ref_num);
 		if (pawm == nullptr) {
-			logger->Crit("CheckMappingFeasibility [%s] null working mode",
+			logger->Crit("CheckMappingFeasibility: [%s] null working mode",
 			             papp->StrId());
 			return ExitCode_t::SCHED_ERROR;
 		}
@@ -410,7 +410,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
 		// Schedule request
 		ret = ScheduleApplication(papp, pawm, ref_num);
 		if (ret != SCHED_R_UNAVAILABLE) {
-			logger->Debug("CheckMappingFeasibility [%s] terminated",
+			logger->Debug("CheckMappingFeasibility: [%s] terminated",
 			              papp->StrId());
 			return ret;
 		}
@@ -429,18 +429,14 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 		           papp->WorkingModes().size(),"Run-time", 1, papp);
 	}
 	pawm->ClearResourceBinding();
-	logger->Info("SelectWorkingMode: [%s] partition %d mapping...",
-	             papp->StrId(), partition->GetId());
 	ref_num = -1;
-
-	// Now we will update the Resource Accounter in order to trace the resource
-	// allocation. This has no effect in the platform resource assignment, since
-	// the actual assignment was performed (by the platform proxy) during
-	// the PropagatePartition
 
 	uint32_t nr_cores = 1;
 	auto tg = papp->GetTaskGraph();
-	uint32_t cluster_id = tg->GetCluster(); //partition->GetClusterId();
+	uint32_t cluster_id = tg->GetCluster();
+
+	logger->Info("SelectWorkingMode: [%s] looking on cluster %d",
+		papp->StrId(), cluster_id);
 
 	for (auto task : tg->Tasks()) {
 		// if thread count not specified, assign all the available cores
@@ -495,7 +491,6 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 
 	// Accouting of memory resources
 	for (auto buff : tg->Buffers()) {
-		//int mem_bank_id = partition->GetMemoryBank(buff.second);
 		int mem_bank_id = buff.second->MemoryBank();
 		if (mem_bank_id < 0) {
 			logger->Error("SelectWorkingMode: [%s] buffer=%d mapping missing",
@@ -504,11 +499,10 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 		}
 
 		mem_req_amount[mem_bank_id] += buff.second->Size();
-		logger->Debug("SelectWorkingMode: [%s] buffer=%d -> memory bank %d (id=%d)",
+		logger->Debug("SelectWorkingMode: [%s] buffer=%d -> memory bank =<%d>",
 		              papp->StrId(),
 		              buff.first,
-		              partition->GetMemoryBank(buff.second),
-		              mem_bank_id);
+			      mem_bank_id);
 	}
 
 	for (auto &mem_entry: mem_req_amount) {
