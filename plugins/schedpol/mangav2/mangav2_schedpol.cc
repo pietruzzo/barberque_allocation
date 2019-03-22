@@ -518,8 +518,16 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 
 		// Resource binding: HN cluster (group) needed only
 		ref_num = pawm->BindResource(
-		              br::ResourceType::GROUP, R_ID_ANY,
-		              partition->GetClusterId(),
+		              br::ResourceType::GROUP,
+		              R_ID_ANY,
+		              cluster_id,
+		              ref_num);
+
+		// Resource binding: memory node
+		ref_num = pawm->BindResource(
+		              br::ResourceType::MEMORY,
+		              mem_bank_id,
+		              mem_bank_id,
 		              ref_num);
 	}
 
