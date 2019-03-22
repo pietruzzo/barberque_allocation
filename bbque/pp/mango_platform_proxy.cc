@@ -372,7 +372,7 @@ static bool ReserveMemory(const TaskGraph &tg)
 	for (auto & b: tg.Buffers()) {
 		auto & buffer = b.second;
 		// find...
-		uint32_t tile_id = 0; // TODO: find the right tile to look for
+		uint32_t tile_id = buffer->MemoryBank();
 		logger->Debug("ReserveMemory: buffer=%d finding space "
 		              "(scheduled on mem=%d)...",
 		              b.first, buffer->MemoryBank());
