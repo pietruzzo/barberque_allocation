@@ -538,24 +538,26 @@ static int GetCoherentUnitSet(
 	int nr_tasks = tg.TaskCount();
 	logger->Debug("GetCoherentUnitSet: nr_tasks=%d", nr_tasks);
 
-	for (unsigned int i=0; i < num_sets; ++i) {
-		int j=0;
+	for (unsigned int set_id=0; set_id < num_sets; ++set_id) {
+		int tile_id = 0;
 		for (auto & task_entry: tg.Tasks()) {
 			auto task_id = task_entry.first;
 			auto & task  = task_entry.second;
 			logger->Debug("GetCoherentUnitSet: [set=%d] task=%d -> proc=%d [=%d?]",
-			              i, task_id,
-			              unit_sets[i][j],
+			              set_id,
+				      task_id,
+			              unit_sets[set_id][tile_id],
 			              task->GetMappedProcessor());
-			if (unit_sets[i][j] != (unsigned int) task->GetMappedProcessor()) {
-				logger->Debug("GetCoherentUnitSet: scheduled mapping not in set %d", i);
+			if (unit_sets[set_id][tile_id] != (unsigned int) task->GetMappedProcessor()) {
+				logger->Debug("GetCoherentUnitSet: scheduled mapping not in set %d",
+					set_id);
 				break;
 			}
-			++j;
+			++tile_id;
 		}
-		if (j == nr_tasks) {
-			logger->Debug("GetCoherentUnitSet: scheduled mapping matches set %d", i);
-			return j;
+		if (tile_id == nr_tasks) {
+			logger->Debug("GetCoherentUnitSet: scheduled mapping matches set %d", set_id);
+			return set_id;
 		}
 	}
 
