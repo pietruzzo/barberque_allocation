@@ -127,12 +127,10 @@ private:
 
 	ExitCode_t EvalMappingAlternatives(bbque::app::AppCPtr_t papp);
 
-	ExitCode_t CheckMappingFeasibility(
-	    bbque::app::AppCPtr_t papp, std::shared_ptr<Partition> partition);
+	ExitCode_t CheckMappingFeasibility(bbque::app::AppCPtr_t papp);
 
 	bbque::app::AwmPtr_t SelectWorkingMode(
 	    bbque::app::AppCPtr_t papp,
-	    std::shared_ptr<Partition> partition,
 	    int & ref_num);
 
 	ExitCode_t ScheduleApplication(

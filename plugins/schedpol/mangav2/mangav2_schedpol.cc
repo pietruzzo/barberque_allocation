@@ -272,8 +272,6 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 		             m.second.power_mw,
 		             m.second.mem_bw);
 
-		std::shared_ptr<Partition> partition = std::make_shared<Partition>(0);
-
 		if (task_graph->Tasks().size() > m.second.tasks.size()) {
 			logger->Error("EvalMappingAlternatives: [%s] "
 			              "possible mismatch in recipe file!",
@@ -320,7 +318,6 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 
 				// assign the processor
 				task->SetMappedProcessor(mapping_info.id);
-				partition->MapTask(task, mapping_info.id, 0, 0);
 				task_mapping_succeeded = true;
 
 				// TODO: frequency setting ...
@@ -352,17 +349,15 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 				              "buffer=%d => [mem=%d]",
 				              papp->StrId(), buffer->Id(), mapping_info.id);
 				buffer->SetMemoryBank(mapping_info.id);
-				partition->MapBuffer(buffer, mapping_info.id, 0);
 			}
 		}
 
 		// Check if the mapping is feasible in at least one platform cluster
-		ret = CheckMappingFeasibility(papp, partition);
+		ret = CheckMappingFeasibility(papp);
 		if (ret == SCHED_OK) {
 			logger->Info("EvalMappingAlternatives: [%s] mapping [id=%d] is feasible",
 			             papp->StrId(),
 			             m.first);
-			//		papp->SetPartition(partition);
 			return ret;
 		} else if (ret == SCHED_ERROR) {
 			logger->Error("EvalMappingAlternatives: [%s] mapping [id=%d] interrupted",
@@ -385,14 +380,13 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 
 
 SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
-    bbque::app::AppCPtr_t papp,
-    std::shared_ptr<Partition> partition)
+    bbque::app::AppCPtr_t papp)
 {
 	ExitCode_t ret = SCHED_ERROR;
 
 	// Iterate over all the HN clusters
 	uint32_t nr_clusters = pe_per_acc.size();
-	logger->Debug("CheckMappingFeasibility [%s] nr. of clusters on the platform: %d",
+	logger->Debug("CheckMappingFeasibility: [%s] nr. of clusters on the platform: %d",
 	              papp->StrId(),
 		      nr_clusters);
 
@@ -401,16 +395,12 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
 		              "in cluster=%d",
 		              papp->StrId(), curr_cluster_id);
 
-		partition->SetClusterId(curr_cluster_id);
+		// Assign current cluster id
 		papp->GetTaskGraph()->SetCluster(curr_cluster_id);
-
-		// Find memory space for kernels binaries and buffers...
-
-
 
 		// Set the working mode
 		int32_t ref_num;
-		auto pawm = SelectWorkingMode(papp, partition, ref_num);
+		auto pawm = SelectWorkingMode(papp, ref_num);
 		if (pawm == nullptr) {
 			logger->Crit("CheckMappingFeasibility [%s] null working mode",
 			             papp->StrId());
@@ -430,10 +420,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
 }
 
 
-ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(
-    ba::AppCPtr_t papp,
-    std::shared_ptr<Partition> partition,
-    int & ref_num)
+ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_num)
 {
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
@@ -461,7 +448,6 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(
 		              papp->StrId(), task.first, task.second->GetThreadCount());
 
 		int tile_id = task.second->GetMappedProcessor();
-		//partition->GetUnit(task.second);
 		if (tile_id < 0) {
 			logger->Error("SelectWorkingMode: [%s] task=%d mapping missing",
 			              papp->StrId(), task.first);
