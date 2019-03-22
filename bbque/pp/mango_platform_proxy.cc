@@ -611,7 +611,7 @@ static bool ReleaseProcessingUnits(const TaskGraph & tg)
 	// Release units
 	unsigned int num_tiles = tg.TaskCount();
 	uint32_t * units = new uint32_t[num_tiles];
-	int i = 0;
+	unsigned int i = 0;
 	for (auto task : tg.Tasks()) {
 		auto arch = task.second->GetAssignedArch();
 		units[i]  = task.second->GetMappedProcessor();
@@ -625,6 +625,9 @@ static bool ReleaseProcessingUnits(const TaskGraph & tg)
 	if (err != HN_SUCCEEDED) {
 		logger->Error("ReleaseProcessingUnits: error while releasing the units set [err=%d]", err);
 		ret = false;
+	}
+	else {
+		logger->Info("ReleaseProcessingUnits: units set released");
 	}
 
 	if (units == nullptr) {
