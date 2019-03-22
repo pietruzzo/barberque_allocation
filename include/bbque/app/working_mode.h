@@ -361,11 +361,14 @@ public:
 	 *
 	 * @param bound_map The resource assignment map (already bound) with
 	 * missing requests
+	 * @param r_type The type of the resource for which a request adding
+	 * may be needed
 	 *
 	 * @return The number of missing resources added
 	 */
 	uint32_t AddMissingResourceRequests(
-			br::ResourceAssignmentMapPtr_t bound_map);
+			br::ResourceAssignmentMapPtr_t bound_map,
+			br::ResourceType r_type);
 
 	/**
 	 * @brief Retrieve the source and the destination map of resource
