@@ -32,26 +32,71 @@
 			</awms>
 			<tg>
 				<reqs>
-					<task name="t0" id="0" hw_prefs="peak,gn,nup" throughput_cps="1" inbw_kbps="2000" outbw_kbps="1500"/>
-					<task name="t1" id="1" hw_prefs="peak,gn,nup" ctime_ms="1000"/>
+					<task name="t1" id="1" hw_prefs="peak,gn,nup" ctime_ms="1000" throughput_cps="1" inbw_kbps="2000" outbw_kbps="1500" />
 				</reqs>
 				<mappings>
-					<mapping id="0" exec_time_ms="1000" power_mw="2096" mem_bw="">
+					<mapping id="0" exec_time_ms="100" power_mw="8888" mem_bw="">
 						<tasks>
-							<task id="0" acc="1" freq_khz="0"/>
 							<task id="1" acc="0" freq_khz="0"/>
 						</tasks>
 						<buffers>
-							<buffer id="0" mem="0"/>
+							<buffer id="1" mem="0"/>
 						</buffers>
 					</mapping>
-					<mapping id="1" exec_time_ms="2000" power_mw="4120" mem_bw="300">
+					<mapping id="1" exec_time_ms="1000" power_mw="8888" mem_bw="">
 						<tasks>
-							<task id="0" acc="1" freq_khz="0"/>
+							<task id="1" acc="1" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="0"/>
+						</buffers>
+					</mapping>
+					<mapping id="2" exec_time_ms="1000" power_mw="9999" mem_bw="">
+						<tasks>
 							<task id="1" acc="2" freq_khz="0"/>
 						</tasks>
 						<buffers>
-							<buffer id="0" mem="0"/>
+							<buffer id="1" mem="0"/>
+						</buffers>
+					</mapping>
+					<mapping id="3" exec_time_ms="500" power_mw="9999" mem_bw="">
+						<tasks>
+							<task id="1" acc="3" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="4" exec_time_ms="1000" power_mw="2096" mem_bw="">
+						<tasks>
+							<task id="1" acc="4" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="5" exec_time_ms="200" power_mw="4120" mem_bw="300">
+						<tasks>
+							<task id="1" acc="5" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="6" exec_time_ms="500" power_mw="4120" mem_bw="300">
+						<tasks>
+							<task id="1" acc="6" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="7" exec_time_ms="200" power_mw="4120" mem_bw="300">
+						<tasks>
+							<task id="1" acc="7" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
 						</buffers>
 					</mapping>
 				</mappings>
