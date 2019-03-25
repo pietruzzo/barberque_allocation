@@ -55,6 +55,7 @@ inline ArchType GetArchTypeFromString(std::string const & str) {
 		case ConstHashString("PEAK"):
 			return ArchType::PEAK;
 		case ConstHashString("NUP"):
+		case ConstHashString("NUPLUS"):
 			return ArchType::NUPLUS;
 		case ConstHashString("ARM"):
 			return ArchType::ARM;
