@@ -34,8 +34,6 @@ MangoPowerManager::MangoPowerManager() {
 			"[error=%d]", err);
 	}
 
-	hn_stats_monitor_t * curr_stats[2];
-
 	// Initialize per-cluster tile info...
 	for (uint32_t cluster_id=0; cluster_id < this->num_clusters; ++cluster_id) {
 		int err = hn_get_num_tiles(&num_tiles[0], &num_tiles[1], &num_tiles[2], cluster_id);
@@ -50,6 +48,7 @@ MangoPowerManager::MangoPowerManager() {
 			return;
 		}
 
+		// Per cluster tile info
 		for (uint_fast32_t tile_id = 0; tile_id < num_tiles[0]; ++tile_id) {
 
 			// Static information
@@ -61,30 +60,7 @@ MangoPowerManager::MangoPowerManager() {
 				return;
 			}
 
-			// First counters values for initialization
-			uint32_t nr_cores = 0;
-			err = hn_stats_monitor_read(tile_id, &nr_cores, curr_stats, cluster_id);
-			if (err == 0 && (curr_stats != nullptr)) {
-				// Per tile...
-				tiles_stats[cluster_id][tile_id].resize(nr_cores);
-				logger->Debug("MangoPowerMonitor: cluster=<%d> tile=<%d> nr_cores=%d",
-						cluster_id, tile_id, nr_cores);
-
-				// Per core...
-				for (uint32_t core_id = 0; core_id < nr_cores; ++core_id) {
-					logger->Debug("MangoPowerMonitor: cluster=<%d> tile=<%d> core=<&d>"
-						" initialization...",
-						cluster_id, tile_id, core_id);
-					tiles_stats[cluster_id][tile_id][core_id] = *curr_stats[core_id];
-					free(curr_stats[core_id]);
-				}
-			}
-			else {
-				nr_cores = 1;
-				tiles_stats[cluster_id][tile_id].resize(nr_cores);
-				logger->Warn("MangoPowerMonitor: cluster=<%d> tile=<%d> nr_cores=%d fake",
-						cluster_id, tile_id, nr_cores);
-			}
+			tiles_stats[cluster_id][tile_id].resize(NR_CORES_MAX_PER_TILE);
 		}
 	}
 }
@@ -156,7 +132,7 @@ MangoPowerManager::GetLoadPEAK(
 		uint32_t & perc) {
 
 	uint32_t nr_cores = 0;
-	hn_stats_monitor_t * curr_stats[2];
+	hn_stats_monitor_t * curr_stats[NR_CORES_MAX_PER_TILE];
 
 	uint32_t err = hn_stats_monitor_read(tile_id, &nr_cores, curr_stats, cluster_id);
 	if (err == 0 && (curr_stats != nullptr)) {
@@ -174,7 +150,8 @@ MangoPowerManager::GetLoadPEAK(
 			curr_stats[core_id]->tics_sleep,
 			curr_stats[core_id]->core_cycles,
 			perc);
-		free(curr_stats[core_id]);
+	//	if (curr_stats[core_id])
+	//		free(curr_stats[core_id]); // not clear who releases memory here
 	}
 	else {
 		perc = 0;

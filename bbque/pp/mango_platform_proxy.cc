@@ -1104,19 +1104,17 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept {
 			logger->Debug("RegisterTiles: cluster=<%d> tile=<%d> core=<%d>: path=%s",
 			              cluster_id, tile_id, i, pe.GetPath().c_str());
 			mt.AddProcessingElement(pe);
+
+			// Register the processor core for resource accounting
 			auto rsrc_ptr = ra.RegisterResource(pe.GetPath(), "", 100);
 			rsrc_ptr->SetModel(hn_to_str_unit_family(tile_info.unit_family));
-		}
-
 #ifdef CONFIG_BBQUE_WM
-		// Register only one processing element per tile (representing a reference
-		// to the entire tile), since we do not  expect to have per-core status
-		// information
-		std::string acc_pe_path(mt.GetPath() + ".pe0");
-		wm.Register(acc_pe_path);
-		logger->Debug("RegisterTiles: [%s] registered for power monitoring",
-		              acc_pe_path.c_str());
+			// Register the processor core for power monitoring
+			wm.Register(pe.GetPath());
+			logger->Debug("RegisterTiles: [%s] registered for power monitoring",
+				pe.GetPath().c_str());
 #endif
+		}
 
 		// Let now register the memories. Unfortunately, memories are not easy to be
 		// retrieved, we have to iterate over all tiles and search memories

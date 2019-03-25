@@ -25,6 +25,8 @@
 
 #include <libhn/hn.h>
 
+#define NR_CORES_MAX_PER_TILE 	8
+
 using namespace bbque::res;
 
 namespace bbque {
