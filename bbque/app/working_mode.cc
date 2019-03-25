@@ -319,7 +319,7 @@ uint32_t WorkingMode::AddMissingResourceRequests(
 			++nr_added;
 		}
 		else {
-			logger->Warn("AddMissingResourceRequests: no matching for <%s>... ",
+			logger->Debug("AddMissingResourceRequests: no matching for <%s>... ",
 				requested_path->ToString().c_str());
 		}
 	}
