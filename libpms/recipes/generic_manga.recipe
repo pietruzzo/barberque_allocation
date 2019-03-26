@@ -41,6 +41,8 @@
 						</tasks>
 						<buffers>
 							<buffer id="1" mem="0"/>
+							<buffer id="2" mem="0"/>
+							<buffer id="3" mem="0"/>
 						</buffers>
 					</mapping>
 					<mapping id="1" exec_time_ms="1000" power_mw="8888" mem_bw="">
@@ -49,6 +51,8 @@
 						</tasks>
 						<buffers>
 							<buffer id="1" mem="0"/>
+							<buffer id="2" mem="0"/>
+							<buffer id="3" mem="0"/>
 						</buffers>
 					</mapping>
 					<mapping id="2" exec_time_ms="1000" power_mw="9999" mem_bw="">
@@ -57,6 +61,8 @@
 						</tasks>
 						<buffers>
 							<buffer id="1" mem="0"/>
+							<buffer id="2" mem="0"/>
+							<buffer id="3" mem="0"/>
 						</buffers>
 					</mapping>
 					<mapping id="3" exec_time_ms="500" power_mw="9999" mem_bw="">
@@ -65,6 +71,8 @@
 						</tasks>
 						<buffers>
 							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="3"/>
 						</buffers>
 					</mapping>
 					<mapping id="4" exec_time_ms="1000" power_mw="2096" mem_bw="">
@@ -73,6 +81,8 @@
 						</tasks>
 						<buffers>
 							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="3"/>
 						</buffers>
 					</mapping>
 					<mapping id="5" exec_time_ms="200" power_mw="4120" mem_bw="300">
@@ -81,6 +91,8 @@
 						</tasks>
 						<buffers>
 							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="3"/>
 						</buffers>
 					</mapping>
 					<mapping id="6" exec_time_ms="500" power_mw="4120" mem_bw="300">
@@ -89,6 +101,8 @@
 						</tasks>
 						<buffers>
 							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="3"/>
 						</buffers>
 					</mapping>
 					<mapping id="7" exec_time_ms="200" power_mw="4120" mem_bw="300">
@@ -97,6 +111,8 @@
 						</tasks>
 						<buffers>
 							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="3"/>
 						</buffers>
 					</mapping>
 				</mappings>
