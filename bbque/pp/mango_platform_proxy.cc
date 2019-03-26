@@ -535,28 +535,44 @@ static bool ReleaseMemory(const TaskGraph &tg) noexcept {
 static int GetCoherentUnitSet(
     TaskGraph & tg, unsigned int ** unit_sets, unsigned int num_sets)
 {
-	int nr_tasks = tg.TaskCount();
+	unsigned int nr_tasks = tg.TaskCount();
+	unsigned int matching_count = 0;
 	logger->Debug("GetCoherentUnitSet: nr_tasks=%d", nr_tasks);
 
 	for (unsigned int set_id=0; set_id < num_sets; ++set_id) {
-		int tile_id = 0;
 		for (auto & task_entry: tg.Tasks()) {
 			auto task_id = task_entry.first;
 			auto & task  = task_entry.second;
-			logger->Debug("GetCoherentUnitSet: [set=%d] task=%d -> proc=%d [=%d?]",
-			              set_id,
-				      task_id,
-			              unit_sets[set_id][tile_id],
-			              task->GetMappedProcessor());
-			if (unit_sets[set_id][tile_id] != (unsigned int) task->GetMappedProcessor()) {
-				logger->Debug("GetCoherentUnitSet: scheduled mapping not in set %d",
-					set_id);
+			bool mapping_matched = false;
+
+			// Look for the mapped processor among the tiles in the current set
+			for (unsigned int tile_index = 0; tile_index < nr_tasks; ++tile_index) {
+				logger->Debug("GetCoherentUnitSet: [set=%d] task=%d -> proc=%d [=%d?]",
+					set_id,
+					task_id,
+					unit_sets[set_id][tile_index],
+					task->GetMappedProcessor());
+
+				if (unit_sets[set_id][tile_index] == (uint32_t) task->GetMappedProcessor()) {
+					mapping_matched = true;
+					++matching_count;
+					logger->Debug("GetCoherentUnitSet: [set=%d] task=%d mapping matched",
+						set_id,	task_id);
+					break;
+				}
+			}
+
+			// Mapped processor found?
+			if (!mapping_matched) {
+				logger->Debug("GetCoherentUnitSet: [set=%d] does not match", set_id);
 				break;
 			}
-			++tile_id;
+
 		}
-		if (tile_id == nr_tasks) {
-			logger->Debug("GetCoherentUnitSet: scheduled mapping matches set %d", set_id);
+
+		if (matching_count == nr_tasks) {
+			logger->Debug("GetCoherentUnitSet: [set=%d] matches "
+				"the scheduled task mapping", set_id);
 			return set_id;
 		}
 	}
