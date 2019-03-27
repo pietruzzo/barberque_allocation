@@ -25,6 +25,7 @@
 #include "bbque/modules_factory.h"
 #include "bbque/utils/logging/logger.h"
 
+#include "bbque/app/recipe.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/binder.h"
 #include "tg/task_graph.h"
@@ -147,6 +148,23 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 		}
 	}
 
+	// Test and profiling purposes: force a mapping choice
+	FILE * fp = fopen("/tmp/bbque_manga_force", "r");
+	if (fp == nullptr) {
+		return SCHED_OK;
+	}
+
+	char buff[5];
+	fgets(buff, 5, fp);
+	if (strlen(buff) > 0) {
+		forced_mapping_id = atoi(buff);
+		logger->Notice("Init: forced to select mapping id=%d", forced_mapping_id);
+	}
+	else
+		logger->Debug("Init: no forced mapping selection");
+
+	fclose(fp);
+
 	return SCHED_OK;
 }
 
@@ -263,16 +281,33 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 	logger->Debug("EvalMappingAlternatives: [%s] nr. mapping options = %d",
 		papp->StrId(), recipe->GetTaskGraphMappingAll().size());
 
+	bbque::app::Recipe::TaskGraphMapping curr_mapping;
+
 	for (auto & m: recipe->GetTaskGraphMappingAll()) {
+		int curr_mapping_id;
+
+		// Check if a mapping id has been forced (testing purpose)
+		if (forced_mapping_id >= 0) {
+			curr_mapping = recipe->GetTaskGraphMapping(forced_mapping_id);
+			curr_mapping_id = forced_mapping_id;
+			logger->Warn("EvalMappingAlternatives: [%s] forced mapping id=%d ",
+				papp->StrId(), forced_mapping_id);
+			forced_mapping_id = -1;
+		}
+		else {
+			curr_mapping_id = m.first;
+			curr_mapping    = m.second;
+		}
+
 		logger->Info("EvalMappingAlternatives: [%s] id=%d "
 		             "exec_time=%d[ms] power=%d[mW] memory_bw=%d[Kbps] ",
 		             papp->StrId(),
-		             m.first,
-		             m.second.exec_time_ms,
-		             m.second.power_mw,
-		             m.second.mem_bw);
+		             curr_mapping_id,
+		             curr_mapping.exec_time_ms,
+		             curr_mapping.power_mw,
+		             curr_mapping.mem_bw);
 
-		if (task_graph->Tasks().size() > m.second.tasks.size()) {
+		if (task_graph->Tasks().size() > curr_mapping.tasks.size()) {
 			logger->Error("EvalMappingAlternatives: [%s] "
 			              "possible mismatch in recipe file!",
 			              papp->StrId());
@@ -282,7 +317,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 		bool task_mapping_succeeded = false;
 
 		// Task mapping
-		for (auto const & task_mapping: m.second.tasks) {
+		for (auto const & task_mapping: curr_mapping.tasks) {
 			auto & task_id = task_mapping.first;
 			auto & mapping_info = task_mapping.second;
 
@@ -327,12 +362,12 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 		if (!task_mapping_succeeded) {
 			logger->Debug("EvalMappingAlternatives: [%s] id=%d skipping..",
 				papp->StrId(),
-				m.first);
+				curr_mapping);
 			continue;
 		}
 
 		// Buffer mapping
-		for (auto const & buff_mapping: m.second.buffers) {
+		for (auto const & buff_mapping: curr_mapping.buffers) {
 			auto & buff_id = buff_mapping.first;
 			auto & mapping_info = buff_mapping.second;
 
@@ -357,19 +392,19 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 		if (ret == SCHED_OK) {
 			logger->Info("EvalMappingAlternatives: [%s] mapping [id=%d] is feasible",
 			             papp->StrId(),
-			             m.first);
+			             curr_mapping_id);
 			return ret;
 		} else if (ret == SCHED_ERROR) {
 			logger->Error("EvalMappingAlternatives: [%s] mapping [id=%d] interrupted",
 			              papp->StrId(),
-			              m.first);
+			              curr_mapping_id);
 			return ret;
 		}
 		else {
 			logger->Debug("EvalMappingAlternatives: [%s] mapping [id=%d] not applicable."
 				     " Trying next option...",
 			              papp->StrId(),
-			              m.first);
+			              curr_mapping_id);
 		}
 
 		// if here... try with the next mapping option

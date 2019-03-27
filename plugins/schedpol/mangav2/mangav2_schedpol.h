@@ -106,7 +106,10 @@ private:
 	/** Number of cores per accelerator (and group/cluster) */
 	std::map<uint32_t, std::vector<uint32_t>> pe_per_acc;
 
+	/** Type of architecture per accelerator */
 	std::map<uint32_t, std::vector<ArchType>> arch_per_acc;
+
+	int forced_mapping_id = -1;
 
 	/**
 	 * @brief Constructor
