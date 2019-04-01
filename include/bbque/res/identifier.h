@@ -74,6 +74,10 @@ public:
 	 */
 	bool operator< (ResourceIdentifier const &);
 
+	bool operator!= (ResourceIdentifier const &);
+
+	bool operator== (ResourceIdentifier const &);
+
 	/**
 	 * @brief Resource identity as a text string
 	 *

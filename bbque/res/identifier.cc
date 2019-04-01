@@ -50,6 +50,18 @@ bool ResourceIdentifier::operator< (ResourceIdentifier const & ri) {
 	return false;
 }
 
+bool ResourceIdentifier::operator== (ResourceIdentifier const & ri) {
+	if (type == ri.Type() && (id == ri.ID()))
+		return true;
+	return false;
+}
+
+bool ResourceIdentifier::operator!= (ResourceIdentifier const & ri) {
+	if (type != ri.Type() || (id != ri.ID()))
+		return true;
+	return false;
+}
+
 void ResourceIdentifier::SetID(BBQUE_RID_TYPE _id) {
 	id   = _id;
 	name = GetResourceTypeString(type);
