@@ -109,7 +109,11 @@ private:
 	/** Type of architecture per accelerator */
 	std::map<uint32_t, std::vector<ArchType>> arch_per_acc;
 
-	int forced_mapping_id = -1;
+	/** Forced mapping ids (one per ready application) */
+	std::vector<int> forced_mapping_ids;
+
+	/** Keep the count of scheduled applications */
+	uint32_t apps_count = 0;
 
 	/**
 	 * @brief Constructor

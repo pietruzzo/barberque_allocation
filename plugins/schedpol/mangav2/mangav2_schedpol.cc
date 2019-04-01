@@ -19,6 +19,7 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <memory>
 
@@ -149,21 +150,19 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 	}
 
 	// Test and profiling purposes: force a mapping choice
-	FILE * fp = fopen("/tmp/bbque_manga_force", "r");
-	if (fp == nullptr) {
-		return SCHED_OK;
+	std::ifstream fmf("/tmp/bbque_manga_force");
+	while (fmf.good()) {
+		char buff[5];
+		if (fmf.getline(buff, 5)) {
+			int m_id = atoi(buff);
+			forced_mapping_ids.push_back(m_id);
+			logger->Notice("Init: [%d] forced to select mapping id=%d",
+				forced_mapping_ids.size()-1,
+				m_id);
+		}
 	}
 
-	char buff[5];
-	fgets(buff, 5, fp);
-	if (strlen(buff) > 0) {
-		forced_mapping_id = atoi(buff);
-		logger->Notice("Init: forced to select mapping id=%d", forced_mapping_id);
-	}
-	else
-		logger->Debug("Init: no forced mapping selection");
-
-	fclose(fp);
+	fmf.close();
 
 	return SCHED_OK;
 }
@@ -191,8 +190,10 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Schedule(
 		if (result == SCHED_ERROR) {
 			logger->Crit("Schedule: [%s] unexpected error [err=%d]",
 				     papp->StrId(), result);
+			forced_mapping_ids.clear();
 			return SCHED_ERROR;
 		}
+		++apps_count;
 	}
 
 	for (AppPrio_t priority = 0; priority <= sys->ApplicationLowestPriority(); priority++) {
@@ -204,9 +205,13 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Schedule(
 		if (result == SCHED_ERROR) {
 			logger->Error("Schedule: error occurred while scheduling priority %d",
 			              priority);
+			forced_mapping_ids.clear();
 			return result;
 		}
 	}
+
+	forced_mapping_ids.clear();
+	apps_count = 0;
 
 	// Return the new resource status view according to the new resource
 	// allocation performed
@@ -249,6 +254,8 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::SchedulePriority(
 			am.NoSchedule(papp);
 			ret = SCHED_OK;
 		}
+
+		++apps_count;
 	}
 
 	return ExitCode_t::SCHED_OK;
@@ -285,14 +292,18 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 
 	for (auto & m: recipe->GetTaskGraphMappingAll()) {
 		int curr_mapping_id;
+		bool forced = false;
 
 		// Check if a mapping id has been forced (testing purpose)
-		if (forced_mapping_id >= 0) {
-			curr_mapping = recipe->GetTaskGraphMapping(forced_mapping_id);
-			curr_mapping_id = forced_mapping_id;
+		logger->Debug("EvalMappingAlternatives: [%s] nr.apps=%d nr.forced=%d",
+			papp->StrId(), apps_count, forced_mapping_ids.size());
+		if (apps_count < forced_mapping_ids.size() && (!forced) && (ret == SCHED_OK)) {
+			int m_id = forced_mapping_ids[apps_count];
+			curr_mapping = recipe->GetTaskGraphMapping(m_id);
+			curr_mapping_id = m_id;
 			logger->Warn("EvalMappingAlternatives: [%s] forced mapping id=%d ",
-				papp->StrId(), forced_mapping_id);
-			forced_mapping_id = -1;
+				papp->StrId(), curr_mapping_id);
+			forced = true;
 		}
 		else {
 			curr_mapping_id = m.first;
