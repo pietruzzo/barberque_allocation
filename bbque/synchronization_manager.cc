@@ -798,6 +798,11 @@ void SynchronizationManager::DisableFailedApps() {
 			logger->Warn("DisableFailedApps: [%s] is alive",
 				papp->StrId());
 		}
+		else {
+			logger->Warn("DisableFailedApps: [%s] forced to DISABLE",
+				papp->StrId());
+			am.DisableEXC(papp, true);
+		}
 	}
 	sync_fails_apps.clear();
 }
