@@ -502,27 +502,25 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 			              papp->StrId(), task.first, nr_cores);
 		}
 
-		// Resource request of processing resources
-		logger->Debug("SelectWorkingMode: [%s] task=%d add accelerator request...",
+		// Resource request of processing resources (cluster binding
+		// already set in)
+		std::string acc_path("sys.grp");
+		acc_path += std::to_string(cluster_id);
+		acc_path += ".acc" + std::to_string(tile_id) + ".pe";
+		pawm->AddResourceRequest(
+				acc_path,
+				100 * nr_cores,
+				br::ResourceAssignment::Policy::BALANCED);
+		logger->Debug("SelectWorkingMode: [%s] task=%d add accelerator requested...",
 		              papp->StrId(), task.first);
-		pawm->AddResourceRequest("sys.grp.acc.pe", 100 * nr_cores,
-		                         br::ResourceAssignment::Policy::BALANCED);
-
-		// Resource binding: HN cluster (group)
-		logger->Debug("SelectWorkingMode: [%s] task=%d bind accelerator request to "
-		              "cluster=%d",
-		              papp->StrId(), task.first, cluster_id);
-		ref_num = pawm->BindResource(
-		              br::ResourceType::GROUP, R_ID_ANY,
-		              cluster_id,
-		              ref_num);
 
 		// Resource binding: HN tile (accelerator)
 		logger->Debug("SelectWorkingMode: [%s] task=%d bind accelerator request to "
 		              "tile=%d",
 		              papp->StrId(), task.first, tile_id);
 		ref_num = pawm->BindResource(
-		              br::ResourceType::ACCELERATOR, R_ID_ANY,
+		              br::ResourceType::ACCELERATOR,
+			      tile_id,
 		              tile_id,
 		              ref_num);
 
@@ -555,19 +553,13 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 		auto & mem_bank_id = mem_entry.first;
 		auto & mem_amount  = mem_entry.second;
 
-		// Resource request for memory (set the bank id yet)
-		std::string mem_path("sys.grp.mem");
-		mem_path += std::to_string(mem_bank_id);
+		// Resource request for memory (set cluster and the bank id yet)
+		std::string mem_path("sys.grp");
+		mem_path += std::to_string(cluster_id);
+		mem_path += ".mem" + std::to_string(mem_bank_id);
 		pawm->AddResourceRequest(mem_path, mem_amount);
 		logger->Debug("SelectWorkingMode: [%s] memory bank %d (requested=%d)",
 		              papp->StrId(), mem_bank_id, mem_amount);
-
-		// Resource binding: HN cluster (group) needed only
-		ref_num = pawm->BindResource(
-		              br::ResourceType::GROUP,
-		              R_ID_ANY,
-		              cluster_id,
-		              ref_num);
 
 		// Resource binding: memory node
 		ref_num = pawm->BindResource(
