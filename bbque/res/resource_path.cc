@@ -80,6 +80,26 @@ bool ResourcePath::operator< (ResourcePath const & comp_path) {
 	return false;
 }
 
+
+bool ResourcePath::operator== (ResourcePath const & comp_path) {
+	// Manage the case of different length
+	if (identifiers.size() != comp_path.NumLevels())
+		return false;
+
+	// Per-level comparison of resource identifiers (equal length)
+	auto curr_it = identifiers.begin();
+	auto comp_it = comp_path.Begin();
+	for (; curr_it != identifiers.end(), comp_it != comp_path.End(); ++curr_it, ++comp_it) {
+		ResourceIdentifier & curr_resource_ident(*(*curr_it));
+		ResourceIdentifier & comp_resource_ident(*(*comp_it));
+
+		if (curr_resource_ident != comp_resource_ident)
+			return false;
+	}
+	return true;
+}
+
+
 bool ResourcePath::IsTemplate() const {
 	// A template has all the resources IDs unset
 	for (auto & curr_resource_ident: identifiers) {

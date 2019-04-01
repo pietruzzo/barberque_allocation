@@ -128,6 +128,9 @@ public:
 	 */
 	bool operator< (ResourcePath const & r_path);
 
+
+	bool operator== (ResourcePath const & r_path);
+
 	/**
 	 * @brief Compare two resource identifiers
 	 *
