@@ -111,7 +111,6 @@ void ResourceBinder::Bind(
 			out_path->ToString().c_str(),
 			(*out_map)[out_path]->GetAmount(),
 			(*out_map)[out_path]->GetResourcesList().size());
-		break;
 	}
 
 	for (auto & m: *out_map) {
