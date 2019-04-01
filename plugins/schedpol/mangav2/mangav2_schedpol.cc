@@ -456,9 +456,13 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
 		// Schedule request
 		ret = ScheduleApplication(papp, pawm, ref_num);
 		if (ret != SCHED_R_UNAVAILABLE) {
-			logger->Debug("CheckMappingFeasibility: [%s] terminated",
-			              papp->StrId());
+			logger->Debug("CheckMappingFeasibility: [%s] terminated [ret=%d]",
+			              papp->StrId(), ret);
 			return ret;
+		}
+		else {
+			logger->Debug("CheckMappingFeasibility: [%s] mapping not feasible",
+			              papp->StrId());
 		}
 	}
 
