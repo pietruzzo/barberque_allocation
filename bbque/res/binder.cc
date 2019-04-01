@@ -92,13 +92,6 @@ void ResourceBinder::Bind(
 		else {
 			out_assign->SetResourcesList(r_bindings);
 		}
-		logger->Debug("Bind: amount=%ld, set resource list length=%d",
-			out_assign->GetAmount(),
-			out_assign->GetResourcesList().size());
-
-		// If the out_path is compatible with an already existing bound
-		// path, the latter should be replaced by out_map
-		RemoveCompatibleAssignments(out_map, out_path);
 
 		// Insert the resource usage object in the output map and exit
 		// from the loop
@@ -142,9 +135,6 @@ void ResourceBinder::Bind(
 	logger->Debug("Bind: <%s> binding list size = %d",
 		resource_path->ToString().c_str(),
 		out_assign->GetResourcesList().size());
-
-	// Remove compatible bindings
-	RemoveCompatibleAssignments(out_map, resource_path);
 
 	// Insert the resource usage object in the output map
 	(*out_map)[resource_path] = out_assign;
