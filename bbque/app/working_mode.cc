@@ -261,7 +261,7 @@ uint32_t WorkingMode::AddMissingResourceRequests(
 		br::ResourceType r_type) {
 
 	uint32_t diff_size = resources.requested.size() - bound_map->size();
-	logger->Debug("AddMissingResourceRequests: bound map size = %d ", bound_map->size());
+	logger->Debug("AddMissingResourceRequests: bound map size=%d ", bound_map->size());
 
 	uint32_t nr_added = 0;
 
@@ -277,35 +277,15 @@ uint32_t WorkingMode::AddMissingResourceRequests(
 				requested_path->ToString().c_str(),
 				bound_path->ToString().c_str());
 
-			// Add the missing requested resource path in case completly different or,
-			// in case of 'EQUAL_TYPES' look at the 'r_type' id number. In case they
-			// differs, the resource path must be added
-/*
-			auto cmp_result = requested_path->Compare(*bound_path);
-			switch (cmp_result) {
-				case br::ResourcePath::EQUAL_TYPES:
-					logger->Debug("AddMissingResourceRequests: equal types, comparing <%s> id ",
-						br::GetResourceTypeString(r_type));
-					if (requested_path->GetID(r_type) != bound_path->GetID(r_type)) {
-						logger->Debug("AddMissingResourceRequests: equal types, <%s> to add",
-							requested_path->ToString().c_str());
-						break;
-					}
-				case br::ResourcePath::EQUAL:
-					matched = true;
-					logger->Debug("AddMissingResourceRequests: skipping a match: "
-						"<%s>", requested_path->ToString().c_str());
-					break;
-				default:
-					break;
-			}
-
-			if (matched) break;
-*/
-			if ((requested_path->Compare(*bound_path) != br::ResourcePath::NOT_EQUAL)
-					&& (requested_path->GetID(r_type) != bound_path->GetID(r_type)))  {
+			// Update the map with the missing resource requests
+			// (path).
+			auto cmp = requested_path->Compare(*bound_path);
+			logger->Debug("AddMissingResourceRequests: comparison result=%d", cmp);
+			if ((cmp == br::ResourcePath::EQUAL)
+				|| ((cmp == br::ResourcePath::EQUAL_TYPES)
+					&& (requested_path->GetID(r_type) == bound_path->GetID(r_type)))) {
 				matched = true;
-				logger->Debug("AddMissingResourceRequests: skipping a match: "
+				logger->Debug("AddMissingResourceRequests: request to skip: "
 					"<%s>", requested_path->ToString().c_str());
 				break;
 			}
@@ -319,13 +299,14 @@ uint32_t WorkingMode::AddMissingResourceRequests(
 			++nr_added;
 		}
 		else {
-			logger->Debug("AddMissingResourceRequests: no matching for <%s>... ",
+			logger->Debug("AddMissingResourceRequests: skipped request <%s>... ",
 				requested_path->ToString().c_str());
 		}
 	}
 
 	logger->Debug("AddMissingResourceRequests: added %d (out of %d) request(s)",
 		nr_added, diff_size);
+	logger->Debug("AddMissingResourceRequests: bound map size=%d", bound_map->size());
 
 	return nr_added;
 }
@@ -335,8 +316,8 @@ br::ResourceAssignmentMap_t * WorkingMode::GetSourceAndOutBindingMaps(
 		br::ResourceAssignmentMapPtr_t & out_map,
 		int32_t prev_refn) {
 
+	// First binding?
 	if (prev_refn < 0) {
-		// First binding
 		logger->Debug("BindResource: first binding");
 		out_map = std::make_shared<br::ResourceAssignmentMap_t>();
 		return &resources.requested;
