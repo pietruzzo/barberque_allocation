@@ -47,7 +47,7 @@ void ResourceBinder::Bind(
 		br::ResourceAssignmentPtr_t const & source_assign(ru_entry.second);
 
 		if (!source_path->IncludesType(r_type)) {
-			logger->Debug("Bind: <%s> does not contain <%s>",
+			logger->Debug("Bind: <%s> does not contain resource <%s>",
 				source_path->ToString().c_str(),
 				br::GetResourceTypeString(r_type));
 			continue;
@@ -64,12 +64,12 @@ void ResourceBinder::Bind(
 		// Replace ID of the given resource type with the bound ID
 		rp_result = out_path->ReplaceID(r_type, source_id, out_id);
 		if (rp_result == ResourcePath::OK) {
-			logger->Debug("Bind: <%s> to <%s> done",
+			logger->Debug("Bind: source=<%s> -> out=<%s> replacement done",
 					source_path->ToString().c_str(),
 					out_path->ToString().c_str());
 		}
 		else
-			logger->Debug("Bind: Nothing to do in <%s>",
+			logger->Debug("Bind: source=<%s> ...nothing to do",
 					source_path->ToString().c_str());
 
 		// Create a new ResourceAssignment object and set the binding list
@@ -77,26 +77,37 @@ void ResourceBinder::Bind(
 			std::make_shared<ResourceAssignment>(
 				source_assign->GetAmount(),
 				source_assign->GetPolicy());
+		logger->Debug("Bind: out=<%s> amount=%ld",
+			out_path->ToString().c_str(), out_assign->GetAmount());
 
+		// Retrive the list of resources to which the request can be bound
 		ResourcePtrList_t r_bindings = ra.GetResources(out_path);
-		logger->Debug("Bind: binding list length=%d", r_bindings.size());
+		logger->Debug("Bind: out=<%s> binding list length=%d",
+			out_path->ToString().c_str(), r_bindings.size());
 
+		// Binding with filter
 		if ((filter_rtype != br::ResourceType::UNDEFINED)
 				&& (filter_mask != nullptr)) {
-			// Binding with filter
 			out_assign->SetResourcesList(r_bindings, filter_rtype, *filter_mask);
-			logger->Debug("Bind: applying filter <%s>={%s}",
+			logger->Debug("Bind: <%s> applied filter <%s>={%s} to populate resources list",
+				out_path->ToString().c_str(),
 				GetResourceTypeString(filter_rtype),
 				filter_mask->ToString().c_str());
 		}
 		else {
 			out_assign->SetResourcesList(r_bindings);
+			logger->Debug("Bind: <%s> set resources list [length=%d]",
+				out_path->ToString().c_str(),
+				out_assign->GetResourcesList().size());
 		}
 
 		// Insert the resource usage object in the output map and exit
 		// from the loop
+		logger->Debug("Bind: <%s> adding the resource assignment...",
+			out_path->ToString().c_str());
+
 		(*out_map)[out_path] = out_assign;
-		logger->Debug("Bind: added bound path: <%s> [amount=%ld, length=%d]",
+		logger->Debug("Bind: <%s> added assignment [amount=%ld nr_resources=%d]",
 			out_path->ToString().c_str(),
 			(*out_map)[out_path]->GetAmount(),
 			(*out_map)[out_path]->GetResourcesList().size());
@@ -104,7 +115,8 @@ void ResourceBinder::Bind(
 	}
 
 	for (auto & m: *out_map) {
-		logger->Debug("Bind: map containing <%s>", m.first->ToString().c_str());
+		logger->Debug("Bind: map containing <%s>: assignment=@%p",
+			m.first->ToString().c_str(), m.second.get());
 	}
 }
 
@@ -126,6 +138,8 @@ void ResourceBinder::Bind(
 	auto source_assign = assign_it->second;
 	auto out_assign =
 		std::make_shared<ResourceAssignment>(source_assign->GetAmount());
+
+	// Retrive the list of resources to which the request can be bound
 	auto r_list = ra.GetResources(resource_path);
 	logger->Debug("Bind: <%s> has %d candidates",
 		resource_path->ToString().c_str(), r_list.size());
@@ -169,10 +183,12 @@ inline void SetBit(
 		ResourcePathPtr_t ppath,
 		br::ResourceType r_type,
 		ResourceBitset & r_mask) {
+
 	// Get the ID of the resource type in the path
 	BBQUE_RID_TYPE r_id = ppath->GetID(r_type);
 	if ((r_id == R_ID_NONE) || (r_id == R_ID_ANY))
 		return;
+
 	// Set the ID-th bit in the mask
 	r_mask.Set(r_id);
 }
