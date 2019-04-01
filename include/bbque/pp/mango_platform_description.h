@@ -41,6 +41,7 @@ public:
 		UNIT_MODEL_PEAK_CONF_4,
 		UNIT_MODEL_PEAK_CONF_5,
 		UNIT_MODEL_PEAK_CONF_6,
+		UNIT_MODEL_PEAK_CONF_7,
 		// NUPLUS range is from 50 - 99
 		UNIT_MODEL_NUPLUS_CONF_0 = 50,
 		// DCT range is from 100 - 149
@@ -104,6 +105,8 @@ public:
 				return 8;
 			case UNIT_MODEL_PEAK_CONF_6:
 				return 8;
+			case UNIT_MODEL_PEAK_CONF_7:
+				return 2;
 			default:
 				return 0;
 			}
