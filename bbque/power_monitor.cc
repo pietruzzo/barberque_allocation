@@ -252,12 +252,12 @@ void PowerMonitor::Task() {
 int PowerMonitor::CommandsCb(int argc, char *argv[]) {
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
 	char * command_id  = argv[0] + cmd_offset;
-	logger->Info("Processing command [%s]", command_id);
+	logger->Info("CommandsCb: processing command [%s]", command_id);
 
 	// Data logging control
 	if (!strncmp(CMD_WM_DATALOG, command_id, strlen(CMD_WM_DATALOG))) {
 		if (argc != 2) {
-			logger->Error("Command [%s] missing action [start/stop/clear]",
+			logger->Error("CommandsCb: command [%s] missing action [start/stop/clear]",
 					command_id);
 			return 1;
 		}
@@ -267,7 +267,7 @@ int PowerMonitor::CommandsCb(int argc, char *argv[]) {
 	// System life-time target
 	if (!strncmp(CMD_WM_SYSLIFETIME , command_id, strlen(CMD_WM_SYSLIFETIME))) {
 		if (argc < 2) {
-			logger->Error("PWR MNTR: Command [%s] missing argument"
+			logger->Error("CommandsCb: command [%s] missing argument"
 					"[set/clear/info/help]", command_id);
 			return 1;
 		}
@@ -277,7 +277,7 @@ int PowerMonitor::CommandsCb(int argc, char *argv[]) {
 			return SystemLifetimeCmdHandler(argv[1], "");
 	}
 #endif
-	logger->Error("Command unknown [%s]", command_id);
+	logger->Error("CommandsCb: unknown command [%s]", command_id);
 	return -1;
 }
 
@@ -290,7 +290,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	// Register all the resources referenced by the path specified
 	auto r_list(ra.GetResources(rp));
 	if (r_list.empty()) {
-		logger->Warn("No resources to monitor <%s>", rp->ToString().c_str());
+		logger->Warn("Register: no resources to monitor <%s>", rp->ToString().c_str());
 		return ExitCode_t::ERR_RSRC_MISSING;
 	}
 
@@ -299,7 +299,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	// descriptor
 	for (auto & rsrc: r_list) {
 		rsrc->EnablePowerProfile(samples_window);
-		logger->Info("Registering <%s> for power monitoring...",
+		logger->Info("Register: adding <%s> to power monitoring...",
 			rsrc->Path().c_str());
 		wm_info.resources.push_back({ra.GetPath(rsrc->Path()), rsrc});
 		wm_info.log_fp.emplace(ra.GetPath(rsrc->Path()), new std::ofstream());
@@ -325,12 +325,12 @@ void PowerMonitor::Start(uint32_t period_ms) {
 		wm_info.period_ms = period_ms;
 
 	if (wm_info.started) {
-		logger->Warn("Power logging already started (T = %d ms)...",
+		logger->Warn("Start: power logging already started (T = %d ms)...",
 			wm_info.period_ms);
 		return;
 	}
 
-	logger->Info("Starting power logging (T = %d ms)...", wm_info.period_ms);
+	logger->Info("Start: starting power logging (T = %d ms)...", wm_info.period_ms);
 	events.set(WM_EVENT_UPDATE);
 	worker_status_cv.notify_all();
 }
@@ -339,11 +339,11 @@ void PowerMonitor::Start(uint32_t period_ms) {
 void PowerMonitor::Stop() {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	if (!wm_info.started) {
-		logger->Warn("Power logging already stopped");
+		logger->Warn("Stop: power logging already stopped");
 		return;
 	}
 
-	logger->Info("Stopping power logging...");
+	logger->Info("Stop: stopping power logging...");
 	events.reset(WM_EVENT_UPDATE);
 	worker_status_cv.notify_all();
 }
@@ -401,12 +401,12 @@ void  PowerMonitor::SampleResourcesStatus(
 		thd_id = first_resource_index / (last_resource_index - first_resource_index);
 	else
 		thd_id = first_resource_index;
-	logger->Debug("[T%d] monitoring resources in range [%d, %d)",
+	logger->Debug("SampleResourcesStatus: [thread %d] monitoring resources in range [%d, %d)",
 		thd_id, first_resource_index, last_resource_index);
 
 	while (!done) {
 		if (events.none()) {
-			logger->Debug("T{%d} no events to process",
+			logger->Debug("SampleResourcesStatus: [thread %d] no events to process",
 				first_resource_index);
 			Wait();
 		}
@@ -424,7 +424,8 @@ void  PowerMonitor::SampleResourcesStatus(
 			std::string i_values, m_values;
 			uint info_idx   = 0;
 			uint info_count = 0;
-			logger->Debug("[T%d] monitoring <%s>", thd_id, r_path->ToString().c_str());
+			logger->Debug("SampleResourcesStatus: [thread %d] monitoring <%s>",
+				thd_id, r_path->ToString().c_str());
 
 			for (; info_idx < PowerManager::InfoTypeIndex.size() &&
 					info_count < rsrc->GetPowerInfoEnabledCount();
@@ -432,7 +433,8 @@ void  PowerMonitor::SampleResourcesStatus(
 				// Check if the power profile information has been required
 				info_type = PowerManager::InfoTypeIndex[info_idx];
 				if (rsrc->GetPowerInfoSamplesWindowSize(info_type) <= 0) {
-					logger->Warn("[T%d] power profile not enabled for %s",
+					logger->Warn("SampleResourcesStatus: [thread %d] power profile "
+						"not enabled for %s",
 						thd_id, rsrc->Path().c_str());
 					continue;
 				}
@@ -440,7 +442,8 @@ void  PowerMonitor::SampleResourcesStatus(
 				// Call power manager get function and update the resource
 				// descriptor power profile information
 				if (PowerMonitorGet[info_idx] == nullptr) {
-					logger->Warn("[T%d] power monitoring for %s not available",
+					logger->Warn("SampleResourcesStatus: [thread %d] power monitoring "
+						"or <%s> not available",
 						thd_id, PowerManager::InfoTypeStr[info_idx]);
 					continue;
 				}
@@ -455,8 +458,10 @@ void  PowerMonitor::SampleResourcesStatus(
 					ExecuteTrigger(rsrc, info_type);
 			}
 
-			logger->Debug("[T%d] sampling %s ", thd_id, (log_i + i_values).c_str());
-			logger->Debug("[T%d] sampling %s ", thd_id, (log_m + m_values).c_str());
+			logger->Debug("SampleResourcesStatus: [thread %d] sampling %s ",
+				thd_id, (log_i + i_values).c_str());
+			logger->Debug("SampleResourcesStatus: [thread %d] sampling %s ",
+				thd_id, (log_m + m_values).c_str());
 			if (wm_info.log_enabled) {
 				DataLogWrite(r_path, i_values);
 			}
@@ -464,7 +469,7 @@ void  PowerMonitor::SampleResourcesStatus(
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
 	}
-	logger->Notice("[T%d] terminating monitor thread", thd_id);
+	logger->Notice("SampleResourcesStatus: [thread %d] terminating", thd_id);
 }
 
 
@@ -503,20 +508,20 @@ void PowerMonitor::DataLogWrite(
 	std::string file_path(wm_info.log_dir + "/");
 	file_path.append(rp->ToString());
 	file_path.append(".dat");
-	logger->Debug("Writing to file [%s]: %s",
+	logger->Debug("DataLogWrite: writing to file [%s]: %s",
 		file_path.c_str(), data_line.c_str());
 
 	// Open file
 	wm_info.log_fp[rp]->open(file_path, om);
 	if (!wm_info.log_fp[rp]->is_open()) {
-		logger->Warn("Log file not open");
+		logger->Warn("DataLogWrite: log file not open");
 		return;
 	}
 
 	// Write data line
 	*wm_info.log_fp[rp] << data_line << std::endl;
 	if (wm_info.log_fp[rp]->fail()) {
-		logger->Error("Log file write failed [F:%d, B:%d]",
+		logger->Error("DataLogWrite: log file write failed [F:%d, B:%d]",
 			wm_info.log_fp[rp]->fail(),
 			wm_info.log_fp[rp]->bad());
 		*wm_info.log_fp[rp] << "Error";
@@ -537,18 +542,18 @@ void PowerMonitor::DataLogClear() {
 
 int PowerMonitor::DataLogCmdHandler(const char * arg) {
 	std::string action(arg);
-	logger->Info("PWR MNTR: Action = %s", action.c_str());
+	logger->Info("DataLogCmdHandler: action = [%s]", action.c_str());
 	// Start
 	if ((action.compare("start") == 0)
 			&& (!wm_info.log_enabled)) {
-		logger->Info("PWR MNTR: Starting data logging...");
+		logger->Info("DataLogCmdHandler: starting data logging...");
 		wm_info.log_enabled = true;
 		return 0;
 	}
 	// Stop
 	if ((action.compare("stop") == 0)
 			&& (wm_info.log_enabled)) {
-		logger->Info("PWR MNTR: Stopping data logging...");
+		logger->Info("DataLogCmdHandler: stopping data logging...");
 		wm_info.log_enabled = false;
 		return 0;
 	}
@@ -558,11 +563,11 @@ int PowerMonitor::DataLogCmdHandler(const char * arg) {
 		wm_info.log_enabled = false;
 		DataLogClear();
 		wm_info.log_enabled = de;
-		logger->Info("PWR MNTR: Clearing data logs...");
+		logger->Info("DataLogCmdHandler: clearing data logs...");
 		return 0;
 	}
 
-	logger->Warn("PWR MNTR: unknown action [%s] or nothing to do",
+	logger->Warn("DataLogCmdHandler: unknown action [%s]",
 		action.c_str());
 	return -1;
 }
@@ -585,12 +590,12 @@ int32_t PowerMonitor::GetSysPowerBudget() {
 */
 
 	if (sys_lifetime.always_on) {
-		logger->Debug("PWR MNTR: System lifetime target = 'always_on'");
+		logger->Debug("GetSysPowerBudget: system lifetime target = 'always_on'");
 		return -1;
 	}
 
 	if (sys_lifetime.power_budget_mw == 0) {
-		logger->Debug("PWR MNTR: No system lifetime target");
+		logger->Debug("GetSysPowerBudget: no system lifetime target");
 		return 0;
 	}
 
@@ -607,40 +612,40 @@ int PowerMonitor::SystemLifetimeCmdHandler(
 		const std::string action, const std::string hours) {
 	std::unique_lock<std::mutex> ul(sys_lifetime.mtx);
 	std::chrono::system_clock::time_point now;
-	logger->Info("PWR MNTR: action=[%s], hours=[%s]",
+	logger->Info("SystemLifetimeCmdHandler: action=[%s], hours=[%s]",
 			action.c_str(), hours.c_str());
 	// Help
 	if (action.compare("help") == 0) {
-		logger->Notice("PWR MNTR: %s set <HOURS> (set hours)", CMD_WM_SYSLIFETIME);
-		logger->Notice("PWR MNTR: %s info  (target lifetime)", CMD_WM_SYSLIFETIME);
-		logger->Notice("PWR MNTR: %s clear (clear setting)",   CMD_WM_SYSLIFETIME);
-		logger->Notice("PWR MNTR: %s help  (this help)",  CMD_WM_SYSLIFETIME);
+		logger->Notice("SystemLifetimeCmdHandler: %s set <HOURS> (set hours)", CMD_WM_SYSLIFETIME);
+		logger->Notice("SystemLifetimeCmdHandler: %s info  (target lifetime)", CMD_WM_SYSLIFETIME);
+		logger->Notice("SystemLifetimeCmdHandler: %s clear (clear setting)",   CMD_WM_SYSLIFETIME);
+		logger->Notice("SystemLifetimeCmdHandler: %s help  (this help)",  CMD_WM_SYSLIFETIME);
 		return 0;
 	}
 	// Clear the target lifetime setting
 	if (action.compare("clear") == 0) {
-		logger->Notice("PWR MNTR: Clearing system target lifetime...");
+		logger->Notice("SystemLifetimeCmdHandler: clearing system target lifetime...");
 		sys_lifetime.power_budget_mw = 0;
 		sys_lifetime.always_on   = false;
 		return 0;
 	}
 	// Return information about last target lifetime set
 	if (action.compare("info") == 0) {
-		logger->Notice("PWR MNTR: System target lifetime information...");
+		logger->Notice("SystemLifetimeCmdHandler: system target lifetime information...");
 		sys_lifetime.power_budget_mw = ComputeSysPowerBudget();
 		PrintSystemLifetimeInfo();
 		return 0;
 	}
 	// Set the target lifetime
 	if (action.compare("set") == 0) {
-		logger->Notice("PWR MNTR: Setting system target lifetime...");
+		logger->Notice("SystemLifetimeCmdHandler: setting system target lifetime...");
 		// Argument check
 		if (!IsNumber(hours)) {
-			logger->Error("PWR MNTR: Invalid argument");
+			logger->Error("SystemLifetimeCmdHandler: invalid argument");
 			return -1;
 		}
 		else if (hours.compare("always_on") == 0) {
-			logger->Info("PWR MNTR: Set to 'always on'");
+			logger->Info("SystemLifetimeCmdHandler: set to 'always on'");
 			sys_lifetime.power_budget_mw = -1;
 			sys_lifetime.always_on     = true;
 			return 0;
@@ -662,7 +667,7 @@ void PowerMonitor::SampleBatteryStatus() {
 		if (events.none())
 			Wait();
 		if (events.test(WM_EVENT_UPDATE)) {
-			logger->Debug("[Tbatt] Battery power = %d mW", pbatt->GetPower());
+			logger->Debug("SampleBatteryStatus: battery power = %dmW", pbatt->GetPower());
 			ExecuteTriggerForBattery();
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
@@ -687,10 +692,10 @@ void PowerMonitor::PrintSystemLifetimeInfo() const {
 	std::chrono::seconds secs_from_now;
 	// Print output
 	std::time_t time_out = std::chrono::system_clock::to_time_t(sys_lifetime.target_time);
-	logger->Notice("PWR MNTR: System target lifetime: %s", ctime(&time_out));
+	logger->Notice("System target lifetime    : %s", ctime(&time_out));
 	secs_from_now = GetSysLifetimeLeft();
-	logger->Notice("PWR MNTR: System target lifetime [s]: %d", secs_from_now.count());
-	logger->Notice("PWR MNTR: System power budget [mW]: %d", sys_lifetime.power_budget_mw);
+	logger->Notice("System target lifetime [s]: %d", secs_from_now.count());
+	logger->Notice("System power budget   [mW]: %d", sys_lifetime.power_budget_mw);
 }
 
 #endif // CONFIG_BBQUE_PM_BATTERY
