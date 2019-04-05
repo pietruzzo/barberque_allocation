@@ -175,7 +175,7 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 	RspMap_t rsp_map;
 	AppPtr_t papp;
 
-	logger->Debug("STEP 1: preChange() START");
+	logger->Debug("Sync_PreChange: STEP 1 => START");
 	SM_RESET_TIMING(sm_tmr);
 
 	papp = am.GetFirst(syncState, apps_it);
@@ -190,12 +190,12 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 			continue;
 		}
 
-		logger->Info("STEP 1: preChange() ===> [%s]", papp->StrId());
+		logger->Debug("Sync_PreChange: STEP 1 => [%s]", papp->StrId());
 
 		// Do the minimum for disabled applications
 		if (papp->Disabled()) {
-			logger->Debug("STEP 1: ignoring disabled EXC [%s]",
-					papp->StrId());
+			logger->Debug("Sync_PreChange: STEP 1: ignoring disabled EXC [%s]",
+				papp->StrId());
 			syncInProgress = OK;
 			continue;
 		}
@@ -228,8 +228,9 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 #endif
 		// Jumping meanwhile disabled applications
 		if (papp->Disabled()) {
-			logger->Debug("STEP 1: ignoring disabled EXC [%s]",
-					papp->StrId());
+			logger->Debug("Sync_PreChange: STEP 1: "
+				"ignoring (meanwhile) disabled EXC [%s]",
+				papp->StrId());
 			continue;
 		}
 
@@ -249,7 +250,7 @@ SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncStat
 	// Collecing execution metrics
 	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_PRECHANGE,
 			sm_tmr, syncState);
-	logger->Debug("STEP 1: preChange() DONE");
+	logger->Debug("Sync_PreChange: STEP 1 => DONE");
 
 	if (syncInProgress == NOTHING_TO_SYNC)
 		return NOTHING_TO_SYNC;
@@ -266,40 +267,43 @@ void SynchronizationManager::Sync_PreChange_Check_EXC_Response(
 // Pre-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
 	RTLIB_ExitCode_t result;
-	logger->Debug("STEP 1: .... (wait) .... [%s]", papp->StrId());
+	logger->Debug("Sync_PreChange: STEP 1 => [%s] ... (wait) ... ",
+		papp->StrId());
 
 	// Send RTLIB Sync-PreChange message
 	result = ap.SyncP_PreChange_GetResult(presp);
 	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
-		logger->Warn("STEP 1: <---- TIMEOUT -- [%s]", papp->StrId());
+		logger->Warn("Sync_PreChange: STEP 1 => [%s] TIMEOUT!",
+			papp->StrId());
 		sync_fails_apps.insert(papp);
 		return;
 	}
 
 	if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
-		logger->Warn("STEP 1: <------ WERROR -- [%s]", papp->StrId());
+		logger->Error("Sync_PreChange: STEP 1 => [%s] failed channel write [err=%d]",
+			papp->StrId(), result);
 		sync_fails_apps.insert(papp);
 		return;
 	}
 
 	if (result != RTLIB_OK) {
-		logger->Warn("STEP 1: <----- FAILED -- [%s]", papp->StrId());
+		logger->Error("Sync_PreChange: STEP 1 => [%s] library error occurred [err=%d]",
+			papp->StrId(), result);
 		// FIXME This case should be handled
 		assert(false);
 	}
 
 #endif
-
-	logger->Info("STEP 1: <--------- OK -- [%s]", papp->StrId());
-	logger->Info("STEP 1: [%s] declared syncLatency %d[ms]",
-			papp->StrId(), presp->syncLatency);
+	logger->Debug("Sync_PreChange: STEP 1 => [%s] OK!",
+		papp->StrId());
+	logger->Debug("Sync_PreChange: STEP 1 => [%s] sync_latency=%dms",
+		papp->StrId(), presp->syncLatency);
 
 	// Collect stats on declared sync latency
 	SM_ADD_SAMPLE(metrics, SM_SYNCP_APP_SYNCLAT, presp->syncLatency);
 
 	syncp_result = policy->CheckLatency(papp, presp->syncLatency);
-    UNUSED(syncp_result); // TODO: check the POLICY required action
-
+	UNUSED(syncp_result); // TODO: check the POLICY required action
 }
 
 SynchronizationManager::ExitCode_t
@@ -316,7 +320,7 @@ SynchronizationManager::Sync_SyncChange(
 	RspMap_t rsp_map;
 	AppPtr_t papp;
 
-	logger->Debug("STEP 2: syncChange() START");
+	logger->Debug("Sync_SyncChange: STEP 2 => START");
 	SM_RESET_TIMING(sm_tmr);
 
 	papp = am.GetFirst(syncState, apps_it);
@@ -329,12 +333,12 @@ SynchronizationManager::Sync_SyncChange(
 			papp->IsContainer())
 			continue;
 
-		logger->Info("STEP 2: syncChange() ===> [%s]", papp->StrId());
+		logger->Debug("Sync_SyncChange: STEP 2 => [%s]", papp->StrId());
 
 		// Jumping meanwhile disabled applications
 		if (papp->Disabled()) {
-			logger->Debug("STEP 2: ignoring disabled EXC [%s]",
-					papp->StrId());
+			logger->Debug("Sync_SyncChange: STEP 2 => [%s] ignoring disabled EXC",
+				papp->StrId());
 			continue;
 		}
 
@@ -359,8 +363,9 @@ SynchronizationManager::Sync_SyncChange(
 #endif
 		// Jumping meanwhile disabled applications
 		if (papp->Disabled()) {
-			logger->Debug("STEP 2: ignoring disabled EXC [%s]",
-					papp->StrId());
+			logger->Debug("Sync_SyncChange: STEP 2 => [%s] "
+				"ignoring (meanwhile) disabled EXC",
+				papp->StrId());
 			continue;
 		}
 
@@ -378,9 +383,8 @@ SynchronizationManager::Sync_SyncChange(
 	}
 
 	// Collecing execution metrics
-	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_SYNCCHANGE,
-			sm_tmr, syncState);
-	logger->Debug("STEP 2: syncChange() DONE");
+	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_SYNCCHANGE, sm_tmr, syncState);
+	logger->Debug("Sync_SyncChange: STEP 2 => DONE ");
 
 	return OK;
 }
@@ -392,21 +396,22 @@ void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(
 // Sync-Change completion (just if asynchronous)
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
 	RTLIB_ExitCode_t result;
-	logger->Debug("STEP 2: .... (wait) .... [%s]", papp->StrId());
+	logger->Debug("Sync_SyncChange: STEP 2 => [%s] ... (wait)... ",
+ 		papp->StrId());
 
 	// Send RTLIB Sync-Change message
 	result = ap.SyncP_SyncChange_GetResult(presp);
 	if (result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {
-		logger->Warn("STEP 2: <---- TIMEOUT -- [%s]",
-				papp->StrId());
+		logger->Warn("Sync_SyncChange: STEP 2 => [%s] TIMEOUT! ",
+			papp->StrId());
 		sync_fails_apps.insert(papp);
 		SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
 		return;
 	}
 
 	if (result == RTLIB_BBQUE_CHANNEL_WRITE_FAILED) {
-		logger->Warn("STEP 2: <------ WERROR -- [%s]",
-				papp->StrId());
+		logger->Error("Sync_SyncChange: STEP 2 => [%s] channel write error [err=%d]",
+			papp->StrId(), result);
 		// Accounting for syncpoints missed
 		sync_fails_apps.insert(papp);
 		SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_MISS);
@@ -415,22 +420,19 @@ void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(
 
 
 	if (result != RTLIB_OK) {
-		logger->Warn("STEP 2: <----- FAILED -- [%s]", papp->StrId());
+		logger->Error("Sync_SyncChange: STEP 2 => [%s] library error [err=%d]",
+			papp->StrId(), result);
 		// TODO Here the synchronization policy should be queryed to
 		// decide if the synchronization latency is compliant with the
 		// RTRM optimization goals.
 		//
 		DB(logger->Warn("TODO: Check sync policy for sync miss reaction"));
-
-		// FIXME This case should be handled
-		assert(false);
+		sync_fails_apps.insert(papp);
 	}
 #endif
 	// Accounting for syncpoints missed
 	SM_COUNT_EVENT(metrics, SM_SYNCP_SYNC_HIT);
-
-	logger->Info("STEP 2: <--------- OK -- [%s]", papp->StrId());
-
+	logger->Debug("Sync_SyncChange: STEP 2 => OK!");
 }
 
 SynchronizationManager::ExitCode_t
@@ -438,12 +440,11 @@ SynchronizationManager::Sync_DoChange(ApplicationStatusIF::SyncState_t syncState
 	AppsUidMapIt apps_it;
 
 	RTLIB_ExitCode_t result;
-	AppPtr_t papp;
 
-	logger->Debug("STEP 3: doChange() START");
+	logger->Debug("Sync_DoChange: STEP 3 => START");
 	SM_RESET_TIMING(sm_tmr);
 
-	papp = am.GetFirst(syncState, apps_it);
+	AppPtr_t papp = am.GetFirst(syncState, apps_it);
 	for ( ; papp; papp = am.GetNext(syncState, apps_it)) {
 
 		if (!policy->DoSync(papp))
@@ -453,12 +454,12 @@ SynchronizationManager::Sync_DoChange(ApplicationStatusIF::SyncState_t syncState
 			papp->IsContainer())
 			continue;
 
-		logger->Info("STEP 3: doChange() ===> [%s]", papp->StrId());
+		logger->Debug("Sync_DoChange: STEP 3 => [%s]", papp->StrId());
 
 		// Jumping meanwhile disabled applications
 		if (papp->Disabled()) {
-			logger->Debug("STEP 3: ignoring disabled EXC [%s]",
-					papp->StrId());
+			logger->Debug("Sync_DoChange: STEP 3 => [%s] ignoring disabled EXC",
+				papp->StrId());
 			continue;
 		}
 
@@ -467,13 +468,12 @@ SynchronizationManager::Sync_DoChange(ApplicationStatusIF::SyncState_t syncState
 		if (result != RTLIB_OK)
 			continue;
 
-		logger->Info("STEP 3: <--------- OK -- [%s]", papp->StrId());
+		logger->Debug("Sync_DoChange: STEP 3 => [%s] OK", papp->StrId());
 	}
 
 	// Collecing execution metrics
-	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_DOCHANGE,
-			sm_tmr, syncState);
-	logger->Debug("STEP 3: doChange() DONE");
+	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_DOCHANGE, sm_tmr, syncState);
+	logger->Debug("Sync_DoChange: STEP 3 => DONE");
 
 	return OK;
 }
@@ -485,38 +485,38 @@ SynchronizationManager::Sync_PostChange(ApplicationStatusIF::SyncState_t syncSta
 	AppPtr_t papp;
 	uint8_t excs = 0;
 
-	logger->Debug("STEP 4: postChange() START");
+	logger->Debug("Sync_PostChange: STEP 4 => START");
 	SM_RESET_TIMING(sm_tmr);
 
 	papp = am.GetFirst(syncState, apps_it);
 	for ( ; papp; papp = am.GetNext(syncState, apps_it)) {
-		logger->Info("STEP 4: postChange() ===> [%s]", papp->StrId());
+		logger->Debug("Sync_PostChange: STEP 4 => [%s]", papp->StrId());
 
 		if (!policy->DoSync(papp))
 			continue;
 
 		// Skip failed synchronizations
 		if (sync_fails_apps.find(papp) != sync_fails_apps.end()) {
-			logger->Warn("STEP 4: <------ skipping [%s]", papp->StrId());
+			logger->Warn("Sync_PostChange: STEP 4 => [%s] skipped (sync failure)",
+				papp->StrId());
 			continue;
 		}
 
 		// Commit changes if everything went fine
 		SyncCommit(papp);
-		logger->Info("STEP 4: <--------- OK -- [%s]", papp->StrId());
+		logger->Debug("Sync_PostChange: STEP 4 => [%s] OK", papp->StrId());
 		excs++;
 	}
 
 	// Collecing execution metrics
 	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_POSTCHANGE,
 			sm_tmr, syncState);
-	logger->Debug("STEP 4: postChange() DONE");
-
 	// Account for total reconfigured EXCs
 	SM_COUNT_EVENT2(metrics, SM_SYNCP_EXCS, excs);
-
 	// Collect statistics on average EXCSs reconfigured.
 	SM_ADD_SAMPLE(metrics, SM_SYNCP_AVGE, excs);
+
+	logger->Debug("Sync_PostChange: STEP 4 => DONE");
 
 	return OK;
 }
@@ -531,7 +531,7 @@ void SynchronizationManager::SyncCommit(AppPtr_t papp) {
 	if (!papp->Blocking() && !papp->Disabled()) {
 		auto ra_result = ra.SyncAcquireResources(papp);
 		if (ra_result != ResourceAccounter::RA_SUCCESS) {
-			logger->Error("SyncCommit: failed for [%s] (ret=%d)",
+			logger->Error("SyncCommit: [%s] failed (ret=%d)",
 					papp->StrId(), ra_result);
 			am.SyncAbort(papp);
 		}
@@ -548,35 +548,42 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 	ExitCode_t result;
 	bool at_least_one_success = false;
 
-	logger->Debug("STEP M.1: SyncPlatform(%s) START: adaptive applications",
+	logger->Debug("Sync_Platform <%s>: START adaptive applications",
 		Schedulable::SyncStateStr(syncState));
 	SM_RESET_TIMING(sm_tmr);
 
 	AppsUidMapIt apps_it;
 	AppPtr_t papp;
 	papp = am.GetFirst(syncState, apps_it);
-	for ( ; papp; papp = am.GetNext(syncState, apps_it)) {
-		logger->Info("STEP M.1: SyncPlatform(%s)", papp->SyncStateStr(syncState));
+	for ( ; papp; papp = am.GetNext(syncState, apps_it)) {\
+		logger->Debug("Sync_Platform <%s>: [%s] ...",
+			papp->SyncStateStr(syncState), papp->StrId());
 		if (!policy->DoSync(papp))
 			continue;
-		logger->Info("STEP M.1: SyncPlatform(%s) ===> [%s]",
+		logger->Debug("Sync_Platform <%s>: [%s] to sync",
 			papp->SyncStateStr(syncState), papp->StrId());
 
 		result = MapResources(papp);
 		if (result != SynchronizationManager::OK) {
-			logger->Error("STEP M.1: cannot synchronize application [%s]", papp->StrId());
+			logger->Error("Sync_Platform <%s>: [%s] failed [err=%d]",
+				papp->SyncStateStr(syncState),
+				papp->StrId(),
+				result);
 			sync_fails_apps.insert(papp);
 			continue;
 		}
 		else
 			if (!at_least_one_success)
 				at_least_one_success = true;
-		logger->Info("STEP M.1: <--------- OK -- [%s]", papp->StrId());
+
+		logger->Debug("Sync_Platform <%s>: [%s] => OK",
+			papp->SyncStateStr(syncState),
+			papp->StrId());
 	}
 
 	// Collecting execution metrics
 	SM_GET_TIMING_SYNCSTATE(metrics, SM_SYNCP_TIME_SYNCPLAT, sm_tmr, syncState);
-	logger->Debug("STEP M.1: SyncPlatform(%s) DONE: adaptive applications",
+	logger->Debug("Sync_Platform <%s> DONE with adaptive applications",
 		papp->SyncStateStr(syncState));
 
 	if (at_least_one_success)
@@ -588,32 +595,40 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 SynchronizationManager::ExitCode_t
 SynchronizationManager::MapResources(SchedPtr_t papp) {
 	PlatformManager::ExitCode_t result = PlatformManager::PLATFORM_OK;
-	logger->Info("STEP M: SyncPlatform(%s) ===> [%s]",
+	logger->Debug("MapResources <%s>: [%s] checking...",
 		papp->SyncStateStr(papp->SyncState()),
 		papp->StrId());
 
 	switch (papp->SyncState()) {
 	case Schedulable::STARTING:
-		logger->Debug("STEP M: allocating resources to [%s]", papp->StrId());
+		logger->Debug("MapResources <%s>: [%s] STARTING...",
+			papp->SyncStateStr(papp->SyncState()),
+			papp->StrId());
 		result = plm.MapResources(papp,
 				papp->NextAWM()->GetResourceBinding());
 		break;
 	case Schedulable::RECONF:
 	case Schedulable::MIGREC:
 	case Schedulable::MIGRATE:
-		logger->Debug("STEP M: re-mapping resources for [%s]", papp->StrId());
+		logger->Debug("MapResources <%s>: [%s] REC/MIG...",
+			papp->SyncStateStr(papp->SyncState()),
+			papp->StrId());
 		result = plm.MapResources(papp,
 				papp->NextAWM()->GetResourceBinding());
 		break;
 	case Schedulable::BLOCKED:
-		logger->Debug("STEP M: reclaiming resources from [%s]", papp->StrId());
+		logger->Debug("MapResources <%s>: [%s] BLOCKED. Reclaiming...",
+			papp->SyncStateStr(papp->SyncState()),
+			papp->StrId());
 		result = plm.ReclaimResources(papp);
 		break;
 	case Schedulable::DISABLED:
-		logger->Debug("STEP M: do nothing for disabled [%s]", papp->StrId());
+		logger->Debug("MapResources <%s>: [%s] DISABLED. Doing nothing...",
+			papp->SyncStateStr(papp->SyncState()),
+			papp->StrId());
 		break;
 	default:
-		logger->Warn("Step M: suspect wrong sync status (%s) for [%s]",
+		logger->Warn("MapResources <%s>: [%s] wrong sync status!",
 			papp->SyncStateStr(papp->SyncState()),
 			papp->StrId());
 		break;
@@ -621,7 +636,10 @@ SynchronizationManager::MapResources(SchedPtr_t papp) {
 
 	if (result != PlatformManager::PLATFORM_OK
 			&& (kill(papp->Pid(), 0) == 0)) {
-		logger->Error("Step M: failure occurred in resource mapping");
+		logger->Warn("MapResources <%s>: [%s]: failure occurred ",
+			papp->SyncStateStr(papp->SyncState()),
+			papp->StrId());
+
 		return PLATFORM_SYNC_FAILED;
 	}
 	return OK;
@@ -649,7 +667,7 @@ SynchronizationManager::SyncApps(ApplicationStatusIF::SyncState_t syncState) {
 	SM_ADD_SAMPLE(metrics, SM_SYNCP_TIME_LATENCY, syncLatency);
 
 	// Wait for the policy specified sync point
-	logger->Debug("Wait sync point for %d[ms]", syncLatency);
+	logger->Debug("SyncApps: wait sync point for %d[ms]", syncLatency);
 	std::this_thread::sleep_for(
 			std::chrono::milliseconds(syncLatency));
 
@@ -739,7 +757,8 @@ SynchronizationManager::SyncSchedule() {
 	// Start the resource accounter synchronized session
 	raResult = ra.SyncStart();
 	if (raResult != ResourceAccounter::RA_SUCCESS) {
-		logger->Fatal("SyncSchedule: session=%d unable to start resource accounting ",
+		logger->Fatal("SyncSchedule: session=%d unable to start "
+			"resource accounting ",
 			sync_count);
 		return ABORTED;
 	}
