@@ -80,9 +80,9 @@
 							<task id="1" acc="4" freq_khz="0"/>
 						</tasks>
 						<buffers>
-							<buffer id="1" mem="3"/>
-							<buffer id="2" mem="3"/>
-							<buffer id="3" mem="3"/>
+							<buffer id="1" mem="0"/>
+							<buffer id="2" mem="0"/>
+							<buffer id="3" mem="0"/>
 						</buffers>
 					</mapping>
 					<mapping id="5" exec_time_ms="200" power_mw="4120" mem_bw="300">
@@ -113,6 +113,106 @@
 							<buffer id="1" mem="3"/>
 							<buffer id="2" mem="3"/>
 							<buffer id="3" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="8" exec_time_ms="1" power_mw="50" mem_bw="003">
+						<tasks>
+							<task id="1" acc="1" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="9" exec_time_ms="2" power_mw="50" mem_bw="033">
+						<tasks>
+							<task id="1" acc="2" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="10" exec_time_ms="4" power_mw="50" mem_bw="330">
+						<tasks>
+							<task id="1" acc="4" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="11" exec_time_ms="1" power_mw="50" mem_bw="303">
+						<tasks>
+							<task id="1" acc="1" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="0"/>
+							<buffer id="3" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="12" exec_time_ms="4" power_mw="50" mem_bw="330">
+						<tasks>
+							<task id="1" acc="4" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="0"/>
+							<buffer id="2" mem="0"/>
+							<buffer id="3" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="13" exec_time_ms="4" power_mw="50" mem_bw="003">
+						<tasks>
+							<task id="1" acc="4" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="0"/>
+						</buffers>
+					</mapping>
+					<mapping id="14" exec_time_ms="1" power_mw="50" mem_bw="003">
+						<tasks>
+							<task id="1" acc="1" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="3"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="3"/>
+						</buffers>
+					</mapping>
+					<mapping id="15" exec_time_ms="1" power_mw="50" mem_bw="003">
+						<tasks>
+							<task id="1" acc="1" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="0"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="0"/>
+						</buffers>
+					</mapping>
+					<mapping id="16" exec_time_ms="2" power_mw="50" mem_bw="003">
+						<tasks>
+							<task id="1" acc="2" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="0"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="0"/>
+						</buffers>
+					</mapping>
+					<mapping id="17" exec_time_ms="4" power_mw="50" mem_bw="003">
+						<tasks>
+							<task id="1" acc="4" freq_khz="0"/>
+						</tasks>
+						<buffers>
+							<buffer id="1" mem="0"/>
+							<buffer id="2" mem="3"/>
+							<buffer id="3" mem="0"/>
 						</buffers>
 					</mapping>
 				</mappings>
