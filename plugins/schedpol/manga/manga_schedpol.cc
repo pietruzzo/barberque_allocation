@@ -448,6 +448,14 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 	auto & curr_task = task_map[task_id];
 	auto & arch_id = arch_index[task_id];
 	const auto & task_reqs = papp->GetTaskRequirements(task_id);
+
+	// Is it the architecture id a valid option?
+	if (task_reqs.ArchPreference(arch_id) == ArchType::NONE) {
+		logger->Debug("NextTaskGraphMappingOption: task_id=%d arch_id=%d not valid",
+		              task_id, arch_id);
+		return SCHED_OPT_OVER;
+	}
+
 	logger->Debug("NextTaskGraphMappingOption: task_id=%d: current arch=%d [%s]",
 	              task_id, arch_id,
 	              GetStringFromArchType(task_reqs.ArchPreference(arch_id)));
