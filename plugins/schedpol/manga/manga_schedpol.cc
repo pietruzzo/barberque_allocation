@@ -527,12 +527,19 @@ MangASchedPol::ScheduleApplication(
 				papp->SetTaskGraph(tg);
 				return SCHED_OK;
 			}
-		} else if (ret != SCHED_R_UNAVAILABLE) {
+		}
+		else if (ret == SCHED_R_UNAVAILABLE) {
+			logger->Warn("ScheduleApplication: [%s] not enough resources"
+				" for partition %d", papp->StrId(), selected_partition.GetId());
+
+		}
+		else {
 			logger->Warn("ScheduleApplication: [%s] not schedulable", papp->StrId());
 			break;
 		}
 	}
 
+	logger->Notice("ScheduleApplication: [%s] ret=%d", papp->StrId(), ret);
 	return ret;
 }
 
@@ -568,37 +575,47 @@ MangASchedPol::SelectWorkingMode(
 
 	uint32_t nr_cores = 1;
 	auto tg = papp->GetTaskGraph();
+	uint32_t cluster_id = selected_partition.GetClusterId();
+
 	for (auto task : tg->Tasks()) {
+		// Tile id
+		uint32_t tile_id = selected_partition.GetUnit(task.second);
+
 		// if thread count not specified, assign all the available cores
 		logger->Debug("SelectWorkingMode: task=%d thread_count=%d",
-		task.first, task.second->GetThreadCount());
+			task.first, task.second->GetThreadCount());
 		if (task.second->GetThreadCount() <= 0) {
-			nr_cores = pe_per_acc
-			[selected_partition.GetClusterId()]
-			[selected_partition.GetUnit(task.second)];
+			nr_cores = pe_per_acc[cluster_id][tile_id];
 			logger->Debug("SelectWorkingMode: task=%d nr_cores=%d",
 			task.first, nr_cores);
 		}
 
-		// Resource request of processing resources
-		pawm->AddResourceRequest("sys.grp.acc.pe", 100 * nr_cores,
-		                         br::ResourceAssignment::Policy::BALANCED);
-
-		// Resource binding: HN cluster (group)
-		ref_num = pawm->BindResource(
-		              br::ResourceType::GROUP, R_ID_ANY,
-		              selected_partition.GetClusterId(),
-		              ref_num);
+		// Resource request of processing resources (cluster binding
+		// already set in)
+		std::string acc_path("sys.grp");
+		acc_path += std::to_string(cluster_id);
+		acc_path += ".acc" + std::to_string(tile_id) + ".pe";
+		pawm->AddResourceRequest(
+				acc_path,
+				100 * nr_cores,
+				br::ResourceAssignment::Policy::BALANCED);
+		logger->Debug("SelectWorkingMode: [%s] task=%d add accelerator requested...",
+		              papp->StrId(), task.first);
 
 		// Resource binding: HN tile (accelerator)
+		logger->Debug("SelectWorkingMode: [%s] task=%d bind accelerator request to "
+		              "tile=%d",
+		              papp->StrId(), task.first, tile_id);
 		ref_num = pawm->BindResource(
-		              br::ResourceType::ACCELERATOR, R_ID_ANY,
-		              selected_partition.GetUnit(task.second),
+		              br::ResourceType::ACCELERATOR,
+			      tile_id,
+		              tile_id,
 		              ref_num);
-		logger->Debug("SelectWorkingMode: task=%d -> cluster=<%d> tile=<%d>",
-		              task.first,
-		              selected_partition.GetClusterId(),
-		              selected_partition.GetUnit(task.second));
+
+		logger->Debug("SelectWorkingMode: [%s] task=%d -> cluster=<%d> tile=<%d>",
+		              papp->StrId(), task.first,
+		              cluster_id,
+		              tile_id);
 	}
 
 	// Amount of memory to allocate per bank
@@ -618,17 +635,19 @@ MangASchedPol::SelectWorkingMode(
 		auto & mem_bank_id = mem_entry.first;
 		auto & mem_amount  = mem_entry.second;
 
-		// Resource request for memory (set the bank id yet)
-		std::string mem_path("sys.grp.mem");
-		mem_path += std::to_string(mem_bank_id);
+		// Resource request for memory (set cluster and the bank id yet)
+		std::string mem_path("sys.grp");
+		mem_path += std::to_string(cluster_id);
+		mem_path += ".mem" + std::to_string(mem_bank_id);
 		pawm->AddResourceRequest(mem_path, mem_amount);
-		logger->Debug("SelectWorkingMode: memory bank %d (requested=%d)",
-		              mem_bank_id, mem_amount);
+		logger->Debug("SelectWorkingMode: [%s] memory bank %d (requested=%d)",
+		              papp->StrId(), mem_bank_id, mem_amount);
 
-		// Resource binding: HN cluster (group) needed only
+		// Resource binding: memory node
 		ref_num = pawm->BindResource(
-		              br::ResourceType::GROUP, R_ID_ANY,
-		              selected_partition.GetClusterId(),
+		              br::ResourceType::MEMORY,
+		              mem_bank_id,
+		              mem_bank_id,
 		              ref_num);
 	}
 
