@@ -1168,16 +1168,8 @@ MangoPlatformProxy::RegisterMemoryBank(
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	logger->Debug("RegisterMemoryBank: cluster=<%d> tile=<%d> memory=<%d>",
-	cluster_id, tile_id, mem_id);
-	bbque_assert(mem_id > -1 && mem_id < MANGO_MAX_MEMORIES);
-	if (found_memory_banks.test(mem_id)) {
-		// We have already registered this memory, nothing to do
-		return PLATFORM_OK;
-	}
+		cluster_id, tile_id, mem_id);
 
-	// A bitset is used to keep track the already registered memory (we could also use the
-	// ResourceAccounter methods, but this is faster)
-	found_memory_banks.set(mem_id);
 	uint32_t memory_size;
 	int err = hn_get_memory_size(tile_id, &memory_size, cluster_id);
 	if (HN_SUCCEEDED != err) {
