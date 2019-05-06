@@ -567,6 +567,7 @@ MangASchedPol::SelectWorkingMode(
 		    papp->WorkingModes().size(),"Run-time", 1, papp);
 	}
 	pawm->ClearResourceBinding();
+	pawm->ClearResourceRequests();
 	logger->Info("SelectWorkingMode: [%s] partition mapping...", papp->StrId());
 	int32_t ref_num = -1;
 
