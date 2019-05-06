@@ -1419,12 +1419,14 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 		i++;
 	}
 
-	ExitCode_t err;
+	ExitCode_t err = PartitionSkimmer::SK_OK;
 	std::unique_lock<std::recursive_mutex> hn_lock(hn_mutex);
-	if (hn_reserve_units_set(num_tiles, units, hw_cluster_id) != HN_SUCCEEDED) {
+	int hn_ret = hn_reserve_units_set(num_tiles, units, hw_cluster_id);
+	if (hn_ret != HN_SUCCEEDED) {
 		logger->Error("SetPartition: units reservation failed");
 		err = SK_GENERIC_ERROR;
-	} else if (units == nullptr) {
+	}
+	else if (units == nullptr) {
 		logger->Fatal("SetPartition: unexpected null pointer: units"
 		" [libhn suspect corruption]");
 		return SK_GENERIC_ERROR;
