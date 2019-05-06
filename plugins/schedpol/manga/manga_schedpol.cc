@@ -313,8 +313,10 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 					              papp->StrId(), curr_cluster_id);
 					continue;
 				}
-				logger->Debug("ServeApp: [%s] scheduled [HN cluster=%d]",
-				              papp->StrId(), curr_cluster_id);
+				else {
+					logger->Debug("ServeApp: [%s] scheduled [HN cluster=%d]",
+						papp->StrId(), curr_cluster_id);
+				}
 				return err;
 			}
 			// No partitions found for the current resource mappinf option
