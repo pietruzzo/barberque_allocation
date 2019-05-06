@@ -505,7 +505,7 @@ MangASchedPol::ScheduleApplication(
 		papp->StrId(), selected_partition.GetId());
 
 		// Set a working mode an perform a schedule request
-		auto ret = SelectWorkingMode(papp, selected_partition);
+		ret = SelectWorkingMode(papp, selected_partition);
 		if (ret == SCHED_OK) {
 			logger->Debug("ScheduleApplication: [%s] selected partition %d",
 			papp->StrId(), selected_partition.GetId());
@@ -533,7 +533,6 @@ MangASchedPol::ScheduleApplication(
 		else if (ret == SCHED_R_UNAVAILABLE) {
 			logger->Warn("ScheduleApplication: [%s] not enough resources"
 				" for partition %d", papp->StrId(), selected_partition.GetId());
-
 		}
 		else {
 			logger->Warn("ScheduleApplication: [%s] not schedulable", papp->StrId());
