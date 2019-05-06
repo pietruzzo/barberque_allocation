@@ -1220,7 +1220,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::Skim(
 	uint32_t *mem_buffers_size   = new uint32_t[buff_size+tasks_size];
 	uint32_t num_sets            = 0;
 
-	bbque_assert(part_list.empty());
+	part_list.clear();
 
 	logger->Debug("Skim: request summary: ");
 	for (size_t i = 0; i < tasks_size; i++) {
