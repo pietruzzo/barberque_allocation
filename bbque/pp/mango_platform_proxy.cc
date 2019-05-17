@@ -97,6 +97,7 @@ static void FindUnitsSets(
 {
 	int num_tiles = tg.TaskCount();
 	unsigned int *tiles_family = new unsigned int[num_tiles];
+	std::vector<uint32_t> tiles_id;
 
 	// Fill the computing resources requested
 	int i=0;
@@ -111,10 +112,12 @@ static void FindUnitsSets(
 		tiles_family[i++] = ArchTypeToMangoFamily(
 		                        t.second->GetAssignedArch(),
 		                        t.second->GetThreadCount());
+
+		tiles_id.push_back(t.second->GetMappedProcessor());
 	}
 
 	int res = hn_find_units_sets(
-	              0, num_tiles, tiles_family, tiles, families_order,num_sets,
+	              tiles_id[0], num_tiles, tiles_family, tiles, families_order,num_sets,
 	              hw_cluster_id);
 
 	if (tiles_family == nullptr) {
