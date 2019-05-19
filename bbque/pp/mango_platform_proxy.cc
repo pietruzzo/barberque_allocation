@@ -588,31 +588,23 @@ static int GetCoherentUnitSet(
 static int ReserveProcessingUnits(TaskGraph & tg)
 {
 	uint32_t hw_cluster_id = tg.GetCluster();
-	unsigned int num_sets  = 0;
-	unsigned int ** units_sets     = nullptr;
-	unsigned int ** families_order = nullptr;
+	int num_tiles = tg.TaskCount();
+	unsigned int * units_set = new unsigned int[num_tiles];
+	unsigned int i = 0;
 
-	// Retrieve available units from HN library
-	FindUnitsSets(tg, hw_cluster_id, &units_sets, &families_order, &num_sets);
-	if (num_sets < 1) {
-		logger->Error("ReserveProcessingUnits: no units sets available");
-		return -1;
+	// Fill the array with the tiles IDs for the reservation request
+	for (auto & task_entry: tg.Tasks()) {
+		auto task_id = task_entry.first;
+		auto & task  = task_entry.second;
+
+		units_set[i] = task->GetMappedProcessor();
+		logger->Debug("ReserveProcessingUnits: task=%d to map onto unit=%d",
+			task_id, units_set[i]);
+		i++;
 	}
-	logger->Debug("ReserveProcessingUnits: returned %d possible unit sets", num_sets);
-
-	// One of the sets must be coherent w.r.t to the task mapping selected
-	// by the policy
-	int unit_set_id = GetCoherentUnitSet(tg, units_sets, num_sets);
-	if (unit_set_id < 0) {
-		logger->Warn("ReserveProcessingUnits: mapping option not available");
-		return -2;
-	}
-	logger->Debug("ReserveProcessingUnits: mapping option set=%d", unit_set_id);
-
 
 	// Reserve units
-	int num_tiles = tg.TaskCount();
-	int err = hn_reserve_units_set(num_tiles, units_sets[unit_set_id], hw_cluster_id);
+	int err = hn_reserve_units_set(num_tiles, units_set, hw_cluster_id);
 	if (err != HN_SUCCEEDED) {
 		logger->Error("ReserveProcessingUnits: units reservation failed [err=%d]", err);
 		return -3;
