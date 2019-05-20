@@ -113,12 +113,23 @@ static void FindUnitsSets(
 		                        t.second->GetAssignedArch(),
 		                        t.second->GetThreadCount());
 
-		tiles_id.push_back(t.second->GetMappedProcessor());
+		int mapped_processor = t.second->GetMappedProcessor();
+		if (mapped_processor >= 0) {
+			logger->Debug("FindUnitsSets: task=%d mapped_processor=%d",
+				t.second->Id(), mapped_processor);
+			tiles_id.push_back(mapped_processor);
+		}
+	}
+
+	uint32_t start_tile = 0;
+	if (!tiles_id.empty()) {
+		start_tile = tiles_id[0];
+		logger->Debug("FindUnitsSets: start finding from tile=%d", start_tile);
 	}
 
 	int res = hn_find_units_sets(
-	              tiles_id[0], num_tiles, tiles_family, tiles, families_order,num_sets,
-	              hw_cluster_id);
+			start_tile, num_tiles, tiles_family, tiles, families_order,num_sets,
+			hw_cluster_id);
 
 	if (tiles_family == nullptr) {
 		logger->Warn("FindUnitsSets: unexpected null pointer (tiles_family)"
