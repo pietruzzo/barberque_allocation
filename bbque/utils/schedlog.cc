@@ -86,14 +86,26 @@ void SchedLog::BuildStateStr(
 	snprintf(state_str, len, " %s %s ", st_str, sy_str);
 }
 
+void GetBindingInfo(
+		bbque::app::AwmPtr_t awm,
+		bbque::res::ResourceType & r_type,
+		bbque::res::ResourceBitset & r_bset) {
 
-#define GET_OBJ_RESOURCE(awm, r_type, r_bset) \
-	r_type = res::ResourceType::GPU; \
-	r_bset = awm->BindingSet(r_type); \
-	if (r_bset.Count() == 0) { \
-		r_type = res::ResourceType::CPU; \
-		r_bset = awm->BindingSet(r_type); \
+	std::vector<res::ResourceType> typeset = {
+		res::ResourceType::ACCELERATOR,
+		res::ResourceType::GPU,
+		res::ResourceType::CPU,
+	};
+
+	for (auto & curr_type: typeset) {
+		r_bset = awm->BindingSet(curr_type);
+		if (r_bset.Count() > 0) {
+			r_type = curr_type;
+			return;
+		}
 	}
+	r_type = res::ResourceType::UNDEFINED;
+}
 
 void SchedLog::BuildSchedStateLine(
 			app::SchedPtr_t sched_ptr,
@@ -118,11 +130,13 @@ void SchedLog::BuildSchedStateLine(
 
 	// Current AWM
 	if (awm) {
-		GET_OBJ_RESOURCE(awm, r_type, r_bset);
+		GetBindingInfo(awm, r_type, r_bset);
+
 		// MIGRATE case => must see previous set of the same AWM
 		if ((awm == next_awm) &&
 			((awm->BindingChanged(res::ResourceType::GPU)) ||
-				(awm->BindingChanged(res::ResourceType::CPU)))) {
+				(awm->BindingChanged(res::ResourceType::CPU)) ||
+					(awm->BindingChanged(res::ResourceType::ACCELERATOR)))) {
 			r_bset = awm->BindingSetPrev(r_type);
 		}
 		else {
@@ -141,7 +155,7 @@ void SchedLog::BuildSchedStateLine(
 
 	// Next AWM
 	if (next_awm) {
-		GET_OBJ_RESOURCE(next_awm, r_type, r_bset);
+		GetBindingInfo(next_awm, r_type, r_bset);
 		snprintf(binding_str, sizeof(binding_str), "%s{%s}",
 				res::GetResourceTypeString(r_type),
 				r_bset.ToStringCG().c_str());
