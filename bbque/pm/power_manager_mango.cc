@@ -99,9 +99,15 @@ MangoPowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t & perc) {
 		return GetLoadPEAK(cluster_id, tile_id, core_id, perc);
 
 	case HN_TILE_FAMILY_NUPLUS:
+#if 0
+		// !!! Profiling support for NU+ is not stable !!!
+		break;
 		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a NUPLUS processor",
 			cluster_id, tile_id);
 		return GetLoadNUP(cluster_id, tile_id, perc);
+#endif
+		perc = 0;
+		break;
 /*
 	case HN_TILE_FAMILY_DCT:
 		logger->Debug("GetLoad: cluster=<%d> tile=<%d> is a DCT accelerator",
