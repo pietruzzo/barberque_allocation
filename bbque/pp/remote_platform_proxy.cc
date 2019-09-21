@@ -222,6 +222,18 @@ RemotePlatformProxy::SendScheduleRequest(
 	return agent_proxy->SendScheduleRequest(system_path, request);
 }
 
+bbque::agent::ExitCode_t
+RemotePlatformProxy::ResourceRequest(
+		int system_id,
+        agent::ResourceAllocation & resource_request,
+		agent::ResourceAllocation & resource_reply) {
+	if (agent_proxy == nullptr) {
+		logger->Error("SendDisjoinRequest failed. AgentProxy plugin missing");
+		return bbque::agent::ExitCode_t::PROXY_NOT_READY;
+	}
+	return agent_proxy->ResourceRequest(system_id, resource_request, resource_reply);
+}
+
 } // namespace pp
 } // namespace bbque
 
