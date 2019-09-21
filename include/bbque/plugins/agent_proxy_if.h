@@ -148,6 +148,17 @@ public:
 		agent::ResourceAllocation & resource_reply) = 0;
 
     /**
+	* @brief Agreement
+    * @param system_id
+	* @param resource_request
+	* @param resource_reply
+	* @return
+	*/
+	virtual ExitCode_t Agreement(
+		int system_id,
+        agent::ResourceAllocation & resource_request,
+		agent::AgreementReply & resource_reply) = 0;
+
 };
 
 } // namespace plugins

@@ -114,6 +114,11 @@ public:
         agent::ResourceAllocation & resource_request,
 		agent::ResourceAllocation & resource_reply) ;
 
+    bbque::agent::ExitCode_t Agreement(
+		int system_id,
+        agent::ResourceAllocation & resource_request,
+		agent::AgreementReply & resource_reply) ;
+
 private:
 	/**
 	 * @brief The logger used by the worker thread
