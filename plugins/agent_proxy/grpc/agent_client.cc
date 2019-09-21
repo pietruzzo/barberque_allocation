@@ -238,6 +238,43 @@ ExitCode_t AgentClient::ResourceRequest(
 	return ExitCode_t::OK;
 }
 
+ExitCode_t AgentClient::Agreement(
+	agent::ResourceAllocation & resource_request,
+	agent::AgreementReply & resource_reply)
+{
+    bbque::ResourceAlloc request;
+	grpc::Status status;
+	grpc::ClientContext context;
+	bbque::ResourceAlloc reply;
+
+    request.set_sender_id(local_system_id);
+    request.set_dest_id(remote_system_id);
+    request.set_trans_id(resource_request.trans_id);
+    request.set_memory(resource_request.memory);
+
+    for(const agent::ResourceAllocation::ProcessingUnitsRequest & element : resource_request.proc){
+        bbque::CuU * cuu = request.add_proc();
+        cuu->set_arch(element.arch);
+        cuu->set_num(element.num);
+    }
+
+	logger->Debug("Agreement: Calling implementation...");
+	status = service_stub->Agreement(&context, request, &reply);
+	if (!status.ok()) {
+		logger->Error("Agreement: Returned code %d", status.error_code());
+		return ExitCode_t::AGENT_DISCONNECTED;
+	}
+
+	logger->Debug("Agreement: Reading reapeated messages");
+    for (const bbque::CuU & cuu : reply.proc()) {
+        for (const std::string & path : cuu.path()) {
+            resource_reply.proc_paths.push_back({cuu.arch(), path});
+        }
+    }
+
+	return ExitCode_t::OK;
+}
+
 } // namespace plugins
 
 } // namespace bbque
