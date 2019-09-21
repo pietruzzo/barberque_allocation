@@ -195,6 +195,49 @@ ExitCode_t AgentClient::SendScheduleRequest(
 	return ExitCode_t::OK;
 }
 
+ExitCode_t AgentClient::ResourceRequest(
+	agent::ResourceAllocation & resource_request,
+	agent::ResourceAllocation & resource_reply)
+{
+    ExitCode_t exit_code = Connect();
+	if (exit_code != ExitCode_t::OK) {
+		logger->Error("ResourceRequest: Connection failed");
+		return exit_code;
+	}
+
+	bbque::ResourceAlloc request;
+	grpc::Status status;
+	grpc::ClientContext context;
+	bbque::ResourceAlloc reply;
+
+    request.set_sender_id(local_system_id);
+    request.set_dest_id(remote_system_id);
+    request.set_trans_id(resource_request.trans_id);
+    request.set_memory(resource_request.memory);
+
+    for(const agent::ResourceAllocation::ProcessingUnitsRequest & element : resource_request.proc){
+	bbque::CuU * cuu = request.add_proc();
+        cuu->set_arch(element.arch);
+	cuu->set_num(element.num);
+    }
+	logger->Debug("ResourceRequest: Calling implementation...");
+	status = service_stub->ResourceRequest(&context, request, &reply);
+	if (!status.ok()) {
+		logger->Error("ResourceRequest: Returned code %d", status.error_code());
+		return ExitCode_t::AGENT_DISCONNECTED;
+	}
+
+	//Return values
+	resource_reply.trans_id = reply.trans_id();
+    resource_reply.memory = reply.memory();
+    logger->Debug("ResourceRequest: Reading reapeated messages");
+    for (const bbque::CuU & cuu : reply.proc()) {
+        resource_reply.proc.push_back({cuu.arch(), cuu.num()});
+    }
+
+	return ExitCode_t::OK;
+}
+
 } // namespace plugins
 
 } // namespace bbque
