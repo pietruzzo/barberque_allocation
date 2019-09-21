@@ -279,6 +279,19 @@ ExitCode_t AgentProxyGRPC::ResourceRequest(
 }
 
 
+ExitCode_t AgentProxyGRPC::Agreement(
+	int remote_system_id,
+	agent::ResourceAllocation & resource_request,
+	agent::AgreementReply & resource_reply) {
+
+    std::shared_ptr<AgentClient> client(GetAgentClient(remote_system_id));
+	if (client)
+		return client->Agreement(resource_request, resource_reply);
+
+	return agent::ExitCode_t::AGENT_UNREACHABLE;
+}
+
+
 } // namespace plugins
 
 } // namespace bbque
