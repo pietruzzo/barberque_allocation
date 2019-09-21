@@ -7,6 +7,8 @@ service RemoteAgent {
 	rpc GetWorkloadStatus(GenericRequest) returns (WorkloadStatusReply);
 	rpc GetChannelStatus(GenericRequest) returns (ChannelStatusReply);
 	rpc SetNodeManagementAction(NodeManagementRequest) returns (GenericReply);
+	rpc ResourceRequest(ResourceAlloc) returns (ResourceAlloc);
+	rpc Agreement(ResourceAlloc) returns (ResourceAlloc);
 }
 
 // --------------------------
@@ -76,4 +78,30 @@ message ApplicationSchedulingRequest {
   uint32 app_id    = 2;
   string app_name  = 3;
   int32  awm_id    = 4;
+}
+
+/*
+	used to request and obtain allocation of resources
+	trans_id: identifier to identify the transation, it is useful if we have a request that blocks architectures
+	this id is linked to those architectures, so the receiver can know which resources needs to give and which ones need to unlock
+	proc: list of requested resources
+	memory: memory requested
+*/
+message ResourceAlloc {
+  uint32 sender_id = 1;
+  uint32 dest_id   = 2;
+  uint32 trans_id = 3;
+  repeated CuU proc = 4;
+  uint32 memory = 5;
+}
+
+/*
+	arch: id of the type of resource
+	num: number of resources
+	path: path of the resources
+*/
+message CuU{
+  string arch = 1;
+  uint32 num = 2;
+  repeated string path = 3;
 }
