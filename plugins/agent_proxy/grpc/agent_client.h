@@ -70,6 +70,10 @@ public:
 	ExitCode_t SendScheduleRequest(
 	        agent::ApplicationScheduleRequest const & request);
 
+	ExitCode_t ResourceRequest(
+	        agent::ResourceAllocation & resource_request,
+		agent::ResourceAllocation & resource_reply);
+
 private:
 
 	int local_system_id;

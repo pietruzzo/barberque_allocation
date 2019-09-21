@@ -117,6 +117,11 @@ public:
 	        std::string const & system_path,
 	        agent::ApplicationScheduleRequest const & request) override;
 
+	ExitCode_t ResourceRequest(
+		int system_id,
+        agent::ResourceAllocation & resource_request,
+		agent::ResourceAllocation & resource_reply) override;
+
 private:
 
 	std::string server_address_port = "0.0.0.0:";

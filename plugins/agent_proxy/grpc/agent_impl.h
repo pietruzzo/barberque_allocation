@@ -60,6 +60,12 @@ public:
 	        grpc::ServerContext * context,
 	        const bbque::NodeManagementRequest * action,
 	        bbque::GenericReply * error) override;
+
+	grpc::Status ResourceRequest(
+	        grpc::ServerContext * context,
+	        const bbque::ResourceAlloc * request,
+	        bbque::ResourceAlloc * reply) override;
+
 private:
 
 	bbque::System & system;
