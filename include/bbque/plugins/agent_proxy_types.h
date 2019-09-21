@@ -22,6 +22,7 @@
 #include <bitset>
 #include <map>
 #include <string>
+#include <list>
 
 #include "bbque/config.h"
 #include "bbque/res/resource_type.h"
@@ -81,6 +82,36 @@ struct ApplicationScheduleRequest {
 		std::map<bbque::res::ResourceType, uint64_t> amount;
 		std::map<bbque::res::ResourceType, std::bitset<BBQUE_MAX_R_ID_NUM+1>> binding_set;
 	} resources;
+};
+
+/**
+ * @struct ResourceAllocation
+ * trans_id: identifier of the transaction
+ * memory: amount of memory requested
+ * proc: list of required resources
+ */
+
+struct ResourceAllocation {
+	int32_t trans_id;
+	int32_t memory;
+	typedef struct ProcessingUnitsRequest {
+		std::string arch;
+		int32_t num;
+	} ProcessingUnitsRequest;
+	std::list<ProcessingUnitsRequest> proc;
+};
+
+/**
+ * @struct AgreementReply
+ * proc_paths: list of paths of required resources
+ */
+
+struct AgreementReply {
+	typedef struct Paths {
+		std::string arch;
+		std::string path;
+	} Paths;
+	std::list<Paths> proc_paths;
 };
 
 } // namespace agent
