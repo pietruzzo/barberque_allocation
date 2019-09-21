@@ -66,6 +66,10 @@ public:
 	        const bbque::ResourceAlloc * request,
 	        bbque::ResourceAlloc * reply) override;
 
+	grpc::Status Agreement(
+	        grpc::ServerContext * context,
+	        const bbque::ResourceAlloc * request,
+	        bbque::ResourceAlloc * reply) override;
 private:
 
 	bbque::System & system;

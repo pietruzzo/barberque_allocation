@@ -74,6 +74,10 @@ public:
 	        agent::ResourceAllocation & resource_request,
 		agent::ResourceAllocation & resource_reply);
 
+	ExitCode_t Agreement(
+	        agent::ResourceAllocation & resource_request,
+		agent::AgreementReply & resource_reply);
+
 private:
 
 	int local_system_id;
