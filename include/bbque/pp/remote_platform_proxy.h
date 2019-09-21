@@ -109,6 +109,11 @@ public:
 		std::string const & system_path,
 		agent::ApplicationScheduleRequest const & request) ;
 
+    bbque::agent::ExitCode_t ResourceRequest(
+		int system_id,
+        agent::ResourceAllocation & resource_request,
+		agent::ResourceAllocation & resource_reply) ;
+
 private:
 	/**
 	 * @brief The logger used by the worker thread

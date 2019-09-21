@@ -135,6 +135,19 @@ public:
 		std::string const & path,
 		agent::ApplicationScheduleRequest const & request) = 0;
 
+    /**
+	* @brief ResourceRequest
+    * @param system_id
+	* @param resource_request
+	* @param resource_reply
+	* @return
+	*/
+	virtual ExitCode_t ResourceRequest(
+		int system_id,
+        agent::ResourceAllocation & resource_request,
+		agent::ResourceAllocation & resource_reply) = 0;
+
+    /**
 };
 
 } // namespace plugins
