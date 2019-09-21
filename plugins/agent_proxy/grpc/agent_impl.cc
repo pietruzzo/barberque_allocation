@@ -117,6 +117,20 @@ grpc::Status AgentImpl::SetNodeManagementAction(
 	return grpc::Status::OK;
 }
 
+grpc::Status AgentImpl::ResourceRequest(
+        grpc::ServerContext * context,
+        const bbque::ResourceAlloc * request,
+        bbque::ResourceAlloc * reply) {
+
+	logger->Debug(" === ResourceRequest ===");
+
+    reply->set_sender_id(request->sender_id());
+    reply->set_dest_id(request->dest_id());
+    reply->set_trans_id(request->trans_id());
+
+    return grpc::Status::OK;
+}
+
 } // namespace plugins
 
 } // namespace bbque
